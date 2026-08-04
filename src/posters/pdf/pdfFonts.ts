@@ -3,7 +3,7 @@ import { Font } from '@react-pdf/renderer'
 let registered = false
 
 function localFont(name: string) {
-  return new URL(`/fonts/${name}`, window.location.href).href
+  return new URL(`./fonts/${name}`, window.location.href).href
 }
 
 export function ensurePdfFonts() {
