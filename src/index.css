@@ -1,0 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&display=swap');
+@import 'tailwindcss';
+
+@font-face {
+  font-family: 'Geist Y';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/Geist_Y-Medium.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Geist_Y:Medium';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/Geist_Y-Medium.woff2') format('woff2');
+}
+
+@theme {
+  --font-sans: 'Geist', sans-serif;
+  --breakpoint-xs: 360px;
+}
