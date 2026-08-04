@@ -2,6 +2,11 @@
 <html lang="<!-- figma:lang -->">
   <head>
     <!-- figma:head-start -->
+    <script>
+      // Restore path after GitHub Pages 404 redirect
+      var redirect = sessionStorage.getItem('redirect');
+      if (redirect) { sessionStorage.removeItem('redirect'); window.history.replaceState(null, '', redirect); }
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><!-- figma:title --></title>
