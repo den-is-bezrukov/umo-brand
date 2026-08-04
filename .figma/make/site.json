@@ -1,0 +1,18 @@
+{
+  "title": "UMO Brand Assets",
+  "description": "Редактор печатных материалов дилера UMO",
+  "language": "ru",
+  "robots": {
+    "index": false
+  },
+  "icons": {
+    "icon": "/.figma/make/favicon.png"
+  },
+  "openGraph": {
+    "image": "/.figma/make/social-image.png"
+  },
+  "accessibility": {
+    "addBypassLinks": false,
+    "ignoreReducedMotion": false
+  }
+}
