@@ -1,5 +1,5 @@
 import svgPaths from '@/imports/Umo5ProPriceCard/svg-kxo5ttp2xy'
-import imgCar from '@/imports/Umo5ProPriceCard/9fcb9c444b55ba3b1cd91fa39d0c11dbdbbdbe24.png'
+import imgCar from '@/imports/______________________________B2C.png'
 
 interface Props { fullPrice: string; creditPrice: string; qrSvg?: string }
 
@@ -37,7 +37,7 @@ export default function Umo5ProCard({ fullPrice, creditPrice, qrSvg }: Props) {
 
       {/* Car image */}
       <div className="-translate-x-1/2 absolute bottom-0 h-[560px] left-1/2 overflow-clip w-[1754px]">
-        <div className="-translate-x-1/2 absolute bottom-[-100px] h-[990px] left-1/2 w-[1760px]">
+        <div className="-translate-x-1/2 absolute bottom-[-95px] h-[1080px] left-1/2 w-[1920px]">
           <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={imgCar} />
         </div>
       </div>
