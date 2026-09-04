@@ -69,13 +69,12 @@ export default function Umo5MaxPdf({ fullPrice, creditPrice, qrUrl }: Props) {
         </View>
 
         {/* Description */}
-        <View style={{ position: 'absolute', left: px(100), top: px(835), width: px(1554), gap: px(30) }}>
+        <View style={{ position: 'absolute', left: px(100), top: px(835), width: px(1480), gap: px(30) }}>
           <Text style={{ fontFamily: 'Geist', fontWeight: 500, fontSize: px(36), lineHeight: 1.25, opacity: 0.6, color: 'black' }}>
             {'Это комплектация Макс:'}
           </Text>
           <Text style={{ fontFamily: 'Geist', fontWeight: 500, fontSize: px(54), lineHeight: 1.38, color: 'black' }}>
-            {'Всё нужное для комфортной городской жизни: Алиса помогает за рулем, система интеллектуального вождения с адаптивным круиз-контролем и панорамная крыша, которая наполняет салон светом.\nАтмосферная подсветка салона, 18-дюймовые диски и рейлинги на крыше подчеркивают
-характер автомобиля.'}
+            {'Всё нужное для комфортной городской жизни: Алиса помогает за рулем, система интеллектуального вождения с адаптивным круиз-контролем и панорамная крыша, которая наполняет салон светом.\nАтмосферная подсветка салона, 18-дюймовые диски и рейлинги на крыше подчеркивают характер автомобиля.'}
           </Text>
         </View>
 
