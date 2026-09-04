@@ -1,5 +1,5 @@
 import svgPaths from '@/imports/Umo5ProPriceCard/svg-kxo5ttp2xy'
-import imgCar from '@/imports/______________________________B2C.png'
+import { imgUmo5 as imgCar } from '@/assets/cars'
 
 interface Props { fullPrice: string; creditPrice: string; qrSvg?: string }
 

@@ -1,6 +1,6 @@
 import { Document, Page, View, Text, Image, Svg, Path } from '@react-pdf/renderer'
 import svgPaths from '@/imports/Umo5ProPriceCard/svg-kxo5ttp2xy'
-import imgCar from '@/imports/Umo5ProPriceCard/9fcb9c444b55ba3b1cd91fa39d0c11dbdbbdbe24.png'
+import { imgUmo5 as imgCar } from '@/assets/cars'
 import QrVector from './QrVector'
 
 const W = 841.89
