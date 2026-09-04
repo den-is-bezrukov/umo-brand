@@ -63,7 +63,7 @@ export default function Umo5ProPdf({ fullPrice, creditPrice, qrUrl }: Props) {
             <Text>{'Технологичный электромобиль с Алисо'}</Text>
             <Text style={{ letterSpacing: px(-1.6) }}>{'й'}</Text>
             <Text>{' '}</Text>
-            <Text style={{ fontFamily: 'GeistY' }}>{'☺'}</Text>
+            <Text style={{ fontFamily: 'GeistY', color: '#7a55ff' }}>{'☺'}</Text>
             <Text>{' и сервисами Яндекса. Запас хода до 420 км, разгон до 100 км/ч за 8,7 секунды'}</Text>
           </Text>
         </View>

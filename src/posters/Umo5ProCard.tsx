@@ -47,7 +47,7 @@ export default function Umo5ProCard({ fullPrice, creditPrice, qrSvg }: Props) {
         <span className="[word-break:break-word] font-['Geist',sans-serif] font-medium leading-[1.33]">Технологичный электромобиль с Алисо</span>
         <span className="[word-break:break-word] font-['Geist',sans-serif] font-medium leading-[1.33] tracking-[-1.6px]">й</span>
         <span className="[word-break:break-word] font-['Geist',sans-serif] font-medium leading-[1.33]">{` `}</span>
-        <span className="leading-[1.33]">☺</span>
+        <span className="leading-[1.33] text-[#7a55ff]">☺</span>
         <span className="[word-break:break-word] font-['Geist',sans-serif] font-medium leading-[1.33]">{` и сервисами Яндекса. Запас хода до 420 км, разгон до 100 км/ч за 8,7 секунды`}</span>
       </p>
 

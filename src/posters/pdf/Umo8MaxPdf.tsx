@@ -63,7 +63,7 @@ export default function Umo8MaxPdf({ fullPrice, creditPrice, qrUrl }: Props) {
             <Text>{'с Алисо'}</Text>
             <Text style={{ letterSpacing: px(-1.6) }}>й</Text>
             <Text>{' '}</Text>
-            <Text style={{ fontFamily: 'GeistY' }}>☺</Text>
+            <Text style={{ fontFamily: 'GeistY', color: '#7a55ff' }}>☺</Text>
             <Text>{' и сервисами Яндекса.\n'}</Text>
             <Text>{'Запас хода до 867 км, разгон\nдо 100 км/ч за 6,7 секунды'}</Text>
           </Text>
