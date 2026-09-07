@@ -41,6 +41,7 @@ export default defineConfig(({ mode }) => {
       port: parseInt(process.env.PORT || '8443'),
       strictPort: true,
       watch: { ignored: ['**/.figma/**'] },
+      hmr: { clientPort: 443, protocol: 'wss' },
     },
     preview: {
       host: '0.0.0.0',

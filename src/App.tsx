@@ -2,15 +2,10 @@ import { useState, useEffect } from 'react'
 import { pdf } from '@react-pdf/renderer'
 import QRCode from 'qrcode'
 import svgPaths from '@/imports/App/svg-pzn2qwx547'
-import Umo8Max from '@/posters/Umo8MaxCard'
-import Umo8Ultra from '@/posters/Umo8UltraCard'
-import Umo5Max from '@/posters/Umo5MaxCard'
-import Umo5Pro from '@/posters/Umo5ProCard'
-import Umo8MaxPdf from '@/posters/pdf/Umo8MaxPdf'
-import Umo8UltraPdf from '@/posters/pdf/Umo8UltraPdf'
-import Umo5MaxPdf from '@/posters/pdf/Umo5MaxPdf'
-import Umo5ProPdf from '@/posters/pdf/Umo5ProPdf'
+import PriceCard from '@/posters/PriceCard'
+import PriceCardPdf from '@/posters/pdf/PriceCardPdf'
 import { ensurePdfFonts } from '@/posters/pdf/pdfFonts'
+import type { Variant } from '@/posters/cardData'
 
 const POSTER_W = 1754
 const POSTER_H = 2480
@@ -103,11 +98,7 @@ function DarkInput({ value, onChange, onBlur, placeholder, invalid, numeric }: {
 }
 
 function ActivePoster({ model, trim, fullPrice, creditPrice, qrSvg }: { model: Model; trim: Trim; fullPrice: string; creditPrice: string; qrSvg?: string }) {
-  if (model === 'umo8' && trim === 'max')   return <Umo8Max   fullPrice={fullPrice} creditPrice={creditPrice} qrSvg={qrSvg} />
-  if (model === 'umo8' && trim === 'ultra') return <Umo8Ultra fullPrice={fullPrice} creditPrice={creditPrice} qrSvg={qrSvg} />
-  if (model === 'umo5' && trim === 'max')   return <Umo5Max   fullPrice={fullPrice} creditPrice={creditPrice} qrSvg={qrSvg} />
-  if (model === 'umo5' && trim === 'pro')   return <Umo5Pro   fullPrice={fullPrice} creditPrice={creditPrice} qrSvg={qrSvg} />
-  return null
+  return <PriceCard variant={`${model}-${trim}` as Variant} fullPrice={fullPrice} creditPrice={creditPrice} qrSvg={qrSvg} />
 }
 
 export default function App() {
@@ -162,11 +153,7 @@ export default function App() {
       ensurePdfFonts()
       const qrUrl = urlValid ? url.trim() : DEFAULT_URL
       const props = { fullPrice, creditPrice, qrUrl }
-      const doc =
-        model === 'umo8' && trim === 'max'   ? <Umo8MaxPdf   {...props} /> :
-        model === 'umo8' && trim === 'ultra' ? <Umo8UltraPdf {...props} /> :
-        model === 'umo5' && trim === 'max'   ? <Umo5MaxPdf   {...props} /> :
-                                               <Umo5ProPdf   {...props} />
+      const doc = <PriceCardPdf variant={`${model}-${trim}` as Variant} {...props} />
       const blob = await pdf(doc).toBlob()
       const link = document.createElement('a')
       link.href = URL.createObjectURL(blob)
@@ -216,7 +203,7 @@ export default function App() {
 
             {/* Full price */}
             <div className="flex flex-col justify-center">
-              <FieldLabel>Полная цена, ₽:</FieldLabel>
+              <FieldLabel>Без кредита, ₽:</FieldLabel>
               <DarkInput numeric value={fullPrice} invalid={fullLessThanCredit} onChange={v => setFullPrice(formatPrice(v))} />
             </div>
 
