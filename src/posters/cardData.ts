@@ -1,5 +1,5 @@
-import imgUmo5 from '@/imports/______________________________B2C.png'
-import imgUmo8 from '@/imports/Umo8MaxPriceCard/8f2366272706e62fb3ae0e7197b2103311e7e454.png'
+import imgUmo5 from '@/assets/umo5-car.jpg'
+import imgUmo8 from '@/assets/umo8-car.jpg'
 
 export type Variant = 'umo8-max' | 'umo8-ultra' | 'umo5-max' | 'umo5-pro'
 
