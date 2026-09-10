@@ -11,12 +11,12 @@ interface Props {
 
 function PriceRow({ value }: { value: string }) {
   return (
-    <div className="content-stretch flex font-['Geist',sans-serif] font-semibold items-center leading-[0] relative shrink-0 text-[72px] w-full whitespace-nowrap">
+    <div className="content-stretch flex gap-[18px] font-['Geist',sans-serif] font-semibold items-center leading-[0] relative shrink-0 text-[72px] w-full whitespace-nowrap">
       <div className="flex flex-col justify-end relative shrink-0" style={{ fontFeatureSettings: '"lnum" 1, "tnum" 1' }}>
         <p className="leading-[1.25]">{value}</p>
       </div>
       <div className="flex flex-col justify-end relative shrink-0">
-        <p className="leading-[1.25]">{' ₽'}</p>
+        <p className="leading-[1.25]">₽</p>
       </div>
     </div>
   )

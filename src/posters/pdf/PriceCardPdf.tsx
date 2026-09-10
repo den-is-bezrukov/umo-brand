@@ -16,9 +16,9 @@ function PriceBlock({ label, value }: { label: string; value: string }) {
       <Text style={{ fontFamily: 'Geist', fontWeight: 500, fontSize: px(36), lineHeight: 1.25, opacity: 0.6 }}>
         {label}
       </Text>
-      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: px(18) }}>
         <Text style={{ fontFamily: 'Geist', fontWeight: 600, fontSize: px(72), lineHeight: 1.25 }}>{value}</Text>
-        <Text style={{ fontFamily: 'Geist', fontWeight: 600, fontSize: px(72), lineHeight: 1.25 }}>{' ₽'}</Text>
+        <Text style={{ fontFamily: 'Geist', fontWeight: 600, fontSize: px(72), lineHeight: 1.25 }}>₽</Text>
       </View>
     </View>
   )
