@@ -34,6 +34,15 @@ This project uses **Tailwind CSS v4** through the `@tailwindcss/vite` plugin con
 
 `src/main.tsx` imports `src/index.css`, so global font wiring belongs in `src/index.css`. Keep CSS `@import` statements first, then add any `@font-face` rules and font-family defaults there.
 
+## Car photos
+
+The car photos shown on the price card live at fixed paths so they can be swapped without touching code:
+
+- `src/assets/umo5-car.jpg` — UMO 5
+- `src/assets/umo8-car.jpg` — UMO 8
+
+To update a photo, replace the file in place (keep the same filename). Keep each file **under 1.5 MB** — resize to roughly 2000-2400px on the long side and export as JPEG quality ~80. CI (`.github/workflows/ci.yml`) and the deploy workflow both fail the build if any image under `src/` or `public/` exceeds 1.5 MB, so an oversized photo will never reach production — it previously shipped as a 13 MB PNG and silently failed to load for users on slow connections.
+
 ## Code quality
 
 - Use double quotes for strings containing apostrophes (`"We're here to help"`), or escape them in single-quoted strings. An unescaped apostrophe in a single-quoted string breaks the build.
