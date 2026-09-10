@@ -41,7 +41,9 @@ The car photos shown on the price card live at fixed paths so they can be swappe
 - `src/assets/umo5-car.jpg` — UMO 5
 - `src/assets/umo8-car.jpg` — UMO 8
 
-To update a photo, replace the file in place (keep the same filename). Keep each file **under 1.5 MB** — resize to roughly 2000-2400px on the long side and export as JPEG quality ~80. CI (`.github/workflows/ci.yml`) and the deploy workflow both fail the build if any image under `src/` or `public/` exceeds 1.5 MB, so an oversized photo will never reach production — it previously shipped as a 13 MB PNG and silently failed to load for users on slow connections.
+The exported PDF is printed at A3, and the car photo is meant to hold up at 300dpi — don't shrink it down to "web size." Target **3840×2160 for UMO5** and **3520×1980 for UMO8** (native resolution the car image container needs at 300dpi on an A3 sheet). Export as JPEG quality ~90; that lands each file around 1.5-2 MB. To update a photo, replace the file in place (keep the same filename).
+
+CI (`.github/workflows/ci.yml`) and the deploy workflow both fail the build if any image under `src/` or `public/` exceeds 2.5 MB — high enough for a real 300dpi print asset, low enough to catch a mistake like the raw 13 MB PNG that used to ship here and silently failed to load for users on slow connections.
 
 ## Code quality
 

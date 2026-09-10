@@ -20,9 +20,9 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - name: Check for oversized images
         run: |
-          big=$(find src public -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \) -size +1536k)
+          big=$(find src public -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \) -size +2560k)
           if [ -n "$big" ]; then
-            echo "These images are over 1.5MB — compress before committing:"
+            echo "These images are over 2.5MB — compress before committing:"
             echo "$big"
             exit 1
           fi
