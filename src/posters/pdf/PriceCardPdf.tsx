@@ -1,6 +1,6 @@
 import { Document, Page, View, Text, Image, Svg, Path } from '@react-pdf/renderer'
-import svgUmo8 from '@/imports/Umo8MaxPriceCard/svg-nhd8qcz7hx'
-import svgUmo5 from '@/imports/Umo5ProPriceCard/svg-kxo5ttp2xy'
+import svgUmo8 from '@/icons/umo8-badge'
+import svgUmo5 from '@/icons/umo5-badge'
 import QrVector from './QrVector'
 import { cards, type Variant } from '../cardData'
 

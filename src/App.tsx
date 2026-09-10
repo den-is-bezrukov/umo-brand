@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { pdf } from '@react-pdf/renderer'
 import QRCode from 'qrcode'
-import svgPaths from '@/imports/App/svg-pzn2qwx547'
+import svgPaths from '@/icons/ui'
 import PriceCard from '@/posters/PriceCard'
 import PriceCardPdf from '@/posters/pdf/PriceCardPdf'
 import { ensurePdfFonts } from '@/posters/pdf/pdfFonts'

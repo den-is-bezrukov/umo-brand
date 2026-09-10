@@ -6,10 +6,10 @@
     "index": false
   },
   "icons": {
-    "icon": "/.figma/make/favicon.png"
+    "icon": "/favicon.png"
   },
   "openGraph": {
-    "image": "/.figma/make/social-image.png"
+    "image": "/social-image.png"
   },
   "accessibility": {
     "addBypassLinks": false,
