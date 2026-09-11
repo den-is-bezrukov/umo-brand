@@ -60,7 +60,7 @@ function SegBtn({ active, onClick, children }: { active: boolean; onClick: () =>
           : 'bg-[#303033] hover:bg-[#3e3e42]'
         }`}
     >
-      <span className={`font-['Geist',sans-serif] font-semibold text-[14px] leading-5 whitespace-nowrap ${active ? 'text-white' : 'text-[#969699]'}`}>
+      <span className={`font-['CoFo_Sans',sans-serif] font-medium text-[14px] leading-5 whitespace-nowrap ${active ? 'text-white' : 'text-[#969699]'}`}>
         {children}
       </span>
     </button>
@@ -70,7 +70,7 @@ function SegBtn({ active, onClick, children }: { active: boolean; onClick: () =>
 function FieldLabel({ children }: { children: React.ReactNode }) {
   return (
     <div className="py-2">
-      <p className="font-['Geist',sans-serif] font-normal text-[14px] leading-5 text-[#969699] whitespace-nowrap">{children}</p>
+      <p className="font-['CoFo_Sans',sans-serif] font-normal text-[14px] leading-5 text-[#969699] whitespace-nowrap">{children}</p>
     </div>
   )
 }
@@ -91,7 +91,7 @@ function DarkInput({ value, onChange, onBlur, placeholder, invalid, numeric }: {
         placeholder={placeholder}
         inputMode={numeric ? 'numeric' : undefined}
         pattern={numeric ? '[0-9 ]*' : undefined}
-        className="bg-transparent font-['Geist',sans-serif] font-normal text-[14px] leading-5 text-white w-full p-3 outline-none placeholder:text-[#969699]"
+        className="bg-transparent font-['CoFo_Sans',sans-serif] font-normal text-[14px] leading-5 text-white w-full p-3 outline-none placeholder:text-[#969699]"
       />
     </div>
   )
@@ -177,7 +177,7 @@ export default function App() {
         <div className="flex flex-col gap-3 p-6">
 
           {/* Title */}
-          <p className="font-['Geist',sans-serif] font-semibold text-[24px] leading-none text-white">Прайс-карта</p>
+          <p className="font-['CoFo_Sans',sans-serif] font-medium text-[24px] leading-none text-white">Прайс-карта</p>
 
           {/* Controls — 2-col grid on mobile (<sm), flex-wrap on wider */}
           <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 items-end">
@@ -264,7 +264,7 @@ export default function App() {
                     <path d="M7.5 9.375V1.875" stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.25" />
                   </svg>
                 )}
-                <span className="font-['Geist',sans-serif] font-medium text-[14px] leading-5 text-black whitespace-nowrap">
+                <span className="font-['CoFo_Sans',sans-serif] font-medium text-[14px] leading-5 text-black whitespace-nowrap">
                   {exporting ? 'Генерация…' : 'Скачать PDF'}
                 </span>
               </button>
