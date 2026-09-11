@@ -11,7 +11,7 @@ interface Props {
 
 function PriceRow({ value }: { value: string }) {
   return (
-    <div className="content-stretch flex gap-[18px] font-['Geist',sans-serif] font-semibold items-center leading-[0] relative shrink-0 text-[72px] w-full whitespace-nowrap">
+    <div className="content-stretch flex gap-[18px] font-['CoFo_Sans',sans-serif] font-medium items-center leading-[0] relative shrink-0 text-[72px] w-full whitespace-nowrap">
       <div className="flex flex-col justify-end relative shrink-0" style={{ fontFeatureSettings: '"lnum" 1, "tnum" 1' }}>
         <p className="leading-[1.25]">{value}</p>
       </div>
@@ -67,16 +67,16 @@ export default function PriceCard({ variant, fullPrice, creditPrice, qrSvg }: Pr
       </div>
 
       {/* Headline */}
-      <div className="[word-break:break-word] absolute leading-[0] left-[100px] not-italic text-[90px] text-black top-[280px] w-[1554px]" style={{ fontFamily: "'Geist Y', 'Geist', sans-serif" }}>
+      <div className="[word-break:break-word] absolute leading-[0] left-[100px] not-italic text-[96px] text-black top-[280px] w-[1554px]" style={{ fontFamily: "'Geist Y', 'CoFo Sans', sans-serif" }}>
         {data.model === 'umo8' ? (
           <>
-            <p className="font-['Geist',sans-serif] font-medium leading-[1.33] mb-0">Гибридный кроссовер</p>
+            <p className="font-['CoFo_Sans',sans-serif] font-medium leading-[1.25] mb-0">Гибридный кроссовер</p>
             <p>
-              <span className="font-['Geist',sans-serif] font-medium leading-[1.33]">с Алисо</span>
-              <span className="font-['Geist',sans-serif] font-medium leading-[1.33] tracking-[-1.6px]">й</span>
-              <span className="font-['Geist',sans-serif] font-medium leading-[1.33]">{' '}</span>
-              <span className="leading-[1.33] text-[#7a55ff]">☺</span>
-              <span className="font-['Geist',sans-serif] font-medium leading-[1.33]">
+              <span className="font-['CoFo_Sans',sans-serif] font-medium leading-[1.25]">с Алисо</span>
+              <span className="font-['CoFo_Sans',sans-serif] font-medium leading-[1.25] tracking-[-9.6px]">й</span>
+              <span className="font-['CoFo_Sans',sans-serif] font-medium leading-[1.25]">{' '}</span>
+              <span className="leading-[1.25] text-[#7a55ff]">☺</span>
+              <span className="font-['CoFo_Sans',sans-serif] font-medium leading-[1.25]">
                 {' и сервисами Яндекса.'}
                 <br aria-hidden />
                 {'Запас хода до 867 км, разгон до 100 км/ч за 6,7 секунды'}
@@ -85,19 +85,19 @@ export default function PriceCard({ variant, fullPrice, creditPrice, qrSvg }: Pr
           </>
         ) : (
           <p>
-            <span className="font-['Geist',sans-serif] font-medium leading-[1.33]">Технологичный электромобиль с Алисо</span>
-            <span className="font-['Geist',sans-serif] font-medium leading-[1.33] tracking-[-1.6px]">й</span>
-            <span className="font-['Geist',sans-serif] font-medium leading-[1.33]">{' '}</span>
-            <span className="leading-[1.33] text-[#7a55ff]">☺</span>
-            <span className="font-['Geist',sans-serif] font-medium leading-[1.33]">{' и сервисами Яндекса. Запас хода до 420 км, разгон до 100 км/ч за 8,7 секунды'}</span>
+            <span className="font-['CoFo_Sans',sans-serif] font-medium leading-[1.25]">Технологичный электромобиль с Алисо</span>
+            <span className="font-['CoFo_Sans',sans-serif] font-medium leading-[1.25] tracking-[-9.6px]">й</span>
+            <span className="font-['CoFo_Sans',sans-serif] font-medium leading-[1.25]">{' '}</span>
+            <span className="leading-[1.25] text-[#7a55ff]">☺</span>
+            <span className="font-['CoFo_Sans',sans-serif] font-medium leading-[1.25]">{' и сервисами Яндекса. Запас хода до 420 км, разгон до 100 км/ч за 8,7 секунды'}</span>
           </p>
         )}
       </div>
 
       {/* Description */}
-      <div className="[word-break:break-word] absolute content-stretch flex flex-col font-['Geist',sans-serif] font-medium gap-[30px] items-start left-[100px] text-black top-[835px] w-[1554px]">
-        <p className="leading-[1.25] opacity-60 relative shrink-0 text-[36px] w-full">{data.trimLabel}</p>
-        <p className="leading-[1.38] relative shrink-0 text-[54px] w-full">
+      <div className="[word-break:break-word] absolute content-stretch flex flex-col font-['CoFo_Sans',sans-serif] font-medium gap-[30px] items-start left-[100px] text-black top-[835px] w-[1554px]">
+        <p className="leading-[1.13] text-[#666] relative shrink-0 text-[40px] w-full">{data.trimLabel}</p>
+        <p className="leading-[1.25] relative shrink-0 text-[60px] w-full">
           {data.descriptionLines.map((line, i) => (
             <span key={i}>
               {i > 0 && <br aria-hidden />}
@@ -110,11 +110,11 @@ export default function PriceCard({ variant, fullPrice, creditPrice, qrSvg }: Pr
       {/* Prices */}
       <div className="[word-break:break-word] absolute content-stretch flex flex-col gap-[30px] items-start left-[100px] text-black top-[1505px]">
         <div className="content-stretch flex flex-col gap-[15px] items-start relative shrink-0">
-          <p className="font-['Geist',sans-serif] font-medium leading-[1.25] opacity-60 relative shrink-0 text-[36px] w-full">Без кредита:</p>
+          <p className="font-['CoFo_Sans',sans-serif] font-medium leading-[1.13] text-[#666] relative shrink-0 text-[40px] w-full">Без кредита:</p>
           <PriceRow value={fullPrice} />
         </div>
         <div className="content-stretch flex flex-col gap-[15px] items-start relative shrink-0">
-          <p className="font-['Geist',sans-serif] font-medium leading-[1.25] opacity-60 relative shrink-0 text-[36px] w-full">В кредит с субсидией:</p>
+          <p className="font-['CoFo_Sans',sans-serif] font-medium leading-[1.13] text-[#666] relative shrink-0 text-[40px] w-full">В кредит с субсидией:</p>
           <PriceRow value={creditPrice} />
         </div>
       </div>
@@ -131,7 +131,7 @@ export default function PriceCard({ variant, fullPrice, creditPrice, qrSvg }: Pr
       </div>
 
       {/* Disclaimer */}
-      <div className="-translate-y-full [word-break:break-word] absolute flex flex-col font-['Geist',sans-serif] font-normal justify-end leading-[0] left-[100px] text-[18px] text-white top-[2420px] whitespace-nowrap">
+      <div className="-translate-y-full [word-break:break-word] absolute flex flex-col font-['CoFo_Sans',sans-serif] font-normal justify-end leading-[0] left-[100px] text-[20px] text-white/60 top-[2420px] whitespace-nowrap">
         <p className="leading-[1.1]">* Подробности уточняйте у менеджеров отдела продаж новых автомобилей. Не является публичной офертой</p>
       </div>
 

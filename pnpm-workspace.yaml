@@ -1,3 +1,5 @@
 allowBuilds:
   core-js: true
   sharp: true
+patchedDependencies:
+  '@react-pdf/textkit@6.3.0': patches/@react-pdf__textkit@6.3.0.patch

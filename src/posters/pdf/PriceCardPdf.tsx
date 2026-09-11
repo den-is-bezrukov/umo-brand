@@ -13,12 +13,12 @@ interface Props { variant: Variant; fullPrice: string; creditPrice: string; qrUr
 function PriceBlock({ label, value }: { label: string; value: string }) {
   return (
     <View style={{ gap: px(15) }}>
-      <Text style={{ fontFamily: 'Geist', fontWeight: 500, fontSize: px(36), lineHeight: 1.25, opacity: 0.6 }}>
+      <Text style={{ fontFamily: 'CoFo Sans', fontWeight: 500, fontSize: px(40), lineHeight: 1.13, color: '#666' }}>
         {label}
       </Text>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: px(18) }}>
-        <Text style={{ fontFamily: 'Geist', fontWeight: 600, fontSize: px(72), lineHeight: 1.25 }}>{value}</Text>
-        <Text style={{ fontFamily: 'Geist', fontWeight: 600, fontSize: px(72), lineHeight: 1.25 }}>₽</Text>
+        <Text style={{ fontFamily: 'CoFo Sans', fontWeight: 500, fontSize: px(72), lineHeight: 1.25 }}>{value}</Text>
+        <Text style={{ fontFamily: 'CoFo Sans', fontWeight: 500, fontSize: px(72), lineHeight: 1.25 }}>₽</Text>
       </View>
     </View>
   )
@@ -76,12 +76,12 @@ export default function PriceCardPdf({ variant, fullPrice, creditPrice, qrUrl }:
 
         {/* Headline */}
         <View style={{ position: 'absolute', left: px(100), top: px(280), width: px(1554) }}>
-          <Text style={{ fontFamily: 'Geist', fontWeight: 500, fontSize: px(90), lineHeight: 1.33, color: 'black' }}>
+          <Text style={{ fontFamily: 'CoFo Sans', fontWeight: 500, fontSize: px(96), lineHeight: 1.25, color: 'black' }}>
             {data.model === 'umo8' ? (
               <>
                 <Text>{'Гибридный кроссовер\n'}</Text>
                 <Text>{'с Алисо'}</Text>
-                <Text style={{ letterSpacing: px(-1.6) }}>{'й'}</Text>
+                <Text style={{ letterSpacing: px(-9.6) }}>{'й'}</Text>
                 <Text>{' '}</Text>
                 <Text style={{ fontFamily: 'GeistY', color: '#7a55ff' }}>{'☺'}</Text>
                 <Text>{'\xa0и\xa0сервисами Яндекса.\nЗапас хода до 867 км, разгон\nдо 100 км/ч за 6,7 секунды'}</Text>
@@ -89,7 +89,7 @@ export default function PriceCardPdf({ variant, fullPrice, creditPrice, qrUrl }:
             ) : (
               <>
                 <Text>{'Технологичный электромобиль с Алисо'}</Text>
-                <Text style={{ letterSpacing: px(-1.6) }}>{'й'}</Text>
+                <Text style={{ letterSpacing: px(-9.6) }}>{'й'}</Text>
                 <Text>{' '}</Text>
                 <Text style={{ fontFamily: 'GeistY', color: '#7a55ff' }}>{'☺'}</Text>
                 <Text>{' и сервисами Яндекса. Запас хода до 420 км, разгон до 100 км/ч за 8,7 секунды'}</Text>
@@ -100,10 +100,10 @@ export default function PriceCardPdf({ variant, fullPrice, creditPrice, qrUrl }:
 
         {/* Description */}
         <View style={{ position: 'absolute', left: px(100), top: px(835), width: px(data.pdfDescWidth), gap: px(30) }}>
-          <Text style={{ fontFamily: 'Geist', fontWeight: 500, fontSize: px(36), lineHeight: 1.25, opacity: 0.6, color: 'black' }}>
+          <Text style={{ fontFamily: 'CoFo Sans', fontWeight: 500, fontSize: px(40), lineHeight: 1.13, color: '#666' }}>
             {data.trimLabel}
           </Text>
-          <Text style={{ fontFamily: 'Geist', fontWeight: 500, fontSize: px(54), lineHeight: 1.38, color: 'black' }}>
+          <Text style={{ fontFamily: 'CoFo Sans', fontWeight: 500, fontSize: px(60), lineHeight: 1.25, color: 'black' }}>
             {data.descriptionLines.join('\n')}
           </Text>
         </View>
@@ -122,7 +122,7 @@ export default function PriceCardPdf({ variant, fullPrice, creditPrice, qrUrl }:
         {/* Disclaimer */}
         <Text style={{
           position: 'absolute', left: px(100), bottom: px(60),
-          fontFamily: 'Geist', fontWeight: 400, fontSize: px(18), lineHeight: 1.1, color: 'white',
+          fontFamily: 'CoFo Sans', fontWeight: 400, fontSize: px(20), lineHeight: 1.1, color: 'rgba(255,255,255,0.6)',
         }}>
           {'* Подробности уточняйте у менеджеров отдела продаж новых автомобилей. Не является публичной офертой'}
         </Text>

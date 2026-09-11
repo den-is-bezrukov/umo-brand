@@ -11,11 +11,12 @@ export function ensurePdfFonts() {
   registered = true
 
   Font.register({
-    family: 'Geist',
+    family: 'CoFo Sans',
     fonts: [
-      { src: localFont('Geist-Regular.ttf'), fontWeight: 400 },
-      { src: localFont('Geist-Medium.ttf'), fontWeight: 500 },
-      { src: localFont('Geist-SemiBold.ttf'), fontWeight: 600 },
+      { src: localFont('CoFoSans-Regular.ttf'), fontWeight: 400 },
+      { src: localFont('CoFoSans-Medium.ttf'), fontWeight: 500 },
+      { src: localFont('CoFoSans-Bold.ttf'), fontWeight: 700 },
+      { src: localFont('CoFoSans-Black.ttf'), fontWeight: 900 },
     ],
   })
 

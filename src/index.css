@@ -17,6 +17,38 @@
   src: url('/fonts/Geist_Y-Medium.woff2') format('woff2');
 }
 
+@font-face {
+  font-family: 'CoFo Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/CoFoSans-Regular.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'CoFo Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/CoFoSans-Medium.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'CoFo Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/CoFoSans-Bold.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'CoFo Sans';
+  font-style: normal;
+  font-weight: 900;
+  font-display: swap;
+  src: url('/fonts/CoFoSans-Black.ttf') format('truetype');
+}
+
 @theme {
   --font-sans: 'Geist', sans-serif;
   --breakpoint-xs: 360px;
