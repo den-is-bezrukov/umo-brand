@@ -7,6 +7,8 @@ interface Props {
   fullPrice: string
   creditPrice: string
   qrSvg?: string
+  /** Replaces the print-resolution car photo, e.g. with a small preview on the brand guide page. */
+  image?: string
 }
 
 function PriceRow({ value }: { value: string }) {
@@ -22,8 +24,9 @@ function PriceRow({ value }: { value: string }) {
   )
 }
 
-export default function PriceCard({ variant, fullPrice, creditPrice, qrSvg }: Props) {
+export default function PriceCard({ variant, fullPrice, creditPrice, qrSvg, image }: Props) {
   const data = cards[variant]
+  const carImage = image ?? data.image
   const svg = data.model === 'umo8' ? svgUmo8 : svgUmo5
 
   return (
@@ -57,11 +60,11 @@ export default function PriceCard({ variant, fullPrice, creditPrice, qrSvg }: Pr
       <div className="-translate-x-1/2 absolute bottom-0 h-[560px] left-1/2 overflow-clip w-[1754px]">
         {data.model === 'umo8' ? (
           <div className="-translate-x-1/2 -translate-y-1/2 absolute h-[990px] left-1/2 top-1/2 w-[1760px]">
-            <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={data.image} />
+            <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={carImage} />
           </div>
         ) : (
           <div className="-translate-x-1/2 absolute bottom-[-95px] h-[1080px] left-1/2 w-[1920px]">
-            <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={data.image} />
+            <img alt="" className="absolute inset-0 max-w-none object-cover pointer-events-none size-full" src={carImage} />
           </div>
         )}
       </div>

@@ -21,7 +21,7 @@
   font-style: normal;
   font-weight: 400;
   font-display: swap;
-  src: url('/fonts/CoFoSans-Regular.ttf') format('truetype');
+  src: url('/fonts/CoFoSans-Regular.woff2') format('woff2'), url('/fonts/CoFoSans-Regular.ttf') format('truetype');
 }
 
 @font-face {
@@ -29,7 +29,7 @@
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url('/fonts/CoFoSans-Medium.ttf') format('truetype');
+  src: url('/fonts/CoFoSans-Medium.woff2') format('woff2'), url('/fonts/CoFoSans-Medium.ttf') format('truetype');
 }
 
 @font-face {
@@ -37,7 +37,7 @@
   font-style: normal;
   font-weight: 700;
   font-display: swap;
-  src: url('/fonts/CoFoSans-Bold.ttf') format('truetype');
+  src: url('/fonts/CoFoSans-Bold.woff2') format('woff2'), url('/fonts/CoFoSans-Bold.ttf') format('truetype');
 }
 
 @font-face {
@@ -45,7 +45,13 @@
   font-style: normal;
   font-weight: 900;
   font-display: swap;
-  src: url('/fonts/CoFoSans-Black.ttf') format('truetype');
+  src: url('/fonts/CoFoSans-Black.woff2') format('woff2'), url('/fonts/CoFoSans-Black.ttf') format('truetype');
+}
+
+/* Grayscale smoothing like contrastfoundry.com: on macOS/iOS the default draws CoFo Sans heavier and softer. */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 @theme {

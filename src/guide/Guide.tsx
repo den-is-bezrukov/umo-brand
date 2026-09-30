@@ -1,4 +1,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { Link } from 'react-router-dom'
+import PriceCard from '@/posters/PriceCard'
+import type { Variant } from '@/posters/cardData'
 import UmoLogo from './UmoLogo'
 import UmoYandexLockup from './UmoYandexLockup'
 import { useTypograf } from './typograf'
@@ -9,7 +12,7 @@ import { useTypograf } from './typograf'
 const images = import.meta.glob<string>('../assets/guide/*.{webp,svg}', { eager: true, import: 'default' })
 const img = (name: string) => images[`../assets/guide/${name}.svg`] ?? images[`../assets/guide/${name}.webp`]
 
-type NavItem = { id: string; title: string; children?: { id: string; title: string }[] }
+type NavItem = { id: string; title: string; children?: NavItem[] }
 
 const NAV: NavItem[] = [
   {
@@ -47,9 +50,17 @@ const NAV: NavItem[] = [
       { id: 'kv-umo8', title: 'UMO 8' },
     ],
   },
+  {
+    id: 'dealer',
+    title: 'Дилерский центр',
+    children: [{ id: 'print', title: 'Печатные материалы', children: [{ id: 'price-card', title: 'Прайс-карта' }] }],
+  },
 ]
 
-const ALL_IDS = NAV.flatMap(c => [c.id, ...(c.children ?? []).map(s => s.id)])
+const flatIds = (items: NavItem[]): string[] => items.flatMap(i => [i.id, ...flatIds(i.children ?? [])])
+const ALL_IDS = flatIds(NAV)
+/** Whether `id` is this item or anything nested under it. */
+const contains = (item: NavItem, id: string): boolean => item.id === id || !!item.children?.some(c => contains(c, id))
 
 /** Id of the lowest section heading that has scrolled past the upper third of the viewport. */
 function useActiveSection() {
@@ -111,7 +122,7 @@ function TocIcon({ expanded }: { expanded: boolean }) {
 function Nav({ active, expandAll, onToggle, onNavigate }: {
   active: string; expandAll: boolean; onToggle: () => void; onNavigate?: () => void
 }) {
-  const chapterOf = (id: string) => NAV.find(c => c.id === id || c.children?.some(s => s.id === id))?.id
+  const chapterOf = (id: string) => NAV.find(c => contains(c, id))?.id
   const activeChapter = chapterOf(active)
   return (
     <nav className="flex flex-col gap-4 text-[16px] tracking-[-0.01em]">
@@ -142,7 +153,17 @@ function Nav({ active, expandAll, onToggle, onNavigate }: {
                 <div className="min-h-0 overflow-hidden">
                   <div className="flex flex-col gap-3 pl-6 pt-2">
                     {chapter.children.map(s => (
-                      <NavLink key={s.id} id={s.id} title={s.title} active={active === s.id} onNavigate={onNavigate} />
+                      // Parent → its sub-items 8px (like chapter → items), siblings 12px.
+                      <div key={s.id} className="flex flex-col gap-2">
+                        <NavLink id={s.id} title={s.title} active={contains(s, active)} onNavigate={onNavigate} />
+                        {s.children && (
+                          <div className="flex flex-col gap-3 pl-6">
+                            {s.children.map(t => (
+                              <NavLink key={t.id} id={t.id} title={t.title} active={active === t.id} onNavigate={onNavigate} />
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>
@@ -183,6 +204,15 @@ function H1({ id, children }: { id?: string; children: ReactNode }) {
   )
 }
 
+/** Subsection title between H1 and H2 (40px in the Figma layout), e.g. Печатные материалы inside Дилерский центр. */
+function H1Small({ id, children }: { id?: string; children: ReactNode }) {
+  return (
+    <h2 id={id} className="scroll-mt-24 lg:scroll-mt-6 text-[28px] md:text-[40px] font-medium leading-none tracking-[-0.01em]">
+      {children}
+    </h2>
+  )
+}
+
 function H2({ id, children }: { id?: string; children: ReactNode }) {
   return (
     <h3 id={id} className="scroll-mt-24 lg:scroll-mt-6 text-[24px] md:text-[32px] font-medium leading-none tracking-[-0.01em]">
@@ -191,9 +221,10 @@ function H2({ id, children }: { id?: string; children: ReactNode }) {
   )
 }
 
-function Text({ narrow, children }: { narrow?: boolean; children: ReactNode }) {
+/** Body copy; widths follow the Figma grid: 6 columns (narrow), 8 (default) or 9 (wide) of 12. */
+function Text({ narrow, wide, children }: { narrow?: boolean; wide?: boolean; children: ReactNode }) {
   return (
-    <div className={`${narrow ? 'max-w-[432px]' : 'max-w-[600px]'} flex flex-col gap-3 text-[18px] md:text-[20px] leading-[1.25] tracking-[-0.01em]`}>
+    <div className={`${narrow ? 'max-w-[432px]' : wide ? 'max-w-[678px]' : 'max-w-[600px]'} flex flex-col gap-3 text-[18px] md:text-[20px] leading-[1.25] tracking-[-0.01em]`}>
       {children}
     </div>
   )
@@ -290,6 +321,33 @@ function Photo({ name }: { name: string }) {
 }
 
 const DOWNLOAD_BUTTON = 'flex min-w-16 items-center justify-center rounded-[4px] border border-[#e6e6e6] p-3 leading-none hover:border-black'
+
+const POSTER_W = 1754
+const POSTER_H = 2480
+
+/** A live PriceCard (the same component the constructor renders) scaled down to fit its column. */
+function PriceCardPreview({ variant, fullPrice, creditPrice, image, alt }: {
+  variant: Variant; fullPrice: string; creditPrice: string; image: string; alt: string
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+  const [scale, setScale] = useState(0)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const observer = new ResizeObserver(([entry]) => setScale(entry.contentRect.width / POSTER_W))
+    observer.observe(el)
+    return () => observer.disconnect()
+  }, [])
+  return (
+    <div ref={ref} role="img" aria-label={alt} className="relative overflow-hidden bg-white" style={{ aspectRatio: `${POSTER_W} / ${POSTER_H}` }}>
+      {scale > 0 && (
+        <div aria-hidden className="absolute left-0 top-0 origin-top-left" style={{ transform: `scale(${scale})` }}>
+          <PriceCard variant={variant} fullPrice={fullPrice} creditPrice={creditPrice} image={image} />
+        </div>
+      )}
+    </div>
+  )
+}
 
 /** Download row from public/downloads/: `<file>.svg` (black) and `<file>-png.zip` (black and white transparent PNGs). */
 function Downloads({ file, what }: { file: string; what: string }) {
@@ -732,6 +790,41 @@ export default function Guide() {
               <Fig name="umo8-kv" w={912} h={456} alt="Ключевой образ UMO 8" />
             </div>
           </Section>
+
+          {/* ── Дилерский центр ── */}
+          <Section chapter>
+            <Head>
+              <H1 id="dealer">Дилерский центр</H1>
+              <Text wide>
+                <p>Первое место, где UMO можно потрогать.</p>
+                <p>Пространство собрано из тех же модулей, что и весь бренд: спокойная геометрия, понятная навигация, ничего лишнего вокруг автомобиля. Единая система для любого города и любой площадки.</p>
+              </Text>
+            </Head>
+            <Fig name="dealer" w={912} h={456} alt="Дилерский центр UMO и Яндекса" />
+          </Section>
+
+          {/* Subsection of Дилерский центр: 40px heading, then its own sections */}
+          <div className="flex flex-col gap-12 md:gap-[72px]">
+            <H1Small id="print">Печатные материалы</H1Small>
+            <Section>
+              <Head>
+                <H2 id="price-card">Прайс-карта</H2>
+                <Text wide>
+                  <p>Прайс-карта стоит рядом с автомобилем и отвечает на главный вопрос — сколько он стоит.</p>
+                  <p>Карты для всех моделей и комплектаций собираются в конструкторе: выберите модель и комплектацию, укажите цену с кредитом и без и ссылку для QR-кода. Макет, шрифты и отступы уже настроены — получится готовый к печати PDF формата A3.</p>
+                </Text>
+                <div className="text-[16px] font-medium tracking-[-0.01em]">
+                  <Link to="/price-card" className={`inline-flex ${DOWNLOAD_BUTTON}`}>Открыть конструктор</Link>
+                </div>
+              </Head>
+              <div className="bg-[#f5f5f5] p-6 md:flex md:aspect-[2/1] md:items-center md:justify-center md:p-0">
+                <div className="grid grid-cols-2 gap-3 md:w-[58.46%] md:gap-x-[4.5%]">
+                  <PriceCardPreview variant="umo8-max" fullPrice="6 515 000" creditPrice="5 000 000" image={img('pricecard-umo8-car')} alt="Прайс-карта UMO 8, комплектация Макс" />
+                  <PriceCardPreview variant="umo5-max" fullPrice="3 715 000" creditPrice="2 790 000" image={img('pricecard-umo5-car')} alt="Прайс-карта UMO 5, комплектация Макс" />
+                </div>
+              </div>
+            </Section>
+          </div>
 
           <footer className="text-[16px] leading-[1.25] tracking-[-0.01em] text-[#999]">ООО «ЭМ РУС». 0+</footer>
         </div>
