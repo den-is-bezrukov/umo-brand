@@ -621,7 +621,7 @@ export default function Guide() {
                   <Text><p>Через умный транспорт трансформировать культуру повседневных поездок.</p></Text>
                 </Head>
               </div>
-              <Fig name="vision" w={912} h={456} />
+              <Fig name="umo5-kv" w={912} h={456} />
             </Section>
 
             <Section>

@@ -35,6 +35,7 @@ jobs:
             echo "$big"
             exit 1
           fi
+      - run: npx tsc --noEmit
       - run: pnpm build
       - uses: actions/upload-pages-artifact@v3
         with:

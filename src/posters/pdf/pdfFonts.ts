@@ -15,8 +15,6 @@ export function ensurePdfFonts() {
     fonts: [
       { src: localFont('CoFoSans-Regular.ttf'), fontWeight: 400 },
       { src: localFont('CoFoSans-Medium.ttf'), fontWeight: 500 },
-      { src: localFont('CoFoSans-Bold.ttf'), fontWeight: 700 },
-      { src: localFont('CoFoSans-Black.ttf'), fontWeight: 900 },
     ],
   })
 
