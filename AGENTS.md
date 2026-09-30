@@ -1,6 +1,6 @@
 # umo-brand
 
-React + Vite + Tailwind CSS app for generating UMO price-card posters (web preview + print-ready PDF export). Deployed to `umo.autos` via GitHub Pages on every push to `main` (`.github/workflows/deploy.yml`).
+React + Vite + Tailwind CSS site for UMO brand materials: the brand guide at `/` and the price-card poster generator at `/price-card` (web preview + print-ready PDF export). Deployed to `umo.autos` via GitHub Pages on every push to `main` (`.github/workflows/deploy.yml`).
 
 ## Development Server
 
@@ -16,8 +16,9 @@ This serves the app at `http://localhost:8443` (port set in `vite.config.ts`, no
 
 This is the canonical project structure. Start with task-relevant files below. Only follow imports or inspect other files when required, when a documented path is missing, or when the repository contradicts this guide.
 
-- `src/main.tsx` - React entrypoint; imports `src/index.css` and mounts `src/App.tsx` into the `#root` element
-- `src/App.tsx` - Primary application component and the usual starting point for UI work
+- `src/main.tsx` - React entrypoint and router: `/` → `src/guide/Guide.tsx`, `/price-card` → `src/App.tsx` (both lazy-loaded), anything else redirects to `/`
+- `src/App.tsx` - Price-card generator page
+- `src/guide/Guide.tsx` - Brand guide page (see "Brand guide" below)
 - `src/posters/` - Poster components: `PriceCard.tsx` (web preview) and `pdf/PriceCardPdf.tsx` (PDF export), sharing data from `cardData.ts`
 - `src/icons/` - SVG path data for the UMO logo/badges and small UI icons, imported directly by component name
 - `src/index.css` - Global CSS entrypoint and Tailwind CSS v4 import
@@ -38,6 +39,12 @@ This is the canonical project structure. Start with task-relevant files below. O
 This project uses **Tailwind CSS v4** through the `@tailwindcss/vite` plugin configured in `vite.config.ts`. `src/index.css` imports Tailwind with `@import 'tailwindcss';`. Use Tailwind utility classes directly in JSX and put global CSS or Tailwind v4 theme customization in `src/index.css`. This scaffold does not need a Tailwind config file or PostCSS config.
 
 `src/main.tsx` imports `src/index.css`, so global font wiring belongs in `src/index.css`. Keep CSS `@import` statements first, then add any `@font-face` rules and font-family defaults there.
+
+## Brand guide (`/`)
+
+`src/guide/Guide.tsx` is the web version of the UMO brand guide page from Figma ([UMO | Evrone, node 4810:686](https://www.figma.com/design/i6PdEDo72Vab0cAixG0nIz/UMO-%257C-Evrone?node-id=4810-686)). Text and layout are live code; every illustration is a Figma frame exported at 2x and saved as `src/assets/guide/<name>.webp` (cwebp `-q 90`), picked up automatically by `import.meta.glob`.
+
+To refresh an illustration, re-export that frame at 2x and overwrite the file with the same name. Export the whole section Block and crop the frame out of it: frames that stretch inside a grid/flex parent come out of Figma's direct export at the wrong size (a mostly empty canvas).
 
 ## Car photos
 

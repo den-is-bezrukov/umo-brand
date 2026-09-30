@@ -1,22 +1,25 @@
 import { Buffer } from 'buffer'
 if (!globalThis.Buffer) (globalThis as any).Buffer = Buffer
 
-import React from 'react'
+import React, { lazy, Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
-import App from './App'
 import './index.css'
+
+// Pages are split so the guide doesn't download the PDF renderer the price card needs.
+const App = lazy(() => import('./App'))
+const Guide = lazy(() => import('./guide/Guide'))
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
-      <Routes>
-        <Route path="/price-card" element={<App />} />
-        {/* Temporary: umo.autos has only one page today. Once there's more
-            than one, replace this with a real landing route. */}
-        <Route path="/" element={<Navigate to="/price-card" replace />} />
-        <Route path="*" element={null} />
-      </Routes>
+      <Suspense fallback={null}>
+        <Routes>
+          <Route path="/" element={<Guide />} />
+          <Route path="/price-card" element={<App />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Suspense>
     </BrowserRouter>
   </React.StrictMode>,
 )
