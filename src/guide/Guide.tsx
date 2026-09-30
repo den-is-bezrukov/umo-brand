@@ -85,7 +85,7 @@ function NavLink({ id, title, active, onNavigate }: { id: string; title: string;
     <a
       href={`#${id}`}
       onClick={onNavigate}
-      className={`relative block leading-[1.25] transition-opacity hover:opacity-60 ${active ? 'font-medium' : ''}`}
+      className={`relative block leading-[1.25] decoration-[0.25px] underline-offset-[0.25em] [text-decoration-skip-ink:none] hover:underline ${active ? 'font-medium' : ''}`}
     >
       {active && <span aria-hidden className="absolute -left-[0.9em]">•</span>}
       {title}
@@ -93,26 +93,77 @@ function NavLink({ id, title, active, onNavigate }: { id: string; title: string;
   )
 }
 
-function Nav({ active, onNavigate }: { active: string; onNavigate?: () => void }) {
+/**
+ * Expand-all toggle ("unfold more / unfold less"): collapsed, the chevrons point apart — the list will spread
+ * open; expanded, they point at each other — the list will fold back.
+ */
+function TocIcon({ expanded }: { expanded: boolean }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden className="block" fill="none" stroke="currentColor" strokeWidth="1.5">
+      <path d={expanded ? 'M4 2.5L8 6L12 2.5M4 13.5L8 10L12 13.5' : 'M4 6L8 2.5L12 6M4 10L8 13.5L12 10'} />
+    </svg>
+  )
+}
+
+function Nav({ active, expandAll, onToggle, onNavigate }: {
+  active: string; expandAll: boolean; onToggle: () => void; onNavigate?: () => void
+}) {
   const chapterOf = (id: string) => NAV.find(c => c.id === id || c.children?.some(s => s.id === id))?.id
   const activeChapter = chapterOf(active)
   return (
     <nav className="flex flex-col gap-4 text-[16px] tracking-[-0.01em]">
-      <p className="leading-[1.25]">Стандарты бренда 2026</p>
-      {NAV.map(chapter => (
-        <div key={chapter.id} className="flex flex-col gap-2">
-          <NavLink id={chapter.id} title={chapter.title} active={activeChapter === chapter.id} onNavigate={onNavigate} />
-          {chapter.children && (
-            <div className="flex flex-col gap-3 pl-6">
-              {chapter.children.map(s => (
-                <NavLink key={s.id} id={s.id} title={s.title} active={active === s.id} onNavigate={onNavigate} />
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
+      <div className="flex items-center gap-2">
+        <p className="leading-[1.25]">Стандарты бренда 2026</p>
+        <button
+          type="button"
+          onClick={onToggle}
+          aria-pressed={expandAll}
+          aria-label={expandAll ? 'Свернуть содержание' : 'Раскрыть всё содержание'}
+          title={expandAll ? 'Свернуть' : 'Раскрыть всё'}
+          className="-m-1 cursor-pointer p-1 transition-opacity hover:opacity-60"
+        >
+          <TocIcon expanded={expandAll} />
+        </button>
+      </div>
+      {NAV.map(chapter => {
+        // Like guides.area17.com: only the chapter you're reading is open, unless everything is expanded.
+        const open = expandAll || activeChapter === chapter.id
+        return (
+          <div key={chapter.id} className="flex flex-col">
+            <NavLink id={chapter.id} title={chapter.title} active={activeChapter === chapter.id} onNavigate={onNavigate} />
+            {chapter.children && (
+              <div
+                inert={!open}
+                className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
+              >
+                <div className="min-h-0 overflow-hidden">
+                  <div className="flex flex-col gap-3 pl-6 pt-2">
+                    {chapter.children.map(s => (
+                      <NavLink key={s.id} id={s.id} title={s.title} active={active === s.id} onNavigate={onNavigate} />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )
+      })}
     </nav>
   )
+}
+
+const EXPAND_KEY = 'umo-guide-toc-expanded'
+
+/** Remembers the expand-all choice per browser; storage may be unavailable, so every access is guarded. */
+function useExpandAll() {
+  const [expandAll, setExpandAll] = useState(() => {
+    try { return localStorage.getItem(EXPAND_KEY) === '1' } catch { return false }
+  })
+  const toggle = () => setExpandAll(v => {
+    try { localStorage.setItem(EXPAND_KEY, v ? '0' : '1') } catch { /* ignore */ }
+    return !v
+  })
+  return [expandAll, toggle] as const
 }
 
 function Logo() {
@@ -244,6 +295,7 @@ function Dictionary() {
 
 export default function Guide() {
   const active = useActiveSection()
+  const [expandAll, toggleExpandAll] = useExpandAll()
   const [menuOpen, setMenuOpen] = useState(false)
 
   useEffect(() => {
@@ -260,7 +312,7 @@ export default function Guide() {
       {/* Desktop sidebar */}
       <aside className="hidden lg:block sticky top-0 h-screen w-[320px] xl:w-[480px] shrink-0 overflow-y-auto">
         <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" aria-label="В начало"><Logo /></a></div>
-        <div className="px-6 pb-6"><Nav active={active} /></div>
+        <div className="px-6 pb-6"><Nav active={active} expandAll={expandAll} onToggle={toggleExpandAll} /></div>
       </aside>
 
       {/* Mobile top bar */}
@@ -278,7 +330,7 @@ export default function Guide() {
         </div>
         {menuOpen && (
           <div className="max-h-[calc(100dvh-56px)] overflow-y-auto border-t border-[#e6e6e6] px-4 py-6">
-            <Nav active={active} onNavigate={() => setMenuOpen(false)} />
+            <Nav active={active} expandAll={expandAll} onToggle={toggleExpandAll} onNavigate={() => setMenuOpen(false)} />
           </div>
         )}
       </header>
