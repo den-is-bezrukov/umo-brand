@@ -1,5 +1,5 @@
 diff --git a/lib/textkit.js b/lib/textkit.js
-index 0b8b6fa636c48ef0ac9cecb27040d2bac9303ce8..9bf9a822eea672e8fc2a80bf8d69af7a39a7fab4 100644
+index 0b8b6fa636c48ef0ac9cecb27040d2bac9303ce8..c4ce5ae450dc2637be1eebf9a0e3e34dac85c96e 100644
 --- a/lib/textkit.js
 +++ b/lib/textkit.js
 @@ -1131,6 +1131,86 @@ const scalePositions = (run, positions) => {
@@ -109,3 +109,99 @@ index 0b8b6fa636c48ef0ac9cecb27040d2bac9303ce8..9bf9a822eea672e8fc2a80bf8d69af7a
          };
          return result;
      };
+@@ -2620,10 +2701,36 @@ const breakLines = (attributedString, nodes, breaks) => {
+  * @param options - Layout options
+  * @returns ?
+  */
++/**
++ * Patch (umo-brand): runs are split where the script or font changes, and wrapWords
++ * splits words per run — so "коже\u00a0Nappa" (Cyrillic, no-break space, Latin) became
++ * two syllables, read below as a hyphenation point: the line broke inside the word and
++ * got a stray "-". Rejoin non-space syllables that were cut only by a run boundary.
++ */
++const joinSplitWords = (syllables, runs) => {
++    const boundaries = new Set(runs.map((run) => run.end));
++    const result = [];
++    let offset = 0;
++    for (const s of syllables) {
++        const prev = result[result.length - 1];
++        if (prev !== undefined &&
++            prev.trim() !== '' &&
++            s.trim() !== '' &&
++            !/ $/.test(prev) &&
++            boundaries.has(offset)) {
++            result[result.length - 1] = prev + s;
++        }
++        else {
++            result.push(s);
++        }
++        offset += s.length;
++    }
++    return result;
++};
+ const getNodes = (attributedString, { align }, options) => {
+     let start = 0;
+     const hyphenWidth = 5;
+-    const { syllables } = attributedString;
++    const syllables = joinSplitWords(attributedString.syllables, attributedString.runs || []);
+     const hyphenPenalty = options.hyphenationPenalty || (align === 'justify' ? 100 : 600);
+     const result = syllables.reduce((acc, s, index) => {
+         const width = advanceWidthBetween(start, start + s.length, attributedString);
+@@ -2665,6 +2772,37 @@ const getAttributes = (attributedString) => {
+  *
+  * @param options - Layout options
+  */
++/**
++ * Patch (umo-brand): first-fit line breaking — each line takes as many words as fit,
++ * the way Figma and browsers wrap. Knuth & Plass balances the whole paragraph and
++ * moves words down early, so print layouts drifted from the Figma ones.
++ */
++const greedyBreaks = (nodes, widths) => {
++    const breaks = [0];
++    let line = 0;
++    let width = 0;
++    let lastGlue = -1;
++    let widthAtGlue = 0;
++    for (let i = 0; i < nodes.length; i += 1) {
++        const node = nodes[i];
++        if (node.type === 'box') {
++            const available = widths[Math.min(line, widths.length - 1)];
++            if (width + node.width > available && lastGlue !== -1) {
++                breaks.push(lastGlue);
++                line += 1;
++                width -= widthAtGlue + nodes[lastGlue].width;
++                lastGlue = -1;
++            }
++            width += node.width;
++        }
++        else if (node.type === 'glue' && node.stretch !== linebreak.infinity) {
++            lastGlue = i;
++            widthAtGlue = width;
++            width += node.width;
++        }
++    }
++    return breaks;
++};
+ const linebreaker = (options) => {
+     /**
+      * @param attributedString - Attributed string
+@@ -2672,18 +2810,9 @@ const linebreaker = (options) => {
+      * @returns Attributed string
+      */
+     return (attributedString, availableWidths) => {
+-        let tolerance = options.tolerance || 4;
+         const attributes = getAttributes(attributedString);
+         const nodes = getNodes(attributedString, attributes, options);
+-        let breaks = linebreak(nodes, availableWidths, tolerance);
+-        // Try again with a higher tolerance if the line breaking failed.
+-        while (breaks.length === 0 && tolerance < TOLERANCE_LIMIT) {
+-            tolerance += TOLERANCE_STEPS;
+-            breaks = linebreak(nodes, availableWidths, tolerance);
+-        }
+-        if (breaks.length === 0 || (breaks.length === 1 && breaks[0] === 0)) {
+-            breaks = applyBestFit(nodes, availableWidths);
+-        }
++        const breaks = greedyBreaks(nodes, availableWidths);
+         return breakLines(attributedString, nodes, breaks.slice(1));
+     };
+ };

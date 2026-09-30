@@ -99,7 +99,7 @@ export default function PriceCardPdf({ variant, fullPrice, creditPrice, qrUrl }:
         </View>
 
         {/* Description */}
-        <View style={{ position: 'absolute', left: px(100), top: px(835), width: px(data.pdfDescWidth), gap: px(30) }}>
+        <View style={{ position: 'absolute', left: px(100), top: px(835), width: px(1554), gap: px(30) }}>
           <Text style={{ fontFamily: 'CoFo Sans', fontWeight: 500, fontSize: px(40), lineHeight: 1.13, color: '#666' }}>
             {data.trimLabel}
           </Text>
