@@ -1,7 +1,9 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import { Link } from 'react-router-dom'
 import { pdf } from '@react-pdf/renderer'
 import QRCode from 'qrcode'
 import svgPaths from '@/icons/ui'
+import UmoLogo from '@/guide/UmoLogo'
 import PriceCard from '@/posters/PriceCard'
 import PriceCardPdf from '@/posters/pdf/PriceCardPdf'
 import { ensurePdfFonts } from '@/posters/pdf/pdfFonts'
@@ -49,51 +51,49 @@ function formatPrice(val: string) {
   return digits === '' ? '' : String(num).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
 }
 
+// Light UI per the Figma layout (UMO | Evrone, node 4844:6864), matching the brand guide.
+
 function SegBtn({ active, onClick, children }: { active: boolean; onClick: () => void; children: React.ReactNode }) {
   return (
     <button
+      type="button"
       onClick={onClick}
-      className={`flex-1 min-w-0 flex items-center justify-center px-3 py-3 xs:px-5 xs:min-w-[90px] cursor-pointer transition-colors outline-none
-        focus-visible:ring-2 focus-visible:ring-white/40 focus-visible:ring-inset
-        ${active
-          ? 'bg-[#606066] hover:bg-[#72727a]'
-          : 'bg-[#303033] hover:bg-[#3e3e42]'
-        }`}
+      aria-pressed={active}
+      className={`flex-1 min-w-0 flex items-center justify-center rounded-[4px] border px-3 py-[9px] cursor-pointer outline-none
+        focus-visible:ring-2 focus-visible:ring-black/30
+        ${active ? 'border-black' : 'border-transparent hover:border-black/20'}`}
     >
-      <span className={`font-['CoFo_Sans',sans-serif] font-medium text-[14px] leading-5 whitespace-nowrap ${active ? 'text-white' : 'text-[#969699]'}`}>
-        {children}
-      </span>
+      <span className="font-medium text-[14px] leading-5 text-black whitespace-nowrap">{children}</span>
     </button>
   )
 }
 
-function FieldLabel({ children }: { children: React.ReactNode }) {
+function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="py-2">
-      <p className="font-['CoFo_Sans',sans-serif] font-normal text-[14px] leading-5 text-[#969699] whitespace-nowrap">{children}</p>
+    <div className="flex flex-col">
+      <p className="py-2 text-[14px] leading-5 text-[#999] whitespace-nowrap">{label}</p>
+      {children}
     </div>
   )
 }
 
-function DarkInput({ value, onChange, onBlur, placeholder, invalid, numeric }: { value: string; onChange: (v: string) => void; onBlur?: () => void; placeholder?: string; invalid?: boolean; numeric?: boolean }) {
-  const [focused, setFocused] = useState(false)
+function Segments({ children }: { children: React.ReactNode }) {
+  return <div className="flex rounded-[4px] bg-[#f5f5f5]">{children}</div>
+}
+
+function TextInput({ value, onChange, onBlur, placeholder, invalid, numeric, className = '' }: { value: string; onChange: (v: string) => void; onBlur?: () => void; placeholder?: string; invalid?: boolean; numeric?: boolean; className?: string }) {
   return (
-    <div className={`min-w-0 w-full xs:min-w-[180px] border-l-2 transition-colors ${
-      invalid   ? 'border-red-500 bg-[#2d1a1a]' :
-      focused   ? 'border-white/60 bg-[#3e3e42]' :
-                  'border-transparent bg-[#303033] hover:bg-[#3a3a3e]'
-    }`}>
-      <input
-        value={value}
-        onChange={e => onChange(e.target.value)}
-        onFocus={() => setFocused(true)}
-        onBlur={e => { setFocused(false); onBlur?.() }}
-        placeholder={placeholder}
-        inputMode={numeric ? 'numeric' : undefined}
-        pattern={numeric ? '[0-9 ]*' : undefined}
-        className="bg-transparent font-['CoFo_Sans',sans-serif] font-normal text-[14px] leading-5 text-white w-full p-3 outline-none placeholder:text-[#969699]"
-      />
-    </div>
+    <input
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      onBlur={() => onBlur?.()}
+      placeholder={placeholder}
+      aria-invalid={invalid || undefined}
+      inputMode={numeric ? 'numeric' : undefined}
+      pattern={numeric ? '[0-9 ]*' : undefined}
+      className={`h-10 w-full min-w-0 rounded-[4px] bg-[#f5f5f5] px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]
+        ${invalid ? 'ring-1 ring-inset ring-[#e30]' : 'focus:ring-1 focus:ring-inset focus:ring-black'} ${className}`}
+    />
   )
 }
 
@@ -110,7 +110,7 @@ export default function App() {
   const [urlBlurred, setUrlBlurred] = useState(false)
   const [qrSvg, setQrSvg] = useState<string | undefined>(undefined)
   const [exporting, setExporting] = useState(false)
-  const [scale, setScale] = useState(0.3)
+  const [scale, setScale] = useState(0)
 
   const urlValid = isValidUrl(url.trim())
 
@@ -127,11 +127,18 @@ export default function App() {
       .catch(() => setQrSvg(undefined))
   }, [url])
 
+  const previewRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
-    const compute = () => setScale(Math.min((window.innerWidth - 48) / POSTER_W, 0.48))
-    compute()
-    window.addEventListener('resize', compute)
-    return () => window.removeEventListener('resize', compute)
+    const el = previewRef.current
+    if (!el) return
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect
+      // Wide screens fit the card to the preview area's height; narrow ones (stacked layout) to its width.
+      const byWidth = width / POSTER_W
+      setScale(window.matchMedia('(min-width: 768px)').matches ? Math.min(byWidth, height / POSTER_H) : byWidth)
+    })
+    observer.observe(el)
+    return () => observer.disconnect()
   }, [])
 
   const switchModel = (m: Model) => {
@@ -165,63 +172,57 @@ export default function App() {
     }
   }
 
-  const trims8: { value: Trim; label: string }[] = [{ value: 'max', label: 'Макс' }, { value: 'ultra', label: 'Ультра' }]
-  const trims5: { value: Trim; label: string }[] = [{ value: 'pro', label: 'Про' }, { value: 'max', label: 'Макс' }]
+  const trims8: { value: Trim; label: string }[] = [{ value: 'max', label: 'MAX' }, { value: 'ultra', label: 'ULTRA' }]
+  const trims5: { value: Trim; label: string }[] = [{ value: 'pro', label: 'PRO' }, { value: 'max', label: 'MAX' }]
   const trimOptions = model === 'umo8' ? trims8 : trims5
 
+  const urlError = urlBlurred && url.trim() !== '' && !urlValid
+
   return (
-    <div className="bg-black min-h-screen flex flex-col">
+    <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
 
-      {/* ── Toolbar ── */}
-      <div className="bg-black sticky top-0 z-50 w-full">
-        <div className="flex flex-col gap-3 p-6">
+      {/* ── Sidebar ── */}
+      <aside className="flex shrink-0 flex-col md:h-full md:w-[240px] md:overflow-y-auto">
+        <div className="p-6">
+          <Link to="/" aria-label="Стандарты бренда"><UmoLogo title="UMO" className="w-[120px]" /></Link>
+        </div>
 
-          {/* Title */}
-          <p className="font-['CoFo_Sans',sans-serif] font-medium text-[24px] leading-none text-white">Прайс-карта</p>
+        <div className="flex flex-1 flex-col gap-4 px-6 tracking-[-0.01em]">
+          <Link to="/" className="text-[16px] leading-[1.25] hover:underline underline-offset-[0.25em] decoration-[0.25px]">← Стандарты бренда</Link>
+          <h1 className="text-[24px] font-medium leading-none">Прайс-карта</h1>
 
-          {/* Controls — 2-col grid on mobile (<sm), flex-wrap on wider */}
-          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-3 items-end">
-
-            {/* Model */}
-            <div className="flex flex-col justify-center">
-              <FieldLabel>Модель</FieldLabel>
-              <div className="flex">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-2 md:grid-cols-1 tracking-normal">
+            <Field label="Модель">
+              <Segments>
                 <SegBtn active={model === 'umo8'} onClick={() => switchModel('umo8')}>UMO 8</SegBtn>
                 <SegBtn active={model === 'umo5'} onClick={() => switchModel('umo5')}>UMO 5</SegBtn>
-              </div>
-            </div>
+              </Segments>
+            </Field>
 
-            {/* Trim */}
-            <div className="flex flex-col justify-center">
-              <FieldLabel>Комплектация</FieldLabel>
-              <div className="flex">
+            <Field label="Комплектация">
+              <Segments>
                 {trimOptions.map(t => (
                   <SegBtn key={t.value} active={trim === t.value} onClick={() => switchTrim(t.value)}>{t.label}</SegBtn>
                 ))}
-              </div>
-            </div>
+              </Segments>
+            </Field>
 
-            {/* Full price */}
-            <div className="flex flex-col justify-center">
-              <FieldLabel>Без кредита, ₽:</FieldLabel>
-              <DarkInput numeric value={fullPrice} invalid={fullLessThanCredit} onChange={v => setFullPrice(formatPrice(v))} />
-            </div>
+            <Field label="Полная цена, ₽:">
+              <TextInput numeric value={fullPrice} invalid={fullLessThanCredit} onChange={v => setFullPrice(formatPrice(v))} />
+            </Field>
 
-            {/* Credit price */}
-            <div className="flex flex-col justify-center">
-              <FieldLabel>В кредит, ₽:</FieldLabel>
-              <DarkInput numeric value={creditPrice} invalid={creditTooLow || fullLessThanCredit} onChange={v => setCreditPrice(formatPrice(v))} />
-            </div>
+            <Field label="В кредит, ₽:">
+              <TextInput numeric value={creditPrice} invalid={creditTooLow || fullLessThanCredit} onChange={v => setCreditPrice(formatPrice(v))} />
+            </Field>
 
-            {/* QR URL — full width on mobile */}
-            <div className="col-span-2 sm:col-auto flex flex-col justify-center">
-              <FieldLabel>Ссылка QR:</FieldLabel>
-              <div className="flex items-center w-full xs:min-w-[272px]">
-                <div className="flex-1 min-w-0 -mr-[34px]">
-                  <DarkInput
+            <div className="col-span-2 md:col-span-1">
+              <Field label="Ссылка QR:">
+                <div className="relative">
+                  <TextInput
+                    className="pr-9"
                     value={url}
                     onChange={v => { setUrl(v); setUrlBlurred(false) }}
-                    invalid={urlBlurred && url.trim() !== '' && !urlValid}
+                    invalid={urlError}
                     onBlur={() => {
                       setUrlBlurred(true)
                       const v = url.trim()
@@ -229,59 +230,55 @@ export default function App() {
                     }}
                     placeholder="https://..."
                   />
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex w-9 items-center justify-center">
+                    {urlValid ? (
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-label="Ссылка в порядке">
+                        <path d={svgPaths.p3de7e600} stroke="#00C950" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.45833" />
+                      </svg>
+                    ) : urlError ? (
+                      <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-label="Проверьте ссылку">
+                        <circle cx="7" cy="7" r="6" stroke="#e30" strokeWidth="1.4" />
+                        <line x1="7" y1="4" x2="7" y2="7.5" stroke="#e30" strokeWidth="1.4" strokeLinecap="round" />
+                        <circle cx="7" cy="9.5" r="0.7" fill="#e30" />
+                      </svg>
+                    ) : null}
+                  </div>
                 </div>
-                <div className="shrink-0 size-[34px] relative z-10 flex items-center justify-center">
-                  {urlValid ? (
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <path d={svgPaths.p3de7e600} stroke="#00C950" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.45833" />
-                    </svg>
-                  ) : urlBlurred && url.trim() !== '' ? (
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <circle cx="7" cy="7" r="6" stroke="#ef4444" strokeWidth="1.4" />
-                      <line x1="7" y1="4" x2="7" y2="7.5" stroke="#ef4444" strokeWidth="1.4" strokeLinecap="round" />
-                      <circle cx="7" cy="9.5" r="0.7" fill="#ef4444" />
-                    </svg>
-                  ) : null}
-                </div>
-              </div>
+              </Field>
             </div>
-
-            {/* Download button — full width on mobile */}
-            <div className="col-span-2 sm:col-auto flex flex-col justify-end pt-3">
-              <button
-                onClick={handleExport}
-                disabled={exporting || !urlValid || !pricesValid}
-                className="w-full sm:w-auto bg-white flex items-center justify-center gap-2 px-5 py-3 cursor-pointer transition-colors outline-none focus-visible:ring-2 focus-visible:ring-white/60 disabled:opacity-40 disabled:cursor-not-allowed hover:enabled:bg-[#e0e0e0] active:enabled:bg-[#cacaca]"
-              >
-                {exporting ? (
-                  <svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2">
-                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-                  </svg>
-                ) : (
-                  <svg width="15" height="15" viewBox="0 0 15 15" fill="none">
-                    <path d={svgPaths.p3c0592d0} stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.25" />
-                    <path d={svgPaths.p581d980}  stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.25" />
-                    <path d="M7.5 9.375V1.875" stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.25" />
-                  </svg>
-                )}
-                <span className="font-['CoFo_Sans',sans-serif] font-medium text-[14px] leading-5 text-black whitespace-nowrap">
-                  {exporting ? 'Генерация…' : 'Скачать PDF'}
-                </span>
-              </button>
-            </div>
-
           </div>
         </div>
-      </div>
+
+        {/* Download — pinned to the bottom of the sidebar (and of the screen on phones) */}
+        <div className="sticky bottom-0 z-10 bg-white p-6">
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={exporting || !urlValid || !pricesValid}
+            className="flex w-full items-center justify-center gap-2 rounded-[4px] bg-black p-3 text-[16px] font-medium leading-none tracking-[-0.01em] text-white cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 hover:enabled:bg-[#333]"
+          >
+            {exporting && (
+              <svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" aria-hidden>
+                <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+              </svg>
+            )}
+            {exporting ? 'Генерация…' : 'Скачать PDF'}
+          </button>
+        </div>
+      </aside>
 
       {/* ── Poster preview ── */}
-      <div className="flex-1 flex justify-center p-6">
-        <div style={{ width: POSTER_W * scale, height: POSTER_H * scale, position: 'relative', flexShrink: 0 }}>
-          <div style={{ transformOrigin: 'top left', transform: `scale(${scale})`, position: 'absolute', top: 0, left: 0 }}>
-            <ActivePoster model={model} trim={trim} fullPrice={fullPrice} creditPrice={creditPrice} qrSvg={qrSvg} />
-          </div>
+      <main className="flex flex-1 items-center justify-center bg-[#f5f5f5] p-6 md:min-w-0 md:p-16">
+        <div ref={previewRef} className="flex size-full items-center justify-center">
+          {scale > 0 && (
+            <div className="bg-white" style={{ width: POSTER_W * scale, height: POSTER_H * scale, position: 'relative', flexShrink: 0 }}>
+              <div style={{ transformOrigin: 'top left', transform: `scale(${scale})`, position: 'absolute', top: 0, left: 0 }}>
+                <ActivePoster model={model} trim={trim} fullPrice={fullPrice} creditPrice={creditPrice} qrSvg={qrSvg} />
+              </div>
+            </div>
+          )}
         </div>
-      </div>
+      </main>
 
     </div>
   )

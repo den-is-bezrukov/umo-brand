@@ -196,9 +196,10 @@ function Logo() {
 
 // ─── Typography ──────────────────────────────────────────────────────────────
 
-function H1({ id, children }: { id?: string; children: ReactNode }) {
+/** Chapter title; 8 of 12 columns wide by default, `full` spans the whole grid (one line in the Figma layout). */
+function H1({ id, full, children }: { id?: string; full?: boolean; children: ReactNode }) {
   return (
-    <h2 id={id} className="scroll-mt-24 lg:scroll-mt-6 max-w-[600px] text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em]">
+    <h2 id={id} className={`scroll-mt-24 lg:scroll-mt-6 ${full ? '' : 'max-w-[600px]'} text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em]`}>
       {children}
     </h2>
   )
@@ -742,7 +743,7 @@ export default function Guide() {
 
           {/* ── Сделано в Москве ── */}
           <Section chapter>
-            <H1 id="made-in-moscow">Марка «Сделано в Москве»</H1>
+            <H1 id="made-in-moscow" full>Марка «Сделано в Москве»</H1>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <Fig name="moscow-umo5" w={444} h={368} alt="Шильдик «Сделано в Москве» на UMO 5" />
               <Fig name="moscow-umo8" w={444} h={368} alt="Шильдик «Сделано в Москве» на UMO 8" />
