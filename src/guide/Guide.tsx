@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { isValidElement, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import PriceCard from '@/posters/PriceCard'
 import type { Variant } from '@/posters/cardData'
@@ -63,22 +63,26 @@ const ALL_IDS = flatIds(NAV)
 /** Whether `id` is this item or anything nested under it. */
 const contains = (item: NavItem, id: string): boolean => item.id === id || !!item.children?.some(c => contains(c, id))
 
-/** Id of the lowest section heading that has scrolled past the upper third of the viewport. */
+/**
+ * Ids of the lowest section heading that has scrolled past the upper third of the viewport — several when headings
+ * stand side by side on one line (Видение / Миссия), so every one you can see next to it is lit.
+ */
 function useActiveSection() {
-  const [active, setActive] = useState<string>('')
+  const [active, setActive] = useState<string[]>([])
   useEffect(() => {
     let frame = 0
     const update = () => {
       frame = 0
       const line = window.innerHeight / 3
-      let current = ''
+      let current: string[] = []
       let currentTop = -Infinity
       for (const id of ALL_IDS) {
         const top = document.getElementById(id)?.getBoundingClientRect().top
-        // Strict ">" so that side-by-side headings (Видение / Миссия) resolve to the first one.
-        if (top !== undefined && top <= line && top > currentTop) { current = id; currentTop = top }
+        if (top === undefined || top > line) continue
+        if (Math.abs(top - currentTop) < 1) current.push(id)
+        else if (top > currentTop) { current = [id]; currentTop = top }
       }
-      setActive(current)
+      setActive(prev => (prev.join() === current.join() ? prev : current))
     }
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }
     update()
@@ -121,10 +125,9 @@ function TocIcon({ expanded }: { expanded: boolean }) {
 }
 
 function Nav({ active, expandAll, onToggle, onNavigate }: {
-  active: string; expandAll: boolean; onToggle: () => void; onNavigate?: () => void
+  active: string[]; expandAll: boolean; onToggle: () => void; onNavigate?: () => void
 }) {
-  const chapterOf = (id: string) => NAV.find(c => contains(c, id))?.id
-  const activeChapter = chapterOf(active)
+  const activeChapter = NAV.find(c => active.some(id => contains(c, id)))?.id
   return (
     <nav className="flex flex-col gap-4 text-[16px] tracking-[-0.01em]">
       <div className="flex items-center gap-2">
@@ -156,11 +159,11 @@ function Nav({ active, expandAll, onToggle, onNavigate }: {
                     {chapter.children.map(s => (
                       // Parent → its sub-items 8px (like chapter → items), siblings 12px.
                       <div key={s.id} className="flex flex-col gap-2">
-                        <NavLink id={s.id} title={s.title} active={contains(s, active)} onNavigate={onNavigate} />
+                        <NavLink id={s.id} title={s.title} active={active.some(id => contains(s, id))} onNavigate={onNavigate} />
                         {s.children && (
                           <div className="flex flex-col gap-3 pl-6">
                             {s.children.map(t => (
-                              <NavLink key={t.id} id={t.id} title={t.title} active={active === t.id} onNavigate={onNavigate} />
+                              <NavLink key={t.id} id={t.id} title={t.title} active={active.includes(t.id)} onNavigate={onNavigate} />
                             ))}
                           </div>
                         )}
@@ -197,19 +200,71 @@ function Logo() {
 
 // ─── Typography ──────────────────────────────────────────────────────────────
 
-/** Chapter title; 8 of 12 columns wide by default, `full` spans the whole grid (one line in the Figma layout). */
-function H1({ id, full, children }: { id?: string; full?: boolean; children: ReactNode }) {
+/** Scroll distance over which a chapter title shrinks into its sticky bar, equal to the bar height. */
+const TITLE_BAR = 72
+
+/**
+ * Chapter: optional lead picture, the title, then the chapter's sections. On wide screens the title sticks to the
+ * top for the whole chapter and leaves with the bottom edge of the chapter's last block. Over the last TITLE_BAR px
+ * before it sticks it shrinks from 48 to 32px and settles 20px into a white 72px bar spanning the content column —
+ * scroll-linked via `--p` (0 in the text, 1 stuck), with a transform so nothing below moves. The title is 8 of 12
+ * columns wide, `full` lets it span the whole grid. The anchor `id` sits on an empty marker at the title's place in
+ * the text, so links and the active-chapter tracking see where the chapter really starts.
+ * `loose` puts section spacing between title and content, for chapters whose title isn't followed by body copy.
+ */
+function Chapter({ id, title, full, lead, loose, children }: {
+  id: string; title: ReactNode; full?: boolean; lead?: ReactNode; loose?: boolean; children: ReactNode
+}) {
+  const ref = useRef<HTMLHeadingElement>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    let frame = 0
+    let last = -1
+    const update = () => {
+      frame = 0
+      const p = Math.min(1, Math.max(0, 1 - el.getBoundingClientRect().top / TITLE_BAR))
+      if (p === last) return
+      el.style.setProperty('--p', String((last = p)))
+    }
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      cancelAnimationFrame(frame)
+    }
+  }, [])
+  // lg: the title box is the full 72px bar (24px taken back from the space below it, so the layout doesn't move).
+  // A sticky element is pushed out when its box meets the end of its parent, so the bar's bottom edge then leaves
+  // together with the bottom edge of the chapter's last block.
   return (
-    <h2 id={id} className={`scroll-mt-24 lg:scroll-mt-6 ${full ? '' : 'max-w-[600px]'} text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em]`}>
-      {children}
-    </h2>
+    <div className="pt-12 md:pt-[72px]">
+      {lead && <div className="mb-8 md:mb-12">{lead}</div>}
+      <div id={id} className="scroll-mt-24 lg:scroll-mt-0" />
+      <h2
+        ref={ref}
+        className="relative z-10 lg:sticky lg:top-0 lg:h-[72px] lg:before:absolute lg:before:-inset-x-6 lg:before:inset-y-0 lg:before:-z-10 lg:before:bg-white lg:before:content-['']"
+      >
+        {/* A link to the chapter's start, so a click on the stuck title jumps back to the beginning of the chapter. */}
+        <a
+          href={`#${id}`}
+          className={`block origin-top-left ${full ? '' : 'max-w-[600px]'} text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em] lg:[transform:translateY(calc(var(--p,0)*20px))_scale(calc(1-var(--p,0)/3))]`}
+        >
+          {title}
+        </a>
+      </h2>
+      <div className={`${loose ? 'mt-8 md:mt-12 lg:mt-6' : 'mt-6 lg:mt-0'} flex flex-col gap-24 md:gap-36`}>{children}</div>
+    </div>
   )
 }
 
 /** Subsection title between H1 and H2 (40px in the Figma layout), e.g. Печатные материалы inside Дилерский центр. */
 function H1Small({ id, children }: { id?: string; children: ReactNode }) {
   return (
-    <h2 id={id} className="scroll-mt-24 lg:scroll-mt-6 text-[28px] md:text-[40px] font-medium leading-none tracking-[-0.01em]">
+    <h2 id={id} className="scroll-mt-24 text-[28px] md:text-[40px] font-medium leading-none tracking-[-0.01em]">
       {children}
     </h2>
   )
@@ -217,16 +272,31 @@ function H1Small({ id, children }: { id?: string; children: ReactNode }) {
 
 function H2({ id, children }: { id?: string; children: ReactNode }) {
   return (
-    <h3 id={id} className="scroll-mt-24 lg:scroll-mt-6 text-[24px] md:text-[32px] font-medium leading-none tracking-[-0.01em]">
+    <h3 id={id} className="scroll-mt-24 text-[24px] md:text-[32px] font-medium leading-none tracking-[-0.01em]">
       {children}
     </h3>
   )
 }
 
-/** Body copy; widths follow the Figma grid: 6 columns (narrow), 8 (default) or 9 (wide) of 12. */
-function Text({ narrow, wide, children }: { narrow?: boolean; wide?: boolean; children: ReactNode }) {
+/** Characters of text in a React tree. */
+function textLength(node: ReactNode): number {
+  if (typeof node === 'string' || typeof node === 'number') return String(node).length
+  if (Array.isArray(node)) return node.reduce((n: number, c: ReactNode) => n + textLength(c), 0)
+  if (isValidElement<{ children?: ReactNode }>(node)) return textLength(node.props.children)
+  return 0
+}
+
+/**
+ * Body copy. Its width on the 12-column Figma grid follows from how much text there is: up to 150 characters
+ * (a line or two) 6 columns, up to 300 — 8, longer — 9, so short notes don't stretch thin and long copy doesn't
+ * stand as a tall column. Texts paired side by side (Кобрендинг, Ключевой образ) fill their grid cells instead —
+ * their grid sets `*:max-w-none`.
+ */
+function Text({ children }: { children: ReactNode }) {
+  const n = textLength(children)
+  const width = n <= 150 ? 'max-w-[432px]' : n <= 300 ? 'max-w-[600px]' : 'max-w-[678px]'
   return (
-    <div className={`${narrow ? 'max-w-[432px]' : wide ? 'max-w-[678px]' : 'max-w-[600px]'} flex flex-col gap-3 text-[18px] md:text-[20px] leading-[1.25] tracking-[-0.01em]`}>
+    <div className={`${width} flex flex-col gap-3 text-[18px] md:text-[20px] leading-[1.25] tracking-[-0.01em]`}>
       {children}
     </div>
   )
@@ -398,9 +468,9 @@ function Assets({ items }: { items: Asset[] }) {
   )
 }
 
-/** A heading + text group. Sections are separated by 144px, chapters get an extra 72px on top. */
-function Section({ chapter, children }: { chapter?: boolean; children: ReactNode }) {
-  return <section className={`flex flex-col gap-8 md:gap-12 ${chapter ? 'pt-12 md:pt-[72px]' : ''}`}>{children}</section>
+/** A heading + text group. Sections are separated by 144px; a Chapter adds 72px on top of its first one. */
+function Section({ children }: { children: ReactNode }) {
+  return <section className="flex flex-col gap-8 md:gap-12">{children}</section>
 }
 
 function Head({ children }: { children: ReactNode }) {
@@ -498,9 +568,10 @@ export default function Guide() {
         <div className="px-6 pb-6"><Nav active={active} expandAll={expandAll} onToggle={toggleExpandAll} /></div>
       </aside>
 
-      {/* Mobile top bar */}
-      <header className="lg:hidden sticky top-0 z-20 bg-white">
-        <div className="flex items-center justify-between px-4 py-4">
+      {/* Mobile top bar. iOS 26 browsers draw the page under their translucent top bar and stick `top: 0` below it,
+          so the white is extended a screen upwards to hide content scrolling above the header. */}
+      <header className="lg:hidden sticky top-0 z-20 bg-white before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-screen before:bg-white before:content-['']">
+        <div className="flex items-center justify-between px-4 py-4 md:px-6">
           <a href="#top" aria-label="В начало"><Logo /></a>
           <button
             type="button"
@@ -512,7 +583,7 @@ export default function Guide() {
           </button>
         </div>
         {menuOpen && (
-          <div className="max-h-[calc(100dvh-56px)] overflow-y-auto border-t border-[#e6e6e6] px-4 py-6">
+          <div className="max-h-[calc(100dvh-56px)] overflow-y-auto border-t border-[#e6e6e6] px-4 py-6 md:px-6">
             <Nav active={active} expandAll={expandAll} onToggle={toggleExpandAll} onNavigate={() => setMenuOpen(false)} />
           </div>
         )}
@@ -529,341 +600,336 @@ export default function Guide() {
           </section>
 
           {/* ── Позиционирование ── */}
-          <Section chapter>
-            <Fig name="positioning" w={912} h={456} alt="" />
-            <Head>
-              <H1 id="positioning">Позиционирование</H1>
+          <Chapter id="positioning" title="Позиционирование" lead={<Fig name="positioning" w={912} h={456} alt="" />}>
+            <Section>
               <Text>
                 <p>UMO — это и есть ты. Больше, чем машина, это гаджет для человека.</p>
                 <p>Для мамы с детьми это безопасное пространство в городе. Для айтишника — утилитарный и технологичный транспорт. Для водителя такси — рабочий инструмент.</p>
                 <p>Для отца, который раз в месяц уезжает на рыбалку за сотню километров — машина с бардачком под блёсны и возможностью зарядить аккумулятор от обычной розетки на даче.</p>
                 <p>UMO не диктует сценарий, а подстраивается под тот, что есть сейчас.</p>
               </Text>
-            </Head>
-          </Section>
+            </Section>
 
-          <Section>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-10">
+            <Section>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-10">
+                <Head>
+                  <H2 id="vision">Видение</H2>
+                  <Text><p>Сделать электромобильность новой, доступной и естественной нормой жизни для миллионов людей уже сегодня.</p></Text>
+                </Head>
+                <Head>
+                  <H2 id="mission">Миссия</H2>
+                  <Text><p>Через умный транспорт трансформировать культуру повседневных поездок.</p></Text>
+                </Head>
+              </div>
+              <Fig name="vision" w={912} h={456} />
+            </Section>
+
+            <Section>
               <Head>
-                <H2 id="vision">Видение</H2>
-                <Text narrow><p>Сделать электромобильность новой, доступной и естественной нормой жизни для миллионов людей уже сегодня.</p></Text>
+                <H2 id="audience">Аудитория</H2>
+                <Text><p>Современные люди, лояльные к технологиям — им важны персонализация и комфорт, а не статус ради статуса.</p></Text>
               </Head>
+              <Fig name="audience" w={912} h={456} />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
+                <Head>
+                  <p className="text-[24px] font-medium leading-none tracking-[-0.01em]">UMO 5</p>
+                  <Text><p>Молодые городские — те, кто живёт в ритме и выбирает машину под свою мобильность здесь и сейчас.</p></Text>
+                </Head>
+                <Head>
+                  <p className="text-[24px] font-medium leading-none tracking-[-0.01em]">UMO 8</p>
+                  <Text><p>Семейный и представительский сегмент — те, для кого машина должна одинаково подходить и для путешествия с детьми, и для деловой поездки.</p></Text>
+                </Head>
+              </div>
+            </Section>
+
+            <Section>
               <Head>
-                <H2 id="mission">Миссия</H2>
-                <Text narrow><p>Через умный транспорт трансформировать культуру повседневных поездок.</p></Text>
+                <H2 id="voice">Голос</H2>
+                <Text>
+                  <p>Голос UMO — вдумчивый, искренний, партнёрский. Обращаемся на «вы». Говорим на языке людей, без пафоса и сложных метафор — наш язык живой и человечный.</p>
+                  <p>Выстраиваем диалог с пользователем в каждой точке контакта. Там где позволяет формат, вместо констатации сухих технических терминов раскрываем их на примерах.</p>
+                  <p>Рекламные клише категории и агрессивные восклицания не используем.</p>
+                </Text>
               </Head>
-            </div>
-            <Fig name="vision" w={912} h={456} />
-          </Section>
+              <Fig name="voice" w={912} h={456} />
+            </Section>
 
-          <Section>
-            <Head>
-              <H2 id="audience">Аудитория</H2>
-              <Text narrow><p>Современные люди, лояльные к технологиям — им важны персонализация и комфорт, а не статус ради статуса.</p></Text>
-            </Head>
-            <Fig name="audience" w={912} h={456} />
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
+            <Section>
+              <H2 id="dictionary">Словарь</H2>
+              <Dictionary />
+            </Section>
+
+            <Section>
               <Head>
-                <p className="text-[24px] font-medium leading-none tracking-[-0.01em]">UMO 5</p>
-                <Text narrow><p>Молодые городские — те, кто живёт в ритме и выбирает машину под свою мобильность здесь и сейчас.</p></Text>
+                <H2 id="examples">Примеры коммуникации</H2>
+                <Text><p>Лучше один раз увидеть: UMO говорит по-человечески и уважительно на вы.</p></Text>
               </Head>
-              <Head>
-                <p className="text-[24px] font-medium leading-none tracking-[-0.01em]">UMO 8</p>
-                <Text narrow><p>Семейный и представительский сегмент — те, для кого машина должна одинаково подходить и для путешествия с детьми, и для деловой поездки.</p></Text>
-              </Head>
-            </div>
-          </Section>
-
-          <Section>
-            <Head>
-              <H2 id="voice">Голос</H2>
-              <Text>
-                <p>Голос UMO — вдумчивый, искренний, партнёрский. Обращаемся на «вы». Говорим на языке людей, без пафоса и сложных метафор — наш язык живой и человечный.</p>
-                <p>Выстраиваем диалог с пользователем в каждой точке контакта. Там где позволяет формат, вместо констатации сухих технических терминов раскрываем их на примерах.</p>
-                <p>Рекламные клише категории и агрессивные восклицания не используем.</p>
-              </Text>
-            </Head>
-            <Fig name="voice" w={912} h={456} />
-          </Section>
-
-          <Section>
-            <H2 id="dictionary">Словарь</H2>
-            <Dictionary />
-          </Section>
-
-          <Section>
-            <Head>
-              <H2 id="examples">Примеры коммуникации</H2>
-              <Text narrow><p>Лучше один раз увидеть: UMO говорит по-человечески и уважительно на вы.</p></Text>
-            </Head>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 text-[18px] md:text-[20px] leading-[1.25] tracking-[-0.01em]">
-              {EXAMPLES.map(([title, text]) => (
-                <div key={title} className="flex flex-col gap-3 border-t border-[#e6e6e6] py-6">
-                  <p className="font-medium">{title}</p>
-                  <p>{text}</p>
-                </div>
-              ))}
-            </div>
-          </Section>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 text-[18px] md:text-[20px] leading-[1.25] tracking-[-0.01em]">
+                {EXAMPLES.map(([title, text]) => (
+                  <div key={title} className="flex flex-col gap-3 border-t border-[#e6e6e6] py-6">
+                    <p className="font-medium">{title}</p>
+                    <p>{text}</p>
+                  </div>
+                ))}
+              </div>
+            </Section>
+          </Chapter>
 
           {/* ── Логотип ── */}
-          <Section chapter>
-            <Head>
-              <H1 id="logo">Логотип</H1>
+          <Chapter id="logo" title="Логотип">
+            <Section>
               <Text>
                 <p>Логотип UMO не буквы, а модули.</p>
                 <p>Словесный знак собран из элементов, как из конструктора — чистая геометрия и инженерия. Это визуальный эквивалент главной идеи бренда — город как система, а автомобиль как её умный, технологичный элемент.</p>
               </Text>
-            </Head>
-            <div className="flex flex-col gap-6">
-              <LogoPlate w={912} h={456} logo={480} bg="#f5f5f5" />
-              <Assets items={[{ file: 'umo-logo.svg' }, { file: 'umo-logo-png.zip' }]} />
-            </div>
-          </Section>
-
-          <Section>
-            <Head>
-              <H2 id="placement">Размещение на продукте</H2>
-              <Text>
-                <p>Логотип остаётся собой в любом масштабе и материале.</p>
-                <p>В экстерьере это метка бренда и деталь, которая читается на ходу. В салоне — присутствие в ежедневной рутине.</p>
-                <p>Единый модуль для любого контекста.</p>
-              </Text>
-            </Head>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <Fig name="placement-exterior" w={912} h={456} className="md:col-span-2" alt="Логотип на передней части UMO 8" />
-              <Fig name="placement-interior" w={444} h={333} alt="Логотип на руле" />
-              <Fig name="placement-badge" w={444} h={333} alt="Шильдик UMO на кузове" />
-            </div>
-          </Section>
-
-          <Section>
-            <Head>
-              <H2 id="clearspace">Свободное пространство и размер</H2>
-              <Text>
-                <p>Минимальный размер свободного пространства равен одной базовой единице: высоте логотипа (U). В пределах свободного пространства нельзя размещать другие элементы.</p>
-                <p>Чтобы сохранить узнаваемость и четкость не уменьшайте размеры логотипа ниже рекомендуемых.</p>
-              </Text>
-            </Head>
-            <div className="flex flex-col gap-6">
-              <Fig name="clearspace" w={912} h={456} alt="Схема охранного поля логотипа: U со всех сторон" />
-              <Fig name="minsize" w={912} h={304} alt="Минимальный размер: аналоговый ≥20 мм, цифровой ≥40 px" />
-            </div>
-          </Section>
-
-          <Section>
-            <Head>
-              <H2 id="logo-color">Цвет логотипа</H2>
-              <Text narrow><p>Цвет логотипа подбирается по контрасту, яркости и тону фона: белый или черный.</p></Text>
-            </Head>
-            <div className="flex flex-col gap-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <LogoPlate w={444} h={333} logo={240} bg="#000" dark caption="Белый для тёмного фона" />
-                <LogoPlate w={444} h={333} logo={240} bg="#f5f5f5" caption="Чёрный для светлого фона" />
+              <div className="flex flex-col gap-6">
+                <LogoPlate w={912} h={456} logo={480} bg="#f5f5f5" />
+                <Assets items={[{ file: 'umo-logo.svg' }, { file: 'umo-logo-png.zip' }]} />
               </div>
-              <figure className="flex flex-col gap-3">
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  <Photo name="color-photo" />
-                  <LogoPlate w={210} h={280} logo={120} bg="#fc3f1d" dark />
-                  <LogoPlate w={210} h={280} logo={120} bg="#ffea00" />
-                  <Photo name="color-light" />
+            </Section>
+
+            <Section>
+              <Head>
+                <H2 id="placement">Размещение на продукте</H2>
+                <Text>
+                  <p>Логотип остаётся собой в любом масштабе и материале.</p>
+                  <p>В экстерьере это метка бренда и деталь, которая читается на ходу. В салоне — присутствие в ежедневной рутине.</p>
+                  <p>Единый модуль для любого контекста.</p>
+                </Text>
+              </Head>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Fig name="placement-exterior" w={912} h={456} className="md:col-span-2" alt="Логотип на передней части UMO 8" />
+                <Fig name="placement-interior" w={444} h={333} alt="Логотип на руле" />
+                <Fig name="placement-badge" w={444} h={333} alt="Шильдик UMO на кузове" />
+              </div>
+            </Section>
+
+            <Section>
+              <Head>
+                <H2 id="clearspace">Свободное пространство и размер</H2>
+                <Text>
+                  <p>Минимальный размер свободного пространства равен одной базовой единице: высоте логотипа (U). В пределах свободного пространства нельзя размещать другие элементы.</p>
+                  <p>Чтобы сохранить узнаваемость и четкость не уменьшайте размеры логотипа ниже рекомендуемых.</p>
+                </Text>
+              </Head>
+              <div className="flex flex-col gap-6">
+                <Fig name="clearspace" w={912} h={456} alt="Схема охранного поля логотипа: U со всех сторон" />
+                <Fig name="minsize" w={912} h={304} alt="Минимальный размер: аналоговый ≥20 мм, цифровой ≥40 px" />
+              </div>
+            </Section>
+
+            <Section>
+              <Head>
+                <H2 id="logo-color">Цвет логотипа</H2>
+                <Text><p>Цвет логотипа подбирается по контрасту, яркости и тону фона: белый или черный.</p></Text>
+              </Head>
+              <div className="flex flex-col gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <LogoPlate w={444} h={333} logo={240} bg="#000" dark caption="Белый для тёмного фона" />
+                  <LogoPlate w={444} h={333} logo={240} bg="#f5f5f5" caption="Чёрный для светлого фона" />
                 </div>
-                <Caption>Примеры подбора цвета</Caption>
-              </figure>
-            </div>
-          </Section>
-
-          <Section>
-            <Head>
-              <H2 id="misuse">Ограничения</H2>
-              <Text><p>Необходимо сохранять оригинальные пропорции и дизайн логотипа, чтобы избежать потери узнаваемости и искажений восприятия.</p></Text>
-            </Head>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-6">
-              {MISUSE.map(([name, text]) => (
-                <Fig key={name} name={name} w={288} h={216} caption={text} cross alt={text} />
-              ))}
-            </div>
-          </Section>
-
-          <Section>
-            <Head>
-              <H2 id="icons">Логотип на иконках</H2>
-              <Text>
-                <p>Размещая логотип на мелких форматах рекомендуется учитывать минимальные размеры и свободное пространство.</p>
-                <p>Иконка сайта — исключение.</p>
-              </Text>
-            </Head>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <Fig name="icon-app" w={444} h={333} caption="Иконка мобильного приложения" />
-              <Fig name="icon-userpic" w={444} h={333} caption="Юзерпик аккаунта соцсетей" />
-              <Fig name="icon-favicon" w={444} h={333} caption="Фавиконка и иконка закладок в браузере" />
-              <Fig name="icon-post" w={444} h={333} caption="Пост в соцсети" />
-            </div>
-          </Section>
-
-          <Section>
-            <Head>
-              <H2 id="cobranding">Кобрендинг</H2>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
-                <Text narrow>
-                  <p>Для совместного брендинга с логотипом UMO используйте квадратный или горизонтальный логотип (словесный знак) другой компании.</p>
-                  <p>Следите за размерами логотипов, их расположением и правилами свободного пространства.</p>
-                </Text>
-                <Text narrow>
-                  <p>Высота разделительной линии между логотипами равна высоте логотипа UMO, ширина 1/30 высоты.</p>
-                  <p>Любой кобрендинг требует одобрения от команды бренда и юридической команды.</p>
-                </Text>
+                <figure className="flex flex-col gap-3">
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                    <Photo name="color-photo" />
+                    <LogoPlate w={210} h={280} logo={120} bg="#fc3f1d" dark />
+                    <LogoPlate w={210} h={280} logo={120} bg="#ffea00" />
+                    <Photo name="color-light" />
+                  </div>
+                  <Caption>Примеры подбора цвета</Caption>
+                </figure>
               </div>
-            </Head>
-            <div className="flex flex-col gap-6">
-              <Fig name="cobrand-square" w={912} h={304} alt="Схема кобрендинга с квадратным логотипом" />
-              <Fig name="cobrand-square-example" w={912} h={304} alt="UMO и Яндекс" />
-              <Assets items={[{ file: 'umo-yandex.svg' }, { file: 'umo-yandex-png.zip' }]} />
-            </div>
-            <div className="flex flex-col gap-6">
-              <Fig name="cobrand-horizontal" w={912} h={304} alt="Схема кобрендинга с горизонтальным логотипом" />
-              <Fig name="cobrand-horizontal-example" w={912} h={304} alt="UMO и EVM" />
-            </div>
-          </Section>
+            </Section>
+
+            <Section>
+              <Head>
+                <H2 id="misuse">Ограничения</H2>
+                <Text><p>Необходимо сохранять оригинальные пропорции и дизайн логотипа, чтобы избежать потери узнаваемости и искажений восприятия.</p></Text>
+              </Head>
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-6">
+                {MISUSE.map(([name, text]) => (
+                  <Fig key={name} name={name} w={288} h={216} caption={text} cross alt={text} />
+                ))}
+              </div>
+            </Section>
+
+            <Section>
+              <Head>
+                <H2 id="icons">Логотип на иконках</H2>
+                <Text>
+                  <p>Размещая логотип на мелких форматах рекомендуется учитывать минимальные размеры и свободное пространство.</p>
+                  <p>Иконка сайта — исключение.</p>
+                </Text>
+              </Head>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <Fig name="icon-app" w={444} h={333} caption="Иконка мобильного приложения" />
+                <Fig name="icon-userpic" w={444} h={333} caption="Юзерпик аккаунта соцсетей" />
+                <Fig name="icon-favicon" w={444} h={333} caption="Фавиконка и иконка закладок в браузере" />
+                <Fig name="icon-post" w={444} h={333} caption="Пост в соцсети" />
+              </div>
+            </Section>
+
+            <Section>
+              <Head>
+                <H2 id="cobranding">Кобрендинг</H2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
+                  <Text>
+                    <p>Для совместного брендинга с логотипом UMO используйте квадратный или горизонтальный логотип (словесный знак) другой компании.</p>
+                    <p>Следите за размерами логотипов, их расположением и правилами свободного пространства.</p>
+                  </Text>
+                  <Text>
+                    <p>Высота разделительной линии между логотипами равна высоте логотипа UMO, ширина 1/30 высоты.</p>
+                    <p>Любой кобрендинг требует одобрения от команды бренда и юридической команды.</p>
+                  </Text>
+                </div>
+              </Head>
+              <div className="flex flex-col gap-6">
+                <Fig name="cobrand-square" w={912} h={304} alt="Схема кобрендинга с квадратным логотипом" />
+                <Fig name="cobrand-square-example" w={912} h={304} alt="UMO и Яндекс" />
+                <Assets items={[{ file: 'umo-yandex.svg' }, { file: 'umo-yandex-png.zip' }]} />
+              </div>
+              <div className="flex flex-col gap-6">
+                <Fig name="cobrand-horizontal" w={912} h={304} alt="Схема кобрендинга с горизонтальным логотипом" />
+                <Fig name="cobrand-horizontal-example" w={912} h={304} alt="UMO и EVM" />
+              </div>
+            </Section>
+          </Chapter>
 
           {/* ── Типографика ── */}
-          <Section chapter>
-            <Head>
-              <H1 id="typography">Типографика</H1>
+          <Chapter id="typography" title="Типографика">
+            <Section>
               <Text>
                 <p>Гарнитура CoFo Sans — основа визуальной идентификации и стиля бренда UMO. Функциональный и разборчивый, он имеет несколько весов для полной свободы выражения.</p>
                 <p>Когда использование CoFo Sans невозможно, допускается применение альтернатив, доступных в популярных рабочих пространствах.</p>
               </Text>
-            </Head>
-            <div className="flex flex-col gap-6">
-              <figure className="flex flex-col gap-3">
-                <div className="flex aspect-[2/1] items-center justify-center bg-[#f5f5f5]">
-                  <p className="text-[48px] sm:text-[72px] md:text-[96px] font-medium leading-none tracking-[-0.01em]">CoFo Sans</p>
+              <div className="flex flex-col gap-6">
+                <figure className="flex flex-col gap-3">
+                  <div className="flex aspect-[2/1] items-center justify-center bg-[#f5f5f5]">
+                    <p className="text-[48px] sm:text-[72px] md:text-[96px] font-medium leading-none tracking-[-0.01em]">CoFo Sans</p>
+                  </div>
+                  <Caption>Базовая гарнитура</Caption>
+                </figure>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  <Fig name="font-geist" w={288} h={216} caption="Альтернатива для Google" alt="Geist" />
+                  <Fig name="font-helvetica" w={288} h={216} caption="Альтернатива для MacOS" alt="Helvetica Neue" />
+                  <Fig name="font-arial" w={288} h={216} caption="Альтернатива для Windows" alt="Arial" />
                 </div>
-                <Caption>Базовая гарнитура</Caption>
-              </figure>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <Fig name="font-geist" w={288} h={216} caption="Альтернатива для Google" alt="Geist" />
-                <Fig name="font-helvetica" w={288} h={216} caption="Альтернатива для MacOS" alt="Helvetica Neue" />
-                <Fig name="font-arial" w={288} h={216} caption="Альтернатива для Windows" alt="Arial" />
               </div>
-            </div>
-          </Section>
+            </Section>
 
-          <Section>
-            <Head>
-              <H2 id="type-styles">Стили и иерархия</H2>
-              <Text>
-                <p>CoFo Sans подходит для оформления любых маркетинговых материалов в цифровой и аналоговой среде.</p>
-                <p>Среди доступных весов гарнитуры, рекомендуется использовать пару:</p>
-                <ul className="list-disc pl-[30px] flex flex-col gap-2">
-                  <li>CoFo Sans Medium для заголовков и акциденции</li>
-                  <li>CoFo Sans Regular для набора основного массива текста</li>
-                </ul>
-              </Text>
-            </Head>
-            <Fig name="type-styles" w={912} h={456} alt="Заголовок 3 rem, подзаголовок 1.5 rem, основной текст 1 rem" />
-          </Section>
+            <Section>
+              <Head>
+                <H2 id="type-styles">Стили и иерархия</H2>
+                <Text>
+                  <p>CoFo Sans подходит для оформления любых маркетинговых материалов в цифровой и аналоговой среде.</p>
+                  <p>Среди доступных весов гарнитуры, рекомендуется использовать пару:</p>
+                  <ul className="list-disc pl-[30px] flex flex-col gap-2">
+                    <li>CoFo Sans Medium для заголовков и акциденции</li>
+                    <li>CoFo Sans Regular для набора основного массива текста</li>
+                  </ul>
+                </Text>
+              </Head>
+              <Fig name="type-styles" w={912} h={456} alt="Заголовок 3 rem, подзаголовок 1.5 rem, основной текст 1 rem" />
+            </Section>
+          </Chapter>
 
           {/* ── Леттеринг ── */}
-          <Section chapter>
-            <H1 id="lettering">Леттеринг моделей</H1>
-            <div className="flex flex-col gap-6">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <Fig name="lettering-vector" w={444} h={333} alt="Леттеринг MODEL 8 и MODEL 5" />
-                <Fig name="lettering-umo8" w={444} h={333} alt="Леттеринг на корме UMO 8" />
-                <Fig name="lettering-umo5" w={444} h={333} alt="Леттеринг на кузове UMO 5" />
-                <Fig name="lettering-plates" w={444} h={333} alt="Шильдики MODEL 8 и MODEL 5" />
+          <Chapter id="lettering" title="Леттеринг моделей" loose>
+            <Section>
+              <div className="flex flex-col gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <Fig name="lettering-vector" w={444} h={333} alt="Леттеринг MODEL 8 и MODEL 5" />
+                  <Fig name="lettering-umo8" w={444} h={333} alt="Леттеринг на корме UMO 8" />
+                  <Fig name="lettering-umo5" w={444} h={333} alt="Леттеринг на кузове UMO 5" />
+                  <Fig name="lettering-plates" w={444} h={333} alt="Шильдики MODEL 8 и MODEL 5" />
+                </div>
+                <Assets items={[{ file: 'umo-model-5.svg' }, { file: 'umo-model-5-png.zip' }, { file: 'umo-model-8.svg' }, { file: 'umo-model-8-png.zip' }]} />
               </div>
-              <Assets items={[{ file: 'umo-model-5.svg' }, { file: 'umo-model-5-png.zip' }, { file: 'umo-model-8.svg' }, { file: 'umo-model-8-png.zip' }]} />
-            </div>
-          </Section>
+            </Section>
+          </Chapter>
 
           {/* ── Сделано в Москве ── */}
-          <Section chapter>
-            <H1 id="made-in-moscow" full>Марка «Сделано в Москве»</H1>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <Fig name="moscow-umo5" w={444} h={368} alt="Шильдик «Сделано в Москве» на UMO 5" />
-              <Fig name="moscow-umo8" w={444} h={368} alt="Шильдик «Сделано в Москве» на UMO 8" />
-            </div>
-          </Section>
+          <Chapter id="made-in-moscow" title="Марка «Сделано в Москве»" full loose>
+            <Section>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <Fig name="moscow-umo5" w={444} h={368} alt="Шильдик «Сделано в Москве» на UMO 5" />
+                <Fig name="moscow-umo8" w={444} h={368} alt="Шильдик «Сделано в Москве» на UMO 8" />
+              </div>
+            </Section>
+          </Chapter>
 
           {/* ── Ключевой образ ── */}
-          <Section chapter>
-            <Fig name="keyvisual" w={912} h={456} />
-            <Head>
-              <H1 id="key-visual">Ключевой образ</H1>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3">
+          <Chapter id="key-visual" title="Ключевой образ" lead={<Fig name="keyvisual" w={912} h={456} />}>
+            <Section>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
                 <Text><p>Без излишней постановочности и драмы. Изображение захватывает взгляд, потому что все, что видит зритель, происходит здесь и сейчас.</p></Text>
                 <Text><p>Автомобили становятся частью мира аудитории, но показаны в выгодном ракурсе, который подчеркивает преимущества или рассказывает историю за счет окружения.</p></Text>
               </div>
-            </Head>
-          </Section>
+            </Section>
 
-          <Section>
-            <Head>
-              <H2 id="kv-umo5">UMO 5</H2>
-              <Text narrow><p>Ключевой образ и рекламные материалы для UMO Model 5</p></Text>
-            </Head>
-            <div className="flex flex-col gap-6">
-              <Fig name="umo5-kv" w={912} h={456} alt="Ключевой образ UMO 5" />
-              <div className="grid grid-cols-1 sm:grid-cols-[600fr_288fr] gap-6">
-                <Poster bg="umo5-banner-bg" w={600} h={368} title="Новый UMO 5" subtitle={UMO5_SUBTITLE} alt="Горизонтальный баннер UMO 5" />
-                <Poster bg="umo5-square-bg" w={288} h={368} title="Новый UMO 5" subtitle={UMO5_SUBTITLE} center alt="Вертикальный баннер UMO 5" />
-              </div>
-            </div>
-          </Section>
-
-          <Section>
-            <Head>
-              <H2 id="kv-umo8">UMO 8</H2>
-              <Text narrow><p>Ключевой образ и рекламные материалы для UMO Model 8</p></Text>
-            </Head>
-            <div className="flex flex-col gap-6">
-              <div className="grid grid-cols-1 sm:grid-cols-[288fr_600fr] gap-6">
-                <div className="order-2 sm:order-none">
-                  <Poster bg="umo8-square-bg" w={288} h={368} title="Новый UMO 8" subtitle={UMO8_SUBTITLE} center alt="Вертикальный баннер UMO 8" />
+            <Section>
+              <Head>
+                <H2 id="kv-umo5">UMO 5</H2>
+                <Text><p>Ключевой образ и рекламные материалы для UMO Model 5</p></Text>
+              </Head>
+              <div className="flex flex-col gap-6">
+                <Fig name="umo5-kv" w={912} h={456} alt="Ключевой образ UMO 5" />
+                <div className="grid grid-cols-1 sm:grid-cols-[600fr_288fr] gap-6">
+                  <Poster bg="umo5-banner-bg" w={600} h={368} title="Новый UMO 5" subtitle={UMO5_SUBTITLE} alt="Горизонтальный баннер UMO 5" />
+                  <Poster bg="umo5-square-bg" w={288} h={368} title="Новый UMO 5" subtitle={UMO5_SUBTITLE} center alt="Вертикальный баннер UMO 5" />
                 </div>
-                <Poster bg="umo8-banner-bg" w={600} h={368} title="Новый UMO 8" subtitle={UMO8_SUBTITLE} alt="Горизонтальный баннер UMO 8" />
               </div>
-              <Fig name="umo8-kv" w={912} h={456} alt="Ключевой образ UMO 8" />
-            </div>
-          </Section>
+            </Section>
+
+            <Section>
+              <Head>
+                <H2 id="kv-umo8">UMO 8</H2>
+                <Text><p>Ключевой образ и рекламные материалы для UMO Model 8</p></Text>
+              </Head>
+              <div className="flex flex-col gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-[288fr_600fr] gap-6">
+                  <div className="order-2 sm:order-none">
+                    <Poster bg="umo8-square-bg" w={288} h={368} title="Новый UMO 8" subtitle={UMO8_SUBTITLE} center alt="Вертикальный баннер UMO 8" />
+                  </div>
+                  <Poster bg="umo8-banner-bg" w={600} h={368} title="Новый UMO 8" subtitle={UMO8_SUBTITLE} alt="Горизонтальный баннер UMO 8" />
+                </div>
+                <Fig name="umo8-kv" w={912} h={456} alt="Ключевой образ UMO 8" />
+              </div>
+            </Section>
+          </Chapter>
 
           {/* ── Дилерский центр ── */}
-          <Section chapter>
-            <Head>
-              <H1 id="dealer">Дилерский центр</H1>
-              <Text wide>
+          <Chapter id="dealer" title="Дилерский центр">
+            <Section>
+              <Text>
                 <p>Первое место, где UMO можно потрогать.</p>
                 <p>Пространство собрано из тех же модулей, что и весь бренд: спокойная геометрия, понятная навигация, ничего лишнего вокруг автомобиля. Единая система для любого города и любой площадки.</p>
               </Text>
-            </Head>
-            <Fig name="dealer" w={912} h={456} alt="Дилерский центр UMO и Яндекса" />
-          </Section>
-
-          {/* Subsection of Дилерский центр: 40px heading, then its own sections */}
-          <div className="flex flex-col gap-12 md:gap-[72px]">
-            <H1Small id="print">Печатные материалы</H1Small>
-            <Section>
-              <Head>
-                <H2 id="price-card">Прайс-карта</H2>
-                <Text wide>
-                  <p>Прайс-карта стоит рядом с автомобилем и отвечает на главный вопрос — сколько он стоит.</p>
-                  <p>Карты для всех моделей и комплектаций собираются в конструкторе: выберите модель и комплектацию, укажите цену с кредитом и без и ссылку для QR-кода. Макет, шрифты и отступы уже настроены — получится готовый к печати PDF формата A3.</p>
-                </Text>
-              </Head>
-              <div className="flex flex-col gap-6">
-                <div className="bg-[#f5f5f5] p-6 md:flex md:aspect-[2/1] md:items-center md:justify-center md:p-0">
-                  <div className="grid grid-cols-2 gap-3 md:w-[58.46%] md:gap-x-[4.5%]">
-                    <PriceCardPreview variant="umo8-max" fullPrice="6 515 000" creditPrice="5 000 000" image={img('pricecard-umo8-car')} alt="Прайс-карта UMO 8, комплектация Макс" />
-                    <PriceCardPreview variant="umo5-max" fullPrice="3 715 000" creditPrice="2 790 000" image={img('pricecard-umo5-car')} alt="Прайс-карта UMO 5, комплектация Макс" />
-                  </div>
-                </div>
-                <Assets items={[{ to: '/price-card', title: 'Редактор прайс-карты' }]} />
-              </div>
+              <Fig name="dealer" w={912} h={456} alt="Дилерский центр UMO и Яндекса" />
             </Section>
-          </div>
+
+            {/* Subsection of Дилерский центр: 40px heading, then its own sections */}
+            <div className="flex flex-col gap-12 md:gap-[72px]">
+              <H1Small id="print">Печатные материалы</H1Small>
+              <Section>
+                <Head>
+                  <H2 id="price-card">Прайс-карта</H2>
+                  <Text>
+                    <p>Прайс-карта стоит рядом с автомобилем и отвечает на главный вопрос — сколько он стоит.</p>
+                    <p>Карты для всех моделей и комплектаций собираются в конструкторе: выберите модель и комплектацию, укажите цену с кредитом и без и ссылку для QR-кода. Макет, шрифты и отступы уже настроены — получится готовый к печати PDF формата A3.</p>
+                  </Text>
+                </Head>
+                <div className="flex flex-col gap-6">
+                  <div className="bg-[#f5f5f5] p-6 md:flex md:aspect-[2/1] md:items-center md:justify-center md:p-0">
+                    <div className="grid grid-cols-2 gap-3 md:w-[58.46%] md:gap-x-[4.5%]">
+                      <PriceCardPreview variant="umo8-max" fullPrice="6 515 000" creditPrice="5 000 000" image={img('pricecard-umo8-car')} alt="Прайс-карта UMO 8, комплектация Макс" />
+                      <PriceCardPreview variant="umo5-max" fullPrice="3 715 000" creditPrice="2 790 000" image={img('pricecard-umo5-car')} alt="Прайс-карта UMO 5, комплектация Макс" />
+                    </div>
+                  </div>
+                  <Assets items={[{ to: '/price-card', title: 'Редактор прайс-карты' }]} />
+                </div>
+              </Section>
+            </div>
+          </Chapter>
 
           <footer className="text-[16px] leading-[1.25] tracking-[-0.01em] text-[#999]">ООО «ЭМ РУС». 0+</footer>
         </div>
