@@ -1,5 +1,7 @@
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import UmoLogo from './UmoLogo'
+import UmoYandexLockup from './UmoYandexLockup'
+import { useTypograf } from './typograf'
 
 // Figures are exported from Figma (UMO | Evrone, node 4810:686) at 2x and
 // cropped per frame — see "Brand guide" in AGENTS.md for how to refresh them.
@@ -231,6 +233,37 @@ function Fig({ name, w, h, alt = '', eager, caption, cross, className = '' }: {
  * Flat background with the wordmark centred on it — built from the logo SVG rather than an exported picture.
  * `w`/`h` set the aspect ratio (1x frame size in Figma), `logo` is the wordmark width in the same units.
  */
+/**
+ * Model ad banner: photo background (WebP) with live CoFo Sans text and the vector UMO | Я lockup on top.
+ * Sizes and offsets are Figma pixels in a `w`-wide frame, converted to container-width units so the
+ * layout scales with the banner and stays sharp at any size.
+ */
+function Poster({ bg, w, h, title, subtitle, center, alt }: {
+  bg: string; w: number; h: number; title: string; subtitle: ReactNode; center?: boolean; alt: string
+}) {
+  const u = (px: number) => `${(px / w) * 100}cqw`
+  const x = center ? { left: '50%', transform: 'translateX(-50%)', textAlign: 'center' as const } : { left: u(24) }
+  return (
+    <figure
+      role="img"
+      aria-label={alt}
+      className="relative overflow-hidden bg-black text-white [container-type:inline-size]"
+      style={{ aspectRatio: `${w} / ${h}` }}
+    >
+      <img src={img(bg)} alt="" loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover" />
+      <p className="absolute whitespace-nowrap font-medium leading-none tracking-[-0.01em]" style={{ ...x, top: u(24), fontSize: u(24) }}>
+        {title}
+      </p>
+      <p className="absolute whitespace-nowrap font-medium leading-none tracking-[-0.01em]" style={{ ...x, top: u(56), fontSize: u(8) }}>
+        {subtitle}
+      </p>
+      <div className="absolute" style={{ ...x, bottom: u(20), width: u(104) }}>
+        <UmoYandexLockup className="w-full" />
+      </div>
+    </figure>
+  )
+}
+
 function LogoPlate({ w, h, logo, bg, dark, caption, className = '' }: {
   w: number; h: number; logo: number; bg: string; dark?: boolean; caption?: ReactNode; className?: string
 }) {
@@ -282,6 +315,9 @@ function Head({ children }: { children: ReactNode }) {
 
 // ─── Content ─────────────────────────────────────────────────────────────────
 
+const UMO5_SUBTITLE = <>Электромобиль с Алисой на борту<br />от 2.5 млн ₽</>
+const UMO8_SUBTITLE = <>Гибридный кроссовер<br />с Алисой на борту от 5 млн. ₽</>
+
 const DICTIONARY: { good: ReactNode; bad: ReactNode; why: string }[] = [
   {
     good: <>UMO<br /><span className="font-normal">только латиницей и капителью</span></>,
@@ -317,16 +353,17 @@ const MISUSE: [string, string][] = [
 ]
 
 function Dictionary() {
-  const head = 'text-[18px] md:text-[20px] leading-[1.25] tracking-[-0.01em]'
+  const cols = 'md:grid-cols-[1fr_1fr_2fr]'
+  const mark = (m: string) => <span className="w-[30px] [font-feature-settings:'case'_1]">{m}</span>
   return (
-    <div className={head}>
-      <div className="hidden md:grid grid-cols-[1fr_1fr_2fr] gap-x-6 py-6 font-medium">
-        <p>Стандарт бренда ✓</p>
-        <p>Ошибка ✗</p>
+    <div className="text-[16px] leading-[1.25] tracking-[-0.01em]">
+      <div className={`hidden md:grid ${cols} gap-x-6 py-4 font-medium`}>
+        <p className="flex gap-2">Стандарт бренда {mark('✓')}</p>
+        <p className="flex gap-2">Ошибка {mark('✗')}</p>
         <p>Мотивация</p>
       </div>
       {DICTIONARY.map((row, i) => (
-        <div key={i} className="grid grid-cols-1 md:grid-cols-[1fr_1fr_2fr] gap-x-6 gap-y-2 border-t border-[#e6e6e6] py-6">
+        <div key={i} className={`grid grid-cols-1 ${cols} gap-x-6 gap-y-2 border-t border-[#e6e6e6] py-4`}>
           <p className="font-medium"><span className="md:hidden">✓ </span>{row.good}</p>
           <p><span className="md:hidden">✗ </span>{row.bad}</p>
           <p className="text-black/60 md:text-black">{row.why}</p>
@@ -340,6 +377,8 @@ function Dictionary() {
 
 export default function Guide() {
   const active = useActiveSection()
+  const pageRef = useRef<HTMLDivElement>(null)
+  useTypograf(pageRef)
   const [expandAll, toggleExpandAll] = useExpandAll()
   const [menuOpen, setMenuOpen] = useState(false)
 
@@ -347,13 +386,18 @@ export default function Guide() {
     const prev = document.title
     document.title = 'UMO — стандарты бренда 2026'
     // The page is lazy-loaded, so the browser's own jump to #hash on load finds nothing yet.
+    // Jump again once CoFo Sans has loaded: the swap from the fallback font changes text heights above the target.
     const id = decodeURIComponent(window.location.hash.slice(1))
-    if (id) document.getElementById(id)?.scrollIntoView()
+    if (id) {
+      const jump = () => document.getElementById(id)?.scrollIntoView()
+      jump()
+      document.fonts?.ready.then(jump)
+    }
     return () => { document.title = prev }
   }, [])
 
   return (
-    <div className="min-h-screen bg-white font-sans text-black lg:flex lg:items-start">
+    <div ref={pageRef} className="min-h-screen bg-white font-sans text-black lg:flex lg:items-start">
       {/* Desktop sidebar */}
       <aside className="hidden lg:block sticky top-0 h-screen w-[320px] xl:w-[480px] shrink-0 overflow-y-auto">
         <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" aria-label="В начало"><Logo /></a></div>
@@ -667,8 +711,8 @@ export default function Guide() {
             <div className="flex flex-col gap-6">
               <Fig name="umo5-kv" w={912} h={456} alt="Ключевой образ UMO 5" />
               <div className="grid grid-cols-1 sm:grid-cols-[600fr_288fr] gap-6">
-                <Fig name="umo5-banner" w={600} h={368} alt="Горизонтальный баннер UMO 5" />
-                <Fig name="umo5-square" w={288} h={368} alt="Вертикальный баннер UMO 5" />
+                <Poster bg="umo5-banner-bg" w={600} h={368} title="Новый UMO 5" subtitle={UMO5_SUBTITLE} alt="Горизонтальный баннер UMO 5" />
+                <Poster bg="umo5-square-bg" w={288} h={368} title="Новый UMO 5" subtitle={UMO5_SUBTITLE} center alt="Вертикальный баннер UMO 5" />
               </div>
             </div>
           </Section>
@@ -680,8 +724,10 @@ export default function Guide() {
             </Head>
             <div className="flex flex-col gap-6">
               <div className="grid grid-cols-1 sm:grid-cols-[288fr_600fr] gap-6">
-                <Fig name="umo8-square" w={288} h={368} alt="Вертикальный баннер UMO 8" className="order-2 sm:order-none" />
-                <Fig name="umo8-banner" w={600} h={368} alt="Горизонтальный баннер UMO 8" />
+                <div className="order-2 sm:order-none">
+                  <Poster bg="umo8-square-bg" w={288} h={368} title="Новый UMO 8" subtitle={UMO8_SUBTITLE} center alt="Вертикальный баннер UMO 8" />
+                </div>
+                <Poster bg="umo8-banner-bg" w={600} h={368} title="Новый UMO 8" subtitle={UMO8_SUBTITLE} alt="Горизонтальный баннер UMO 8" />
               </div>
               <Fig name="umo8-kv" w={912} h={456} alt="Ключевой образ UMO 8" />
             </div>

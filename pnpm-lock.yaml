@@ -32,6 +32,9 @@ importers:
       react-router-dom:
         specifier: ^7.18.2
         version: 7.18.2(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
+      typograf:
+        specifier: ^7.8.0
+        version: 7.8.0
     devDependencies:
       '@tailwindcss/vite':
         specifier: ^4.0.0
@@ -849,6 +852,10 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
+  typograf@7.8.0:
+    resolution: {integrity: sha512-Eo+Fu7iM0ASkYOgsI3veGtdkxI+QhMgJBmyftB16Or+g6B2pC4NgsAPT7nP36BzVx7720IMmvkWf7N9O33HNHg==}
+    engines: {node: '>= 4'}
+
   undici-types@6.21.0:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
 
@@ -1623,6 +1630,8 @@ snapshots:
   tslib@2.8.1: {}
 
   typescript@5.9.3: {}
+
+  typograf@7.8.0: {}
 
   undici-types@6.21.0: {}
 
