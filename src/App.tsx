@@ -3,7 +3,6 @@ import { Link } from 'react-router-dom'
 import { pdf } from '@react-pdf/renderer'
 import QRCode from 'qrcode'
 import svgPaths from '@/icons/ui'
-import UmoLogo from '@/guide/UmoLogo'
 import PriceCard from '@/posters/PriceCard'
 import PriceCardPdf from '@/posters/pdf/PriceCardPdf'
 import { ensurePdfFonts } from '@/posters/pdf/pdfFonts'
@@ -183,13 +182,11 @@ export default function App() {
 
       {/* ── Sidebar ── */}
       <aside className="flex shrink-0 flex-col md:h-full md:w-[240px] md:overflow-y-auto">
-        <div className="p-6">
-          <Link to="/" aria-label="Стандарты бренда"><UmoLogo title="UMO" className="w-[120px]" /></Link>
-        </div>
-
-        <div className="flex flex-1 flex-col gap-4 px-6 tracking-[-0.01em]">
-          <Link to="/" className="text-[16px] leading-[1.25] hover:underline underline-offset-[0.25em] decoration-[0.25px]">← Стандарты бренда</Link>
-          <h1 className="text-[24px] font-medium leading-none">Прайс-карта</h1>
+        <div className="flex flex-col gap-4 p-6 tracking-[-0.01em] md:pb-2">
+          <div className="flex flex-col gap-4">
+            <Link to="/" className="self-start text-[14px] font-medium leading-5 tracking-normal hover:underline underline-offset-[0.25em] decoration-[0.25px]">← Бренд UMO</Link>
+            <h1 className="text-[24px] font-medium leading-none">Прайс-карта</h1>
+          </div>
 
           <div className="grid grid-cols-2 gap-x-3 gap-y-2 md:grid-cols-1 tracking-normal">
             <Field label="Модель">
@@ -249,8 +246,9 @@ export default function App() {
           </div>
         </div>
 
-        {/* Download — pinned to the bottom of the sidebar (and of the screen on phones) */}
-        <div className="sticky bottom-0 z-10 bg-white p-6">
+        {/* Download — right under the fields, sticking to the bottom of the sidebar when the window is shorter than the form;
+            on phones pinned to the bottom of the screen, since the preview comes below the form */}
+        <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky">
           <button
             type="button"
             onClick={handleExport}
@@ -268,7 +266,7 @@ export default function App() {
       </aside>
 
       {/* ── Poster preview ── */}
-      <main className="flex flex-1 items-center justify-center bg-[#f5f5f5] p-6 md:min-w-0 md:p-16">
+      <main className="flex flex-1 items-center justify-center bg-[#f5f5f5] p-6 pb-[112px] md:min-w-0 md:p-16">
         <div ref={previewRef} className="flex size-full items-center justify-center">
           {scale > 0 && (
             <div className="bg-white" style={{ width: POSTER_W * scale, height: POSTER_H * scale, position: 'relative', flexShrink: 0 }}>
