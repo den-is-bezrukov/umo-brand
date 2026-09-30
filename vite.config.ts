@@ -1,6 +1,7 @@
 import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import fs from 'node:fs'
 import path from 'node:path'
 
 import siteConfiguration from './site.config.json'
@@ -19,6 +20,7 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
       siteMetaPlugin(siteConfiguration),
+      downloadSizesPlugin(),
       reactRefreshBoundaryFallback(),
     ],
     resolve: {
@@ -211,6 +213,21 @@ function siteMetaPlugin(config: SiteConfiguration): Plugin {
           tags,
         }
       },
+    },
+  }
+}
+
+/** `virtual:download-sizes`: byte size of every file in public/downloads, keyed by file name. */
+function downloadSizesPlugin(): Plugin {
+  const id = 'virtual:download-sizes'
+  const dir = path.resolve(__dirname, 'public/downloads')
+  return {
+    name: 'download-sizes',
+    resolveId: (source) => (source === id ? '\0' + id : null),
+    load(source) {
+      if (source !== '\0' + id) return null
+      const sizes = Object.fromEntries(fs.readdirSync(dir).filter((f) => !f.startsWith('.')).map((f) => [f, fs.statSync(path.join(dir, f)).size]))
+      return `export default ${JSON.stringify(sizes)}`
     },
   }
 }

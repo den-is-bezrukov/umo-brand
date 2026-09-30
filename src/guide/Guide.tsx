@@ -1,10 +1,11 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import PriceCard from '@/posters/PriceCard'
 import type { Variant } from '@/posters/cardData'
 import UmoLogo from './UmoLogo'
 import UmoYandexLockup from './UmoYandexLockup'
 import { useTypograf } from './typograf'
+import downloadSizes from 'virtual:download-sizes'
 
 // Figures are exported from Figma (UMO | Evrone, node 4810:686) at 2x and
 // cropped per frame — see "Brand guide" in AGENTS.md for how to refresh them.
@@ -321,8 +322,6 @@ function Photo({ name }: { name: string }) {
   )
 }
 
-const DOWNLOAD_BUTTON = 'flex min-w-16 items-center justify-center rounded-[4px] border border-[#e6e6e6] p-3 leading-none hover:border-black'
-
 const POSTER_W = 1754
 const POSTER_H = 2480
 
@@ -350,15 +349,51 @@ function PriceCardPreview({ variant, fullPrice, creditPrice, image, alt }: {
   )
 }
 
-/** Download row from public/downloads/: `<file>.svg` (black) and `<file>-png.zip` (black and white transparent PNGs). */
-function Downloads({ file, what }: { file: string; what: string }) {
+/** A file from public/downloads/ (the row shows its name and size) or a page of this site (its title and path). */
+type Asset = { file: string } | { to: string; title: string }
+
+/** Size in КБ below 1000 КБ, else МБ. */
+function fileSize(bytes: number): [number, string] {
+  return bytes < 1e6 ? [bytes / 1e3, 'КБ'] : [bytes / 1e6, 'МБ']
+}
+
+/**
+ * Asset list: a row per file or page, a hairline above each. Up to 3 rows stay in one column, 4 and more
+ * split into two, filled top to bottom so files of one item stay together. Sizes get one decimal in every
+ * row as soon as one of them is under 10 (0,7 КБ), and none otherwise.
+ */
+function Assets({ items }: { items: Asset[] }) {
+  const sizes = items.flatMap(a => ('file' in a ? [fileSize(downloadSizes[a.file] ?? 0)] : []))
+  const digits = sizes.some(([n]) => n < 10) ? 1 : 0
+  const number = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: digits, maximumFractionDigits: digits })
+  const two = items.length > 3
   return (
-    <div className="flex items-center gap-4 text-[16px] font-medium tracking-[-0.01em]">
-      <p className="py-3 leading-none">Скачать</p>
-      <div className="flex items-center gap-2">
-        <a href={`/downloads/${file}.svg`} download className={DOWNLOAD_BUTTON} title={`${what}, чёрный, SVG`}>SVG</a>
-        <a href={`/downloads/${file}-png.zip`} download className={DOWNLOAD_BUTTON} title={`${what}, чёрный и белый, PNG в zip`}>PNG</a>
-      </div>
+    <div
+      className={two ? 'grid grid-cols-1 gap-x-6 sm:grid-flow-col sm:grid-cols-2 sm:grid-rows-[repeat(var(--rows),auto)]' : 'flex flex-col'}
+      style={two ? ({ '--rows': Math.ceil(items.length / 2) } as CSSProperties) : undefined}
+    >
+      {items.map(a => {
+        const row = 'group flex items-center gap-4 border-t border-[#e6e6e6] py-[14px] text-[16px] leading-none tracking-[-0.01em]'
+        const name = 'min-w-0 flex-1 font-medium decoration-[0.25px] underline-offset-[0.25em] [text-decoration-skip-ink:none] group-hover:underline'
+        const meta = 'shrink-0 text-[#999] [font-feature-settings:"tnum"_1] group-hover:text-black'
+        if ('to' in a) {
+          return (
+            <Link key={a.to} to={a.to} className={row}>
+              <span aria-hidden className="w-4 shrink-0 text-center font-medium">↗</span>
+              <span className={name}>{a.title}</span>
+              <span className={meta}>{a.to}</span>
+            </Link>
+          )
+        }
+        const [n, unit] = fileSize(downloadSizes[a.file] ?? 0)
+        return (
+          <a key={a.file} href={`/downloads/${a.file}`} download className={row}>
+            <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>
+            <span className={name}>{a.file}</span>
+            <span className={meta}>{number.format(n)} {unit}</span>
+          </a>
+        )
+      })}
     </div>
   )
 }
@@ -582,7 +617,7 @@ export default function Guide() {
             </Head>
             <div className="flex flex-col gap-6">
               <LogoPlate w={912} h={456} logo={480} bg="#f5f5f5" />
-              <Downloads file="umo-logo" what="Логотип UMO" />
+              <Assets items={[{ file: 'umo-logo.svg' }, { file: 'umo-logo-png.zip' }]} />
             </div>
           </Section>
 
@@ -683,7 +718,7 @@ export default function Guide() {
             <div className="flex flex-col gap-6">
               <Fig name="cobrand-square" w={912} h={304} alt="Схема кобрендинга с квадратным логотипом" />
               <Fig name="cobrand-square-example" w={912} h={304} alt="UMO и Яндекс" />
-              <Downloads file="umo-yandex" what="Логотипы UMO и Яндекса" />
+              <Assets items={[{ file: 'umo-yandex.svg' }, { file: 'umo-yandex-png.zip' }]} />
             </div>
             <div className="flex flex-col gap-6">
               <Fig name="cobrand-horizontal" w={912} h={304} alt="Схема кобрендинга с горизонтальным логотипом" />
@@ -733,11 +768,14 @@ export default function Guide() {
           {/* ── Леттеринг ── */}
           <Section chapter>
             <H1 id="lettering">Леттеринг моделей</H1>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              <Fig name="lettering-vector" w={444} h={333} alt="Леттеринг MODEL 8 и MODEL 5" />
-              <Fig name="lettering-umo8" w={444} h={333} alt="Леттеринг на корме UMO 8" />
-              <Fig name="lettering-umo5" w={444} h={333} alt="Леттеринг на кузове UMO 5" />
-              <Fig name="lettering-plates" w={444} h={333} alt="Шильдики MODEL 8 и MODEL 5" />
+            <div className="flex flex-col gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <Fig name="lettering-vector" w={444} h={333} alt="Леттеринг MODEL 8 и MODEL 5" />
+                <Fig name="lettering-umo8" w={444} h={333} alt="Леттеринг на корме UMO 8" />
+                <Fig name="lettering-umo5" w={444} h={333} alt="Леттеринг на кузове UMO 5" />
+                <Fig name="lettering-plates" w={444} h={333} alt="Шильдики MODEL 8 и MODEL 5" />
+              </div>
+              <Assets items={[{ file: 'umo-model-5.svg' }, { file: 'umo-model-5-png.zip' }, { file: 'umo-model-8.svg' }, { file: 'umo-model-8-png.zip' }]} />
             </div>
           </Section>
 
@@ -814,15 +852,15 @@ export default function Guide() {
                   <p>Прайс-карта стоит рядом с автомобилем и отвечает на главный вопрос — сколько он стоит.</p>
                   <p>Карты для всех моделей и комплектаций собираются в конструкторе: выберите модель и комплектацию, укажите цену с кредитом и без и ссылку для QR-кода. Макет, шрифты и отступы уже настроены — получится готовый к печати PDF формата A3.</p>
                 </Text>
-                <div className="text-[16px] font-medium tracking-[-0.01em]">
-                  <Link to="/price-card" className={`inline-flex ${DOWNLOAD_BUTTON}`}>Открыть конструктор</Link>
-                </div>
               </Head>
-              <div className="bg-[#f5f5f5] p-6 md:flex md:aspect-[2/1] md:items-center md:justify-center md:p-0">
-                <div className="grid grid-cols-2 gap-3 md:w-[58.46%] md:gap-x-[4.5%]">
-                  <PriceCardPreview variant="umo8-max" fullPrice="6 515 000" creditPrice="5 000 000" image={img('pricecard-umo8-car')} alt="Прайс-карта UMO 8, комплектация Макс" />
-                  <PriceCardPreview variant="umo5-max" fullPrice="3 715 000" creditPrice="2 790 000" image={img('pricecard-umo5-car')} alt="Прайс-карта UMO 5, комплектация Макс" />
+              <div className="flex flex-col gap-6">
+                <div className="bg-[#f5f5f5] p-6 md:flex md:aspect-[2/1] md:items-center md:justify-center md:p-0">
+                  <div className="grid grid-cols-2 gap-3 md:w-[58.46%] md:gap-x-[4.5%]">
+                    <PriceCardPreview variant="umo8-max" fullPrice="6 515 000" creditPrice="5 000 000" image={img('pricecard-umo8-car')} alt="Прайс-карта UMO 8, комплектация Макс" />
+                    <PriceCardPreview variant="umo5-max" fullPrice="3 715 000" creditPrice="2 790 000" image={img('pricecard-umo5-car')} alt="Прайс-карта UMO 5, комплектация Макс" />
+                  </div>
                 </div>
+                <Assets items={[{ to: '/price-card', title: 'Редактор прайс-карты' }]} />
               </div>
             </Section>
           </div>
