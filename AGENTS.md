@@ -46,6 +46,12 @@ This project uses **Tailwind CSS v4** through the `@tailwindcss/vite` plugin con
 
 To refresh an illustration, re-export that frame at 2x and overwrite the file with the same name. Export the whole section Block and crop the frame out of it: frames that stretch inside a grid/flex parent come out of Figma's direct export at the wrong size (a mostly empty canvas).
 
+Vector schemes (clear space, minimum size, co-branding, type specimens, model lettering) are SVG files in the same folder — `img()` prefers `<name>.svg` over `<name>.webp`. They are cut out of Figma SVG exports of the parent Body nodes by `scripts/split-figma-svg.py` (node ids and crop boxes are listed at the bottom of the script). Text inside them is outlined by Figma. Photos, logo misuse examples, app/social icons and model posters stay WebP.
+
+Plain "logo on a flat colour" figures are not images: `LogoPlate` in `Guide.tsx` renders `src/guide/UmoLogo.tsx` (inline SVG, `currentColor`) centred on a background, with the logo width given in Figma frame units.
+
+Downloads live in `public/downloads/` and are linked by the `Downloads` component: `<file>.svg` (black) and `<file>-png.zip` (black + white transparent PNGs). `umo-logo` (2400×480) sits under the Логотип figure, `umo-yandex` (the UMO | Яндекс lockup, 2080×400) under Кобрендинг. Keep hairlines as filled rects, not stroked zero-width paths — ImageMagick drops the latter when rasterising. If the logo changes, update `umo-logo.svg` and `UmoLogo.tsx` together, then regenerate the PNGs, e.g. `magick -background none -density 360 umo-logo.svg -resize 2400x480 PNG32:umo-logo-black.png` (swap `fill="black"` for `white` for the white one), and re-zip with `zip -X -j`.
+
 ## Car photos
 
 The car photos shown on the price card live at fixed paths so they can be swapped without touching code:

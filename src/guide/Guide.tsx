@@ -1,10 +1,11 @@
 import { useEffect, useState, type ReactNode } from 'react'
-import logo from '@/assets/guide/logo.svg'
+import UmoLogo from './UmoLogo'
 
 // Figures are exported from Figma (UMO | Evrone, node 4810:686) at 2x and
 // cropped per frame — see "Brand guide" in AGENTS.md for how to refresh them.
-const images = import.meta.glob<string>('../assets/guide/*.webp', { eager: true, import: 'default' })
-const img = (name: string) => images[`../assets/guide/${name}.webp`]
+// Vector schemes (clear space, co-branding, type specimens, lettering) are SVG, photos are WebP.
+const images = import.meta.glob<string>('../assets/guide/*.{webp,svg}', { eager: true, import: 'default' })
+const img = (name: string) => images[`../assets/guide/${name}.svg`] ?? images[`../assets/guide/${name}.webp`]
 
 type NavItem = { id: string; title: string; children?: { id: string; title: string }[] }
 
@@ -120,7 +121,7 @@ function Nav({ active, expandAll, onToggle, onNavigate }: {
           aria-pressed={expandAll}
           aria-label={expandAll ? 'Свернуть содержание' : 'Раскрыть всё содержание'}
           title={expandAll ? 'Свернуть' : 'Раскрыть всё'}
-          className="-m-1 cursor-pointer p-1 transition-opacity hover:opacity-60"
+          className="-m-1 cursor-pointer p-1 hover:opacity-60"
         >
           <TocIcon expanded={expandAll} />
         </button>
@@ -167,7 +168,7 @@ function useExpandAll() {
 }
 
 function Logo() {
-  return <img src={logo} alt="UMO" width={120} height={24} className="block h-6 w-[120px]" />
+  return <UmoLogo title="UMO" className="w-[120px]" />
 }
 
 // ─── Typography ──────────────────────────────────────────────────────────────
@@ -223,6 +224,50 @@ function Fig({ name, w, h, alt = '', eager, caption, cross, className = '' }: {
       />
       {caption && <Caption cross={cross}>{caption}</Caption>}
     </figure>
+  )
+}
+
+/**
+ * Flat background with the wordmark centred on it — built from the logo SVG rather than an exported picture.
+ * `w`/`h` set the aspect ratio (1x frame size in Figma), `logo` is the wordmark width in the same units.
+ */
+function LogoPlate({ w, h, logo, bg, dark, caption, className = '' }: {
+  w: number; h: number; logo: number; bg: string; dark?: boolean; caption?: ReactNode; className?: string
+}) {
+  return (
+    <figure className={`flex flex-col gap-3 ${className}`}>
+      <div
+        className={`flex items-center justify-center ${dark ? 'text-white' : 'text-black'}`}
+        style={{ aspectRatio: `${w} / ${h}`, background: bg }}
+      >
+        <div style={{ width: `${(logo / w) * 100}%` }}>
+          <UmoLogo title={`Логотип UMO, ${dark ? 'белый' : 'чёрный'}`} className="w-full" />
+        </div>
+      </div>
+      {caption && <Caption>{caption}</Caption>}
+    </figure>
+  )
+}
+
+/** 210×280 colour example that still needs its photo background, exported from Figma with the logo baked in. */
+function Photo({ name }: { name: string }) {
+  return (
+    <img src={img(name)} alt="" width={420} height={560} loading="lazy" decoding="async" className="block h-auto w-full" style={{ aspectRatio: '210 / 280' }} />
+  )
+}
+
+const DOWNLOAD_BUTTON = 'flex min-w-16 items-center justify-center rounded-[4px] border border-[#e6e6e6] p-3 leading-none hover:border-black'
+
+/** Download row from public/downloads/: `<file>.svg` (black) and `<file>-png.zip` (black and white transparent PNGs). */
+function Downloads({ file, what }: { file: string; what: string }) {
+  return (
+    <div className="flex items-center gap-4 text-[16px] font-medium tracking-[-0.01em]">
+      <p className="py-3 leading-none">Скачать</p>
+      <div className="flex items-center gap-2">
+        <a href={`/downloads/${file}.svg`} download className={DOWNLOAD_BUTTON} title={`${what}, чёрный, SVG`}>SVG</a>
+        <a href={`/downloads/${file}-png.zip`} download className={DOWNLOAD_BUTTON} title={`${what}, чёрный и белый, PNG в zip`}>PNG</a>
+      </div>
+    </div>
   )
 }
 
@@ -432,7 +477,10 @@ export default function Guide() {
                 <p>Словесный знак собран из элементов, как из конструктора — чистая геометрия и инженерия. Это визуальный эквивалент главной идеи бренда — город как система, а автомобиль как её умный, технологичный элемент.</p>
               </Text>
             </Head>
-            <Fig name="logo" w={912} h={456} alt="Логотип UMO" />
+            <div className="flex flex-col gap-6">
+              <LogoPlate w={912} h={456} logo={480} bg="#f5f5f5" />
+              <Downloads file="umo-logo" what="Логотип UMO" />
+            </div>
           </Section>
 
           <Section>
@@ -472,14 +520,15 @@ export default function Guide() {
             </Head>
             <div className="flex flex-col gap-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <Fig name="color-white" w={444} h={333} caption="Белый для тёмного фона" alt="Белый логотип на чёрном" />
-                <Fig name="color-black" w={444} h={333} caption="Чёрный для светлого фона" alt="Чёрный логотип на светлом" />
+                <LogoPlate w={444} h={333} logo={240} bg="#000" dark caption="Белый для тёмного фона" />
+                <LogoPlate w={444} h={333} logo={240} bg="#f5f5f5" caption="Чёрный для светлого фона" />
               </div>
               <figure className="flex flex-col gap-3">
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                  {['color-photo', 'color-red', 'color-yellow', 'color-light'].map(n => (
-                    <img key={n} src={img(n)} alt="" width={420} height={560} loading="lazy" decoding="async" className="block h-auto w-full" style={{ aspectRatio: '210 / 280' }} />
-                  ))}
+                  <Photo name="color-photo" />
+                  <LogoPlate w={210} h={280} logo={120} bg="#fc3f1d" dark />
+                  <LogoPlate w={210} h={280} logo={120} bg="#ffea00" />
+                  <Photo name="color-light" />
                 </div>
                 <Caption>Примеры подбора цвета</Caption>
               </figure>
@@ -531,6 +580,7 @@ export default function Guide() {
             <div className="flex flex-col gap-6">
               <Fig name="cobrand-square" w={912} h={304} alt="Схема кобрендинга с квадратным логотипом" />
               <Fig name="cobrand-square-example" w={912} h={304} alt="UMO и Яндекс" />
+              <Downloads file="umo-yandex" what="Логотипы UMO и Яндекса" />
             </div>
             <div className="flex flex-col gap-6">
               <Fig name="cobrand-horizontal" w={912} h={304} alt="Схема кобрендинга с горизонтальным логотипом" />
