@@ -1,4 +1,6 @@
-# Флоу: обновление шрифта в UMO Print App (Geist → CoFo Sans)
+# Флоу: обновление шрифта в UMO Print App (Geist → CoFo Sans) [ВЫПОЛНЕНО]
+
+> Статус: миграция завершена — см. коммиты `6201c59` ("Switch price cards to CoFo Sans, fix missing-glyph PDF export bug") и `f1c0555` ("Switch toolbar UI to CoFo Sans too"), вошли в релиз `09-2026.2`. CoFo Sans — текущий `--font-sans` в `src/index.css`. Geist Y оставлен намеренно только как источник для символа ☺, которого нет в CoFo Sans. Документ ниже — исходный план, оставлен для истории.
 
 Контекст: приложение "UMO Print App" (отдельный проект в Claude Code, репозиторий на GitHub) рендерит и экспортирует в PDF прайс-карты UMO. Сейчас использует шрифт Geist; бренд-стандарт — CoFo Sans (см. `design-system-umo.md` в этом же проекте — там точные токены: заголовок 3rem CoFo Sans Medium, подзаголовок 1.5rem, текст 1rem Regular, tracking -1%). Просто заменить font-family нельзя — у CoFo другая метрика (ширина символов, переносы), поэтому макет пересобирается в Figma заново на CoFo, и через него надо перенести только типографические значения, не переверстывая компонент с нуля.
 
