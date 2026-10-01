@@ -14,11 +14,14 @@ const RED = '#ff2a1a'
 
 type Model = 'umo8' | 'umo5'
 
-function SheetPreview({ sheet, seams, dims }: { sheet: Sheet; seams: boolean; dims: boolean }) {
+type View = 'car' | 'plan'
+
+function SheetPreview({ sheet, view, seams, dims }: { sheet: Sheet; view: View; seams: boolean; dims: boolean }) {
   const s = sheet.surface
   const marks = specMarks(s)
-  // With dimensions on, the view closes in on the sheet so the numbers can be read off the screen
-  const [vx, vy, vw, vh] = dims ? (() => {
+  // The drawing is the sheet alone with its dimensions, close enough to read the numbers off the screen
+  const plan = view === 'plan'
+  const [vx, vy, vw, vh] = plan ? (() => {
     const xs = marks.lines.flatMap(l => [l[0], l[2]])
     const ys = marks.lines.flatMap(l => [l[1], l[3]])
     const padX = marks.size * 2.5
@@ -38,14 +41,17 @@ function SheetPreview({ sheet, seams, dims }: { sheet: Sheet; seams: boolean; di
         <span className="font-medium">{s.title}</span>
         <span className="text-[#999]">{s.w} × {s.h} мм</span>
       </figcaption>
-      <svg viewBox={`${vx} ${vy} ${vw} ${vh}`} className="block w-full rounded-[4px]" style={{ background: s.photo.background === '#000000' ? '#000' : '#e8e8e8' }}>
-        <image
-          href={s.photo.src}
-          width={s.photo.w}
-          height={s.photo.h}
-          transform={s.photo.mirror ? `translate(${s.photo.w} 0) scale(-1 1)` : undefined}
-        />
+      <svg viewBox={`${vx} ${vy} ${vw} ${vh}`} className="block w-full rounded-[4px]" style={{ background: plan ? '#1a1a1a' : s.photo.background === '#000000' ? '#000' : '#e8e8e8' }}>
+        {!plan && (
+          <image
+            href={s.photo.src}
+            width={s.photo.w}
+            height={s.photo.h}
+            transform={s.photo.mirror ? `translate(${s.photo.w} 0) scale(-1 1)` : undefined}
+          />
+        )}
         <g transform={`translate(${s.photo.x} ${s.photo.y})`}>
+          {plan && <rect width={s.w} height={s.h} fill="#000" />}
           {/* QR and lettering */}
           {sheet.shapes.slice(0, 3).map((cmds, i) => <path key={i} d={toD(cmds)} fill="#fff" fillRule="evenodd" />)}
           {lines.map((l, i) => (
@@ -67,7 +73,7 @@ function SheetPreview({ sheet, seams, dims }: { sheet: Sheet; seams: boolean; di
             </g>
           )}
           {/* The spec's dimensions */}
-          {dims && (
+          {(dims || plan) && (
             <g>
               {marks.lines.map(([x1, y1, x2, y2], i) => <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={RED} {...hairline} />)}
               {marks.labels.map((l, i) => (
@@ -94,6 +100,7 @@ export default function Livery() {
   const [ownRear, setOwnRear] = useState(false)
   const [rear, setRear] = useState<{ dealer: string; tagline: string }>()
   const [url, setUrl] = useState(DEFAULT_URL)
+  const [view, setView] = useState<View>('car')
   const [seams, setSeams] = useState(false)
   const [dims, setDims] = useState(false)
   const [font, setFont] = useState<Font>()
@@ -185,9 +192,17 @@ export default function Livery() {
               <UrlField value={url} onChange={setUrl} />
             </Field>
 
+            <Field label="Вид">
+              <Segments>
+                <SegBtn active={view === 'car'} onClick={() => setView('car')}>На машине</SegBtn>
+                <SegBtn active={view === 'plan'} onClick={() => setView('plan')}>Чертёж</SegBtn>
+              </Segments>
+            </Field>
+
             <div className="flex gap-6">
               <Checkbox checked={seams} onChange={setSeams}>Швы</Checkbox>
-              <Checkbox checked={dims} onChange={setDims}>Размеры</Checkbox>
+              {/* The drawing always has them */}
+              {view === 'car' && <Checkbox checked={dims} onChange={setDims}>Размеры</Checkbox>}
             </div>
           </div>
         </div>
@@ -199,10 +214,10 @@ export default function Livery() {
 
       <main className="flex-1 bg-[#f5f5f5] p-6 pb-[112px] md:min-w-0 md:overflow-y-auto md:p-16">
         <div className="mx-auto flex max-w-[1200px] flex-col gap-10">
-          {sheets.slice(0, 2).map(s => <SheetPreview key={s.surface.id} sheet={s} seams={seams} dims={dims} />)}
+          {sheets.slice(0, 2).map(s => <SheetPreview key={s.surface.id} sheet={s} view={view} seams={seams} dims={dims} />)}
           {sheets[2] && (
-            <div className={dims ? "w-full" : "w-full md:w-1/2"}>
-              <SheetPreview sheet={sheets[2]} seams={seams} dims={dims} />
+            <div className={view === 'plan' ? 'w-full' : 'w-full md:w-1/2'}>
+              <SheetPreview sheet={sheets[2]} view={view} seams={seams} dims={dims} />
             </div>
           )}
         </div>
