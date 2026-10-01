@@ -135,20 +135,18 @@ function NavLink({ id, title, active, onNavigate }: { id: string; title: string;
   )
 }
 
-/** Table-of-contents icon, 16×16 on a 20px line: chevrons apart (expand), together (collapse), or the menu bars. */
+/** Table-of-contents icon, 16×16 on a 20px line: the menu bars to open the contents, the cross to fold them. */
 function TocIcon({ name }: { name: keyof typeof tocIcons }) {
   return (
     <span aria-hidden className="flex h-5 shrink-0 items-center">
       <svg width="16" height="16" viewBox="0 0 16 16" className="block">
-        {name === 'menu'
-          ? <path d={tocIcons.menu} fill="none" stroke="currentColor" strokeWidth="1.5" />
-          : <path d={tocIcons[name]} fill="currentColor" />}
+        <path d={tocIcons[name]} fill="none" stroke="currentColor" strokeWidth="1.5" />
       </svg>
     </span>
   )
 }
 
-/** Expand-all row at the foot of the table of contents: chevrons apart to spread the list, together to fold it. */
+/** Expand-all row at the foot of the table of contents: the menu bars to spread the list, the cross to fold it. */
 function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; onClick: () => void; className?: string }) {
   return (
     <button
@@ -157,7 +155,7 @@ function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; o
       aria-expanded={expanded}
       className={`flex w-full cursor-pointer items-start gap-2 bg-white ${NAV_HOVER} text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] ${className}`}
     >
-      <TocIcon name={expanded ? 'collapse' : 'expand'} />
+      <TocIcon name={expanded ? 'close' : 'menu'} />
       {expanded ? 'Свернуть' : 'Развернуть'}
     </button>
   )
