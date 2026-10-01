@@ -626,11 +626,11 @@ export default function Guide() {
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-expanded={false}
-            aria-label={`Содержание: ${sectionTitle ?? 'Стандарты бренда'}`}
+            aria-label={`Содержание: ${sectionTitle ?? TITLES.brand}`}
             className="fixed inset-x-0 bottom-0 z-20 flex cursor-pointer items-start gap-2 bg-white px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]"
           >
             <TocIcon name="menu" />
-            <span className="min-w-0 flex-1 truncate">{sectionTitle ?? 'Стандарты бренда'}</span>
+            <span className="min-w-0 flex-1 truncate">{sectionTitle ?? TITLES.brand}</span>
           </button>
         )}
       </div>
