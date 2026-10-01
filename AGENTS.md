@@ -23,7 +23,7 @@ This is the canonical project structure. Start with task-relevant files below. O
 - `src/icons/` - SVG path data for the UMO logo/badges and small UI icons, imported directly by component name
 - `src/index.css` - Global CSS entrypoint and Tailwind CSS v4 import
 - `index.html` - Vite HTML shell containing the `#root` element and loading `src/main.tsx`
-- `site.config.json` - Site title/description/favicon/OG-image/robots, applied to the built HTML by the `site-meta` Vite plugin. Icons in `public/`: `favicon.svg` and `favicon.ico` (16/32/48) are the U module of the logo, white on black — the full wordmark turns to mush at 16px; `apple-touch-icon.png` (180) carries the whole UMO wordmark, 135px wide
+- `site.config.json` - Site title/description/favicon/OG-image/robots, applied to the built HTML by the `site-meta` Vite plugin. Icons in `public/` (Figma fav 4870:3556): `favicon.svg` and `favicon.ico` are the U module of the logo, white on black — the full wordmark turns to mush at 16px. The U is hinted: on a 16-unit grid its stems (2), bar (2) and edges sit on whole units, so it lands on whole pixels at 16, 32 and 48; the .ico's 16px frame is drawn by hand with mirrored corners, 32/48 are Chrome renders of the SVG. `apple-touch-icon.png` (180) carries the whole UMO wordmark at 2/3 of the tile (120×24 at 30,78), as the app icon in Логотип на иконках
 - `package.json` - Project dependencies and the Vite build, development, preview, and formatting scripts
 - `vite.config.ts` - Vite configuration: React, Tailwind CSS v4, the `@` alias for `src`, and the `site-meta` plugin
 
