@@ -148,6 +148,15 @@ export function UrlField({ value, onChange }: { value: string; onChange: (v: str
   )
 }
 
+export function Checkbox({ checked, onChange, children }: { checked: boolean; onChange: (v: boolean) => void; children: React.ReactNode }) {
+  return (
+    <label className="flex cursor-pointer items-center gap-2 py-2 text-[14px] leading-5">
+      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="size-4 accent-black" />
+      {children}
+    </label>
+  )
+}
+
 export function DownloadButton({ onClick, busy, disabled, children }: { onClick: () => void; busy: boolean; disabled?: boolean; children: React.ReactNode }) {
   return (
     <button

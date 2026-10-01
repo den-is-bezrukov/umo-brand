@@ -177,8 +177,9 @@ function hits(ink: Box, o: Obstacle, c: number): boolean {
 }
 
 function setText(font: Font, text: string, block: TextBlock, name: string, surface: Surface): TextResult {
-  const lines: Line[] = wrap(font, text, block).map((t, i) => {
-    const baseline = block.baseline + i * block.leading
+  const wrapped = wrap(font, text, block)
+  const lines: Line[] = wrapped.map((t, i) => {
+    const baseline = block.baseline - (wrapped.length - 1 - i) * block.leading
     const width = font.getAdvanceWidth(t.replace(/ /g, ' '), block.size)
     const x = block.align === 'left' ? block.x : block.x - width
     const { path, ink } = shape(font, t, x, baseline, block.size)
@@ -224,4 +225,36 @@ export function buildSheet(font: Font, surface: Surface, input: { dealer: string
   if (!input.dealer.trim()) issues.unshift('Нет имени дилера')
   if (!input.tagline.trim()) issues.unshift('Нет теглайна')
   return { surface, shapes, dealer, tagline, issues }
+}
+
+export interface SpecMarks {
+  /** Label size and line weight, in mm */
+  size: number
+  thickness: number
+  lines: [number, number, number, number][]
+  labels: { text: string; x: number; y: number; align: 'left' | 'center' | 'right' }[]
+}
+
+/**
+ * The red dimensions of the spec in sheet millimetres (y down): the sheet edges, its zone grid, column widths above it
+ * and row heights beside it. Labels are positioned by their baseline. Drawn by the spec PDF and by the preview.
+ */
+export function specMarks(surface: Surface): SpecMarks {
+  const { w, h, dims } = surface
+  const size = w / 28
+  const lines: SpecMarks['lines'] = [[0, 0, w, 0], [w, 0, w, h], [w, h, 0, h], [0, h, 0, 0], ...dims.grid]
+  const labels: SpecMarks['labels'] = []
+  for (const c of dims.cols) {
+    const y = c.y ?? -size
+    lines.push([c.from, 0, c.from, y], [c.to, 0, c.to, y])
+    if (c.y) lines.push([c.from, y, c.to, y])
+    labels.push({ text: c.label, x: (c.from + c.to) / 2, y: y - size * 0.3, align: 'center' })
+  }
+  for (const r of dims.rows) {
+    const x = r.x < 0 ? 0 : w
+    const tick = x + r.x * size * 3
+    lines.push([x, r.from, tick, r.from], [x, r.to, tick, r.to])
+    labels.push({ text: r.label, x: x + r.x * size * 0.4, y: (r.from + r.to) / 2 + size * 0.35, align: r.x < 0 ? 'right' : 'left' })
+  }
+  return { size, thickness: size / 20, lines, labels }
 }

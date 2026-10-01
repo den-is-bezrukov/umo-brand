@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Font } from 'opentype.js'
-import { Field, Segments, SegBtn, TextArea, UrlField, DownloadButton, isValidUrl } from '@/ui/form'
+import { Field, Segments, SegBtn, TextArea, UrlField, Checkbox, DownloadButton, isValidUrl } from '@/ui/form'
 import { UMO8, SURFACES } from '@/livery/layout'
-import { loadFont, buildSheet, toD, type Sheet, type Line } from '@/livery/geometry'
+import { loadFont, buildSheet, specMarks, toD, type Sheet, type Line } from '@/livery/geometry'
 
 // Dealer livery generator: lettering for both sides and the rear window of a dealer's demo car (Figma: UMO | Evrone,
 // node 4021:2908). The preview puts the sheets on photos of the car, with the door seam and handle marked, so a
@@ -14,13 +14,24 @@ const RED = '#ff2a1a'
 
 type Model = 'umo8' | 'umo5'
 
-function SheetPreview({ sheet, guides }: { sheet: Sheet; guides: boolean }) {
+function SheetPreview({ sheet, seams, dims }: { sheet: Sheet; seams: boolean; dims: boolean }) {
   const s = sheet.surface
-  const [vx, vy, vw, vh] = s.photo.view
+  const marks = specMarks(s)
+  // With dimensions on, the view closes in on the sheet so the numbers can be read off the screen
+  const [vx, vy, vw, vh] = dims ? (() => {
+    const xs = marks.lines.flatMap(l => [l[0], l[2]])
+    const ys = marks.lines.flatMap(l => [l[1], l[3]])
+    const padX = marks.size * 2.5
+    const padY = marks.size * 1.5
+    const x = Math.min(...xs) - padX
+    const y = Math.min(...ys) - padY
+    return [s.photo.x + x, s.photo.y + y, Math.max(...xs) + padX - x, Math.max(...ys) + padY - y]
+  })() : s.photo.view
   const bad = (l: Line) => l.issues.length > 0
   const lines = [...sheet.dealer.lines, ...sheet.tagline.lines]
-  const extra = [...sheet.dealer.lines.slice(s.dealer.maxLines), ...sheet.tagline.lines.slice(s.tagline.maxLines)]
+  const extra = [...sheet.dealer.lines.slice(0, -s.dealer.maxLines), ...sheet.tagline.lines.slice(0, -s.tagline.maxLines)]
   const hairline = { vectorEffect: 'non-scaling-stroke' as const, strokeWidth: 1, fill: 'none' }
+  const anchor = { left: 'start', center: 'middle', right: 'end' } as const
   return (
     <figure className="flex min-w-0 flex-col gap-2">
       <figcaption className="flex items-baseline gap-2 text-[14px] leading-5">
@@ -40,12 +51,11 @@ function SheetPreview({ sheet, guides }: { sheet: Sheet; guides: boolean }) {
           {lines.map((l, i) => (
             <path key={`t${i}`} d={toD(l.cmds)} fill={bad(l) || extra.includes(l) ? RED : '#fff'} fillRule="evenodd" />
           ))}
-          {guides && (
+          {seams && (
             <g stroke={RED} opacity={0.9}>
-              <rect width={s.w} height={s.h} {...hairline} strokeDasharray="4 4" />
               {/* Where the dealer name and tagline may go */}
               {[s.dealer, s.tagline].map((b, i) => {
-                const top = b.baseline - b.size * 0.85
+                const top = b.baseline - b.leading * (b.maxLines - 1) - b.size * 0.85
                 const h = b.leading * (b.maxLines - 1) + b.size * 1.1
                 return <rect key={i} x={b.align === 'left' ? b.x : b.x - b.maxWidth} y={top} width={b.maxWidth} height={h} {...hairline} strokeDasharray="2 3" opacity={0.6} />
               })}
@@ -54,6 +64,15 @@ function SheetPreview({ sheet, guides }: { sheet: Sheet; guides: boolean }) {
                   ? <line key={i} x1={o.top[0]} y1={o.top[1]} x2={o.bottom[0]} y2={o.bottom[1]} {...hairline} strokeWidth={2} />
                   : <rect key={i} x={o.x} y={o.y} width={o.w} height={o.h} rx={o.h / 2} {...hairline} strokeWidth={2} />,
               )}
+            </g>
+          )}
+          {/* The spec's dimensions */}
+          {dims && (
+            <g>
+              {marks.lines.map(([x1, y1, x2, y2], i) => <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={RED} {...hairline} />)}
+              {marks.labels.map((l, i) => (
+                <text key={i} x={l.x} y={l.y} textAnchor={anchor[l.align]} fontSize={marks.size} fontFamily="Helvetica, Arial, sans-serif" fontWeight={700} fill={RED}>{l.text}</text>
+              ))}
             </g>
           )}
         </g>
@@ -69,10 +88,14 @@ function SheetPreview({ sheet, guides }: { sheet: Sheet; guides: boolean }) {
 
 export default function Livery() {
   const [model, setModel] = useState<Model>('umo8')
-  const [dealer, setDealer] = useState('Центр UMO | Автодом')
+  const [dealer, setDealer] = useState('Автодом\nЦентр UMO')
   const [tagline, setTagline] = useState('Попробуй гибрид с технологиями Яндекса')
+  // Text of its own on the rear window; filled from the sides the first time it's turned on
+  const [ownRear, setOwnRear] = useState(false)
+  const [rear, setRear] = useState<{ dealer: string; tagline: string }>()
   const [url, setUrl] = useState(DEFAULT_URL)
-  const [guides, setGuides] = useState(false)
+  const [seams, setSeams] = useState(false)
+  const [dims, setDims] = useState(false)
   const [font, setFont] = useState<Font>()
   const [exporting, setExporting] = useState(false)
 
@@ -80,17 +103,26 @@ export default function Livery() {
 
   useEffect(() => {
     const prev = document.title
-    document.title = 'Ливрея дилера UMO'
+    document.title = 'Ливрея UMO'
     return () => { document.title = prev }
   }, [])
 
   const urlValid = isValidUrl(url.trim())
   const qrUrl = urlValid ? url.trim() : DEFAULT_URL
 
+  const rearText = ownRear && rear ? rear : { dealer, tagline }
   const sheets = useMemo(
-    () => font ? SURFACES.map(id => buildSheet(font, UMO8[id], { dealer, tagline, url: qrUrl })) : [],
-    [font, dealer, tagline, qrUrl],
+    () => font ? SURFACES.map(id => buildSheet(font, UMO8[id], { ...(id === 'rear' ? rearText : { dealer, tagline }), url: qrUrl })) : [],
+    [font, dealer, tagline, rearText.dealer, rearText.tagline, qrUrl],
   )
+  // Which sheets a field's text goes on, to mark it when one of them has a problem with it
+  const sides = ownRear ? sheets.slice(0, 2) : sheets
+  const rearSheet = sheets.slice(2)
+
+  const toggleOwnRear = (on: boolean) => {
+    if (on && !rear) setRear({ dealer: dealer.replace(/\s*\n\s*/g, ' '), tagline })
+    setOwnRear(on)
+  }
   const ok = sheets.length > 0 && sheets.every(s => s.issues.length === 0)
 
   const handleExport = async () => {
@@ -98,7 +130,7 @@ export default function Livery() {
     try {
       const { liveryZip } = await import('@/livery/pdf')
       const prefix = model === 'umo8' ? 'UMO8' : 'UMO5'
-      const blob = await liveryZip(prefix, sheets.slice(0, 2), sheets[2])
+      const blob = await liveryZip(prefix, sheets)
       const link = document.createElement('a')
       link.href = URL.createObjectURL(blob)
       link.download = `${prefix}_dealer-livery.zip`
@@ -116,7 +148,7 @@ export default function Livery() {
         <div className="flex flex-col gap-4 p-6 tracking-[-0.01em] md:pb-2">
           <div className="flex flex-col gap-4">
             <Link to="/" className="self-start text-[14px] font-medium leading-5 tracking-normal hover:underline underline-offset-[0.25em] decoration-[0.25px]">← Бренд UMO</Link>
-            <h1 className="text-[24px] font-medium leading-none">Ливрея дилера</h1>
+            <h1 className="text-[24px] font-medium leading-none">Ливрея</h1>
           </div>
 
           <div className="grid grid-cols-1 gap-y-2 tracking-normal">
@@ -128,21 +160,35 @@ export default function Livery() {
             </Field>
 
             <Field label="Дилер:">
-              <TextArea value={dealer} onChange={setDealer} invalid={sheets.some(s => s.dealer.issues.length > 0) || !dealer.trim()} />
+              <TextArea value={dealer} onChange={setDealer} invalid={sides.some(s => s.dealer.issues.length > 0) || !dealer.trim()} />
             </Field>
 
             <Field label="Теглайн:">
-              <TextArea value={tagline} onChange={setTagline} invalid={sheets.some(s => s.tagline.issues.length > 0) || !tagline.trim()} />
+              <TextArea value={tagline} onChange={setTagline} invalid={sides.some(s => s.tagline.issues.length > 0) || !tagline.trim()} />
             </Field>
+
+            <Checkbox checked={ownRear} onChange={toggleOwnRear}>Свой текст на стекле</Checkbox>
+
+            {ownRear && rear && (
+              <>
+                <Field label="Дилер на стекле:">
+                  <TextArea value={rear.dealer} onChange={v => setRear({ ...rear, dealer: v })} invalid={rearSheet.some(s => s.dealer.issues.length > 0) || !rear.dealer.trim()} />
+                </Field>
+
+                <Field label="Теглайн на стекле:">
+                  <TextArea value={rear.tagline} onChange={v => setRear({ ...rear, tagline: v })} invalid={rearSheet.some(s => s.tagline.issues.length > 0) || !rear.tagline.trim()} />
+                </Field>
+              </>
+            )}
 
             <Field label="Ссылка QR:">
               <UrlField value={url} onChange={setUrl} />
             </Field>
 
-            <label className="flex cursor-pointer items-center gap-2 py-2 text-[14px] leading-5">
-              <input type="checkbox" checked={guides} onChange={e => setGuides(e.target.checked)} className="size-4 accent-black" />
-              Швы и границы
-            </label>
+            <div className="flex gap-6">
+              <Checkbox checked={seams} onChange={setSeams}>Швы</Checkbox>
+              <Checkbox checked={dims} onChange={setDims}>Размеры</Checkbox>
+            </div>
           </div>
         </div>
 
@@ -153,10 +199,10 @@ export default function Livery() {
 
       <main className="flex-1 bg-[#f5f5f5] p-6 pb-[112px] md:min-w-0 md:overflow-y-auto md:p-16">
         <div className="mx-auto flex max-w-[1200px] flex-col gap-10">
-          {sheets.slice(0, 2).map(s => <SheetPreview key={s.surface.id} sheet={s} guides={guides} />)}
+          {sheets.slice(0, 2).map(s => <SheetPreview key={s.surface.id} sheet={s} seams={seams} dims={dims} />)}
           {sheets[2] && (
-            <div className="w-full md:w-1/2">
-              <SheetPreview sheet={sheets[2]} guides={guides} />
+            <div className={dims ? "w-full" : "w-full md:w-1/2"}>
+              <SheetPreview sheet={sheets[2]} seams={seams} dims={dims} />
             </div>
           )}
         </div>

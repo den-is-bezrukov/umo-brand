@@ -61,7 +61,7 @@ const NAV: NavItem[] = [
     ],
   },
   { id: 'spaces', title: 'Пространства' },
-  { id: 'materials', title: 'Носители', children: [{ id: 'price-card', title: 'Прайс-карта' }, { id: 'livery', title: 'Ливрея дилера' }] },
+  { id: 'materials', title: 'Носители', children: [{ id: 'price-card', title: 'Прайс-карта' }, { id: 'livery', title: 'Ливрея' }] },
 ]
 
 /** Chapter anchors that were renamed after the guide went out, mapped to their current ids. */
@@ -1008,7 +1008,7 @@ export default function Guide() {
 
             <Section>
               <Head>
-                <H2 id="livery">Ливрея дилера</H2>
+                <H2 id="livery">Ливрея</H2>
                 <Text>
                   <p>Ливрея превращает демо-автомобиль дилера в носитель бренда: на бортах и заднем стекле — название модели, имя дилерского центра и QR-код.</p>
                   <p>Файлы для оклейки собираются в <Link to="/livery" className="underline decoration-[0.5px] underline-offset-[0.2em] [text-decoration-skip-ink:none] hover:no-underline">конструкторе</Link>: укажите название дилера, теглайн и ссылку для QR-кода. Конструктор проверит, что текст не заходит на шов между дверями и ручку, и соберёт архив: векторные PDF для плоттерной резки в масштабе 1:1 и спецификацию с размерами для монтажа.</p>

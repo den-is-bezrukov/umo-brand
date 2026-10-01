@@ -3,7 +3,7 @@ import {
   moveTo, lineTo, appendBezierCurve, closePath, pushGraphicsState, popGraphicsState, setFillingCmykColor, setFillingRgbColor,
 } from 'pdf-lib'
 import { zipSync } from 'fflate'
-import type { Cmd, Sheet } from './geometry'
+import { specMarks, type Cmd, type Sheet } from './geometry'
 import type { Surface } from './layout'
 
 const PT = 72 / 25.4
@@ -26,7 +26,7 @@ function fillShapes(page: PDFPage, shapes: Cmd[][], k: number, ox: number, oy: n
   page.pushOperators(...ops)
 }
 
-/** Cut files: each sheet at 1:1 in millimetres, lettering in the livery colour */
+/** Decals: each sheet on a page of its own at 1:1 in millimetres, lettering in the livery colour */
 async function cutFile(sheets: Sheet[], title: string): Promise<Uint8Array> {
   const doc = await PDFDocument.create()
   doc.setTitle(title)
@@ -64,7 +64,7 @@ async function specFile(sheets: Sheet[], title: string): Promise<Uint8Array> {
   const font = await doc.embedFont(StandardFonts.HelveticaBold)
   const red = rgb(1, 0, 0)
   for (const s of sheets) {
-    const { photo, dims } = s.surface
+    const { photo } = s.surface
     const [vx, vy, vw, vh] = photo.view
     const page = doc.addPage([vw, vh])
     page.drawRectangle({ x: 0, y: 0, width: vw, height: vh, color: photo.background === '#000000' ? rgb(0, 0, 0) : rgb(1, 1, 1) })
@@ -74,44 +74,34 @@ async function specFile(sheets: Sheet[], title: string): Promise<Uint8Array> {
     const oy = photo.y - vy
     fillShapes(page, s.shapes, 1, ox, oy, 'white')
 
-    // Sheet edges and zone lines
+    // Dimensions, as in the preview
+    const marks = specMarks(s.surface)
     const X = (x: number) => ox + x
     const Y = (y: number) => vh - (oy + y)
-    const { w, h } = s.surface
-    const size = w / 28
-    const thickness = size / 20
-    const line = (x1: number, y1: number, x2: number, y2: number) =>
-      page.drawLine({ start: { x: X(x1), y: Y(y1) }, end: { x: X(x2), y: Y(y2) }, thickness, color: red })
-    line(0, 0, w, 0); line(w, 0, w, h); line(w, h, 0, h); line(0, h, 0, 0)
-    for (const [x1, y1, x2, y2] of dims.grid) line(x1, y1, x2, y2)
-    for (const c of dims.cols) {
-      const y = c.y ?? -size
-      line(c.from, 0, c.from, y); line(c.to, 0, c.to, y)
-      if (c.y) line(c.from, y, c.to, y)
-      const tw = font.widthOfTextAtSize(c.label, size)
-      page.drawText(c.label, { x: X((c.from + c.to) / 2) - tw / 2, y: Y(y) + size * 0.3, size, font, color: red })
+    for (const [x1, y1, x2, y2] of marks.lines) {
+      page.drawLine({ start: { x: X(x1), y: Y(y1) }, end: { x: X(x2), y: Y(y2) }, thickness: marks.thickness, color: red })
     }
-    for (const r of dims.rows) {
-      const x = r.x < 0 ? 0 : w
-      line(x, r.from, x + r.x * size * 3, r.from); line(x, r.to, x + r.x * size * 3, r.to)
-      const tw = font.widthOfTextAtSize(r.label, size)
-      page.drawText(r.label, { x: X(x) + (r.x < 0 ? -tw - size * 0.4 : size * 0.4), y: Y((r.from + r.to) / 2) - size * 0.35, size, font, color: red })
+    for (const l of marks.labels) {
+      const tw = font.widthOfTextAtSize(l.text, marks.size)
+      const dx = l.align === 'left' ? 0 : l.align === 'center' ? -tw / 2 : -tw
+      page.drawText(l.text, { x: X(l.x) + dx, y: Y(l.y), size: marks.size, font, color: red })
     }
   }
   return doc.save()
 }
 
-/** All three files of a dealer livery in one zip, named as in the Livery folder on Yandex Disk */
-export async function liveryZip(prefix: string, side: Sheet[], rear: Sheet): Promise<Blob> {
-  const [livery, rearWindow, spec] = await Promise.all([
-    cutFile(side, `${prefix} dealer livery`),
-    cutFile([rear], `${prefix} dealer livery, rear window`),
-    specFile([...side, rear], `${prefix} dealer livery spec`),
+/**
+ * A dealer livery in one zip: the decals (left side, right side, rear window — one page each, every page at its own
+ * size) and the spec, named as in the Livery folder on Yandex Disk
+ */
+export async function liveryZip(prefix: string, sheets: Sheet[]): Promise<Blob> {
+  const [livery, spec] = await Promise.all([
+    cutFile(sheets, `${prefix} dealer livery`),
+    specFile(sheets, `${prefix} dealer livery spec`),
   ])
   const zip = zipSync({
     [`00_${prefix}_dealer-livery_spec.pdf`]: spec,
     [`${prefix}_dealer-livery.pdf`]: livery,
-    [`${prefix}_dealer-livery_rearwindow.pdf`]: rearWindow,
   }, { level: 0 })
   return new Blob([zip as BlobPart], { type: 'application/zip' })
 }
