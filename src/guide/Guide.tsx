@@ -620,8 +620,10 @@ export default function Guide() {
             </section>
 
             <Section>
+              {/* Picture above the heading, as a chapter lead; the anchor sits on it so links land on the picture */}
+              <div id="positioning" className="scroll-mt-24"><Fig name="positioning" w={912} h={456} alt="" /></div>
               <Head>
-                <H2 id="positioning">Позиционирование</H2>
+                <H2>Позиционирование</H2>
                 <Text>
                   <p>UMO — это и есть ты. Больше, чем машина, это гаджет для человека.</p>
                   <p>Для мамы с детьми это безопасное пространство в городе. Для айтишника — утилитарный и технологичный транспорт. Для водителя такси — рабочий инструмент.</p>
@@ -629,7 +631,6 @@ export default function Guide() {
                   <p>UMO не диктует сценарий, а подстраивается под тот, что есть сейчас.</p>
                 </Text>
               </Head>
-              <Fig name="positioning" w={912} h={456} alt="" />
             </Section>
 
             <Section>
