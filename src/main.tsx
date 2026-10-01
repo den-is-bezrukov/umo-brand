@@ -9,6 +9,7 @@ import './index.css'
 // Pages are split so the guide doesn't download the PDF renderer the price card needs.
 const App = lazy(() => import('./App'))
 const Guide = lazy(() => import('./guide/Guide'))
+const Livery = lazy(() => import('./Livery'))
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -17,6 +18,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Routes>
           <Route path="/" element={<Guide />} />
           <Route path="/price-card" element={<App />} />
+          <Route path="/livery" element={<Livery />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
