@@ -19,18 +19,13 @@ type NavItem = { id: string; title: string; children?: NavItem[] }
 const NAV: NavItem[] = [
   {
     id: 'brand',
-    title: 'Бренд',
+    title: 'Платформа бренда',
     children: [
       { id: 'positioning', title: 'Позиционирование' },
       { id: 'vision', title: 'Видение' },
       { id: 'mission', title: 'Миссия' },
       { id: 'audience', title: 'Аудитория' },
-    ],
-  },
-  {
-    id: 'voice',
-    title: 'Голос',
-    children: [
+      { id: 'voice', title: 'Голос' },
       { id: 'dictionary', title: 'Словарь' },
       { id: 'examples', title: 'Примеры' },
     ],
@@ -40,7 +35,7 @@ const NAV: NavItem[] = [
     title: 'Логотип',
     children: [
       { id: 'placement', title: 'Размещение на продукте' },
-      { id: 'clearspace', title: 'Свободное пространство и размер' },
+      { id: 'clearspace', title: 'Отступы и размер' },
       { id: 'logo-color', title: 'Цвет логотипа' },
       { id: 'misuse', title: 'Ограничения' },
       { id: 'icons', title: 'Логотип на иконках' },
@@ -230,22 +225,22 @@ function Logo() {
 // ─── Typography ──────────────────────────────────────────────────────────────
 
 /**
- * Chapter: optional lead picture, the title, then the chapter's sections. The title is 8 of 12 columns wide, `full`
- * lets it span the whole grid. The anchor `id` sits on an empty marker above the lead picture, so links land on the
- * chapter's very start and the active-chapter tracking sees it begin there.
+ * Chapter: the title, then the chapter's sections. The title is 8 of 12 columns wide, `full` lets it span the whole
+ * grid. The anchor `id` sits on an empty marker above the title, so links land on the chapter's very start and the
+ * active-chapter tracking sees it begin there.
  * `loose` puts section spacing between title and content, for chapters whose title isn't followed by body copy.
  */
-function Chapter({ id, title, full, lead, loose, children }: {
-  id: string; title: ReactNode; full?: boolean; lead?: ReactNode; loose?: boolean; children: ReactNode
+function Chapter({ id, title, full, loose, children }: {
+  id: string; title: ReactNode; full?: boolean; loose?: boolean; children: ReactNode
 }) {
   return (
-    <div className="pt-12 md:pt-[72px]">
+    // The page list is spaced by sections, so a chapter adds the difference on top.
+    <div className="pt-[calc(var(--spacing-chapter)-var(--spacing-section))]">
       <div id={id} className="scroll-mt-24" />
-      {lead && <div className="mb-8 md:mb-12">{lead}</div>}
       <h2 className={`${full ? '' : 'max-w-[600px]'} text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em]`}>
         {title}
       </h2>
-      <div className={`${loose ? 'mt-8 md:mt-12' : 'mt-6'} flex flex-col gap-24 md:gap-36`}>{children}</div>
+      <div className={`${loose ? 'mt-8 md:mt-12' : 'mt-6'} flex flex-col gap-section`}>{children}</div>
     </div>
   )
 }
@@ -599,104 +594,104 @@ export default function Guide() {
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-expanded={false}
-            aria-label={`Содержание: ${sectionTitle ?? TITLES.brand}`}
+            aria-label={`Содержание: ${sectionTitle ?? 'Стандарты бренда'}`}
             className="fixed inset-x-0 bottom-0 z-20 flex cursor-pointer items-start gap-2 bg-white px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]"
           >
             <TocIcon name="menu" />
-            <span className="min-w-0 flex-1 truncate">{sectionTitle ?? TITLES.brand}</span>
+            <span className="min-w-0 flex-1 truncate">{sectionTitle ?? 'Стандарты бренда'}</span>
           </button>
         )}
       </div>
 
       <main id="top" className="min-w-0 flex-1 p-4 pb-[calc(52px+1rem)] md:p-6 md:pb-[calc(68px+1.5rem)] lg:pb-6">
-        <div className="flex max-w-[1200px] flex-col gap-24 md:gap-36">
-          {/* ── Бренд: opens the page, the statement under the hero stands in for the chapter title ── */}
-          <div id="brand" className="flex scroll-mt-24 flex-col gap-24 md:gap-36">
-            <section className="flex flex-col gap-8 md:gap-12">
-              <Fig name="hero" w={912} h={456} eager alt="Семья у UMO 8 в лесу" />
-              <p className="text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em]">
+        <div className="flex max-w-[1200px] flex-col gap-section">
+          {/* The hero is the top of the page: the logo leads here, and it isn't in the contents. Платформа бренда follows
+              without a title of its own — the statement stands in for it and carries the chapter anchor. */}
+          <div className="flex flex-col gap-8 md:gap-12">
+            <Fig name="hero" w={912} h={456} eager alt="Семья у UMO 8 в лесу" />
+            <div className="flex flex-col gap-section">
+              <p id="brand" className="scroll-mt-24 text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em]">
                 UMO — это автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
               </p>
-            </section>
+              <Section>
+                {/* Picture above the heading; the anchor sits on it so links land on the picture */}
+                <div id="positioning" className="scroll-mt-24"><Fig name="positioning" w={912} h={456} alt="" /></div>
+                <Head>
+                  <H2>Позиционирование</H2>
+                  <Text>
+                    <p>UMO — это и есть ты. Больше, чем машина, это гаджет для человека.</p>
+                    <p>Для мамы с детьми это безопасное пространство в городе. Для айтишника — утилитарный и технологичный транспорт. Для водителя такси — рабочий инструмент.</p>
+                    <p>Для отца, который раз в месяц уезжает на рыбалку за сотню километров — машина с бардачком под блёсны и возможностью зарядить аккумулятор от обычной розетки на даче.</p>
+                    <p>UMO не диктует сценарий, а подстраивается под тот, что есть сейчас.</p>
+                  </Text>
+                </Head>
+              </Section>
 
-            <Section>
-              {/* Picture above the heading, as a chapter lead; the anchor sits on it so links land on the picture */}
-              <div id="positioning" className="scroll-mt-24"><Fig name="positioning" w={912} h={456} alt="" /></div>
-              <Head>
-                <H2>Позиционирование</H2>
-                <Text>
-                  <p>UMO — это и есть ты. Больше, чем машина, это гаджет для человека.</p>
-                  <p>Для мамы с детьми это безопасное пространство в городе. Для айтишника — утилитарный и технологичный транспорт. Для водителя такси — рабочий инструмент.</p>
-                  <p>Для отца, который раз в месяц уезжает на рыбалку за сотню километров — машина с бардачком под блёсны и возможностью зарядить аккумулятор от обычной розетки на даче.</p>
-                  <p>UMO не диктует сценарий, а подстраивается под тот, что есть сейчас.</p>
-                </Text>
-              </Head>
-            </Section>
+              <Section>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-10">
+                  <Head>
+                    <H2 id="vision">Видение</H2>
+                    <Text><p>Сделать электромобильность новой, доступной и естественной нормой жизни для миллионов людей уже сегодня.</p></Text>
+                  </Head>
+                  <Head>
+                    <H2 id="mission">Миссия</H2>
+                    <Text><p>Через умный транспорт трансформировать культуру повседневных поездок.</p></Text>
+                  </Head>
+                </div>
+                <Fig name="umo5-kv" w={912} h={456} />
+              </Section>
 
-            <Section>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-10">
+              <Section>
                 <Head>
-                  <H2 id="vision">Видение</H2>
-                  <Text><p>Сделать электромобильность новой, доступной и естественной нормой жизни для миллионов людей уже сегодня.</p></Text>
+                  <H2 id="audience">Аудитория</H2>
+                  <Text><p>Современные люди, лояльные к технологиям — им важны персонализация и комфорт, а не статус ради статуса.</p></Text>
                 </Head>
-                <Head>
-                  <H2 id="mission">Миссия</H2>
-                  <Text><p>Через умный транспорт трансформировать культуру повседневных поездок.</p></Text>
-                </Head>
-              </div>
-              <Fig name="umo5-kv" w={912} h={456} />
-            </Section>
+                <Fig name="audience" w={912} h={456} />
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
+                  <Head>
+                    <p className="text-[24px] font-medium leading-none tracking-[-0.01em]">UMO 5</p>
+                    <Text><p>Молодые городские — те, кто живёт в ритме и выбирает машину под свою мобильность здесь и сейчас.</p></Text>
+                  </Head>
+                  <Head>
+                    <p className="text-[24px] font-medium leading-none tracking-[-0.01em]">UMO 8</p>
+                    <Text><p>Семейный и представительский сегмент — те, для кого машина должна одинаково подходить и для путешествия с детьми, и для деловой поездки.</p></Text>
+                  </Head>
+                </div>
+              </Section>
 
-            <Section>
-              <Head>
-                <H2 id="audience">Аудитория</H2>
-                <Text><p>Современные люди, лояльные к технологиям — им важны персонализация и комфорт, а не статус ради статуса.</p></Text>
-              </Head>
-              <Fig name="audience" w={912} h={456} />
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
+              <Section>
                 <Head>
-                  <p className="text-[24px] font-medium leading-none tracking-[-0.01em]">UMO 5</p>
-                  <Text><p>Молодые городские — те, кто живёт в ритме и выбирает машину под свою мобильность здесь и сейчас.</p></Text>
+                  <H2 id="voice">Голос</H2>
+                  <Text>
+                    <p>Голос UMO — вдумчивый, искренний, партнёрский. Обращаемся на «вы». Говорим на языке людей, без пафоса и сложных метафор — наш язык живой и человечный.</p>
+                    <p>Выстраиваем диалог с пользователем в каждой точке контакта. Там где позволяет формат, вместо констатации сухих технических терминов раскрываем их на примерах.</p>
+                    <p>Рекламные клише категории и агрессивные восклицания не используем.</p>
+                  </Text>
                 </Head>
+                <Fig name="voice" w={912} h={456} />
+              </Section>
+
+              <Section>
+                <H2 id="dictionary">Словарь</H2>
+                <Dictionary />
+              </Section>
+
+              <Section>
                 <Head>
-                  <p className="text-[24px] font-medium leading-none tracking-[-0.01em]">UMO 8</p>
-                  <Text><p>Семейный и представительский сегмент — те, для кого машина должна одинаково подходить и для путешествия с детьми, и для деловой поездки.</p></Text>
+                  <H2 id="examples">Примеры</H2>
+                  <Text><p>Лучше один раз увидеть: UMO говорит по-человечески и уважительно на вы.</p></Text>
                 </Head>
-              </div>
-            </Section>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 text-[18px] md:text-[20px] leading-[1.25] tracking-[-0.01em]">
+                  {EXAMPLES.map(([title, text]) => (
+                    <div key={title} className="flex flex-col gap-3 border-t border-[#e6e6e6] py-6">
+                      <p className="font-medium">{title}</p>
+                      <p>{text}</p>
+                    </div>
+                  ))}
+                </div>
+              </Section>
+            </div>
           </div>
-
-          {/* ── Голос ── */}
-          <Chapter id="voice" title="Голос">
-            <Section>
-              <Text>
-                <p>Голос UMO — вдумчивый, искренний, партнёрский. Обращаемся на «вы». Говорим на языке людей, без пафоса и сложных метафор — наш язык живой и человечный.</p>
-                <p>Выстраиваем диалог с пользователем в каждой точке контакта. Там где позволяет формат, вместо констатации сухих технических терминов раскрываем их на примерах.</p>
-                <p>Рекламные клише категории и агрессивные восклицания не используем.</p>
-              </Text>
-              <Fig name="voice" w={912} h={456} />
-            </Section>
-
-            <Section>
-              <H2 id="dictionary">Словарь</H2>
-              <Dictionary />
-            </Section>
-
-            <Section>
-              <Head>
-                <H2 id="examples">Примеры</H2>
-                <Text><p>Лучше один раз увидеть: UMO говорит по-человечески и уважительно на вы.</p></Text>
-              </Head>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 text-[18px] md:text-[20px] leading-[1.25] tracking-[-0.01em]">
-                {EXAMPLES.map(([title, text]) => (
-                  <div key={title} className="flex flex-col gap-3 border-t border-[#e6e6e6] py-6">
-                    <p className="font-medium">{title}</p>
-                    <p>{text}</p>
-                  </div>
-                ))}
-              </div>
-            </Section>
-          </Chapter>
 
           {/* ── Логотип ── */}
           <Chapter id="logo" title="Логотип">
@@ -729,9 +724,9 @@ export default function Guide() {
 
             <Section>
               <Head>
-                <H2 id="clearspace">Свободное пространство и размер</H2>
+                <H2 id="clearspace">Отступы и размер</H2>
                 <Text>
-                  <p>Минимальный размер свободного пространства равен одной базовой единице: высоте логотипа (U). В пределах свободного пространства нельзя размещать другие элементы.</p>
+                  <p>Минимальный отступ вокруг логотипа равен одной базовой единице: высоте логотипа (U). В пределах отступа нельзя размещать другие элементы.</p>
                   <p>Чтобы сохранить узнаваемость и четкость не уменьшайте размеры логотипа ниже рекомендуемых.</p>
                 </Text>
               </Head>
@@ -779,7 +774,7 @@ export default function Guide() {
               <Head>
                 <H2 id="icons">Логотип на иконках</H2>
                 <Text>
-                  <p>Размещая логотип на мелких форматах рекомендуется учитывать минимальные размеры и свободное пространство.</p>
+                  <p>Размещая логотип на мелких форматах рекомендуется учитывать минимальные размеры и отступы.</p>
                   <p>Иконка сайта — исключение.</p>
                 </Text>
               </Head>
@@ -797,7 +792,7 @@ export default function Guide() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
                   <Text>
                     <p>Для совместного брендинга с логотипом UMO используйте квадратный или горизонтальный логотип (словесный знак) другой компании.</p>
-                    <p>Следите за размерами логотипов, их расположением и правилами свободного пространства.</p>
+                    <p>Следите за размерами логотипов, их расположением и правилами отступов.</p>
                   </Text>
                   <Text>
                     <p>Высота разделительной линии между логотипами равна высоте логотипа UMO, ширина 1/30 высоты.</p>
@@ -889,10 +884,16 @@ export default function Guide() {
           </Chapter>
 
           {/* ── Ключевой образ ── */}
-          <Chapter id="key-visual" title="Ключевой образ" lead={<Fig name="keyvisual" w={912} h={456} />} loose>
+          <Chapter id="key-visual" title="Ключевой образ">
             <Section>
+              <Text>
+                <p>Ключевой образ — лицо модели в рекламе.</p>
+                <p>Как и логотип, он собран из модулей: фотография, короткий заголовок и локап UMO | Яндекс. Образ у каждой модели свой, а правила общие — поэтому реклама UMO узнаётся с первого взгляда.</p>
+              </Text>
+              {/* Picture above the heading, as in Позиционирование; the anchor sits on it so links land on the picture */}
+              <div id="photography" className="scroll-mt-24"><Fig name="keyvisual" w={912} h={456} /></div>
               <Head>
-                <H2 id="photography">Фотография</H2>
+                <H2>Фотография</H2>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
                   <Text><p>Без излишней постановочности и драмы. Изображение захватывает взгляд, потому что все, что видит зритель, происходит здесь и сейчас.</p></Text>
                   <Text><p>Автомобили становятся частью мира аудитории, но показаны в выгодном ракурсе, который подчеркивает преимущества или рассказывает историю за счет окружения.</p></Text>
@@ -942,7 +943,7 @@ export default function Guide() {
             </Section>
 
             {/* Subsection of Точка продаж: 40px heading, then its own sections */}
-            <div className="flex flex-col gap-12 md:gap-[72px]">
+            <div className="flex flex-col gap-[calc(var(--spacing-section)/3)]">
               <H1Small id="print">Полиграфия</H1Small>
               <Section>
                 <Head>

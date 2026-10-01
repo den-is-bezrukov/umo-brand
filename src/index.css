@@ -33,4 +33,8 @@ body {
 @theme {
   --font-sans: 'CoFo Sans', sans-serif;
   --breakpoint-xs: 360px;
+  /* Guide rhythm, fluid between a 375px phone and the 1440px Figma frame: sections 96 → 216px apart,
+     chapters 144 → 288px. Linear in viewport width, held at both ends. */
+  --spacing-section: clamp(6rem, 3.359rem + 11.268vw, 13.5rem);
+  --spacing-chapter: clamp(9rem, 5.831rem + 13.521vw, 18rem);
 }

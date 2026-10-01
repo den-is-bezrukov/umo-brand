@@ -23,11 +23,29 @@ const typograf = new Typograf({
   enableRule: ['common/nbsp/*', 'ru/nbsp/*', 'ru/dash/main'],
 })
 typograf.disableRule(['common/nbsp/replaceNbsp', 'common/nbsp/nowrap'])
+// Words of up to 3 letters (в, на, для, все…) never end a line: they're tied to the word after them.
+typograf.setSetting('common/nbsp/afterShortWord', 'lengthShortWord', 3)
+
+const INLINE = new Set(['A', 'SPAN', 'STRONG', 'EM', 'B', 'I', 'SMALL', 'ABBR', 'CODE', 'SUP', 'SUB'])
+
+/** Whether no text follows `node` up to the end of its block or a line break — the node holds the last line. */
+function endsLine(node: Node) {
+  for (let n: Node = node; ; n = n.parentNode!) {
+    for (let s = n.nextSibling; s; s = s.nextSibling) {
+      if (s.nodeName === 'BR') return true
+      if (s.textContent?.trim()) return false
+    }
+    if (!n.parentNode || !INLINE.has(n.parentNode.nodeName)) return true
+  }
+}
 
 function fix(node: Text) {
   const text = node.nodeValue
   if (!text || !text.includes(' ')) return
-  const result = typograf.execute(text)
+  let result = typograf.execute(text)
+  // Typograf sees one text node at a time, so it can't tell where a paragraph ends: the last word is tied to the
+  // one before it here, so a line never holds a single word alone.
+  if (endsLine(node)) result = result.replace(/ (\S+\s*)$/, `${NBSP}$1`)
   // Only write when something changed, so the observer below doesn't loop on its own edits.
   if (result !== text) node.nodeValue = result
 }
