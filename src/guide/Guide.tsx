@@ -286,21 +286,23 @@ function Text({ children }: { children: ReactNode }) {
   )
 }
 
-function Caption({ children, cross }: { children: ReactNode; cross?: boolean }) {
+function Caption({ children, cross, download }: { children: ReactNode; cross?: boolean; download?: boolean }) {
   return (
     <figcaption className="flex items-start gap-2 text-[14px] leading-[1.43] [font-feature-settings:'case'_1]">
-      <span className="flex-1">{children}</span>
+      {download && <span aria-hidden className="mt-[3px] w-[14px] shrink-0 border-b border-black pb-px text-center font-medium leading-none">↓</span>}
+      <span className={`flex-1 ${download ? 'decoration-[0.25px] underline-offset-[0.25em] [text-decoration-skip-ink:none] group-hover:underline' : ''}`}>{children}</span>
       {cross && <span aria-label="нельзя" className="w-4 text-center text-[20px] leading-[1.13] text-[#e30]">×</span>}
     </figcaption>
   )
 }
 
 /** One exported Figma frame. `w`/`h` are the frame's 1x size in the 1440px layout and set the aspect ratio. */
-function Fig({ name, w, h, alt = '', eager, caption, cross, className = '' }: {
-  name: string; w: number; h: number; alt?: string; eager?: boolean; caption?: ReactNode; cross?: boolean; className?: string
+/** `href` makes the whole figure a download link, its caption led by ↓ like the rows of `Assets`. */
+function Fig({ name, w, h, alt = '', eager, caption, cross, href, className = '' }: {
+  name: string; w: number; h: number; alt?: string; eager?: boolean; caption?: ReactNode; cross?: boolean; href?: string; className?: string
 }) {
-  return (
-    <figure className={`flex flex-col gap-3 ${className}`}>
+  const figure = (
+    <figure className={`flex flex-col gap-3 ${href ? '' : className}`}>
       <img
         src={img(name)}
         alt={alt}
@@ -311,9 +313,10 @@ function Fig({ name, w, h, alt = '', eager, caption, cross, className = '' }: {
         className="block h-auto w-full bg-[#f5f5f5]"
         style={{ aspectRatio: `${w} / ${h}` }}
       />
-      {caption && <Caption cross={cross}>{caption}</Caption>}
+      {caption && <Caption cross={cross} download={!!href}>{caption}</Caption>}
     </figure>
   )
+  return href ? <a href={href} download className={`group block ${className}`}>{figure}</a> : figure
 }
 
 /**
@@ -462,6 +465,9 @@ function Head({ children }: { children: ReactNode }) {
 }
 
 // ─── Content ─────────────────────────────────────────────────────────────────
+
+// Vercel's own release: Google Fonts has no direct download link any more, only its specimen page.
+const GEIST_ZIP = 'https://github.com/vercel/geist-font/releases/download/v1.7.2/geist-font-v1.7.2.zip'
 
 const UMO5_SUBTITLE = <>Электромобиль с Алисой на борту<br />от 2.5 млн ₽</>
 const UMO8_SUBTITLE = <>Гибридный кроссовер<br />с Алисой на борту от 5 млн. ₽</>
@@ -830,7 +836,7 @@ export default function Guide() {
                   <Caption>Базовая гарнитура</Caption>
                 </figure>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <Fig name="font-geist" w={288} h={216} caption="Альтернатива для Google" alt="Geist" />
+                  <Fig name="font-geist" w={288} h={216} caption="Альтернатива для Google" alt="Geist" href={GEIST_ZIP} />
                   <Fig name="font-helvetica" w={288} h={216} caption="Альтернатива для MacOS" alt="Helvetica Neue" />
                   <Fig name="font-arial" w={288} h={216} caption="Альтернатива для Windows" alt="Arial" />
                 </div>
