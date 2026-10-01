@@ -126,6 +126,12 @@ export default function App() {
       .catch(() => setQrSvg(undefined))
   }, [url])
 
+  useEffect(() => {
+    const prev = document.title
+    document.title = 'Прайс-карта UMO'
+    return () => { document.title = prev }
+  }, [])
+
   const previewRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const el = previewRef.current

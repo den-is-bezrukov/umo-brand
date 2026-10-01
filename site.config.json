@@ -1,5 +1,5 @@
 {
-  "title": "UMO Brand Assets",
+  "title": "Стандарты бренда UMO",
   "description": "Стандарты бренда UMO и печатные материалы для дилеров",
   "language": "ru",
   "robots": {
@@ -11,7 +11,7 @@
     "appleTouchIcon": "/apple-touch-icon.png"
   },
   "openGraph": {
-    "image": "/social-image.png"
+    "image": "https://umo.autos/social-image.png"
   },
   "accessibility": {
     "addBypassLinks": false,

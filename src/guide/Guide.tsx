@@ -74,6 +74,9 @@ const NAV: NavItem[] = [
   },
 ]
 
+/** Chapter anchors that were renamed after the guide went out, mapped to their current ids. */
+const OLD_ANCHORS: Record<string, string> = { dealer: 'retail', about: 'brand', intro: 'top' }
+
 const flatItems = (items: NavItem[]): NavItem[] => items.flatMap(i => [i, ...flatItems(i.children ?? [])])
 const ALL_IDS = flatItems(NAV).map(i => i.id)
 const TITLES: Record<string, string> = Object.fromEntries(flatItems(NAV).map(i => [i.id, i.title]))
@@ -516,8 +519,8 @@ function Dictionary() {
       </div>
       {DICTIONARY.map((row, i) => (
         <div key={i} className={`grid grid-cols-1 ${cols} gap-x-6 gap-y-2 border-t border-[#e6e6e6] py-4`}>
-          <p className="font-medium"><span className="md:hidden">✓ </span>{row.good}</p>
-          <p><span className="md:hidden">✗ </span>{row.bad}</p>
+          <p className="font-medium"><span className="md:hidden">✓&nbsp;</span>{row.good}</p>
+          <p><span className="md:hidden">✗&nbsp;</span>{row.bad}</p>
           <p className="text-black/60 md:text-black">{row.why}</p>
         </div>
       ))}
@@ -550,17 +553,29 @@ export default function Guide() {
   }, [menuOpen])
 
   useEffect(() => {
-    const prev = document.title
-    document.title = 'UMO — стандарты бренда 2026'
+    // Anchors renamed since links went out: send them to where that content lives now, and fix the address.
+    const current = () => {
+      const id = decodeURIComponent(window.location.hash.slice(1))
+      if (!(id in OLD_ANCHORS)) return id
+      const to = OLD_ANCHORS[id]
+      history.replaceState(null, '', to === 'top' ? window.location.pathname : `#${to}`)
+      return to
+    }
     // The page is lazy-loaded, so the browser's own jump to #hash on load finds nothing yet.
     // Jump again once CoFo Sans has loaded: the swap from the fallback font changes text heights above the target.
-    const id = decodeURIComponent(window.location.hash.slice(1))
+    const id = current()
     if (id) {
       const jump = () => document.getElementById(id)?.scrollIntoView()
       jump()
       document.fonts?.ready.then(jump)
     }
-    return () => { document.title = prev }
+    // An old anchor opened on the page that's already here: the browser finds nothing to jump to, so jump ourselves.
+    const onHash = () => {
+      if (!(decodeURIComponent(window.location.hash.slice(1)) in OLD_ANCHORS)) return
+      document.getElementById(current())?.scrollIntoView()
+    }
+    window.addEventListener('hashchange', onHash)
+    return () => window.removeEventListener('hashchange', onHash)
   }, [])
 
   return (
