@@ -67,15 +67,14 @@ const NAV: NavItem[] = [
       { id: 'kv-umo8', title: 'UMO 8' },
     ],
   },
-  {
-    id: 'retail',
-    title: 'Точка продаж',
-    children: [{ id: 'print', title: 'Полиграфия', children: [{ id: 'price-card', title: 'Прайс-карта' }] }],
-  },
+  { id: 'spaces', title: 'Пространства' },
+  { id: 'materials', title: 'Носители', children: [{ id: 'price-card', title: 'Прайс-карта' }] },
 ]
 
 /** Chapter anchors that were renamed after the guide went out, mapped to their current ids. */
-const OLD_ANCHORS: Record<string, string> = { dealer: 'retail', about: 'brand', intro: 'top' }
+const OLD_ANCHORS: Record<string, string> = {
+  dealer: 'spaces', retail: 'spaces', print: 'materials', about: 'brand', intro: 'top',
+}
 
 const flatItems = (items: NavItem[]): NavItem[] => items.flatMap(i => [i, ...flatItems(i.children ?? [])])
 const ALL_IDS = flatItems(NAV).map(i => i.id)
@@ -271,15 +270,6 @@ function Chapter({ id, title, full, loose, children }: {
       </h2>
       <div className={`${loose ? 'mt-8 md:mt-12' : 'mt-6'} flex flex-col gap-section`}>{children}</div>
     </div>
-  )
-}
-
-/** Subsection title between H1 and H2 (40px in the Figma layout), e.g. Полиграфия inside Точка продаж. */
-function H1Small({ id, children }: { id?: string; children: ReactNode }) {
-  return (
-    <h2 id={id} className="scroll-mt-24 text-[28px] md:text-[40px] font-medium leading-none tracking-[-0.01em]">
-      {children}
-    </h2>
   )
 }
 
@@ -981,38 +971,50 @@ export default function Guide() {
             </Section>
           </Chapter>
 
-          {/* ── Точка продаж ── */}
-          <Chapter id="retail" title="Точка продаж">
+          {/* ── Пространства ── */}
+          <Chapter id="spaces" title="Пространства">
             <Section>
               <Text>
-                <p>Первое место, где UMO можно потрогать.</p>
-                <p>Пространство собрано из тех же модулей, что и весь бренд: спокойная геометрия, понятная навигация, ничего лишнего вокруг автомобиля. Единая система для любого города и любой площадки.</p>
+                <p>Пространства продолжают бренд за пределами экрана и бумаги.</p>
+                <p>Здесь работают те же принципы: спокойная геометрия, понятная навигация и ничего лишнего вокруг автомобиля.</p>
               </Text>
               <Fig name="dealer" w={912} h={456} alt="Дилерский центр UMO и Яндекса" />
             </Section>
 
-            {/* Subsection of Точка продаж: 40px heading, then its own sections */}
-            <div className="flex flex-col gap-[calc(var(--spacing-section)/3)]">
-              <H1Small id="print">Полиграфия</H1Small>
-              <Section>
-                <Head>
-                  <H2 id="price-card">Прайс-карта</H2>
-                  <Text>
-                    <p>Прайс-карта стоит рядом с автомобилем и отвечает на главный вопрос — сколько он стоит.</p>
-                    <p>Карты для всех моделей и комплектаций собираются в <Link to="/price-card" className="underline decoration-[0.5px] underline-offset-[0.2em] [text-decoration-skip-ink:none] hover:no-underline">конструкторе</Link>: выберите модель и комплектацию, укажите цену с кредитом и без и ссылку для QR-кода. Макет, шрифты и отступы уже настроены — получится готовый к печати PDF формата A3.</p>
-                  </Text>
-                </Head>
-                <div className="flex flex-col gap-6">
-                  <div className="bg-[#f5f5f5] p-6 md:flex md:aspect-[2/1] md:items-center md:justify-center md:p-0">
-                    <div className="grid grid-cols-2 gap-3 md:w-[58.46%] md:gap-x-[4.5%]">
-                      <PriceCardPreview variant="umo8-max" fullPrice="6 515 000" creditPrice="5 000 000" image={img('pricecard-umo8-car')} alt="Прайс-карта UMO 8, комплектация Макс" />
-                      <PriceCardPreview variant="umo5-max" fullPrice="3 715 000" creditPrice="2 790 000" image={img('pricecard-umo5-car')} alt="Прайс-карта UMO 5, комплектация Макс" />
-                    </div>
+            {/* Дилерский центр, on hold: back as a section with { id: 'dealer', title: 'Дилерский центр' } in NAV,
+                and drop `dealer` from OLD_ANCHORS.
+            <Section>
+              <Head>
+                <H2 id="dealer">Дилерский центр</H2>
+                <Text>
+                  <p>Первое место, где UMO можно потрогать.</p>
+                  <p>Салоны собраны по единой системе, поэтому UMO узнаётся с порога в любом городе и на любой площадке.</p>
+                </Text>
+              </Head>
+            </Section>
+            */}
+          </Chapter>
+
+          {/* ── Носители ── */}
+          <Chapter id="materials" title="Носители" loose>
+            <Section>
+              <Head>
+                <H2 id="price-card">Прайс-карта</H2>
+                <Text>
+                  <p>Прайс-карта стоит рядом с автомобилем и отвечает на главный вопрос — сколько он стоит.</p>
+                  <p>Карты для всех моделей и комплектаций собираются в <Link to="/price-card" className="underline decoration-[0.5px] underline-offset-[0.2em] [text-decoration-skip-ink:none] hover:no-underline">конструкторе</Link>: выберите модель и комплектацию, укажите цену с кредитом и без и ссылку для QR-кода. Макет, шрифты и отступы уже настроены — получится готовый к печати PDF формата A3.</p>
+                </Text>
+              </Head>
+              <div className="flex flex-col gap-6">
+                <div className="bg-[#f5f5f5] p-6 md:flex md:aspect-[2/1] md:items-center md:justify-center md:p-0">
+                  <div className="grid grid-cols-2 gap-3 md:w-[58.46%] md:gap-x-[4.5%]">
+                    <PriceCardPreview variant="umo8-max" fullPrice="6 515 000" creditPrice="5 000 000" image={img('pricecard-umo8-car')} alt="Прайс-карта UMO 8, комплектация Макс" />
+                    <PriceCardPreview variant="umo5-max" fullPrice="3 715 000" creditPrice="2 790 000" image={img('pricecard-umo5-car')} alt="Прайс-карта UMO 5, комплектация Макс" />
                   </div>
-                  <Assets items={[{ to: '/price-card', title: 'Конструктор прайс-карты' }]} />
                 </div>
-              </Section>
-            </div>
+                <Assets items={[{ to: '/price-card', title: 'Конструктор прайс-карты' }]} />
+              </div>
+            </Section>
           </Chapter>
 
           <footer className="text-[16px] leading-[1.25] tracking-[-0.01em] text-[#999]">ООО «ЭМ РУС». 0+</footer>
