@@ -431,7 +431,7 @@ function fileSize(bytes: number): [number, string] {
  * split into two, filled top to bottom so files of one item stay together. Sizes get one decimal in every
  * row as soon as one of them is under 10 (0,7 КБ), and none otherwise.
  */
-function Assets({ items }: { items: Asset[] }) {
+function Assets({ items, preview }: { items: Asset[]; preview?: string }) {
   const sizes = items.flatMap(a => ('file' in a ? [fileSize(downloadSizes[a.file] ?? 0)] : []))
   const digits = sizes.some(([n]) => n < 10) ? 1 : 0
   const number = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: digits, maximumFractionDigits: digits })
@@ -443,8 +443,10 @@ function Assets({ items }: { items: Asset[] }) {
     >
       {items.map(a => {
         const row = 'group flex items-center gap-4 border-t border-[#e6e6e6] py-[14px] text-[16px] leading-none tracking-[-0.01em]'
-        const name = 'min-w-0 flex-1 font-medium decoration-[0.25px] underline-offset-[0.25em] [text-decoration-skip-ink:none] group-hover:underline'
-        const meta = 'shrink-0 text-[#999] [font-feature-settings:"tnum"_1] group-hover:text-black'
+        // The row a preview above stands for lights up while the preview is pointed at
+        const linked = preview === ('to' in a ? a.to : a.file)
+        const name = `min-w-0 flex-1 font-medium decoration-[0.25px] underline-offset-[0.25em] [text-decoration-skip-ink:none] group-hover:underline ${linked ? 'group-has-[[data-preview]:hover]/preview:underline' : ''}`
+        const meta = `shrink-0 text-[#999] [font-feature-settings:"tnum"_1] group-hover:text-black ${linked ? 'group-has-[[data-preview]:hover]/preview:text-black' : ''}`
         if ('to' in a) {
           return (
             <Link key={a.to} to={a.to} className={row}>
@@ -463,6 +465,28 @@ function Assets({ items }: { items: Asset[] }) {
           </a>
         )
       })}
+    </div>
+  )
+}
+
+/**
+ * A picture that does what one row of the `Assets` under it does: opens the page or downloads the file. Pointing at
+ * the picture marks that row as hovered, so the two read as one link. Put both inside a `group/preview` element and
+ * pass the row's file or path to `Assets` as `preview`.
+ */
+function PreviewLink({ asset, label, children }: { asset: Asset; label: string; children: ReactNode }) {
+  const className = 'block outline-none focus-visible:ring-2 focus-visible:ring-black/30'
+  return 'to' in asset
+    ? <Link to={asset.to} aria-label={label} data-preview className={className}>{children}</Link>
+    : <a href={`/downloads/${asset.file}`} download aria-label={label} data-preview className={className}>{children}</a>
+}
+
+/** A constructor page's preview over its ↗ row */
+function Constructor({ to, title, children }: { to: string; title: string; children: ReactNode }) {
+  return (
+    <div className="group/preview flex flex-col gap-6">
+      <PreviewLink asset={{ to, title }} label={title}>{children}</PreviewLink>
+      <Assets items={[{ to, title }]} preview={to} />
     </div>
   )
 }
@@ -732,9 +756,11 @@ export default function Guide() {
                 <p>Логотип UMO не буквы, а модули.</p>
                 <p>Словесный знак собран из элементов, как из конструктора — чистая геометрия и инженерия. Это визуальный эквивалент главной идеи бренда — город как система, а автомобиль как её умный, технологичный элемент.</p>
               </Text>
-              <div className="flex flex-col gap-6">
-                <LogoPlate w={912} h={456} logo={480} bg="#f5f5f5" />
-                <Assets items={[{ file: 'umo-logo.svg' }, { file: 'umo-logo-png.zip' }]} />
+              <div className="group/preview flex flex-col gap-6">
+                <PreviewLink asset={{ file: 'umo-logo.svg' }} label="Скачать логотип, SVG">
+                  <LogoPlate w={912} h={456} logo={480} bg="#f5f5f5" />
+                </PreviewLink>
+                <Assets items={[{ file: 'umo-logo.svg' }, { file: 'umo-logo-png.zip' }]} preview="umo-logo.svg" />
               </div>
             </Section>
 
@@ -810,11 +836,18 @@ export default function Guide() {
                   <p>Иконка сайта — исключение.</p>
                 </Text>
               </Head>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <Fig name="icon-app" w={444} h={333} caption="Иконка мобильного приложения" />
-                <Fig name="icon-userpic" w={444} h={333} caption="Юзерпик аккаунта соцсетей" />
-                <Fig name="icon-favicon" w={444} h={333} caption="Фавиконка и иконка закладок в браузере" alt="Фавиконка во вкладке тёмного браузера" />
-                <Fig name="icon-favicon-light" w={444} h={333} alt="Фавиконка во вкладке светлого браузера" />
+              <div className="group/preview flex flex-col gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <Fig name="icon-app" w={444} h={333} caption="Иконка мобильного приложения" />
+                  <Fig name="icon-userpic" w={444} h={333} caption="Юзерпик аккаунта соцсетей" />
+                  <PreviewLink asset={{ file: 'umo-favicon.svg' }} label="Скачать фавиконку, SVG">
+                    <Fig name="icon-favicon" w={444} h={333} caption="Фавиконка и иконка закладок в браузере" alt="Фавиконка во вкладке тёмного браузера" />
+                  </PreviewLink>
+                  <PreviewLink asset={{ file: 'umo-favicon.svg' }} label="Скачать фавиконку, SVG">
+                    <Fig name="icon-favicon-light" w={444} h={333} alt="Фавиконка во вкладке светлого браузера" />
+                  </PreviewLink>
+                </div>
+                <Assets items={[{ file: 'umo-favicon.svg' }, { file: 'umo-favicon.ico' }]} preview="umo-favicon.svg" />
               </div>
             </Section>
 
@@ -832,10 +865,12 @@ export default function Guide() {
                   </Text>
                 </div>
               </Head>
-              <div className="flex flex-col gap-6">
+              <div className="group/preview flex flex-col gap-6">
                 <Fig name="cobrand-square" w={912} h={304} alt="Схема кобрендинга с квадратным логотипом" />
-                <Fig name="cobrand-square-example" w={912} h={304} alt="UMO и Яндекс" />
-                <Assets items={[{ file: 'umo-yandex.svg' }, { file: 'umo-yandex-png.zip' }]} />
+                <PreviewLink asset={{ file: 'umo-yandex.svg' }} label="Скачать логотип UMO | Яндекс, SVG">
+                  <Fig name="cobrand-square-example" w={912} h={304} alt="UMO и Яндекс" />
+                </PreviewLink>
+                <Assets items={[{ file: 'umo-yandex.svg' }, { file: 'umo-yandex-png.zip' }]} preview="umo-yandex.svg" />
               </div>
               <div className="flex flex-col gap-6">
                 <Fig name="cobrand-horizontal" w={912} h={304} alt="Схема кобрендинга с горизонтальным логотипом" />
@@ -995,10 +1030,9 @@ export default function Guide() {
                   <p>Файлы для оклейки собираются в <Link to="/livery" className="underline decoration-[0.5px] underline-offset-[0.2em] [text-decoration-skip-ink:none] hover:no-underline">конструкторе</Link>: укажите название дилера, теглайн и ссылку для QR-кода. Конструктор проверит, что текст не заходит на шов между дверями и ручку, и соберёт архив: векторные PDF для плоттерной резки в масштабе 1:1 и спецификацию с размерами для монтажа.</p>
                 </Text>
               </Head>
-              <div className="flex flex-col gap-6">
+              <Constructor to="/livery" title="Конструктор ливреи">
                 <Fig name="livery-umo8" w={912} h={456} alt="UMO 8 с ливреей дилера, левый борт" />
-                <Assets items={[{ to: '/livery', title: 'Конструктор ливреи' }]} />
-              </div>
+              </Constructor>
             </Section>
 
             <Section>
@@ -1009,15 +1043,14 @@ export default function Guide() {
                   <p>Карты для всех моделей и комплектаций собираются в <Link to="/price-card" className="underline decoration-[0.5px] underline-offset-[0.2em] [text-decoration-skip-ink:none] hover:no-underline">конструкторе</Link>: выберите модель и комплектацию, укажите цену с кредитом и без и ссылку для QR-кода. Макет, шрифты и отступы уже настроены — получится готовый к печати PDF формата A3.</p>
                 </Text>
               </Head>
-              <div className="flex flex-col gap-6">
+              <Constructor to="/price-card" title="Конструктор прайс-карты">
                 <div className="bg-[#f5f5f5] p-6 md:flex md:aspect-[2/1] md:items-center md:justify-center md:p-0">
                   <div className="grid grid-cols-2 gap-3 md:w-[58.46%] md:gap-x-[4.5%]">
                     <PriceCardPreview variant="umo8-max" fullPrice="6 515 000" creditPrice="5 000 000" image={img('pricecard-umo8-car')} alt="Прайс-карта UMO 8, комплектация Макс" />
                     <PriceCardPreview variant="umo5-max" fullPrice="3 715 000" creditPrice="2 790 000" image={img('pricecard-umo5-car')} alt="Прайс-карта UMO 5, комплектация Макс" />
                   </div>
                 </div>
-                <Assets items={[{ to: '/price-card', title: 'Конструктор прайс-карты' }]} />
-              </div>
+              </Constructor>
             </Section>
           </Chapter>
 
