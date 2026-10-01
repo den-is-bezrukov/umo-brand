@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useLayoutEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { pdf } from '@react-pdf/renderer'
 import QRCode from 'qrcode'
@@ -92,6 +92,38 @@ function TextInput({ value, onChange, onBlur, placeholder, invalid, numeric, cla
       pattern={numeric ? '[0-9 ]*' : undefined}
       className={`h-10 w-full min-w-0 rounded-[4px] bg-[#f5f5f5] px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]
         ${invalid ? 'ring-1 ring-inset ring-[#e30]' : 'focus:ring-1 focus:ring-inset focus:ring-black'} ${className}`}
+    />
+  )
+}
+
+/**
+ * The QR link field: a one-line-tall textarea that grows with the link instead of cutting it off. Links have no
+ * spaces, so they break anywhere; Enter and pasted line breaks never get into the value.
+ */
+function UrlInput({ value, onChange, onBlur, invalid }: { value: string; onChange: (v: string) => void; onBlur: () => void; invalid?: boolean }) {
+  const ref = useRef<HTMLTextAreaElement>(null)
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el) return
+    const fit = () => { el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px` }
+    fit()
+    // The column is fluid on phones, so the number of lines changes with the screen width too.
+    window.addEventListener('resize', fit)
+    return () => window.removeEventListener('resize', fit)
+  }, [value])
+  return (
+    <textarea
+      ref={ref}
+      rows={1}
+      value={value}
+      onChange={e => onChange(e.target.value.replace(/\s*\n\s*/g, ''))}
+      onKeyDown={e => { if (e.key === 'Enter') e.preventDefault() }}
+      onBlur={onBlur}
+      placeholder="https://..."
+      aria-invalid={invalid || undefined}
+      spellCheck={false}
+      className={`block min-h-10 w-full min-w-0 resize-none overflow-hidden break-all rounded-[4px] bg-[#f5f5f5] py-[10px] pl-3 pr-9 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]
+        ${invalid ? 'ring-1 ring-inset ring-[#e30]' : 'focus:ring-1 focus:ring-inset focus:ring-black'}`}
     />
   )
 }
@@ -221,8 +253,7 @@ export default function App() {
             <div className="col-span-2 md:col-span-1">
               <Field label="Ссылка QR:">
                 <div className="relative">
-                  <TextInput
-                    className="pr-9"
+                  <UrlInput
                     value={url}
                     onChange={v => { setUrl(v); setUrlBlurred(false) }}
                     invalid={urlError}
@@ -231,9 +262,9 @@ export default function App() {
                       const v = url.trim()
                       if (v && !/^https?:\/\//i.test(v)) { setUrl('https://' + v); setUrlBlurred(false) }
                     }}
-                    placeholder="https://..."
                   />
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex w-9 items-center justify-center">
+                  {/* On the first line, however many lines the link takes */}
+                  <div className="pointer-events-none absolute top-0 right-0 flex h-10 w-9 items-center justify-center">
                     {urlValid ? (
                       <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-label="Ссылка в порядке">
                         <path d={svgPaths.p3de7e600} stroke="#00C950" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.45833" />

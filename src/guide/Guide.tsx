@@ -1,4 +1,4 @@
-import { isValidElement, useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react'
+import { isValidElement, useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react'
 import { Link } from 'react-router-dom'
 import PriceCard from '@/posters/PriceCard'
 import type { Variant } from '@/posters/cardData'
@@ -125,14 +125,16 @@ function useActiveSection() {
  */
 const NAV_HOVER = 'transition-[color] duration-350 ease-[ease] hover:text-[#757575] hover:duration-0'
 
-function NavLink({ id, title, active, onNavigate }: { id: string; title: string; active: boolean; onNavigate?: () => void }) {
+/** `active`: you're inside this item (medium weight); `current`: its own heading is the one on screen (the bullet). */
+function NavLink({ id, title, active, current, onNavigate }: { id: string; title: string; active: boolean; current: boolean; onNavigate?: () => void }) {
   return (
     <a
       href={`#${id}`}
       onClick={onNavigate}
+      aria-current={active ? 'location' : undefined}
       className={`relative block leading-[1.25] ${active ? 'font-medium' : NAV_HOVER}`}
     >
-      {active && <span aria-hidden className="absolute -left-[0.9em]">•</span>}
+      {current && <span aria-hidden className="absolute -left-[0.9em]">•</span>}
       {title}
     </a>
   )
@@ -159,7 +161,7 @@ function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; o
       className={`flex w-full cursor-pointer items-start gap-2 bg-white ${NAV_HOVER} text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] ${className}`}
     >
       <TocIcon name={expanded ? 'close' : 'menu'} />
-      {expanded ? 'Свернуть' : 'Развернуть'}
+      {expanded ? 'Свернуть' : 'Содержание'}
     </button>
   )
 }
@@ -173,7 +175,7 @@ function Nav({ active, expandAll, onNavigate }: { active: string[]; expandAll: b
         const open = expandAll || activeChapter === chapter.id
         return (
           <div key={chapter.id} className="flex flex-col">
-            <NavLink id={chapter.id} title={chapter.title} active={activeChapter === chapter.id} onNavigate={onNavigate} />
+            <NavLink id={chapter.id} title={chapter.title} active={activeChapter === chapter.id} current={active.includes(chapter.id)} onNavigate={onNavigate} />
             {chapter.children && (
               <div
                 inert={!open}
@@ -184,11 +186,11 @@ function Nav({ active, expandAll, onNavigate }: { active: string[]; expandAll: b
                     {chapter.children.map(s => (
                       // Parent → its sub-items 12px (chapter → items, item → nested items), siblings 8px.
                       <div key={s.id} className="flex flex-col gap-3">
-                        <NavLink id={s.id} title={s.title} active={active.some(id => contains(s, id))} onNavigate={onNavigate} />
+                        <NavLink id={s.id} title={s.title} active={active.some(id => contains(s, id))} current={active.includes(s.id)} onNavigate={onNavigate} />
                         {s.children && (
                           <div className="flex flex-col gap-2 pl-6">
                             {s.children.map(t => (
-                              <NavLink key={t.id} id={t.id} title={t.title} active={active.includes(t.id)} onNavigate={onNavigate} />
+                              <NavLink key={t.id} id={t.id} title={t.title} active={active.includes(t.id)} current={active.includes(t.id)} onNavigate={onNavigate} />
                             ))}
                           </div>
                         )}
@@ -203,6 +205,32 @@ function Nav({ active, expandAll, onNavigate }: { active: string[]; expandAll: b
       })}
     </nav>
   )
+}
+
+/**
+ * Keeps the item you're reading visible in the desktop sidebar when the list is taller than the screen (expanded):
+ * once the page settles, the sidebar scrolls just enough to show it between the sticky logo and the toggle row.
+ */
+function useActiveInView(asideRef: RefObject<HTMLElement | null>, active: string[], expandAll: boolean) {
+  useEffect(() => {
+    const aside = asideRef.current
+    if (!aside || !active.length) return
+    // Wait out a chapter opening or closing (0.3s), and fast scrolling through several headings.
+    const timer = setTimeout(() => {
+      const lit = aside.querySelectorAll('nav [aria-current]')
+      const link = lit[lit.length - 1]
+      if (!link) return
+      const head = aside.firstElementChild as HTMLElement
+      const foot = aside.lastElementChild as HTMLElement
+      const box = aside.getBoundingClientRect()
+      const r = link.getBoundingClientRect()
+      const top = box.top + head.offsetHeight
+      const bottom = box.bottom - foot.offsetHeight
+      const by = r.top < top ? r.top - top - 24 : r.bottom > bottom ? r.bottom - bottom + 24 : 0
+      if (by) aside.scrollBy({ top: by, behavior: 'smooth' })
+    }, 350)
+    return () => clearTimeout(timer)
+  }, [asideRef, active, expandAll])
 }
 
 const EXPAND_KEY = 'umo-guide-toc-expanded'
@@ -536,6 +564,8 @@ export default function Guide() {
   useTypograf(pageRef)
   const [expandAll, toggleExpandAll] = useExpandAll()
   const [menuOpen, setMenuOpen] = useState(false)
+  const asideRef = useRef<HTMLElement>(null)
+  useActiveInView(asideRef, active, expandAll)
   // Two headings rarely share a line on a phone; when they do (Видение / Миссия), the first one names the place.
   const sectionTitle = active.length ? TITLES[active[0]] : undefined
 
@@ -583,7 +613,7 @@ export default function Guide() {
       {/* Desktop sidebar. The expand row sits at the bottom of the screen, so it stays put while the open chapter
           changes the list's height, and sticks there when the list is taller than the screen, cutting the list off —
           enough of a hint that it scrolls, so the scrollbar, far from the text at this width, is hidden. */}
-      <aside className="hidden lg:flex sticky top-0 h-screen w-[320px] xl:w-[480px] shrink-0 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <aside ref={asideRef} className="hidden lg:flex sticky top-0 h-screen w-[320px] xl:w-[480px] shrink-0 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" aria-label="В начало"><Logo /></a></div>
         <div className="px-6"><Nav active={active} expandAll={expandAll} /></div>
         <TocToggle expanded={expandAll} onClick={toggleExpandAll} className="sticky bottom-0 z-10 mt-auto p-6" />
