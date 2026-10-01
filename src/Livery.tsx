@@ -72,7 +72,7 @@ export default function Livery() {
   const [dealer, setDealer] = useState('Центр UMO | Автодом')
   const [tagline, setTagline] = useState('Попробуй гибрид с технологиями Яндекса')
   const [url, setUrl] = useState(DEFAULT_URL)
-  const [guides, setGuides] = useState(true)
+  const [guides, setGuides] = useState(false)
   const [font, setFont] = useState<Font>()
   const [exporting, setExporting] = useState(false)
 
