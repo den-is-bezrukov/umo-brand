@@ -56,6 +56,8 @@ type SiteConfiguration = {
   }
   icons?: {
     icon?: string
+    ico?: string
+    appleTouchIcon?: string
   }
   openGraph?: {
     image?: string
@@ -89,6 +91,8 @@ function siteMetaPlugin(config: SiteConfiguration): Plugin {
   const title = config.title ?? "umo-brand"
   const description = config.description ?? ''
   const favicon = config.icons?.icon ?? ''
+  const faviconIco = config.icons?.ico ?? ''
+  const appleTouchIcon = config.icons?.appleTouchIcon ?? ''
   const socialImage = config.openGraph?.image ?? ''
   const language = sanitizeHtmlValue(config.language) || 'en'
   const googleAnalyticsId = sanitizeHtmlValue(config.analytics?.googleAnalyticsId)
@@ -135,8 +139,16 @@ function siteMetaPlugin(config: SiteConfiguration): Plugin {
         if (config.robots?.index === false) {
           tags.push({ tag: 'meta', attrs: { name: 'robots', content: 'noindex, nofollow' }, injectTo: 'head' })
         }
+        // .ico first with sizes="32x32" so browsers that take SVG icons still prefer the SVG one.
+        if (faviconIco) {
+          tags.push({ tag: 'link', attrs: { rel: 'icon', href: faviconIco, sizes: '32x32' }, injectTo: 'head' })
+        }
         if (favicon) {
-          tags.push({ tag: 'link', attrs: { rel: 'icon', href: favicon }, injectTo: 'head' })
+          const type = favicon.endsWith('.svg') ? 'image/svg+xml' : undefined
+          tags.push({ tag: 'link', attrs: { rel: 'icon', href: favicon, ...(type && { type }) }, injectTo: 'head' })
+        }
+        if (appleTouchIcon) {
+          tags.push({ tag: 'link', attrs: { rel: 'apple-touch-icon', href: appleTouchIcon }, injectTo: 'head' })
         }
         if (title) {
           tags.push({ tag: 'meta', attrs: { property: 'og:title', content: title }, injectTo: 'head' })

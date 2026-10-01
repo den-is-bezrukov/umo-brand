@@ -6,7 +6,9 @@
     "index": false
   },
   "icons": {
-    "icon": "/favicon.png"
+    "icon": "/favicon.svg",
+    "ico": "/favicon.ico",
+    "appleTouchIcon": "/apple-touch-icon.png"
   },
   "openGraph": {
     "image": "/social-image.png"
