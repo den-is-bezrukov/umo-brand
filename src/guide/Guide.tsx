@@ -4,6 +4,7 @@ import PriceCard from '@/posters/PriceCard'
 import type { Variant } from '@/posters/cardData'
 import UmoLogo from './UmoLogo'
 import UmoYandexLockup from './UmoYandexLockup'
+import tocIcons from '@/icons/toc'
 import { useTypograf } from './typograf'
 import downloadSizes from 'virtual:download-sizes'
 
@@ -119,27 +120,29 @@ function NavLink({ id, title, active, onNavigate }: { id: string; title: string;
   )
 }
 
-/**
- * Expand-all row at the foot of the table of contents. The glyph is the font's own › ‹ turned upright: collapsed,
- * the chevrons point apart — the list will spread open; expanded, they point at each other — it will fold back.
- */
-function TocGlyph({ expanded }: { expanded: boolean }) {
+/** Table-of-contents icon, 16×16 on a 20px line: chevrons apart (expand), together (collapse), or the menu bars. */
+function TocIcon({ name }: { name: keyof typeof tocIcons }) {
   return (
-    <span aria-hidden className="flex h-5 w-2 shrink-0 items-center justify-center">
-      <span className="rotate-90 whitespace-nowrap leading-none [font-feature-settings:'case']">{expanded ? '› ‹' : '‹ ›'}</span>
+    <span aria-hidden className="flex h-5 shrink-0 items-center">
+      <svg width="16" height="16" viewBox="0 0 16 16" className="block">
+        {name === 'menu'
+          ? <path d={tocIcons.menu} fill="none" stroke="currentColor" strokeWidth="1.5" />
+          : <path d={tocIcons[name]} fill="currentColor" />}
+      </svg>
     </span>
   )
 }
 
+/** Expand-all row at the foot of the table of contents: chevrons apart to spread the list, together to fold it. */
 function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; onClick: () => void; className?: string }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-expanded={expanded}
-      className={`flex w-full cursor-pointer items-start gap-4 bg-white ${NAV_HOVER} text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] ${className}`}
+      className={`flex w-full cursor-pointer items-start gap-2 bg-white ${NAV_HOVER} text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] ${className}`}
     >
-      <TocGlyph expanded={expanded} />
+      <TocIcon name={expanded ? 'collapse' : 'expand'} />
       {expanded ? 'Свернуть' : 'Развернуть'}
     </button>
   )
@@ -153,7 +156,7 @@ function Nav({ active, expandAll, onNavigate }: { active: string[]; expandAll: b
       <a
         href="#top"
         onClick={onNavigate}
-        className={`block font-medium leading-[1.25] ${NAV_HOVER}`}
+        className={`block leading-[1.25] ${NAV_HOVER}`}
       >
         Стандарты бренда
       </a>
@@ -562,7 +565,7 @@ export default function Guide() {
 
       {/* Mobile top bar. iOS 26 browsers draw the page under their translucent top bar and stick `top: 0` below it,
           so the white is extended a screen upwards to hide content scrolling above the header. */}
-      <header className="lg:hidden sticky top-0 z-20 bg-white px-4 py-4 md:px-6 before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-screen before:bg-white before:content-['']">
+      <header className="lg:hidden sticky top-0 z-20 bg-white p-4 md:p-6 before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-screen before:bg-white before:content-['']">
         <a href="#top" aria-label="В начало" className="block w-fit"><Logo /></a>
       </header>
 
@@ -570,12 +573,12 @@ export default function Guide() {
           sidebar; tapped, the full contents open between the header and the bar, which turns into «Свернуть». */}
       <div className="lg:hidden">
         {menuOpen && (
-          <div className="fixed inset-x-0 top-14 bottom-0 z-20 overflow-y-auto overscroll-contain bg-white px-4 pt-4 md:px-6">
+          <div className="fixed inset-x-0 top-14 bottom-0 z-20 overflow-y-auto overscroll-contain bg-white px-4 pt-4 md:top-[72px] md:px-6 md:pt-6">
             <Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} />
             <TocToggle
               expanded
               onClick={() => setMenuOpen(false)}
-              className="sticky bottom-0 -mx-4 w-[calc(100%+2rem)] px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] md:-mx-6 md:w-[calc(100%+3rem)] md:px-6"
+              className="sticky bottom-0 -mx-4 w-[calc(100%+2rem)] px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] md:-mx-6 md:w-[calc(100%+3rem)] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]"
             />
           </div>
         )}
@@ -585,15 +588,15 @@ export default function Guide() {
             onClick={() => setMenuOpen(true)}
             aria-expanded={false}
             aria-label={`Содержание: ${sectionTitle ?? 'Стандарты бренда'}`}
-            className="fixed inset-x-0 bottom-0 z-20 flex cursor-pointer items-start gap-4 bg-white px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6"
+            className="fixed inset-x-0 bottom-0 z-20 flex cursor-pointer items-start gap-2 bg-white px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]"
           >
-            <TocGlyph expanded={false} />
+            <TocIcon name="menu" />
             <span className="min-w-0 flex-1 truncate">{sectionTitle ?? 'Стандарты бренда'}</span>
           </button>
         )}
       </div>
 
-      <main id="top" className="min-w-0 flex-1 p-4 pb-[calc(52px+1rem)] md:p-6 md:pb-[calc(52px+1.5rem)] lg:pb-6">
+      <main id="top" className="min-w-0 flex-1 p-4 pb-[calc(52px+1rem)] md:p-6 md:pb-[calc(68px+1.5rem)] lg:pb-6">
         <div className="flex max-w-[1200px] flex-col gap-24 md:gap-36">
           {/* Intro */}
           <section className="flex flex-col gap-8 md:gap-12">
