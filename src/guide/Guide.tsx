@@ -42,14 +42,7 @@ const NAV: NavItem[] = [
       { id: 'cobranding', title: 'Кобрендинг' },
     ],
   },
-  {
-    id: 'typography',
-    title: 'Типографика',
-    children: [
-      { id: 'fonts', title: 'Шрифты' },
-      { id: 'type-styles', title: 'Стили и иерархия' },
-    ],
-  },
+  { id: 'typography', title: 'Типографика', children: [{ id: 'type-styles', title: 'Стили и иерархия' }] },
   {
     id: 'lettering',
     title: 'Леттеринг',
@@ -73,7 +66,7 @@ const NAV: NavItem[] = [
 
 /** Chapter anchors that were renamed after the guide went out, mapped to their current ids. */
 const OLD_ANCHORS: Record<string, string> = {
-  dealer: 'spaces', retail: 'spaces', print: 'materials', about: 'brand', intro: 'top',
+  dealer: 'spaces', retail: 'spaces', print: 'materials', fonts: 'typography', about: 'brand', intro: 'top',
 }
 
 const flatItems = (items: NavItem[]): NavItem[] => items.flatMap(i => [i, ...flatItems(i.children ?? [])])
@@ -144,7 +137,7 @@ function TocIcon({ name }: { name: keyof typeof tocIcons }) {
   return (
     <span aria-hidden className="flex h-5 shrink-0 items-center">
       <svg width="16" height="16" viewBox="0 0 16 16" className="block">
-        <path d={tocIcons[name]} fill="none" stroke="currentColor" strokeWidth="1.5" />
+        <path d={tocIcons[name]} fill="none" stroke="currentColor" strokeWidth="2" />
       </svg>
     </span>
   )
@@ -852,15 +845,12 @@ export default function Guide() {
           </Chapter>
 
           {/* ── Типографика ── */}
-          <Chapter id="typography" title="Типографика" loose>
+          <Chapter id="typography" title="Типографика">
             <Section>
-              <Head>
-                <H2 id="fonts">Шрифты</H2>
-                <Text>
-                  <p>Гарнитура CoFo Sans — основа визуальной идентификации и стиля бренда UMO. Функциональный и разборчивый, он имеет несколько весов для полной свободы выражения.</p>
-                  <p>Когда использование CoFo Sans невозможно, допускается применение альтернатив, доступных в популярных рабочих пространствах.</p>
-                </Text>
-              </Head>
+              <Text>
+                <p>Гарнитура CoFo Sans — основа визуальной идентификации и стиля бренда UMO. Функциональный и разборчивый, он имеет несколько весов для полной свободы выражения.</p>
+                <p>Когда использование CoFo Sans невозможно, допускается применение альтернатив, доступных в популярных рабочих пространствах.</p>
+              </Text>
               <div className="flex flex-col gap-6">
                 <figure className="flex flex-col gap-3">
                   <div className="flex aspect-[2/1] items-center justify-center bg-[#f5f5f5]">
