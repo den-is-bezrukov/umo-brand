@@ -49,6 +49,22 @@ make('b1845.svg','type-styles',None,(0,0,912,456))
 make('b1784.svg','font-geist','Frame 47',(0,512,288,216),drop=('Frame 39_2',))
 make('b1784.svg','font-helvetica','Frame 48',(312,512,288,216),drop=('Frame 39_3',))
 make('b1784.svg','font-arial','Frame 49',(624,512,288,216),drop=('Frame 39_4',))
-# These two export 684 wide instead of 444; their content is centred, so shift the viewBox by 120.
-make('f1961.svg','lettering-vector',None,(120,0,444,333))
-make('f1969.svg','lettering-plates',None,(120,0,444,333))
+
+def assemble(name, size, bg, parts):
+    """A figure laid out from separate layer exports: [(file, x, y)] over a flat background."""
+    w,h=size
+    out=[f'<svg xmlns="{SVG}" width="{w}" height="{h}" viewBox="0 0 {w} {h}" fill="none"><rect width="{w}" height="{h}" fill="{bg}"/>']
+    for src,x,y in parts:
+        root=ET.parse(os.path.join(SRC, src)).getroot()
+        inner=''.join(ET.tostring(c,encoding='unicode') for c in root)
+        out.append(f'<g transform="translate({x} {y})">{inner}</g>')  # parts are exported at 1:1, viewBox = size
+    s=''.join(out)+'</svg>'
+    s=re.sub(r'\s+id="[^"]*"','',s); s=re.sub(r'(<(?!svg )\w+) xmlns="[^"]*"',r'\1',s)  # serialised children repeat it
+    s=re.sub(r'>\s+<','><',s)
+    open(os.path.join(OUT,name+'.svg'),'w').write(s)
+    print(name, len(s))
+
+# Lettering frames 4818:1969 / 4818:1961 (444×333) export stretched, so they're laid out from their layers:
+# n<id>.svg = the MODEL lettering (Vector 4870:3450 / 4818:1963) and the number plate (4870:3498 / 4870:3522).
+assemble('lettering-model8',(444,333),'#000',[('n4870-3450.svg',78,100),('n4870-3498.svg',54.997,183)])
+assemble('lettering-model5',(444,333),'#f5f5f5',[('n4818-1963.svg',77.9985,100),('n4870-3522.svg',54.997,183)])

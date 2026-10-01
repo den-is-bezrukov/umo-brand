@@ -42,8 +42,14 @@ const NAV: NavItem[] = [
     ],
   },
   { id: 'typography', title: 'Типографика', children: [{ id: 'type-styles', title: 'Стили и иерархия' }] },
-  { id: 'lettering', title: 'Леттеринг моделей' },
-  { id: 'made-in-moscow', title: 'Марка «Сделано в Москве»' },
+  {
+    id: 'lettering',
+    title: 'Леттеринг',
+    children: [
+      { id: 'lettering-models', title: 'Модели' },
+      { id: 'made-in-moscow', title: 'Сделано в Москве' },
+    ],
+  },
   {
     id: 'key-visual',
     title: 'Ключевой образ',
@@ -840,23 +846,28 @@ export default function Guide() {
           </Chapter>
 
           {/* ── Леттеринг ── */}
-          <Chapter id="lettering" title="Леттеринг моделей" loose>
+          <Chapter id="lettering" title="Леттеринг" loose>
             <Section>
+              <H2 id="lettering-models">Модели</H2>
               <div className="flex flex-col gap-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <Fig name="lettering-vector" w={444} h={333} alt="Леттеринг MODEL 8 и MODEL 5" />
-                  <Fig name="lettering-umo8" w={444} h={333} alt="Леттеринг на корме UMO 8" />
+                  <Fig name="lettering-model8" w={444} h={333} alt="Леттеринг MODEL 8 и номерная плашка UMO 8" />
+                  <Fig name="lettering-model5" w={444} h={333} alt="Леттеринг MODEL 5 и номерная плашка UMO 5" />
+                  <Fig name="lettering-umo8" w={444} h={333} alt="Леттеринг на UMO 8" />
                   <Fig name="lettering-umo5" w={444} h={333} alt="Леттеринг на кузове UMO 5" />
-                  <Fig name="lettering-plates" w={444} h={333} alt="Шильдики MODEL 8 и MODEL 5" />
                 </div>
-                <Assets items={[{ file: 'umo-model-5.svg' }, { file: 'umo-model-5-png.zip' }, { file: 'umo-model-8.svg' }, { file: 'umo-model-8-png.zip' }]} />
+                {/* Columns follow the pictures: UMO 8 on the left, UMO 5 on the right. */}
+                <Assets
+                  items={[
+                    { file: 'umo-model-8.svg' }, { file: 'umo-model-8-png.zip' }, { file: 'umo-plate-8-svg.zip' },
+                    { file: 'umo-model-5.svg' }, { file: 'umo-model-5-png.zip' }, { file: 'umo-plate-5-svg.zip' },
+                  ]}
+                />
               </div>
             </Section>
-          </Chapter>
 
-          {/* ── Сделано в Москве ── */}
-          <Chapter id="made-in-moscow" title="Марка «Сделано в Москве»" full loose>
             <Section>
+              <H2 id="made-in-moscow">Сделано в Москве</H2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <Fig name="moscow-umo5" w={444} h={368} alt="Шильдик «Сделано в Москве» на UMO 5" />
                 <Fig name="moscow-umo8" w={444} h={368} alt="Шильдик «Сделано в Москве» на UMO 8" />
