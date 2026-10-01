@@ -180,8 +180,8 @@ export default function App() {
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
 
-      {/* ── Sidebar ── */}
-      <aside className="flex shrink-0 flex-col md:h-full md:w-[240px] md:overflow-y-auto">
+      {/* ── Sidebar: 240px plus the 1px outside stroke from Figma, which shows only on the right ── */}
+      <aside className="flex shrink-0 flex-col md:h-full md:w-[241px] md:overflow-y-auto md:border-r md:border-black/10">
         <div className="flex flex-col gap-4 p-6 tracking-[-0.01em] md:pb-2">
           <div className="flex flex-col gap-4">
             <Link to="/" className="self-start text-[14px] font-medium leading-5 tracking-normal hover:underline underline-offset-[0.25em] decoration-[0.25px]">← Бренд UMO</Link>
@@ -269,7 +269,7 @@ export default function App() {
       <main className="flex flex-1 items-center justify-center bg-[#f5f5f5] p-6 pb-[112px] md:min-w-0 md:p-16">
         <div ref={previewRef} className="flex size-full items-center justify-center">
           {scale > 0 && (
-            <div className="bg-white" style={{ width: POSTER_W * scale, height: POSTER_H * scale, position: 'relative', flexShrink: 0 }}>
+            <div className="bg-white ring-1 ring-black/10" style={{ width: POSTER_W * scale, height: POSTER_H * scale, position: 'relative', flexShrink: 0 }}>
               <div style={{ transformOrigin: 'top left', transform: `scale(${scale})`, position: 'absolute', top: 0, left: 0 }}>
                 <ActivePoster model={model} trim={trim} fullPrice={fullPrice} creditPrice={creditPrice} qrSvg={qrSvg} />
               </div>

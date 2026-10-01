@@ -18,15 +18,21 @@ type NavItem = { id: string; title: string; children?: NavItem[] }
 
 const NAV: NavItem[] = [
   {
-    id: 'positioning',
-    title: 'Позиционирование',
+    id: 'brand',
+    title: 'Бренд',
     children: [
+      { id: 'positioning', title: 'Позиционирование' },
       { id: 'vision', title: 'Видение' },
       { id: 'mission', title: 'Миссия' },
       { id: 'audience', title: 'Аудитория' },
-      { id: 'voice', title: 'Голос' },
+    ],
+  },
+  {
+    id: 'voice',
+    title: 'Голос',
+    children: [
       { id: 'dictionary', title: 'Словарь' },
-      { id: 'examples', title: 'Примеры коммуникации' },
+      { id: 'examples', title: 'Примеры' },
     ],
   },
   {
@@ -41,7 +47,14 @@ const NAV: NavItem[] = [
       { id: 'cobranding', title: 'Кобрендинг' },
     ],
   },
-  { id: 'typography', title: 'Типографика', children: [{ id: 'type-styles', title: 'Стили и иерархия' }] },
+  {
+    id: 'typography',
+    title: 'Типографика',
+    children: [
+      { id: 'fonts', title: 'Шрифты' },
+      { id: 'type-styles', title: 'Стили и иерархия' },
+    ],
+  },
   {
     id: 'lettering',
     title: 'Леттеринг',
@@ -54,14 +67,15 @@ const NAV: NavItem[] = [
     id: 'key-visual',
     title: 'Ключевой образ',
     children: [
+      { id: 'photography', title: 'Фотография' },
       { id: 'kv-umo5', title: 'UMO 5' },
       { id: 'kv-umo8', title: 'UMO 8' },
     ],
   },
   {
-    id: 'dealer',
-    title: 'Дилерский центр',
-    children: [{ id: 'print', title: 'Печатные материалы', children: [{ id: 'price-card', title: 'Прайс-карта' }] }],
+    id: 'retail',
+    title: 'Точка продаж',
+    children: [{ id: 'print', title: 'Полиграфия', children: [{ id: 'price-card', title: 'Прайс-карта' }] }],
   },
 ]
 
@@ -158,14 +172,6 @@ function Nav({ active, expandAll, onNavigate }: { active: string[]; expandAll: b
   const activeChapter = NAV.find(c => active.some(id => contains(c, id)))?.id
   return (
     <nav className="flex flex-col gap-4 text-[16px] tracking-[-0.01em]">
-      {/* The guide's own title doubles the logo link: back to the top of the page. */}
-      <a
-        href="#top"
-        onClick={onNavigate}
-        className={`block leading-[1.25] ${NAV_HOVER}`}
-      >
-        Стандарты бренда
-      </a>
       {NAV.map(chapter => {
         // Like guides.area17.com: only the chapter you're reading is open, unless everything is expanded.
         const open = expandAll || activeChapter === chapter.id
@@ -244,7 +250,7 @@ function Chapter({ id, title, full, lead, loose, children }: {
   )
 }
 
-/** Subsection title between H1 and H2 (40px in the Figma layout), e.g. Печатные материалы inside Дилерский центр. */
+/** Subsection title between H1 and H2 (40px in the Figma layout), e.g. Полиграфия inside Точка продаж. */
 function H1Small({ id, children }: { id?: string; children: ReactNode }) {
   return (
     <h2 id={id} className="scroll-mt-24 text-[28px] md:text-[40px] font-medium leading-none tracking-[-0.01em]">
@@ -593,34 +599,37 @@ export default function Guide() {
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-expanded={false}
-            aria-label={`Содержание: ${sectionTitle ?? 'Стандарты бренда'}`}
+            aria-label={`Содержание: ${sectionTitle ?? TITLES.brand}`}
             className="fixed inset-x-0 bottom-0 z-20 flex cursor-pointer items-start gap-2 bg-white px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]"
           >
             <TocIcon name="menu" />
-            <span className="min-w-0 flex-1 truncate">{sectionTitle ?? 'Стандарты бренда'}</span>
+            <span className="min-w-0 flex-1 truncate">{sectionTitle ?? TITLES.brand}</span>
           </button>
         )}
       </div>
 
       <main id="top" className="min-w-0 flex-1 p-4 pb-[calc(52px+1rem)] md:p-6 md:pb-[calc(68px+1.5rem)] lg:pb-6">
         <div className="flex max-w-[1200px] flex-col gap-24 md:gap-36">
-          {/* Intro */}
-          <section className="flex flex-col gap-8 md:gap-12">
-            <Fig name="hero" w={912} h={456} eager alt="Семья у UMO 8 в лесу" />
-            <p className="text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em]">
-              UMO — это автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
-            </p>
-          </section>
+          {/* ── Бренд: opens the page, the statement under the hero stands in for the chapter title ── */}
+          <div id="brand" className="flex scroll-mt-24 flex-col gap-24 md:gap-36">
+            <section className="flex flex-col gap-8 md:gap-12">
+              <Fig name="hero" w={912} h={456} eager alt="Семья у UMO 8 в лесу" />
+              <p className="text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em]">
+                UMO — это автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
+              </p>
+            </section>
 
-          {/* ── Позиционирование ── */}
-          <Chapter id="positioning" title="Позиционирование" lead={<Fig name="positioning" w={912} h={456} alt="" />}>
             <Section>
-              <Text>
-                <p>UMO — это и есть ты. Больше, чем машина, это гаджет для человека.</p>
-                <p>Для мамы с детьми это безопасное пространство в городе. Для айтишника — утилитарный и технологичный транспорт. Для водителя такси — рабочий инструмент.</p>
-                <p>Для отца, который раз в месяц уезжает на рыбалку за сотню километров — машина с бардачком под блёсны и возможностью зарядить аккумулятор от обычной розетки на даче.</p>
-                <p>UMO не диктует сценарий, а подстраивается под тот, что есть сейчас.</p>
-              </Text>
+              <Head>
+                <H2 id="positioning">Позиционирование</H2>
+                <Text>
+                  <p>UMO — это и есть ты. Больше, чем машина, это гаджет для человека.</p>
+                  <p>Для мамы с детьми это безопасное пространство в городе. Для айтишника — утилитарный и технологичный транспорт. Для водителя такси — рабочий инструмент.</p>
+                  <p>Для отца, который раз в месяц уезжает на рыбалку за сотню километров — машина с бардачком под блёсны и возможностью зарядить аккумулятор от обычной розетки на даче.</p>
+                  <p>UMO не диктует сценарий, а подстраивается под тот, что есть сейчас.</p>
+                </Text>
+              </Head>
+              <Fig name="positioning" w={912} h={456} alt="" />
             </Section>
 
             <Section>
@@ -654,16 +663,16 @@ export default function Guide() {
                 </Head>
               </div>
             </Section>
+          </div>
 
+          {/* ── Голос ── */}
+          <Chapter id="voice" title="Голос">
             <Section>
-              <Head>
-                <H2 id="voice">Голос</H2>
-                <Text>
-                  <p>Голос UMO — вдумчивый, искренний, партнёрский. Обращаемся на «вы». Говорим на языке людей, без пафоса и сложных метафор — наш язык живой и человечный.</p>
-                  <p>Выстраиваем диалог с пользователем в каждой точке контакта. Там где позволяет формат, вместо констатации сухих технических терминов раскрываем их на примерах.</p>
-                  <p>Рекламные клише категории и агрессивные восклицания не используем.</p>
-                </Text>
-              </Head>
+              <Text>
+                <p>Голос UMO — вдумчивый, искренний, партнёрский. Обращаемся на «вы». Говорим на языке людей, без пафоса и сложных метафор — наш язык живой и человечный.</p>
+                <p>Выстраиваем диалог с пользователем в каждой точке контакта. Там где позволяет формат, вместо констатации сухих технических терминов раскрываем их на примерах.</p>
+                <p>Рекламные клише категории и агрессивные восклицания не используем.</p>
+              </Text>
               <Fig name="voice" w={912} h={456} />
             </Section>
 
@@ -674,7 +683,7 @@ export default function Guide() {
 
             <Section>
               <Head>
-                <H2 id="examples">Примеры коммуникации</H2>
+                <H2 id="examples">Примеры</H2>
                 <Text><p>Лучше один раз увидеть: UMO говорит по-человечески и уважительно на вы.</p></Text>
               </Head>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 text-[18px] md:text-[20px] leading-[1.25] tracking-[-0.01em]">
@@ -776,8 +785,8 @@ export default function Guide() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <Fig name="icon-app" w={444} h={333} caption="Иконка мобильного приложения" />
                 <Fig name="icon-userpic" w={444} h={333} caption="Юзерпик аккаунта соцсетей" />
-                <Fig name="icon-favicon" w={444} h={333} caption="Фавиконка и иконка закладок в браузере" />
-                <Fig name="icon-post" w={444} h={333} caption="Пост в соцсети" />
+                <Fig name="icon-favicon" w={444} h={333} caption="Фавиконка и иконка закладок в браузере" alt="Фавиконка во вкладке тёмного браузера" />
+                <Fig name="icon-favicon-light" w={444} h={333} alt="Фавиконка во вкладке светлого браузера" />
               </div>
             </Section>
 
@@ -808,12 +817,15 @@ export default function Guide() {
           </Chapter>
 
           {/* ── Типографика ── */}
-          <Chapter id="typography" title="Типографика">
+          <Chapter id="typography" title="Типографика" loose>
             <Section>
-              <Text>
-                <p>Гарнитура CoFo Sans — основа визуальной идентификации и стиля бренда UMO. Функциональный и разборчивый, он имеет несколько весов для полной свободы выражения.</p>
-                <p>Когда использование CoFo Sans невозможно, допускается применение альтернатив, доступных в популярных рабочих пространствах.</p>
-              </Text>
+              <Head>
+                <H2 id="fonts">Шрифты</H2>
+                <Text>
+                  <p>Гарнитура CoFo Sans — основа визуальной идентификации и стиля бренда UMO. Функциональный и разборчивый, он имеет несколько весов для полной свободы выражения.</p>
+                  <p>Когда использование CoFo Sans невозможно, допускается применение альтернатив, доступных в популярных рабочих пространствах.</p>
+                </Text>
+              </Head>
               <div className="flex flex-col gap-6">
                 <figure className="flex flex-col gap-3">
                   <div className="flex aspect-[2/1] items-center justify-center bg-[#f5f5f5]">
@@ -876,12 +888,15 @@ export default function Guide() {
           </Chapter>
 
           {/* ── Ключевой образ ── */}
-          <Chapter id="key-visual" title="Ключевой образ" lead={<Fig name="keyvisual" w={912} h={456} />}>
+          <Chapter id="key-visual" title="Ключевой образ" lead={<Fig name="keyvisual" w={912} h={456} />} loose>
             <Section>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
-                <Text><p>Без излишней постановочности и драмы. Изображение захватывает взгляд, потому что все, что видит зритель, происходит здесь и сейчас.</p></Text>
-                <Text><p>Автомобили становятся частью мира аудитории, но показаны в выгодном ракурсе, который подчеркивает преимущества или рассказывает историю за счет окружения.</p></Text>
-              </div>
+              <Head>
+                <H2 id="photography">Фотография</H2>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
+                  <Text><p>Без излишней постановочности и драмы. Изображение захватывает взгляд, потому что все, что видит зритель, происходит здесь и сейчас.</p></Text>
+                  <Text><p>Автомобили становятся частью мира аудитории, но показаны в выгодном ракурсе, который подчеркивает преимущества или рассказывает историю за счет окружения.</p></Text>
+                </div>
+              </Head>
             </Section>
 
             <Section>
@@ -915,8 +930,8 @@ export default function Guide() {
             </Section>
           </Chapter>
 
-          {/* ── Дилерский центр ── */}
-          <Chapter id="dealer" title="Дилерский центр">
+          {/* ── Точка продаж ── */}
+          <Chapter id="retail" title="Точка продаж">
             <Section>
               <Text>
                 <p>Первое место, где UMO можно потрогать.</p>
@@ -925,15 +940,15 @@ export default function Guide() {
               <Fig name="dealer" w={912} h={456} alt="Дилерский центр UMO и Яндекса" />
             </Section>
 
-            {/* Subsection of Дилерский центр: 40px heading, then its own sections */}
+            {/* Subsection of Точка продаж: 40px heading, then its own sections */}
             <div className="flex flex-col gap-12 md:gap-[72px]">
-              <H1Small id="print">Печатные материалы</H1Small>
+              <H1Small id="print">Полиграфия</H1Small>
               <Section>
                 <Head>
                   <H2 id="price-card">Прайс-карта</H2>
                   <Text>
                     <p>Прайс-карта стоит рядом с автомобилем и отвечает на главный вопрос — сколько он стоит.</p>
-                    <p>Карты для всех моделей и комплектаций собираются в конструкторе: выберите модель и комплектацию, укажите цену с кредитом и без и ссылку для QR-кода. Макет, шрифты и отступы уже настроены — получится готовый к печати PDF формата A3.</p>
+                    <p>Карты для всех моделей и комплектаций собираются в <Link to="/price-card" className="underline decoration-[0.5px] underline-offset-[0.2em] [text-decoration-skip-ink:none] hover:no-underline">конструкторе</Link>: выберите модель и комплектацию, укажите цену с кредитом и без и ссылку для QR-кода. Макет, шрифты и отступы уже настроены — получится готовый к печати PDF формата A3.</p>
                   </Text>
                 </Head>
                 <div className="flex flex-col gap-6">
@@ -943,7 +958,7 @@ export default function Guide() {
                       <PriceCardPreview variant="umo5-max" fullPrice="3 715 000" creditPrice="2 790 000" image={img('pricecard-umo5-car')} alt="Прайс-карта UMO 5, комплектация Макс" />
                     </div>
                   </div>
-                  <Assets items={[{ to: '/price-card', title: 'Редактор прайс-карты' }]} />
+                  <Assets items={[{ to: '/price-card', title: 'Конструктор прайс-карты' }]} />
                 </div>
               </Section>
             </div>
