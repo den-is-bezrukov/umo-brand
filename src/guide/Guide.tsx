@@ -61,7 +61,7 @@ const NAV: NavItem[] = [
     ],
   },
   { id: 'spaces', title: 'Пространства' },
-  { id: 'materials', title: 'Носители', children: [{ id: 'price-card', title: 'Прайс-карта' }, { id: 'livery', title: 'Ливрея' }] },
+  { id: 'materials', title: 'Носители', children: [{ id: 'livery', title: 'Ливрея' }, { id: 'price-card', title: 'Прайс-карта' }] },
 ]
 
 /** Chapter anchors that were renamed after the guide went out, mapped to their current ids. */
@@ -989,6 +989,20 @@ export default function Guide() {
           <Chapter id="materials" title="Носители" loose>
             <Section>
               <Head>
+                <H2 id="livery">Ливрея</H2>
+                <Text>
+                  <p>Ливрея превращает демо-автомобиль дилера в носитель бренда: на бортах и заднем стекле — название модели, имя дилерского центра и QR-код.</p>
+                  <p>Файлы для оклейки собираются в <Link to="/livery" className="underline decoration-[0.5px] underline-offset-[0.2em] [text-decoration-skip-ink:none] hover:no-underline">конструкторе</Link>: укажите название дилера, теглайн и ссылку для QR-кода. Конструктор проверит, что текст не заходит на шов между дверями и ручку, и соберёт архив: векторные PDF для плоттерной резки в масштабе 1:1 и спецификацию с размерами для монтажа.</p>
+                </Text>
+              </Head>
+              <div className="flex flex-col gap-6">
+                <Fig name="livery-umo8" w={912} h={456} alt="UMO 8 с ливреей дилера, левый борт" />
+                <Assets items={[{ to: '/livery', title: 'Конструктор ливреи' }]} />
+              </div>
+            </Section>
+
+            <Section>
+              <Head>
                 <H2 id="price-card">Прайс-карта</H2>
                 <Text>
                   <p>Прайс-карта стоит рядом с автомобилем и отвечает на главный вопрос — сколько он стоит.</p>
@@ -1003,20 +1017,6 @@ export default function Guide() {
                   </div>
                 </div>
                 <Assets items={[{ to: '/price-card', title: 'Конструктор прайс-карты' }]} />
-              </div>
-            </Section>
-
-            <Section>
-              <Head>
-                <H2 id="livery">Ливрея</H2>
-                <Text>
-                  <p>Ливрея превращает демо-автомобиль дилера в носитель бренда: на бортах и заднем стекле — название модели, имя дилерского центра и QR-код.</p>
-                  <p>Файлы для оклейки собираются в <Link to="/livery" className="underline decoration-[0.5px] underline-offset-[0.2em] [text-decoration-skip-ink:none] hover:no-underline">конструкторе</Link>: укажите название дилера, теглайн и ссылку для QR-кода. Конструктор проверит, что текст не заходит на шов между дверями и ручку, и соберёт архив: векторные PDF для плоттерной резки в масштабе 1:1 и спецификацию с размерами для монтажа.</p>
-                </Text>
-              </Head>
-              <div className="flex flex-col gap-6">
-                <Fig name="livery-umo8" w={912} h={456} alt="UMO 8 с ливреей дилера, левый борт" />
-                <Assets items={[{ to: '/livery', title: 'Конструктор ливреи' }]} />
               </div>
             </Section>
           </Chapter>
