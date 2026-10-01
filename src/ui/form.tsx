@@ -148,12 +148,30 @@ export function UrlField({ value, onChange }: { value: string; onChange: (v: str
   )
 }
 
+/** A grey 16 px box with a black tick (Figma: UMO | Evrone, node 4900:4588), on a native checkbox for keyboard and screen readers */
 export function Checkbox({ checked, onChange, children }: { checked: boolean; onChange: (v: boolean) => void; children: React.ReactNode }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2 py-2 text-[14px] leading-5">
-      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="size-4 accent-black" />
+    <label className="flex cursor-pointer items-center gap-1 py-2 text-[14px] leading-5 text-black">
+      <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="peer sr-only" />
+      <span aria-hidden className="flex size-4 shrink-0 items-center justify-center rounded-[4px] bg-[#f5f5f5] peer-focus-visible:ring-2 peer-focus-visible:ring-black/30">
+        {checked && (
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+            <path d={svgPaths.p3de7e600} stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.45833" />
+          </svg>
+        )}
+      </span>
       {children}
     </label>
+  )
+}
+
+/** A part that can be left out: its checkbox is the label, and the field shows only while it's on */
+export function OptionalField({ label, on, onChange, children }: { label: string; on: boolean; onChange: (v: boolean) => void; children?: React.ReactNode }) {
+  return (
+    <div className="flex flex-col">
+      <Checkbox checked={on} onChange={onChange}>{label}</Checkbox>
+      {on && children}
+    </div>
   )
 }
 

@@ -1,7 +1,7 @@
 import { parse, type Font } from 'opentype.js'
 import QRCode from 'qrcode'
 import { UMO, EIGHT } from './logo'
-import type { Surface, TextBlock, Obstacle } from './layout'
+import type { Surface, TextBlock, Obstacle, TextPart } from './layout'
 
 // Everything on a livery sheet is a filled outline in millimetres: the shapes the plotter cuts. The preview draws them
 // as SVG, the export writes the same commands into the PDF.
@@ -16,13 +16,17 @@ export interface Line {
   ink: Box
   /** Why this line can't go on the car as it is */
   issues: string[]
+  /** Over the block's line limit: the top lines when the block grows upwards, the bottom ones when it grows down */
+  extra: boolean
 }
 
 export interface TextResult { lines: Line[]; issues: string[] }
 
 export interface Sheet {
   surface: Surface
+  /** Everything to cut: `fixed` (the QR and the UMO 8 lettering), then the text lines */
   shapes: Cmd[][]
+  fixed: Cmd[][]
   dealer: TextResult
   tagline: TextResult
   issues: string[]
@@ -35,6 +39,13 @@ export function loadFont(): Promise<Font> {
     .then(r => r.arrayBuffer())
     .then(buf => parse(buf))
   return fontPromise
+}
+
+/** The deepest descender of CoFo Sans Cyrillic (р, у, д), in em */
+const DESCENDER = 0.194
+
+function moveCmds(cmds: Cmd[], dx: number, dy: number): Cmd[] {
+  return cmds.map(c => c.length === 1 ? c : c.map((v, i) => (i === 0 ? v : (v as number) + (i % 2 ? dx : dy))) as Cmd)
 }
 
 export function toD(cmds: Cmd[]): string {
@@ -176,19 +187,33 @@ function hits(ink: Box, o: Obstacle, c: number): boolean {
   return ink.x1 - c < Math.max(...xs) && ink.x2 + c > Math.min(...xs)
 }
 
-function setText(font: Font, text: string, block: TextBlock, name: string, surface: Surface): TextResult {
+/** Lines grow upwards from `block.baseline`, or downwards from `firstBaseline` when given */
+/**
+ * Text as typed or pasted, made safe to set: every kind of space (no-break, narrow, thin — Figma and typographers
+ * leave them in) becomes a plain one, so wrapping sees the words and short ones get bound again; zero-width marks go.
+ * The narrow no-break space in particular has no glyph in CoFo Sans and would glue words together.
+ */
+function clean(text: string): string {
+  return text.replace(/[\u200b-\u200d\u2060\ufeff]/g, '').replace(/[^\S\n]+/g, ' ')
+}
+
+function setText(font: Font, raw: string, block: TextBlock, name: string, surface: Surface, firstBaseline?: number): TextResult {
+  const text = clean(raw)
   const wrapped = wrap(font, text, block)
   const lines: Line[] = wrapped.map((t, i) => {
-    const baseline = block.baseline - (wrapped.length - 1 - i) * block.leading
+    const baseline = firstBaseline === undefined ? block.baseline - (wrapped.length - 1 - i) * block.leading : firstBaseline + i * block.leading
     const width = font.getAdvanceWidth(t.replace(/ /g, ' '), block.size)
-    const x = block.align === 'left' ? block.x : block.x - width
+    const x = block.align === 'left' ? block.x : block.align === 'center' ? block.x - width / 2 : block.x - width
     const { path, ink } = shape(font, t, x, baseline, block.size)
     const issues: string[] = []
     if (ink.x2 - ink.x1 > block.maxWidth) issues.push(`${name} шире ${block.maxWidth} мм`)
     for (const o of surface.obstacles) if (hits(ink, o, surface.clearance)) issues.push(`${name} задевает ${o.label}`)
-    return { text: t, cmds: pathCmds(path.commands), ink, issues }
+    const extra = firstBaseline === undefined ? i < wrapped.length - block.maxLines : i >= block.maxLines
+    return { text: t, cmds: pathCmds(path.commands), ink, issues, extra }
   })
   const issues = [...new Set(lines.flatMap(l => l.issues))]
+  const missing = [...new Set([...text.replace(/\s/g, '')].filter(c => !font.hasChar(c)))]
+  if (missing.length) issues.push(`${name}: нет в шрифте ${missing.map(c => `«${c}»`).join(', ')}`)
   if (lines.length > block.maxLines) issues.unshift(`${name} не помещается в ${block.maxLines === 1 ? 'одну строку' : `${block.maxLines} строки`}`)
   return { lines, issues }
 }
@@ -210,21 +235,110 @@ function pathCmds(commands: any[]): Cmd[] {
   return cmds
 }
 
-export function buildSheet(font: Font, surface: Surface, input: { dealer: string; tagline: string; url: string }): Sheet {
-  const { qr, umo, num } = surface
-  const dealer = setText(font, input.dealer, surface.dealer, 'Дилер', surface)
-  const tagline = setText(font, input.tagline, surface.tagline, 'Теглайн', surface)
+/** Dealer name, tagline and the QR link; `null` leaves that part off the sheet */
+export function buildSheet(font: Font, surface: Surface, input: { dealer: string | null; tagline: string | null; url: string | null }): Sheet {
+  const { qr, umo, num, stack } = surface
+  const none: TextResult = { lines: [], issues: [] }
+  const dealer = input.dealer === null ? none
+    : setText(font, input.dealer, surface.dealer, 'Дилер', surface, stack && surface.dealer.baseline)
+  // Stacked, the tagline follows the dealer name, or takes its place
+  const afterDealer = dealer.lines.length
+    ? surface.dealer.baseline + (dealer.lines.length - 1) * surface.dealer.leading + (stack?.gap ?? 0)
+    : surface.dealer.baseline
+  // Stacked, the tagline may take the dealer's lines too when there's no dealer name
+  const taglineBlock = stack && input.dealer === null
+    ? { ...surface.tagline, maxLines: surface.tagline.maxLines + surface.dealer.maxLines }
+    : surface.tagline
+  const tagline = input.tagline === null ? none
+    : setText(font, input.tagline, taglineBlock, 'Теглайн', surface, stack && afterDealer)
+  let sheetSurface = surface
+  let lettering = [fromD(UMO.d, umo.h / UMO.h, umo.x, umo.y), fromD(EIGHT.d, num.h / EIGHT.h, num.x, num.y)]
+  if (stack) {
+    // Centre the column (lettering and text) on the sheet's height: from the top of the lettering to the deepest
+    // descender of the last line
+    const last = [...dealer.lines, ...tagline.lines].length
+      ? (tagline.lines.length ? { block: surface.tagline, n: tagline.lines.length, first: afterDealer } : { block: surface.dealer, n: dealer.lines.length, first: surface.dealer.baseline })
+      : null
+    const top = Math.min(umo.y, num.y)
+    const bottom = last ? last.first + (last.n - 1) * last.block.leading + last.block.size * DESCENDER : Math.max(umo.y + umo.h, num.y + num.h)
+    // With the QR the sheet keeps the QR's height and the column is centred on it; without, the sheet is cut down to
+    // the column, centred where the full sheet was
+    const height = bottom - top
+    const crop = input.url === null
+    const dy = crop ? -top : (surface.h - height) / 2 - top
+    lettering = lettering.map(c => moveCmds(c, 0, dy))
+    for (const l of [...dealer.lines, ...tagline.lines]) {
+      l.cmds = moveCmds(l.cmds, 0, dy)
+      l.ink = { ...l.ink, y1: l.ink.y1 + dy, y2: l.ink.y2 + dy }
+    }
+    const sized = crop ? { ...surface, h: height, photo: { ...surface.photo, y: surface.photo.y + (surface.h - height) / 2 } } : surface
+    sheetSurface = { ...sized, dims: stackDims(sized, top + dy, bottom + dy, !!last) }
+  } else {
+    const off = new Set<TextPart>([...(input.dealer === null ? ['dealer' as const] : []), ...(input.tagline === null ? ['tagline' as const] : [])])
+    if (off.size) sheetSurface = { ...surface, dims: withoutParts(surface.dims, off) }
+  }
+  const fixed = [
+    ...(input.url === null ? [] : [qrOutline(input.url, qr.x, qr.y, qr.size)]),
+    ...lettering,
+  ]
   const shapes = [
-    qrOutline(input.url, qr.x, qr.y, qr.size),
-    fromD(UMO.d, umo.h / UMO.h, umo.x, umo.y),
-    fromD(EIGHT.d, num.h / EIGHT.h, num.x, num.y),
+    ...fixed,
     ...dealer.lines.map(l => l.cmds),
     ...tagline.lines.map(l => l.cmds),
   ]
   const issues = [...dealer.issues, ...tagline.issues]
-  if (!input.dealer.trim()) issues.unshift('Нет имени дилера')
-  if (!input.tagline.trim()) issues.unshift('Нет теглайна')
-  return { surface, shapes, dealer, tagline, issues }
+  if (input.dealer !== null && !input.dealer.trim()) issues.unshift('Нет имени дилера')
+  if (input.tagline !== null && !input.tagline.trim()) issues.unshift('Нет теглайна')
+  return { surface: sheetSurface, shapes, fixed, dealer, tagline, issues }
+}
+
+/** A dimension to half a millimetre, so rows add up to the sheet: 87,5 + 75 + 87,5 */
+export const mm = (v: number) => String(Math.round(v * 2) / 2).replace('.', ',')
+
+/**
+ * The spec's dimensions without the rows and lines of the texts left out. On each side the rows around a dropped
+ * one close up: the dealer's 80 and 60 become one 140, the tagline's two 120s one 240.
+ */
+function withoutParts(dims: Surface['dims'], off: Set<TextPart>): Surface['dims'] {
+  type Row = Surface['dims']['rows'][number]
+  const gone = (r: Row) => !!r.part && off.has(r.part)
+  const merged: Row[] = []
+  for (const side of [-1, 1]) {
+    // Runs of adjacent dropped rows become one row over the space they leave
+    const runs: [number, number][] = []
+    for (const r of dims.rows.filter(r => r.x === side && gone(r)).sort((a, b) => a.from - b.from)) {
+      const run = runs[runs.length - 1]
+      if (run && Math.abs(run[1] - r.from) < 1) run[1] = r.to
+      else runs.push([r.from, r.to])
+    }
+    merged.push(...runs.map(([from, to]) => ({ from, to, label: mm(to - from), x: side })))
+  }
+  return { ...dims, rows: [...dims.rows.filter(r => !gone(r)), ...merged], grid: dims.grid.filter(g => !(g[4] && off.has(g[4]))) }
+}
+
+/**
+ * The spec's dimensions for a stacked surface, from where its column landed (`top` to `bottom`): the lettering, the
+ * gap and the text zone on the column's side, with lines across the column between them. The margins above and under
+ * the column aren't dimensioned — they only follow from centring — but the sheet's full height always is, on the other
+ * side. Columns and the vertical lines stay as in the layout.
+ */
+function stackDims(surface: Surface, top: number, bottom: number, text: boolean): Surface['dims'] {
+  const { umo, num, h, dims, stack } = surface
+  const x1 = umo.x
+  const x2 = num.x + num.h * (EIGHT.w / EIGHT.h)
+  const steps = [top, top + umo.h, ...(text ? [top + stack!.textTop, bottom] : [])]
+  const rows = steps.slice(1).map((to, i) => ({ from: steps[i], to, label: mm(to - steps[i]), x: 1 }))
+  const height = dims.rows.filter(r => r.x < 0)
+  // The full height, unless the lettering alone already is it
+  const total = height.length ? height : rows.length > 1 || Math.abs(rows[0].to - rows[0].from - h) > 1 ? [{ from: 0, to: h, label: mm(h), x: -1 }] : []
+  return {
+    cols: dims.cols,
+    rows: [...total, ...rows],
+    grid: [
+      ...dims.grid.filter(([ax, , bx]) => ax === bx),
+      ...steps.slice(1, -1).map(y => [x1, y, x2, y] as [number, number, number, number]),
+    ],
+  }
 }
 
 export interface SpecMarks {
@@ -241,8 +355,8 @@ export interface SpecMarks {
  */
 export function specMarks(surface: Surface): SpecMarks {
   const { w, h, dims } = surface
-  const size = w / 28
-  const lines: SpecMarks['lines'] = [[0, 0, w, 0], [w, 0, w, h], [w, h, 0, h], [0, h, 0, 0], ...dims.grid]
+  const size = surface.labelSize
+  const lines: SpecMarks['lines'] = [[0, 0, w, 0], [w, 0, w, h], [w, h, 0, h], [0, h, 0, 0], ...dims.grid.map(([x1, y1, x2, y2]) => [x1, y1, x2, y2] as [number, number, number, number])]
   const labels: SpecMarks['labels'] = []
   for (const c of dims.cols) {
     const y = c.y ?? -size
@@ -251,7 +365,7 @@ export function specMarks(surface: Surface): SpecMarks {
     labels.push({ text: c.label, x: (c.from + c.to) / 2, y: y - size * 0.3, align: 'center' })
   }
   for (const r of dims.rows) {
-    const x = r.x < 0 ? 0 : w
+    const x = r.at ?? (r.x < 0 ? 0 : w)
     const tick = x + r.x * size * 3
     lines.push([x, r.from, tick, r.from], [x, r.to, tick, r.to])
     labels.push({ text: r.label, x: x + r.x * size * 0.4, y: (r.from + r.to) / 2 + size * 0.35, align: r.x < 0 ? 'right' : 'left' })
