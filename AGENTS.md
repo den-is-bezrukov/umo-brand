@@ -52,7 +52,9 @@ The UMO 5 / UMO 8 ad banners in Ключевой образ are `Poster` compone
 
 Body copy (`Text`) takes its width from its length on the 12-column Figma grid: up to 150 characters 6 columns (432px), up to 300 — 8 (600px), longer — 9 (678px). Don't set widths by hand; texts paired side by side sit in a grid with `*:max-w-none` and fill their cells.
 
-Each chapter is a `Chapter` (id, title, optional `lead` picture above the title, then its `Section`s). From `lg` up the chapter title sticks to the top in a white 72px bar and shrinks 48 → 32px over the last 72px on the way in (scroll-linked `--p`, transform only); it leaves with the bottom edge of the chapter's last block. Anchor ids sit on an empty marker at the title's place in the text, so keep new chapters inside `Chapter` rather than a bare `<h2 id>`.
+Each chapter is a `Chapter` (id, title, optional `lead` picture above the title, then its `Section`s). Anchor ids sit on an empty marker above the lead picture (or the title, without one), so keep new chapters inside `Chapter` rather than a bare `<h2 id>`.
+
+Navigation follows Figma section TOC (node 4865:1079). The list opens with «Стандарты бренда», a link to the top of the page like the logo. On `lg`+ the sidebar lists chapters with only the one you're reading open; the «Развернуть / Свернуть» row (`TocToggle`, the font's › ‹ turned upright) is pinned to the bottom of the screen, so it doesn't move as the open chapter changes the list's height. The choice is remembered in `localStorage`. Below `lg` the header holds just the logo; a bar fixed at the bottom shows the title of the heading you're reading (any level, from `NAV`; «Стандарты бренда» above the first one) and opens the full, expanded contents between header and bar, with «Свернуть» at the foot.
 
 Plain "logo on a flat colour" figures are not images: `LogoPlate` in `Guide.tsx` renders `src/guide/UmoLogo.tsx` (inline SVG, `currentColor`) centred on a background, with the logo width given in Figma frame units.
 

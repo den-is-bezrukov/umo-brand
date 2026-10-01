@@ -58,8 +58,9 @@ const NAV: NavItem[] = [
   },
 ]
 
-const flatIds = (items: NavItem[]): string[] => items.flatMap(i => [i.id, ...flatIds(i.children ?? [])])
-const ALL_IDS = flatIds(NAV)
+const flatItems = (items: NavItem[]): NavItem[] => items.flatMap(i => [i, ...flatItems(i.children ?? [])])
+const ALL_IDS = flatItems(NAV).map(i => i.id)
+const TITLES: Record<string, string> = Object.fromEntries(flatItems(NAV).map(i => [i.id, i.title]))
 /** Whether `id` is this item or anything nested under it. */
 const contains = (item: NavItem, id: string): boolean => item.id === id || !!item.children?.some(c => contains(c, id))
 
@@ -99,12 +100,18 @@ function useActiveSection() {
 
 // ─── Navigation ──────────────────────────────────────────────────────────────
 
+/**
+ * A hovered link turns grey at once and fades back to black over 0.35s, like guides.area17.com, once the pointer
+ * leaves (a transition runs with the duration of the state it heads to). The active link stays black.
+ */
+const NAV_HOVER = 'transition-[color] duration-350 ease-[ease] hover:text-[#757575] hover:duration-0'
+
 function NavLink({ id, title, active, onNavigate }: { id: string; title: string; active: boolean; onNavigate?: () => void }) {
   return (
     <a
       href={`#${id}`}
       onClick={onNavigate}
-      className={`relative block leading-[1.25] decoration-[0.25px] underline-offset-[0.25em] [text-decoration-skip-ink:none] hover:underline ${active ? 'font-medium' : ''}`}
+      className={`relative block leading-[1.25] ${active ? 'font-medium' : NAV_HOVER}`}
     >
       {active && <span aria-hidden className="absolute -left-[0.9em]">•</span>}
       {title}
@@ -113,36 +120,43 @@ function NavLink({ id, title, active, onNavigate }: { id: string; title: string;
 }
 
 /**
- * Expand-all toggle ("unfold more / unfold less"): collapsed, the chevrons point apart — the list will spread
- * open; expanded, they point at each other — the list will fold back.
+ * Expand-all row at the foot of the table of contents. The glyph is the font's own › ‹ turned upright: collapsed,
+ * the chevrons point apart — the list will spread open; expanded, they point at each other — it will fold back.
  */
-function TocIcon({ expanded }: { expanded: boolean }) {
+function TocGlyph({ expanded }: { expanded: boolean }) {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden className="block" fill="none" stroke="currentColor" strokeWidth="1.5">
-      <path d={expanded ? 'M4 2.5L8 6L12 2.5M4 13.5L8 10L12 13.5' : 'M4 6L8 2.5L12 6M4 10L8 13.5L12 10'} />
-    </svg>
+    <span aria-hidden className="flex h-5 w-2 shrink-0 items-center justify-center">
+      <span className="rotate-90 whitespace-nowrap leading-none [font-feature-settings:'case']">{expanded ? '› ‹' : '‹ ›'}</span>
+    </span>
   )
 }
 
-function Nav({ active, expandAll, onToggle, onNavigate }: {
-  active: string[]; expandAll: boolean; onToggle: () => void; onNavigate?: () => void
-}) {
+function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; onClick: () => void; className?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-expanded={expanded}
+      className={`flex w-full cursor-pointer items-start gap-4 bg-white ${NAV_HOVER} text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] ${className}`}
+    >
+      <TocGlyph expanded={expanded} />
+      {expanded ? 'Свернуть' : 'Развернуть'}
+    </button>
+  )
+}
+
+function Nav({ active, expandAll, onNavigate }: { active: string[]; expandAll: boolean; onNavigate?: () => void }) {
   const activeChapter = NAV.find(c => active.some(id => contains(c, id)))?.id
   return (
     <nav className="flex flex-col gap-4 text-[16px] tracking-[-0.01em]">
-      <div className="flex items-center gap-2">
-        <p className="leading-[1.25]">Стандарты бренда 2026</p>
-        <button
-          type="button"
-          onClick={onToggle}
-          aria-pressed={expandAll}
-          aria-label={expandAll ? 'Свернуть содержание' : 'Раскрыть всё содержание'}
-          title={expandAll ? 'Свернуть' : 'Раскрыть всё'}
-          className="-m-1 cursor-pointer p-1 hover:opacity-60"
-        >
-          <TocIcon expanded={expandAll} />
-        </button>
-      </div>
+      {/* The guide's own title doubles the logo link: back to the top of the page. */}
+      <a
+        href="#top"
+        onClick={onNavigate}
+        className={`block font-medium leading-[1.25] ${NAV_HOVER}`}
+      >
+        Стандарты бренда
+      </a>
       {NAV.map(chapter => {
         // Like guides.area17.com: only the chapter you're reading is open, unless everything is expanded.
         const open = expandAll || activeChapter === chapter.id
@@ -155,13 +169,13 @@ function Nav({ active, expandAll, onToggle, onNavigate }: {
                 className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
               >
                 <div className="min-h-0 overflow-hidden">
-                  <div className="flex flex-col gap-3 pl-6 pt-2">
+                  <div className="flex flex-col gap-2 pl-6 pt-3">
                     {chapter.children.map(s => (
-                      // Parent → its sub-items 8px (like chapter → items), siblings 12px.
-                      <div key={s.id} className="flex flex-col gap-2">
+                      // Parent → its sub-items 12px (chapter → items, item → nested items), siblings 8px.
+                      <div key={s.id} className="flex flex-col gap-3">
                         <NavLink id={s.id} title={s.title} active={active.some(id => contains(s, id))} onNavigate={onNavigate} />
                         {s.children && (
-                          <div className="flex flex-col gap-3 pl-6">
+                          <div className="flex flex-col gap-2 pl-6">
                             {s.children.map(t => (
                               <NavLink key={t.id} id={t.id} title={t.title} active={active.includes(t.id)} onNavigate={onNavigate} />
                             ))}
@@ -200,63 +214,23 @@ function Logo() {
 
 // ─── Typography ──────────────────────────────────────────────────────────────
 
-/** Scroll distance over which a chapter title shrinks into its sticky bar, equal to the bar height. */
-const TITLE_BAR = 72
-
 /**
- * Chapter: optional lead picture, the title, then the chapter's sections. On wide screens the title sticks to the
- * top for the whole chapter and leaves with the bottom edge of the chapter's last block. Over the last TITLE_BAR px
- * before it sticks it shrinks from 48 to 32px and settles 20px into a white 72px bar spanning the content column —
- * scroll-linked via `--p` (0 in the text, 1 stuck), with a transform so nothing below moves. The title is 8 of 12
- * columns wide, `full` lets it span the whole grid. The anchor `id` sits on an empty marker at the title's place in
- * the text, so links and the active-chapter tracking see where the chapter really starts.
+ * Chapter: optional lead picture, the title, then the chapter's sections. The title is 8 of 12 columns wide, `full`
+ * lets it span the whole grid. The anchor `id` sits on an empty marker above the lead picture, so links land on the
+ * chapter's very start and the active-chapter tracking sees it begin there.
  * `loose` puts section spacing between title and content, for chapters whose title isn't followed by body copy.
  */
 function Chapter({ id, title, full, lead, loose, children }: {
   id: string; title: ReactNode; full?: boolean; lead?: ReactNode; loose?: boolean; children: ReactNode
 }) {
-  const ref = useRef<HTMLHeadingElement>(null)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    let frame = 0
-    let last = -1
-    const update = () => {
-      frame = 0
-      const p = Math.min(1, Math.max(0, 1 - el.getBoundingClientRect().top / TITLE_BAR))
-      if (p === last) return
-      el.style.setProperty('--p', String((last = p)))
-    }
-    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }
-    update()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll)
-    return () => {
-      window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
-      cancelAnimationFrame(frame)
-    }
-  }, [])
-  // lg: the title box is the full 72px bar (24px taken back from the space below it, so the layout doesn't move).
-  // A sticky element is pushed out when its box meets the end of its parent, so the bar's bottom edge then leaves
-  // together with the bottom edge of the chapter's last block.
   return (
     <div className="pt-12 md:pt-[72px]">
+      <div id={id} className="scroll-mt-24" />
       {lead && <div className="mb-8 md:mb-12">{lead}</div>}
-      <div id={id} className="scroll-mt-24 lg:scroll-mt-0" />
-      <h2
-        ref={ref}
-        className="relative z-10 lg:sticky lg:top-0 lg:h-[72px] lg:before:absolute lg:before:-inset-x-6 lg:before:inset-y-0 lg:before:-z-10 lg:before:bg-white lg:before:content-['']"
-      >
-        {/* A link to the chapter's start, so a click on the stuck title jumps back to the beginning of the chapter. */}
-        <a
-          href={`#${id}`}
-          className={`block origin-top-left ${full ? '' : 'max-w-[600px]'} text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em] lg:[transform:translateY(calc(var(--p,0)*20px))_scale(calc(1-var(--p,0)/3))]`}
-        >
-          {title}
-        </a>
+      <h2 className={`${full ? '' : 'max-w-[600px]'} text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em]`}>
+        {title}
       </h2>
-      <div className={`${loose ? 'mt-8 md:mt-12 lg:mt-6' : 'mt-6 lg:mt-0'} flex flex-col gap-24 md:gap-36`}>{children}</div>
+      <div className={`${loose ? 'mt-8 md:mt-12' : 'mt-6'} flex flex-col gap-24 md:gap-36`}>{children}</div>
     </div>
   )
 }
@@ -545,6 +519,21 @@ export default function Guide() {
   useTypograf(pageRef)
   const [expandAll, toggleExpandAll] = useExpandAll()
   const [menuOpen, setMenuOpen] = useState(false)
+  // Two headings rarely share a line on a phone; when they do (Видение / Миссия), the first one names the place.
+  const sectionTitle = active.length ? TITLES[active[0]] : undefined
+
+  // The open mobile contents cover the page: keep the page behind still, and let Esc close it.
+  useEffect(() => {
+    if (!menuOpen) return
+    const root = document.documentElement
+    root.style.overflow = 'hidden'
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false) }
+    window.addEventListener('keydown', onKey)
+    return () => {
+      root.style.overflow = ''
+      window.removeEventListener('keydown', onKey)
+    }
+  }, [menuOpen])
 
   useEffect(() => {
     const prev = document.title
@@ -562,34 +551,49 @@ export default function Guide() {
 
   return (
     <div ref={pageRef} className="min-h-screen bg-white font-sans text-black lg:flex lg:items-start">
-      {/* Desktop sidebar */}
-      <aside className="hidden lg:block sticky top-0 h-screen w-[320px] xl:w-[480px] shrink-0 overflow-y-auto">
+      {/* Desktop sidebar. The expand row sits at the bottom of the screen, so it stays put while the open chapter
+          changes the list's height, and sticks there when the list is taller than the screen, cutting the list off —
+          enough of a hint that it scrolls, so the scrollbar, far from the text at this width, is hidden. */}
+      <aside className="hidden lg:flex sticky top-0 h-screen w-[320px] xl:w-[480px] shrink-0 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" aria-label="В начало"><Logo /></a></div>
-        <div className="px-6 pb-6"><Nav active={active} expandAll={expandAll} onToggle={toggleExpandAll} /></div>
+        <div className="px-6"><Nav active={active} expandAll={expandAll} /></div>
+        <TocToggle expanded={expandAll} onClick={toggleExpandAll} className="sticky bottom-0 z-10 mt-auto p-6" />
       </aside>
 
       {/* Mobile top bar. iOS 26 browsers draw the page under their translucent top bar and stick `top: 0` below it,
           so the white is extended a screen upwards to hide content scrolling above the header. */}
-      <header className="lg:hidden sticky top-0 z-20 bg-white before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-screen before:bg-white before:content-['']">
-        <div className="flex items-center justify-between px-4 py-4 md:px-6">
-          <a href="#top" aria-label="В начало"><Logo /></a>
-          <button
-            type="button"
-            onClick={() => setMenuOpen(o => !o)}
-            aria-expanded={menuOpen}
-            className="text-[16px] font-medium tracking-[-0.01em] cursor-pointer"
-          >
-            {menuOpen ? 'Закрыть' : 'Содержание'}
-          </button>
-        </div>
-        {menuOpen && (
-          <div className="max-h-[calc(100dvh-56px)] overflow-y-auto border-t border-[#e6e6e6] px-4 py-6 md:px-6">
-            <Nav active={active} expandAll={expandAll} onToggle={toggleExpandAll} onNavigate={() => setMenuOpen(false)} />
-          </div>
-        )}
+      <header className="lg:hidden sticky top-0 z-20 bg-white px-4 py-4 md:px-6 before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-screen before:bg-white before:content-['']">
+        <a href="#top" aria-label="В начало" className="block w-fit"><Logo /></a>
       </header>
 
-      <main id="top" className="min-w-0 flex-1 p-4 md:p-6">
+      {/* Mobile table of contents: a bar at the bottom names the heading you're reading and stands in for the
+          sidebar; tapped, the full contents open between the header and the bar, which turns into «Свернуть». */}
+      <div className="lg:hidden">
+        {menuOpen && (
+          <div className="fixed inset-x-0 top-14 bottom-0 z-20 overflow-y-auto overscroll-contain bg-white px-4 pt-4 md:px-6">
+            <Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} />
+            <TocToggle
+              expanded
+              onClick={() => setMenuOpen(false)}
+              className="sticky bottom-0 -mx-4 w-[calc(100%+2rem)] px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] md:-mx-6 md:w-[calc(100%+3rem)] md:px-6"
+            />
+          </div>
+        )}
+        {!menuOpen && (
+          <button
+            type="button"
+            onClick={() => setMenuOpen(true)}
+            aria-expanded={false}
+            aria-label={`Содержание: ${sectionTitle ?? 'Стандарты бренда'}`}
+            className="fixed inset-x-0 bottom-0 z-20 flex cursor-pointer items-start gap-4 bg-white px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6"
+          >
+            <TocGlyph expanded={false} />
+            <span className="min-w-0 flex-1 truncate">{sectionTitle ?? 'Стандарты бренда'}</span>
+          </button>
+        )}
+      </div>
+
+      <main id="top" className="min-w-0 flex-1 p-4 pb-[calc(52px+1rem)] md:p-6 md:pb-[calc(52px+1.5rem)] lg:pb-6">
         <div className="flex max-w-[1200px] flex-col gap-24 md:gap-36">
           {/* Intro */}
           <section className="flex flex-col gap-8 md:gap-12">
