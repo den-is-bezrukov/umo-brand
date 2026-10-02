@@ -28,9 +28,9 @@ jobs:
           fi
       - name: Check for oversized videos
         run: |
-          big=$(find src public -type f \( -iname '*.mp4' -o -iname '*.webm' \) -size +8192k)
+          big=$(find src public -type f \( -iname '*.mp4' -o -iname '*.webm' \) -size +15360k)
           if [ -n "$big" ]; then
-            echo "These videos are over 8MB — compress before committing:"
+            echo "These videos are over 15MB — compress before committing:"
             echo "$big"
             exit 1
           fi

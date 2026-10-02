@@ -8,7 +8,6 @@ import tocIcons from '@/icons/toc'
 import { useTypograf } from './typograf'
 import downloadSizes from 'virtual:download-sizes'
 import heroMp4 from '@/assets/guide/hero.mp4'
-import heroWebm from '@/assets/guide/hero.webm'
 
 // Figures are exported from Figma (UMO | Evrone, node 4810:686) at 2x and
 // cropped per frame — see "Brand guide" in AGENTS.md for how to refresh them.
@@ -294,8 +293,8 @@ function useHeroStrip(pageRef: RefObject<HTMLElement | null>) {
 }
 
 /**
- * The hero: the UMO test-drive film, looped and muted — AV1 WebM (4.7 MB) where the browser decodes it, else H.264 MP4
- * (6.5 MB); the poster is its first frame, so nothing jumps when it starts. It loops all the time, under the page too.
+ * The hero: the UMO test-drive film, looped and muted — the source MP4 as it came (H.264, 12 MB, no re-encoding: it's
+ * already set up for the web); the poster is its first frame, so nothing jumps when it starts. It loops all the time, under the page too.
  * With reduced motion asked for, or data saving on, the still photo stands in.
  */
 function Hero() {
@@ -317,7 +316,6 @@ function Hero() {
         <img src={img('hero')} alt="Женщина у UMO 8 на горной дороге" width={1824} height={912} fetchPriority="high" decoding="async" className={`${fill} object-[50%_40%]`} />
       ) : (
         <video ref={videoRef} poster={img('hero-poster')} autoPlay muted loop playsInline preload="auto" aria-hidden className={fill}>
-          <source src={heroWebm} type={'video/webm; codecs="av01.0.08M.08"'} />
           <source src={heroMp4} type="video/mp4" />
         </video>
       )}
