@@ -1,4 +1,4 @@
-"""Curvature combs: Golos, Golos UMO and CoFo side by side.
+"""Curvature combs: Golos, UMO Sans and CoFo side by side.
 Usage, from the work directory (KEEP=1 ./build.sh): python3 combs.py O,C,zero Medium out.png"""
 import sys, ufoLib2
 from fontTools.ttLib import TTFont
@@ -26,7 +26,7 @@ def draw_segs(contours,ox,oy,sc,d,title,scale_y=1.0,nodes=None):
 def ufo_contours(g): return [segs(c) for c in g.contours]
 names=sys.argv[1].split(','); m=sys.argv[2]; out=sys.argv[3]
 cf='/home/user/umo-brand/public/fonts/CoFoSans-%s.ttf'%('Regular' if m in('Light','Regular') else 'Medium')
-C=TTFont(cf); O=ufoLib2.Font.open(f'master_ufo/GolosText-{"Regular" if m=="Light" else m}.ufo'); U=ufoLib2.Font.open(f'umo/GolosUMO-{m}.ufo')
+C=TTFont(cf); O=ufoLib2.Font.open(f'master_ufo/GolosText-{"Regular" if m=="Light" else m}.ufo'); U=ufoLib2.Font.open(f'umo/UMOSans-{m}.ufo')
 sc=0.5; W=int(880*sc); k=700/680
 uni={g.name:g for g in O}
 im=Image.new('RGB',(len(names)*3*W+40,int(1000*sc)+60),'white'); d=ImageDraw.Draw(im)

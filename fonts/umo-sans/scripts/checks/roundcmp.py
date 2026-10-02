@@ -19,7 +19,7 @@ def describe(contours):
         a,b=area_bbox(cs); w=b[2]-b[0]; h=b[3]-b[1]
         info.append((round(a/(w*h),3),round(w/h,3),straight(cs)))
     return info
-U=ufoLib2.Font.open('umo/GolosUMO-Medium.ufo'); G=ufoLib2.Font.open('master_ufo/GolosText-Medium.ufo'); C=TTFont('/home/user/umo-brand/public/fonts/CoFoSans-Medium.ttf')
+U=ufoLib2.Font.open('umo/UMOSans-Medium.ufo'); G=ufoLib2.Font.open('master_ufo/GolosText-Medium.ufo'); C=TTFont('/home/user/umo-brand/public/fonts/CoFoSans-Medium.ttf')
 uni={chr(u):g.name for g in G for u in g.unicodes}
 if __name__=='__main__': print('per contour: superness (circle .785 / square 1), width:height, straight length (h+v lines)')
 if __name__=="__main__":

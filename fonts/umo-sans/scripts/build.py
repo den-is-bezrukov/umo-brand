@@ -1,4 +1,4 @@
-"""Golos UMO, second pass.
+"""UMO Sans, second pass.
 - straight letters (H E T Ш…) are cut where a vertical line crosses only horizontal lines and moved apart;
 - everything with curves or diagonals is scaled across with the weight compensated in x only
   (x from a lighter instance, y from the original), so vertical and diagonal strokes keep their
@@ -180,9 +180,9 @@ for m in MASTERS:
         for a in g.anchors: a.x+=dl
 
 for m in MASTERS:
-    f=fonts[m]; f.info.familyName='Golos UMO'; f.info.styleMapFamilyName=None
-    f.info.postscriptFontName=f'GolosUMO-{m}'; f.info.openTypeNameUniqueID=None
-    f.save(f'mid/GolosUMO-{m}.ufo',overwrite=True)
+    f=fonts[m]; f.info.familyName='UMO Sans'; f.info.styleMapFamilyName=None
+    f.info.postscriptFontName=f'UMOSans-{m}'; f.info.openTypeNameUniqueID=None
+    f.save(f'mid/UMOSans-{m}.ufo',overwrite=True)
 json.dump(report,open('report.json','w'),ensure_ascii=False,indent=0)
 print(sum(1 for v in report.values() if v[0]=='split'),'split',sum(1 for v in report.values() if v[0]=='scale'),'scaled',sum(1 for v in report.values() if v[0]=='composite'),'composites')
 print({k:v[1] for k,v in report.items() if v[0]=='split'})

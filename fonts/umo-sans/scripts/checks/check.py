@@ -1,4 +1,4 @@
-"""Regression checks for Golos UMO, run from the build's work directory after build.py:
+"""Regression checks for UMO Sans, run from the build's work directory after build.py:
 - curvature: a widened glyph may not have more curvature breaks than Golos's own glyph (Light/Regular/Medium);
 - superness of O and 0 stays within 0.01 of Golos's (CoFo shown for reference)."""
 import json, sys, ufoLib2
@@ -22,7 +22,7 @@ from audit import segs
 from ttfseg import ttf_contours
 rep=json.load(open('report.json'))
 O={m:ufoLib2.Font.open(f'master_ufo/GolosText-{m}.ufo') for m in ['Regular','Medium','SemiBold']}
-U={m:ufoLib2.Font.open(f'umo/GolosUMO-{m}.ufo') for m in ['Regular','Medium']}
+U={m:ufoLib2.Font.open(f'umo/UMOSans-{m}.ufo') for m in ['Regular','Medium']}
 bad=[]
 from details import REDRAWN
 for n,(how,_,d) in rep.items():

@@ -11,7 +11,7 @@
   Д's legs flare into the slab, their handles aimed at where the tangents meet."""
 import math, copy, ufoLib2
 
-VERTEX_Y = 65       # M vertex, font units above the baseline (Golos UMO had 143-151)
+VERTEX_Y = 65       # M vertex, font units above the baseline (UMO Sans had 143-151)
 TOP_JOINT = 50      # the M diagonals start this far in from the stems' inner edge at the top (Golos: at the edge)
 TAIL_ANGLE = 53     # Q tail, degrees below the horizontal (Golos 43)
 TAIL_BOTTOM = -85   # lowest corner of the Q tail (Golos about -30)
@@ -311,7 +311,7 @@ def fix_ya(g, drop):
 
 if __name__ == '__main__':
     for st in ('Regular', 'Medium'):
-        f = ufoLib2.Font.open(f'umo/GolosUMO-{st}.ufo')
+        f = ufoLib2.Font.open(f'umo/UMOSans-{st}.ufo')
         fix_m(f['M']); fix_q(f); g_spur(f, st)
         for el, de in (('El-cy', 'De-cy'), ('el-cy', 'de-cy')):
             outer_top, inner_top = path_tops(f[de])

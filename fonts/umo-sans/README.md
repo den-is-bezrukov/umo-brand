@@ -1,6 +1,10 @@
-# Golos UMO
+# UMO Sans
 
-A prototype of a UMO brand typeface: Golos Text (Alexandra Korolkova and Vitaly Kuzmin, ParaType, SIL Open Font License 1.1, [googlefonts/golos-text](https://github.com/googlefonts/golos-text)) with its capitals and figures widened toward the proportions of CoFo Sans and its weights set to CoFo's. Lowercase shapes and spacing are Golos's own. The site uses it only on `/golos`, a copy of the brand guide set in it (`src/guide/GolosGuide.tsx`).
+A prototype of a UMO brand typeface: Golos Text (Alexandra Korolkova and Vitaly Kuzmin, ParaType, SIL Open Font License 1.1, [googlefonts/golos-text](https://github.com/googlefonts/golos-text)) with its capitals and figures widened toward the proportions of CoFo Sans and its weights set to CoFo's. Lowercase shapes and spacing are Golos's own. The site uses it only on `/umo-sans`, a copy of the brand guide set in it (`src/guide/SansGuide.tsx`).
+
+## Name and credits
+
+The OFL lets anyone modify Golos Text and use the result, commercially too, as long as the copyright and the license stay with it and the font isn't sold on its own. It grants nothing on the name, though: Golos is a registered trademark of Smena Ltd., as the Golos files say. So this version doesn't carry it: it is UMO Sans, "based on Golos Text". Its files keep Golos Text's copyright and credit Alexandra Korolkova and Vitaly Kuzmin as its designers, "modified for UMO", and drop what would present it as ParaType's release: the trademark line, ParaType as manufacturer, its URLs and vendor id (`final.py`). Keep it that way when renaming or re-releasing, and say "based on Golos Text" wherever the font is named.
 
 ## What changed from Golos Text
 
@@ -31,12 +35,12 @@ A prototype of a UMO brand typeface: Golos Text (Alexandra Korolkova and Vitaly 
 
 ## Checks
 
-`build.sh` stops if a widened glyph gains a curvature break between two curves that Golos doesn't have, gains or loses points, or if the superness of O or 0 moves more than 0.01 from Golos's, in either style (`scripts/checks/check.py`; CoFo Regular's and Medium's are printed for reference). Л л У y, redrawn with a different number of points, are left out of the point comparison. `scripts/checks/combs.py` draws curvature combs of Golos, Golos UMO and CoFo side by side, from the work directory that `KEEP=1 ./build.sh` leaves.
+`build.sh` stops if a widened glyph gains a curvature break between two curves that Golos doesn't have, gains or loses points, or if the superness of O or 0 moves more than 0.01 from Golos's, in either style (`scripts/checks/check.py`; CoFo Regular's and Medium's are printed for reference). Л л У y, redrawn with a different number of points, are left out of the point comparison. `scripts/checks/combs.py` draws curvature combs of Golos, UMO Sans and CoFo side by side, from the work directory that `KEEP=1 ./build.sh` leaves.
 
 ## Files
 
-- `GolosUMO[wght].ttf` / `.woff2`: the variable font, 400–500 (Regular to Medium)
-- `GolosUMO-Regular` / `-Medium` (`.ttf`, `.woff2`): static instances
+- `UMOSans[wght].ttf` / `.woff2`: the variable font, 400–500 (Regular to Medium)
+- `UMOSans-Regular` / `-Medium` (`.ttf`, `.woff2`): static instances
 - The files carry **Russian Cyrillic only** (А–Я, а–я, Ё ё): the other Cyrillic letters (Ukrainian, Belarusian, Serbian, Kazakh, Tatar, historic) stay in the sources, widened with their bases, but `build.sh` cuts them from the release (`RUSSIAN` in its export step). Latin with its accents, figures, punctuation, ₽, № and the combining stress mark stay, and so do all the OpenType features.
 - `OFL.txt`: the license, which also covers this modified version
 - `build.sh`: rebuilds everything from the pinned Golos sources (`pip install fontmake glyphsLib ufoLib2 fontMath brotli`)

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Rebuilds Golos UMO from the Golos Text sources (googlefonts/golos-text, pinned below).
+# Rebuilds UMO Sans from the Golos Text sources (googlefonts/golos-text, pinned below).
 # Needs: pip install fontmake glyphsLib ufoLib2 fontMath brotli
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -17,13 +17,13 @@ python3 details.py
 python3 dots.py
 python3 ds.py
 python3 check.py ../../../public/fonts
-(cd umo && fontmake -m GolosUMO.designspace -o variable --output-dir ../build --no-production-names >/dev/null 2>&1)
+(cd umo && fontmake -m UMOSans.designspace -o variable --output-dir ../build --no-production-names >/dev/null 2>&1)
 cd ..
 python3 - <<'PY'
 from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
 from fontTools import subset
-vf='work/build/GolosUMO-VF.ttf'
+vf='work/build/UMOSans-VF.ttf'
 
 # The release carries Russian Cyrillic only (А-Я, а-я, Ё ё): the other Cyrillic letters (Ukrainian,
 # Belarusian, Serbian, Kazakh, Tatar, historic...) stay in the sources but are cut from the files.
@@ -37,19 +37,20 @@ def release(font):
     sub = subset.Subsetter(opts); sub.populate(unicodes=keep); sub.subset(font)
     return font
 
-f=release(TTFont(vf)); f.save('GolosUMO[wght].ttf'); f.flavor='woff2'; f.save('GolosUMO[wght].woff2')
+f=release(TTFont(vf)); f.save('UMOSans[wght].ttf'); f.flavor='woff2'; f.save('UMOSans[wght].woff2')
 for w,n in ((400,'Regular'),(500,'Medium')):  # the variable font runs 400-500 between the two
     s=release(instancer.instantiateVariableFont(TTFont(vf),{'wght':w}))
     nt=s['name']
     for i in (16,17,25): nt.removeNames(nameID=i)
-    nt.setName('Golos UMO' if n=='Regular' else f'Golos UMO {n}',1,3,1,0x409)
+    nt.setName('UMO Sans' if n=='Regular' else f'UMO Sans {n}',1,3,1,0x409)
     nt.setName('Regular',2,3,1,0x409)
-    nt.setName(f'Golos UMO {n}',4,3,1,0x409)
-    nt.setName(f'GolosUMO-{n}',6,3,1,0x409)
+    nt.setName(f'UMO Sans {n}',4,3,1,0x409)
+    nt.setName(f'UMOSans-{n}',6,3,1,0x409)
+    nt.setName(nt.getDebugName(3).replace('-Regular',f'-{n}'),3,3,1,0x409)
     if n!='Regular':
-        nt.setName('Golos UMO',16,3,1,0x409); nt.setName(n,17,3,1,0x409)
+        nt.setName('UMO Sans',16,3,1,0x409); nt.setName(n,17,3,1,0x409)
     s['OS/2'].usWeightClass=w
-    s.save(f'GolosUMO-{n}.ttf'); s.flavor='woff2'; s.save(f'GolosUMO-{n}.woff2')
+    s.save(f'UMOSans-{n}.ttf'); s.flavor='woff2'; s.save(f'UMOSans-{n}.woff2')
 PY
 [ "${KEEP:-}" = 1 ] || rm -rf "$W"   # KEEP=1 ./build.sh leaves the work directory for inspection
 ls -la *.ttf *.woff2

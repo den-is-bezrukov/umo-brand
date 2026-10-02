@@ -238,5 +238,5 @@ def chevrons(font):
 if __name__ == '__main__':
     style = sys.argv[1] if len(sys.argv) > 1 else DOTS
     for st in ('Regular', 'Medium'):
-        f = ufoLib2.Font.open(f'umo/GolosUMO-{st}.ufo'); run(f, style); chevrons(f); f.save()
+        f = ufoLib2.Font.open(f'umo/UMOSans-{st}.ufo'); run(f, style); chevrons(f); f.save()
         print(st, style, 'stem', stem(f), 'period', bounds(f['period'].contours[0]), 'comma', bounds(f['comma'].contours[0]))

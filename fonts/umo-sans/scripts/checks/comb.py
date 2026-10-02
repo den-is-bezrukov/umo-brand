@@ -33,7 +33,7 @@ def draw(font,name,ox,oy,sc,d,title):
             d.ellipse((X(p.x)-r,Y(p.y)-r,X(p.x)+r,Y(p.y)+r),fill=col)
 if __name__=="__main__":
     names=sys.argv[1].split(','); m=sys.argv[2]; out=sys.argv[3]
-    O=ufoLib2.Font.open(f'master_ufo/GolosText-{m if m!="Light" else "Regular"}.ufo'); U=ufoLib2.Font.open(f'umo/GolosUMO-{m}.ufo')
+    O=ufoLib2.Font.open(f'master_ufo/GolosText-{m if m!="Light" else "Regular"}.ufo'); U=ufoLib2.Font.open(f'umo/UMOSans-{m}.ufo')
     sc=0.55; W=int(900*sc)
     im=Image.new('RGB',(len(names)*2*W+40,int(1000*sc)+60),'white'); d=ImageDraw.Draw(im)
     for i,n in enumerate(names):

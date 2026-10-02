@@ -40,7 +40,7 @@ def audit(g):
 if __name__=="__main__":
   names=[n for n,d in D.items() if d]
   O={m:ufoLib2.Font.open(f'master_ufo/GolosText-{m}.ufo') for m in ['Regular','Medium','Black']}
-  U={m:ufoLib2.Font.open(f'umo/GolosUMO-{m}.ufo') for m in ['Light','Regular','Medium','Black']}
+  U={m:ufoLib2.Font.open(f'umo/UMOSans-{m}.ufo') for m in ['Light','Regular','Medium','Black']}
   print('%-13s %-6s | Golos R/M/Bk kinks,curv-jumps,flips | UMO Light/R/M/Bk'%('glyph','how'))
   for n in names:
       how='split' if isinstance(R.get(n),list) else 'scale'
