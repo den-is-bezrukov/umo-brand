@@ -182,28 +182,20 @@ export function OptionalField({ label, on, onChange, extra, children }: { label:
 }
 
 /**
- * Text size, smaller or larger: two 20 × 16 buttons marked A↓ and A↑ on a grey plate, the chosen one outlined
- * (Figma: UMO | Evrone, node 4920:50)
+ * Text size as one word at the end of a field's label row (Figma: UMO | Evrone, node 4900:4662): «Больше» while the text
+ * is small, «Меньше» once it's large; a press switches. Shown only where the larger size is available.
  */
-export function SizeSwitch({ large, onChange, disabled, title }: { large: boolean; onChange: (v: boolean) => void; disabled?: boolean; title?: string }) {
-  const btn = (value: boolean, label: string, name: string) => (
+export function SizeSwitch({ large, onChange }: { large: boolean; onChange: (v: boolean) => void }) {
+  return (
     <button
       type="button"
-      onClick={() => onChange(value)}
-      disabled={disabled}
-      aria-pressed={large === value}
-      aria-label={name}
-      className={`flex h-4 w-5 cursor-pointer items-center justify-center rounded-[4px] border text-[8px] font-medium leading-none text-black outline-none focus-visible:ring-2 focus-visible:ring-black/30 disabled:cursor-not-allowed
-        ${large === value ? 'border-black' : 'border-transparent hover:enabled:border-black/20'}`}
+      onClick={() => onChange(!large)}
+      aria-pressed={large}
+      aria-label="Крупный текст"
+      className="shrink-0 cursor-pointer text-[14px] leading-5 text-black outline-none transition-colors hover:text-black/50 focus-visible:ring-2 focus-visible:ring-black/30"
     >
-      {label}
+      {large ? 'Меньше' : 'Больше'}
     </button>
-  )
-  return (
-    <div role="group" aria-label="Размер текста" title={title} className={`flex shrink-0 rounded-[4px] bg-[#f5f5f5] ${disabled ? 'opacity-40' : ''}`}>
-      {btn(false, 'A↓', 'Мельче')}
-      {btn(true, 'A↑', 'Крупнее')}
-    </div>
   )
 }
 

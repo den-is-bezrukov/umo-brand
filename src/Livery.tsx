@@ -213,7 +213,8 @@ export default function Livery() {
               label="Текст снизу"
               on={on.tagline}
               onChange={toggle('tagline')}
-              extra={<SizeSwitch large={large && !on.qr && canLarge} onChange={setLarge} disabled={on.qr || !canLarge} title={on.qr ? 'Крупный текст — на бортах без QR-кода' : !canLarge ? 'У этой модели один размер текста' : undefined} />}
+              // The larger size is for the QR-less sides only, so the switch shows only without the QR
+              extra={!on.qr && canLarge ? <SizeSwitch large={large} onChange={setLarge} /> : undefined}
             >
               <TextArea value={tagline} onChange={setTagline} invalid={sides.some(s => s.tagline.issues.length > 0) || !tagline.trim()} />
             </OptionalField>
