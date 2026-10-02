@@ -104,6 +104,9 @@ export interface Surface {
 const SIDE_W = 1280
 const SIDE_H = 500
 
+// The dealer name runs up to 500 from the front edge, with the QR or without; the front door handle stays 13–23 clear
+const DEALER_W = 500
+
 // Side text: CoFo Sans Medium, 40 mm on 40 mm lines. The last baseline of a block sits a descender (0.194 em) above
 // the sheet's bottom edge, so р, у or д in the last line stay on the sheet.
 const sideText = { size: 40, leading: 40 }
@@ -183,7 +186,7 @@ export const UMO8: Record<SurfaceId, Surface> = {
     qr: { x: 0, y: 140, size: 360 },
     umo: { x: 450, y: 140, h: 120 },
     num: { x: 1130, y: 140, h: 120 },
-    dealer: { x: 0, align: 'left', baseline: 74, ...sideText, maxWidth: 450, maxLines: 2 },
+    dealer: { x: 0, align: 'left', baseline: 74, ...sideText, maxWidth: DEALER_W, maxLines: 2 },
     tagline: { x: 450, align: 'left', baseline: 492, ...sideText, maxWidth: 400, maxLines: 3 },
     obstacles: leftObstacles,
     clearance: 10,
@@ -216,7 +219,7 @@ export const UMO8: Record<SurfaceId, Surface> = {
       w: BARE_W,
       umo: { x: 0, ...bareLettering },
       num: { x: 900, ...bareLettering },
-      dealer: { x: 0, align: 'left', baseline: 74, ...sideText, maxWidth: 450, maxLines: 2 },
+      dealer: { x: 0, align: 'left', baseline: 74, ...sideText, maxWidth: DEALER_W, maxLines: 2 },
       tagline: { x: 0, align: 'left', ...bareTagline },
       taglineLarge: { x: 0, align: 'left', ...bareTaglineLarge },
       dims: {
@@ -234,7 +237,7 @@ export const UMO8: Record<SurfaceId, Surface> = {
     qr: { x: 920, y: 140, size: 360 },
     umo: { x: 0, y: 140, h: 120 },
     num: { x: 680, y: 140, h: 120 },
-    dealer: { x: 1280, align: 'right', baseline: 74, ...sideText, maxWidth: 450, maxLines: 2 },
+    dealer: { x: 1280, align: 'right', baseline: 74, ...sideText, maxWidth: DEALER_W, maxLines: 2 },
     tagline: { x: 830, align: 'right', baseline: 492, ...sideText, maxWidth: 400, maxLines: 3 },
     obstacles: leftObstacles.map(mirror),
     clearance: 10,
@@ -267,7 +270,7 @@ export const UMO8: Record<SurfaceId, Surface> = {
       w: BARE_W,
       umo: { x: 0, ...bareLettering },
       num: { x: 900, ...bareLettering },
-      dealer: { x: BARE_W, align: 'right', baseline: 74, ...sideText, maxWidth: 450, maxLines: 2 },
+      dealer: { x: BARE_W, align: 'right', baseline: 74, ...sideText, maxWidth: DEALER_W, maxLines: 2 },
       tagline: { x: BARE_W, align: 'right', ...bareTagline },
       taglineLarge: { x: BARE_W, align: 'right', ...bareTaglineLarge },
       dims: {
