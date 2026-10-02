@@ -115,10 +115,10 @@ function useActiveSection() {
 /**
  * A hovered link stays black and gets a hairline underline as set in Figma (4865:1061): black at 40%, 2.5% of the
  * type size thick, 25% of it under the baseline, through the descenders (no skip ink); it turned grey #757575 before.
- * The line shows at once and fades over 0.35s, like guides.area17.com, once the pointer leaves (a transition runs with
+ * The line shows at once and fades over 0.25s, like guides.area17.com, once the pointer leaves (a transition runs with
  * the duration of the state it heads to): it's always there, transparent until hovered. The active link has none.
  */
-const NAV_HOVER = 'underline decoration-transparent decoration-[2.5%] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-350 ease-[ease] hover:decoration-black/40 hover:duration-0'
+const NAV_HOVER = 'underline decoration-transparent decoration-[2.5%] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 ease-[ease] hover:decoration-black/40 hover:duration-0'
 
 /**
  * `active`: you're inside this item (medium weight); `current`: its own heading is the one on screen (the bullet).
