@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link } from 'react-router-dom'
 import type { Font } from 'opentype.js'
-import { Field, OptionalField, Segments, SegBtn, TextArea, UrlField, Checkbox, SizeSwitch, DownloadButton, isValidUrl } from '@/ui/form'
+import { Field, OptionalField, Segments, SegBtn, TextArea, UrlField, Checkbox, SizeSwitch, GeneratorHeader, LinkButtons, DownloadButton, isValidUrl } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
 import { LIVERIES, SURFACES, withoutQr, type Model } from '@/livery/layout'
 import { loadFont, buildSheet, specMarks, toD, mm, type Sheet, type Line } from '@/livery/geometry'
@@ -165,6 +164,17 @@ export default function Livery() {
     if (on && !rear) setRear({ dealer: dealer.replace(/\s*\n\s*/g, ' '), tagline })
     setOwnRear(on)
   }
+  // «Сбросить» keeps the model and brings the rest back to its defaults
+  const reset = () => {
+    setDealer(DEFAULT_TOP)
+    setTagline(DEFAULT_BOTTOM[model])
+    setOwnRear(false)
+    setRear(undefined)
+    setUrl(DEFAULT_URL)
+    setOn({ qr: true, tagline: true, dealer: true, rear: true })
+    setDims(false)
+    setLarge(false)
+  }
   const ok = sheets.length > 0 && sheets.every(s => s.issues.length === 0)
 
   const handleExport = async () => {
@@ -186,12 +196,10 @@ export default function Livery() {
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
 
-      <aside className="flex shrink-0 flex-col md:h-full md:w-[241px] md:overflow-y-auto md:border-r md:border-black/10">
-        <div className="flex flex-col gap-4 p-6 tracking-[-0.01em] md:pb-2">
-          <div className="flex flex-col gap-4">
-            <Link to="/" className="self-start text-[14px] font-medium leading-5 tracking-normal hover:underline underline-offset-[0.25em] decoration-[0.25px]">← Бренд UMO</Link>
-            <h1 className="text-[24px] font-medium leading-none">Ливрея</h1>
-          </div>
+      {/* Sidebar per Figma 4900:4588, as the price card's */}
+      <aside className="flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+        <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
+          <GeneratorHeader current="/livery" />
 
           <div className="flex flex-col gap-4 tracking-normal">
             <Field label="Модель">
@@ -236,16 +244,17 @@ export default function Livery() {
             )}
 
             {/* Overlays on the preview only */}
-            <Checkbox checked={dims} onChange={setDims}>Размеры</Checkbox>
+            <Checkbox checked={dims} onChange={setDims}>Показать размеры</Checkbox>
             {/* <Checkbox checked={seams} onChange={setSeams}>Швы</Checkbox> */}
+          </div>
+
+          <div className="pt-2 tracking-normal">
+            <LinkButtons onReset={reset} />
           </div>
         </div>
 
-        <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky">
-          <div className="flex gap-2">
-            <DownloadButton onClick={handleExport} busy={exporting} disabled={!ok || (on.qr && !urlValid)}>Скачать ZIP</DownloadButton>
-            {/* <CopyLinkButton /> — hidden for now; the address already carries the settings */}
-          </div>
+        <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:pt-0">
+          <DownloadButton onClick={handleExport} busy={exporting} disabled={!ok || (on.qr && !urlValid)}>Скачать ZIP</DownloadButton>
         </div>
       </aside>
 

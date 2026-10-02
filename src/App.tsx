@@ -1,12 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
-import { Link } from 'react-router-dom'
 import { pdf } from '@react-pdf/renderer'
 import QRCode from 'qrcode'
 import PriceCard from '@/posters/PriceCard'
 import PriceCardPdf from '@/posters/pdf/PriceCardPdf'
 import { ensurePdfFonts } from '@/posters/pdf/pdfFonts'
 import type { Variant } from '@/posters/cardData'
-import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField, DownloadButton } from '@/ui/form'
+import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField, GeneratorHeader, LinkButtons, DownloadButton } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
 
 const POSTER_W = 1754
@@ -158,6 +157,13 @@ export default function App() {
     resetPrices(model, t)
   }
 
+  // «Сбросить» keeps the model and brings the rest back to its defaults
+  const reset = () => {
+    switchModel(model)
+    setCreditOn(false)
+    setUrl(DEFAULT_URL)
+  }
+
   const handleExport = async () => {
     setExporting(true)
     try {
@@ -183,13 +189,10 @@ export default function App() {
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
 
-      {/* ── Sidebar: 240px plus the 1px outside stroke from Figma, which shows only on the right ── */}
-      <aside className="flex shrink-0 flex-col md:h-full md:w-[241px] md:overflow-y-auto md:border-r md:border-black/10">
-        <div className="flex flex-col gap-4 p-6 tracking-[-0.01em] md:pb-2">
-          <div className="flex flex-col gap-4">
-            <Link to="/" className="self-start text-[14px] font-medium leading-5 tracking-normal hover:underline underline-offset-[0.25em] decoration-[0.25px]">← Бренд UMO</Link>
-            <h1 className="text-[24px] font-medium leading-none">Прайс-карта</h1>
-          </div>
+      {/* ── Sidebar: 320px plus the 1px outside stroke from Figma (4844:6865), which shows only on the right ── */}
+      <aside className="flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+        <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
+          <GeneratorHeader current="/price-card" />
 
           <div className="grid grid-cols-2 gap-x-3 gap-y-4 md:grid-cols-1 tracking-normal">
             <Field label="Модель">
@@ -209,7 +212,7 @@ export default function App() {
 
             {/* The link before the prices, as in Figma 4844:6865 */}
             <div className="col-span-2 md:col-span-1">
-              <Field label="Ссылка QR">
+              <Field label="Ссылка QR-кода">
                 <UrlField value={url} onChange={setUrl} />
               </Field>
             </div>
@@ -222,15 +225,16 @@ export default function App() {
               <TextInput numeric value={creditPrice} invalid={creditTooLow || fullLessThanCredit} onChange={changeCredit} />
             </OptionalField>
           </div>
+
+          <div className="pt-2 tracking-normal">
+            <LinkButtons onReset={reset} />
+          </div>
         </div>
 
-        {/* Download — right under the fields, sticking to the bottom of the sidebar when the window is shorter than the form;
-            on phones pinned to the bottom of the screen, since the preview comes below the form */}
-        <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky">
-          <div className="flex gap-2">
-            <DownloadButton onClick={handleExport} busy={exporting} disabled={!urlValid || !pricesValid}>Скачать PDF</DownloadButton>
-            {/* <CopyLinkButton /> — hidden for now; the address already carries the settings */}
-          </div>
+        {/* Download — 8px under «Копировать» and «Сбросить», sticking to the bottom of the sidebar when the window is shorter
+            than the form; on phones pinned to the bottom of the screen, since the preview comes below the form */}
+        <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:pt-0">
+          <DownloadButton onClick={handleExport} busy={exporting} disabled={!urlValid || !pricesValid}>Скачать PDF</DownloadButton>
         </div>
       </aside>
 

@@ -1,8 +1,55 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import svgPaths from '@/icons/ui'
+import { Link, useNavigate } from 'react-router-dom'
 
 // Sidebar controls shared by the generators (price card, dealer livery). Light UI per the Figma layout
-// (UMO | Evrone, node 4844:6864), matching the brand guide.
+// (UMO | Evrone, nodes 4844:6865 and 4900:4588), matching the brand guide.
+
+/** The tick of checkboxes and of a good link (Figma 4900:4657): a 2 px stroke with square ends */
+function Tick({ color = 'black' }: { color?: string }) {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+      <path d="M11.5 4L5.5 10L2.5 7" stroke={color} strokeWidth="2" strokeLinecap="square" />
+    </svg>
+  )
+}
+
+const GENERATORS = [
+  { path: '/price-card', title: 'Прайс-карта' },
+  { path: '/livery', title: 'Ливрея' },
+]
+
+/**
+ * The top of a generator's sidebar (Figma 4900:4589): breadcrumbs back to the guide and to its Носители chapter, and
+ * the title, whose chevron opens the browser's own picker to switch to the other generator — a native select laid
+ * transparent over the title.
+ */
+export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' }) {
+  const navigate = useNavigate()
+  const crumb = 'underline decoration-transparent decoration-[2.5%] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 hover:decoration-black/40 hover:duration-0'
+  return (
+    <div className="flex flex-col gap-4">
+      <nav className="flex items-center gap-2 text-[14px] font-medium leading-5 tracking-normal [font-feature-settings:'case'_1]">
+        <Link to="/" className={crumb}>Бренд UMO</Link>
+        <span aria-hidden>·</span>
+        <Link to="/#materials" className={crumb}>Носители</Link>
+      </nav>
+      <div className="relative flex items-center gap-1 self-start rounded-[4px] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-black/30">
+        <h1 className="text-[24px] font-medium leading-none">{GENERATORS.find(g => g.path === current)!.title}</h1>
+        <svg width="24" height="24" viewBox="-4 -4 24 24" fill="none" aria-hidden>
+          <path d="M4 6L8 10L12 6" stroke="black" strokeWidth="2" strokeLinecap="square" />
+        </svg>
+        <select
+          value={current}
+          onChange={e => navigate(e.target.value)}
+          aria-label="Конструктор"
+          className="absolute inset-0 cursor-pointer appearance-none opacity-0 outline-none"
+        >
+          {GENERATORS.map(g => <option key={g.path} value={g.path}>{g.title}</option>)}
+        </select>
+      </div>
+    </div>
+  )
+}
 
 export function isValidUrl(v: string): boolean {
   if (!v.trim()) return false
@@ -136,9 +183,7 @@ export function UrlField({ value, onChange }: { value: string; onChange: (v: str
       {/* On the first line, however many lines the link takes */}
       <div className="pointer-events-none absolute top-0 right-0 flex h-10 w-9 items-center justify-center">
         {valid ? (
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-label="Ссылка в порядке">
-            <path d={svgPaths.p3de7e600} stroke="#00C950" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.45833" />
-          </svg>
+          <span role="img" aria-label="Ссылка в порядке"><Tick color="#00C950" /></span>
         ) : error ? (
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-label="Проверьте ссылку">
             <circle cx="7" cy="7" r="6" stroke="#e30" strokeWidth="1.4" />
@@ -151,17 +196,13 @@ export function UrlField({ value, onChange }: { value: string; onChange: (v: str
   )
 }
 
-/** A grey 16 px box with a black tick (Figma: UMO | Evrone, node 4900:4588), on a native checkbox for keyboard and screen readers */
+/** A grey 16 px box with a black tick, 8 px from its label (Figma: UMO | Evrone, node 4900:4656), on a native checkbox for keyboard and screen readers */
 export function Checkbox({ checked, onChange, children }: { checked: boolean; onChange: (v: boolean) => void; children: React.ReactNode }) {
   return (
-    <label className="flex cursor-pointer items-center gap-1 text-[14px] leading-5 text-black">
+    <label className="flex cursor-pointer items-center gap-2 text-[14px] leading-5 text-black">
       <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="peer sr-only" />
-      <span aria-hidden className="flex size-4 shrink-0 items-center justify-center rounded-[4px] bg-[#f5f5f5] peer-focus-visible:ring-2 peer-focus-visible:ring-black/30">
-        {checked && (
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <path d={svgPaths.p3de7e600} stroke="black" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.45833" />
-          </svg>
-        )}
+      <span aria-hidden className="flex size-4 shrink-0 items-center justify-center rounded-[2px] bg-[#f5f5f5] peer-focus-visible:ring-2 peer-focus-visible:ring-black/30">
+        {checked && <Tick />}
       </span>
       {children}
     </label>
@@ -182,8 +223,8 @@ export function OptionalField({ label, on, onChange, extra, children }: { label:
 }
 
 /**
- * Text size as one word at the end of a field's label row (Figma: UMO | Evrone, node 4900:4662): «Больше» while the text
- * is small, «Меньше» once it's large; a press switches. Shown only where the larger size is available.
+ * Text size as one word at the end of a field's label row (Figma: UMO | Evrone, node 4900:4662): «Увеличить» while the
+ * text is small, «Уменьшить» once it's large; a press switches. Shown only where the larger size is available.
  */
 export function SizeSwitch({ large, onChange }: { large: boolean; onChange: (v: boolean) => void }) {
   return (
@@ -192,42 +233,39 @@ export function SizeSwitch({ large, onChange }: { large: boolean; onChange: (v: 
       onClick={() => onChange(!large)}
       aria-pressed={large}
       aria-label="Крупный текст"
-      className="shrink-0 cursor-pointer text-[14px] leading-5 text-black outline-none transition-colors hover:text-black/50 focus-visible:ring-2 focus-visible:ring-black/30"
+      className="shrink-0 cursor-pointer text-[14px] font-medium leading-5 text-black outline-none transition-colors hover:text-black/50 focus-visible:ring-2 focus-visible:ring-black/30"
     >
-      {large ? 'Меньше' : 'Больше'}
+      {large ? 'Уменьшить' : 'Увеличить'}
     </button>
   )
 }
 
-/** Copies the page address — with the settings in it — to share a set-up card or livery; a tick says it's done */
-export function CopyLinkButton() {
+const outlined = 'flex min-w-16 flex-1 items-center justify-center rounded-[4px] border border-black/10 p-3 text-[14px] font-medium leading-[1.13] tracking-[-0.01em] text-black cursor-pointer outline-none hover:border-black/30 focus-visible:ring-2 focus-visible:ring-black/30'
+
+/**
+ * «Копировать» and «Сбросить» side by side (Figma 4939:3762): the first copies the page address — the settings are in
+ * it — to send a set-up card or livery as a link, and says so for two seconds; the second brings the settings back to
+ * the defaults, which a page reload can't, as the address keeps them.
+ */
+export function LinkButtons({ onReset }: { onReset: () => void }) {
   const [copied, setCopied] = useState(false)
   useEffect(() => {
     if (!copied) return
     const t = setTimeout(() => setCopied(false), 2000)
     return () => clearTimeout(t)
   }, [copied])
-  const label = copied ? 'Ссылка скопирована' : 'Скопировать ссылку на эти настройки'
   return (
-    <button
-      type="button"
-      onClick={() => navigator.clipboard.writeText(window.location.href).then(() => setCopied(true))}
-      aria-label={label}
-      title={label}
-      className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-[4px] bg-[#f5f5f5] outline-none hover:bg-[#ebebeb] focus-visible:ring-2 focus-visible:ring-black/30"
-    >
-      {copied ? (
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-          <path d={svgPaths.p3de7e600} stroke="#00C950" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.45833" />
-        </svg>
-      ) : (
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-        </svg>
-      )}
-      <span className="sr-only" aria-live="polite">{copied ? 'Ссылка скопирована' : ''}</span>
-    </button>
+    <div className="flex gap-2">
+      <button
+        type="button"
+        onClick={() => navigator.clipboard.writeText(window.location.href).then(() => setCopied(true))}
+        title="Скопировать ссылку на эти настройки"
+        className={outlined}
+      >
+        <span aria-live="polite">{copied ? 'Скопировано' : 'Копировать'}</span>
+      </button>
+      <button type="button" onClick={onReset} title="Вернуть настройки по умолчанию" className={outlined}>Сбросить</button>
+    </div>
   )
 }
 
@@ -237,10 +275,10 @@ export function DownloadButton({ onClick, busy, disabled, children }: { onClick:
       type="button"
       onClick={onClick}
       disabled={busy || disabled}
-      className="flex w-full items-center justify-center gap-2 rounded-[4px] bg-black p-3 text-[16px] font-medium leading-none tracking-[-0.01em] text-white cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 hover:enabled:bg-[#333]"
+      className="flex w-full min-w-16 items-center justify-center gap-2 rounded-[4px] bg-black p-3 text-[14px] font-medium leading-[1.13] tracking-[-0.01em] text-white cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 hover:enabled:bg-[#333]"
     >
       {busy && (
-        <svg className="animate-spin" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" aria-hidden>
+        <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" aria-hidden>
           <path d="M21 12a9 9 0 1 1-6.219-8.56" />
         </svg>
       )}
