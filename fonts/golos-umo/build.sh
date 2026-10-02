@@ -8,13 +8,13 @@ W=work; rm -rf "$W"; mkdir -p "$W"
 git clone -q https://github.com/googlefonts/golos-text "$W/golos-text"
 git -C "$W/golos-text" checkout -q "$UPSTREAM"
 glyphs2ufo "$W/golos-text/sources/GolosText.glyphs" -m "$W/master_ufo" >/dev/null 2>&1
-cp scripts/*.py scripts/delta.json "$W/"
+cp scripts/*.py scripts/delta.json scripts/checks/*.py "$W/"
 mkdir -p "$W/umo"
 cd "$W"
-python3 build.py >/dev/null
-python3 names.py
+python3 build.py
 python3 light.py
 python3 ds.py
+python3 check.py ../../../public/fonts/CoFoSans-Medium.ttf
 (cd umo && fontmake -m GolosUMO.designspace -o variable --output-dir ../build --no-production-names >/dev/null 2>&1)
 cd ..
 python3 - <<'PY'

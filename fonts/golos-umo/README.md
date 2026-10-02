@@ -4,10 +4,15 @@ A prototype of a UMO brand typeface: Golos Text (Alexandra Korolkova and Vitaly 
 
 ## What changed from Golos Text
 
-- **Capitals and figures are wider**, by the amounts in `scripts/delta.json` (font units on the 700 cap height). Where a vertical line crosses only horizontal strokes or the top and bottom of a round, the letter is cut there and its right part moved over, the extremum point becoming a short flat, so stems keep their thickness and curves their shape (O C G E H Ш Ю 0 3…). Diagonal letters and S-shapes (A M N V W X Y Z И Ф Ч 1 2 4 5 6 7 8 9…) have no such line, so they are scaled across, from a slightly lighter version of the same weight to keep the stems even. К, У, I, J, Б and ₽ were left as they are. Composites (Й, Ё, accented Latin) follow their base letters; tabular figures take the new shapes on one shared width.
-- **Capitals are 5 units tighter on each side**, so caps-only lines space like CoFo's.
+- **Capitals and figures are wider**, by the amounts in `scripts/delta.json` (font units on the 700 cap height), measured against CoFo Sans Medium. Letters made of straight strokes only (H E T Ш П Ц…) are cut where a vertical line crosses nothing but horizontal lines, and moved apart. Everything with curves or diagonals is scaled across with the weight compensated in x only: x comes from a lighter instance of the same glyph, y from the original, so vertical strokes and diagonals keep their thickness, horizontals stay as they were and the curves stay exactly as smooth (no flats are added: O keeps Golos's superness, 0.820 against Golos's 0.821 and CoFo's 0.815). Z, whose diagonal flattens most, gets less compensation so it doesn't thin. К, У, I, J and Б are left as they are.
+- **Relatives follow:** letters drawn on a widened base (Ң Ө Є Ә Ғ Ҷ Æ Œ Ø Ð Þ, ₽ € $ ¥ ₸…) get its amount, old-style figures a proportional one, tabular figures (lining and old-style) the new shapes on one shared width, and composites (Ё Й Ў Ӧ É…) their base's width at any depth of nesting, with marks and anchors moved to the new centre.
+- **Capitals' sidebearings are 7% tighter**, in proportion, so rounds lose less than straights, as in CoFo.
 - **Weights:** Regular (400) is extrapolated below Golos's lightest master, to CoFo Regular's stem (0.118 of the cap height); Medium (500) is Golos at 540, matching CoFo Medium (0.169). SemiBold to Black are Golos's.
 - **The OpenType features stay** (tnum, case, frac, onum, mark…), and so does the kerning.
+
+## Checks
+
+`build.sh` stops if a widened glyph gains a curvature break between two curves that Golos doesn't have, gains or loses points, or if the superness of O or 0 moves more than 0.01 from Golos's (`scripts/checks/check.py`; CoFo's is printed for reference).
 
 ## Files
 
@@ -18,4 +23,4 @@ A prototype of a UMO brand typeface: Golos Text (Alexandra Korolkova and Vitaly 
 
 ## Not done yet
 
-The x-height (lowercase) is unchanged on purpose. Nothing has been drawn by hand: a type designer still needs to check the optical details of the cut and scaled letters, the overshoots, kerning of the widened capitals and hinting before this ships.
+The x-height (lowercase) is unchanged on purpose. Nothing has been drawn by hand yet: no spur on G, and the kerning of the reshaped pairs (L, Г, Т, Р with their neighbours) is Golos's. In Black, the widened rounds take their compensation from Bold, whose counters are shaped differently, so their inner curves are a little less even than Golos's. A type designer still needs to check optical details, overshoots and hinting before this ships.
