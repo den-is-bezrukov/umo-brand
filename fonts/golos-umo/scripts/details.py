@@ -11,6 +11,11 @@ VERTEX_Y = 65       # M vertex, font units above the baseline (Golos UMO had 143
 TOP_JOINT = 50      # the M diagonals start this far in from the stems' inner edge at the top (Golos: at the edge)
 TAIL_ANGLE = 53     # Q tail, degrees below the horizontal (Golos 43)
 TAIL_BOTTOM = -85   # lowest corner of the Q tail (Golos about -30)
+# G.ss01, per style: spur width and the height where the bowl runs into it (None keeps the shape
+# that falls out of the drawing: the spur as wide as the jaw, the bowl cut where it meets the spur).
+# Medium needs both, or the bowl merges into the spur at the baseline in a dark knot.
+SPUR_WIDTH = {'Regular': None, 'Medium': 108}
+CROTCH_Y = {'Regular': None, 'Medium': 68}
 TAIL_SHIFT = -65    # the tail's line moves this far left, so it cuts into the bowl nearer its middle
 
 
@@ -114,20 +119,28 @@ def fix_q(font):
     for i, c in icoords.items(): inn[i].x, inn[i].y = round(c[0]), round(c[1])
 
 
-def g_spur(font):
+def g_spur(font, style):
     g = font['G']; s = font.newGlyph('G.ss01') if 'G.ss01' not in font else font['G.ss01']
     s.clear(); s.width = g.width
     for a in g.anchors: s.appendAnchor(dict(name=a.name, x=a.x, y=a.y))
     pts = [(p.x, p.y, p.type) for p in g.contours[0].points]
     # 0 bottom extremum, 1-2 handles, 3 right side, 4 bar top right, 5-6 bar left, 7 bar bottom right
     # (start of the jaw's inner curve), 8-9 its handles, 10 inner bottom ...
-    R = pts[3][0]; xi = pts[7][0]
+    R = pts[3][0]; xi = pts[7][0] if SPUR_WIDTH[style] is None else R - SPUR_WIDTH[style]
     outer = [(pts[0][0], pts[0][1]), (pts[1][0], pts[1][1]), (pts[2][0], pts[2][1]), (pts[3][0], pts[3][1])]
-    t = hit(outer, (xi, 0), (0, 1))                 # where the bowl meets the spur's inner edge
-    A, _ = split(outer, t)
+    if CROTCH_Y[style] is None:
+        t = hit(outer, (xi, 0), (0, 1))             # where the bowl meets the spur's inner edge
+        A, _ = split(outer, t)
+    else:
+        # cut the bowl where it reaches the crotch height and draw that stretch in to the spur's edge:
+        # the curve climbs faster and thins as it meets the spur (an ink trap)
+        t = hit(outer, (0, CROTCH_Y[style]), (1, 0))
+        A, _ = split(outer, t)
+        x0 = A[0][0]; k = (xi - x0) / (A[3][0] - x0)
+        A = [(x0 + (x - x0) * k, y) for x, y in A]
     new = [(A[0][0], A[0][1], 'curve'), (A[1][0], A[1][1], None), (A[2][0], A[2][1], None), (xi, A[3][1], 'curve'),
            (xi, 0, 'line'), (R, 0, 'line'), (R, pts[4][1], 'line')]
-    new += pts[5:8]
+    new += pts[5:7] + [(xi, pts[7][1], 'line')]   # the bar runs to the spur's inner edge
     new += [(xi, pts[8][1], None)] + pts[9:]        # the inner curve leaves the bar vertically
     pen = s.getPointPen(); pen.beginPath()
     for x, y, tp in new: pen.addPoint((round(x), round(y)), segmentType=tp)
@@ -159,7 +172,7 @@ feature ss01 {
 if __name__ == '__main__':
     for st in ('Regular', 'Medium'):
         f = ufoLib2.Font.open(f'umo/GolosUMO-{st}.ufo')
-        fix_m(f['M']); fix_q(f); g_spur(f)
+        fix_m(f['M']); fix_q(f); g_spur(f, st)
         f.save()
         print(st, 'M', [(p.x, p.y) for p in f['M'].contours[0].points][2:6],
               'Q tail', [(p.x, p.y) for p in f['Q'].contours[0].points][3:7])

@@ -36,5 +36,5 @@ for w,n in ((400,'Regular'),(500,'Medium')):  # the variable font runs 400-500 b
     s['OS/2'].usWeightClass=w
     s.save(f'GolosUMO-{n}.ttf'); s.flavor='woff2'; s.save(f'GolosUMO-{n}.woff2')
 PY
-rm -rf "$W"
+[ "${KEEP:-}" = 1 ] || rm -rf "$W"   # KEEP=1 ./build.sh leaves the work directory for inspection
 ls -la *.ttf *.woff2
