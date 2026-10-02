@@ -113,6 +113,12 @@ function useActiveSection() {
 // ─── Navigation ──────────────────────────────────────────────────────────────
 
 /**
+ * The contents' links turn grey (#808080) at once and fade back to black over 0.35s once the pointer leaves, like
+ * guides.area17.com (a transition runs with the duration of the state it heads to). The active one stays black.
+ */
+const NAV_HOVER = 'transition-[color] duration-350 ease-[ease] hover:text-[#808080] hover:duration-0'
+
+/**
  * Links in the page (the quick links, download rows and captions) stay black and get a hairline underline as set in
  * Figma (4865:1061): black at 40%, 2.5% of the type size thick, 25% of it under the baseline, through the descenders.
  * It shows at once and fades over 0.25s: it's always there, transparent until hovered. `UNDERLINE` is the line;
@@ -133,14 +139,9 @@ function NavLink({ id, title, active, current, onNavigate, pad }: { id: string; 
       href={`#${id}`}
       onClick={onNavigate}
       aria-current={active ? 'location' : undefined}
-      className={`group/link relative block leading-[1.25] ${pad} ${active ? 'font-medium' : ''}`}
+      className={`relative block leading-[1.25] ${pad} ${active ? 'font-medium' : NAV_HOVER}`}
     >
-      {/* The bullet marks the heading on screen, and the item under the pointer (Figma 4865:1060): it shows at once and
-          fades over 0.25s when the pointer leaves (a transition runs with the duration of the state it heads to). */}
-      <span
-        aria-hidden
-        className={`absolute -left-[0.9em] transition-opacity duration-250 ease-[ease] group-hover/link:opacity-100 group-hover/link:duration-0 ${current ? 'opacity-100' : 'opacity-0'}`}
-      >•</span>
+      {current && <span aria-hidden className="absolute -left-[0.9em]">•</span>}
       {title}
     </a>
   )
@@ -165,7 +166,7 @@ function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; o
       onClick={onClick}
       aria-expanded={expanded}
       // No width of its own: both places set it, and a `w-full` here outranked theirs in the built CSS
-      className={`flex cursor-pointer items-start gap-2 bg-white text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] ${className}`}
+      className={`flex cursor-pointer items-start gap-2 bg-white ${NAV_HOVER} text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] ${className}`}
     >
       <TocIcon name={expanded ? 'close' : 'menu'} />
       {expanded ? 'Свернуть' : 'Содержание'}
