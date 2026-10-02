@@ -10,6 +10,12 @@ A prototype of a UMO brand typeface: Golos Text (Alexandra Korolkova and Vitaly 
 - **Two working styles only:** Regular (400) is extrapolated below Golos's lightest master, to CoFo Regular's stem (0.118 of the cap height); Medium (500) is Golos at 540, between its Medium and SemiBold, matching CoFo Medium (0.169). Other weights come later.
 - **The OpenType features stay** (tnum, case, frac, onum, mark…), and so does the kerning.
 
+## Drawn details (`scripts/details.py`)
+
+- **M:** the vertex comes down to 65 units above the baseline (it hung at 143–151) and the diagonals start 50 units in from the stems at the top, as in CoFo; they turn about those joints and keep their thickness across the stroke.
+- **Q:** the tail turns from 43° to 53°, moves 65 units towards the bowl's middle and reaches 85 below the baseline; it keeps Golos's thickness and square-cut ends and is re-cut into the bowl with the same points as before.
+- **G with a spur** (`ss01`, «G with spur», also for Ğ Ģ Ġ): the right side runs straight down from the bar to the baseline and the inner curve leaves the bar vertically.
+
 ## Checks
 
 `build.sh` stops if a widened glyph gains a curvature break between two curves that Golos doesn't have, gains or loses points, or if the superness of O or 0 moves more than 0.01 from Golos's, in either style (`scripts/checks/check.py`; CoFo Regular's and Medium's are printed for reference).
@@ -23,4 +29,4 @@ A prototype of a UMO brand typeface: Golos Text (Alexandra Korolkova and Vitaly 
 
 ## Not done yet
 
-The x-height (lowercase) is unchanged on purpose. Nothing has been drawn by hand yet: no spur on G, and the kerning of the reshaped pairs (L, Г, Т, Р with their neighbours) is Golos's. A type designer still needs to check optical details, overshoots and hinting before this ships.
+The x-height (lowercase) is unchanged on purpose. The kerning of the reshaped pairs (L, Г, Т, Р with their neighbours) is Golos's. A type designer still needs to check optical details, overshoots and hinting before this ships.

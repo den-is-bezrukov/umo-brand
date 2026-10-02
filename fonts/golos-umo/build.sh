@@ -13,6 +13,7 @@ mkdir -p "$W/umo" "$W/mid"
 cd "$W"
 python3 build.py
 python3 final.py
+python3 details.py
 python3 ds.py
 python3 check.py ../../../public/fonts
 (cd umo && fontmake -m GolosUMO.designspace -o variable --output-dir ../build --no-production-names >/dev/null 2>&1)
