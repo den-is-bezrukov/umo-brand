@@ -111,7 +111,7 @@ export default function Livery() {
     if (rear && rear.tagline === DEFAULT_BOTTOM[model]) setRear({ ...rear, tagline: DEFAULT_BOTTOM[m] })
     setModel(m)
   }
-  // The larger tagline is a choice only where the QR-less sides have one (UMO 8; UMO 5's has its one size)
+  // The larger tagline is a choice only where the QR-less sides have one (both models do)
   const layout = LIVERIES[model]
   const noQrSide = layout.left.noQr
   const canLarge = noQrSide.kind === 'layout' && !!noQrSide.taglineLarge
@@ -210,7 +210,7 @@ export default function Livery() {
               label="Текст снизу"
               on={on.tagline}
               onChange={toggle('tagline')}
-              extra={<SizeSwitch large={large && !on.qr && canLarge} onChange={setLarge} disabled={on.qr || !canLarge} title={on.qr ? 'Крупный текст — на бортах без QR-кода' : !canLarge ? 'У UMO 5 размер текста задан макетом' : undefined} />}
+              extra={<SizeSwitch large={large && !on.qr && canLarge} onChange={setLarge} disabled={on.qr || !canLarge} title={on.qr ? 'Крупный текст — на бортах без QR-кода' : !canLarge ? 'У этой модели один размер текста' : undefined} />}
             >
               <TextArea value={tagline} onChange={setTagline} invalid={sides.some(s => s.tagline.issues.length > 0) || !tagline.trim()} />
             </OptionalField>
