@@ -113,11 +113,12 @@ function useActiveSection() {
 // ─── Navigation ──────────────────────────────────────────────────────────────
 
 /**
- * A hovered link turns ink blue (#0050C0, a deeper take on apple.com's #0066CC; it was grey #757575) at once and
- * fades back to black over 0.35s, like guides.area17.com, once the pointer leaves (a transition runs with the duration
- * of the state it heads to). The active link stays black.
+ * A hovered link stays black and gets a hairline underline, black at 20%, 2.5% of the type size (Figma 4865:1061; it
+ * turned grey #757575 before). The line shows at once and fades over 0.35s, like guides.area17.com, once the pointer
+ * leaves (a transition runs with the duration of the state it heads to): it's always there, transparent until hovered.
+ * The active link has none.
  */
-const NAV_HOVER = 'transition-[color] duration-350 ease-[ease] hover:text-[#0050c0] hover:duration-0'
+const NAV_HOVER = 'underline decoration-transparent decoration-[0.025em] transition-[text-decoration-color] duration-350 ease-[ease] hover:decoration-black/20 hover:duration-0'
 
 /**
  * `active`: you're inside this item (medium weight); `current`: its own heading is the one on screen (the bullet).
