@@ -799,7 +799,7 @@ export default function Guide() {
                 </p>
                 {/* Quick links: into the guide, from its first section, and to the templated media, the constructors among them */}
                 <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
-                  <a href="#positioning" className={NAV_HOVER}>Исследовать</a>
+                  <a href="#positioning" className={NAV_HOVER}>О бренде</a>
                   <a href="#materials" className={NAV_HOVER}>{TITLES.materials}</a>
                 </nav>
               </div>
