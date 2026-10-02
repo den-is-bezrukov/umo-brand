@@ -31,6 +31,21 @@ for n,(how,_,d) in rep.items():
     allowed=set().union(*(breaks(O[m][n]) for m in O))
     new=set().union(*(breaks(U[m][n]) for m in U))-allowed
     if new: bad.append(f'{n}: new curvature breaks between curves at {sorted(new)}')
+# Л's turn must not pinch the stroke: the narrowest point no thinner than its leg or foot
+import math as _m
+from comb import pt as _pt
+def _d(p,a,b):
+    dx,dy=b[0]-a[0],b[1]-a[1]; L=dx*dx+dy*dy; t=0 if L==0 else max(0,min(1,((p[0]-a[0])*dx+(p[1]-a[1])*dy)/L))
+    return _m.dist(p,(a[0]+t*dx,a[1]+t*dy))
+for st in ('Regular','Medium'):
+    for n in ('El-cy','el-cy'):
+        g=U[st][n]; S=_segs(g.contours[0]); cur=[i for i,s in enumerate(S) if len(s)==4]
+        conv=[_pt(S[cur[0]],i/60) for i in range(61)]; out=[]
+        for i in (cur[1]-1,cur[1],cur[1]+1): out+=[_pt(S[i],j/60) for j in range(61)]
+        w=min(min(_d(p,a,b) for a,b in zip(out,out[1:])) for p in conv)
+        P=g.contours[0].points; leg=P[3].x-P[10].x; foot=P[13].y
+        print(f'{st} {n}: narrowest {w:.0f}, leg {leg}, foot {foot}')
+        if w<0.97*min(leg,foot): bad.append(f'{st} {n}: the turn pinches the stroke to {w:.0f}')
 cofo={st:TTFont(f'{sys.argv[1]}/CoFoSans-{st}.ttf') for st in ('Regular','Medium')} if len(sys.argv)>1 else {}
 for st in ('Regular','Medium'):
     for ch,n in (('O','O'),('0','zero')):

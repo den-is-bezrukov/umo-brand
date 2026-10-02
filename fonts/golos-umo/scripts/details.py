@@ -18,14 +18,17 @@ TAIL_BOTTOM = -85   # lowest corner of the Q tail (Golos about -30)
 # G.ss01, per style: spur width and the height where the bowl runs into it (None keeps the shape
 # that falls out of the drawing: the spur as wide as the jaw, the bowl cut where it meets the spur).
 # Medium needs both, or the bowl merges into the spur at the baseline in a dark knot.
-EL_BEND = 1.1       # Л л: height of the concave side's turn into the foot over its width
 DE_BEND = 4.5       # Д д: height of the legs' flare over its width
 DE_LANDING = 52     # Д д: angle at which the legs land on the slab (Golos 62-69, a 21-28° turn too small to read)
 # handle lengths as a share of the turn's extent. Л's leg turns left into its foot: the convex
 # side of the turn (the leg's right edge running round to the foot's underside) is nearly a circle,
 # so no weight piles up in the corner; the concave side (the leg's left edge meeting the top of the
 # foot) is tighter and squarer.
-EL_CONCAVE_TENSION = 0.75
+# The concave side (the leg's left edge turning into the top of the foot) follows Д's leg: Л and Д
+# are drawn the same way, so it flares over the same height as Д's leg in the same style, its top
+# handle by Д's rule, and only goes on turning to the horizontal of the foot where Д lands on the
+# slab. A tight turn of its own here pinched the stroke to 0.8 of the leg.
+EL_FOOT_TENSION = 0.75
 # the convex side starts its turn a little higher (EL_CONVEX_BEND times as tall as wide) with a long
 # handle at the leg and a short one at the foot: it leaves the straight with the curvature CoFo has
 # there (15 against 17) and carries no more ink into the corner than a circle would (searched)
@@ -194,18 +197,17 @@ feature ss01 {
             if n not in order: order.append(n)
 
 
-def fix_el(g):
+def fix_el(g, flare):
     """Л л: 0 bottom of the convex side of the turn, 1-2 handles, 3 where it leaves the leg's right edge,
     4-9 the straight part, 10 where the concave side leaves the leg's left edge, 11-12 handles, 13 foot top, 14-15 handles, 16 foot end top,
     17 foot end bottom, 18-19 handles"""
     P = [(p.x, p.y) for p in g.contours[0].points]
     x0, xi, xo = P[0][0], P[3][0], P[10][0]
     xf, yf, xt = P[13][0], P[13][1], P[16][0]
-    yi = EL_CONVEX_BEND * (xi - x0); yo = yf + EL_BEND * (xo - xf)
-    C = EL_CONCAVE_TENSION
+    yi = EL_CONVEX_BEND * (xi - x0); yo = yf + flare
     new = [((x0, 0), 'line'), ((x0 + EL_CONVEX_FOOT * (xi - x0), 0), None), ((xi, yi - EL_CONVEX_LEG * yi), None), ((xi, yi), 'curve')]
     new += [(P[i], 'line') for i in range(4, 10)]
-    new += [((xo, yo), 'line'), ((xo, yo - C * (yo - yf)), None), ((xf + C * (xo - xf), yf), None), ((xf, yf), 'curve'),
+    new += [((xo, yo), 'line'), ((xo, yo - DE_TOP_TENSION * (yo - yf)), None), ((xf + EL_FOOT_TENSION * (xo - xf), yf), None), ((xf, yf), 'curve'),
             ((xt, yf), 'line'), ((xt, 0), 'line')]
     g.clearContours(); pen = g.getPointPen(); pen.beginPath()
     for (x, y), tp in new: pen.addPoint((round(x), round(y)), segmentType=tp)
@@ -235,8 +237,10 @@ if __name__ == '__main__':
     for st in ('Regular', 'Medium'):
         f = ufoLib2.Font.open(f'umo/GolosUMO-{st}.ufo')
         fix_m(f['M']); fix_q(f); g_spur(f, st)
-        for n in ('El-cy', 'el-cy'): fix_el(f[n])
-        for n in ('De-cy', 'de-cy'): fix_de(f[n])
+        for el, de in (('El-cy', 'De-cy'), ('el-cy', 'de-cy')):
+            o = f[de].contours[0].points
+            fix_el(f[el], DE_BEND * abs(o[10].x - o[13].x))   # the height of Д's leg flare in this style
+            fix_de(f[de])
         f.save()
         print(st, 'M', [(p.x, p.y) for p in f['M'].contours[0].points][2:6],
               'Q tail', [(p.x, p.y) for p in f['Q'].contours[0].points][3:7])
