@@ -255,7 +255,8 @@ export function buildSheet(font: Font, base: Surface, input: { dealer: string | 
   const tagline = input.tagline === null ? none
     : setText(font, input.tagline, taglineBlock, 'Текст снизу', surface, stack && afterDealer)
   let sheetSurface = surface
-  let lettering = [fromD(UMO.d, umo.h / UMO.h, umo.x, umo.y), fromD(EIGHT.d, num.h / EIGHT.h, num.x, num.y)]
+  const digit = surface.numGlyph ?? EIGHT
+  let lettering = [fromD(UMO.d, umo.h / UMO.h, umo.x, umo.y), fromD(digit.d, num.h / digit.h, num.x, num.y)]
   if (stack) {
     // Centre the column (lettering and text) on the sheet's height: from the top of the lettering to the deepest
     // descender of the last line
@@ -368,7 +369,8 @@ function trimmed(s: Surface, input: { dealer: string | null; tagline: string | n
 function stackDims(surface: Surface, top: number, bottom: number, text: boolean): Surface['dims'] {
   const { umo, num, h, dims, stack } = surface
   const x1 = umo.x
-  const x2 = num.x + num.h * (EIGHT.w / EIGHT.h)
+  const digit = surface.numGlyph ?? EIGHT
+  const x2 = num.x + num.h * (digit.w / digit.h)
   const column = [top, top + umo.h, ...(text ? [top + stack!.textTop, bottom] : [])]
   const end = column[column.length - 1]
   const steps = [...(top > 1 ? [0] : []), ...column, ...(h - end > 1 ? [h] : [])]
