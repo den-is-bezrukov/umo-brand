@@ -41,10 +41,13 @@ export function SegBtn({ active, onClick, disabled, title, children }: { active:
   )
 }
 
+// Spacing per Figma (UMO | Evrone, node 4900:4595): 8 px from a label to its control, 16 px between groups — the gap
+// of the column the groups sit in.
+
 export function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col">
-      <p className="py-2 text-[14px] leading-5 text-[#999] whitespace-nowrap">{label}</p>
+    <div className="flex flex-col gap-2">
+      <p className="text-[14px] leading-5 text-[#999] whitespace-nowrap">{label}</p>
       {children}
     </div>
   )
@@ -151,7 +154,7 @@ export function UrlField({ value, onChange }: { value: string; onChange: (v: str
 /** A grey 16 px box with a black tick (Figma: UMO | Evrone, node 4900:4588), on a native checkbox for keyboard and screen readers */
 export function Checkbox({ checked, onChange, children }: { checked: boolean; onChange: (v: boolean) => void; children: React.ReactNode }) {
   return (
-    <label className="flex cursor-pointer items-center gap-1 py-2 text-[14px] leading-5 text-black">
+    <label className="flex cursor-pointer items-center gap-1 text-[14px] leading-5 text-black">
       <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="peer sr-only" />
       <span aria-hidden className="flex size-4 shrink-0 items-center justify-center rounded-[4px] bg-[#f5f5f5] peer-focus-visible:ring-2 peer-focus-visible:ring-black/30">
         {checked && (
@@ -165,12 +168,41 @@ export function Checkbox({ checked, onChange, children }: { checked: boolean; on
   )
 }
 
-/** A part that can be left out: its checkbox is the label, and the field shows only while it's on */
-export function OptionalField({ label, on, onChange, children }: { label: string; on: boolean; onChange: (v: boolean) => void; children?: React.ReactNode }) {
+/** A part that can be left out: its checkbox is the label, and the field shows only while it's on; `extra` sits at the end of the label row */
+export function OptionalField({ label, on, onChange, extra, children }: { label: string; on: boolean; onChange: (v: boolean) => void; extra?: React.ReactNode; children?: React.ReactNode }) {
   return (
-    <div className="flex flex-col">
-      <Checkbox checked={on} onChange={onChange}>{label}</Checkbox>
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between gap-2">
+        <Checkbox checked={on} onChange={onChange}>{label}</Checkbox>
+        {on && extra}
+      </div>
       {on && children}
+    </div>
+  )
+}
+
+/**
+ * Text size, smaller or larger: two 20 × 16 buttons marked A↓ and A↑ on a grey plate, the chosen one outlined
+ * (Figma: UMO | Evrone, node 4920:50)
+ */
+export function SizeSwitch({ large, onChange, disabled, title }: { large: boolean; onChange: (v: boolean) => void; disabled?: boolean; title?: string }) {
+  const btn = (value: boolean, label: string, name: string) => (
+    <button
+      type="button"
+      onClick={() => onChange(value)}
+      disabled={disabled}
+      aria-pressed={large === value}
+      aria-label={name}
+      className={`flex h-4 w-5 cursor-pointer items-center justify-center rounded-[4px] border text-[8px] font-medium leading-none text-black outline-none focus-visible:ring-2 focus-visible:ring-black/30 disabled:cursor-not-allowed
+        ${large === value ? 'border-black' : 'border-transparent hover:enabled:border-black/20'}`}
+    >
+      {label}
+    </button>
+  )
+  return (
+    <div role="group" aria-label="Размер текста" title={title} className={`flex shrink-0 rounded-[4px] bg-[#f5f5f5] ${disabled ? 'opacity-40' : ''}`}>
+      {btn(false, 'A↓', 'Мельче')}
+      {btn(true, 'A↑', 'Крупнее')}
     </div>
   )
 }

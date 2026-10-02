@@ -5,23 +5,38 @@ import { cards, type Variant } from './cardData'
 interface Props {
   variant: Variant
   fullPrice: string
-  creditPrice: string
+  /** Leave out for a card with no credit offer: one price, under «Цена:» */
+  creditPrice?: string
   qrSvg?: string
   /** Replaces the print-resolution car photo, e.g. with a small preview on the brand guide page. */
   image?: string
 }
 
-function PriceRow({ value }: { value: string }) {
+function PriceRow({ value, large }: { value: string; large?: boolean }) {
+  // `large`: the headline's size, on a line as tall as the type
+  const lh = large ? 'leading-none' : 'leading-[1.25]'
   return (
-    <div className="content-stretch flex gap-[18px] font-['CoFo_Sans',sans-serif] font-medium items-center leading-[0] relative shrink-0 text-[72px] w-full whitespace-nowrap">
+    <div className={`content-stretch flex font-['CoFo_Sans',sans-serif] font-medium items-center leading-[0] relative shrink-0 w-full whitespace-nowrap ${large ? 'gap-[24px] text-[96px]' : 'gap-[18px] text-[72px]'}`}>
       <div className="flex flex-col justify-end relative shrink-0" style={{ fontFeatureSettings: '"lnum" 1, "tnum" 1' }}>
-        <p className="leading-[1.25]">{value}</p>
+        <p className={lh}>{value}</p>
       </div>
       <div className="flex flex-col justify-end relative shrink-0">
-        <p className="leading-[1.25]">₽</p>
+        <p className={lh}>₽</p>
       </div>
     </div>
   )
+}
+
+/**
+ * Where a lone price goes: as large as the headline, its figures standing on the QR code's bottom line. The code's
+ * dark modules end a quiet-zone module above its 250 px box at 1570; the module count (27 for a short link) is in the
+ * SVG's viewBox. Above the figures' baseline: the label's line (40 × 1.13), the gap, and 0.844 em of the 96 px line
+ * (CoFo Sans: ascender 0.974, descender 0.286 em).
+ */
+function singlePriceTop(qrSvg?: string) {
+  const modules = Number(qrSvg?.match(/viewBox="0 0 (\d+)/)?.[1]) || 27
+  const qrLine = 1570 + 250 - 250 / modules
+  return qrLine - (40 * 1.13 + 15 + 96 * 0.844)
 }
 
 export default function PriceCard({ variant, fullPrice, creditPrice, qrSvg, image }: Props) {
@@ -111,16 +126,23 @@ export default function PriceCard({ variant, fullPrice, creditPrice, qrSvg, imag
       </div>
 
       {/* Prices */}
-      <div className="[word-break:break-word] absolute content-stretch flex flex-col gap-[30px] items-start left-[100px] text-black top-[1505px]">
-        <div className="content-stretch flex flex-col gap-[15px] items-start relative shrink-0">
-          <p className="font-['CoFo_Sans',sans-serif] font-medium leading-[1.13] text-[#666] relative shrink-0 text-[40px] w-full">Без кредита:</p>
-          <PriceRow value={fullPrice} />
+      {creditPrice === undefined ? (
+        <div className="[word-break:break-word] absolute content-stretch flex flex-col gap-[15px] items-start left-[100px] text-black" style={{ top: singlePriceTop(qrSvg) }}>
+          <p className="font-['CoFo_Sans',sans-serif] font-medium leading-[1.13] text-[#666] relative shrink-0 text-[40px] w-full">Цена:</p>
+          <PriceRow value={fullPrice} large />
         </div>
-        <div className="content-stretch flex flex-col gap-[15px] items-start relative shrink-0">
-          <p className="font-['CoFo_Sans',sans-serif] font-medium leading-[1.13] text-[#666] relative shrink-0 text-[40px] w-full">В кредит с субсидией:</p>
-          <PriceRow value={creditPrice} />
+      ) : (
+        <div className="[word-break:break-word] absolute content-stretch flex flex-col gap-[30px] items-start left-[100px] text-black top-[1505px]">
+          <div className="content-stretch flex flex-col gap-[15px] items-start relative shrink-0">
+            <p className="font-['CoFo_Sans',sans-serif] font-medium leading-[1.13] text-[#666] relative shrink-0 text-[40px] w-full">Без кредита:</p>
+            <PriceRow value={fullPrice} />
+          </div>
+          <div className="content-stretch flex flex-col gap-[15px] items-start relative shrink-0">
+            <p className="font-['CoFo_Sans',sans-serif] font-medium leading-[1.13] text-[#666] relative shrink-0 text-[40px] w-full">В кредит с субсидией:</p>
+            <PriceRow value={creditPrice} />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* QR code */}
       <div className="absolute left-[1404px] size-[250px] top-[1570px]">

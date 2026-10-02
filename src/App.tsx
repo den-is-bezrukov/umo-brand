@@ -6,7 +6,7 @@ import PriceCard from '@/posters/PriceCard'
 import PriceCardPdf from '@/posters/pdf/PriceCardPdf'
 import { ensurePdfFonts } from '@/posters/pdf/pdfFonts'
 import type { Variant } from '@/posters/cardData'
-import { isValidUrl, SegBtn, Field, Segments, TextInput, UrlField, DownloadButton } from '@/ui/form'
+import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField, DownloadButton } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
 
 const POSTER_W = 1754
@@ -16,12 +16,14 @@ const DEFAULT_URL = 'https://umo.auto/'
 type Model = 'umo8' | 'umo5'
 type Trim = 'max' | 'ultra' | 'pro'
 
-const DEFAULTS: Record<string, { full: string; credit: string }> = {
-  'umo8-max':   { full: '5 915 000', credit: '4 990 000' },
-  'umo8-ultra': { full: '6 415 000', credit: '5 490 000' },
-  'umo5-max':   { full: '3 715 000', credit: '2 790 000' },
-  'umo5-pro':   { full: '3 515 000', credit: '2 590 000' },
+// Full prices; the credit price defaults to a million less (`creditFor`)
+const DEFAULTS: Record<string, string> = {
+  'umo8-max':   '5 690 000',
+  'umo8-ultra': '6 190 000',
+  'umo5-max':   '3 440 000',
+  'umo5-pro':   '3 095 000',
 }
+const CREDIT_OFF = 1_000_000
 
 const TRIMS: Record<Model, Trim[]> = { umo8: ['max', 'ultra'], umo5: ['pro', 'max'] }
 
@@ -33,7 +35,15 @@ function formatPrice(val: string) {
   return digits === '' ? '' : String(num).replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
 }
 
-function ActivePoster({ model, trim, fullPrice, creditPrice, qrSvg }: { model: Model; trim: Trim; fullPrice: string; creditPrice: string; qrSvg?: string }) {
+const priceNum = (s: string) => Number(s.replace(/\D/g, '')) || 0
+
+/** The credit price that goes with a full price unless set by hand: a million less */
+function creditFor(full: string) {
+  const v = priceNum(full) - CREDIT_OFF
+  return v > 0 ? formatPrice(String(v)) : ''
+}
+
+function ActivePoster({ model, trim, fullPrice, creditPrice, qrSvg }: { model: Model; trim: Trim; fullPrice: string; creditPrice?: string; qrSvg?: string }) {
   return <PriceCard variant={`${model}-${trim}` as Variant} fullPrice={fullPrice} creditPrice={creditPrice} qrSvg={qrSvg} />
 }
 
@@ -43,17 +53,21 @@ function fromLink() {
   const model: Model = link.get('model') === 'umo5' ? 'umo5' : 'umo8'
   const asked = link.get('trim') as Trim | null
   const trim = asked && TRIMS[model].includes(asked) ? asked : TRIMS[model][0]
-  const defaults = DEFAULTS[`${model}-${trim}`]
   // A price is taken as it is in the link only if it looks like one: seven digits, 1 000 000 to 9 999 999
   const price = (key: string) => {
     const v = link.get(key) ?? ''
     return /^[1-9]\d{6}$/.test(v) ? formatPrice(v) : null
   }
+  const full = price('full') ?? DEFAULTS[`${model}-${trim}`]
+  const credit = price('credit')
   return {
     model,
     trim,
-    full: price('full') ?? defaults.full,
-    credit: price('credit') ?? defaults.credit,
+    full,
+    credit: credit ?? creditFor(full),
+    creditSet: credit !== null,
+    // Off unless the link has it: `credit=auto` follows the full price, seven digits are a price set by hand
+    creditOn: link.has('credit'),
     url: link.get('link') ?? DEFAULT_URL,
   }
 }
@@ -64,15 +78,33 @@ export default function App() {
   const [trim, setTrim] = useState<Trim>(initial.trim)
   const [fullPrice, setFullPrice] = useState(initial.full)
   const [creditPrice, setCreditPrice] = useState(initial.credit)
+  // The credit price follows the full one (a million less) until it's set by hand; a card may have no credit offer
+  const [creditSet, setCreditSet] = useState(initial.creditSet)
+  const [creditOn, setCreditOn] = useState(initial.creditOn)
   const [url, setUrl] = useState(initial.url)
+
+  const changeFull = (v: string) => {
+    const full = formatPrice(v)
+    setFullPrice(full)
+    if (!creditSet) setCreditPrice(creditFor(full))
+  }
+  const changeCredit = (v: string) => {
+    setCreditPrice(formatPrice(v))
+    setCreditSet(true)
+  }
+  const resetPrices = (m: Model, t: Trim) => {
+    setFullPrice(DEFAULTS[`${m}-${t}`])
+    setCreditPrice(creditFor(DEFAULTS[`${m}-${t}`]))
+    setCreditSet(false)
+  }
 
   // The address carries what differs from the defaults, so the card can be sent as a link
   const digits = (v: string) => v.replace(/\D/g, '')
   useLinkState({
     model: model === 'umo8' ? null : model,
     trim: trim === TRIMS[model][0] ? null : trim,
-    full: fullPrice === DEFAULTS[`${model}-${trim}`].full ? null : digits(fullPrice),
-    credit: creditPrice === DEFAULTS[`${model}-${trim}`].credit ? null : digits(creditPrice),
+    full: fullPrice === DEFAULTS[`${model}-${trim}`] ? null : digits(fullPrice),
+    credit: !creditOn ? null : creditSet ? digits(creditPrice) : 'auto',
     link: url.trim() === DEFAULT_URL ? null : url.trim(),
   })
   const [qrSvg, setQrSvg] = useState<string | undefined>(undefined)
@@ -81,11 +113,12 @@ export default function App() {
 
   const urlValid = isValidUrl(url.trim())
 
-  const priceNum = (s: string) => Number(s.replace(/\D/g, '')) || 0
   const MIN_CREDIT = 999_999
-  const creditTooLow = priceNum(creditPrice) < MIN_CREDIT
-  const fullLessThanCredit = priceNum(fullPrice) < priceNum(creditPrice)
-  const pricesValid = !creditTooLow && !fullLessThanCredit
+  const fullMissing = priceNum(fullPrice) === 0
+  const creditTooLow = creditOn && priceNum(creditPrice) < MIN_CREDIT
+  const fullLessThanCredit = creditOn && priceNum(fullPrice) < priceNum(creditPrice)
+  const pricesValid = !fullMissing && !creditTooLow && !fullLessThanCredit
+  const credit = creditOn ? creditPrice : undefined
 
   useEffect(() => {
     const effective = urlValid ? url.trim() : DEFAULT_URL
@@ -117,14 +150,12 @@ export default function App() {
   const switchModel = (m: Model) => {
     const t = TRIMS[m][0]
     setModel(m); setTrim(t)
-    setFullPrice(DEFAULTS[`${m}-${t}`].full)
-    setCreditPrice(DEFAULTS[`${m}-${t}`].credit)
+    resetPrices(m, t)
   }
 
   const switchTrim = (t: Trim) => {
     setTrim(t)
-    setFullPrice(DEFAULTS[`${model}-${t}`].full)
-    setCreditPrice(DEFAULTS[`${model}-${t}`].credit)
+    resetPrices(model, t)
   }
 
   const handleExport = async () => {
@@ -132,7 +163,7 @@ export default function App() {
     try {
       ensurePdfFonts()
       const qrUrl = urlValid ? url.trim() : DEFAULT_URL
-      const props = { fullPrice, creditPrice, qrUrl }
+      const props = { fullPrice, creditPrice: credit, qrUrl }
       const doc = <PriceCardPdf variant={`${model}-${trim}` as Variant} {...props} />
       const blob = await pdf(doc).toBlob()
       const link = document.createElement('a')
@@ -160,7 +191,7 @@ export default function App() {
             <h1 className="text-[24px] font-medium leading-none">Прайс-карта</h1>
           </div>
 
-          <div className="grid grid-cols-2 gap-x-3 gap-y-2 md:grid-cols-1 tracking-normal">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-4 md:grid-cols-1 tracking-normal">
             <Field label="Модель">
               <Segments>
                 <SegBtn active={model === 'umo8'} onClick={() => switchModel('umo8')}>UMO 8</SegBtn>
@@ -176,16 +207,16 @@ export default function App() {
               </Segments>
             </Field>
 
-            <Field label="Полная цена, ₽:">
-              <TextInput numeric value={fullPrice} invalid={fullLessThanCredit} onChange={v => setFullPrice(formatPrice(v))} />
+            <Field label="Полная цена, ₽">
+              <TextInput numeric value={fullPrice} invalid={fullMissing || fullLessThanCredit} onChange={changeFull} />
             </Field>
 
-            <Field label="В кредит, ₽:">
-              <TextInput numeric value={creditPrice} invalid={creditTooLow || fullLessThanCredit} onChange={v => setCreditPrice(formatPrice(v))} />
-            </Field>
+            <OptionalField label="В кредит, ₽" on={creditOn} onChange={setCreditOn}>
+              <TextInput numeric value={creditPrice} invalid={creditTooLow || fullLessThanCredit} onChange={changeCredit} />
+            </OptionalField>
 
             <div className="col-span-2 md:col-span-1">
-              <Field label="Ссылка QR:">
+              <Field label="Ссылка QR">
                 <UrlField value={url} onChange={setUrl} />
               </Field>
             </div>
@@ -208,7 +239,7 @@ export default function App() {
           {scale > 0 && (
             <div className="bg-white ring-1 ring-black/10" style={{ width: POSTER_W * scale, height: POSTER_H * scale, position: 'relative', flexShrink: 0 }}>
               <div style={{ transformOrigin: 'top left', transform: `scale(${scale})`, position: 'absolute', top: 0, left: 0 }}>
-                <ActivePoster model={model} trim={trim} fullPrice={fullPrice} creditPrice={creditPrice} qrSvg={qrSvg} />
+                <ActivePoster model={model} trim={trim} fullPrice={fullPrice} creditPrice={credit} qrSvg={qrSvg} />
               </div>
             </div>
           )}

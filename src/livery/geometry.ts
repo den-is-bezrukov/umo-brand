@@ -236,8 +236,10 @@ function pathCmds(commands: any[]): Cmd[] {
 }
 
 /** Dealer name, tagline and the QR link; `null` leaves that part off the sheet */
-export function buildSheet(font: Font, base: Surface, input: { dealer: string | null; tagline: string | null; url: string | null }): Sheet {
-  const surface = base.stack ? base : trimmed(base, input)
+export function buildSheet(font: Font, base: Surface, input: { dealer: string | null; tagline: string | null; url: string | null; large?: boolean }): Sheet {
+  // The larger tagline where the sheet has one
+  const chosen = input.large && base.taglineLarge ? { ...base, tagline: base.taglineLarge } : base
+  const surface = chosen.stack ? chosen : trimmed(chosen, input)
   const { qr, umo, num, stack } = surface
   const none: TextResult = { lines: [], issues: [] }
   const dealer = input.dealer === null ? none

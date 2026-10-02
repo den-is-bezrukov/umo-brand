@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Font } from 'opentype.js'
-import { Field, OptionalField, Segments, SegBtn, TextArea, UrlField, Checkbox, DownloadButton, isValidUrl } from '@/ui/form'
+import { Field, OptionalField, Segments, SegBtn, TextArea, UrlField, Checkbox, SizeSwitch, DownloadButton, isValidUrl } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
 import { UMO8, SURFACES, withoutQr } from '@/livery/layout'
 import { loadFont, buildSheet, specMarks, toD, mm, type Sheet, type Line } from '@/livery/geometry'
@@ -98,6 +98,8 @@ export default function Livery() {
   const show = (link.get('show') ?? '').split(',')
   const [seams, setSeams] = useState(show.includes('seams'))
   const [dims, setDims] = useState(show.includes('dims'))
+  // The bottom text larger, 60 mm in two lines; the QR-less sides have room for it
+  const [large, setLarge] = useState(link.get('size') === 'large')
 
   useLinkState({
     link: url.trim() === DEFAULT_URL ? null : url.trim(),
@@ -107,6 +109,7 @@ export default function Livery() {
     rtop: ownRear && rear ? rear.dealer : null,
     rbottom: ownRear && rear ? rear.tagline : null,
     show: [...(dims ? ['dims'] : []), ...(seams ? ['seams'] : [])].join(','),
+    size: large ? 'large' : null,
   })
   const [font, setFont] = useState<Font>()
   const [exporting, setExporting] = useState(false)
@@ -131,9 +134,9 @@ export default function Livery() {
   const qr = on.qr ? qrUrl : null
   const sheets = useMemo(
     () => font
-      ? SURFACES.filter(id => id !== 'rear' || on.rear).map(id => buildSheet(font, qr ? UMO8[id] : withoutQr(UMO8[id]), { ...(id === 'rear' ? rearText : sideText), url: qr }))
+      ? SURFACES.filter(id => id !== 'rear' || on.rear).map(id => buildSheet(font, qr ? UMO8[id] : withoutQr(UMO8[id]), { ...(id === 'rear' ? rearText : sideText), url: qr, large }))
       : [],
-    [font, on.rear, sideText.dealer, sideText.tagline, rearText.dealer, rearText.tagline, qr],
+    [font, on.rear, sideText.dealer, sideText.tagline, rearText.dealer, rearText.tagline, qr, large],
   )
   // Which sheets a field's text goes on, to mark it when one of them has a problem with it
   const sides = sheets.filter(s => s.surface.id !== 'rear' || !ownRearOn)
@@ -171,7 +174,7 @@ export default function Livery() {
             <h1 className="text-[24px] font-medium leading-none">Ливрея</h1>
           </div>
 
-          <div className="grid grid-cols-1 gap-y-2 tracking-normal">
+          <div className="flex flex-col gap-4 tracking-normal">
             <Field label="Модель">
               <Segments>
                 <SegBtn active={model === 'umo8'} onClick={() => setModel('umo8')}>UMO 8</SegBtn>
@@ -179,7 +182,7 @@ export default function Livery() {
               </Segments>
             </Field>
 
-            <OptionalField label="Ссылка QR" on={on.qr} onChange={toggle('qr')}>
+            <OptionalField label="QR-код" on={on.qr} onChange={toggle('qr')}>
               <UrlField value={url} onChange={setUrl} />
             </OptionalField>
 
@@ -187,13 +190,18 @@ export default function Livery() {
               <TextArea value={dealer} onChange={setDealer} invalid={sides.some(s => s.dealer.issues.length > 0) || !dealer.trim()} />
             </OptionalField>
 
-            <OptionalField label="Текст снизу" on={on.tagline} onChange={toggle('tagline')}>
+            <OptionalField
+              label="Текст снизу"
+              on={on.tagline}
+              onChange={toggle('tagline')}
+              extra={<SizeSwitch large={large && !on.qr} onChange={setLarge} disabled={on.qr} title={on.qr ? 'Крупный текст — на бортах без QR-кода' : undefined} />}
+            >
               <TextArea value={tagline} onChange={setTagline} invalid={sides.some(s => s.tagline.issues.length > 0) || !tagline.trim()} />
             </OptionalField>
 
             <OptionalField label="Заднее стекло" on={on.rear} onChange={toggle('rear')} />
 
-            {ownRearOffered && <Checkbox checked={ownRear} onChange={toggleOwnRear}>Свой текст на стекле</Checkbox>}
+            {ownRearOffered && <Checkbox checked={ownRear} onChange={toggleOwnRear}>Другой текст на стекле</Checkbox>}
 
             {ownRearOn && on.dealer && (
               <Field label="Текст сверху на стекле">

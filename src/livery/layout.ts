@@ -77,13 +77,19 @@ export interface Surface {
     rows: { from: number; to: number; label: string; x: number; at?: number; part?: TextPart; margin?: 'top' | 'bottom' }[]
     grid: [number, number, number, number, TextPart?][]
   }
+  /** A larger tagline the sheet can take instead (`large` in `buildSheet`); only the QR-less sides have one */
+  taglineLarge?: TextBlock
   /**
-   * The sheet without the QR: its column (the code and the gap after it) is cut out at the `side` it sits on, so the
-   * lettering moves into its place, nearer the front of the car, and the sheet gets narrower; `dims` replace the spec's.
-   * `centre` keeps the narrower sheet centred where the full one was (the rear window) instead of at the front edge,
-   * and centres the text on it.
+   * The sheet without the QR, either laid out anew or cut down:
+   * - `layout` (the sides, Figma: UMO | Evrone, node 4920:39): its own lettering, text blocks, size and spec; the sheet
+   *   keeps its front edge on the body, its origin moving `shift` along it;
+   * - `cut` (the rear window): the QR's column (the code and the gap after it) is cut out at the `side` it sits on,
+   *   the lettering moving into its place; `centre` keeps the narrower sheet centred where the full one was and
+   *   centres the text on it.
    */
-  noQr: { side: 'start' | 'end'; width: number; centre?: boolean; dims: Surface['dims'] }
+  noQr:
+    | { kind: 'layout'; shift: number } & Pick<Surface, 'w' | 'umo' | 'num' | 'dealer' | 'tagline' | 'taglineLarge' | 'dims'>
+    | { kind: 'cut'; side: 'start' | 'end'; width: number; centre?: boolean; dims: Surface['dims'] }
 }
 
 const SIDE_W = 1280
@@ -117,14 +123,44 @@ const letteringRows = (x: number): Surface['dims']['rows'] => [
   { from: 260, to: 380, label: '120', x, part: 'tagline' },
   { from: 380, to: 500, label: '120', x, part: 'tagline' },
 ]
-// Along the moulding: ~125 from the front door's edge, the sheet, and ~320 on to the rear door's edge (full sheet only)
+// Along the moulding: ~125 from the front door's edge, the sheet, and on to the rear door's edge, 1600 from the front
 const sideBottom = (w: number, front: 'start' | 'end'): Surface['dims']['cols'] => {
   const y = 650
   const sheet = { label: String(w), y }
+  const rest = { label: `~${1600 - w}`, y }
   return front === 'start'
-    ? [{ from: -125, to: 0, label: '~125', y }, { from: 0, to: w, ...sheet }, ...(w === SIDE_W ? [{ from: w, to: w + 320, label: '~320', y }] : [])]
-    : [...(w === SIDE_W ? [{ from: -320, to: 0, label: '~320', y }] : []), { from: 0, to: w, ...sheet }, { from: w, to: w + 125, label: '~125', y }]
+    ? [{ from: -125, to: 0, label: '~125', y }, { from: 0, to: w, ...sheet }, { from: w, to: 1600, ...rest }]
+    : [{ from: w - 1600, to: 0, ...rest }, { from: 0, to: w, ...sheet }, { from: w, to: w + 125, label: '~125', y }]
 }
+
+// The QR-less side (Figma: UMO | Evrone, node 4920:39): the lettering a third larger, 160 mm, its 1100 mm from the front
+// edge making the sheet; the texts as before, the tagline 40 mm in three lines or 60 mm in two, under the lettering.
+const BARE_W = 1100
+const bareLettering = { y: 140, h: 160 }
+const bareTagline = { baseline: 492, ...sideText, maxWidth: 400, maxLines: 3 }
+// 60 mm on 60 mm lines, its last baseline a descender (0.194 em) above the sheet's bottom edge
+const bareTaglineLarge = { baseline: 488, size: 60, leading: 60, maxWidth: 850, maxLines: 2 }
+const bareRows = (x: number): Surface['dims']['rows'] => [
+  { from: 140, to: 300, label: '160', x },
+  { from: 300, to: 380, label: '80', x, part: 'tagline' },
+  { from: 380, to: 500, label: '120', x, part: 'tagline' },
+]
+const dealerRows = (x: number): Surface['dims']['rows'] => [
+  { from: 0, to: 80, label: '80', x, part: 'dealer' },
+  { from: 80, to: 140, label: '60', x, part: 'dealer' },
+]
+// UMO, the gap, the model number
+const bareCols = (front: 'start' | 'end'): Surface['dims']['cols'] => [
+  ...(front === 'start' ? [{ from: -125, to: 0, label: '~125' }] : []),
+  { from: 0, to: 800, label: '800' },
+  { from: 800, to: 900, label: '100' },
+  { from: 900, to: BARE_W, label: '200' },
+  ...(front === 'end' ? [{ from: BARE_W, to: BARE_W + 125, label: '~125' }] : []),
+  ...sideBottom(BARE_W, front),
+]
+const bareGrid = (dealerFrom: number): Surface['dims']['grid'] => [
+  [dealerFrom, 80, dealerFrom + 450, 80, 'dealer'], [0, 140, BARE_W, 140], [0, 300, BARE_W, 300], [0, 380, BARE_W, 380, 'tagline'],
+]
 
 // The side photo covers 4800 × 2000 mm of the spec page, starting 450 mm from its top.
 const sidePhoto = { src: sideImg, w: 4800, h: 2000, background: '#ffffff', view: [80, 60, 4640, 1880] as [number, number, number, number] }
@@ -166,17 +202,18 @@ export const UMO8: Record<SurfaceId, Surface> = {
       ],
     },
     noQr: {
-      side: 'start',
-      width: 450,
+      kind: 'layout',
+      shift: 0,
+      w: BARE_W,
+      umo: { x: 0, ...bareLettering },
+      num: { x: 900, ...bareLettering },
+      dealer: { x: 0, align: 'left', baseline: 74, ...sideText, maxWidth: 450, maxLines: 2 },
+      tagline: { x: 0, align: 'left', ...bareTagline },
+      taglineLarge: { x: 0, align: 'left', ...bareTaglineLarge },
       dims: {
-        cols: [{ from: -125, to: 0, label: '~125' }, { from: 0, to: 830, label: '830' }, ...sideBottom(830, 'start')],
-        rows: [
-          ...sideMargins(-1, -125),
-          { from: 0, to: 80, label: '80', x: -1, part: 'dealer' },
-          { from: 80, to: 140, label: '60', x: -1, part: 'dealer' },
-          ...letteringRows(1),
-        ],
-        grid: [[0, 80, 450, 80, 'dealer'], [0, 140, 830, 140], [0, 260, 830, 260], [0, 380, 830, 380, 'tagline']],
+        cols: bareCols('start'),
+        rows: [...sideMargins(-1, -125), ...dealerRows(-1), ...bareRows(1)],
+        grid: bareGrid(0),
       },
     },
   },
@@ -216,17 +253,18 @@ export const UMO8: Record<SurfaceId, Surface> = {
       ],
     },
     noQr: {
-      side: 'end',
-      width: 450,
+      kind: 'layout',
+      shift: SIDE_W - BARE_W,
+      w: BARE_W,
+      umo: { x: 0, ...bareLettering },
+      num: { x: 900, ...bareLettering },
+      dealer: { x: BARE_W, align: 'right', baseline: 74, ...sideText, maxWidth: 450, maxLines: 2 },
+      tagline: { x: BARE_W, align: 'right', ...bareTagline },
+      taglineLarge: { x: BARE_W, align: 'right', ...bareTaglineLarge },
       dims: {
-        cols: [{ from: 0, to: 830, label: '830' }, { from: 830, to: 955, label: '~125' }, ...sideBottom(830, 'end')],
-        rows: [
-          ...letteringRows(-1),
-          ...sideMargins(1, 955),
-          { from: 0, to: 80, label: '80', x: 1, part: 'dealer' },
-          { from: 80, to: 140, label: '60', x: 1, part: 'dealer' },
-        ],
-        grid: [[380, 80, 830, 80, 'dealer'], [0, 140, 830, 140], [0, 260, 830, 260], [0, 380, 830, 380, 'tagline']],
+        cols: bareCols('end'),
+        rows: [...bareRows(-1), ...sideMargins(1, BARE_W + 125), ...dealerRows(1)],
+        grid: bareGrid(BARE_W - 450),
       },
     },
   },
@@ -267,6 +305,7 @@ export const UMO8: Record<SurfaceId, Surface> = {
       ],
     },
     noQr: {
+      kind: 'cut',
       side: 'start',
       width: 325,
       centre: true,
@@ -288,6 +327,14 @@ export const UMO8: Record<SurfaceId, Surface> = {
  * front edge on the car (or its centre, with `centre`), so its origin may move along the body.
  */
 export function withoutQr(s: Surface): Surface {
+  if (s.noQr.kind === 'layout') {
+    const { kind: _, shift, ...layout } = s.noQr
+    const move = (o: Obstacle): Obstacle =>
+      o.kind === 'seam'
+        ? { ...o, top: [o.top[0] - shift, o.top[1]], bottom: [o.bottom[0] - shift, o.bottom[1]] }
+        : { ...o, x: o.x - shift }
+    return { ...s, ...layout, obstacles: s.obstacles.map(move), photo: { ...s.photo, x: s.photo.x + shift } }
+  }
   const { side, width, centre, dims } = s.noQr
   const start = side === 'start'
   // On the start side what lies beyond the column moves back; on the end side what lies over it does

@@ -1,6 +1,7 @@
 import { Document, Page, View, Text, Image, Svg, Path } from '@react-pdf/renderer'
 import svgUmo8 from '@/icons/umo8-badge'
 import svgUmo5 from '@/icons/umo5-badge'
+import QRCode from 'qrcode'
 import QrVector from './QrVector'
 import { cards, type Variant } from '../cardData'
 
@@ -8,20 +9,35 @@ const W = 841.89
 const S = W / 1754
 const px = (n: number) => n * S
 
-interface Props { variant: Variant; fullPrice: string; creditPrice: string; qrUrl: string }
+/** No `creditPrice`: a card with no credit offer, one price under «Цена:» */
+interface Props { variant: Variant; fullPrice: string; creditPrice?: string; qrUrl: string }
 
-function PriceBlock({ label, value }: { label: string; value: string }) {
+/** `large`: the headline's size on a line as tall as the type, for a card with one price */
+function PriceBlock({ label, value, large }: { label: string; value: string; large?: boolean }) {
+  const price = { fontFamily: 'CoFo Sans', fontWeight: 500, fontSize: px(large ? 96 : 72), lineHeight: large ? 1 : 1.25 }
   return (
     <View style={{ gap: px(15) }}>
       <Text style={{ fontFamily: 'CoFo Sans', fontWeight: 500, fontSize: px(40), lineHeight: 1.13, color: '#666' }}>
         {label}
       </Text>
-      <View style={{ flexDirection: 'row', alignItems: 'center', gap: px(18) }}>
-        <Text style={{ fontFamily: 'CoFo Sans', fontWeight: 500, fontSize: px(72), lineHeight: 1.25 }}>{value}</Text>
-        <Text style={{ fontFamily: 'CoFo Sans', fontWeight: 500, fontSize: px(72), lineHeight: 1.25 }}>₽</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', gap: px(large ? 24 : 18) }}>
+        <Text style={price}>{value}</Text>
+        <Text style={price}>₽</Text>
       </View>
     </View>
   )
+}
+
+/**
+ * As in the preview (`singlePriceTop` in PriceCard.tsx): a lone price's figures stand on the QR code's bottom line.
+ * react-pdf puts the baseline a full ascender (0.974 em) under the top of a line, where a browser's 1.0 line height
+ * crops the ascender to 0.844 em — hence the difference from the preview's constant.
+ */
+function singlePriceTop(qrUrl: string) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const modules = (QRCode as any).create(qrUrl, { errorCorrectionLevel: 'M' }).modules.size + 2
+  const qrLine = 1570 + 250 - 250 / modules
+  return qrLine - (40 * 1.13 + 15 + 96 * 0.974)
 }
 
 export default function PriceCardPdf({ variant, fullPrice, creditPrice, qrUrl }: Props) {
@@ -109,10 +125,16 @@ export default function PriceCardPdf({ variant, fullPrice, creditPrice, qrUrl }:
         </View>
 
         {/* Prices */}
-        <View style={{ position: 'absolute', left: px(100), top: px(1505), gap: px(30) }}>
-          <PriceBlock label={'Без кредита:'} value={fullPrice} />
-          <PriceBlock label={'В кредит с субсидией:'} value={creditPrice} />
-        </View>
+        {creditPrice === undefined ? (
+          <View style={{ position: 'absolute', left: px(100), top: px(singlePriceTop(qrUrl)) }}>
+            <PriceBlock label={'Цена:'} value={fullPrice} large />
+          </View>
+        ) : (
+          <View style={{ position: 'absolute', left: px(100), top: px(1505), gap: px(30) }}>
+            <PriceBlock label={'Без кредита:'} value={fullPrice} />
+            <PriceBlock label={'В кредит с субсидией:'} value={creditPrice} />
+          </View>
+        )}
 
         {/* QR code */}
         <View style={{ position: 'absolute', left: px(1404), top: px(1570) }}>
