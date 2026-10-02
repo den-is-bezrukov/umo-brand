@@ -118,14 +118,17 @@ function useActiveSection() {
  */
 const NAV_HOVER = 'transition-[color] duration-350 ease-[ease] hover:text-[#757575] hover:duration-0'
 
-/** `active`: you're inside this item (medium weight); `current`: its own heading is the one on screen (the bullet). */
-function NavLink({ id, title, active, current, onNavigate }: { id: string; title: string; active: boolean; current: boolean; onNavigate?: () => void }) {
+/**
+ * `active`: you're inside this item (medium weight); `current`: its own heading is the one on screen (the bullet).
+ * The space between items is the links' own padding (`pad`), not gaps, so the whole list is clickable (Figma 4865:1031).
+ */
+function NavLink({ id, title, active, current, onNavigate, pad }: { id: string; title: string; active: boolean; current: boolean; onNavigate?: () => void; pad: string }) {
   return (
     <a
       href={`#${id}`}
       onClick={onNavigate}
       aria-current={active ? 'location' : undefined}
-      className={`relative block leading-[1.25] ${active ? 'font-medium' : NAV_HOVER}`}
+      className={`relative block leading-[1.25] ${pad} ${active ? 'font-medium' : NAV_HOVER}`}
     >
       {current && <span aria-hidden className="absolute -left-[0.9em]">•</span>}
       {title}
@@ -163,28 +166,29 @@ function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; o
 function Nav({ active, expandAll, onNavigate }: { active: string[]; expandAll: boolean; onNavigate?: () => void }) {
   const activeChapter = NAV.find(c => active.some(id => contains(c, id)))?.id
   return (
-    <nav className="flex flex-col gap-4 text-[16px] tracking-[-0.01em]">
+    // Chapters 8px above and under (16px apart), items 4px (8px apart): chapter → first item 12px; the last item takes
+    // 8px under it, so it's 16px to the next chapter, and so does an item over its own nested items (12px to them).
+    <nav className="flex flex-col text-[16px] tracking-[-0.01em]">
       {NAV.map(chapter => {
         // Like guides.area17.com: only the chapter you're reading is open, unless everything is expanded.
         const open = expandAll || activeChapter === chapter.id
         return (
           <div key={chapter.id} className="flex flex-col">
-            <NavLink id={chapter.id} title={chapter.title} active={activeChapter === chapter.id} current={active.includes(chapter.id)} onNavigate={onNavigate} />
+            <NavLink id={chapter.id} title={chapter.title} active={activeChapter === chapter.id} current={active.includes(chapter.id)} onNavigate={onNavigate} pad="py-2" />
             {chapter.children && (
               <div
                 inert={!open}
                 className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
               >
                 <div className="min-h-0 overflow-hidden">
-                  <div className="flex flex-col gap-2 pl-6 pt-3">
+                  <div className="flex flex-col pl-6">
                     {chapter.children.map(s => (
-                      // Parent → its sub-items 12px (chapter → items, item → nested items), siblings 8px.
-                      <div key={s.id} className="flex flex-col gap-3">
-                        <NavLink id={s.id} title={s.title} active={active.some(id => contains(s, id))} current={active.includes(s.id)} onNavigate={onNavigate} />
+                      <div key={s.id} className="group/item flex flex-col">
+                        <NavLink id={s.id} title={s.title} active={active.some(id => contains(s, id))} current={active.includes(s.id)} onNavigate={onNavigate} pad={s.children ? 'pt-1 pb-2' : 'py-1 group-last/item:pb-2'} />
                         {s.children && (
-                          <div className="flex flex-col gap-2 pl-6">
+                          <div className="flex flex-col pl-6">
                             {s.children.map(t => (
-                              <NavLink key={t.id} id={t.id} title={t.title} active={active.includes(t.id)} current={active.includes(t.id)} onNavigate={onNavigate} />
+                              <NavLink key={t.id} id={t.id} title={t.title} active={active.includes(t.id)} current={active.includes(t.id)} onNavigate={onNavigate} pad="py-1" />
                             ))}
                           </div>
                         )}
