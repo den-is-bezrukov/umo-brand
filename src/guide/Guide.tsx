@@ -1,4 +1,4 @@
-import { isValidElement, useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react'
+import { isValidElement, useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode, type RefObject } from 'react'
 import { Link } from 'react-router-dom'
 import PriceCard from '@/posters/PriceCard'
 import type { Variant } from '@/posters/cardData'
@@ -230,10 +230,10 @@ function useActiveInView(asideRef: RefObject<HTMLElement | null>, active: string
  * While the page slides up over the hero, the sidebar's toggle row stays at the bottom of the screen rather than of
  * the sidebar, which runs off the screen, so the contents unroll between the logo and the row as the page rises.
  * They fade in over the first 160px of scroll: on the first screen there's only the logo and the row.
- * The photo behind scrolls at half the page's speed (parallax), and the logo, 180px wide on the first screen, shrinks
+ * The logo, 180px wide on the first screen, shrinks
  * with the scroll to its usual 120 (24 high) by the time the page reaches the top.
  */
-function useHeroReveal(heroRef: RefObject<HTMLElement | null>, bodyRef: RefObject<HTMLElement | null>, asideRef: RefObject<HTMLElement | null>) {
+function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObject<HTMLElement | null>) {
   useEffect(() => {
     let frame = 0
     const update = () => {
@@ -242,9 +242,6 @@ function useHeroReveal(heroRef: RefObject<HTMLElement | null>, bodyRef: RefObjec
       const aside = asideRef.current
       if (!body || !aside) return
       const lift = Math.max(0, body.getBoundingClientRect().top)
-      const hero = heroRef.current
-      // Fixed only from lg; once the page covers it there's nothing to move.
-      if (hero) hero.style.transform = getComputedStyle(hero).position === 'fixed' ? `translateY(${-Math.min(window.scrollY, window.innerHeight) / 2}px)` : ''
       const logo = aside.querySelector<HTMLElement>('[data-logo]')
       // The page starts at its own offset from the top (a strip above the bottom of the screen) — that's how far it rises.
       if (logo) logo.style.width = `${120 + 60 * Math.min(1, lift / Math.max(1, body.offsetTop))}px`
@@ -266,7 +263,7 @@ function useHeroReveal(heroRef: RefObject<HTMLElement | null>, bodyRef: RefObjec
       window.removeEventListener('resize', onScroll)
       cancelAnimationFrame(frame)
     }
-  }, [heroRef, bodyRef, asideRef])
+  }, [bodyRef, asideRef])
 }
 
 /**
@@ -310,6 +307,13 @@ function useExpandAll() {
 
 function Logo({ className = 'w-[120px]' }: { className?: string }) {
   return <UmoLogo title="UMO" className={className} />
+}
+
+/** The logo takes you to the very top, the hero photo included, and leaves no #top in the address. */
+function toTop(e: MouseEvent<HTMLAnchorElement>) {
+  e.preventDefault()
+  history.replaceState(null, '', window.location.pathname + window.location.search)
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // ─── Typography ──────────────────────────────────────────────────────────────
@@ -643,9 +647,8 @@ export default function Guide() {
   const asideRef = useRef<HTMLElement>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
   useActiveInView(asideRef, active, expandAll)
-  const heroRef = useRef<HTMLDivElement>(null)
   useHeroStrip(pageRef)
-  useHeroReveal(heroRef, bodyRef, asideRef)
+  useHeroReveal(bodyRef, asideRef)
   // On the first screen the contents row first takes you past the photo, to where the contents are open to see.
   const onTocToggle = () => {
     const top = bodyRef.current?.getBoundingClientRect().top ?? 0
@@ -701,7 +704,7 @@ export default function Guide() {
           which starts a strip above the bottom of the screen (`--strip`, see useHeroStrip; 181px for a three-line
           statement), so the first screen shows the logo, the row and the statement, then slides up over the photo
           (Figma 4893:3846, prototype 4921:2352). */}
-      <div ref={heroRef} className="relative z-30 aspect-[2/1] will-change-transform lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:aspect-auto lg:h-[calc(100vh-var(--strip,181px))]">
+      <div className="relative z-30 aspect-[2/1] lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:aspect-auto lg:h-[calc(100vh-var(--strip,181px))]">
         <img
           src={img('hero')}
           alt="Женщина у UMO 8 на горной дороге"
@@ -718,7 +721,7 @@ export default function Guide() {
           changes the list's height, and sticks there when the list is taller than the screen, cutting the list off —
           enough of a hint that it scrolls, so the scrollbar, far from the text at this width, is hidden. */}
       <aside ref={asideRef} className="hidden lg:flex sticky top-0 h-screen w-[320px] xl:w-[480px] shrink-0 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" aria-label="В начало" data-logo className="block w-[180px]"><Logo className="w-full" /></a></div>
+        <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" onClick={toTop} aria-label="В начало" data-logo className="block w-[180px]"><Logo className="w-full" /></a></div>
         <div className="px-6"><Nav active={active} expandAll={expandAll} /></div>
         <TocToggle expanded={expandAll} onClick={onTocToggle} className="sticky bottom-0 z-10 mt-auto p-6" />
       </aside>
@@ -726,7 +729,7 @@ export default function Guide() {
       {/* Mobile top bar. iOS 26 browsers draw the page under their translucent top bar and stick `top: 0` below it,
           so the white is extended a screen upwards to hide content scrolling above the header. */}
       <header className="lg:hidden sticky top-0 z-20 bg-white p-4 md:p-6 before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-screen before:bg-white before:content-['']">
-        <a href="#top" aria-label="В начало" className="block w-fit"><Logo /></a>
+        <a href="#top" onClick={toTop} aria-label="В начало" className="block w-fit"><Logo /></a>
       </header>
 
       {/* Mobile table of contents: a bar at the bottom names the heading you're reading and stands in for the
@@ -763,7 +766,7 @@ export default function Guide() {
               the chapter anchor. */}
           <div>
             <div className="flex flex-col gap-section">
-              <p id="brand" className="scroll-mt-24 text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em]">
+              <p id="brand" className="scroll-mt-24 lg:scroll-mt-4 text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em]">
                 UMO — это автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
               </p>
               <Section>
