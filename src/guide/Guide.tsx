@@ -814,7 +814,7 @@ export default function Guide() {
           <div>
             <div className="flex flex-col gap-section">
               <div className="flex flex-col gap-8 md:gap-12">
-                <p id="brand" className="scroll-mt-24 lg:scroll-mt-4 text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em]">
+                <p id="brand" className="max-w-[678px] scroll-mt-24 lg:scroll-mt-4 text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em]">
                   Новый автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
                 </p>
                 {/* Quick links: into the guide, from its first section, and to the templated media, the constructors among them */}
