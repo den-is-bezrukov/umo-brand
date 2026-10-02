@@ -24,6 +24,23 @@
   src: url('/fonts/CoFoSans-Medium.woff2') format('woff2');
 }
 
+/* Golos UMO (fonts/golos-umo), the candidate replacement for CoFo Sans: only /golos uses it */
+@font-face {
+  font-family: 'Golos UMO';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/GolosUMO-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Golos UMO';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/GolosUMO-Medium.woff2') format('woff2');
+}
+
 /* Grayscale smoothing like contrastfoundry.com: on macOS/iOS the default draws CoFo Sans heavier and softer. */
 body {
   -webkit-font-smoothing: antialiased;
