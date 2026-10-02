@@ -819,7 +819,7 @@ export default function Guide() {
                 </p>
                 {/* Quick links: into the guide, from its first section, and to the templated media, the constructors among them */}
                 <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
-                  <a href="#positioning" className={NAV_HOVER}>Идея бренда</a>
+                  <a href="#positioning" className={NAV_HOVER}>Стандарты</a>
                   <a href="#materials" className={NAV_HOVER}>{TITLES.materials}</a>
                 </nav>
               </div>
@@ -1208,7 +1208,7 @@ export default function Guide() {
             </Section>
           </Chapter>
 
-          <footer className="text-[16px] leading-[1.25] tracking-[-0.01em] text-[#999]">ООО «ЭМ РУС». 0+</footer>
+          <footer className="text-[16px] leading-[1.25] tracking-[-0.01em] text-[#999]">Редакция 2026. ООО «ЭМ РУС». 0+</footer>
         </div>
       </main>
       </div>
