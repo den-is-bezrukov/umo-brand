@@ -168,7 +168,8 @@ function Nav({ active, expandAll, onNavigate }: { active: string[]; expandAll: b
   return (
     // Chapters 8px above and under (16px apart), items 4px (8px apart): chapter → first item 12px; the last item takes
     // 8px under it, so it's 16px to the next chapter, and so does an item over its own nested items (12px to them).
-    <nav className="flex flex-col text-[16px] tracking-[-0.01em]">
+    // The first and last chapters' 8px go under what's above and below the list (-my-2), so the text stays put.
+    <nav className="-my-2 flex flex-col text-[16px] tracking-[-0.01em]">
       {NAV.map(chapter => {
         // Like guides.area17.com: only the chapter you're reading is open, unless everything is expanded.
         const open = expandAll || activeChapter === chapter.id
