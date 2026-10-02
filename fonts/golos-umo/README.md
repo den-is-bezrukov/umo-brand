@@ -18,6 +18,9 @@ A prototype of a UMO brand typeface: Golos Text (Alexandra Korolkova and Vitaly 
 
 - **Л л, Д д, geometric legs:** Golos bends them over most of their height, like a sabre; here they stand straight and turn only near the foot. Д's legs land on the slab at 52° (Golos 62–69°) and flare over 4.5 times their width, both handles aimed 0.7 of the way to where the straight leg's line meets the landing line, so the curvature is near zero where the straight ends and grows steadily to the slab. Л follows a Д leg drawn along a clothoid (landing at 44°, 15 units further out): its outer edge starts turning as far above its inner edge as that path's does, then turns on to the horizontal of a foot as thick as the leg (0.97, as in CoFo) that reaches 12 units further left. The inner turn leaves the straight gently and the stroke stays within 0.95–1.08 of the leg all the way round; the build checks that it is nowhere thinner than the leg or the foot. Л's turns were chosen by searching their parameters against these conditions. Љ and Ԓ, not in the release, still have Golos's legs.
 
+- **У у** end in a flat foot like Л's instead of Golos's thin hook: level on the baseline (the descender line for у, which is Latin y too, so ý ÿ Ў follow), cut square, 0.97 of the stem thick and reaching 45 units further left; both turns into it aim their handles at the point where their tangents meet.
+- **Я я** sit more firmly on the leg: the bar under the bowl, the notch over the leg and the bowl's lower half come down 15 units (10 in я), easing to nothing at the bowl's widest point; the bar keeps its thickness and the leg its foot.
+
 ## Dots and commas (`scripts/dots.py`)
 
 - **Square dots** (`DOTS = 'square'`; `'round'` keeps Golos's): the font's strokes all end in flat cuts, its rounds are squarish (superness 0.82) and the UMO mark is built of rectangles, so a round dot would be the only true circle in it; a square one is the cross-section of a stroke. Period, the dots of ! ? ¡ ¿ ÷, the dot of i j and the dieresis; colon, semicolon, ellipsis and the middle dot follow as components.
@@ -28,7 +31,7 @@ A prototype of a UMO brand typeface: Golos Text (Alexandra Korolkova and Vitaly 
 
 ## Checks
 
-`build.sh` stops if a widened glyph gains a curvature break between two curves that Golos doesn't have, gains or loses points, or if the superness of O or 0 moves more than 0.01 from Golos's, in either style (`scripts/checks/check.py`; CoFo Regular's and Medium's are printed for reference). Л and л, redrawn with a different number of points, are left out of the point comparison. `scripts/checks/combs.py` draws curvature combs of Golos, Golos UMO and CoFo side by side, from the work directory that `KEEP=1 ./build.sh` leaves.
+`build.sh` stops if a widened glyph gains a curvature break between two curves that Golos doesn't have, gains or loses points, or if the superness of O or 0 moves more than 0.01 from Golos's, in either style (`scripts/checks/check.py`; CoFo Regular's and Medium's are printed for reference). Л л У y, redrawn with a different number of points, are left out of the point comparison. `scripts/checks/combs.py` draws curvature combs of Golos, Golos UMO and CoFo side by side, from the work directory that `KEEP=1 ./build.sh` leaves.
 
 ## Files
 

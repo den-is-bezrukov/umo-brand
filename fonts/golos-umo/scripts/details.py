@@ -51,7 +51,16 @@ EL_CONVEX_FOOT = 0.6
 DE_TOP_TENSION = 0.7
 DE_SLAB_TENSION = 0.7
 EL_TOP_TENSION = 0.9   # Л's outer turn: its handle at the leg
-REDRAWN = ['El-cy', 'el-cy']   # redrawn with a different number of points than Golos's
+REDRAWN = ['El-cy', 'el-cy', 'U-cy', 'y']   # redrawn with a different number of points than Golos's
+# У у: the tail ends in a flat foot like Л's instead of Golos's thin hook: level on the baseline (the
+# descender line for у), square-cut, nearly as thick as the stem, reaching further left; both turns
+# take their handles towards the point where their tangents meet
+U_FOOT_RATIO = 0.97
+U_FOOT_REACH = 45
+U_TENSION = 0.65
+# Я я: the lower half of the bowl, the bar under it and the leg's start come down, so the bowl sits
+# on the leg with more weight (CoFo's sits 8-20 units lower); the bar keeps its thickness
+YA_DROP = {'Ya-cy': 15, 'ya-cy': 10}
 SPUR_WIDTH = {'Regular': None, 'Medium': 108}
 CROTCH_Y = {'Regular': None, 'Medium': 68}
 TAIL_SHIFT = -65    # the tail's line moves this far left, so it cuts into the bowl nearer its middle
@@ -264,6 +273,42 @@ def fix_de(g):
     i[1].x, i[1].y = round(h1[0]), round(h1[1]); i[2].x, i[2].y = round(h2[0]), round(h2[1])
 
 
+def meet(p, d, y):
+    """where the line through p with direction d reaches height y"""
+    t = (y - p[1]) / d[1]
+    return (p[0] + d[0] * t, p[1] + d[1] * t)
+
+
+def fix_u(font, name, bottom):
+    """У у: 0 bottom of the outer turn, 1-2 handles, 3 where it leaves the tail's outer edge, 4-8 arms,
+    9 where the inner edge (from the left arm) turns, 10-11 handles, 12 foot top, 13-14 handles,
+    15 foot end top, 16 foot end bottom, 17-18 handles"""
+    g = font[name]; P = [(p.x, p.y) for p in g.contours[0].points]
+    c = font['idotless'].contours[0]; xs = [p.x for p in c.points]; S = max(xs) - min(xs)
+    yf = bottom + U_FOOT_RATIO * S; xt = P[15][0] - U_FOOT_REACH; x0, xf = P[0][0], P[12][0]
+    d = (P[3][0] - P[4][0], P[3][1] - P[4][1])                         # the tail runs down-left
+    I1 = meet(P[3], d, bottom); I2 = meet(P[9], d, yf)
+    T = U_TENSION
+    lerp = lambda a, b, t: (a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t)
+    new = [((x0, bottom), 'line'), (lerp((x0, bottom), I1, T), None), (lerp(P[3], I1, T), None), (P[3], 'curve')]
+    new += [(P[i], 'line') for i in range(4, 10)]
+    new += [(lerp(P[9], I2, T), None), (lerp((xf, yf), I2, T), None), ((xf, yf), 'curve'), ((xt, yf), 'line'), ((xt, bottom), 'line')]
+    g.clearContours(); pen = g.getPointPen(); pen.beginPath()
+    for (x, y), tp in new: pen.addPoint((round(x), round(y)), segmentType=tp)
+    pen.endPath()
+
+
+def fix_ya(g, drop):
+    """Я я: lower the bar, the notch over the leg and the bowl's lower half by `drop`, easing it to
+    nothing at the bowl's widest point; the leg keeps its foot"""
+    o, i = g.contours[0].points, g.contours[1].points
+    mid = o[10].y                                   # the bowl's leftmost point
+    bar = i[5].y                                    # the counter's bottom
+    def shift(y): return drop if y <= bar else (drop * (mid - y) / (mid - bar) if y < mid else 0)
+    for c, idx in ((o, (2, 3, 11, 12, 13)), (i, (5, 6, 7, 8))):
+        for k in idx: c[k].y = round(c[k].y - shift(c[k].y))
+
+
 if __name__ == '__main__':
     for st in ('Regular', 'Medium'):
         f = ufoLib2.Font.open(f'umo/GolosUMO-{st}.ufo')
@@ -272,6 +317,9 @@ if __name__ == '__main__':
             outer_top, inner_top = path_tops(f[de])
             fix_el(f[el], outer_top - inner_top)   # the leg path's outer edge starts its flare this far above the inner
             fix_de(f[de])
+        fix_u(f, 'U-cy', 0)
+        fix_u(f, 'y', min(p.y for p in f['p'].contours[0].points))   # flat on the descender line
+        for n, drop in YA_DROP.items(): fix_ya(f[n], drop)
         f.save()
         print(st, 'M', [(p.x, p.y) for p in f['M'].contours[0].points][2:6],
               'Q tail', [(p.x, p.y) for p in f['Q'].contours[0].points][3:7])
