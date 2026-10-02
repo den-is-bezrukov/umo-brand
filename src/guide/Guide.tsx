@@ -824,7 +824,6 @@ export default function Guide() {
                 <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
                   <a href="#positioning" className={NAV_HOVER}>Стандарты</a>
                   <a href="#materials" className={NAV_HOVER}>{TITLES.materials}</a>
-                  <a href="https://umo.auto" target="_blank" rel="noopener" className={NAV_HOVER}>umo.auto ↗</a>
                 </nav>
               </div>
               <Section>
