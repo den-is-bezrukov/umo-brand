@@ -8,7 +8,7 @@
 - Л л, Д д: geometric legs. Golos bends them over most of their height, like a sabre; here they
   stand straight and turn only near the foot. Л's turn into its foot is close to a quarter circle
   (EL_BEND times as tall as wide) and the foot lies flat on the baseline with a square end;
-  Д's legs flare along a clothoid into the slab."""
+  Д's legs flare into the slab, their handles aimed at where the tangents meet."""
 import math, copy, ufoLib2
 
 VERTEX_Y = 65       # M vertex, font units above the baseline (Golos UMO had 143-151)
@@ -18,9 +18,13 @@ TAIL_BOTTOM = -85   # lowest corner of the Q tail (Golos about -30)
 # G.ss01, per style: spur width and the height where the bowl runs into it (None keeps the shape
 # that falls out of the drawing: the spur as wide as the jaw, the bowl cut where it meets the spur).
 # Medium needs both, or the bowl merges into the spur at the baseline in a dark knot.
-DE_LANDING = 44     # Д д: angle at which the legs land on the slab (Golos 62-69, a 21-28° turn too small to read)
-DE_REACH = 15       # Д д: the legs land this much further out than Golos's, so the flare reads at a lower height
-DE_SPLIT = 0.55     # where along the flare its two cubic pieces meet
+DE_BEND = 4.5       # Д д: height of the legs' flare over its width
+DE_LANDING = 52     # Д д: angle at which the legs land on the slab (Golos 62-69, a 21-28° turn too small to read)
+# Л's path: the clothoid a Д leg would follow landing at LEG_PATH_LANDING, LEG_PATH_REACH further out.
+# Л's outer edge starts its turn as far above its inner edge as that path's outer edge does above its
+# inner one. (Д itself went back to the single-cubic flare below.)
+LEG_PATH_LANDING = 44
+LEG_PATH_REACH = 15
 # handle lengths as a share of the turn's extent. Л's leg turns left into its foot: the convex
 # side of the turn (the leg's right edge running round to the foot's underside) is nearly a circle,
 # so no weight piles up in the corner; the concave side (the leg's left edge meeting the top of the
@@ -41,12 +45,13 @@ EL_FOOT_REACH = 12     # the foot reaches this much further left than Golos's
 EL_CONVEX_BEND = 1.2
 EL_CONVEX_LEG = 0.8
 EL_CONVEX_FOOT = 0.6
-# Д's legs flare along a clothoid: the curvature grows evenly from nothing where the straight leg ends
-# to its most where the leg lands on the slab, the smoothest way out of a straight. Its height follows
-# from the landing angle (3.7 times the flare's width at 44°), so the flare is kept low by reaching
-# further out, not by squeezing the curve. Drawn as two cubics fitted to the spiral.
-DE_TOP_TENSION = 0.9   # Л's concave turn still takes its top handle by this rule
-REDRAWN = ['El-cy', 'el-cy', 'De-cy', 'de-cy']   # redrawn with a different number of points than Golos's
+# Д's legs: both handles aim at the point where the straight leg's line meets the landing line, 0.7 of
+# the way, which keeps the curvature near zero where the straight ends and lets it grow steadily to the
+# slab (a handle past that point puts a wave in the leg, a short top one a knee).
+DE_TOP_TENSION = 0.7
+DE_SLAB_TENSION = 0.7
+EL_TOP_TENSION = 0.9   # Л's outer turn: its handle at the leg
+REDRAWN = ['El-cy', 'el-cy']   # redrawn with a different number of points than Golos's
 SPUR_WIDTH = {'Regular': None, 'Medium': 108}
 CROTCH_Y = {'Regular': None, 'Medium': 68}
 TAIL_SHIFT = -65    # the tail's line moves this far left, so it cuts into the bowl nearer its middle
@@ -213,7 +218,7 @@ def fix_el(g, lag):
     yi = EL_CONVEX_BEND * (xi - x0); yo = yi + lag
     new = [((x0, 0), 'line'), ((x0 + EL_CONVEX_FOOT * (xi - x0), 0), None), ((xi, yi - EL_CONVEX_LEG * yi), None), ((xi, yi), 'curve')]
     new += [(P[i], 'line') for i in range(4, 10)]
-    new += [((xo, yo), 'line'), ((xo, yo - DE_TOP_TENSION * (yo - yf)), None), ((xf + EL_FOOT_TENSION * (xo - xf), yf), None), ((xf, yf), 'curve'),
+    new += [((xo, yo), 'line'), ((xo, yo - EL_TOP_TENSION * (yo - yf)), None), ((xf + EL_FOOT_TENSION * (xo - xf), yf), None), ((xf, yf), 'curve'),
             ((xt, yf), 'line'), ((xt, 0), 'line')]
     g.clearContours(); pen = g.getPointPen(); pen.beginPath()
     for (x, y), tp in new: pen.addPoint((round(x), round(y)), segmentType=tp)
@@ -230,63 +235,43 @@ def clothoid(turn, n=400):
     return pts, tans
 
 
-def fit(pts, t0, t3):
-    """cubic from pts[0] to pts[-1] with the given end tangents, handle lengths by least squares"""
-    P0, P3 = pts[0], pts[-1]
-    L = [0.0]
-    for a, b in zip(pts, pts[1:]): L.append(L[-1] + math.dist(a, b))
-    rows, rhs = [], []
-    for p, l in zip(pts, L):
-        t = l / L[-1]; b0, b1, b2, b3 = (1 - t) ** 3, 3 * (1 - t) ** 2 * t, 3 * (1 - t) * t * t, t ** 3
-        for k in (0, 1):
-            base = (b0 + b1) * P0[k] + (b2 + b3) * P3[k]
-            rows.append((b1 * t0[k], -b2 * t3[k])); rhs.append(p[k] - base)
-    # 2x2 normal equations
-    a11 = sum(r[0] * r[0] for r in rows); a12 = sum(r[0] * r[1] for r in rows); a22 = sum(r[1] * r[1] for r in rows)
-    b1_ = sum(r[0] * v for r, v in zip(rows, rhs)); b2_ = sum(r[1] * v for r, v in zip(rows, rhs))
-    det = a11 * a22 - a12 * a12; ha = (b1_ * a22 - b2_ * a12) / det; hb = (a11 * b2_ - a12 * b1_) / det
-    return [P0, (P0[0] + ha * t0[0], P0[1] + ha * t0[1]), (P3[0] - hb * t3[0], P3[1] - hb * t3[1]), P3]
-
-
-def flare(top_x, landing):
-    """the leg from where it leaves the straight (x = top_x) down to `landing` on the slab, flaring left:
-    returns the top point and two cubics, top to slab"""
-    pts, tans = clothoid(math.radians(90 - DE_LANDING))
-    k = (top_x - landing[0]) / -pts[-1][0]               # scale so it spans the leg's horizontal reach
-    P = [(landing[0] + (x - pts[-1][0]) * k, landing[1] + (y - pts[-1][1]) * k) for x, y in pts]
-    m = int(len(P) * DE_SPLIT)
-    A = fit(P[:m + 1], tans[0], tans[m]); B = fit(P[m:], tans[m], tans[-1])
-    return P[0], A, B
+def path_tops(g):
+    """where the outer and inner edges of a Д leg drawn along the clothoid would start their flare"""
+    o = g.contours[0].points; i = g.contours[1].points
+    def top(top_x, landing):
+        pts, _ = clothoid(math.radians(90 - LEG_PATH_LANDING))
+        k = (top_x - landing[0]) / -pts[-1][0]
+        return landing[1] + (pts[0][1] - pts[-1][1]) * k
+    return (top(o[10].x, (o[13].x - LEG_PATH_REACH, o[13].y)), top(i[3].x, (i[0].x - LEG_PATH_REACH, i[0].y)))
 
 
 def fix_de(g):
-    """Д д: outer contour 10 top of the flare, 11-12 handles, 13 landing on the slab;
-    inner contour 0 landing, 1-2 handles, 3 top of the flare. Each flare becomes two cubics."""
-    tops = []
-    o = g.contours[0]; P = [(p.x, p.y, p.type) for p in o.points]
-    land = (P[13][0] - DE_REACH, P[13][1]); top, A, B = flare(P[10][0], land)
-    new = P[:10] + [(top[0], top[1], 'line'), (*A[1], None), (*A[2], None), (*A[3], 'curve'),
-                    (*B[1], None), (*B[2], None), (land[0], land[1], 'curve')] + P[14:]
-    tops.append(top[1])
-    i = g.contours[1]; Q = [(p.x, p.y, p.type) for p in i.points]
-    land = (Q[0][0] - DE_REACH, Q[0][1]); top, A, B = flare(Q[3][0], land)
-    newi = [(land[0], land[1], 'line'), (*B[2], None), (*B[1], None), (*B[0], 'curve'),
-            (*A[2], None), (*A[1], None), (top[0], top[1], 'curve')] + Q[4:]
-    tops.append(top[1])
-    g.clearContours()
-    for pts in (new, newi):
-        pen = g.getPointPen(); pen.beginPath()
-        for x, y, tp in pts: pen.addPoint((round(x), round(y)), segmentType=tp)
-        pen.endPath()
-    return tops
+    """Д д: outer 10 top of the leg's turn, 11-12 handles, 13 where it lands on the slab;
+    inner 0 landing, 1-2 handles, 3 top of the turn"""
+    o = g.contours[0].points; i = g.contours[1].points
+    def leg(bottom, top_x, start_handle, flip, side):
+        dx = abs(top_x - bottom[0]); ytop = bottom[1] + DE_BEND * dx
+        a = math.radians(DE_LANDING)
+        yI = bottom[1] + (top_x - bottom[0]) * math.tan(a)                         # tangents meet at (top_x, yI)
+        h1 = (bottom[0] + DE_SLAB_TENSION * (top_x - bottom[0]), bottom[1] + DE_SLAB_TENSION * (yI - bottom[1]))
+        h2 = (top_x, ytop - DE_TOP_TENSION * (ytop - yI))
+        return (top_x, ytop), (h2, h1) if flip else (h1, h2)
+    top, (h2, h1) = leg((o[13].x, o[13].y), o[10].x, (o[12].x, o[12].y), True, 'outer')
+    o[10].x, o[10].y = round(top[0]), round(top[1])
+    o[11].x, o[11].y = round(h2[0]), round(h2[1]); o[12].x, o[12].y = round(h1[0]), round(h1[1])
+    top, (h1, h2) = leg((i[0].x, i[0].y), i[3].x, (i[1].x, i[1].y), False, 'inner')
+    i[3].x, i[3].y = round(top[0]), round(top[1])
+    i[1].x, i[1].y = round(h1[0]), round(h1[1]); i[2].x, i[2].y = round(h2[0]), round(h2[1])
+
 
 if __name__ == '__main__':
     for st in ('Regular', 'Medium'):
         f = ufoLib2.Font.open(f'umo/GolosUMO-{st}.ufo')
         fix_m(f['M']); fix_q(f); g_spur(f, st)
         for el, de in (('El-cy', 'De-cy'), ('el-cy', 'de-cy')):
-            outer_top, inner_top = fix_de(f[de])
-            fix_el(f[el], outer_top - inner_top)   # Д's outer edge starts its flare this far above the inner
+            outer_top, inner_top = path_tops(f[de])
+            fix_el(f[el], outer_top - inner_top)   # the leg path's outer edge starts its flare this far above the inner
+            fix_de(f[de])
         f.save()
         print(st, 'M', [(p.x, p.y) for p in f['M'].contours[0].points][2:6],
               'Q tail', [(p.x, p.y) for p in f['Q'].contours[0].points][3:7])
