@@ -228,11 +228,10 @@ function useActiveInView(asideRef: RefObject<HTMLElement | null>, active: string
 }
 
 /**
- * While the page slides up over the hero, the sidebar's toggle row stays at the bottom of the screen rather than of
- * the sidebar, which runs off the screen, so the contents unroll between the logo and the row as the page rises.
- * They fade in over the first 160px of scroll: on the first screen there's only the logo and the row.
- * The logo, 180px wide on the first screen, shrinks
- * with the scroll to its usual 120 (24 high) by the time the page reaches the top.
+ * While the page slides up over the hero, the sidebar's toggle row stays fixed at the bottom of the screen, while the
+ * sidebar runs off it, so the contents unroll between the logo and the row as the page rises. They fade in over the
+ * first 160px of scroll: on the first screen there's only the logo and the row. The logo, 180px wide on the first
+ * screen, shrinks with the scroll to its usual 120 (24 high) by the time the page reaches the top.
  */
 function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObject<HTMLElement | null>) {
   useEffect(() => {
@@ -246,9 +245,7 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
       const logo = aside.querySelector<HTMLElement>('[data-logo]')
       // The page starts at its own offset from the top (a strip above the bottom of the screen) — that's how far it rises.
       if (logo) logo.style.width = `${120 + 60 * Math.min(1, lift / Math.max(1, body.offsetTop))}px`
-      const foot = aside.lastElementChild as HTMLElement
       const nav = aside.querySelector('nav')
-      foot.style.transform = lift ? `translateY(${-lift}px)` : ''
       if (nav) {
         const opacity = Math.min(1, window.scrollY / 160)
         nav.style.opacity = String(opacity)
@@ -770,8 +767,10 @@ export default function Guide() {
           enough of a hint that it scrolls, so the scrollbar, far from the text at this width, is hidden. */}
       <aside ref={asideRef} className="hidden lg:flex sticky top-0 h-screen w-[320px] xl:w-[480px] shrink-0 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" onClick={toTop} aria-label="В начало" data-logo className="block w-[180px]"><Logo className="w-full" /></a></div>
-        <div className="px-6"><Nav active={active} expandAll={expandAll} /></div>
-        <TocToggle expanded={expandAll} onClick={onTocToggle} className="sticky bottom-0 z-10 mt-auto p-6" />
+        {/* The row is fixed to the bottom of the screen — not moved there by script, which lags the scroll a frame and
+            makes it shake — so the list keeps its height free at the end. */}
+        <div className="px-6 pb-[68px]"><Nav active={active} expandAll={expandAll} /></div>
+        <TocToggle expanded={expandAll} onClick={onTocToggle} className="fixed bottom-0 left-0 z-10 w-[320px] p-6 xl:w-[480px]" />
       </aside>
 
       {/* Mobile top bar. iOS 26 browsers draw the page under their translucent top bar and stick `top: 0` below it,
