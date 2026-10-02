@@ -377,6 +377,9 @@ export const SURFACES: SurfaceId[] = ['left', 'right', 'rear']
 
 const SIDE5_W = 1310
 const side5Text = { size: 40, leading: 42 }
+// The dealer name may run 550 from the front edge with the QR or without, so one that fits fits both ways; it stays
+// clear of the front door handle either way
+const DEALER5_W = 550
 
 // Measured on the photo of the right side (front on the right): the seam between the doors crosses the lettering, the
 // front door handle sits under the dealer's corner of the sheet; the left side is its mirror image.
@@ -408,13 +411,13 @@ const side5Qr = (x: number): Surface['dims']['rows'] => [
 ]
 
 // Without the QR (node 4934:3338): the lettering 160 high (UMO 800, 100, the 5 186,67), the sheet as wide, the dealer
-// name over its far end, 40 mm in two lines or one centred on them and the tagline under it: 40 mm in three lines (node 4934:3341) or, with
+// name over its front end, 40 mm in two lines or one centred on them and the tagline under it: 40 mm in three lines (node 4934:3341) or, with
 // the size switch, 60 mm in two. The sheet keeps its height and moves along the body: on the right side 183,33 back
 // from the front, on the left 40.
 const BARE5_W = 800 + 100 + FIVE.w * (160 / FIVE.h)
 const bare5Lettering = { y: 140, h: 160 }
 // Two lines filling the 80 over the lettering, or one in the middle of them (node 4934:3325)
-const bare5Dealer = { baseline: 74, size: 40, leading: 40, maxWidth: 500, maxLines: 2, centred: true }
+const bare5Dealer = { baseline: 74, size: 40, leading: 40, maxWidth: DEALER5_W, maxLines: 2, centred: true }
 const bare5Tagline = { baseline: 486, size: 40, leading: 40, maxWidth: 420, maxLines: 3 }
 const bare5TaglineLarge = { baseline: 483, size: 60, leading: 60, maxWidth: 850, maxLines: 2 }
 const bare5Rows = (x: number): Surface['dims']['rows'] => [
@@ -432,7 +435,7 @@ const bare5Cols: Surface['dims']['cols'] = [
   { from: 900, to: BARE5_W, label: '186,5' },
 ]
 const bare5Grid = (dealerFrom: number): Surface['dims']['grid'] => [
-  [dealerFrom, 80, dealerFrom + 500, 80, 'dealer'], [0, 140, BARE5_W, 140], [0, 300, BARE5_W, 300], [0, 380, BARE5_W, 380, 'tagline'],
+  [dealerFrom, 80, dealerFrom + DEALER5_W, 80, 'dealer'], [0, 140, BARE5_W, 140], [0, 300, BARE5_W, 300], [0, 380, BARE5_W, 380, 'tagline'],
 ]
 
 // The side photo is the Figma frame's: 4718 × 1680 mm, the car's right side, the sheet's top 682 down.
@@ -450,7 +453,7 @@ export const UMO5: Record<SurfaceId, Surface> = {
     num: { x: 1170, y: 140, h: 120 },
     numGlyph: FIVE,
     decal: '#000000',
-    dealer: { x: 0, align: 'left', baseline: 71, ...side5Text, maxWidth: 360, maxLines: 2 },
+    dealer: { x: 0, align: 'left', baseline: 71, ...side5Text, maxWidth: DEALER5_W, maxLines: 2 },
     tagline: { x: 480, align: 'left', baseline: 492, ...side5Text, maxWidth: 420, maxLines: 3 },
     obstacles: right5Obstacles.map(mirror5),
     clearance: 10,
@@ -468,7 +471,7 @@ export const UMO5: Record<SurfaceId, Surface> = {
       rows: [...side5Qr(-1), ...side5Bottom(-200, -1), ...side5Lettering(1)],
       grid: [
         [360, 0, 360, 500], [480, 0, 480, 500],
-        [0, 80, 360, 80, 'dealer'], [0, 140, SIDE5_W, 140],
+        [0, 80, DEALER5_W, 80, 'dealer'], [0, 140, SIDE5_W, 140],
         [480, 260, SIDE5_W, 260], [480, 380, SIDE5_W, 380, 'tagline'],
       ],
     },
@@ -503,7 +506,7 @@ export const UMO5: Record<SurfaceId, Surface> = {
     num: { x: 690, y: 140, h: 120 },
     numGlyph: FIVE,
     decal: '#000000',
-    dealer: { x: SIDE5_W, align: 'right', baseline: 71, ...side5Text, maxWidth: 360, maxLines: 2 },
+    dealer: { x: SIDE5_W, align: 'right', baseline: 71, ...side5Text, maxWidth: DEALER5_W, maxLines: 2 },
     tagline: { x: 830, align: 'right', baseline: 492, ...side5Text, maxWidth: 420, maxLines: 3 },
     obstacles: right5Obstacles,
     clearance: 10,
@@ -521,7 +524,7 @@ export const UMO5: Record<SurfaceId, Surface> = {
       rows: [...side5Lettering(-1), ...side5Qr(1), ...side5Bottom(SIDE5_W + 200, 1)],
       grid: [
         [830, 0, 830, 500], [950, 0, 950, 500],
-        [950, 80, SIDE5_W, 80, 'dealer'], [0, 140, SIDE5_W, 140],
+        [SIDE5_W - DEALER5_W, 80, SIDE5_W, 80, 'dealer'], [0, 140, SIDE5_W, 140],
         [0, 260, 830, 260], [0, 380, 830, 380, 'tagline'],
       ],
     },
@@ -542,7 +545,7 @@ export const UMO5: Record<SurfaceId, Surface> = {
           { from: BARE5_W, to: SIDE5_W + 200 - 183.33, label: '~240', y: MOULDING_Y },
         ],
         rows: [...bare5Rows(-1), ...bare5Dealer80(1), ...side5Bottom(SIDE5_W + 200 - 183.33, 1)],
-        grid: bare5Grid(BARE5_W - 500),
+        grid: bare5Grid(BARE5_W - DEALER5_W),
       },
     },
   },
