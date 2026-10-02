@@ -9,7 +9,8 @@
 import ufoLib2, json, copy, math
 from fontMath import MathGlyph
 from fontTools.pens.pointInsidePen import PointInsidePen
-MASTERS=['Regular','Medium','SemiBold','Bold','Black']
+# only what Regular (an extrapolation below Golos 400) and Medium (Golos 540) are made from
+MASTERS=['Regular','Medium','SemiBold']
 fonts={m:ufoLib2.Font.open(f'master_ufo/GolosText-{m}.ufo') for m in MASTERS}
 ref=fonts['Regular']; L=ref.layers.defaultLayer
 DELTA={k:v for k,v in json.load(open('delta.json')).items() if v}
@@ -181,7 +182,7 @@ for m in MASTERS:
 for m in MASTERS:
     f=fonts[m]; f.info.familyName='Golos UMO'; f.info.styleMapFamilyName=None
     f.info.postscriptFontName=f'GolosUMO-{m}'; f.info.openTypeNameUniqueID=None
-    f.save(f'umo/GolosUMO-{m}.ufo',overwrite=True)
+    f.save(f'mid/GolosUMO-{m}.ufo',overwrite=True)
 json.dump(report,open('report.json','w'),ensure_ascii=False,indent=0)
 print(sum(1 for v in report.values() if v[0]=='split'),'split',sum(1 for v in report.values() if v[0]=='scale'),'scaled',sum(1 for v in report.values() if v[0]=='composite'),'composites')
 print({k:v[1] for k,v in report.items() if v[0]=='split'})

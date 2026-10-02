@@ -21,8 +21,8 @@ from roundcmp import describe
 from audit import segs
 from ttfseg import ttf_contours
 rep=json.load(open('report.json'))
-O={m:ufoLib2.Font.open(f'master_ufo/GolosText-{m}.ufo') for m in ['Regular','Medium']}
-U={m:ufoLib2.Font.open(f'umo/GolosUMO-{m}.ufo') for m in ['Light','Regular','Medium']}
+O={m:ufoLib2.Font.open(f'master_ufo/GolosText-{m}.ufo') for m in ['Regular','Medium','SemiBold']}
+U={m:ufoLib2.Font.open(f'umo/GolosUMO-{m}.ufo') for m in ['Regular','Medium']}
 bad=[]
 for n,(how,_,d) in rep.items():
     if how=='composite': continue
@@ -30,11 +30,12 @@ for n,(how,_,d) in rep.items():
     allowed=set().union(*(breaks(O[m][n]) for m in O))
     new=set().union(*(breaks(U[m][n]) for m in U))-allowed
     if new: bad.append(f'{n}: new curvature breaks between curves at {sorted(new)}')
-cofo=TTFont(sys.argv[1]) if len(sys.argv)>1 else None
-for ch,n in (('O','O'),('0','zero')):
-    g=describe([segs(c) for c in O['Medium'][n].contours])[0][0]; u=describe([segs(c) for c in U['Medium'][n].contours])[0][0]
-    c=describe(ttf_contours(cofo,ch))[0][0] if cofo else None
-    print(f'superness {ch}: Golos {g} UMO {u} CoFo {c}')
-    if abs(u-g)>0.01: bad.append(f'{ch}: superness {u} vs Golos {g}')
+cofo={st:TTFont(f'{sys.argv[1]}/CoFoSans-{st}.ttf') for st in ('Regular','Medium')} if len(sys.argv)>1 else {}
+for st in ('Regular','Medium'):
+    for ch,n in (('O','O'),('0','zero')):
+        g=describe([segs(c) for c in O['Medium'][n].contours])[0][0]; u=describe([segs(c) for c in U[st][n].contours])[0][0]
+        c=describe(ttf_contours(cofo[st],ch))[0][0] if cofo else None
+        print(f'{st} superness {ch}: Golos {g}  UMO {u}  CoFo {c}')
+        if abs(u-g)>0.01: bad.append(f'{st} {ch}: superness {u} vs Golos {g}')
 print('\n'.join(bad) if bad else 'checks passed')
 sys.exit(1 if bad else 0)

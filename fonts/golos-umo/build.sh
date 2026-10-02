@@ -9,12 +9,12 @@ git clone -q https://github.com/googlefonts/golos-text "$W/golos-text"
 git -C "$W/golos-text" checkout -q "$UPSTREAM"
 glyphs2ufo "$W/golos-text/sources/GolosText.glyphs" -m "$W/master_ufo" >/dev/null 2>&1
 cp scripts/*.py scripts/delta.json scripts/checks/*.py "$W/"
-mkdir -p "$W/umo"
+mkdir -p "$W/umo" "$W/mid"
 cd "$W"
 python3 build.py
-python3 light.py
+python3 final.py
 python3 ds.py
-python3 check.py ../../../public/fonts/CoFoSans-Medium.ttf
+python3 check.py ../../../public/fonts
 (cd umo && fontmake -m GolosUMO.designspace -o variable --output-dir ../build --no-production-names >/dev/null 2>&1)
 cd ..
 python3 - <<'PY'
@@ -22,7 +22,7 @@ from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
 vf='work/build/GolosUMO-VF.ttf'
 f=TTFont(vf); f.save('GolosUMO[wght].ttf'); f.flavor='woff2'; f.save('GolosUMO[wght].woff2')
-for w,n in ((400,'Regular'),(500,'Medium')):
+for w,n in ((400,'Regular'),(500,'Medium')):  # the variable font runs 400-500 between the two
     s=instancer.instantiateVariableFont(TTFont(vf),{'wght':w})
     nt=s['name']
     for i in (16,17,25): nt.removeNames(nameID=i)
