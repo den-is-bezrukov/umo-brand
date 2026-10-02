@@ -230,7 +230,7 @@ function useActiveInView(asideRef: RefObject<HTMLElement | null>, active: string
 /**
  * While the page slides up over the hero, the sidebar's toggle row stays fixed at the bottom of the screen, while the
  * sidebar runs off it, so the contents unroll between the logo and the row as the page rises. They fade in over the
- * first 160px of scroll: on the first screen there's only the logo and the row. The logo, 180px wide on the first
+ * first 160px of scroll: on the first screen there's only the logo and the row. The logo, 200px wide on the first
  * screen, shrinks with the scroll to its usual 120 (24 high) by the time the page reaches the top.
  */
 function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObject<HTMLElement | null>) {
@@ -244,7 +244,7 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
       const lift = Math.max(0, body.getBoundingClientRect().top)
       const logo = aside.querySelector<HTMLElement>('[data-logo]')
       // The page starts at its own offset from the top (a strip above the bottom of the screen) — that's how far it rises.
-      if (logo) logo.style.width = `${120 + 60 * Math.min(1, lift / Math.max(1, body.offsetTop))}px`
+      if (logo) logo.style.width = `${120 + 80 * Math.min(1, lift / Math.max(1, body.offsetTop))}px`
       const nav = aside.querySelector('nav')
       if (nav) {
         const opacity = Math.min(1, window.scrollY / 160)
@@ -766,7 +766,7 @@ export default function Guide() {
           changes the list's height, and sticks there when the list is taller than the screen, cutting the list off —
           enough of a hint that it scrolls, so the scrollbar, far from the text at this width, is hidden. */}
       <aside ref={asideRef} className="hidden lg:flex sticky top-0 h-screen w-[320px] xl:w-[480px] shrink-0 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" onClick={toTop} aria-label="В начало" data-logo className="block w-[180px]"><Logo className="w-full" /></a></div>
+        <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" onClick={toTop} aria-label="В начало" data-logo className="block w-[200px]"><Logo className="w-full" /></a></div>
         {/* The row is fixed to the bottom of the screen — not moved there by script, which lags the scroll a frame and
             makes it shake — so the list keeps its height free at the end. */}
         <div className="px-6 pb-[68px]"><Nav active={active} expandAll={expandAll} /></div>
@@ -813,8 +813,11 @@ export default function Guide() {
               the chapter anchor. */}
           <div>
             <div className="flex flex-col gap-section">
-              <div className="flex flex-col gap-8 md:gap-12">
-                <p id="brand" className="max-w-[810px] scroll-mt-24 lg:scroll-mt-4 text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em]">
+              {/* From lg the statement is 60px in the 912px Figma column and scales with the column below that
+                  (6.58cqw), so it wraps the same three lines at any width. Its capitals stand level with the top of
+                  the logo: the body's 16px on top, plus 8px less CoFo Sans's 0.164em above the caps. */}
+              <div className="flex flex-col gap-8 md:gap-12 lg:[container-type:inline-size]">
+                <p id="brand" className="scroll-mt-24 text-[32px] font-medium leading-none tracking-[-0.01em] md:text-[48px] lg:mt-[calc(8px-0.164em)] lg:max-w-[912px] lg:scroll-mt-[calc(24px-0.164em)] lg:text-[min(60px,6.58cqw)]">
                   Автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
                 </p>
                 {/* Quick links: into the guide, from its first section, and to the templated media, the constructors among them */}
