@@ -61,10 +61,11 @@ U_TENSION = 0.65
 # Я я: the lower half of the bowl, the bar under it and the leg's start come down, so the bowl sits
 # on the leg with more weight (CoFo's sits 8-20 units lower); the bar keeps its thickness
 YA_DROP = {'Ya-cy': 15, 'ya-cy': 10}
-# Я's bowl is squarer than the rounds: every curve of it (outside and counter) gets longer handles,
-# pulled towards the corner its tangents make, until the area left between curve and corner is
-# YA_SQUARE of what our O leaves (Golos's lower outside turn was rounder than a circle)
-YA_SQUARE = 0.8
+# Я's bowl is squarer than the rounds where it was round: the lower outside turn into the leg (Golos's
+# was rounder than a circle) and the counter get longer handles, pulled towards the corner their
+# tangents make, until the area left between curve and corner is YA_SQUARE of what our O leaves.
+# The upper outside turn stays as round as O: squared too, its corner stood out as a bump.
+YA_SQUARE = {'lower': 0.8, 'counter': 0.8, 'upper': 1.0}
 SPUR_WIDTH = {'Regular': None, 'Medium': 108}
 CROTCH_Y = {'Regular': None, 'Medium': 68}
 TAIL_SHIFT = -65    # the tail's line moves this far left, so it cuts into the bowl nearer its middle
@@ -348,16 +349,18 @@ def square_up(P, target):
 
 
 def square_bowl(font, name):
-    """Я: every cubic of the bowl, outside and counter, squared to YA_SQUARE of O's corner fill"""
+    """Я: the bowl's cubics squared to YA_SQUARE of O's corner fill: the outside's upper and lower
+    turns, and the counter's"""
     o = font['O'].contours[0]
     ref = sum(corner_fill([(q.x, q.y) for q in pts]) for pts in _cubics(o)) / len(_cubics(o))
-    for c in font[name].contours:
+    for ci, c in enumerate(font[name].contours):
         pts = c.points; n = len(pts)
         for i, p in enumerate(pts):
             if p.type == 'curve':
                 a, h1, h2 = pts[(i - 3) % n], pts[(i - 2) % n], pts[(i - 1) % n]
                 if a.type is None or h1.type is not None or h2.type is not None: continue
-                Q = square_up([(a.x, a.y), (h1.x, h1.y), (h2.x, h2.y), (p.x, p.y)], YA_SQUARE * ref)
+                part = 'counter' if ci else ('upper' if max(a.y, p.y) >= 690 else 'lower')   # the upper turn starts at the cap height
+                Q = square_up([(a.x, a.y), (h1.x, h1.y), (h2.x, h2.y), (p.x, p.y)], YA_SQUARE[part] * ref)
                 h1.x, h1.y = round(Q[1][0]), round(Q[1][1]); h2.x, h2.y = round(Q[2][0]), round(Q[2][1])
 
 
