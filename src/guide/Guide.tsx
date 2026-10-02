@@ -814,8 +814,8 @@ export default function Guide() {
           <div>
             <div className="flex flex-col gap-section">
               <div className="flex flex-col gap-8 md:gap-12">
-                <p id="brand" className="max-w-[900px] scroll-mt-24 lg:scroll-mt-4 text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em]">
-                  Человечный автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
+                <p id="brand" className="max-w-[810px] scroll-mt-24 lg:scroll-mt-4 text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em]">
+                  Автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
                 </p>
                 {/* Quick links: into the guide, from its first section, and to the templated media, the constructors among them */}
                 <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
