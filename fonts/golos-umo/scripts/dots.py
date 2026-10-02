@@ -1,6 +1,7 @@
 """Dots and commas (run after details.py). DOTS picks the dot: 'square' (cut like the strokes) or
-'round' (Golos's). Either way the comma is the period's dot with a tail: the right edge runs on
-down and turns left into a point, so comma and period share a head; the quotes are built from it.
+'round' (Golos's). The comma is a straight diagonal stroke taken from Q's tail: its angle (mirrored,
+so it leans the way a comma does) and its square-cut ends, with about the period's weight; the
+quotes are built from it. (COMMA = 'tail' gives the period's dot with a curled tail instead.)
 - period, the dots of ! ? ¡ ¿ and ÷: the period's size; colon, semicolon, ellipsis and the middle
   dot take the period as a component and follow;
 - the dot of i j and the dieresis (ё Ё): as wide as the stem of i, so the dot stands on the stem;
@@ -9,6 +10,11 @@ import math, sys, ufoLib2
 import pathops
 
 DOTS = 'square'
+COMMA = 'stroke'
+COMMA_DEPTH = 100   # the stroke's lowest corner below the baseline (Q's tail reaches 85)
+COMMA_WEIGHT = 0.85 # the stroke's thickness over the period's width: on its own it needs the dot's
+                    # weight, which Q's tail, leaning on the bowl, does without
+QUOTE_GAP = 0.45    # double quotes: the gap between the two strokes, over the period's width
 # Dots grow slower than the stem: a light weight needs a relatively bigger dot or it melts away
 # (calibrated on CoFo's two weights: its period is 1.34 stems wide in Regular, 1.11 in Medium).
 # Sizes in font units from the stem of i, S: a + b*S.
@@ -63,6 +69,25 @@ def tail(l, r, depth):
     inner = [(ri, -0.45 * depth, None), (tip[0] + 0.3 * (ri - tip[0]), tip[1] + 0.45 * depth, None), (tip[0], tip[1], 'curve')]
     outer = [(tip[0] + 0.55 * (r - tip[0]), tip[1] + 0.2 * depth, None), (r, -0.5 * depth, None), (r, 0, 'curve')]
     return ri, inner, outer
+
+
+def stroke_comma(font, dot):
+    """Q's tail as a comma: a straight stroke at its angle mirrored, ends cut square to the stroke,
+    COMMA_WEIGHT of the period's width thick, the top corner level with the period's top, the bottom one COMMA_DEPTH
+    below the baseline, centred on the period's dot"""
+    from details import TAIL_ANGLE
+    w = COMMA_WEIGHT * (dot[2] - dot[0])
+    a = math.radians(TAIL_ANGLE)
+    d = (-math.cos(a), -math.sin(a)); n = (-math.sin(a), math.cos(a))
+    top = dot[3] - math.cos(a) * w / 2; bottom = -COMMA_DEPTH + math.cos(a) * w / 2
+    L = (top - bottom) / math.sin(a)
+    Ct = (0.0, top); Cb = (Ct[0] + d[0] * L, Ct[1] + d[1] * L)
+    pts = [(Ct[0] + n[0] * w / 2, Ct[1] + n[1] * w / 2), (Cb[0] + n[0] * w / 2, Cb[1] + n[1] * w / 2),
+           (Cb[0] - n[0] * w / 2, Cb[1] - n[1] * w / 2), (Ct[0] - n[0] * w / 2, Ct[1] - n[1] * w / 2)]
+    area = sum(x1 * y2 - x2 * y1 for (x1, y1), (x2, y2) in zip(pts, pts[1:] + pts[:1]))
+    if area < 0: pts.reverse()                                   # counter-clockwise, like the font
+    xs = [x for x, _ in pts]; shift = (dot[0] + dot[2]) / 2 - (min(xs) + max(xs)) / 2
+    return [(x + shift, y, 'line') for x, y in pts]
 
 
 def comma(dot, depth, style):
@@ -137,25 +162,30 @@ def run(font, style):
         e.width = round(p.width + 2 * step)
     # the comma and its family
     cm = font['comma']; l, b, r, t = bounds(cm.contours[0]); depth = -b
-    shape = comma(dot, depth, style)
+    shape = stroke_comma(font, dot) if COMMA == 'stroke' else comma(dot, depth, style)
     cm.clearContours(); draw(cm, [shape])
-    q = font['quotesinglbase']; old_qw = q.width; old_head = r - l; q.clearContours()
+    q = font['quotesinglbase']; q.clearContours()
     if style == 'square': q.width = p.width
     dx = (q.width - font['comma'].width) / 2
     draw(q, [[(x + dx, y, tp) for x, y, tp in shape]])
-    # the quotes built from it: the same gap between the two commas, flipped ones re-anchored
+    # the quotes built from it: QUOTE_GAP between the two strokes, flipped ones re-anchored
     if style == 'square':
-        shrink = old_head - pw
+        xs_ = [x for x, _, _ in shape]; cw = max(xs_) - min(xs_)
+        new_step = cw + QUOTE_GAP * pw
         for g in font:
             cs = [c for c in g.components if c.baseGlyph == 'quotesinglbase']
             if not cs or g.contours: continue
-            # positions: k-th comma at k*(old step - shrink); flipped ones measured from the right edge
-            xs = sorted(c.transformation[4] for c in cs); step = (xs[1] - xs[0]) if len(xs) > 1 else 0
+            # Golos turns the comma half round for the opening quotes ‘ “; a straight stroke would then
+            # lean the same way as the closing ones, so they are mirrored instead and lean like Q's tail
+            xs = sorted(c.transformation[4] for c in cs)
+            top = [c.transformation[5] for c in font['quoteright'].components][0]
             for c in cs:
                 tr = c.transformation; k = xs.index(tr[4]); flip = tr[0] < 0
-                base = q.width if flip else 0
-                c.transformation = (tr[0], tr[1], tr[2], tr[3], round(base + k * (step - shrink)), tr[5])
-            g.width = round(g.width - (old_qw - q.width) - (len(cs) - 1) * shrink)
+                if flip and COMMA == 'stroke':
+                    c.transformation = (-1, 0, 0, 1, round(q.width + k * new_step), top)
+                else:
+                    c.transformation = (tr[0], tr[1], tr[2], tr[3], round((q.width if flip else 0) + k * new_step), tr[5])
+            g.width = round(q.width + (len(cs) - 1) * new_step)
     for name in ('commaaccentcomb', 'caroncomb.alt'):
         if name in font and font[name].contours:
             g = font[name]; box = bounds(g.contours[0]); g.clearContours(); draw(g, [fit_to(shape, box)])
