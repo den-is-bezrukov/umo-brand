@@ -135,9 +135,12 @@ function NavLink({ id, title, active, current, onNavigate, pad }: { id: string; 
       aria-current={active ? 'location' : undefined}
       className={`group/link relative block leading-[1.25] ${pad} ${active ? 'font-medium' : ''}`}
     >
-      {/* The bullet marks the heading on screen, and the item under the pointer (Figma 4865:1060), on and off at once:
-          fading out, it flickered as the pointer ran down the list. */}
-      <span aria-hidden className={`absolute -left-[0.9em] group-hover/link:opacity-100 ${current ? 'opacity-100' : 'opacity-0'}`}>•</span>
+      {/* The bullet marks the heading on screen, and the item under the pointer (Figma 4865:1060): it shows at once and
+          fades over 0.25s when the pointer leaves (a transition runs with the duration of the state it heads to). */}
+      <span
+        aria-hidden
+        className={`absolute -left-[0.9em] transition-opacity duration-250 ease-[ease] group-hover/link:opacity-100 group-hover/link:duration-0 ${current ? 'opacity-100' : 'opacity-0'}`}
+      >•</span>
       {title}
     </a>
   )
