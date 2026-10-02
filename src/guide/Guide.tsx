@@ -805,7 +805,7 @@ export default function Guide() {
               </div>
               <Section>
                 {/* Picture above the heading; the anchor sits on it so links land on the picture */}
-                <div id="positioning" className="scroll-mt-24"><Fig name="positioning" w={912} h={456} alt="" /></div>
+                <div id="positioning" className="scroll-mt-24 lg:scroll-mt-6"><Fig name="positioning" w={912} h={456} alt="" /></div>
                 <Head>
                   <H2>Позиционирование</H2>
                   <Text>
