@@ -200,8 +200,10 @@ function clean(text: string): string {
 function setText(font: Font, raw: string, block: TextBlock, name: string, surface: Surface, firstBaseline?: number): TextResult {
   const text = clean(raw)
   const wrapped = wrap(font, text, block)
+  // A `centred` block with fewer lines than it takes sits in the middle of its lines' zone, not at its bottom
+  const lift = block.centred && wrapped.length < block.maxLines ? (block.maxLines - wrapped.length) * block.leading / 2 : 0
   const lines: Line[] = wrapped.map((t, i) => {
-    const baseline = firstBaseline === undefined ? block.baseline - (wrapped.length - 1 - i) * block.leading : firstBaseline + i * block.leading
+    const baseline = firstBaseline === undefined ? block.baseline - lift - (wrapped.length - 1 - i) * block.leading : firstBaseline + i * block.leading
     const width = font.getAdvanceWidth(t.replace(/ /g, ' '), block.size)
     const x = block.align === 'left' ? block.x : block.align === 'center' ? block.x - width / 2 : block.x - width
     const { path, ink } = shape(font, t, x, baseline, block.size)

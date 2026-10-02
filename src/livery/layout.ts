@@ -25,6 +25,8 @@ export interface TextBlock {
   maxLines: number
   /** Line breaks typed in the field become spaces (the rear window has room for one line only) */
   oneLine?: boolean
+  /** Fewer lines than `maxLines` are centred in the zone the full block takes, rather than kept at its last baseline */
+  centred?: boolean
 }
 
 /** Things on the body the lettering must keep clear of, in the surface's coordinates */
@@ -406,12 +408,13 @@ const side5Qr = (x: number): Surface['dims']['rows'] => [
 ]
 
 // Without the QR (node 4934:3338): the lettering 160 high (UMO 800, 100, the 5 186,67), the sheet as wide, the dealer
-// name in one 40 mm line over its far end and the tagline under it: 40 mm in three lines (node 4934:3341) or, with
+// name over its far end, 40 mm in two lines or one centred on them and the tagline under it: 40 mm in three lines (node 4934:3341) or, with
 // the size switch, 60 mm in two. The sheet keeps its height and moves along the body: on the right side 183,33 back
 // from the front, on the left 40.
 const BARE5_W = 800 + 100 + FIVE.w * (160 / FIVE.h)
 const bare5Lettering = { y: 140, h: 160 }
-const bare5Dealer = { baseline: 54, size: 40, leading: 40, maxWidth: 500, maxLines: 1, oneLine: true }
+// Two lines filling the 80 over the lettering, or one in the middle of them (node 4934:3325)
+const bare5Dealer = { baseline: 74, size: 40, leading: 40, maxWidth: 500, maxLines: 2, centred: true }
 const bare5Tagline = { baseline: 486, size: 40, leading: 40, maxWidth: 420, maxLines: 3 }
 const bare5TaglineLarge = { baseline: 483, size: 60, leading: 60, maxWidth: 850, maxLines: 2 }
 const bare5Rows = (x: number): Surface['dims']['rows'] => [
