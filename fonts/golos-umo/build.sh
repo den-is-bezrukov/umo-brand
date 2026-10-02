@@ -21,10 +21,24 @@ cd ..
 python3 - <<'PY'
 from fontTools.ttLib import TTFont
 from fontTools.varLib import instancer
+from fontTools import subset
 vf='work/build/GolosUMO-VF.ttf'
-f=TTFont(vf); f.save('GolosUMO[wght].ttf'); f.flavor='woff2'; f.save('GolosUMO[wght].woff2')
+
+# The release carries Russian Cyrillic only (А-Я, а-я, Ё ё): the other Cyrillic letters (Ukrainian,
+# Belarusian, Serbian, Kazakh, Tatar, historic...) stay in the sources but are cut from the files.
+# Latin, figures, punctuation, ₽ № and the combining stress mark stay.
+RUSSIAN = set(range(0x0410, 0x0450)) | {0x0401, 0x0451}
+CYRILLIC = lambda u: 0x0400 <= u <= 0x052F or 0x1C80 <= u <= 0x1C8F or 0x2DE0 <= u <= 0x2DFF or 0xA640 <= u <= 0xA69F
+def release(font):
+    keep = [u for u in font.getBestCmap() if not CYRILLIC(u) or u in RUSSIAN]
+    opts = subset.Options(); opts.layout_features = ['*']; opts.name_IDs = ['*']; opts.name_languages = ['*']
+    opts.glyph_names = True; opts.notdef_outline = True; opts.drop_tables = []
+    sub = subset.Subsetter(opts); sub.populate(unicodes=keep); sub.subset(font)
+    return font
+
+f=release(TTFont(vf)); f.save('GolosUMO[wght].ttf'); f.flavor='woff2'; f.save('GolosUMO[wght].woff2')
 for w,n in ((400,'Regular'),(500,'Medium')):  # the variable font runs 400-500 between the two
-    s=instancer.instantiateVariableFont(TTFont(vf),{'wght':w})
+    s=release(instancer.instantiateVariableFont(TTFont(vf),{'wght':w}))
     nt=s['name']
     for i in (16,17,25): nt.removeNames(nameID=i)
     nt.setName('Golos UMO' if n=='Regular' else f'Golos UMO {n}',1,3,1,0x409)

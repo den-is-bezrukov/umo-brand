@@ -16,7 +16,7 @@ A prototype of a UMO brand typeface: Golos Text (Alexandra Korolkova and Vitaly 
 - **Q:** the tail turns from 43° to 53°, moves 65 units towards the bowl's middle and reaches 85 below the baseline; it keeps Golos's thickness and square-cut ends and is re-cut into the bowl with the same points as before.
 - **G with a spur** (`ss01`, «G with spur», also for Ğ Ģ Ġ): the right side runs straight down from the bar to the baseline and the inner curve leaves the bar vertically.
 
-- **Л л, Д д, geometric legs:** Golos bends them over most of their height, like a sabre; here they stand straight and turn only near the foot. Д's legs land on the slab at 52° (Golos 62–69°) and flare over 4.5 times their width, both handles aimed 0.7 of the way to where the straight leg's line meets the landing line, so the curvature is near zero where the straight ends and grows steadily to the slab. Л follows a Д leg drawn along a clothoid (landing at 44°, 15 units further out): its outer edge starts turning as far above its inner edge as that path's does, then turns on to the horizontal of a foot as thick as the leg (0.97, as in CoFo) that reaches 12 units further left. The inner turn leaves the straight gently and the stroke stays within 0.95–1.08 of the leg all the way round; the build checks that it is nowhere thinner than the leg or the foot. Л's turns were chosen by searching their parameters against these conditions. Љ and Ԓ still have Golos's legs.
+- **Л л, Д д, geometric legs:** Golos bends them over most of their height, like a sabre; here they stand straight and turn only near the foot. Д's legs land on the slab at 52° (Golos 62–69°) and flare over 4.5 times their width, both handles aimed 0.7 of the way to where the straight leg's line meets the landing line, so the curvature is near zero where the straight ends and grows steadily to the slab. Л follows a Д leg drawn along a clothoid (landing at 44°, 15 units further out): its outer edge starts turning as far above its inner edge as that path's does, then turns on to the horizontal of a foot as thick as the leg (0.97, as in CoFo) that reaches 12 units further left. The inner turn leaves the straight gently and the stroke stays within 0.95–1.08 of the leg all the way round; the build checks that it is nowhere thinner than the leg or the foot. Л's turns were chosen by searching their parameters against these conditions. Љ and Ԓ, not in the release, still have Golos's legs.
 
 ## Checks
 
@@ -26,6 +26,7 @@ A prototype of a UMO brand typeface: Golos Text (Alexandra Korolkova and Vitaly 
 
 - `GolosUMO[wght].ttf` / `.woff2`: the variable font, 400–500 (Regular to Medium)
 - `GolosUMO-Regular` / `-Medium` (`.ttf`, `.woff2`): static instances
+- The files carry **Russian Cyrillic only** (А–Я, а–я, Ё ё): the other Cyrillic letters (Ukrainian, Belarusian, Serbian, Kazakh, Tatar, historic) stay in the sources, widened with their bases, but `build.sh` cuts them from the release (`RUSSIAN` in its export step). Latin with its accents, figures, punctuation, ₽, № and the combining stress mark stay, and so do all the OpenType features.
 - `OFL.txt`: the license, which also covers this modified version
 - `build.sh`: rebuilds everything from the pinned Golos sources (`pip install fontmake glyphsLib ufoLib2 fontMath brotli`)
 
