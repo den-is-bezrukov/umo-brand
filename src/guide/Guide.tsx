@@ -7,6 +7,8 @@ import UmoYandexLockup from './UmoYandexLockup'
 import tocIcons from '@/icons/toc'
 import { useTypograf } from './typograf'
 import downloadSizes from 'virtual:download-sizes'
+import heroMp4 from '@/assets/guide/hero.mp4'
+import heroWebm from '@/assets/guide/hero.webm'
 
 // Figures are exported from Figma (UMO | Evrone, node 4810:686) at 2x and
 // cropped per frame — see "Brand guide" in AGENTS.md for how to refresh them.
@@ -289,6 +291,57 @@ function useHeroStrip(pageRef: RefObject<HTMLElement | null>) {
     observer.observe(statement)
     return () => observer.disconnect()
   }, [pageRef])
+}
+
+/**
+ * The hero: the UMO test-drive film, looped and muted — AV1 WebM (4.7 MB) where the browser decodes it, else H.264 MP4
+ * (6.5 MB); the poster is its first frame, so nothing jumps when it starts. It plays only while some of it is on screen,
+ * not under the page that has slid over it. With reduced motion asked for, or data saving on, the still photo stands in.
+ */
+function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [still] = useState(() =>
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    || !!(navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData)
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+    // React doesn't put `muted` on the element as an attribute, and browsers only autoplay muted video.
+    video.muted = true
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const box = ref.current?.getBoundingClientRect()
+      const below = bodyRef.current?.getBoundingClientRect().top ?? Infinity
+      if (!box) return
+      const seen = Math.min(box.bottom, below) - Math.max(box.top, 0) > 0
+      if (seen && video.paused) video.play().catch(() => { /* autoplay refused: the poster stays */ })
+      else if (!seen && !video.paused) video.pause()
+    }
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      cancelAnimationFrame(frame)
+    }
+  }, [bodyRef])
+  const fill = 'block size-full bg-black object-cover'
+  return (
+    <div ref={ref} className="relative z-30 aspect-[2/1] lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:aspect-auto lg:h-[calc(100vh-var(--strip,181px))]">
+      {still ? (
+        <img src={img('hero')} alt="Женщина у UMO 8 на горной дороге" width={1824} height={912} fetchPriority="high" decoding="async" className={`${fill} object-[50%_40%]`} />
+      ) : (
+        <video ref={videoRef} poster={img('hero-poster')} autoPlay muted loop playsInline preload="auto" aria-hidden className={fill}>
+          <source src={heroWebm} type={'video/webm; codecs="av01.0.08M.08"'} />
+          <source src={heroMp4} type="video/mp4" />
+        </video>
+      )}
+    </div>
+  )
 }
 
 const EXPAND_KEY = 'umo-guide-toc-expanded'
@@ -704,17 +757,7 @@ export default function Guide() {
           which starts a strip above the bottom of the screen (`--strip`, see useHeroStrip; 181px for a three-line
           statement), so the first screen shows the logo, the row and the statement, then slides up over the photo
           (Figma 4893:3846, prototype 4921:2352). */}
-      <div className="relative z-30 aspect-[2/1] lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:aspect-auto lg:h-[calc(100vh-var(--strip,181px))]">
-        <img
-          src={img('hero')}
-          alt="Женщина у UMO 8 на горной дороге"
-          width={1824}
-          height={912}
-          fetchPriority="high"
-          decoding="async"
-          className="block size-full bg-[#f5f5f5] object-cover object-[50%_40%]"
-        />
-      </div>
+      <Hero bodyRef={bodyRef} />
 
       <div ref={bodyRef} className="bg-white lg:relative lg:z-10 lg:mt-[calc(100vh-var(--strip,181px))] lg:flex lg:items-start">
       {/* Desktop sidebar. The expand row sits at the bottom of the screen, so it stays put while the open chapter

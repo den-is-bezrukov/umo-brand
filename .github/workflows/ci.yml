@@ -26,5 +26,13 @@ jobs:
             echo "$big"
             exit 1
           fi
+      - name: Check for oversized videos
+        run: |
+          big=$(find src public -type f \( -iname '*.mp4' -o -iname '*.webm' \) -size +8192k)
+          if [ -n "$big" ]; then
+            echo "These videos are over 8MB — compress before committing:"
+            echo "$big"
+            exit 1
+          fi
       - run: npx tsc --noEmit
       - run: pnpm build
