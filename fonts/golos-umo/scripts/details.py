@@ -18,16 +18,26 @@ TAIL_BOTTOM = -85   # lowest corner of the Q tail (Golos about -30)
 # G.ss01, per style: spur width and the height where the bowl runs into it (None keeps the shape
 # that falls out of the drawing: the spur as wide as the jaw, the bowl cut where it meets the spur).
 # Medium needs both, or the bowl merges into the spur at the baseline in a dark knot.
-EL_BEND = 1.1       # Л л: height of the turn into the foot over its width
-DE_BEND = {'outer': 4.0, 'inner': 4.5}   # Д д: height of the legs' turn over its width
-# handle lengths as a share of the turn's extent. Л's turn is a squarish corner, like the rounds:
-# long handles at both ends keep the curvature low where it meets the straight leg and the flat
-# foot and gather it in the middle (a circular arc, 0.552, jumps from nothing to full at the joins).
-# Д's legs: handles run towards the point where the straight leg's line meets the landing line
-# (a handle past it puts a wave in the leg), long at the top so the leg leaves the straight gently.
-EL_TENSION = 0.8
-DE_TOP_TENSION = 0.8
-DE_SLAB_TENSION = 0.6
+EL_BEND = 1.1       # Л л: height of the concave side's turn into the foot over its width
+DE_BEND = 4.5       # Д д: height of the legs' flare over its width
+DE_LANDING = 52     # Д д: angle at which the legs land on the slab (Golos 62-69, a 21-28° turn too small to read)
+# handle lengths as a share of the turn's extent. Л's leg turns left into its foot: the convex
+# side of the turn (the leg's right edge running round to the foot's underside) is nearly a circle,
+# so no weight piles up in the corner; the concave side (the leg's left edge meeting the top of the
+# foot) is tighter and squarer.
+EL_CONCAVE_TENSION = 0.75
+# the convex side starts its turn a little higher (EL_CONVEX_BEND times as tall as wide) with a long
+# handle at the leg and a short one at the foot: it leaves the straight with the curvature CoFo has
+# there (15 against 17) and carries no more ink into the corner than a circle would (searched)
+EL_CONVEX_BEND = 1.4
+EL_CONVEX_LEG = 0.8
+EL_CONVEX_FOOT = 0.4
+# Д's legs flare at the slab: both handles aim at the point where the straight leg's line meets the
+# landing line, 0.7 of the way, which keeps the curvature near zero where the straight ends and lets
+# it grow steadily to the slab (found by search: no sign change, the peak at the slab, under 110
+# there; a handle past that point puts a wave in the leg, a short top one a knee).
+DE_TOP_TENSION = 0.7
+DE_SLAB_TENSION = 0.7
 REDRAWN = ['El-cy', 'el-cy']   # their feet are redrawn with lines, so they have fewer points than Golos's
 SPUR_WIDTH = {'Regular': None, 'Medium': 108}
 CROTCH_Y = {'Regular': None, 'Medium': 68}
@@ -185,17 +195,17 @@ feature ss01 {
 
 
 def fix_el(g):
-    """Л л: 0 inner bottom, 1-2 handles, 3 top of the inner turn, 4-9 the straight part,
-    10 top of the outer turn, 11-12 handles, 13 foot top, 14-15 handles, 16 foot end top,
+    """Л л: 0 bottom of the convex side of the turn, 1-2 handles, 3 where it leaves the leg's right edge,
+    4-9 the straight part, 10 where the concave side leaves the leg's left edge, 11-12 handles, 13 foot top, 14-15 handles, 16 foot end top,
     17 foot end bottom, 18-19 handles"""
     P = [(p.x, p.y) for p in g.contours[0].points]
     x0, xi, xo = P[0][0], P[3][0], P[10][0]
     xf, yf, xt = P[13][0], P[13][1], P[16][0]
-    yi = EL_BEND * (xi - x0); yo = yf + EL_BEND * (xo - xf)
-    L = F = EL_TENSION
-    new = [((x0, 0), 'line'), ((x0 + F * (xi - x0), 0), None), ((xi, yi - L * yi), None), ((xi, yi), 'curve')]
+    yi = EL_CONVEX_BEND * (xi - x0); yo = yf + EL_BEND * (xo - xf)
+    C = EL_CONCAVE_TENSION
+    new = [((x0, 0), 'line'), ((x0 + EL_CONVEX_FOOT * (xi - x0), 0), None), ((xi, yi - EL_CONVEX_LEG * yi), None), ((xi, yi), 'curve')]
     new += [(P[i], 'line') for i in range(4, 10)]
-    new += [((xo, yo), 'line'), ((xo, yo - L * (yo - yf)), None), ((xf + F * (xo - xf), yf), None), ((xf, yf), 'curve'),
+    new += [((xo, yo), 'line'), ((xo, yo - C * (yo - yf)), None), ((xf + C * (xo - xf), yf), None), ((xf, yf), 'curve'),
             ((xt, yf), 'line'), ((xt, 0), 'line')]
     g.clearContours(); pen = g.getPointPen(); pen.beginPath()
     for (x, y), tp in new: pen.addPoint((round(x), round(y)), segmentType=tp)
@@ -207,8 +217,8 @@ def fix_de(g):
     inner 0 landing, 1-2 handles, 3 top of the turn"""
     o = g.contours[0].points; i = g.contours[1].points
     def leg(bottom, top_x, start_handle, flip, side):
-        dx = abs(top_x - bottom[0]); ytop = bottom[1] + DE_BEND[side] * dx
-        a = math.atan2(start_handle[1] - bottom[1], start_handle[0] - bottom[0])   # Golos's landing angle
+        dx = abs(top_x - bottom[0]); ytop = bottom[1] + DE_BEND * dx
+        a = math.radians(DE_LANDING)
         yI = bottom[1] + (top_x - bottom[0]) * math.tan(a)                         # tangents meet at (top_x, yI)
         h1 = (bottom[0] + DE_SLAB_TENSION * (top_x - bottom[0]), bottom[1] + DE_SLAB_TENSION * (yI - bottom[1]))
         h2 = (top_x, ytop - DE_TOP_TENSION * (ytop - yI))
