@@ -11,6 +11,11 @@ import pathops
 
 DOTS = 'square'
 COMMA = 'trapezoid'
+GUIL_ANGLE = 58      # chevron arms, degrees from the horizontal (Golos about 40)
+GUIL_HEIGHT = 0.95   # chevron height over the x-height, standing just above the baseline
+GUIL_WEIGHT = 0.92   # arm thickness across the stroke, over the stem of i
+GUIL_GAP = (120, -0.15)   # double guillemets: gap between the two chevrons at mid-height, a + b*stem
+                          # (nearly the same in both weights: 108 in Regular, 102 in Medium)
 COMMA_LEAN = 18     # trapezoid: lean of its middle line from the vertical, degrees
 COMMA_FOOT = 0.5    # trapezoid: width of its bottom over its top (the period's width)
 COMMA_DEPTH = 100   # the stroke's lowest corner below the baseline (Q's tail reaches 85)
@@ -205,8 +210,32 @@ def run(font, style):
             g = font[name]; box = bounds(g.contours[0]); g.clearContours(); draw(g, [fit_to(shape, box)])
 
 
+def chevrons(font):
+    """‹ › « »: six-point chevrons, ends cut level, sharp point; Golos's sidebearings"""
+    S = stem(font); a = math.radians(GUIL_ANGLE)
+    h = GUIL_HEIGHT * font.info.xHeight; bottom = (font.info.xHeight - h) / 2 * 0.25; top = bottom + h; mid = (top + bottom) / 2
+    run = GUIL_WEIGHT * S / math.sin(a)                 # level run of an arm
+    reach = (top - mid) / math.tan(a)                   # how far an arm runs out from the point
+    def left(x0):   # point at x0, opening to the right, counter-clockwise
+        return [(x0, mid, 'line'), (x0 + reach, bottom, 'line'), (x0 + reach + run, bottom, 'line'),
+                (x0 + run, mid, 'line'), (x0 + reach + run, top, 'line'), (x0 + reach, top, 'line')]
+    ink = reach + run
+    for name, mirror in (('guilsinglleft', False), ('guilsinglright', True)):
+        g = font[name]; l, b, r, t = bounds(g.contours[0]); lsb, rsb = l, g.width - r
+        pts = left(lsb)
+        if mirror:   # flip within the ink box, keep the contour counter-clockwise
+            pts = [(2 * lsb + ink - x, y, tp) for x, y, tp in pts][::-1]
+        g.clearContours(); draw(g, [pts]); g.width = round(lsb + ink + rsb)
+    step = run + GUIL_GAP[0] + GUIL_GAP[1] * S          # second chevron's point sits a gap past the first's notch
+    for name, single in (('guillemotleft', 'guilsinglleft'), ('guillemotright', 'guilsinglright')):
+        g = font[name]
+        for k, c in enumerate(sorted(g.components, key=lambda c: c.transformation[4])):
+            tr = c.transformation; c.transformation = (tr[0], tr[1], tr[2], tr[3], round(k * step), tr[5])
+        g.width = round(font[single].width + step)
+
+
 if __name__ == '__main__':
     style = sys.argv[1] if len(sys.argv) > 1 else DOTS
     for st in ('Regular', 'Medium'):
-        f = ufoLib2.Font.open(f'umo/GolosUMO-{st}.ufo'); run(f, style); f.save()
+        f = ufoLib2.Font.open(f'umo/GolosUMO-{st}.ufo'); run(f, style); chevrons(f); f.save()
         print(st, style, 'stem', stem(f), 'period', bounds(f['period'].contours[0]), 'comma', bounds(f['comma'].contours[0]))
