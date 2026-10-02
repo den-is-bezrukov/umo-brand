@@ -1,4 +1,4 @@
-import { isValidElement, useEffect, useRef, useState, type CSSProperties, type ReactNode, type RefObject } from 'react'
+import { isValidElement, useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode, type RefObject } from 'react'
 import { Link } from 'react-router-dom'
 import PriceCard from '@/posters/PriceCard'
 import type { Variant } from '@/posters/cardData'
@@ -7,6 +7,7 @@ import UmoYandexLockup from './UmoYandexLockup'
 import tocIcons from '@/icons/toc'
 import { useTypograf } from './typograf'
 import downloadSizes from 'virtual:download-sizes'
+import heroMp4 from '@/assets/guide/hero.mp4'
 
 // Figures are exported from Figma (UMO | Evrone, node 4810:686) at 2x and
 // cropped per frame — see "Brand guide" in AGENTS.md for how to refresh them.
@@ -217,12 +218,130 @@ function useActiveInView(asideRef: RefObject<HTMLElement | null>, active: string
       const box = aside.getBoundingClientRect()
       const r = link.getBoundingClientRect()
       const top = box.top + head.offsetHeight
-      const bottom = box.bottom - foot.offsetHeight
+      // Below the hero photo the sidebar runs off the screen, and the toggle row rides at the screen's bottom.
+      const bottom = Math.min(box.bottom, window.innerHeight) - foot.offsetHeight
       const by = r.top < top ? r.top - top - 24 : r.bottom > bottom ? r.bottom - bottom + 24 : 0
       if (by) aside.scrollBy({ top: by, behavior: 'smooth' })
     }, 350)
     return () => clearTimeout(timer)
   }, [asideRef, active, expandAll])
+}
+
+/**
+ * While the page slides up over the hero, the sidebar's toggle row stays fixed at the bottom of the screen, while the
+ * sidebar runs off it, so the contents unroll between the logo and the row as the page rises. They fade in over the
+ * first 160px of scroll: on the first screen there's only the logo and the row. The logo, 180px wide on the first
+ * screen, shrinks with the scroll to its usual 120 (24 high) by the time the page reaches the top.
+ */
+function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const body = bodyRef.current
+      const aside = asideRef.current
+      if (!body || !aside) return
+      const lift = Math.max(0, body.getBoundingClientRect().top)
+      const logo = aside.querySelector<HTMLElement>('[data-logo]')
+      // The page starts at its own offset from the top (a strip above the bottom of the screen) — that's how far it rises.
+      if (logo) logo.style.width = `${120 + 60 * Math.min(1, lift / Math.max(1, body.offsetTop))}px`
+      const nav = aside.querySelector('nav')
+      if (nav) {
+        const opacity = Math.min(1, window.scrollY / 160)
+        nav.style.opacity = String(opacity)
+        nav.style.visibility = opacity ? '' : 'hidden'
+      }
+    }
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      cancelAnimationFrame(frame)
+    }
+  }, [bodyRef, asideRef])
+}
+
+/**
+ * Height of the first screen's white strip (`--strip` on the page), from lg. The statement's capitals stand level with
+ * the top of the logo (the body's 16px on top plus CoFo Sans's 0.164em above the caps at leading 1 make the logo's 24),
+ * and the quick links under it share a line with the toggle row at the bottom of the screen (the row's 20px line starts
+ * 24px into its 68), however many lines the statement wraps to (Figma 4893:3846).
+ */
+function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    const page = pageRef.current
+    const quick = quickRef.current
+    const block = quick?.parentElement
+    if (!page || !quick || !block) return
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const strip = `${Math.round(16 + quick.offsetTop - block.offsetTop + 68 - 24)}px`
+      if (page.style.getPropertyValue('--strip') === strip) return
+      page.style.setProperty('--strip', strip)
+      // The page now starts elsewhere: let useHeroReveal place the toggle row and size the logo anew.
+      window.dispatchEvent(new Event('resize'))
+    }
+    // A frame later, out of the observer's own pass, so moving the page doesn't loop it.
+    const observer = new ResizeObserver(() => { if (!frame) frame = requestAnimationFrame(update) })
+    observer.observe(block)
+    return () => { observer.disconnect(); cancelAnimationFrame(frame) }
+  }, [pageRef, quickRef])
+}
+
+/**
+ * The hero: the UMO test-drive film, looped and muted — the source MP4 as it came (H.264, 12 MB, no re-encoding: it's
+ * already set up for the web); the poster is its first frame, so nothing jumps when it starts. It plays only while some
+ * of it is on screen: once the page has slid over it whole, it stops, and goes on from that frame when it shows again.
+ * With reduced motion asked for, or data saving on, the still photo stands in.
+ */
+function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [still] = useState(() =>
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    || !!(navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData)
+  useEffect(() => {
+    const video = videoRef.current
+    if (!video) return
+    // React doesn't put `muted` on the element as an attribute, and browsers only autoplay muted video.
+    video.muted = true
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const box = ref.current?.getBoundingClientRect()
+      if (!box) return
+      // From lg the page slides over the fixed film; on a phone the film scrolls away above the page.
+      const below = bodyRef.current?.getBoundingClientRect().top ?? Infinity
+      const seen = Math.min(box.bottom, below) - Math.max(box.top, 0) > 0
+      if (seen && video.paused) video.play().catch(() => { /* autoplay refused: the poster stays */ })
+      else if (!seen && !video.paused) video.pause()
+    }
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      cancelAnimationFrame(frame)
+    }
+  }, [bodyRef])
+  const fill = 'block size-full bg-black object-cover'
+  return (
+    <div ref={ref} className="relative z-30 aspect-[2/1] lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:aspect-auto lg:h-[calc(100vh-var(--strip,252px))]">
+      {still ? (
+        <img src={img('hero')} alt="Женщина у UMO 8 на горной дороге" width={1824} height={912} fetchPriority="high" decoding="async" className={`${fill} object-[50%_40%]`} />
+      ) : (
+        <video ref={videoRef} poster={img('hero-poster')} autoPlay muted loop playsInline preload="auto" aria-hidden className={fill}>
+          <source src={heroMp4} type="video/mp4" />
+        </video>
+      )}
+    </div>
+  )
 }
 
 const EXPAND_KEY = 'umo-guide-toc-expanded'
@@ -239,8 +358,15 @@ function useExpandAll() {
   return [expandAll, toggle] as const
 }
 
-function Logo() {
-  return <UmoLogo title="UMO" className="w-[120px]" />
+function Logo({ className = 'w-[120px]' }: { className?: string }) {
+  return <UmoLogo title="UMO" className={className} />
+}
+
+/** The logo takes you to the very top, the hero photo included, and leaves no #top in the address. */
+function toTop(e: MouseEvent<HTMLAnchorElement>) {
+  e.preventDefault()
+  history.replaceState(null, '', window.location.pathname + window.location.search)
+  window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
 // ─── Typography ──────────────────────────────────────────────────────────────
@@ -572,7 +698,18 @@ export default function Guide() {
   const [expandAll, toggleExpandAll] = useExpandAll()
   const [menuOpen, setMenuOpen] = useState(false)
   const asideRef = useRef<HTMLElement>(null)
+  const bodyRef = useRef<HTMLDivElement>(null)
   useActiveInView(asideRef, active, expandAll)
+  const quickRef = useRef<HTMLElement>(null)
+  useHeroStrip(pageRef, quickRef)
+  useHeroReveal(bodyRef, asideRef)
+  // The contents row does what it says; on the first screen it also takes the page up over the photo, where the
+  // contents can be seen.
+  const onTocToggle = () => {
+    toggleExpandAll()
+    const top = bodyRef.current?.getBoundingClientRect().top ?? 0
+    if (top > 1) window.scrollTo({ top: window.scrollY + top, behavior: 'smooth' })
+  }
   // Two headings rarely share a line on a phone; when they do (Видение / Миссия), the first one names the place.
   const sectionTitle = active.length ? TITLES[active[0]] : undefined
 
@@ -616,27 +753,37 @@ export default function Guide() {
   }, [])
 
   return (
-    <div ref={pageRef} className="min-h-screen bg-white font-sans text-black lg:flex lg:items-start">
+    <div ref={pageRef} id="top" className="min-h-screen bg-white font-sans text-black">
+      {/* The hero is the top of the page: the logo leads here, and it isn't in the contents. On a phone it's the first
+          picture, above the header, and covers the header's upward white (z-30). From lg it's fixed behind the page,
+          which starts a strip above the bottom of the screen (`--strip`, see useHeroStrip; 252px for a three-line
+          statement), so the first screen shows the logo, the row and the statement, then slides up over the photo
+          (Figma 4893:3846, prototype 4921:2352). */}
+      <Hero bodyRef={bodyRef} />
+
+      <div ref={bodyRef} className="bg-white lg:relative lg:z-10 lg:mt-[calc(100vh-var(--strip,252px))] lg:flex lg:items-start">
       {/* Desktop sidebar. The expand row sits at the bottom of the screen, so it stays put while the open chapter
           changes the list's height, and sticks there when the list is taller than the screen, cutting the list off —
           enough of a hint that it scrolls, so the scrollbar, far from the text at this width, is hidden. */}
       <aside ref={asideRef} className="hidden lg:flex sticky top-0 h-screen w-[320px] xl:w-[480px] shrink-0 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" aria-label="В начало"><Logo /></a></div>
-        <div className="px-6"><Nav active={active} expandAll={expandAll} /></div>
-        <TocToggle expanded={expandAll} onClick={toggleExpandAll} className="sticky bottom-0 z-10 mt-auto p-6" />
+        <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" onClick={toTop} aria-label="В начало" data-logo className="block w-[180px]"><Logo className="w-full" /></a></div>
+        {/* The row is fixed to the bottom of the screen — not moved there by script, which lags the scroll a frame and
+            makes it shake — so the list keeps its height free at the end. */}
+        <div className="px-6 pb-[68px]"><Nav active={active} expandAll={expandAll} /></div>
+        <TocToggle expanded={expandAll} onClick={onTocToggle} className="fixed bottom-0 left-0 z-10 w-[320px] p-6 xl:w-[480px]" />
       </aside>
 
       {/* Mobile top bar. iOS 26 browsers draw the page under their translucent top bar and stick `top: 0` below it,
           so the white is extended a screen upwards to hide content scrolling above the header. */}
       <header className="lg:hidden sticky top-0 z-20 bg-white p-4 md:p-6 before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-screen before:bg-white before:content-['']">
-        <a href="#top" aria-label="В начало" className="block w-fit"><Logo /></a>
+        <a href="#top" onClick={toTop} aria-label="В начало" className="block w-fit"><Logo /></a>
       </header>
 
       {/* Mobile table of contents: a bar at the bottom names the heading you're reading and stands in for the
           sidebar; tapped, the full contents open between the header and the bar, which turns into «Свернуть». */}
       <div className="lg:hidden">
         {menuOpen && (
-          <div className="fixed inset-x-0 top-14 bottom-0 z-20 overflow-y-auto overscroll-contain bg-white px-4 pt-4 md:top-[72px] md:px-6 md:pt-6">
+          <div className="fixed inset-x-0 top-14 bottom-0 z-40 overflow-y-auto overscroll-contain bg-white px-4 pt-4 md:top-[72px] md:px-6 md:pt-6">
             <Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} />
             <TocToggle
               expanded
@@ -651,7 +798,7 @@ export default function Guide() {
             onClick={() => setMenuOpen(true)}
             aria-expanded={false}
             aria-label={`Содержание: ${sectionTitle ?? TITLES.brand}`}
-            className="fixed inset-x-0 bottom-0 z-20 flex cursor-pointer items-start gap-2 bg-white px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]"
+            className="fixed inset-x-0 bottom-0 z-40 flex cursor-pointer items-start gap-2 bg-white px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]"
           >
             <TocIcon name="menu" />
             <span className="min-w-0 flex-1 truncate">{sectionTitle ?? TITLES.brand}</span>
@@ -659,19 +806,26 @@ export default function Guide() {
         )}
       </div>
 
-      <main id="top" className="min-w-0 flex-1 p-4 pb-[calc(52px+1rem)] md:p-6 md:pb-[calc(68px+1.5rem)] lg:pb-6">
+      {/* 16px on top from lg: the statement's capitals then stand level with the top of the logo beside it. */}
+      <main className="min-w-0 flex-1 p-4 pb-[calc(52px+1rem)] md:p-6 md:pb-[calc(68px+1.5rem)] lg:pt-4 lg:pb-6">
         <div className="flex max-w-[1200px] flex-col gap-section">
-          {/* The hero is the top of the page: the logo leads here, and it isn't in the contents. Платформа бренда follows
-              without a title of its own — the statement stands in for it and carries the chapter anchor. */}
-          <div className="flex flex-col gap-8 md:gap-12">
-            <Fig name="hero" w={912} h={456} eager alt="Семья у UMO 8 в лесу" />
+          {/* Платформа бренда follows the hero without a title of its own — the statement stands in for it and carries
+              the chapter anchor. */}
+          <div>
             <div className="flex flex-col gap-section">
-              <p id="brand" className="scroll-mt-24 text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em]">
-                UMO — это автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
-              </p>
+              <div className="flex flex-col gap-8 md:gap-12">
+                <p id="brand" className="max-w-[678px] scroll-mt-24 lg:scroll-mt-4 text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em]">
+                  Новый автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
+                </p>
+                {/* Quick links: into the guide, from its first section, and to the templated media, the constructors among them */}
+                <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
+                  <a href="#positioning" className={NAV_HOVER}>Стандарты</a>
+                  <a href="#materials" className={NAV_HOVER}>{TITLES.materials}</a>
+                </nav>
+              </div>
               <Section>
                 {/* Picture above the heading; the anchor sits on it so links land on the picture */}
-                <div id="positioning" className="scroll-mt-24"><Fig name="positioning" w={912} h={456} alt="" /></div>
+                <div id="positioning" className="scroll-mt-24 lg:scroll-mt-6"><Fig name="positioning" w={912} h={456} alt="" /></div>
                 <Head>
                   <H2>Позиционирование</H2>
                   <Text>
@@ -1054,9 +1208,10 @@ export default function Guide() {
             </Section>
           </Chapter>
 
-          <footer className="text-[16px] leading-[1.25] tracking-[-0.01em] text-[#999]">ООО «ЭМ РУС». 0+</footer>
+          <footer className="text-[16px] leading-[1.25] tracking-[-0.01em] text-[#999]">Редакция 2026. ООО «ЭМ РУС». 0+</footer>
         </div>
       </main>
+      </div>
     </div>
   )
 }

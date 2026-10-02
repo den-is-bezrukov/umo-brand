@@ -30,6 +30,13 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* No pull-to-refresh (Safari and mobile browsers reload the page when you scroll up past its top) and no rubber band
+   at the ends, which pulled the page off the hero film: the page stops where it ends. */
+html,
+body {
+  overscroll-behavior-y: none;
+}
+
 @theme {
   --font-sans: 'CoFo Sans', sans-serif;
   --breakpoint-xs: 360px;
