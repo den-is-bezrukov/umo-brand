@@ -236,11 +236,12 @@ function pathCmds(commands: any[]): Cmd[] {
 }
 
 /** Dealer name, tagline and the QR link; `null` leaves that part off the sheet */
-export function buildSheet(font: Font, surface: Surface, input: { dealer: string | null; tagline: string | null; url: string | null }): Sheet {
+export function buildSheet(font: Font, base: Surface, input: { dealer: string | null; tagline: string | null; url: string | null }): Sheet {
+  const surface = base.stack ? base : trimmed(base, input)
   const { qr, umo, num, stack } = surface
   const none: TextResult = { lines: [], issues: [] }
   const dealer = input.dealer === null ? none
-    : setText(font, input.dealer, surface.dealer, 'Дилер', surface, stack && surface.dealer.baseline)
+    : setText(font, input.dealer, surface.dealer, 'Текст сверху', surface, stack && surface.dealer.baseline)
   // Stacked, the tagline follows the dealer name, or takes its place
   const afterDealer = dealer.lines.length
     ? surface.dealer.baseline + (dealer.lines.length - 1) * surface.dealer.leading + (stack?.gap ?? 0)
@@ -250,7 +251,7 @@ export function buildSheet(font: Font, surface: Surface, input: { dealer: string
     ? { ...surface.tagline, maxLines: surface.tagline.maxLines + surface.dealer.maxLines }
     : surface.tagline
   const tagline = input.tagline === null ? none
-    : setText(font, input.tagline, taglineBlock, 'Теглайн', surface, stack && afterDealer)
+    : setText(font, input.tagline, taglineBlock, 'Текст снизу', surface, stack && afterDealer)
   let sheetSurface = surface
   let lettering = [fromD(UMO.d, umo.h / UMO.h, umo.x, umo.y), fromD(EIGHT.d, num.h / EIGHT.h, num.x, num.y)]
   if (stack) {
@@ -273,9 +274,6 @@ export function buildSheet(font: Font, surface: Surface, input: { dealer: string
     }
     const sized = crop ? { ...surface, h: height, photo: { ...surface.photo, y: surface.photo.y + (surface.h - height) / 2 } } : surface
     sheetSurface = { ...sized, dims: stackDims(sized, top + dy, bottom + dy, !!last) }
-  } else {
-    const off = new Set<TextPart>([...(input.dealer === null ? ['dealer' as const] : []), ...(input.tagline === null ? ['tagline' as const] : [])])
-    if (off.size) sheetSurface = { ...surface, dims: withoutParts(surface.dims, off) }
   }
   const fixed = [
     ...(input.url === null ? [] : [qrOutline(input.url, qr.x, qr.y, qr.size)]),
@@ -287,8 +285,8 @@ export function buildSheet(font: Font, surface: Surface, input: { dealer: string
     ...tagline.lines.map(l => l.cmds),
   ]
   const issues = [...dealer.issues, ...tagline.issues]
-  if (input.dealer !== null && !input.dealer.trim()) issues.unshift('Нет имени дилера')
-  if (input.tagline !== null && !input.tagline.trim()) issues.unshift('Нет теглайна')
+  if (input.dealer !== null && !input.dealer.trim()) issues.unshift('Нет текста сверху')
+  if (input.tagline !== null && !input.tagline.trim()) issues.unshift('Нет текста снизу')
   return { surface: sheetSurface, shapes, fixed, dealer, tagline, issues }
 }
 
@@ -317,17 +315,66 @@ function withoutParts(dims: Surface['dims'], off: Set<TextPart>): Surface['dims'
 }
 
 /**
+ * A side surface with only what's on it: the rows and lines of the texts left out go (`withoutParts`), and the sheet
+ * is cut down to its content — without the dealer name it starts at the top of the QR and lettering, without the
+ * tagline (and the QR, which reaches the bottom too) it ends under the lettering. The sheet stays where it was on the
+ * body, so the strip cut off joins the distance to the window line or the moulding: ~100 + 140 become ~240.
+ */
+function trimmed(s: Surface, input: { dealer: string | null; tagline: string | null; url: string | null }): Surface {
+  const off = new Set<TextPart>([...(input.dealer === null ? ['dealer' as const] : []), ...(input.tagline === null ? ['tagline' as const] : [])])
+  const parts = off.size ? withoutParts(s.dims, off) : s.dims
+  const qr = input.url !== null
+  const top = input.dealer !== null ? 0 : Math.min(...(qr ? [s.qr.y] : []), s.umo.y, s.num.y)
+  const bottom = input.tagline !== null ? s.h : Math.max(...(qr ? [s.qr.y + s.qr.size] : []), s.umo.y + s.umo.h, s.num.y + s.num.h)
+  if (top === 0 && bottom === s.h) return { ...s, dims: parts }
+  const h = bottom - top
+  const rows = parts.rows.flatMap(r => {
+    if (r.margin === 'top') return [{ ...r, from: r.from - top, to: 0, label: `~${Math.round(r.to - r.from + top)}` }]
+    if (r.margin === 'bottom') return [{ ...r, from: h, to: r.to - top, label: `~${Math.round(r.to - r.from + s.h - bottom)}` }]
+    const from = r.from - top
+    const to = r.to - top
+    return from > -1 && to < h + 1 ? [{ ...r, from, to }] : []
+  })
+  const grid = parts.grid.flatMap(([x1, y1, x2, y2, part]): Surface['dims']['grid'] => {
+    if (y1 === y2) return y1 - top > 0 && y1 - top < h ? [[x1, y1 - top, x2, y2 - top, part]] : []
+    const a = Math.max(0, y1 - top)
+    const b = Math.min(h, y2 - top)
+    return b > a ? [[x1, a, x2, b, part]] : []
+  })
+  const up = (o: Obstacle): Obstacle =>
+    o.kind === 'seam' ? { ...o, top: [o.top[0], o.top[1] - top], bottom: [o.bottom[0], o.bottom[1] - top] } : { ...o, y: o.y - top }
+  return {
+    ...s,
+    h,
+    qr: { ...s.qr, y: s.qr.y - top },
+    umo: { ...s.umo, y: s.umo.y - top },
+    num: { ...s.num, y: s.num.y - top },
+    dealer: { ...s.dealer, baseline: s.dealer.baseline - top },
+    tagline: { ...s.tagline, baseline: s.tagline.baseline - top },
+    obstacles: s.obstacles.map(up),
+    photo: { ...s.photo, y: s.photo.y + top },
+    dims: { cols: parts.cols.map(c => (c.y === undefined ? c : { ...c, y: c.y - top })), rows, grid },
+  }
+}
+
+/**
  * The spec's dimensions for a stacked surface, from where its column landed (`top` to `bottom`): the lettering, the
- * gap and the text zone on the column's side, with lines across the column between them. The margins above and under
- * the column aren't dimensioned — they only follow from centring — but the sheet's full height always is, on the other
- * side. Columns and the vertical lines stay as in the layout.
+ * gap and the text zone on the column's side, with lines across the column between them, and the sheet's full height
+ * on the other side. When the column is shorter than the sheet (the QR keeps it at full height) the margins above
+ * and under it are given too, from the QR's edges. Columns and the vertical lines stay as in the layout.
  */
 function stackDims(surface: Surface, top: number, bottom: number, text: boolean): Surface['dims'] {
   const { umo, num, h, dims, stack } = surface
   const x1 = umo.x
   const x2 = num.x + num.h * (EIGHT.w / EIGHT.h)
-  const steps = [top, top + umo.h, ...(text ? [top + stack!.textTop, bottom] : [])]
-  const rows = steps.slice(1).map((to, i) => ({ from: steps[i], to, label: mm(to - steps[i]), x: 1 }))
+  const column = [top, top + umo.h, ...(text ? [top + stack!.textTop, bottom] : [])]
+  const end = column[column.length - 1]
+  const steps = [...(top > 1 ? [0] : []), ...column, ...(h - end > 1 ? [h] : [])]
+  // Rounded to half a millimetre, the last one taking up the rounding so the rows add up to what they span
+  const half = (v: number) => Math.round(v * 2) / 2
+  const sizes = steps.slice(1).map((to, i) => half(to - steps[i]))
+  sizes[sizes.length - 1] = half(steps[steps.length - 1] - steps[0]) - sizes.slice(0, -1).reduce((a, b) => a + b, 0)
+  const rows = steps.slice(1).map((to, i) => ({ from: steps[i], to, label: mm(sizes[i]), x: 1 }))
   const height = dims.rows.filter(r => r.x < 0)
   // The full height, unless the lettering alone already is it
   const total = height.length ? height : rows.length > 1 || Math.abs(rows[0].to - rows[0].from - h) > 1 ? [{ from: 0, to: h, label: mm(h), x: -1 }] : []
@@ -336,7 +383,7 @@ function stackDims(surface: Surface, top: number, bottom: number, text: boolean)
     rows: [...total, ...rows],
     grid: [
       ...dims.grid.filter(([ax, , bx]) => ax === bx),
-      ...steps.slice(1, -1).map(y => [x1, y, x2, y] as [number, number, number, number]),
+      ...steps.filter(y => y > 1 && y < h - 1).map(y => [x1, y, x2, y] as [number, number, number, number]),
     ],
   }
 }

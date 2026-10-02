@@ -158,27 +158,27 @@ export default function Livery() {
               <UrlField value={url} onChange={setUrl} />
             </OptionalField>
 
-            <OptionalField label="Теглайн" on={on.tagline} onChange={toggle('tagline')}>
-              <TextArea value={tagline} onChange={setTagline} invalid={sides.some(s => s.tagline.issues.length > 0) || !tagline.trim()} />
+            <OptionalField label="Текст сверху" on={on.dealer} onChange={toggle('dealer')}>
+              <TextArea value={dealer} onChange={setDealer} invalid={sides.some(s => s.dealer.issues.length > 0) || !dealer.trim()} />
             </OptionalField>
 
-            <OptionalField label="Дилер" on={on.dealer} onChange={toggle('dealer')}>
-              <TextArea value={dealer} onChange={setDealer} invalid={sides.some(s => s.dealer.issues.length > 0) || !dealer.trim()} />
+            <OptionalField label="Текст снизу" on={on.tagline} onChange={toggle('tagline')}>
+              <TextArea value={tagline} onChange={setTagline} invalid={sides.some(s => s.tagline.issues.length > 0) || !tagline.trim()} />
             </OptionalField>
 
             <OptionalField label="Заднее стекло" on={on.rear} onChange={toggle('rear')} />
 
             {ownRearOffered && <Checkbox checked={ownRear} onChange={toggleOwnRear}>Свой текст на стекле</Checkbox>}
 
-            {ownRearOn && on.tagline && (
-              <Field label="Теглайн на стекле">
-                <TextArea value={rear!.tagline} onChange={v => setRear({ ...rear!, tagline: v })} invalid={rearSheet.some(s => s.tagline.issues.length > 0) || !rear!.tagline.trim()} />
+            {ownRearOn && on.dealer && (
+              <Field label="Текст сверху на стекле">
+                <TextArea value={rear!.dealer} onChange={v => setRear({ ...rear!, dealer: v })} invalid={rearSheet.some(s => s.dealer.issues.length > 0) || !rear!.dealer.trim()} />
               </Field>
             )}
 
-            {ownRearOn && on.dealer && (
-              <Field label="Дилер на стекле">
-                <TextArea value={rear!.dealer} onChange={v => setRear({ ...rear!, dealer: v })} invalid={rearSheet.some(s => s.dealer.issues.length > 0) || !rear!.dealer.trim()} />
+            {ownRearOn && on.tagline && (
+              <Field label="Текст снизу на стекле">
+                <TextArea value={rear!.tagline} onChange={v => setRear({ ...rear!, tagline: v })} invalid={rearSheet.some(s => s.tagline.issues.length > 0) || !rear!.tagline.trim()} />
               </Field>
             )}
 

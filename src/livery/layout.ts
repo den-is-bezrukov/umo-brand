@@ -74,7 +74,7 @@ export interface Surface {
   dims: {
     cols: { from: number; to: number; label: string; y?: number }[]
     /** `at` moves a row off the sheet's edge, e.g. to the door's edge for the distances to the body */
-    rows: { from: number; to: number; label: string; x: number; at?: number; part?: TextPart }[]
+    rows: { from: number; to: number; label: string; x: number; at?: number; part?: TextPart; margin?: 'top' | 'bottom' }[]
     grid: [number, number, number, number, TextPart?][]
   }
   /**
@@ -108,8 +108,8 @@ const mirror = (o: Obstacle): Obstacle =>
 // The sheet's distance to the body: ~100 down from the window line, ~150 to the sill moulding, measured at the front
 // door's edge (`at`), ~125 ahead of the sheet, so they clear the ~125 labels
 const sideMargins = (x: number, at: number): Surface['dims']['rows'] => [
-  { from: -100, to: 0, label: '~100', x, at },
-  { from: 500, to: 650, label: '~150', x, at },
+  { from: -100, to: 0, label: '~100', x, at, margin: 'top' },
+  { from: 500, to: 650, label: '~150', x, at, margin: 'bottom' },
 ]
 // The lettering, the gap under it and the tagline zone
 const letteringRows = (x: number): Surface['dims']['rows'] => [
