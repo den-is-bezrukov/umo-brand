@@ -151,7 +151,8 @@ function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; o
       type="button"
       onClick={onClick}
       aria-expanded={expanded}
-      className={`flex w-full cursor-pointer items-start gap-2 bg-white ${NAV_HOVER} text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] ${className}`}
+      // No width of its own: both places set it, and a `w-full` here outranked theirs in the built CSS
+      className={`flex cursor-pointer items-start gap-2 bg-white ${NAV_HOVER} text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] ${className}`}
     >
       <TocIcon name={expanded ? 'close' : 'menu'} />
       {expanded ? 'Свернуть' : 'Содержание'}
