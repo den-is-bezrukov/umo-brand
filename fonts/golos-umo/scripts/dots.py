@@ -1,7 +1,7 @@
 """Dots and commas (run after details.py). DOTS picks the dot: 'square' (cut like the strokes) or
-'round' (Golos's). The comma is a straight diagonal stroke taken from Q's tail: its angle (mirrored,
-so it leans the way a comma does) and its square-cut ends, with about the period's weight; the
-quotes are built from it. (COMMA = 'tail' gives the period's dot with a curled tail instead.)
+'round' (Golos's). The comma is a trapezoid: its top is the period's dot, cut level and as wide, and it
+narrows and leans gently left down to a level bottom under the baseline; the quotes are built from
+it. (COMMA = 'stroke' gives a straight stroke at Q's tail angle, 'tail' the dot with a curled tail.)
 - period, the dots of ! ? ¡ ¿ and ÷: the period's size; colon, semicolon, ellipsis and the middle
   dot take the period as a component and follow;
 - the dot of i j and the dieresis (ё Ё): as wide as the stem of i, so the dot stands on the stem;
@@ -10,7 +10,9 @@ import math, sys, ufoLib2
 import pathops
 
 DOTS = 'square'
-COMMA = 'stroke'
+COMMA = 'trapezoid'
+COMMA_LEAN = 18     # trapezoid: lean of its middle line from the vertical, degrees
+COMMA_FOOT = 0.5    # trapezoid: width of its bottom over its top (the period's width)
 COMMA_DEPTH = 100   # the stroke's lowest corner below the baseline (Q's tail reaches 85)
 COMMA_WEIGHT = 0.85 # the stroke's thickness over the period's width: on its own it needs the dot's
                     # weight, which Q's tail, leaning on the bowl, does without
@@ -69,6 +71,14 @@ def tail(l, r, depth):
     inner = [(ri, -0.45 * depth, None), (tip[0] + 0.3 * (ri - tip[0]), tip[1] + 0.45 * depth, None), (tip[0], tip[1], 'curve')]
     outer = [(tip[0] + 0.55 * (r - tip[0]), tip[1] + 0.2 * depth, None), (r, -0.5 * depth, None), (r, 0, 'curve')]
     return ri, inner, outer
+
+
+def trapezoid_comma(dot):
+    """top: the period's dot, level and as wide; bottom: COMMA_FOOT as wide, COMMA_DEPTH under the
+    baseline, its middle COMMA_LEAN degrees left of the top's"""
+    l, b, r, t = dot; cx = (l + r) / 2; w = r - l
+    H = t + COMMA_DEPTH; cb = cx - math.tan(math.radians(COMMA_LEAN)) * H; bw = COMMA_FOOT * w
+    return [(cb - bw / 2, -COMMA_DEPTH, 'line'), (cb + bw / 2, -COMMA_DEPTH, 'line'), (r, t, 'line'), (l, t, 'line')]
 
 
 def stroke_comma(font, dot):
@@ -162,7 +172,7 @@ def run(font, style):
         e.width = round(p.width + 2 * step)
     # the comma and its family
     cm = font['comma']; l, b, r, t = bounds(cm.contours[0]); depth = -b
-    shape = stroke_comma(font, dot) if COMMA == 'stroke' else comma(dot, depth, style)
+    shape = trapezoid_comma(dot) if COMMA == 'trapezoid' else stroke_comma(font, dot) if COMMA == 'stroke' else comma(dot, depth, style)
     cm.clearContours(); draw(cm, [shape])
     q = font['quotesinglbase']; q.clearContours()
     if style == 'square': q.width = p.width
@@ -175,14 +185,18 @@ def run(font, style):
         for g in font:
             cs = [c for c in g.components if c.baseGlyph == 'quotesinglbase']
             if not cs or g.contours: continue
-            # Golos turns the comma half round for the opening quotes ‘ “; a straight stroke would then
-            # lean the same way as the closing ones, so they are mirrored instead and lean like Q's tail
+            # Golos turns the comma half round for the opening quotes ‘ “: the trapezoid then has its wide
+            # end at the bottom, top level with the closing quotes'. (A straight stroke would lean the same
+            # way both ends of a quote, so that one is mirrored instead.)
             xs = sorted(c.transformation[4] for c in cs)
             top = [c.transformation[5] for c in font['quoteright'].components][0]
             for c in cs:
                 tr = c.transformation; k = xs.index(tr[4]); flip = tr[0] < 0
+                ys = [y for _, y, _ in shape]
                 if flip and COMMA == 'stroke':
                     c.transformation = (-1, 0, 0, 1, round(q.width + k * new_step), top)
+                elif flip:
+                    c.transformation = (-1, 0, 0, -1, round(q.width + k * new_step), round(top + max(ys) + min(ys)))
                 else:
                     c.transformation = (tr[0], tr[1], tr[2], tr[3], round((q.width if flip else 0) + k * new_step), tr[5])
             g.width = round(q.width + (len(cs) - 1) * new_step)
