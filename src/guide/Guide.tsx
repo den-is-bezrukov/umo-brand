@@ -230,7 +230,8 @@ function useActiveInView(asideRef: RefObject<HTMLElement | null>, active: string
  * While the page slides up over the hero, the sidebar's toggle row stays at the bottom of the screen rather than of
  * the sidebar, which runs off the screen, so the contents unroll between the logo and the row as the page rises.
  * They fade in over the first 160px of scroll: on the first screen there's only the logo and the row.
- * The photo behind scrolls at half the page's speed (parallax).
+ * The photo behind scrolls at half the page's speed (parallax), and the logo, 180px wide on the first screen, shrinks
+ * with the scroll to its usual 120 (24 high) by the time the page reaches the top.
  */
 function useHeroReveal(heroRef: RefObject<HTMLElement | null>, bodyRef: RefObject<HTMLElement | null>, asideRef: RefObject<HTMLElement | null>) {
   useEffect(() => {
@@ -244,6 +245,9 @@ function useHeroReveal(heroRef: RefObject<HTMLElement | null>, bodyRef: RefObjec
       const hero = heroRef.current
       // Fixed only from lg; once the page covers it there's nothing to move.
       if (hero) hero.style.transform = getComputedStyle(hero).position === 'fixed' ? `translateY(${-Math.min(window.scrollY, window.innerHeight) / 2}px)` : ''
+      const logo = aside.querySelector<HTMLElement>('[data-logo]')
+      // The page starts 184px above the bottom of the screen, so that's how far it has to rise.
+      if (logo) logo.style.width = `${120 + 60 * Math.min(1, lift / Math.max(1, window.innerHeight - 184))}px`
       const foot = aside.lastElementChild as HTMLElement
       const nav = aside.querySelector('nav')
       foot.style.transform = lift ? `translateY(${-lift}px)` : ''
@@ -688,7 +692,7 @@ export default function Guide() {
           changes the list's height, and sticks there when the list is taller than the screen, cutting the list off —
           enough of a hint that it scrolls, so the scrollbar, far from the text at this width, is hidden. */}
       <aside ref={asideRef} className="hidden lg:flex sticky top-0 h-screen w-[320px] xl:w-[480px] shrink-0 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" aria-label="В начало" className="block w-fit"><Logo className="w-[180px]" /></a></div>
+        <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" aria-label="В начало" data-logo className="block w-[180px]"><Logo className="w-full" /></a></div>
         <div className="px-6"><Nav active={active} expandAll={expandAll} /></div>
         <TocToggle expanded={expandAll} onClick={onTocToggle} className="sticky bottom-0 z-10 mt-auto p-6" />
       </aside>
