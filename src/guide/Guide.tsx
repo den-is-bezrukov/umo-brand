@@ -230,8 +230,9 @@ function useActiveInView(asideRef: RefObject<HTMLElement | null>, active: string
  * While the page slides up over the hero, the sidebar's toggle row stays at the bottom of the screen rather than of
  * the sidebar, which runs off the screen, so the contents unroll between the logo and the row as the page rises.
  * They fade in over the first 160px of scroll: on the first screen there's only the logo and the row.
+ * The photo behind scrolls at half the page's speed (parallax).
  */
-function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObject<HTMLElement | null>) {
+function useHeroReveal(heroRef: RefObject<HTMLElement | null>, bodyRef: RefObject<HTMLElement | null>, asideRef: RefObject<HTMLElement | null>) {
   useEffect(() => {
     let frame = 0
     const update = () => {
@@ -240,6 +241,9 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
       const aside = asideRef.current
       if (!body || !aside) return
       const lift = Math.max(0, body.getBoundingClientRect().top)
+      const hero = heroRef.current
+      // Fixed only from lg; once the page covers it there's nothing to move.
+      if (hero) hero.style.transform = getComputedStyle(hero).position === 'fixed' ? `translateY(${-Math.min(window.scrollY, window.innerHeight) / 2}px)` : ''
       const foot = aside.lastElementChild as HTMLElement
       const nav = aside.querySelector('nav')
       foot.style.transform = lift ? `translateY(${-lift}px)` : ''
@@ -258,7 +262,7 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
       window.removeEventListener('resize', onScroll)
       cancelAnimationFrame(frame)
     }
-  }, [bodyRef, asideRef])
+  }, [heroRef, bodyRef, asideRef])
 }
 
 const EXPAND_KEY = 'umo-guide-toc-expanded'
@@ -610,7 +614,14 @@ export default function Guide() {
   const asideRef = useRef<HTMLElement>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
   useActiveInView(asideRef, active, expandAll)
-  useHeroReveal(bodyRef, asideRef)
+  const heroRef = useRef<HTMLDivElement>(null)
+  useHeroReveal(heroRef, bodyRef, asideRef)
+  // On the first screen the contents row first takes you past the photo, to where the contents are open to see.
+  const onTocToggle = () => {
+    const top = bodyRef.current?.getBoundingClientRect().top ?? 0
+    if (top > 1) window.scrollTo({ top: window.scrollY + top, behavior: 'smooth' })
+    else toggleExpandAll()
+  }
   // Two headings rarely share a line on a phone; when they do (Видение / Миссия), the first one names the place.
   const sectionTitle = active.length ? TITLES[active[0]] : undefined
 
@@ -660,7 +671,7 @@ export default function Guide() {
           which starts 184px above the bottom of the screen — the logo block (84), one nav line (32) and the toggle
           row (68) — so the first screen shows the logo, the row and the statement, then slides up over the photo
           (Figma 4893:3846, prototype 4921:2352). */}
-      <div className="relative z-30 aspect-[2/1] lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:aspect-auto lg:h-[calc(100vh-184px)]">
+      <div ref={heroRef} className="relative z-30 aspect-[2/1] will-change-transform lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:aspect-auto lg:h-[calc(100vh-184px)]">
         <img
           src={img('hero')}
           alt="Женщина у UMO 8 на горной дороге"
@@ -679,7 +690,7 @@ export default function Guide() {
       <aside ref={asideRef} className="hidden lg:flex sticky top-0 h-screen w-[320px] xl:w-[480px] shrink-0 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" aria-label="В начало" className="block w-fit"><Logo className="w-[180px]" /></a></div>
         <div className="px-6"><Nav active={active} expandAll={expandAll} /></div>
-        <TocToggle expanded={expandAll} onClick={toggleExpandAll} className="sticky bottom-0 z-10 mt-auto p-6" />
+        <TocToggle expanded={expandAll} onClick={onTocToggle} className="sticky bottom-0 z-10 mt-auto p-6" />
       </aside>
 
       {/* Mobile top bar. iOS 26 browsers draw the page under their translucent top bar and stick `top: 0` below it,
@@ -715,7 +726,8 @@ export default function Guide() {
         )}
       </div>
 
-      <main className="min-w-0 flex-1 p-4 pb-[calc(52px+1rem)] md:p-6 md:pb-[calc(68px+1.5rem)] lg:pb-6">
+      {/* 20px on top from lg, per Figma: the statement's capitals then line up with the top of the logo beside it. */}
+      <main className="min-w-0 flex-1 p-4 pb-[calc(52px+1rem)] md:p-6 md:pb-[calc(68px+1.5rem)] lg:pt-5 lg:pb-6">
         <div className="flex max-w-[1200px] flex-col gap-section">
           {/* Платформа бренда follows the hero without a title of its own — the statement stands in for it and carries
               the chapter anchor. */}
