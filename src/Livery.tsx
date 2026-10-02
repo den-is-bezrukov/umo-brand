@@ -100,7 +100,10 @@ export default function Livery() {
   })
   const toggle = (key: keyof typeof on) => (v: boolean) => setOn(o => ({ ...o, [key]: v }))
   const show = (link.get('show') ?? '').split(',')
-  const [seams, setSeams] = useState(show.includes('seams'))
+  // The «Швы» overlay is hidden for now: the limits keep text off the seam and handle, and a sheet that touches them
+  // says so under it. Off, and links with `show=seams` open without it, as there'd be no way to turn it off.
+  // const [seams, setSeams] = useState(show.includes('seams'))
+  const seams = false
   const [dims, setDims] = useState(show.includes('dims'))
   // The bottom text larger, 60 mm in two lines; the QR-less sides have room for it
   const [large, setLarge] = useState(link.get('size') === 'large')
@@ -233,7 +236,7 @@ export default function Livery() {
 
             {/* Overlays on the preview only */}
             <Checkbox checked={dims} onChange={setDims}>Размеры</Checkbox>
-            <Checkbox checked={seams} onChange={setSeams}>Швы</Checkbox>
+            {/* <Checkbox checked={seams} onChange={setSeams}>Швы</Checkbox> */}
           </div>
         </div>
 
