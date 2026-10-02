@@ -246,8 +246,8 @@ function useHeroReveal(heroRef: RefObject<HTMLElement | null>, bodyRef: RefObjec
       // Fixed only from lg; once the page covers it there's nothing to move.
       if (hero) hero.style.transform = getComputedStyle(hero).position === 'fixed' ? `translateY(${-Math.min(window.scrollY, window.innerHeight) / 2}px)` : ''
       const logo = aside.querySelector<HTMLElement>('[data-logo]')
-      // The page starts 184px above the bottom of the screen, so that's how far it has to rise.
-      if (logo) logo.style.width = `${120 + 60 * Math.min(1, lift / Math.max(1, window.innerHeight - 184))}px`
+      // The page starts at its own offset from the top (a strip above the bottom of the screen) — that's how far it rises.
+      if (logo) logo.style.width = `${120 + 60 * Math.min(1, lift / Math.max(1, body.offsetTop))}px`
       const foot = aside.lastElementChild as HTMLElement
       const nav = aside.querySelector('nav')
       foot.style.transform = lift ? `translateY(${-lift}px)` : ''
@@ -267,6 +267,31 @@ function useHeroReveal(heroRef: RefObject<HTMLElement | null>, bodyRef: RefObjec
       cancelAnimationFrame(frame)
     }
   }, [heroRef, bodyRef, asideRef])
+}
+
+/**
+ * Height of the first screen's white strip (`--strip` on the page), from lg: the statement's capitals stand level with
+ * the top of the logo (the body's 16px on top plus CoFo Sans's 0.164em above the caps at leading 1 make the logo's 24),
+ * and its last baseline with the toggle row's at the bottom of the screen (the row's 20px line starts 24px into its 68,
+ * its baseline 2px + 0.844em of 16px into the line), however many lines the statement wraps to.
+ */
+function useHeroStrip(pageRef: RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    const page = pageRef.current
+    const statement = document.getElementById('brand')
+    if (!page || !statement) return
+    const observer = new ResizeObserver(() => {
+      const size = parseFloat(getComputedStyle(statement).fontSize)
+      const lastBaseline = 16 + statement.offsetHeight - size + 0.844 * size
+      const strip = `${Math.round(lastBaseline + 68 - 24 - 2 - 0.844 * 16)}px`
+      if (page.style.getPropertyValue('--strip') === strip) return
+      page.style.setProperty('--strip', strip)
+      // The page now starts elsewhere: let useHeroReveal place the toggle row and size the logo anew.
+      window.dispatchEvent(new Event('resize'))
+    })
+    observer.observe(statement)
+    return () => observer.disconnect()
+  }, [pageRef])
 }
 
 const EXPAND_KEY = 'umo-guide-toc-expanded'
@@ -619,6 +644,7 @@ export default function Guide() {
   const bodyRef = useRef<HTMLDivElement>(null)
   useActiveInView(asideRef, active, expandAll)
   const heroRef = useRef<HTMLDivElement>(null)
+  useHeroStrip(pageRef)
   useHeroReveal(heroRef, bodyRef, asideRef)
   // On the first screen the contents row first takes you past the photo, to where the contents are open to see.
   const onTocToggle = () => {
@@ -672,10 +698,10 @@ export default function Guide() {
     <div ref={pageRef} id="top" className="min-h-screen bg-white font-sans text-black">
       {/* The hero is the top of the page: the logo leads here, and it isn't in the contents. On a phone it's the first
           picture, above the header, and covers the header's upward white (z-30). From lg it's fixed behind the page,
-          which starts 184px above the bottom of the screen — the logo block (84), one nav line (32) and the toggle
-          row (68) — so the first screen shows the logo, the row and the statement, then slides up over the photo
+          which starts a strip above the bottom of the screen (`--strip`, see useHeroStrip; 181px for a three-line
+          statement), so the first screen shows the logo, the row and the statement, then slides up over the photo
           (Figma 4893:3846, prototype 4921:2352). */}
-      <div ref={heroRef} className="relative z-30 aspect-[2/1] will-change-transform lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:aspect-auto lg:h-[calc(100vh-184px)]">
+      <div ref={heroRef} className="relative z-30 aspect-[2/1] will-change-transform lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:aspect-auto lg:h-[calc(100vh-var(--strip,181px))]">
         <img
           src={img('hero')}
           alt="Женщина у UMO 8 на горной дороге"
@@ -687,7 +713,7 @@ export default function Guide() {
         />
       </div>
 
-      <div ref={bodyRef} className="bg-white lg:relative lg:z-10 lg:mt-[calc(100vh-184px)] lg:flex lg:items-start">
+      <div ref={bodyRef} className="bg-white lg:relative lg:z-10 lg:mt-[calc(100vh-var(--strip,181px))] lg:flex lg:items-start">
       {/* Desktop sidebar. The expand row sits at the bottom of the screen, so it stays put while the open chapter
           changes the list's height, and sticks there when the list is taller than the screen, cutting the list off —
           enough of a hint that it scrolls, so the scrollbar, far from the text at this width, is hidden. */}
@@ -730,8 +756,8 @@ export default function Guide() {
         )}
       </div>
 
-      {/* 20px on top from lg, per Figma: the statement's capitals then line up with the top of the logo beside it. */}
-      <main className="min-w-0 flex-1 p-4 pb-[calc(52px+1rem)] md:p-6 md:pb-[calc(68px+1.5rem)] lg:pt-5 lg:pb-6">
+      {/* 16px on top from lg: the statement's capitals then stand level with the top of the logo beside it. */}
+      <main className="min-w-0 flex-1 p-4 pb-[calc(52px+1rem)] md:p-6 md:pb-[calc(68px+1.5rem)] lg:pt-4 lg:pb-6">
         <div className="flex max-w-[1200px] flex-col gap-section">
           {/* Платформа бренда follows the hero without a title of its own — the statement stands in for it and carries
               the chapter anchor. */}
