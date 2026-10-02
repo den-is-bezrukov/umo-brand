@@ -12,7 +12,8 @@ import pathops
 DOTS = 'square'
 COMMA = 'trapezoid'
 GUIL_ANGLE = 58      # chevron arms, degrees from the horizontal (Golos about 40)
-GUIL_HEIGHT = 0.95   # chevron height over the x-height, standing just above the baseline
+GUIL_HEIGHT = 1.0    # chevron height over the x-height, centred on it: at 1 the level-cut ends stand on the
+                     # baseline and the x-height like the ends of x v z, which need no overshoot either
 GUIL_WEIGHT = 0.92   # arm thickness across the stroke, over the stem of i
 GUIL_GAP = (120, -0.15)   # double guillemets: gap between the two chevrons at mid-height, a + b*stem
                           # (nearly the same in both weights: 108 in Regular, 102 in Medium)
@@ -213,7 +214,7 @@ def run(font, style):
 def chevrons(font):
     """‹ › « »: six-point chevrons, ends cut level, sharp point; Golos's sidebearings"""
     S = stem(font); a = math.radians(GUIL_ANGLE)
-    h = GUIL_HEIGHT * font.info.xHeight; bottom = (font.info.xHeight - h) / 2 * 0.25; top = bottom + h; mid = (top + bottom) / 2
+    h = GUIL_HEIGHT * font.info.xHeight; bottom = (font.info.xHeight - h) / 2; top = bottom + h; mid = (top + bottom) / 2
     run = GUIL_WEIGHT * S / math.sin(a)                 # level run of an arm
     reach = (top - mid) / math.tan(a)                   # how far an arm runs out from the point
     def left(x0):   # point at x0, opening to the right, counter-clockwise
