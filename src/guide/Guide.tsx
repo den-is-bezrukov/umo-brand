@@ -297,10 +297,12 @@ function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObjec
 
 /**
  * The hero: the UMO test-drive film, looped and muted — the source MP4 as it came (H.264, 12 MB, no re-encoding: it's
- * already set up for the web); the poster is its first frame, so nothing jumps when it starts. It loops all the time, under the page too.
+ * already set up for the web); the poster is its first frame, so nothing jumps when it starts. It plays only while some
+ * of it is on screen: once the page has slid over it whole, it stops, and goes on from that frame when it shows again.
  * With reduced motion asked for, or data saving on, the still photo stands in.
  */
-function Hero() {
+function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
+  const ref = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [still] = useState(() =>
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
@@ -310,11 +312,30 @@ function Hero() {
     if (!video) return
     // React doesn't put `muted` on the element as an attribute, and browsers only autoplay muted video.
     video.muted = true
-    video.play().catch(() => { /* autoplay refused: the poster stays */ })
-  }, [])
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const box = ref.current?.getBoundingClientRect()
+      if (!box) return
+      // From lg the page slides over the fixed film; on a phone the film scrolls away above the page.
+      const below = bodyRef.current?.getBoundingClientRect().top ?? Infinity
+      const seen = Math.min(box.bottom, below) - Math.max(box.top, 0) > 0
+      if (seen && video.paused) video.play().catch(() => { /* autoplay refused: the poster stays */ })
+      else if (!seen && !video.paused) video.pause()
+    }
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      cancelAnimationFrame(frame)
+    }
+  }, [bodyRef])
   const fill = 'block size-full bg-black object-cover'
   return (
-    <div className="relative z-30 aspect-[2/1] lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:aspect-auto lg:h-[calc(100vh-var(--strip,181px))]">
+    <div ref={ref} className="relative z-30 aspect-[2/1] lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:aspect-auto lg:h-[calc(100vh-var(--strip,252px))]">
       {still ? (
         <img src={img('hero')} alt="Женщина у UMO 8 на горной дороге" width={1824} height={912} fetchPriority="high" decoding="async" className={`${fill} object-[50%_40%]`} />
       ) : (
@@ -741,7 +762,7 @@ export default function Guide() {
           which starts a strip above the bottom of the screen (`--strip`, see useHeroStrip; 252px for a three-line
           statement), so the first screen shows the logo, the row and the statement, then slides up over the photo
           (Figma 4893:3846, prototype 4921:2352). */}
-      <Hero />
+      <Hero bodyRef={bodyRef} />
 
       <div ref={bodyRef} className="bg-white lg:relative lg:z-10 lg:mt-[calc(100vh-var(--strip,252px))] lg:flex lg:items-start">
       {/* Desktop sidebar. The expand row sits at the bottom of the screen, so it stays put while the open chapter
