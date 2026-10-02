@@ -271,15 +271,19 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
  * and the quick links under it share a line with the toggle row at the bottom of the screen (the row's 20px line starts
  * 24px into its 68), however many lines the statement wraps to (Figma 4893:3846).
  */
-function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObject<HTMLElement | null>) {
+function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObject<HTMLElement | null>, bodyRef: RefObject<HTMLElement | null>) {
   useEffect(() => {
     const page = pageRef.current
     const quick = quickRef.current
     const block = quick?.parentElement
-    if (!page || !quick || !block) return
+    const body = bodyRef.current
+    if (!page || !quick || !block || !body) return
     let frame = 0
     const update = () => {
       frame = 0
+      // Below lg: how far the quick links end under the top of the page (header and statement included), for the film
+      // to take the rest of the first screen (see Hero).
+      page.style.setProperty('--mstrip', `${Math.round(quick.getBoundingClientRect().bottom - body.getBoundingClientRect().top)}px`)
       const strip = `${Math.round(16 + quick.offsetTop - block.offsetTop + 68 - 24)}px`
       if (page.style.getPropertyValue('--strip') === strip) return
       page.style.setProperty('--strip', strip)
@@ -290,7 +294,7 @@ function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObjec
     const observer = new ResizeObserver(() => { if (!frame) frame = requestAnimationFrame(update) })
     observer.observe(block)
     return () => { observer.disconnect(); cancelAnimationFrame(frame) }
-  }, [pageRef, quickRef])
+  }, [pageRef, quickRef, bodyRef])
 }
 
 /**
@@ -298,6 +302,9 @@ function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObjec
  * already set up for the web); the poster is its first frame, so nothing jumps when it starts. It plays only while some
  * of it is on screen: once the page has slid over it whole, it stops, and goes on from that frame when it shows again.
  * With reduced motion asked for, or data saving on, the still photo stands in.
+ * Below lg it heads the page and takes what the first screen has left above the header, statement and quick links
+ * (`--mstrip`) and the bottom bar with a gap over it (52 + 16, from md 68 + 24), so the guide's first section starts
+ * below the fold; never less than half the screen's width, as on a phone held sideways.
  */
 function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -333,7 +340,7 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
   }, [bodyRef])
   const fill = 'block size-full bg-black object-cover'
   return (
-    <div ref={ref} className="relative z-30 aspect-[2/1] lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:aspect-auto lg:h-[calc(100vh-var(--strip,252px))]">
+    <div ref={ref} className="relative z-30 h-[max(50vw,calc(100svh-var(--mstrip,260px)-68px))] md:h-[max(50vw,calc(100svh-var(--mstrip,360px)-92px))] lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:h-[calc(100vh-var(--strip,286px))]">
       {still ? (
         <img src={img('hero')} alt="Женщина у UMO 8 на горной дороге" width={1824} height={912} fetchPriority="high" decoding="async" className={`${fill} object-[50%_40%]`} />
       ) : (
@@ -702,7 +709,7 @@ export default function Guide() {
   const bodyRef = useRef<HTMLDivElement>(null)
   useActiveInView(asideRef, active, expandAll)
   const quickRef = useRef<HTMLElement>(null)
-  useHeroStrip(pageRef, quickRef)
+  useHeroStrip(pageRef, quickRef, bodyRef)
   useHeroReveal(bodyRef, asideRef)
   // The contents row does what it says; on the first screen it also takes the page up over the photo, where the
   // contents can be seen.
@@ -762,7 +769,7 @@ export default function Guide() {
           (Figma 4893:3846, prototype 4921:2352). */}
       <Hero bodyRef={bodyRef} />
 
-      <div ref={bodyRef} className="bg-white lg:relative lg:z-10 lg:mt-[calc(100vh-var(--strip,252px))] lg:flex lg:items-start">
+      <div ref={bodyRef} className="bg-white lg:relative lg:z-10 lg:mt-[calc(100vh-var(--strip,286px))] lg:flex lg:items-start">
       {/* Desktop sidebar. The expand row sits at the bottom of the screen, so it stays put while the open chapter
           changes the list's height, and sticks there when the list is taller than the screen, cutting the list off —
           enough of a hint that it scrolls, so the scrollbar, far from the text at this width, is hidden. */}
