@@ -113,12 +113,21 @@ function useActiveSection() {
 // ─── Navigation ──────────────────────────────────────────────────────────────
 
 /**
- * A hovered link stays black and gets a hairline underline as set in Figma (4865:1061): black at 40%, 2.5% of the
- * type size thick, 25% of it under the baseline, through the descenders (no skip ink); it turned grey #757575 before.
- * The line shows at once and fades over 0.25s, like guides.area17.com, once the pointer leaves (a transition runs with
- * the duration of the state it heads to): it's always there, transparent until hovered. The active link has none.
+ * The contents' links turn grey (#808080) at once and fade back to black over 0.35s once the pointer leaves, like
+ * guides.area17.com (a transition runs with the duration of the state it heads to). The active one stays black.
  */
-const NAV_HOVER = 'underline decoration-transparent decoration-[2.5%] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 ease-[ease] hover:decoration-black/40 hover:duration-0'
+const NAV_HOVER = 'transition-[color] duration-350 ease-[ease] hover:text-[#808080] hover:duration-0'
+
+/**
+ * Links in the page (the quick links, download rows and captions) stay black and get a hairline underline as set in
+ * Figma (4865:1061): black at 40%, 2.5% of the type size thick, 25% of it under the baseline, through the descenders.
+ * It shows at once and fades over 0.25s: it's always there, transparent until hovered. `UNDERLINE` is the line;
+ * `LINK_HOVER` shows it on the link's own hover, rows show it on the row's (`group-hover`).
+ */
+const UNDERLINE = 'underline decoration-transparent decoration-[2.5%] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 ease-[ease]'
+const LINK_HOVER = `${UNDERLINE} hover:decoration-black/40 hover:duration-0`
+/** A link inside body copy keeps that line at 40% so it reads as a link, and it turns black under the pointer */
+const TEXT_LINK = 'underline decoration-black/40 decoration-[2.5%] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 ease-[ease] hover:decoration-black hover:duration-0'
 
 /**
  * `active`: you're inside this item (medium weight); `current`: its own heading is the one on screen (the bullet).
@@ -443,7 +452,7 @@ function Caption({ children, cross, download }: { children: ReactNode; cross?: b
   return (
     <figcaption className="flex items-start gap-2 text-[14px] leading-[1.43] [font-feature-settings:'case'_1]">
       {download && <span aria-hidden className="mt-[3px] w-[14px] shrink-0 border-b border-black pb-px text-center font-medium leading-none">↓</span>}
-      <span className={`flex-1 ${download ? 'decoration-[0.25px] underline-offset-[0.25em] [text-decoration-skip-ink:none] group-hover:underline' : ''}`}>{children}</span>
+      <span className={`flex-1 ${download ? `${UNDERLINE} group-hover:decoration-black/40 group-hover:duration-0` : ''}`}>{children}</span>
       {cross && <span aria-label="нельзя" className="w-4 text-center text-[20px] leading-[1.13] text-[#e30]">×</span>}
     </figcaption>
   )
@@ -586,7 +595,7 @@ function Assets({ items, preview }: { items: Asset[]; preview?: string }) {
         const row = 'group flex items-center gap-4 border-t border-[#e6e6e6] py-[14px] text-[16px] leading-none tracking-[-0.01em]'
         // The row a preview above stands for lights up while the preview is pointed at
         const linked = preview === ('to' in a ? a.to : a.file)
-        const name = `min-w-0 flex-1 font-medium decoration-[0.25px] underline-offset-[0.25em] [text-decoration-skip-ink:none] group-hover:underline ${linked ? 'group-has-[[data-preview]:hover]/preview:underline' : ''}`
+        const name = `min-w-0 flex-1 font-medium ${UNDERLINE} group-hover:decoration-black/40 group-hover:duration-0 ${linked ? 'group-has-[[data-preview]:hover]/preview:decoration-black/40 group-has-[[data-preview]:hover]/preview:duration-0' : ''}`
         const meta = `shrink-0 text-[#999] [font-feature-settings:"tnum"_1] group-hover:text-black ${linked ? 'group-has-[[data-preview]:hover]/preview:text-black' : ''}`
         if ('to' in a) {
           return (
@@ -837,8 +846,8 @@ export default function Guide() {
                 </p>
                 {/* Quick links: into the guide, from its first section, and to the templated media, the constructors among them */}
                 <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
-                  <a href="#positioning" className={NAV_HOVER}>Стандарты</a>
-                  <a href="#materials" className={NAV_HOVER}>{TITLES.materials}</a>
+                  <a href="#positioning" className={LINK_HOVER}>Стандарты</a>
+                  <a href="#materials" className={LINK_HOVER}>{TITLES.materials}</a>
                 </nav>
               </div>
               <Section>
@@ -1199,7 +1208,7 @@ export default function Guide() {
                 <H2 id="livery">Ливрея</H2>
                 <Text>
                   <p>Ливрея превращает демо-автомобиль дилера в носитель бренда: на бортах и заднем стекле — название модели, имя дилерского центра и QR-код.</p>
-                  <p>Файлы для оклейки собираются в <Link to="/livery" className="underline decoration-[0.5px] underline-offset-[0.2em] [text-decoration-skip-ink:none] hover:no-underline">конструкторе</Link>: укажите название дилера, теглайн и ссылку для QR-кода. Конструктор проверит, что текст не заходит на шов между дверями и ручку, и соберёт архив: векторные PDF для плоттерной резки в масштабе 1:1 и спецификацию с размерами для монтажа.</p>
+                  <p>Файлы для оклейки собираются в <Link to="/livery" className={TEXT_LINK}>конструкторе</Link>: укажите название дилера, теглайн и ссылку для QR-кода. Конструктор проверит, что текст не заходит на шов между дверями и ручку, и соберёт архив: векторные PDF для плоттерной резки в масштабе 1:1 и спецификацию с размерами для монтажа.</p>
                 </Text>
               </Head>
               <Constructor to="/livery" title="Конструктор ливреи">
@@ -1212,7 +1221,7 @@ export default function Guide() {
                 <H2 id="price-card">Прайс-карта</H2>
                 <Text>
                   <p>Прайс-карта стоит рядом с автомобилем и отвечает на главный вопрос — сколько он стоит.</p>
-                  <p>Карты для всех моделей и комплектаций собираются в <Link to="/price-card" className="underline decoration-[0.5px] underline-offset-[0.2em] [text-decoration-skip-ink:none] hover:no-underline">конструкторе</Link>: выберите модель и комплектацию, укажите цену с кредитом и без и ссылку для QR-кода. Макет, шрифты и отступы уже настроены — получится готовый к печати PDF формата A3.</p>
+                  <p>Карты для всех моделей и комплектаций собираются в <Link to="/price-card" className={TEXT_LINK}>конструкторе</Link>: выберите модель и комплектацию, укажите цену с кредитом и без и ссылку для QR-кода. Макет, шрифты и отступы уже настроены — получится готовый к печати PDF формата A3.</p>
                 </Text>
               </Head>
               <Constructor to="/price-card" title="Конструктор прайс-карты">
