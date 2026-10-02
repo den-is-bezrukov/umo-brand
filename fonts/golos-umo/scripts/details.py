@@ -61,6 +61,10 @@ U_TENSION = 0.65
 # Я я: the lower half of the bowl, the bar under it and the leg's start come down, so the bowl sits
 # on the leg with more weight (CoFo's sits 8-20 units lower); the bar keeps its thickness
 YA_DROP = {'Ya-cy': 15, 'ya-cy': 10}
+# Я's bowl is squarer than the rounds: every curve of it (outside and counter) gets longer handles,
+# pulled towards the corner its tangents make, until the area left between curve and corner is
+# YA_SQUARE of what our O leaves (Golos's lower outside turn was rounder than a circle)
+YA_SQUARE = 0.8
 SPUR_WIDTH = {'Regular': None, 'Medium': 108}
 CROTCH_Y = {'Regular': None, 'Medium': 68}
 TAIL_SHIFT = -65    # the tail's line moves this far left, so it cuts into the bowl nearer its middle
@@ -309,6 +313,62 @@ def fix_ya(g, drop):
         for k in idx: c[k].y = round(c[k].y - shift(c[k].y))
 
 
+def corner_fill(P):
+    """area between a cubic and the corner its end tangents make, over the triangle ends-corner:
+    a circular quarter 0.43, a square corner 0"""
+    I = intersect(P)
+    pts = [bez(P, i / 200) for i in range(201)] + [I]
+    A = abs(sum(a[0] * b[1] - b[0] * a[1] for a, b in zip(pts, pts[1:] + pts[:1]))) / 2
+    T = abs((P[3][0] - P[0][0]) * (I[1] - P[0][1]) - (I[0] - P[0][0]) * (P[3][1] - P[0][1])) / 2
+    return A / T
+
+
+def intersect(P):
+    (x0, y0), (x1, y1), (x2, y2), (x3, y3) = P
+    d1 = (x1 - x0, y1 - y0); d2 = (x2 - x3, y2 - y3)
+    den = d1[0] * d2[1] - d1[1] * d2[0]
+    t = ((x3 - x0) * d2[1] - (y3 - y0) * d2[0]) / den
+    return (x0 + d1[0] * t, y0 + d1[1] * t)
+
+
+def square_up(P, target):
+    """lengthen both handles towards the tangents' corner until corner_fill(P) == target"""
+    I = intersect(P)
+    a = math.dist(P[0], P[1]) / math.dist(P[0], I); b = math.dist(P[3], P[2]) / math.dist(P[3], I)
+    def make(d):
+        aa, bb = min(a + d, 0.98), min(b + d, 0.98)
+        return [P[0], (P[0][0] + (I[0] - P[0][0]) * aa, P[0][1] + (I[1] - P[0][1]) * aa),
+                (P[3][0] + (I[0] - P[3][0]) * bb, P[3][1] + (I[1] - P[3][1]) * bb), P[3]]
+    lo, hi = -0.3, 0.5
+    for _ in range(50):
+        m = (lo + hi) / 2
+        if corner_fill(make(m)) > target: lo = m
+        else: hi = m
+    return make((lo + hi) / 2)
+
+
+def square_bowl(font, name):
+    """Я: every cubic of the bowl, outside and counter, squared to YA_SQUARE of O's corner fill"""
+    o = font['O'].contours[0]
+    ref = sum(corner_fill([(q.x, q.y) for q in pts]) for pts in _cubics(o)) / len(_cubics(o))
+    for c in font[name].contours:
+        pts = c.points; n = len(pts)
+        for i, p in enumerate(pts):
+            if p.type == 'curve':
+                a, h1, h2 = pts[(i - 3) % n], pts[(i - 2) % n], pts[(i - 1) % n]
+                if a.type is None or h1.type is not None or h2.type is not None: continue
+                Q = square_up([(a.x, a.y), (h1.x, h1.y), (h2.x, h2.y), (p.x, p.y)], YA_SQUARE * ref)
+                h1.x, h1.y = round(Q[1][0]), round(Q[1][1]); h2.x, h2.y = round(Q[2][0]), round(Q[2][1])
+
+
+def _cubics(c):
+    pts = c.points; n = len(pts); out = []
+    for i, p in enumerate(pts):
+        if p.type == 'curve' and pts[(i - 1) % n].type is None and pts[(i - 2) % n].type is None:
+            out.append([pts[(i - 3) % n], pts[(i - 2) % n], pts[(i - 1) % n], p])
+    return out
+
+
 if __name__ == '__main__':
     for st in ('Regular', 'Medium'):
         f = ufoLib2.Font.open(f'umo/GolosUMO-{st}.ufo')
@@ -320,6 +380,7 @@ if __name__ == '__main__':
         fix_u(f, 'U-cy', 0)
         fix_u(f, 'y', min(p.y for p in f['p'].contours[0].points))   # flat on the descender line
         for n, drop in YA_DROP.items(): fix_ya(f[n], drop)
+        square_bowl(f, 'Ya-cy')
         f.save()
         print(st, 'M', [(p.x, p.y) for p in f['M'].contours[0].points][2:6],
               'Q tail', [(p.x, p.y) for p in f['Q'].contours[0].points][3:7])
