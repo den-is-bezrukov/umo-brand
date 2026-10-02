@@ -20,7 +20,8 @@ This is the canonical project structure. Start with task-relevant files below. O
 - `src/App.tsx` - Price-card generator page
 - `src/Livery.tsx` - Dealer livery generator page (see "Dealer livery" below)
 - `src/livery/` - Livery surfaces in mm (`layout.ts`), outlines (`geometry.ts`), UMO 8 lettering (`logo.ts`) and the PDF/zip export (`pdf.ts`)
-- `src/ui/form.tsx` - Sidebar controls shared by the generators (segments, fields, the QR link field, checkboxes, the download button)
+- `src/ui/form.tsx` - Sidebar controls shared by the generators (segments, fields, the QR link field, checkboxes, the download button, a copy-link button not in use yet)
+- `src/ui/share.ts` - Generator settings in the page address (`linkParams`, `useLinkState`), so a set-up card or livery is sent as a link
 - `src/guide/Guide.tsx` - Brand guide page (see "Brand guide" below)
 - `src/posters/` - Poster components: `PriceCard.tsx` (web preview) and `pdf/PriceCardPdf.tsx` (PDF export), sharing data from `cardData.ts`
 - `src/icons/` - SVG path data for the UMO logo/badges and small UI icons, imported directly by component name
@@ -74,6 +75,10 @@ The obstacles — the seam between the doors and the front door handle — were 
 Cut files are vector only: every shape is a filled outline (text converted with opentype.js, the QR traced into merged contours so the plotter doesn't cut between modules), in the sources' colour C60 M40 Y40 K100, even-odd fill. UMO 5 is in the model switch but disabled until it has its own spec.
 
 The guide's Ливрея section (Носители) shows `src/assets/guide/livery-umo8.webp`: the left side with the generator's default dealer («Автодом» over «Центр UMO») and tagline and no guides, rendered from the generator's cut file onto the spec photo (1824×912, the car 84% of the width). Regenerate it if the layout or defaults change.
+
+## Links with settings
+
+Both generators keep their settings in the page address, so a set-up card or livery can be sent as a link: copy it from the address bar. (`CopyLinkButton` in `src/ui/form.tsx` copies it in one click; it's commented out next to the download buttons for now.) The page reads them on load and writes them back with `history.replaceState` as they change; only what differs from the defaults goes in, and anything unknown or implausible falls back to the default. Price card: `model` (umo5), `trim`, `full` and `credit` (seven digits, else the trim's price), `link`. Livery: `link`, `top`, `bottom` (the texts, line breaks as `%0A`), `off` (any of `qr,top,bottom,rear`), `rtop` / `rbottom` (the rear window's own text; either one turns «Свой текст на стекле» on) and `show` (`dims,seams`). Adding a setting means reading it in the page's initial state and writing it in its `useLinkState` call; keep the names stable, as links get sent around.
 
 ## Car photos
 

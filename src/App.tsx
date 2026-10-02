@@ -7,6 +7,7 @@ import PriceCardPdf from '@/posters/pdf/PriceCardPdf'
 import { ensurePdfFonts } from '@/posters/pdf/pdfFonts'
 import type { Variant } from '@/posters/cardData'
 import { isValidUrl, SegBtn, Field, Segments, TextInput, UrlField, DownloadButton } from '@/ui/form'
+import { linkParams, useLinkState } from '@/ui/share'
 
 const POSTER_W = 1754
 const POSTER_H = 2480
@@ -22,6 +23,8 @@ const DEFAULTS: Record<string, { full: string; credit: string }> = {
   'umo5-pro':   { full: '3 515 000', credit: '2 590 000' },
 }
 
+const TRIMS: Record<Model, Trim[]> = { umo8: ['max', 'ultra'], umo5: ['pro', 'max'] }
+
 const MAX_PRICE = 9_999_999
 
 function formatPrice(val: string) {
@@ -34,12 +37,44 @@ function ActivePoster({ model, trim, fullPrice, creditPrice, qrSvg }: { model: M
   return <PriceCard variant={`${model}-${trim}` as Variant} fullPrice={fullPrice} creditPrice={creditPrice} qrSvg={qrSvg} />
 }
 
+/** The card the page was opened with: model and trim from the link if they exist, prices as given or the trim's own */
+function fromLink() {
+  const link = linkParams()
+  const model: Model = link.get('model') === 'umo5' ? 'umo5' : 'umo8'
+  const asked = link.get('trim') as Trim | null
+  const trim = asked && TRIMS[model].includes(asked) ? asked : TRIMS[model][0]
+  const defaults = DEFAULTS[`${model}-${trim}`]
+  // A price is taken as it is in the link only if it looks like one: seven digits, 1 000 000 to 9 999 999
+  const price = (key: string) => {
+    const v = link.get(key) ?? ''
+    return /^[1-9]\d{6}$/.test(v) ? formatPrice(v) : null
+  }
+  return {
+    model,
+    trim,
+    full: price('full') ?? defaults.full,
+    credit: price('credit') ?? defaults.credit,
+    url: link.get('link') ?? DEFAULT_URL,
+  }
+}
+
 export default function App() {
-  const [model, setModel] = useState<Model>('umo8')
-  const [trim, setTrim] = useState<Trim>('max')
-  const [fullPrice, setFullPrice] = useState(DEFAULTS['umo8-max'].full)
-  const [creditPrice, setCreditPrice] = useState(DEFAULTS['umo8-max'].credit)
-  const [url, setUrl] = useState(DEFAULT_URL)
+  const [initial] = useState(fromLink)
+  const [model, setModel] = useState<Model>(initial.model)
+  const [trim, setTrim] = useState<Trim>(initial.trim)
+  const [fullPrice, setFullPrice] = useState(initial.full)
+  const [creditPrice, setCreditPrice] = useState(initial.credit)
+  const [url, setUrl] = useState(initial.url)
+
+  // The address carries what differs from the defaults, so the card can be sent as a link
+  const digits = (v: string) => v.replace(/\D/g, '')
+  useLinkState({
+    model: model === 'umo8' ? null : model,
+    trim: trim === TRIMS[model][0] ? null : trim,
+    full: fullPrice === DEFAULTS[`${model}-${trim}`].full ? null : digits(fullPrice),
+    credit: creditPrice === DEFAULTS[`${model}-${trim}`].credit ? null : digits(creditPrice),
+    link: url.trim() === DEFAULT_URL ? null : url.trim(),
+  })
   const [qrSvg, setQrSvg] = useState<string | undefined>(undefined)
   const [exporting, setExporting] = useState(false)
   const [scale, setScale] = useState(0)
@@ -80,7 +115,7 @@ export default function App() {
   }, [])
 
   const switchModel = (m: Model) => {
-    const t: Trim = m === 'umo5' ? 'pro' : 'max'
+    const t = TRIMS[m][0]
     setModel(m); setTrim(t)
     setFullPrice(DEFAULTS[`${m}-${t}`].full)
     setCreditPrice(DEFAULTS[`${m}-${t}`].credit)
@@ -160,7 +195,10 @@ export default function App() {
         {/* Download — right under the fields, sticking to the bottom of the sidebar when the window is shorter than the form;
             on phones pinned to the bottom of the screen, since the preview comes below the form */}
         <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky">
-          <DownloadButton onClick={handleExport} busy={exporting} disabled={!urlValid || !pricesValid}>Скачать PDF</DownloadButton>
+          <div className="flex gap-2">
+            <DownloadButton onClick={handleExport} busy={exporting} disabled={!urlValid || !pricesValid}>Скачать PDF</DownloadButton>
+            {/* <CopyLinkButton /> — hidden for now; the address already carries the settings */}
+          </div>
         </div>
       </aside>
 

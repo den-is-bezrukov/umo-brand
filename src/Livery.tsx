@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import type { Font } from 'opentype.js'
 import { Field, OptionalField, Segments, SegBtn, TextArea, UrlField, Checkbox, DownloadButton, isValidUrl } from '@/ui/form'
+import { linkParams, useLinkState } from '@/ui/share'
 import { UMO8, SURFACES, withoutQr } from '@/livery/layout'
 import { loadFont, buildSheet, specMarks, toD, mm, type Sheet, type Line } from '@/livery/geometry'
 
@@ -10,6 +11,11 @@ import { loadFont, buildSheet, specMarks, toD, mm, type Sheet, type Line } from 
 // dealer name or tagline that would run onto them shows up before the files go to the wrap shop.
 
 const DEFAULT_URL = 'https://umo.auto/'
+const DEFAULT_TOP = 'Автодом\nЦентр UMO'
+const DEFAULT_BOTTOM = 'Попробуй гибрид с технологиями Яндекса'
+
+// The parts that can be left out, as the `off` link parameter names them
+const PARTS = { qr: 'qr', dealer: 'top', tagline: 'bottom', rear: 'rear' } as const
 const RED = '#ff2a1a'
 
 type Model = 'umo8' | 'umo5'
@@ -71,18 +77,37 @@ function SheetPreview({ sheet, seams, dims }: { sheet: Sheet; seams: boolean; di
 }
 
 export default function Livery() {
+  // Settings come from the link the page was opened with (see `useLinkState` below), defaults for the rest
+  const [link] = useState(linkParams)
   const [model, setModel] = useState<Model>('umo8')
-  const [dealer, setDealer] = useState('Автодом\nЦентр UMO')
-  const [tagline, setTagline] = useState('Попробуй гибрид с технологиями Яндекса')
+  const [dealer, setDealer] = useState(link.get('top') ?? DEFAULT_TOP)
+  const [tagline, setTagline] = useState(link.get('bottom') ?? DEFAULT_BOTTOM)
   // Text of its own on the rear window; filled from the sides the first time it's turned on
-  const [ownRear, setOwnRear] = useState(false)
-  const [rear, setRear] = useState<{ dealer: string; tagline: string }>()
-  const [url, setUrl] = useState(DEFAULT_URL)
+  const [ownRear, setOwnRear] = useState(link.has('rtop') || link.has('rbottom'))
+  const [rear, setRear] = useState<{ dealer: string; tagline: string } | undefined>(() =>
+    link.has('rtop') || link.has('rbottom')
+      ? { dealer: link.get('rtop') ?? dealer.replace(/\s*\n\s*/g, ' '), tagline: link.get('rbottom') ?? tagline }
+      : undefined)
+  const [url, setUrl] = useState(link.get('link') ?? DEFAULT_URL)
   // What goes into the files; a part that's off is in neither the preview, nor the decals, nor the spec
-  const [on, setOn] = useState({ qr: true, tagline: true, dealer: true, rear: true })
+  const [on, setOn] = useState(() => {
+    const off = (link.get('off') ?? '').split(',')
+    return { qr: !off.includes(PARTS.qr), tagline: !off.includes(PARTS.tagline), dealer: !off.includes(PARTS.dealer), rear: !off.includes(PARTS.rear) }
+  })
   const toggle = (key: keyof typeof on) => (v: boolean) => setOn(o => ({ ...o, [key]: v }))
-  const [seams, setSeams] = useState(false)
-  const [dims, setDims] = useState(false)
+  const show = (link.get('show') ?? '').split(',')
+  const [seams, setSeams] = useState(show.includes('seams'))
+  const [dims, setDims] = useState(show.includes('dims'))
+
+  useLinkState({
+    link: url.trim() === DEFAULT_URL ? null : url.trim(),
+    top: dealer === DEFAULT_TOP ? null : dealer,
+    bottom: tagline === DEFAULT_BOTTOM ? null : tagline,
+    off: (Object.keys(PARTS) as (keyof typeof PARTS)[]).filter(k => !on[k]).map(k => PARTS[k]).join(','),
+    rtop: ownRear && rear ? rear.dealer : null,
+    rbottom: ownRear && rear ? rear.tagline : null,
+    show: [...(dims ? ['dims'] : []), ...(seams ? ['seams'] : [])].join(','),
+  })
   const [font, setFont] = useState<Font>()
   const [exporting, setExporting] = useState(false)
 
@@ -189,7 +214,10 @@ export default function Livery() {
         </div>
 
         <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky">
-          <DownloadButton onClick={handleExport} busy={exporting} disabled={!ok || (on.qr && !urlValid)}>Скачать ZIP</DownloadButton>
+          <div className="flex gap-2">
+            <DownloadButton onClick={handleExport} busy={exporting} disabled={!ok || (on.qr && !urlValid)}>Скачать ZIP</DownloadButton>
+            {/* <CopyLinkButton /> — hidden for now; the address already carries the settings */}
+          </div>
         </div>
       </aside>
 

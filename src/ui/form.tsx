@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import svgPaths from '@/icons/ui'
 
 // Sidebar controls shared by the generators (price card, dealer livery). Light UI per the Figma layout
@@ -172,6 +172,38 @@ export function OptionalField({ label, on, onChange, children }: { label: string
       <Checkbox checked={on} onChange={onChange}>{label}</Checkbox>
       {on && children}
     </div>
+  )
+}
+
+/** Copies the page address — with the settings in it — to share a set-up card or livery; a tick says it's done */
+export function CopyLinkButton() {
+  const [copied, setCopied] = useState(false)
+  useEffect(() => {
+    if (!copied) return
+    const t = setTimeout(() => setCopied(false), 2000)
+    return () => clearTimeout(t)
+  }, [copied])
+  const label = copied ? 'Ссылка скопирована' : 'Скопировать ссылку на эти настройки'
+  return (
+    <button
+      type="button"
+      onClick={() => navigator.clipboard.writeText(window.location.href).then(() => setCopied(true))}
+      aria-label={label}
+      title={label}
+      className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-[4px] bg-[#f5f5f5] outline-none hover:bg-[#ebebeb] focus-visible:ring-2 focus-visible:ring-black/30"
+    >
+      {copied ? (
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+          <path d={svgPaths.p3de7e600} stroke="#00C950" strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.45833" />
+        </svg>
+      ) : (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="black" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+          <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+        </svg>
+      )}
+      <span className="sr-only" aria-live="polite">{copied ? 'Ссылка скопирована' : ''}</span>
+    </button>
   )
 }
 
