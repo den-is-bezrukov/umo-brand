@@ -217,12 +217,48 @@ function useActiveInView(asideRef: RefObject<HTMLElement | null>, active: string
       const box = aside.getBoundingClientRect()
       const r = link.getBoundingClientRect()
       const top = box.top + head.offsetHeight
-      const bottom = box.bottom - foot.offsetHeight
+      // Below the hero photo the sidebar runs off the screen, and the toggle row rides at the screen's bottom.
+      const bottom = Math.min(box.bottom, window.innerHeight) - foot.offsetHeight
       const by = r.top < top ? r.top - top - 24 : r.bottom > bottom ? r.bottom - bottom + 24 : 0
       if (by) aside.scrollBy({ top: by, behavior: 'smooth' })
     }, 350)
     return () => clearTimeout(timer)
   }, [asideRef, active, expandAll])
+}
+
+/**
+ * While the page slides up over the hero, the sidebar's toggle row stays at the bottom of the screen rather than of
+ * the sidebar, which runs off the screen, so the contents unroll between the logo and the row as the page rises.
+ * They fade in over the first 160px of scroll: on the first screen there's only the logo and the row.
+ */
+function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const body = bodyRef.current
+      const aside = asideRef.current
+      if (!body || !aside) return
+      const lift = Math.max(0, body.getBoundingClientRect().top)
+      const foot = aside.lastElementChild as HTMLElement
+      const nav = aside.querySelector('nav')
+      foot.style.transform = lift ? `translateY(${-lift}px)` : ''
+      if (nav) {
+        const opacity = Math.min(1, window.scrollY / 160)
+        nav.style.opacity = String(opacity)
+        nav.style.visibility = opacity ? '' : 'hidden'
+      }
+    }
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', onScroll)
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', onScroll)
+      cancelAnimationFrame(frame)
+    }
+  }, [bodyRef, asideRef])
 }
 
 const EXPAND_KEY = 'umo-guide-toc-expanded'
@@ -239,8 +275,8 @@ function useExpandAll() {
   return [expandAll, toggle] as const
 }
 
-function Logo() {
-  return <UmoLogo title="UMO" className="w-[120px]" />
+function Logo({ className = 'w-[120px]' }: { className?: string }) {
+  return <UmoLogo title="UMO" className={className} />
 }
 
 // ─── Typography ──────────────────────────────────────────────────────────────
@@ -572,7 +608,9 @@ export default function Guide() {
   const [expandAll, toggleExpandAll] = useExpandAll()
   const [menuOpen, setMenuOpen] = useState(false)
   const asideRef = useRef<HTMLElement>(null)
+  const bodyRef = useRef<HTMLDivElement>(null)
   useActiveInView(asideRef, active, expandAll)
+  useHeroReveal(bodyRef, asideRef)
   // Two headings rarely share a line on a phone; when they do (Видение / Миссия), the first one names the place.
   const sectionTitle = active.length ? TITLES[active[0]] : undefined
 
@@ -616,12 +654,30 @@ export default function Guide() {
   }, [])
 
   return (
-    <div ref={pageRef} className="min-h-screen bg-white font-sans text-black lg:flex lg:items-start">
+    <div ref={pageRef} id="top" className="min-h-screen bg-white font-sans text-black">
+      {/* The hero is the top of the page: the logo leads here, and it isn't in the contents. On a phone it's the first
+          picture, above the header, and covers the header's upward white (z-30). From lg it's fixed behind the page,
+          which starts 184px above the bottom of the screen — the logo block (84), one nav line (32) and the toggle
+          row (68) — so the first screen shows the logo, the row and the statement, then slides up over the photo
+          (Figma 4893:3846, prototype 4921:2352). */}
+      <div className="relative z-30 aspect-[2/1] lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:aspect-auto lg:h-[calc(100vh-184px)]">
+        <img
+          src={img('hero')}
+          alt="Женщина у UMO 8 на горной дороге"
+          width={1824}
+          height={912}
+          fetchPriority="high"
+          decoding="async"
+          className="block size-full bg-[#f5f5f5] object-cover object-[50%_40%]"
+        />
+      </div>
+
+      <div ref={bodyRef} className="bg-white lg:relative lg:z-10 lg:mt-[calc(100vh-184px)] lg:flex lg:items-start">
       {/* Desktop sidebar. The expand row sits at the bottom of the screen, so it stays put while the open chapter
           changes the list's height, and sticks there when the list is taller than the screen, cutting the list off —
           enough of a hint that it scrolls, so the scrollbar, far from the text at this width, is hidden. */}
       <aside ref={asideRef} className="hidden lg:flex sticky top-0 h-screen w-[320px] xl:w-[480px] shrink-0 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" aria-label="В начало"><Logo /></a></div>
+        <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" aria-label="В начало" className="block w-fit"><Logo className="w-[180px]" /></a></div>
         <div className="px-6"><Nav active={active} expandAll={expandAll} /></div>
         <TocToggle expanded={expandAll} onClick={toggleExpandAll} className="sticky bottom-0 z-10 mt-auto p-6" />
       </aside>
@@ -636,7 +692,7 @@ export default function Guide() {
           sidebar; tapped, the full contents open between the header and the bar, which turns into «Свернуть». */}
       <div className="lg:hidden">
         {menuOpen && (
-          <div className="fixed inset-x-0 top-14 bottom-0 z-20 overflow-y-auto overscroll-contain bg-white px-4 pt-4 md:top-[72px] md:px-6 md:pt-6">
+          <div className="fixed inset-x-0 top-14 bottom-0 z-40 overflow-y-auto overscroll-contain bg-white px-4 pt-4 md:top-[72px] md:px-6 md:pt-6">
             <Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} />
             <TocToggle
               expanded
@@ -651,7 +707,7 @@ export default function Guide() {
             onClick={() => setMenuOpen(true)}
             aria-expanded={false}
             aria-label={`Содержание: ${sectionTitle ?? TITLES.brand}`}
-            className="fixed inset-x-0 bottom-0 z-20 flex cursor-pointer items-start gap-2 bg-white px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]"
+            className="fixed inset-x-0 bottom-0 z-40 flex cursor-pointer items-start gap-2 bg-white px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]"
           >
             <TocIcon name="menu" />
             <span className="min-w-0 flex-1 truncate">{sectionTitle ?? TITLES.brand}</span>
@@ -659,12 +715,11 @@ export default function Guide() {
         )}
       </div>
 
-      <main id="top" className="min-w-0 flex-1 p-4 pb-[calc(52px+1rem)] md:p-6 md:pb-[calc(68px+1.5rem)] lg:pb-6">
+      <main className="min-w-0 flex-1 p-4 pb-[calc(52px+1rem)] md:p-6 md:pb-[calc(68px+1.5rem)] lg:pb-6">
         <div className="flex max-w-[1200px] flex-col gap-section">
-          {/* The hero is the top of the page: the logo leads here, and it isn't in the contents. Платформа бренда follows
-              without a title of its own — the statement stands in for it and carries the chapter anchor. */}
-          <div className="flex flex-col gap-8 md:gap-12">
-            <Fig name="hero" w={912} h={456} eager alt="Семья у UMO 8 в лесу" />
+          {/* Платформа бренда follows the hero without a title of its own — the statement stands in for it and carries
+              the chapter anchor. */}
+          <div>
             <div className="flex flex-col gap-section">
               <p id="brand" className="scroll-mt-24 text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em]">
                 UMO — это автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
@@ -1057,6 +1112,7 @@ export default function Guide() {
           <footer className="text-[16px] leading-[1.25] tracking-[-0.01em] text-[#999]">ООО «ЭМ РУС». 0+</footer>
         </div>
       </main>
+      </div>
     </div>
   )
 }
