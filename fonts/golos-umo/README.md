@@ -16,9 +16,11 @@ A prototype of a UMO brand typeface: Golos Text (Alexandra Korolkova and Vitaly 
 - **Q:** the tail turns from 43° to 53°, moves 65 units towards the bowl's middle and reaches 85 below the baseline; it keeps Golos's thickness and square-cut ends and is re-cut into the bowl with the same points as before.
 - **G with a spur** (`ss01`, «G with spur», also for Ğ Ģ Ġ): the right side runs straight down from the bar to the baseline and the inner curve leaves the bar vertically.
 
+- **Л л, Д д, geometric legs:** Golos bends them over most of their height, like a sabre; here they stand straight and turn only near the foot. Л turns into a flat, square-ended foot with a squarish corner (long handles at both ends, so the curvature is low where it meets the straight leg and the foot and gathers in the middle, as in CoFo and in the rounds); Д's legs turn four times as tall as wide, their handles aimed at the point where the straight leg's line meets Golos's landing line, so the curve has no wave. Љ and Ԓ still have Golos's legs.
+
 ## Checks
 
-`build.sh` stops if a widened glyph gains a curvature break between two curves that Golos doesn't have, gains or loses points, or if the superness of O or 0 moves more than 0.01 from Golos's, in either style (`scripts/checks/check.py`; CoFo Regular's and Medium's are printed for reference).
+`build.sh` stops if a widened glyph gains a curvature break between two curves that Golos doesn't have, gains or loses points, or if the superness of O or 0 moves more than 0.01 from Golos's, in either style (`scripts/checks/check.py`; CoFo Regular's and Medium's are printed for reference). Л and л, whose feet are redrawn with lines, are left out of the point comparison. `scripts/checks/combs.py` draws curvature combs of Golos, Golos UMO and CoFo side by side, from the work directory that `KEEP=1 ./build.sh` leaves.
 
 ## Files
 

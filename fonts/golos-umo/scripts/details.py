@@ -4,7 +4,11 @@
 - Q: the tail turns to TAIL_ANGLE and reaches TAIL_BOTTOM below the baseline, keeping its thickness
   and square-cut ends; it is re-cut into the bowl, with the same points as before;
 - G.ss01: G with a spur, the right side running straight down from the bar to the baseline
-  (stylistic set 1, also for Ğ Ģ Ġ)."""
+  (stylistic set 1, also for Ğ Ģ Ġ);
+- Л л, Д д: geometric legs. Golos bends them over most of their height, like a sabre; here they
+  stand straight and turn only near the foot. Л's turn into its foot is close to a quarter circle
+  (EL_BEND times as tall as wide) and the foot lies flat on the baseline with a square end;
+  Д's legs turn DE_BEND times as tall as wide before the slab, meeting it at Golos's angle."""
 import math, copy, ufoLib2
 
 VERTEX_Y = 65       # M vertex, font units above the baseline (Golos UMO had 143-151)
@@ -14,6 +18,17 @@ TAIL_BOTTOM = -85   # lowest corner of the Q tail (Golos about -30)
 # G.ss01, per style: spur width and the height where the bowl runs into it (None keeps the shape
 # that falls out of the drawing: the spur as wide as the jaw, the bowl cut where it meets the spur).
 # Medium needs both, or the bowl merges into the spur at the baseline in a dark knot.
+EL_BEND = 1.1       # Л л: height of the turn into the foot over its width
+DE_BEND = {'outer': 4.0, 'inner': 4.5}   # Д д: height of the legs' turn over its width
+# handle lengths as a share of the turn's extent. Л's turn is a squarish corner, like the rounds:
+# long handles at both ends keep the curvature low where it meets the straight leg and the flat
+# foot and gather it in the middle (a circular arc, 0.552, jumps from nothing to full at the joins).
+# Д's legs: handles run towards the point where the straight leg's line meets the landing line
+# (a handle past it puts a wave in the leg), long at the top so the leg leaves the straight gently.
+EL_TENSION = 0.8
+DE_TOP_TENSION = 0.8
+DE_SLAB_TENSION = 0.6
+REDRAWN = ['El-cy', 'el-cy']   # their feet are redrawn with lines, so they have fewer points than Golos's
 SPUR_WIDTH = {'Regular': None, 'Medium': 108}
 CROTCH_Y = {'Regular': None, 'Medium': 68}
 TAIL_SHIFT = -65    # the tail's line moves this far left, so it cuts into the bowl nearer its middle
@@ -169,10 +184,49 @@ feature ss01 {
             if n not in order: order.append(n)
 
 
+def fix_el(g):
+    """Л л: 0 inner bottom, 1-2 handles, 3 top of the inner turn, 4-9 the straight part,
+    10 top of the outer turn, 11-12 handles, 13 foot top, 14-15 handles, 16 foot end top,
+    17 foot end bottom, 18-19 handles"""
+    P = [(p.x, p.y) for p in g.contours[0].points]
+    x0, xi, xo = P[0][0], P[3][0], P[10][0]
+    xf, yf, xt = P[13][0], P[13][1], P[16][0]
+    yi = EL_BEND * (xi - x0); yo = yf + EL_BEND * (xo - xf)
+    L = F = EL_TENSION
+    new = [((x0, 0), 'line'), ((x0 + F * (xi - x0), 0), None), ((xi, yi - L * yi), None), ((xi, yi), 'curve')]
+    new += [(P[i], 'line') for i in range(4, 10)]
+    new += [((xo, yo), 'line'), ((xo, yo - L * (yo - yf)), None), ((xf + F * (xo - xf), yf), None), ((xf, yf), 'curve'),
+            ((xt, yf), 'line'), ((xt, 0), 'line')]
+    g.clearContours(); pen = g.getPointPen(); pen.beginPath()
+    for (x, y), tp in new: pen.addPoint((round(x), round(y)), segmentType=tp)
+    pen.endPath()
+
+
+def fix_de(g):
+    """Д д: outer 10 top of the leg's turn, 11-12 handles, 13 where it lands on the slab;
+    inner 0 landing, 1-2 handles, 3 top of the turn"""
+    o = g.contours[0].points; i = g.contours[1].points
+    def leg(bottom, top_x, start_handle, flip, side):
+        dx = abs(top_x - bottom[0]); ytop = bottom[1] + DE_BEND[side] * dx
+        a = math.atan2(start_handle[1] - bottom[1], start_handle[0] - bottom[0])   # Golos's landing angle
+        yI = bottom[1] + (top_x - bottom[0]) * math.tan(a)                         # tangents meet at (top_x, yI)
+        h1 = (bottom[0] + DE_SLAB_TENSION * (top_x - bottom[0]), bottom[1] + DE_SLAB_TENSION * (yI - bottom[1]))
+        h2 = (top_x, ytop - DE_TOP_TENSION * (ytop - yI))
+        return (top_x, ytop), (h2, h1) if flip else (h1, h2)
+    top, (h2, h1) = leg((o[13].x, o[13].y), o[10].x, (o[12].x, o[12].y), True, 'outer')
+    o[10].x, o[10].y = round(top[0]), round(top[1])
+    o[11].x, o[11].y = round(h2[0]), round(h2[1]); o[12].x, o[12].y = round(h1[0]), round(h1[1])
+    top, (h1, h2) = leg((i[0].x, i[0].y), i[3].x, (i[1].x, i[1].y), False, 'inner')
+    i[3].x, i[3].y = round(top[0]), round(top[1])
+    i[1].x, i[1].y = round(h1[0]), round(h1[1]); i[2].x, i[2].y = round(h2[0]), round(h2[1])
+
+
 if __name__ == '__main__':
     for st in ('Regular', 'Medium'):
         f = ufoLib2.Font.open(f'umo/GolosUMO-{st}.ufo')
         fix_m(f['M']); fix_q(f); g_spur(f, st)
+        for n in ('El-cy', 'el-cy'): fix_el(f[n])
+        for n in ('De-cy', 'de-cy'): fix_de(f[n])
         f.save()
         print(st, 'M', [(p.x, p.y) for p in f['M'].contours[0].points][2:6],
               'Q tail', [(p.x, p.y) for p in f['Q'].contours[0].points][3:7])

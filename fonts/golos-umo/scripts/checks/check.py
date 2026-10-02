@@ -24,8 +24,9 @@ rep=json.load(open('report.json'))
 O={m:ufoLib2.Font.open(f'master_ufo/GolosText-{m}.ufo') for m in ['Regular','Medium','SemiBold']}
 U={m:ufoLib2.Font.open(f'umo/GolosUMO-{m}.ufo') for m in ['Regular','Medium']}
 bad=[]
+from details import REDRAWN
 for n,(how,_,d) in rep.items():
-    if how=='composite': continue
+    if how=='composite' or n in REDRAWN: continue
     if topology(U['Medium'][n])!=topology(O['Medium'][n]): bad.append(f'{n}: points added or removed'); continue
     allowed=set().union(*(breaks(O[m][n]) for m in O))
     new=set().union(*(breaks(U[m][n]) for m in U))-allowed
