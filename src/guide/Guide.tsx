@@ -113,19 +113,33 @@ function useActiveSection() {
 // ─── Navigation ──────────────────────────────────────────────────────────────
 
 /**
- * A hovered link turns grey at once and fades back to black over 0.35s, like guides.area17.com, once the pointer
- * leaves (a transition runs with the duration of the state it heads to). The active link stays black.
+ * The contents' links turn grey (#808080) at once and fade back to black over 0.35s once the pointer leaves, like
+ * guides.area17.com (a transition runs with the duration of the state it heads to). The active one stays black.
  */
-const NAV_HOVER = 'transition-[color] duration-350 ease-[ease] hover:text-[#757575] hover:duration-0'
+const NAV_HOVER = 'transition-[color] duration-350 ease-[ease] hover:text-[#808080] hover:duration-0'
 
-/** `active`: you're inside this item (medium weight); `current`: its own heading is the one on screen (the bullet). */
-function NavLink({ id, title, active, current, onNavigate }: { id: string; title: string; active: boolean; current: boolean; onNavigate?: () => void }) {
+/**
+ * Links in the page (the quick links, download rows and captions) stay black and get a hairline underline as set in
+ * Figma (4865:1061): black at 40%, 2.5% of the type size thick, 25% of it under the baseline, through the descenders.
+ * It shows at once and fades over 0.25s: it's always there, transparent until hovered. `UNDERLINE` is the line;
+ * `LINK_HOVER` shows it on the link's own hover, rows show it on the row's (`group-hover`).
+ */
+const UNDERLINE = 'underline decoration-transparent decoration-[2.5%] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 ease-[ease]'
+const LINK_HOVER = `${UNDERLINE} hover:decoration-black/40 hover:duration-0`
+/** A link inside body copy keeps that line at 40% so it reads as a link, and it turns black under the pointer */
+const TEXT_LINK = 'underline decoration-black/40 decoration-[2.5%] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 ease-[ease] hover:decoration-black hover:duration-0'
+
+/**
+ * `active`: you're inside this item (medium weight); `current`: its own heading is the one on screen (the bullet).
+ * The space between items is the links' own padding (`pad`), not gaps, so the whole list is clickable (Figma 4865:1031).
+ */
+function NavLink({ id, title, active, current, onNavigate, pad }: { id: string; title: string; active: boolean; current: boolean; onNavigate?: () => void; pad: string }) {
   return (
     <a
       href={`#${id}`}
       onClick={onNavigate}
       aria-current={active ? 'location' : undefined}
-      className={`relative block leading-[1.25] ${active ? 'font-medium' : NAV_HOVER}`}
+      className={`relative block leading-[1.25] ${pad} ${active ? 'font-medium' : NAV_HOVER}`}
     >
       {current && <span aria-hidden className="absolute -left-[0.9em]">•</span>}
       {title}
@@ -151,7 +165,8 @@ function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; o
       type="button"
       onClick={onClick}
       aria-expanded={expanded}
-      className={`flex w-full cursor-pointer items-start gap-2 bg-white ${NAV_HOVER} text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] ${className}`}
+      // No width of its own: both places set it, and a `w-full` here outranked theirs in the built CSS
+      className={`flex cursor-pointer items-start gap-2 bg-white ${NAV_HOVER} text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] ${className}`}
     >
       <TocIcon name={expanded ? 'close' : 'menu'} />
       {expanded ? 'Свернуть' : 'Содержание'}
@@ -162,28 +177,30 @@ function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; o
 function Nav({ active, expandAll, onNavigate }: { active: string[]; expandAll: boolean; onNavigate?: () => void }) {
   const activeChapter = NAV.find(c => active.some(id => contains(c, id)))?.id
   return (
-    <nav className="flex flex-col gap-4 text-[16px] tracking-[-0.01em]">
+    // Chapters 8px above and under (16px apart), items 4px (8px apart): chapter → first item 12px; the last item takes
+    // 8px under it, so it's 16px to the next chapter, and so does an item over its own nested items (12px to them).
+    // The first and last chapters' 8px go under what's above and below the list (-my-2), so the text stays put.
+    <nav className="-my-2 flex flex-col text-[16px] tracking-[-0.01em]">
       {NAV.map(chapter => {
         // Like guides.area17.com: only the chapter you're reading is open, unless everything is expanded.
         const open = expandAll || activeChapter === chapter.id
         return (
           <div key={chapter.id} className="flex flex-col">
-            <NavLink id={chapter.id} title={chapter.title} active={activeChapter === chapter.id} current={active.includes(chapter.id)} onNavigate={onNavigate} />
+            <NavLink id={chapter.id} title={chapter.title} active={activeChapter === chapter.id} current={active.includes(chapter.id)} onNavigate={onNavigate} pad="py-2" />
             {chapter.children && (
               <div
                 inert={!open}
                 className={`grid transition-[grid-template-rows,opacity] duration-300 ease-out ${open ? 'grid-rows-[1fr] opacity-100' : 'grid-rows-[0fr] opacity-0'}`}
               >
                 <div className="min-h-0 overflow-hidden">
-                  <div className="flex flex-col gap-2 pl-6 pt-3">
+                  <div className="flex flex-col pl-6">
                     {chapter.children.map(s => (
-                      // Parent → its sub-items 12px (chapter → items, item → nested items), siblings 8px.
-                      <div key={s.id} className="flex flex-col gap-3">
-                        <NavLink id={s.id} title={s.title} active={active.some(id => contains(s, id))} current={active.includes(s.id)} onNavigate={onNavigate} />
+                      <div key={s.id} className="group/item flex flex-col">
+                        <NavLink id={s.id} title={s.title} active={active.some(id => contains(s, id))} current={active.includes(s.id)} onNavigate={onNavigate} pad={s.children ? 'pt-1 pb-2' : 'py-1 group-last/item:pb-2'} />
                         {s.children && (
-                          <div className="flex flex-col gap-2 pl-6">
+                          <div className="flex flex-col pl-6">
                             {s.children.map(t => (
-                              <NavLink key={t.id} id={t.id} title={t.title} active={active.includes(t.id)} current={active.includes(t.id)} onNavigate={onNavigate} />
+                              <NavLink key={t.id} id={t.id} title={t.title} active={active.includes(t.id)} current={active.includes(t.id)} onNavigate={onNavigate} pad="py-1" />
                             ))}
                           </div>
                         )}
@@ -270,15 +287,19 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
  * and the quick links under it share a line with the toggle row at the bottom of the screen (the row's 20px line starts
  * 24px into its 68), however many lines the statement wraps to (Figma 4893:3846).
  */
-function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObject<HTMLElement | null>) {
+function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObject<HTMLElement | null>, bodyRef: RefObject<HTMLElement | null>) {
   useEffect(() => {
     const page = pageRef.current
     const quick = quickRef.current
     const block = quick?.parentElement
-    if (!page || !quick || !block) return
+    const body = bodyRef.current
+    if (!page || !quick || !block || !body) return
     let frame = 0
     const update = () => {
       frame = 0
+      // Below lg: how far the quick links end under the top of the page (header and statement included), for the film
+      // to take the rest of the first screen (see Hero).
+      page.style.setProperty('--mstrip', `${Math.round(quick.getBoundingClientRect().bottom - body.getBoundingClientRect().top)}px`)
       const strip = `${Math.round(16 + quick.offsetTop - block.offsetTop + 68 - 24)}px`
       if (page.style.getPropertyValue('--strip') === strip) return
       page.style.setProperty('--strip', strip)
@@ -289,7 +310,7 @@ function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObjec
     const observer = new ResizeObserver(() => { if (!frame) frame = requestAnimationFrame(update) })
     observer.observe(block)
     return () => { observer.disconnect(); cancelAnimationFrame(frame) }
-  }, [pageRef, quickRef])
+  }, [pageRef, quickRef, bodyRef])
 }
 
 /**
@@ -297,6 +318,9 @@ function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObjec
  * already set up for the web); the poster is its first frame, so nothing jumps when it starts. It plays only while some
  * of it is on screen: once the page has slid over it whole, it stops, and goes on from that frame when it shows again.
  * With reduced motion asked for, or data saving on, the still photo stands in.
+ * Below lg it heads the page and takes what the first screen has left above the header, statement and quick links
+ * (`--mstrip`) and the bottom bar with a gap over it (52 + 16, from md 68 + 24), so the guide's first section starts
+ * below the fold; never less than half the screen's width, as on a phone held sideways.
  */
 function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -332,7 +356,7 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
   }, [bodyRef])
   const fill = 'block size-full bg-black object-cover'
   return (
-    <div ref={ref} className="relative z-30 aspect-[2/1] lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:aspect-auto lg:h-[calc(100vh-var(--strip,252px))]">
+    <div ref={ref} className="relative z-30 h-[max(50vw,calc(100svh-var(--mstrip,260px)-68px))] md:h-[max(50vw,calc(100svh-var(--mstrip,360px)-92px))] lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:h-[calc(100vh-var(--strip,286px))]">
       {still ? (
         <img src={img('hero')} alt="Женщина у UMO 8 на горной дороге" width={1824} height={912} fetchPriority="high" decoding="async" className={`${fill} object-[50%_40%]`} />
       ) : (
@@ -428,7 +452,7 @@ function Caption({ children, cross, download }: { children: ReactNode; cross?: b
   return (
     <figcaption className="flex items-start gap-2 text-[14px] leading-[1.43] [font-feature-settings:'case'_1]">
       {download && <span aria-hidden className="mt-[3px] w-[14px] shrink-0 border-b border-black pb-px text-center font-medium leading-none">↓</span>}
-      <span className={`flex-1 ${download ? 'decoration-[0.25px] underline-offset-[0.25em] [text-decoration-skip-ink:none] group-hover:underline' : ''}`}>{children}</span>
+      <span className={`flex-1 ${download ? `${UNDERLINE} group-hover:decoration-black/40 group-hover:duration-0` : ''}`}>{children}</span>
       {cross && <span aria-label="нельзя" className="w-4 text-center text-[20px] leading-[1.13] text-[#e30]">×</span>}
     </figcaption>
   )
@@ -571,7 +595,7 @@ function Assets({ items, preview }: { items: Asset[]; preview?: string }) {
         const row = 'group flex items-center gap-4 border-t border-[#e6e6e6] py-[14px] text-[16px] leading-none tracking-[-0.01em]'
         // The row a preview above stands for lights up while the preview is pointed at
         const linked = preview === ('to' in a ? a.to : a.file)
-        const name = `min-w-0 flex-1 font-medium decoration-[0.25px] underline-offset-[0.25em] [text-decoration-skip-ink:none] group-hover:underline ${linked ? 'group-has-[[data-preview]:hover]/preview:underline' : ''}`
+        const name = `min-w-0 flex-1 font-medium ${UNDERLINE} group-hover:decoration-black/40 group-hover:duration-0 ${linked ? 'group-has-[[data-preview]:hover]/preview:decoration-black/40 group-has-[[data-preview]:hover]/preview:duration-0' : ''}`
         const meta = `shrink-0 text-[#999] [font-feature-settings:"tnum"_1] group-hover:text-black ${linked ? 'group-has-[[data-preview]:hover]/preview:text-black' : ''}`
         if ('to' in a) {
           return (
@@ -701,7 +725,7 @@ export default function Guide() {
   const bodyRef = useRef<HTMLDivElement>(null)
   useActiveInView(asideRef, active, expandAll)
   const quickRef = useRef<HTMLElement>(null)
-  useHeroStrip(pageRef, quickRef)
+  useHeroStrip(pageRef, quickRef, bodyRef)
   useHeroReveal(bodyRef, asideRef)
   // The contents row does what it says; on the first screen it also takes the page up over the photo, where the
   // contents can be seen.
@@ -761,7 +785,7 @@ export default function Guide() {
           (Figma 4893:3846, prototype 4921:2352). */}
       <Hero bodyRef={bodyRef} />
 
-      <div ref={bodyRef} className="bg-white lg:relative lg:z-10 lg:mt-[calc(100vh-var(--strip,252px))] lg:flex lg:items-start">
+      <div ref={bodyRef} className="bg-white lg:relative lg:z-10 lg:mt-[calc(100vh-var(--strip,286px))] lg:flex lg:items-start">
       {/* Desktop sidebar. The expand row sits at the bottom of the screen, so it stays put while the open chapter
           changes the list's height, and sticks there when the list is taller than the screen, cutting the list off —
           enough of a hint that it scrolls, so the scrollbar, far from the text at this width, is hidden. */}
@@ -822,8 +846,8 @@ export default function Guide() {
                 </p>
                 {/* Quick links: into the guide, from its first section, and to the templated media, the constructors among them */}
                 <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
-                  <a href="#positioning" className={NAV_HOVER}>Стандарты</a>
-                  <a href="#materials" className={NAV_HOVER}>{TITLES.materials}</a>
+                  <a href="#positioning" className={LINK_HOVER}>Стандарты</a>
+                  <a href="#materials" className={LINK_HOVER}>{TITLES.materials}</a>
                 </nav>
               </div>
               <Section>
@@ -1184,7 +1208,7 @@ export default function Guide() {
                 <H2 id="livery">Ливрея</H2>
                 <Text>
                   <p>Ливрея превращает демо-автомобиль дилера в носитель бренда: на бортах и заднем стекле — название модели, имя дилерского центра и QR-код.</p>
-                  <p>Файлы для оклейки собираются в <Link to="/livery" className="underline decoration-[0.5px] underline-offset-[0.2em] [text-decoration-skip-ink:none] hover:no-underline">конструкторе</Link>: укажите название дилера, теглайн и ссылку для QR-кода. Конструктор проверит, что текст не заходит на шов между дверями и ручку, и соберёт архив: векторные PDF для плоттерной резки в масштабе 1:1 и спецификацию с размерами для монтажа.</p>
+                  <p>Файлы для оклейки собираются в <Link to="/livery" className={TEXT_LINK}>конструкторе</Link>: укажите название дилера, теглайн и ссылку для QR-кода. Конструктор проверит, что текст не заходит на шов между дверями и ручку, и соберёт архив: векторные PDF для плоттерной резки в масштабе 1:1 и спецификацию с размерами для монтажа.</p>
                 </Text>
               </Head>
               <Constructor to="/livery" title="Конструктор ливреи">
@@ -1197,7 +1221,7 @@ export default function Guide() {
                 <H2 id="price-card">Прайс-карта</H2>
                 <Text>
                   <p>Прайс-карта стоит рядом с автомобилем и отвечает на главный вопрос — сколько он стоит.</p>
-                  <p>Карты для всех моделей и комплектаций собираются в <Link to="/price-card" className="underline decoration-[0.5px] underline-offset-[0.2em] [text-decoration-skip-ink:none] hover:no-underline">конструкторе</Link>: выберите модель и комплектацию, укажите цену с кредитом и без и ссылку для QR-кода. Макет, шрифты и отступы уже настроены — получится готовый к печати PDF формата A3.</p>
+                  <p>Карты для всех моделей и комплектаций собираются в <Link to="/price-card" className={TEXT_LINK}>конструкторе</Link>: выберите модель и комплектацию, укажите цену с кредитом и без и ссылку для QR-кода. Макет, шрифты и отступы уже настроены — получится готовый к печати PDF формата A3.</p>
                 </Text>
               </Head>
               <Constructor to="/price-card" title="Конструктор прайс-карты">

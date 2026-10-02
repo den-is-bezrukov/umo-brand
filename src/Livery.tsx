@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import type { Font } from 'opentype.js'
 import { Field, OptionalField, Segments, SegBtn, TextArea, UrlField, Checkbox, SizeSwitch, DownloadButton, isValidUrl } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
-import { UMO8, SURFACES, withoutQr } from '@/livery/layout'
+import { LIVERIES, SURFACES, withoutQr, type Model } from '@/livery/layout'
 import { loadFont, buildSheet, specMarks, toD, mm, type Sheet, type Line } from '@/livery/geometry'
 
 // Dealer livery generator: lettering for both sides and the rear window of a dealer's demo car (Figma: UMO | Evrone,
@@ -12,13 +12,15 @@ import { loadFont, buildSheet, specMarks, toD, mm, type Sheet, type Line } from 
 
 const DEFAULT_URL = 'https://umo.auto/'
 const DEFAULT_TOP = 'Автодом\nЦентр UMO'
-const DEFAULT_BOTTOM = 'Попробуй гибрид с технологиями Яндекса'
+// The tagline offered by default names what each model is
+const DEFAULT_BOTTOM: Record<Model, string> = {
+  umo8: 'Попробуй гибрид с технологиями Яндекса',
+  umo5: 'Попробуй электрокар с технологиями Яндекса',
+}
 
 // The parts that can be left out, as the `off` link parameter names them
 const PARTS = { qr: 'qr', dealer: 'top', tagline: 'bottom', rear: 'rear' } as const
 const RED = '#ff2a1a'
-
-type Model = 'umo8' | 'umo5'
 
 function SheetPreview({ sheet, seams, dims }: { sheet: Sheet; seams: boolean; dims: boolean }) {
   const s = sheet.surface
@@ -28,6 +30,8 @@ function SheetPreview({ sheet, seams, dims }: { sheet: Sheet; seams: boolean; di
   const lines = [...sheet.dealer.lines, ...sheet.tagline.lines]
   const hairline = { vectorEffect: 'non-scaling-stroke' as const, strokeWidth: 1, fill: 'none' }
   const anchor = { left: 'start', center: 'middle', right: 'end' } as const
+  // White decals on UMO 8 and on glass, black on the white UMO 5's sides
+  const decal = s.decal ?? '#fff'
   return (
     <figure className="flex min-w-0 flex-col gap-2">
       <figcaption className="flex items-baseline gap-2 text-[14px] leading-5">
@@ -43,9 +47,9 @@ function SheetPreview({ sheet, seams, dims }: { sheet: Sheet; seams: boolean; di
         />
         <g transform={`translate(${s.photo.x} ${s.photo.y})`}>
           {/* QR and lettering */}
-          {sheet.fixed.map((cmds, i) => <path key={i} d={toD(cmds)} fill="#fff" fillRule="evenodd" />)}
+          {sheet.fixed.map((cmds, i) => <path key={i} d={toD(cmds)} fill={decal} fillRule="evenodd" />)}
           {lines.map((l, i) => (
-            <path key={`t${i}`} d={toD(l.cmds)} fill={bad(l) || l.extra ? RED : '#fff'} fillRule="evenodd" />
+            <path key={`t${i}`} d={toD(l.cmds)} fill={bad(l) || l.extra ? RED : decal} fillRule="evenodd" />
           ))}
           {seams && (
             <g stroke={RED} opacity={0.9}>
@@ -79,9 +83,9 @@ function SheetPreview({ sheet, seams, dims }: { sheet: Sheet; seams: boolean; di
 export default function Livery() {
   // Settings come from the link the page was opened with (see `useLinkState` below), defaults for the rest
   const [link] = useState(linkParams)
-  const [model, setModel] = useState<Model>('umo8')
+  const [model, setModel] = useState<Model>(link.get('model') === 'umo5' ? 'umo5' : 'umo8')
   const [dealer, setDealer] = useState(link.get('top') ?? DEFAULT_TOP)
-  const [tagline, setTagline] = useState(link.get('bottom') ?? DEFAULT_BOTTOM)
+  const [tagline, setTagline] = useState(() => link.get('bottom') ?? DEFAULT_BOTTOM[model])
   // Text of its own on the rear window; filled from the sides the first time it's turned on
   const [ownRear, setOwnRear] = useState(link.has('rtop') || link.has('rbottom'))
   const [rear, setRear] = useState<{ dealer: string; tagline: string } | undefined>(() =>
@@ -96,15 +100,30 @@ export default function Livery() {
   })
   const toggle = (key: keyof typeof on) => (v: boolean) => setOn(o => ({ ...o, [key]: v }))
   const show = (link.get('show') ?? '').split(',')
-  const [seams, setSeams] = useState(show.includes('seams'))
+  // The «Швы» overlay is hidden for now: the limits keep text off the seam and handle, and a sheet that touches them
+  // says so under it. Off, and links with `show=seams` open without it, as there'd be no way to turn it off.
+  // const [seams, setSeams] = useState(show.includes('seams'))
+  const seams = false
   const [dims, setDims] = useState(show.includes('dims'))
   // The bottom text larger, 60 mm in two lines; the QR-less sides have room for it
   const [large, setLarge] = useState(link.get('size') === 'large')
 
+  // Another model brings its own default tagline, unless the field holds text of the dealer's own
+  const chooseModel = (m: Model) => {
+    if (tagline === DEFAULT_BOTTOM[model]) setTagline(DEFAULT_BOTTOM[m])
+    if (rear && rear.tagline === DEFAULT_BOTTOM[model]) setRear({ ...rear, tagline: DEFAULT_BOTTOM[m] })
+    setModel(m)
+  }
+  // The larger tagline is a choice only where the QR-less sides have one (both models do)
+  const layout = LIVERIES[model]
+  const noQrSide = layout.left.noQr
+  const canLarge = noQrSide.kind === 'layout' && !!noQrSide.taglineLarge
+
   useLinkState({
+    model: model === 'umo8' ? null : model,
     link: url.trim() === DEFAULT_URL ? null : url.trim(),
     top: dealer === DEFAULT_TOP ? null : dealer,
-    bottom: tagline === DEFAULT_BOTTOM ? null : tagline,
+    bottom: tagline === DEFAULT_BOTTOM[model] ? null : tagline,
     off: (Object.keys(PARTS) as (keyof typeof PARTS)[]).filter(k => !on[k]).map(k => PARTS[k]).join(','),
     rtop: ownRear && rear ? rear.dealer : null,
     rbottom: ownRear && rear ? rear.tagline : null,
@@ -134,9 +153,9 @@ export default function Livery() {
   const qr = on.qr ? qrUrl : null
   const sheets = useMemo(
     () => font
-      ? SURFACES.filter(id => id !== 'rear' || on.rear).map(id => buildSheet(font, qr ? UMO8[id] : withoutQr(UMO8[id]), { ...(id === 'rear' ? rearText : sideText), url: qr, large }))
+      ? SURFACES.filter(id => id !== 'rear' || on.rear).map(id => buildSheet(font, qr ? layout[id] : withoutQr(layout[id]), { ...(id === 'rear' ? rearText : sideText), url: qr, large }))
       : [],
-    [font, on.rear, sideText.dealer, sideText.tagline, rearText.dealer, rearText.tagline, qr, large],
+    [font, layout, on.rear, sideText.dealer, sideText.tagline, rearText.dealer, rearText.tagline, qr, large],
   )
   // Which sheets a field's text goes on, to mark it when one of them has a problem with it
   const sides = sheets.filter(s => s.surface.id !== 'rear' || !ownRearOn)
@@ -177,8 +196,8 @@ export default function Livery() {
           <div className="flex flex-col gap-4 tracking-normal">
             <Field label="Модель">
               <Segments>
-                <SegBtn active={model === 'umo8'} onClick={() => setModel('umo8')}>UMO 8</SegBtn>
-                <SegBtn active={model === 'umo5'} onClick={() => setModel('umo5')} disabled title="Скоро">UMO 5</SegBtn>
+                <SegBtn active={model === 'umo8'} onClick={() => chooseModel('umo8')}>UMO 8</SegBtn>
+                <SegBtn active={model === 'umo5'} onClick={() => chooseModel('umo5')}>UMO 5</SegBtn>
               </Segments>
             </Field>
 
@@ -194,7 +213,7 @@ export default function Livery() {
               label="Текст снизу"
               on={on.tagline}
               onChange={toggle('tagline')}
-              extra={<SizeSwitch large={large && !on.qr} onChange={setLarge} disabled={on.qr} title={on.qr ? 'Крупный текст — на бортах без QR-кода' : undefined} />}
+              extra={<SizeSwitch large={large && !on.qr && canLarge} onChange={setLarge} disabled={on.qr || !canLarge} title={on.qr ? 'Крупный текст — на бортах без QR-кода' : !canLarge ? 'У этой модели один размер текста' : undefined} />}
             >
               <TextArea value={tagline} onChange={setTagline} invalid={sides.some(s => s.tagline.issues.length > 0) || !tagline.trim()} />
             </OptionalField>
@@ -217,7 +236,7 @@ export default function Livery() {
 
             {/* Overlays on the preview only */}
             <Checkbox checked={dims} onChange={setDims}>Размеры</Checkbox>
-            <Checkbox checked={seams} onChange={setSeams}>Швы</Checkbox>
+            {/* <Checkbox checked={seams} onChange={setSeams}>Швы</Checkbox> */}
           </div>
         </div>
 

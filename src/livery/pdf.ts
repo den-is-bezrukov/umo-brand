@@ -11,11 +11,11 @@ const PT = 72 / 25.4
 const INK: [number, number, number, number] = [0.6, 0.4, 0.4, 1]
 
 /** Fills outlines given in sheet millimetres (y down), scaled by `k` and moved to (ox, oy) from the page's top left */
-function fillShapes(page: PDFPage, shapes: Cmd[][], k: number, ox: number, oy: number, color: 'ink' | 'white') {
+function fillShapes(page: PDFPage, shapes: Cmd[][], k: number, ox: number, oy: number, color: 'ink' | 'white' | 'black') {
   const H = page.getHeight()
   const X = (x: number) => ox + x * k
   const Y = (y: number) => H - (oy + y * k)
-  const ops: PDFOperator[] = [pushGraphicsState(), color === 'ink' ? setFillingCmykColor(...INK) : setFillingRgbColor(1, 1, 1)]
+  const ops: PDFOperator[] = [pushGraphicsState(), color === 'ink' ? setFillingCmykColor(...INK) : color === 'black' ? setFillingRgbColor(0, 0, 0) : setFillingRgbColor(1, 1, 1)]
   for (const c of shapes.flat()) {
     if (c[0] === 'M') ops.push(moveTo(X(c[1]), Y(c[2])))
     else if (c[0] === 'L') ops.push(lineTo(X(c[1]), Y(c[2])))
@@ -72,7 +72,8 @@ async function specFile(sheets: Sheet[], title: string): Promise<Uint8Array> {
     page.drawImage(jpg, { x: -vx, y: vh - (photo.h - vy), width: photo.w, height: photo.h })
     const ox = photo.x - vx
     const oy = photo.y - vy
-    fillShapes(page, s.shapes, 1, ox, oy, 'white')
+    // The decals as they look on the car: white, or black on the white UMO 5's sides
+    fillShapes(page, s.shapes, 1, ox, oy, s.surface.decal === '#000000' ? 'black' : 'white')
 
     // Dimensions, as in the preview
     const marks = specMarks(s.surface)

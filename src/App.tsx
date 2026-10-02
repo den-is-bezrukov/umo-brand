@@ -207,6 +207,13 @@ export default function App() {
               </Segments>
             </Field>
 
+            {/* The link before the prices, as in Figma 4844:6865 */}
+            <div className="col-span-2 md:col-span-1">
+              <Field label="Ссылка QR">
+                <UrlField value={url} onChange={setUrl} />
+              </Field>
+            </div>
+
             <Field label="Полная цена, ₽">
               <TextInput numeric value={fullPrice} invalid={fullMissing || fullLessThanCredit} onChange={changeFull} />
             </Field>
@@ -214,12 +221,6 @@ export default function App() {
             <OptionalField label="В кредит, ₽" on={creditOn} onChange={setCreditOn}>
               <TextInput numeric value={creditPrice} invalid={creditTooLow || fullLessThanCredit} onChange={changeCredit} />
             </OptionalField>
-
-            <div className="col-span-2 md:col-span-1">
-              <Field label="Ссылка QR">
-                <UrlField value={url} onChange={setUrl} />
-              </Field>
-            </div>
           </div>
         </div>
 

@@ -200,8 +200,10 @@ function clean(text: string): string {
 function setText(font: Font, raw: string, block: TextBlock, name: string, surface: Surface, firstBaseline?: number): TextResult {
   const text = clean(raw)
   const wrapped = wrap(font, text, block)
+  // A `centred` block with fewer lines than it takes sits in the middle of its lines' zone, not at its bottom
+  const lift = block.centred && wrapped.length < block.maxLines ? (block.maxLines - wrapped.length) * block.leading / 2 : 0
   const lines: Line[] = wrapped.map((t, i) => {
-    const baseline = firstBaseline === undefined ? block.baseline - (wrapped.length - 1 - i) * block.leading : firstBaseline + i * block.leading
+    const baseline = firstBaseline === undefined ? block.baseline - lift - (wrapped.length - 1 - i) * block.leading : firstBaseline + i * block.leading
     const width = font.getAdvanceWidth(t.replace(/ /g, ' '), block.size)
     const x = block.align === 'left' ? block.x : block.align === 'center' ? block.x - width / 2 : block.x - width
     const { path, ink } = shape(font, t, x, baseline, block.size)
@@ -255,7 +257,8 @@ export function buildSheet(font: Font, base: Surface, input: { dealer: string | 
   const tagline = input.tagline === null ? none
     : setText(font, input.tagline, taglineBlock, 'Текст снизу', surface, stack && afterDealer)
   let sheetSurface = surface
-  let lettering = [fromD(UMO.d, umo.h / UMO.h, umo.x, umo.y), fromD(EIGHT.d, num.h / EIGHT.h, num.x, num.y)]
+  const digit = surface.numGlyph ?? EIGHT
+  let lettering = [fromD(UMO.d, umo.h / UMO.h, umo.x, umo.y), fromD(digit.d, num.h / digit.h, num.x, num.y)]
   if (stack) {
     // Centre the column (lettering and text) on the sheet's height: from the top of the lettering to the deepest
     // descender of the last line
@@ -368,7 +371,8 @@ function trimmed(s: Surface, input: { dealer: string | null; tagline: string | n
 function stackDims(surface: Surface, top: number, bottom: number, text: boolean): Surface['dims'] {
   const { umo, num, h, dims, stack } = surface
   const x1 = umo.x
-  const x2 = num.x + num.h * (EIGHT.w / EIGHT.h)
+  const digit = surface.numGlyph ?? EIGHT
+  const x2 = num.x + num.h * (digit.w / digit.h)
   const column = [top, top + umo.h, ...(text ? [top + stack!.textTop, bottom] : [])]
   const end = column[column.length - 1]
   const steps = [...(top > 1 ? [0] : []), ...column, ...(h - end > 1 ? [h] : [])]
