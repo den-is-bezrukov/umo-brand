@@ -268,28 +268,31 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
 }
 
 /**
- * Height of the first screen's white strip (`--strip` on the page), from lg: the statement's capitals stand level with
+ * Height of the first screen's white strip (`--strip` on the page), from lg. The statement's capitals stand level with
  * the top of the logo (the body's 16px on top plus CoFo Sans's 0.164em above the caps at leading 1 make the logo's 24),
- * and its last baseline with the toggle row's at the bottom of the screen (the row's 20px line starts 24px into its 68,
- * its baseline 2px + 0.844em of 16px into the line), however many lines the statement wraps to.
+ * and the quick links under it share a line with the toggle row at the bottom of the screen (the row's 20px line starts
+ * 24px into its 68), however many lines the statement wraps to (Figma 4893:3846).
  */
-function useHeroStrip(pageRef: RefObject<HTMLElement | null>) {
+function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObject<HTMLElement | null>) {
   useEffect(() => {
     const page = pageRef.current
-    const statement = document.getElementById('brand')
-    if (!page || !statement) return
-    const observer = new ResizeObserver(() => {
-      const size = parseFloat(getComputedStyle(statement).fontSize)
-      const lastBaseline = 16 + statement.offsetHeight - size + 0.844 * size
-      const strip = `${Math.round(lastBaseline + 68 - 24 - 2 - 0.844 * 16)}px`
+    const quick = quickRef.current
+    const block = quick?.parentElement
+    if (!page || !quick || !block) return
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const strip = `${Math.round(16 + quick.offsetTop - block.offsetTop + 68 - 24)}px`
       if (page.style.getPropertyValue('--strip') === strip) return
       page.style.setProperty('--strip', strip)
       // The page now starts elsewhere: let useHeroReveal place the toggle row and size the logo anew.
       window.dispatchEvent(new Event('resize'))
-    })
-    observer.observe(statement)
-    return () => observer.disconnect()
-  }, [pageRef])
+    }
+    // A frame later, out of the observer's own pass, so moving the page doesn't loop it.
+    const observer = new ResizeObserver(() => { if (!frame) frame = requestAnimationFrame(update) })
+    observer.observe(block)
+    return () => { observer.disconnect(); cancelAnimationFrame(frame) }
+  }, [pageRef, quickRef])
 }
 
 /**
@@ -679,7 +682,8 @@ export default function Guide() {
   const asideRef = useRef<HTMLElement>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
   useActiveInView(asideRef, active, expandAll)
-  useHeroStrip(pageRef)
+  const quickRef = useRef<HTMLElement>(null)
+  useHeroStrip(pageRef, quickRef)
   useHeroReveal(bodyRef, asideRef)
   // The contents row does what it says; on the first screen it also takes the page up over the photo, where the
   // contents can be seen.
@@ -734,12 +738,12 @@ export default function Guide() {
     <div ref={pageRef} id="top" className="min-h-screen bg-white font-sans text-black">
       {/* The hero is the top of the page: the logo leads here, and it isn't in the contents. On a phone it's the first
           picture, above the header, and covers the header's upward white (z-30). From lg it's fixed behind the page,
-          which starts a strip above the bottom of the screen (`--strip`, see useHeroStrip; 181px for a three-line
+          which starts a strip above the bottom of the screen (`--strip`, see useHeroStrip; 252px for a three-line
           statement), so the first screen shows the logo, the row and the statement, then slides up over the photo
           (Figma 4893:3846, prototype 4921:2352). */}
       <Hero />
 
-      <div ref={bodyRef} className="bg-white lg:relative lg:z-10 lg:mt-[calc(100vh-var(--strip,181px))] lg:flex lg:items-start">
+      <div ref={bodyRef} className="bg-white lg:relative lg:z-10 lg:mt-[calc(100vh-var(--strip,252px))] lg:flex lg:items-start">
       {/* Desktop sidebar. The expand row sits at the bottom of the screen, so it stays put while the open chapter
           changes the list's height, and sticks there when the list is taller than the screen, cutting the list off —
           enough of a hint that it scrolls, so the scrollbar, far from the text at this width, is hidden. */}
@@ -789,9 +793,16 @@ export default function Guide() {
               the chapter anchor. */}
           <div>
             <div className="flex flex-col gap-section">
-              <p id="brand" className="scroll-mt-24 lg:scroll-mt-4 text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em]">
-                UMO — это автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
-              </p>
+              <div className="flex flex-col gap-8 md:gap-12">
+                <p id="brand" className="scroll-mt-24 lg:scroll-mt-4 text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em]">
+                  UMO — это автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
+                </p>
+                {/* Quick links: to the start of the guide and to the templated media, the constructors among them */}
+                <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
+                  <a href="#brand" className={NAV_HOVER}>{TITLES.brand}</a>
+                  <a href="#materials" className={NAV_HOVER}>{TITLES.materials}</a>
+                </nav>
+              </div>
               <Section>
                 {/* Picture above the heading; the anchor sits on it so links land on the picture */}
                 <div id="positioning" className="scroll-mt-24"><Fig name="positioning" w={912} h={456} alt="" /></div>
