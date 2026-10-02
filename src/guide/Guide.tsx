@@ -681,11 +681,12 @@ export default function Guide() {
   useActiveInView(asideRef, active, expandAll)
   useHeroStrip(pageRef)
   useHeroReveal(bodyRef, asideRef)
-  // On the first screen the contents row first takes you past the photo, to where the contents are open to see.
+  // The contents row does what it says; on the first screen it also takes the page up over the photo, where the
+  // contents can be seen.
   const onTocToggle = () => {
+    toggleExpandAll()
     const top = bodyRef.current?.getBoundingClientRect().top ?? 0
     if (top > 1) window.scrollTo({ top: window.scrollY + top, behavior: 'smooth' })
-    else toggleExpandAll()
   }
   // Two headings rarely share a line on a phone; when they do (Видение / Миссия), the first one names the place.
   const sectionTitle = active.length ? TITLES[active[0]] : undefined
