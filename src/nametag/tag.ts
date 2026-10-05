@@ -41,10 +41,26 @@ export interface Person { name: string; surname: string; position: string }
 
 export interface Fonts { medium: Font; regular: Font }
 
+export type Field = keyof Person
+
+/**
+ * Where a field's text stands, for editing it on the tag: the top of its first line box as CSS sets a line of `leading`
+ * (half the leading over the font's ascender), its line count, size and weight, in millimetres
+ */
+export interface FieldBox { cmds: Cmd[]; top: number; lines: number; size: number; leading: number; medium: boolean }
+
 export interface Tag {
   /** Text outlines in millimetres, y down */
   cmds: Cmd[]
+  fields: Record<Field, FieldBox>
   issues: string[]
+}
+
+/** The top of a CSS line box of `leading` whose baseline is at `baseline` */
+function lineTop(font: Font, size: number, leading: number, baseline: number): number {
+  const ascent = font.ascender / font.unitsPerEm * size
+  const descent = -font.descender / font.unitsPerEm * size
+  return baseline - (leading - ascent - descent) / 2 - ascent
 }
 
 let regularPromise: Promise<Font> | undefined
@@ -119,14 +135,16 @@ export function buildTag(fonts: Fonts, person: Person): Tag {
   const name = typedName.join(' ')
   const surname = typedSurname.join(' ')
   const position = person.position.replace(/\r/g, '')
-  const cmds: Cmd[] = []
   const issues: string[] = []
+  const nameCmds: Cmd[] = []
+  const surnameCmds: Cmd[] = []
+  const positionCmds: Cmd[] = []
   const nameLines = typedName.length > 1 ? typedName : splitAtHyphen(fonts.medium, name, NAME.maxWidth)
   const surnameLines = typedSurname.length > 1 ? typedSurname : splitAtHyphen(fonts.medium, surname, SURNAME.maxWidth)
   // The surname starts on the second line even without a name; only the first line stands beside the logo
   const first = Math.max(nameLines.length, 1)
-  nameLines.forEach((t, i) => setLines(fonts.medium, [t], i === 0 ? NAME : SURNAME, i, 'Имя', cmds, issues))
-  surnameLines.forEach((t, i) => setLines(fonts.medium, [t], SURNAME, first + i, 'Фамилия', cmds, issues))
+  nameLines.forEach((t, i) => setLines(fonts.medium, [t], i === 0 ? NAME : SURNAME, i, 'Имя', nameCmds, issues))
+  surnameLines.forEach((t, i) => setLines(fonts.medium, [t], SURNAME, first + i, 'Фамилия', surnameCmds, issues))
   const used = surnameLines.length ? first + surnameLines.length : nameLines.length
   if (used > NAME_LINES) issues.push('Имя и фамилия — не больше трёх строк')
   // Three lines of name and surname leave the position room for one
@@ -134,14 +152,25 @@ export function buildTag(fonts: Fonts, person: Person): Tag {
   const lines = wrap(fonts.regular, position, POSITION)
   const shown = lines.slice(0, block.maxLines + 1)
   // Lines over the limit run down off the plate rather than up into the name
-  setLines(fonts.regular, shown, block, 1 - Math.min(shown.length, block.maxLines), 'Должность', cmds, issues)
+  const positionFirst = 1 - Math.min(Math.max(shown.length, 1), block.maxLines)
+  setLines(fonts.regular, shown, block, positionFirst, 'Должность', positionCmds, issues)
   if (lines.length > block.maxLines) {
     issues.push(block.maxLines === 1 ? 'При имени и фамилии в три строки должность — в одну: сократите её' : 'Должность длиннее двух строк: сократите её')
   }
   const missing = (font: Font, t: string) => [...t.replace(/\s/g, '')].filter(c => !font.hasChar(c))
   const absent = [...new Set([...missing(fonts.medium, name + surname), ...missing(fonts.regular, clean(position))])]
   if (absent.length) issues.push(`Нет в шрифте ${absent.map(c => `«${c}»`).join(', ')}`)
-  return { cmds, issues: [...new Set(issues)] }
+  const box = (cmds: Cmd[], font: Font, b: Block, firstLine: number, lines: number, medium: boolean): FieldBox =>
+    ({ cmds, top: lineTop(font, b.size, b.leading, b.baseline + firstLine * b.leading), lines: Math.max(lines, 1), size: b.size, leading: b.leading, medium })
+  return {
+    cmds: [...nameCmds, ...surnameCmds, ...positionCmds],
+    fields: {
+      name: box(nameCmds, fonts.medium, NAME, 0, nameLines.length, true),
+      surname: box(surnameCmds, fonts.medium, NAME, first, surnameLines.length, true),
+      position: box(positionCmds, fonts.regular, block, positionFirst, shown.length, false),
+    },
+    issues: [...new Set(issues)],
+  }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

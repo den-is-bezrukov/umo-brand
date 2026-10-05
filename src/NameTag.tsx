@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { TextArea, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined } from '@/ui/form'
 import { toD } from '@/livery/geometry'
-import { buildTag, loadFonts, type Fonts, type Person } from '@/nametag/tag'
+import { TAG, buildTag, loadFonts, type Field, type FieldBox, type Fonts, type Person } from '@/nametag/tag'
 import { readXlsx, parsePasted, type TableRow } from '@/nametag/table'
 import TagArt from '@/nametag/TagArt'
 
@@ -41,6 +41,8 @@ export default function NameTag() {
   }
   /** The one person the sidebar edits, picked by clicking their tag; a click beside the tags leaves none selected */
   const [selectedKey, setSelected] = useState<number | null>(() => people[0].key)
+  /** A field being edited on the tag itself, after a double click on its text */
+  const [editing, setEditing] = useState<{ key: number; field: Field } | null>(null)
   const current = people.find(p => p.key === selectedKey)
   const selected = current?.key
   const [tableError, setTableError] = useState('')
@@ -293,7 +295,7 @@ export default function NameTag() {
       {/* In the table mode the preview takes a dropped file too, and until one is loaded it's all an upload */}
       <main
         {...(mode === 'table' ? dropTarget : {})}
-        onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure button')) setSelected(null) }}
+        onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure button, figure textarea')) setSelected(null) }}
         className={`flex flex-1 flex-col bg-[#f5f5f5] p-6 pb-[112px] md:min-w-0 md:overflow-y-auto md:p-16
           ${mode === 'table' && file && dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
       >
@@ -307,6 +309,7 @@ export default function NameTag() {
         <div className="mx-auto grid w-full max-w-[1200px] grid-cols-[repeat(auto-fill,minmax(min(100%,360px),1fr))] gap-8">
           {items.map((it, i) => {
             const tag = tags?.[i]
+            const edited = editing?.key === it.key ? editing.field : null
             const bad = problems[i].length > 0
             const key = it.key
             // In the manual list a tag is picked for editing; in the table one, clicking a tag goes to edit it there.
@@ -319,17 +322,41 @@ export default function NameTag() {
                 ref={el => { if (el) figures.current.set(key, el); else figures.current.delete(key) }}
                 className="@container flex flex-col gap-3"
               >
-                {/* In the manual list a tag is picked for editing by clicking it; the picked one is outlined */}
+                {/* In the manual list a tag is picked for editing by clicking it; the picked one is outlined. A double click
+                    on its text edits that field right there */}
+                <div className="relative">
                 <button
                   type="button"
                   onClick={() => { setSelected(key); setFlagged(null); setMode('manual') }}
+                  onDoubleClick={e => {
+                    if (!tag || !ghosts?.[i]) return
+                    const r = e.currentTarget.getBoundingClientRect()
+                    const field = fieldAt(tag.fields, ghosts[i].fields, it.person, (e.clientY - r.top) / r.height * TAG.h)
+                    setSelected(key)
+                    setMode('manual')
+                    setEditing({ key, field })
+                  }}
                   aria-pressed={mode === 'manual' ? active : undefined}
-                  className={`block cursor-pointer rounded-[5.714cqw] outline-offset-4 transition-opacity duration-150
+                  className={`block w-full cursor-pointer rounded-[5.714cqw] outline-offset-4 transition-opacity duration-150
                     ${active ? 'outline-2 outline-black' : 'outline-1 outline-transparent hover:outline-black/20'}
                     ${dimmed ? 'opacity-40 hover:opacity-100' : ''}`}
                 >
-                  <TagArt text={tag ? toD(tag.cmds) : undefined} ghost={ghosts?.[i] ? toD(ghosts[i].cmds) : undefined} color={bad ? RED : undefined} />
+                  <TagArt
+                    text={tag ? toD(fieldsBut(tag.fields, edited)) : undefined}
+                    ghost={ghosts?.[i] ? toD(fieldsBut(ghosts[i].fields, edited)) : undefined}
+                    color={bad ? RED : undefined}
+                  />
                 </button>
+                {edited && tag && (
+                  <InlineField
+                    box={(it.person[edited].trim() ? tag : ghosts![i]).fields[edited]}
+                    field={edited}
+                    value={it.person[edited]}
+                    onChange={v => update(key, { [edited]: v })}
+                    onDone={() => setEditing(null)}
+                  />
+                )}
+                </div>
                 {bad && (
                   <p className="text-[13px] leading-5 text-[#e30]">{alertLine(problems[i])}</p>
                 )}
@@ -361,6 +388,62 @@ async function downloadTemplate(e: React.MouseEvent) {
 /** сотрудник, сотрудника, сотрудников */
 function staff(n: number): string {
   return 'сотрудник' + ({ '': '', 'а': 'а', 'ей': 'ов' } as Record<string, string>)[plural(n)]
+}
+
+/** The outlines of every field but the one being edited, which the inline field stands in for */
+function fieldsBut(fields: Record<Field, FieldBox>, except: Field | null) {
+  return (Object.keys(fields) as Field[]).filter(f => f !== except).flatMap(f => fields[f].cmds)
+}
+
+/** The field under a double click at `y` mm: the one whose lines it hits, else the nearest; empty fields by their placeholders */
+function fieldAt(real: Record<Field, FieldBox>, ghost: Record<Field, FieldBox>, person: Person, y: number): Field {
+  const fields: Field[] = ['name', 'surname', 'position']
+  const box = (f: Field) => (person[f].trim() ? real : ghost)[f]
+  const dist = (f: Field) => {
+    const b = box(f)
+    const bottom = b.top + b.lines * b.leading
+    return y < b.top ? b.top - y : y > bottom ? y - bottom : 0
+  }
+  return fields.reduce((a, f) => dist(f) < dist(a) ? f : a)
+}
+
+/**
+ * A field edited on the tag: a transparent textarea over its lines, in the same font, size and leading (the tag's
+ * millimetres in container units: the figure is the container, 70 mm wide), so it reads as typing on the tag. Enter is
+ * a line break, as in the sidebar; Esc or a click elsewhere ends it
+ */
+function InlineField({ box, field, value, onChange, onDone }: { box: FieldBox; field: Field; value: string; onChange: (v: string) => void; onDone: () => void }) {
+  const ref = useRef<HTMLTextAreaElement>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    el.focus()
+    el.setSelectionRange(el.value.length, el.value.length)
+  }, [])
+  const mm = (v: number) => `${v * 100 / TAG.w}cqw`
+  return (
+    <textarea
+      ref={ref}
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      onBlur={onDone}
+      onKeyDown={e => { if (e.key === 'Escape') onDone() }}
+      spellCheck={false}
+      aria-label={{ name: 'Имя', surname: 'Фамилия', position: 'Должность' }[field]}
+      className="absolute m-0 block resize-none overflow-hidden border-0 bg-transparent p-0 text-[#262626] outline-none"
+      style={{
+        left: mm(4),
+        top: mm(box.top),
+        width: mm(TAG.w - 8),
+        height: mm(box.lines * box.leading),
+        fontSize: mm(box.size),
+        lineHeight: box.leading / box.size,
+        fontWeight: box.medium ? 500 : 400,
+        whiteSpace: field === 'position' ? 'pre-wrap' : 'pre',
+        letterSpacing: 0,
+      }}
+    />
+  )
 }
 
 /** A tag's errors in one line: the empty fields in one phrase («Нет имени, фамилии и должности»), then the rest */
