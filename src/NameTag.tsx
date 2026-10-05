@@ -218,7 +218,7 @@ export default function NameTag() {
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
 
       <aside className="flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
-        <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
+        <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:flex-1 md:pb-2">
           <GeneratorHeader current="/name-tag" />
 
           <Segments>
