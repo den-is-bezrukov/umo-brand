@@ -1240,7 +1240,7 @@ export default function Guide() {
               <H2 id="plate-frame">Рамка номера</H2>
               <Constructor to="/plate-frame" title="Редактор рамок номеров">
                 <PlateArt guide>
-                  <text y={3 + 0.68 * 18} fontFamily="CoFo Sans" fontWeight={500} fontSize={18} letterSpacing={-0.18} fill="white">Центр UMO | Название дилера</text>
+                  <text y={3 + 0.68 * 18} fontFamily="CoFo Sans" fontWeight={500} fontSize={18} letterSpacing={-0.18} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Центр UMO | Название дилера</text>
                 </PlateArt>
               </Constructor>
             </Section>
