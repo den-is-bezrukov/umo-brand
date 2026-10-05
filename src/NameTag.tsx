@@ -280,7 +280,7 @@ export default function NameTag() {
           )}
         </div>
 
-        <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:mx-6 md:mt-4 md:border-t md:border-black/10 md:px-0 md:pt-6">
+        <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:mt-8 md:pt-0">
           {/* Until every tag is ready, the progress in the button's place: it counts the tags still in work, which a click
               leads through («1 из 4 в работе», or «4 в работе» when it's all of them); with a single tag, nothing: its
               form says enough */}
