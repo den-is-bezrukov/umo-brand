@@ -145,7 +145,7 @@ export default function NameTag() {
                     className="flex flex-col gap-2"
                   >
                     <div className="flex items-baseline justify-between text-[14px] leading-5">
-                      <span className="font-medium">Сотрудник {i + 1}</span>
+                      <span className="font-medium">№&nbsp;{i + 1}</span>
                       {people.length > 1 && (
                         <button type="button" onClick={() => remove(p.key)} className="cursor-pointer text-[#999] hover:text-black">Удалить</button>
                       )}
