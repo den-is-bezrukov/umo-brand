@@ -89,7 +89,6 @@ export default function PlateFrame() {
             <span className="text-[#999]">{STRIP.w} × {STRIP.h} мм</span>
           </figcaption>
           <PlateArt>
-            <rect width={STRIP.w} height={STRIP.h} fill="none" stroke="white" strokeOpacity={0.25} strokeDasharray="4 3" vectorEffect="non-scaling-stroke" />
             {strip && <path d={toD(strip.cmds)} fill={ok ? 'white' : RED} />}
           </PlateArt>
           {strip && strip.issues.length > 0 && (
