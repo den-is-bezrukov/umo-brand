@@ -196,13 +196,6 @@ export default function NameTag() {
       onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = '' }} />
   )
 
-  /** Until every tag is ready, a quiet status instead of «Скачать», leading through the tags still in work */
-  const status = failing.length > 0 && (
-    <button type="button" onClick={() => nextFailing(failing)} className="flex w-full cursor-pointer items-center justify-center p-3 text-[14px] leading-[1.13] tracking-[-0.01em] text-[#999] hover:text-black">
-      {failing.length} бейдж{plural(failing.length)} в работе
-    </button>
-  )
-
   const handleExport = async () => {
     if (!tags || !ok) return
     setExporting(true)
@@ -256,7 +249,6 @@ export default function NameTag() {
                   </div>
                 )
               })()}
-              {status}
               {/* About the whole list, so set apart from the tag's own buttons */}
               <button type="button" onClick={add} className={`${outlined} ${current ? 'mt-2' : ''}`}>Добавить</button>
             </div>
@@ -278,18 +270,22 @@ export default function NameTag() {
               )}
               {tableError && <p className="text-[13px] leading-5 text-[#e30]">{tableError}</p>}
               <a href={TEMPLATE} download="UMO_name-tags_template.xlsx" onClick={downloadTemplate} className={`${outlined} ${file ? 'mt-2' : ''}`}>Скачать шаблон таблицы</a>
-              {status}
             </div>
           )}
         </div>
 
-        {ok && (
-          <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:pt-0">
-            <DownloadButton onClick={handleExport} busy={exporting}>
+        <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:pt-0">
+          {/* Until every tag is ready, a quiet status in the button's place, leading through the tags still in work */}
+          {failing.length > 0 ? (
+            <button type="button" onClick={() => nextFailing(failing)} className="flex w-full cursor-pointer items-center justify-center p-3 text-[14px] leading-[1.13] tracking-[-0.01em] text-[#999] hover:text-black">
+              {failing.length} бейдж{plural(failing.length)} в работе
+            </button>
+          ) : items.length > 0 && (
+            <DownloadButton onClick={handleExport} busy={exporting} disabled={!ok}>
               Скачать{items.length > 1 ? ` ${items.length} бейдж${plural(items.length)}` : ''}
             </DownloadButton>
-          </div>
-        )}
+          )}
+        </div>
       </aside>
 
       {/* In the table mode the preview takes a dropped file too, and until one is loaded it's all an upload */}
