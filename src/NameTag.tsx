@@ -1,12 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { TextInput, TextArea, GeneratorHeader, DownloadButton, outlined } from '@/ui/form'
+import { TextInput, TextArea, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined } from '@/ui/form'
 import { toD } from '@/livery/geometry'
 import { TAG, buildTag, loadFonts, type Fonts, type Person } from '@/nametag/tag'
+import { readXlsx, parsePasted, type TableRow } from '@/nametag/table'
 import TagArt from '@/nametag/TagArt'
 
 // Name tag generator (Figma: UMO | Evrone, node 4021:2878): a dealership's staff list in, one zip out with the tags
-// in outlines, a page each, and the maker's requirements. A list pasted from a spreadsheet (columns: name, surname,
-// position) fills in one row per person.
+// in outlines, a page each, and the maker's requirements. Two modes: «Вручную», a list typed on the page, and «Из
+// таблицы», the template filled in and loaded as .xlsx (or its rows pasted), shown but not edited here: the table stays
+// the one source, its errors named by row. Rows copied from a spreadsheet can be pasted into the manual list too.
+
+const TEMPLATE = `${import.meta.env.BASE_URL}downloads/UMO_name-tags_template.xlsx`
 
 const DEFAULT: Person = { name: 'Имя', surname: 'Фамилия', position: 'Продавец-консультант\nновых автомобилей' }
 const BLANK: Person = { name: '', surname: '', position: '' }
@@ -17,26 +21,15 @@ interface Row extends Person { key: number }
 let nextKey = 0
 const row = (p: Person): Row => ({ ...p, key: nextKey++ })
 
-/**
- * Rows of a spreadsheet: tab-separated cells. Three or more are name, surname and position; two with a space in the
- * first are «Имя Фамилия» and position, otherwise name and surname.
- */
-function parseTable(text: string): Person[] {
-  return text.split(/\r?\n/).map(l => l.split('\t').map(c => c.trim())).filter(c => c.some(Boolean)).map(c => {
-    if (c.length >= 3) return { name: c[0], surname: c[1], position: c.slice(2).filter(Boolean).join(' ') }
-    if (c.length === 2 && c[0].includes(' ')) {
-      const [name, ...rest] = c[0].split(/\s+/)
-      return { name, surname: rest.join(' '), position: c[1] }
-    }
-    return { name: c[0] ?? '', surname: c[1] ?? '', position: '' }
-  })
-}
-
 const same = (a: Person, b: Person) => a.name === b.name && a.surname === b.surname && a.position === b.position
 
 export default function NameTag() {
   // Not kept in the address, unlike the other generators: a staff list isn't something to send as a link
   const [people, setPeople] = useState<Row[]>(() => [row(DEFAULT)])
+  const [mode, setMode] = useState<'manual' | 'table'>('manual')
+  const [table, setTable] = useState<{ file: string; rows: TableRow[] }>()
+  const [tableError, setTableError] = useState('')
+  const [dragging, setDragging] = useState(false)
 
   const [fonts, setFonts] = useState<Fonts>()
   const [exporting, setExporting] = useState(false)
@@ -48,8 +41,39 @@ export default function NameTag() {
     return () => { document.title = prev }
   }, [])
 
-  const tags = useMemo(() => fonts ? people.map(p => buildTag(fonts, p)) : undefined, [fonts, people])
-  const ok = !!tags && tags.every(t => t.issues.length === 0)
+  /** What's shown and downloaded: the manual list, or the table's rows labelled with their row numbers */
+  const items = useMemo(() => mode === 'manual'
+    ? people.map((p, i) => ({ key: `m${p.key}`, label: String(i + 1), person: p as Person }))
+    : (table?.rows ?? []).map(r => ({ key: `t${r.line}`, label: `Строка ${r.line}`, person: r.person })), [mode, people, table])
+  const tags = useMemo(() => fonts ? items.map(it => buildTag(fonts, it.person)) : undefined, [fonts, items])
+  const ok = !!tags && tags.length > 0 && tags.every(t => t.issues.length === 0)
+
+  const loadFile = async (file: File) => {
+    try {
+      const rows = readXlsx(await file.arrayBuffer())
+      if (!rows.length) throw new Error('В таблице нет строк')
+      setTable({ file: file.name, rows })
+      setTableError('')
+    } catch (err) {
+      setTableError(err instanceof Error && /xlsx|лист|строк/.test(err.message) ? err.message : 'Не получилось прочитать файл: нужен .xlsx')
+    }
+  }
+
+  // In the table mode rows pasted anywhere on the page stand in for a file
+  useEffect(() => {
+    if (mode !== 'table') return
+    const onPaste = (e: ClipboardEvent) => {
+      const text = e.clipboardData?.getData('text/plain') ?? ''
+      if (!text.includes('\t')) return
+      const rows = parsePasted(text)
+      if (!rows.length) return
+      e.preventDefault()
+      setTable({ file: 'Вставленные строки', rows })
+      setTableError('')
+    }
+    document.addEventListener('paste', onPaste)
+    return () => document.removeEventListener('paste', onPaste)
+  }, [mode])
 
   // A row just added takes the focus
   const focusKey = useRef<number | null>(null)
@@ -67,13 +91,11 @@ export default function NameTag() {
     focusKey.current = r.key
     setPeople(ps => [...ps, r])
   }
-  const reset = () => setPeople([row(DEFAULT)])
-
   /** A table pasted into any field of a row replaces that row (if it's empty or the example) and goes on after it */
   const paste = (key: number, e: React.ClipboardEvent) => {
     const text = e.clipboardData.getData('text/plain')
     if (!text.includes('\t')) return
-    const rows = parseTable(text)
+    const rows = parsePasted(text).map(r => r.person)
     if (!rows.length) return
     e.preventDefault()
     setPeople(ps => {
@@ -106,58 +128,80 @@ export default function NameTag() {
         <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
           <GeneratorHeader current="/name-tag" />
 
-          <p className="text-[14px] leading-5 tracking-normal text-[#999]">
-            Список можно вставить из таблицы: колонки Имя, Фамилия, Должность. Должность переносится сама или по Enter.
-          </p>
+          <Segments>
+            <SegBtn active={mode === 'manual'} onClick={() => setMode('manual')}>Вручную</SegBtn>
+            <SegBtn active={mode === 'table'} onClick={() => setMode('table')}>Из таблицы</SegBtn>
+          </Segments>
 
-          <div className="flex flex-col gap-6 tracking-normal">
-            {people.map((p, i) => {
-              const issues = tags?.[i].issues ?? []
-              return (
-                <div
-                  key={p.key}
-                  ref={el => { if (el) fields.current.set(p.key, el); else fields.current.delete(p.key) }}
-                  onPasteCapture={e => paste(p.key, e)}
-                  className="flex flex-col gap-2"
-                >
-                  <div className="flex items-baseline justify-between text-[14px] leading-5">
-                    <span className="font-medium">Сотрудник {i + 1}</span>
-                    {people.length > 1 && (
-                      <button type="button" onClick={() => remove(p.key)} className="cursor-pointer text-[#999] hover:text-black">Удалить</button>
-                    )}
+          {mode === 'manual' ? (
+            <div className="flex flex-col gap-6 tracking-normal">
+              {people.map((p, i) => {
+                const issues = tags?.[i]?.issues ?? []
+                return (
+                  <div
+                    key={p.key}
+                    ref={el => { if (el) fields.current.set(p.key, el); else fields.current.delete(p.key) }}
+                    onPasteCapture={e => paste(p.key, e)}
+                    className="flex flex-col gap-2"
+                  >
+                    <div className="flex items-baseline justify-between text-[14px] leading-5">
+                      <span className="font-medium">Сотрудник {i + 1}</span>
+                      {people.length > 1 && (
+                        <button type="button" onClick={() => remove(p.key)} className="cursor-pointer text-[#999] hover:text-black">Удалить</button>
+                      )}
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <TextInput value={p.name} onChange={v => update(p.key, { name: v })} placeholder="Имя" invalid={issues.some(t => /^(Имя|Нет имени)/.test(t))} />
+                      <TextInput value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={issues.some(t => /^(Фамилия|Нет имени)/.test(t))} />
+                    </div>
+                    <TextArea value={p.position} onChange={v => update(p.key, { position: v })} placeholder="Должность" invalid={issues.some(t => t.startsWith('Должность'))} />
                   </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <TextInput value={p.name} onChange={v => update(p.key, { name: v })} placeholder="Имя" invalid={issues.some(t => /^(Имя|Нет имени)/.test(t))} />
-                    <TextInput value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={issues.some(t => /^(Фамилия|Нет имени)/.test(t))} />
-                  </div>
-                  <TextArea value={p.position} onChange={v => update(p.key, { position: v })} placeholder="Должность" invalid={issues.some(t => t.startsWith('Должность'))} />
-                </div>
-              )
-            })}
-            <button type="button" onClick={add} className={outlined}>Добавить сотрудника</button>
-          </div>
-
-          <div className="pt-2 tracking-normal">
-            <button type="button" onClick={reset} title="Вернуть пример вместо списка" className={outlined}>Сбросить</button>
-          </div>
+                )
+              })}
+              <button type="button" onClick={add} className={outlined}>Добавить сотрудника</button>
+            </div>
+          ) : (
+            <div className="flex flex-col gap-2 tracking-normal">
+              <label
+                onDragOver={e => { e.preventDefault(); setDragging(true) }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) loadFile(f) }}
+                className={`flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-1 rounded-[4px] border border-dashed p-4 text-center text-[14px] leading-5
+                  ${dragging ? 'border-black bg-[#f5f5f5]' : tableError ? 'border-[#e30]' : 'border-black/20 hover:border-black/40'}`}
+              >
+                <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="sr-only"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = '' }} />
+                {table ? (
+                  <>
+                    <span className="font-medium break-all">{table.file}</span>
+                    <span className="text-[#999]">{table.rows.length} {staff(table.rows.length)} · заменить</span>
+                  </>
+                ) : (
+                  <span className="font-medium">Загрузить таблицу .xlsx</span>
+                )}
+              </label>
+              {tableError && <p className="text-[13px] leading-5 text-[#e30]">{tableError}</p>}
+              <a href={TEMPLATE} download className={`${outlined} mt-2`}>Скачать шаблон</a>
+            </div>
+          )}
         </div>
 
         <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:pt-0">
           <DownloadButton onClick={handleExport} busy={exporting} disabled={!ok}>
-            Скачать{people.length > 1 ? ` ${people.length} бейдж${plural(people.length)}` : ''}
+            Скачать{items.length > 1 ? ` ${items.length} бейдж${plural(items.length)}` : ''}
           </DownloadButton>
         </div>
       </aside>
 
       <main className="flex-1 bg-[#f5f5f5] p-6 pb-[112px] md:min-w-0 md:overflow-y-auto md:p-16">
         <div className="mx-auto grid max-w-[1200px] grid-cols-[repeat(auto-fill,minmax(min(100%,360px),1fr))] gap-x-8 gap-y-10">
-          {people.map((p, i) => {
+          {items.map((it, i) => {
             const tag = tags?.[i]
             const bad = !!tag && tag.issues.length > 0
             return (
-              <figure key={p.key} className="flex flex-col gap-3">
+              <figure key={it.key} className="flex flex-col gap-3">
                 <figcaption className="flex items-baseline gap-2 text-[14px] leading-5">
-                  <span className="font-medium">{i + 1}</span>
+                  <span className="font-medium">{it.label}</span>
                   <span className="text-[#999]">{TAG.w} × {TAG.h} мм</span>
                 </figcaption>
                 <TagArt text={tag ? toD(tag.cmds) : undefined} color={bad ? RED : undefined} />
@@ -174,6 +218,11 @@ export default function NameTag() {
 
     </div>
   )
+}
+
+/** сотрудник, сотрудника, сотрудников */
+function staff(n: number): string {
+  return 'сотрудник' + ({ '': '', 'а': 'а', 'ей': 'ов' } as Record<string, string>)[plural(n)]
 }
 
 /** бейдж, бейджа, бейджей */
