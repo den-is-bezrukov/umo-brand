@@ -12,7 +12,8 @@ import TagArt from '@/nametag/TagArt'
 
 const TEMPLATE = `${import.meta.env.BASE_URL}downloads/UMO_name-tags_template.xlsx`
 
-const DEFAULT: Person = { name: 'Имя', surname: 'Фамилия', position: 'Продавец-консультант\nновых автомобилей' }
+/** Shown grey on the tag in place of an empty field, as the fields' placeholders; never in the PDF */
+const PLACEHOLDER: Person = { name: 'Имя', surname: 'Фамилия', position: 'Должность' }
 const BLANK: Person = { name: '', surname: '', position: '' }
 const RED = '#e30'
 
@@ -25,7 +26,7 @@ const same = (a: Person, b: Person) => a.name === b.name && a.surname === b.surn
 
 export default function NameTag() {
   // Not kept in the address, unlike the other generators: a staff list isn't something to send as a link
-  const [people, setPeople] = useState<Row[]>(() => [row(DEFAULT)])
+  const [people, setPeople] = useState<Row[]>(() => [row(BLANK)])
   const [mode, setMode] = useState<'manual' | 'table'>('manual')
   const [table, setTable] = useState<{ file: string; rows: TableRow[] }>()
   const [tableError, setTableError] = useState('')
@@ -46,7 +47,14 @@ export default function NameTag() {
     ? people.map((p, i) => ({ key: `m${p.key}`, label: String(i + 1), person: p as Person }))
     : (table?.rows ?? []).map(r => ({ key: `t${r.line}`, label: `Строка ${r.line}`, person: r.person })), [mode, people, table])
   const tags = useMemo(() => fonts ? items.map(it => buildTag(fonts, it.person)) : undefined, [fonts, items])
-  const ok = !!tags && tags.length > 0 && tags.every(t => t.issues.length === 0)
+  /** The placeholders standing in for empty fields */
+  const ghosts = useMemo(() => fonts ? items.map(({ person: p }) => buildTag(fonts, {
+    name: p.name.trim() ? '' : PLACEHOLDER.name,
+    surname: p.surname.trim() ? '' : PLACEHOLDER.surname,
+    position: p.position.trim() ? '' : PLACEHOLDER.position,
+  })) : undefined, [fonts, items])
+  const named = items.every(it => it.person.name.trim() || it.person.surname.trim())
+  const ok = !!tags && tags.length > 0 && named && tags.every(t => t.issues.length === 0)
 
   const loadFile = async (file: File) => {
     try {
@@ -100,7 +108,7 @@ export default function NameTag() {
     e.preventDefault()
     setPeople(ps => {
       const i = ps.findIndex(p => p.key === key)
-      const replace = same(ps[i], BLANK) || same(ps[i], DEFAULT)
+      const replace = same(ps[i], BLANK)
       return [...ps.slice(0, replace ? i : i + 1), ...rows.map(row), ...ps.slice(i + 1)]
     })
   }
@@ -151,8 +159,8 @@ export default function NameTag() {
                       )}
                     </div>
                     <div className="flex flex-col gap-2">
-                      <TextInput value={p.name} onChange={v => update(p.key, { name: v })} placeholder="Имя" invalid={issues.some(t => /^(Имя|Нет имени)/.test(t))} />
-                      <TextInput value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={issues.some(t => /^(Фамилия|Нет имени)/.test(t))} />
+                      <TextInput value={p.name} onChange={v => update(p.key, { name: v })} placeholder="Имя" invalid={issues.some(t => t.startsWith('Имя'))} />
+                      <TextInput value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={issues.some(t => t.startsWith('Фамилия'))} />
                     </div>
                     <TextArea value={p.position} onChange={v => update(p.key, { position: v })} placeholder="Должность" invalid={issues.some(t => t.startsWith('Должность'))} />
                   </div>
@@ -204,7 +212,7 @@ export default function NameTag() {
                   <span className="font-medium">{it.label}</span>
                   <span className="text-[#999]">{TAG.w} × {TAG.h} мм</span>
                 </figcaption>
-                <TagArt text={tag ? toD(tag.cmds) : undefined} color={bad ? RED : undefined} />
+                <TagArt text={tag ? toD(tag.cmds) : undefined} ghost={ghosts?.[i] ? toD(ghosts[i].cmds) : undefined} color={bad ? RED : undefined} />
                 {bad && (
                   <ul className="text-[13px] leading-5 text-[#e30]">
                     {tag.issues.map(t => <li key={t}>{t}</li>)}

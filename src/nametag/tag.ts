@@ -98,7 +98,6 @@ export function buildTag(fonts: Fonts, person: Person): Tag {
   const position = person.position.replace(/\r/g, '')
   const cmds: Cmd[] = []
   const issues: string[] = []
-  if (!name && !surname) issues.push('Нет имени')
   setLines(fonts.medium, name ? [name] : [], NAME, 0, 'Имя', cmds, issues)
   setLines(fonts.medium, surname ? [surname] : [], SURNAME, 1, 'Фамилия', cmds, issues)
   const lines = wrap(fonts.regular, position, POSITION)
