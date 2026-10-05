@@ -10,6 +10,7 @@ import './index.css'
 const App = lazy(() => import('./App'))
 const Guide = lazy(() => import('./guide/Guide'))
 const Livery = lazy(() => import('./Livery'))
+const PlateFrame = lazy(() => import('./PlateFrame'))
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -19,6 +20,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/" element={<Guide />} />
           <Route path="/price-card" element={<App />} />
           <Route path="/livery" element={<Livery />} />
+          <Route path="/plate-frame" element={<PlateFrame />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

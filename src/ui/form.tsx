@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
-// Sidebar controls shared by the generators (price card, dealer livery). Light UI per the Figma layout
+// Sidebar controls shared by the generators (price card, dealer livery, plate frame). Light UI per the Figma layout
 // (UMO | Evrone, nodes 4844:6865 and 4900:4588), matching the brand guide.
 
 /** The tick of checkboxes and of a good link (Figma 4900:4657): a 2 px stroke with square ends */
@@ -16,6 +16,7 @@ function Tick({ color = 'black' }: { color?: string }) {
 const GENERATORS = [
   { path: '/price-card', title: 'Прайс-карта' },
   { path: '/livery', title: 'Ливрея' },
+  { path: '/plate-frame', title: 'Рамка номера' },
 ]
 
 /**
@@ -23,7 +24,7 @@ const GENERATORS = [
  * the title, whose chevron opens the browser's own picker to switch to the other generator — a native select laid
  * transparent over the title.
  */
-export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' }) {
+export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' }) {
   const navigate = useNavigate()
   const crumb = 'underline decoration-transparent decoration-[2.5%] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 hover:decoration-black/40 hover:duration-0'
   return (

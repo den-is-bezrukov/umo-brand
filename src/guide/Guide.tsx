@@ -4,6 +4,7 @@ import PriceCard from '@/posters/PriceCard'
 import type { Variant } from '@/posters/cardData'
 import UmoLogo from './UmoLogo'
 import UmoYandexLockup from './UmoYandexLockup'
+import PlateArt from '@/plate/PlateArt'
 import tocIcons from '@/icons/toc'
 import { useTypograf } from './typograf'
 import downloadSizes from 'virtual:download-sizes'
@@ -62,7 +63,7 @@ const NAV: NavItem[] = [
     ],
   },
   { id: 'spaces', title: 'Пространства' },
-  { id: 'materials', title: 'Носители', children: [{ id: 'livery', title: 'Ливрея' }, { id: 'price-card', title: 'Прайс-карта' }] },
+  { id: 'materials', title: 'Носители', children: [{ id: 'livery', title: 'Ливрея' }, { id: 'price-card', title: 'Прайс-карта' }, { id: 'plate-frame', title: 'Рамка номера' }] },
 ]
 
 /** Chapter anchors that were renamed after the guide went out, mapped to their current ids. */
@@ -1231,6 +1232,16 @@ export default function Guide() {
                     <PriceCardPreview variant="umo5-max" fullPrice="3 715 000" creditPrice="2 790 000" image={img('pricecard-umo5-car')} alt="Прайс-карта UMO 5, комплектация Макс" />
                   </div>
                 </div>
+              </Constructor>
+            </Section>
+
+            {/* Figma 4970:2280: the heading, then the frame straight away, no text */}
+            <Section>
+              <H2 id="plate-frame">Рамка номера</H2>
+              <Constructor to="/plate-frame" title="Редактор рамок номеров">
+                <PlateArt guide>
+                  <text y={3 + 0.68 * 18} fontFamily="CoFo Sans" fontWeight={500} fontSize={18} letterSpacing={-0.18} fill="white">Центр UMO | Название дилера</text>
+                </PlateArt>
               </Constructor>
             </Section>
           </Chapter>
