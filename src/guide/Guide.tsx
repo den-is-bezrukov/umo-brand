@@ -10,6 +10,7 @@ import tocIcons from '@/icons/toc'
 import { useTypograf } from './typograf'
 import downloadSizes from 'virtual:download-sizes'
 import heroMp4 from '@/assets/guide/hero.mp4'
+import hero720Mp4 from '@/assets/guide/hero-720.mp4'
 
 // Figures are exported from Figma (UMO | Evrone, node 4810:686) at 2x and
 // cropped per frame — see "Brand guide" in AGENTS.md for how to refresh them.
@@ -316,8 +317,11 @@ function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObjec
 }
 
 /**
- * The hero: the UMO test-drive film, looped and muted — the source MP4 as it came (H.264, 12 MB, no re-encoding: it's
- * already set up for the web); the poster is its first frame, so nothing jumps when it starts. It plays only while some
+ * The hero: the UMO test-drive film, looped and muted — the source MP4s as they came (H.264, no re-encoding: they're
+ * already set up for the web); the poster is their first frame, so nothing jumps when it starts. The 1080p film (12 MB)
+ * by default, the 720p one (6.2 MB) on a slow connection: at once where the browser tells the speed (Chrome, Edge,
+ * Android: 3G or slower), and in any browser when the 1080p hasn't buffered enough to play within
+ * 3 seconds. It plays only while some
  * of it is on screen: once the page has slid over it whole, it stops, and goes on from that frame when it shows again.
  * With reduced motion asked for, or data saving on, the still photo stands in.
  * Below lg it heads the page and takes what the first screen has left above the header, statement and quick links
@@ -330,6 +334,20 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
   const [still] = useState(() =>
     window.matchMedia('(prefers-reduced-motion: reduce)').matches
     || !!(navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData)
+  const [src, setSrc] = useState(() => {
+    // The connection type only: Chrome's `downlink` is guessed from the first few requests and reads far too low then
+    const type = (navigator as Navigator & { connection?: { effectiveType?: string } }).connection?.effectiveType ?? ''
+    return ['slow-2g', '2g', '3g'].includes(type) ? hero720Mp4 : heroMp4
+  })
+  // Still not enough buffered to play after 3 s: the lighter film instead
+  useEffect(() => {
+    if (still || src !== heroMp4) return
+    const t = setTimeout(() => {
+      const video = videoRef.current
+      if (video && video.readyState < HTMLMediaElement.HAVE_FUTURE_DATA) setSrc(hero720Mp4)
+    }, 3000)
+    return () => clearTimeout(t)
+  }, [still, src])
   useEffect(() => {
     const video = videoRef.current
     if (!video) return
@@ -362,9 +380,7 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
       {still ? (
         <img src={img('hero')} alt="Женщина у UMO 8 на горной дороге" width={1824} height={912} fetchPriority="high" decoding="async" className={`${fill} object-[50%_40%]`} />
       ) : (
-        <video ref={videoRef} poster={img('hero-poster')} autoPlay muted loop playsInline preload="auto" aria-hidden className={fill}>
-          <source src={heroMp4} type="video/mp4" />
-        </video>
+        <video ref={videoRef} src={src} poster={img('hero-poster')} autoPlay muted loop playsInline preload="auto" aria-hidden className={fill} />
       )}
     </div>
   )
