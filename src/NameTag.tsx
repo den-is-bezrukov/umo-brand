@@ -153,6 +153,17 @@ export default function NameTag() {
     setSelected(added[0].key)
   }
 
+  /** A file dropped here loads the table */
+  const dropTarget = {
+    onDragOver: (e: React.DragEvent) => { e.preventDefault(); setDragging(true) },
+    onDragLeave: (e: React.DragEvent) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(false) },
+    onDrop: (e: React.DragEvent) => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) loadFile(f) },
+  }
+  const fileInput = (
+    <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="sr-only"
+      onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = '' }} />
+  )
+
   const handleExport = async () => {
     if (!tags) return
     setExporting(true)
@@ -211,26 +222,20 @@ export default function NameTag() {
 
           {mode === 'table' && (
             <div className="flex flex-col gap-2 tracking-normal">
-              <label
-                onDragOver={e => { e.preventDefault(); setDragging(true) }}
-                onDragLeave={() => setDragging(false)}
-                onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) loadFile(f) }}
-                className={`flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-1 rounded-[4px] border border-dashed p-4 text-center text-[14px] leading-5
-                  ${dragging ? 'border-black bg-[#f5f5f5]' : tableError ? 'border-[#e30]' : 'border-black/20 hover:border-black/40'}`}
-              >
-                <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="sr-only"
-                  onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = '' }} />
-                {file ? (
-                  <>
-                    <span className="font-medium break-all">{file}</span>
-                    <span className="text-[#999]">{people.length} {staff(people.length)} · заменить</span>
-                  </>
-                ) : (
-                  <span className="font-medium">Загрузить таблицу .xlsx</span>
-                )}
-              </label>
+              {/* The loaded file, to replace it; until there's one the preview is the upload */}
+              {file && (
+                <label
+                  {...dropTarget}
+                  className={`flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-1 rounded-[4px] border border-dashed p-4 text-center text-[14px] leading-5
+                    ${dragging ? 'border-black bg-[#f5f5f5]' : tableError ? 'border-[#e30]' : 'border-black/20 hover:border-black/40'}`}
+                >
+                  {fileInput}
+                  <span className="font-medium break-all">{file}</span>
+                  <span className="text-[#999]">{people.length} {staff(people.length)} · заменить</span>
+                </label>
+              )}
               {tableError && <p className="text-[13px] leading-5 text-[#e30]">{tableError}</p>}
-              <a href={TEMPLATE} download="UMO_name-tags_template.xlsx" onClick={downloadTemplate} className={`${outlined} mt-2`}>Скачать шаблон таблицы</a>
+              <a href={TEMPLATE} download="UMO_name-tags_template.xlsx" onClick={downloadTemplate} className={`${outlined} ${file ? 'mt-2' : ''}`}>Скачать шаблон таблицы</a>
             </div>
           )}
         </div>
@@ -242,8 +247,20 @@ export default function NameTag() {
         </div>
       </aside>
 
-      <main className="flex-1 bg-[#f5f5f5] p-6 pb-[112px] md:min-w-0 md:overflow-y-auto md:p-16">
-        <div className="mx-auto grid max-w-[1200px] grid-cols-[repeat(auto-fill,minmax(min(100%,360px),1fr))] gap-x-8 gap-y-10">
+      {/* In the table mode the preview takes a dropped file too, and until one is loaded it's all an upload */}
+      <main
+        {...(mode === 'table' ? dropTarget : {})}
+        className={`flex flex-1 flex-col bg-[#f5f5f5] p-6 pb-[112px] md:min-w-0 md:overflow-y-auto md:p-16
+          ${mode === 'table' && file && dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
+      >
+        {mode === 'table' && !file ? (
+          <label className={`flex min-h-[240px] flex-1 cursor-pointer items-center justify-center rounded-[4px] border border-dashed text-[14px] font-medium leading-5
+            ${dragging ? 'border-black bg-black/5' : 'border-black/20 hover:border-black/40'}`}>
+            {fileInput}
+            Загрузить таблицу .xlsx
+          </label>
+        ) : (
+        <div className="mx-auto grid w-full max-w-[1200px] grid-cols-[repeat(auto-fill,minmax(min(100%,360px),1fr))] gap-x-8 gap-y-10">
           {items.map((it, i) => {
             const tag = tags?.[i]
             const bad = !!tag && tag.issues.length > 0
@@ -281,6 +298,7 @@ export default function NameTag() {
             )
           })}
         </div>
+        )}
       </main>
 
     </div>
