@@ -92,6 +92,19 @@ function setLines(font: Font, lines: string[], block: Block, first: number, labe
   })
 }
 
+/**
+ * A double surname too long for its line breaks after a hyphen, as on passports and door plates
+ * («Петропавловская-» / «Преображенская»): at the last hyphen that leaves the first part fitting. The type size never
+ * shrinks; a surname without a hyphen stays one line and turns red if it's too long.
+ */
+function splitSurname(font: Font, surname: string): string[] {
+  if (!surname) return []
+  if (inkWidth(font, surname, SURNAME.size) <= SURNAME.maxWidth) return [surname]
+  const hyphens = [...surname.matchAll(/-/g)].map(m => m.index!).filter(i => i > 0 && i < surname.length - 1).reverse()
+  const at = hyphens.find(i => inkWidth(font, surname.slice(0, i + 1), SURNAME.size) <= SURNAME.maxWidth) ?? hyphens[hyphens.length - 1]
+  return at === undefined ? [surname] : [surname.slice(0, at + 1), surname.slice(at + 1)]
+}
+
 export function buildTag(fonts: Fonts, person: Person): Tag {
   const name = clean(person.name)
   const surname = clean(person.surname)
@@ -99,10 +112,15 @@ export function buildTag(fonts: Fonts, person: Person): Tag {
   const cmds: Cmd[] = []
   const issues: string[] = []
   setLines(fonts.medium, name ? [name] : [], NAME, 0, 'Имя', cmds, issues)
-  setLines(fonts.medium, surname ? [surname] : [], SURNAME, 1, 'Фамилия', cmds, issues)
+  const surnameLines = splitSurname(fonts.medium, surname)
+  setLines(fonts.medium, surnameLines, SURNAME, 1, 'Фамилия', cmds, issues)
+  // A surname in two lines moves the position a line down, leaving it room for one
+  const block = surnameLines.length > 1 ? { ...POSITION, baseline: POSITION.baseline + NAME.leading, maxLines: 1 } : POSITION
   const lines = wrap(fonts.regular, position, POSITION)
-  setLines(fonts.regular, lines.slice(0, POSITION.maxLines + 1), POSITION, 0, 'Должность', cmds, issues)
-  if (lines.length > POSITION.maxLines) issues.push('Должность длиннее двух строк: сократите её')
+  setLines(fonts.regular, lines.slice(0, block.maxLines + 1), block, 0, 'Должность', cmds, issues)
+  if (lines.length > block.maxLines) {
+    issues.push(block.maxLines === 1 ? 'При фамилии в две строки должность — в одну: сократите её' : 'Должность длиннее двух строк: сократите её')
+  }
   const missing = (font: Font, t: string) => [...t.replace(/\s/g, '')].filter(c => !font.hasChar(c))
   const absent = [...new Set([...missing(fonts.medium, name + surname), ...missing(fonts.regular, clean(position))])]
   if (absent.length) issues.push(`Нет в шрифте ${absent.map(c => `«${c}»`).join(', ')}`)
