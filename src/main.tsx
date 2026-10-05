@@ -12,6 +12,7 @@ const Guide = lazy(() => import('./guide/Guide'))
 const SansGuide = lazy(() => import('./guide/SansGuide'))
 const Livery = lazy(() => import('./Livery'))
 const PlateFrame = lazy(() => import('./PlateFrame'))
+const NameTag = lazy(() => import('./NameTag'))
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -24,6 +25,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/price-card" element={<App />} />
           <Route path="/livery" element={<Livery />} />
           <Route path="/plate-frame" element={<PlateFrame />} />
+          <Route path="/name-tag" element={<NameTag />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

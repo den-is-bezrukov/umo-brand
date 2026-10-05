@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
-// Sidebar controls shared by the generators (price card, dealer livery, plate frame). Light UI per the Figma layout
+// Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag). Light UI per the Figma layout
 // (UMO | Evrone, nodes 4844:6865 and 4900:4588), matching the brand guide.
 
 /** The tick of checkboxes and of a good link (Figma 4900:4657): a 2 px stroke with square ends */
@@ -17,6 +17,7 @@ const GENERATORS = [
   { path: '/price-card', title: 'Прайс-карта' },
   { path: '/livery', title: 'Ливрея' },
   { path: '/plate-frame', title: 'Рамка номера' },
+  { path: '/name-tag', title: 'Бейдж' },
 ]
 
 /**
@@ -24,7 +25,7 @@ const GENERATORS = [
  * the title, whose chevron opens the browser's own picker to switch to the other generator — a native select laid
  * transparent over the title.
  */
-export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' }) {
+export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' }) {
   const navigate = useNavigate()
   const crumb = 'underline decoration-transparent decoration-[2.5%] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 hover:decoration-black/40 hover:duration-0'
   return (
@@ -241,7 +242,7 @@ export function SizeSwitch({ large, onChange }: { large: boolean; onChange: (v: 
   )
 }
 
-const outlined = 'flex min-w-16 flex-1 items-center justify-center rounded-[4px] border border-black/10 p-3 text-[14px] font-medium leading-[1.13] tracking-[-0.01em] text-black cursor-pointer outline-none hover:border-black/30 focus-visible:ring-2 focus-visible:ring-black/30'
+export const outlined = 'flex min-w-16 flex-1 items-center justify-center rounded-[4px] border border-black/10 p-3 text-[14px] font-medium leading-[1.13] tracking-[-0.01em] text-black cursor-pointer outline-none hover:border-black/30 focus-visible:ring-2 focus-visible:ring-black/30'
 
 /**
  * «Копировать» and «Сбросить» side by side (Figma 4939:3762): the first copies the page address — the settings are in
