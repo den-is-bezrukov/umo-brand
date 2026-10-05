@@ -260,16 +260,17 @@ export default function NameTag() {
               <figure
                 key={it.key}
                 ref={el => { if (el) figures.current.set(key, el); else figures.current.delete(key) }}
-                className="flex flex-col gap-3"
+                className="@container flex flex-col gap-3"
               >
-                {/* In the manual list a tag is picked for editing by clicking it */}
+                {/* In the manual list a tag is picked for editing by clicking it; the picked one is outlined */}
                 <button
                   type="button"
                   disabled={!pickable}
                   onClick={() => { setSelected(key); setMode('manual') }}
                   aria-pressed={mode === 'manual' && pickable ? !dimmed : undefined}
-                  className={`block transition-opacity duration-150 ${pickable ? 'cursor-pointer' : 'cursor-default'}
-                    ${dimmed ? 'opacity-40 hover:opacity-70' : pickable && mode === 'table' ? 'hover:opacity-70' : ''}`}
+                  className={`block rounded-[5.714cqw] outline-offset-4 transition-opacity duration-150 ${pickable ? 'cursor-pointer' : 'cursor-default'}
+                    ${!pickable ? '' : mode === 'manual' && !dimmed ? 'outline-2 outline-black' : 'outline-1 outline-transparent hover:outline-black/20'}
+                    ${dimmed ? 'opacity-40 hover:opacity-70' : ''}`}
                 >
                   <TagArt text={tag ? toD(tag.cmds) : undefined} ghost={ghosts?.[i] ? toD(ghosts[i].cmds) : undefined} color={bad ? RED : undefined} />
                 </button>
