@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { TextInput, TextArea, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined } from '@/ui/form'
 import { toD } from '@/livery/geometry'
-import { TAG, buildTag, loadFonts, type Fonts, type Person } from '@/nametag/tag'
+import { buildTag, loadFonts, type Fonts, type Person } from '@/nametag/tag'
 import { readXlsx, parsePasted, type TableRow } from '@/nametag/table'
 import TagArt from '@/nametag/TagArt'
 
@@ -63,7 +63,8 @@ export default function NameTag() {
   const items = useMemo(() => (mode === 'table' && !file ? [] : people).map((p, i) => ({
     key: p.key,
     label: fullName(p) || `Бейдж ${i + 1}`,
-    note: fullName(p) ? `Бейдж ${i + 1}` : `${TAG.w} × ${TAG.h} мм`,
+    /** Beside the name; once there's none the number is the title itself */
+    note: fullName(p) ? `Бейдж ${i + 1}` : '',
     person: p as Person,
   })), [mode, file, people])
   const tags = useMemo(() => fonts ? items.map(it => buildTag(fonts, it.person)) : undefined, [fonts, items])
@@ -275,7 +276,7 @@ export default function NameTag() {
               >
                 <figcaption className="flex items-baseline gap-2 text-[14px] leading-5">
                   <span className="font-medium">{it.label}</span>
-                  <span className="text-[#999]">{it.note}</span>
+                  {it.note && <span className="text-[#999]">{it.note}</span>}
                 </figcaption>
                 {/* In the manual list a tag is picked for editing by clicking it; the picked one is outlined */}
                 <button
