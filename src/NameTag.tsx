@@ -150,7 +150,7 @@ export default function NameTag() {
                         <button type="button" onClick={() => remove(p.key)} className="cursor-pointer text-[#999] hover:text-black">Удалить</button>
                       )}
                     </div>
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="flex flex-col gap-2">
                       <TextInput value={p.name} onChange={v => update(p.key, { name: v })} placeholder="Имя" invalid={issues.some(t => /^(Имя|Нет имени)/.test(t))} />
                       <TextInput value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={issues.some(t => /^(Фамилия|Нет имени)/.test(t))} />
                     </div>
