@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { TextArea, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined } from '@/ui/form'
+import { Field as Labelled, TextArea, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined } from '@/ui/form'
 import { toD } from '@/livery/geometry'
 import { TAG, buildTag, loadFonts, type Field, type FieldBox, type Fonts, type Person } from '@/nametag/tag'
 import { readXlsx, parsePasted, type TableRow } from '@/nametag/table'
@@ -234,11 +234,17 @@ export default function NameTag() {
                 const issues = problems[i] ?? []
                 return (
                   <div ref={form} onPasteCapture={e => paste(p.key, e)} className="flex flex-col gap-2">
-                    <div className="flex flex-col gap-2">
-                      <TextArea value={p.name} onChange={v => update(p.key, { name: v })} placeholder="Имя" invalid={issues.some(t => t.startsWith('Имя') || t === NO_NAME)} />
-                      <TextArea value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={issues.some(t => t.startsWith('Фамилия') || t === NO_SURNAME)} />
+                    <div className="flex flex-col gap-4">
+                      <Labelled label="Имя">
+                        <TextArea value={p.name} onChange={v => update(p.key, { name: v })} placeholder="Имя" invalid={issues.some(t => t.startsWith('Имя') || t === NO_NAME)} />
+                      </Labelled>
+                      <Labelled label="Фамилия">
+                        <TextArea value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={issues.some(t => t.startsWith('Фамилия') || t === NO_SURNAME)} />
+                      </Labelled>
+                      <Labelled label="Должность">
+                        <TextArea value={p.position} onChange={v => update(p.key, { position: v })} placeholder="Должность" invalid={issues.some(t => t.startsWith('Должность') || t === NO_POSITION)} />
+                      </Labelled>
                     </div>
-                    <TextArea value={p.position} onChange={v => update(p.key, { position: v })} placeholder="Должность" invalid={issues.some(t => t.startsWith('Должность') || t === NO_POSITION)} />
                     {/* The selected tag's actions under its fields, side by side as the other generators' «Копировать» and
                         «Сбросить»: «Сбросить» empties the fields, while there's something in them; «Удалить» only while
                         there's another tag to go to */}
