@@ -7,8 +7,8 @@ import TagArt from '@/nametag/TagArt'
 
 // Name tag generator (Figma: UMO | Evrone, node 4021:2878): a dealership's staff list in, one zip out with the tags
 // in outlines, a page each, and the maker's requirements. Two modes: «Вручную», a list typed on the page, and «Из
-// таблицы», the template filled in and loaded as .xlsx (or its rows pasted), shown but not edited here: the table stays
-// the one source, its errors named by row. Rows copied from a spreadsheet can be pasted into the manual list too.
+// таблицы», the template filled in and loaded as .xlsx (or its rows pasted) into a list edited the same way, each tag
+// keeping its row number. Rows copied from a spreadsheet can be pasted into the manual list too.
 
 const TEMPLATE = `${import.meta.env.BASE_URL}downloads/UMO_name-tags_template.xlsx`
 
@@ -17,7 +17,8 @@ const PLACEHOLDER: Person = { name: 'Имя', surname: 'Фамилия', positio
 const BLANK: Person = { name: '', surname: '', position: '' }
 const RED = '#e30'
 
-interface Row extends Person { key: number }
+/** A person on the page; `line` is the spreadsheet row they were loaded from */
+interface Row extends Person { key: number; line?: number }
 
 let nextKey = 0
 const row = (p: Person): Row => ({ ...p, key: nextKey++ })
@@ -32,12 +33,17 @@ const same = (a: Person, b: Person) => a.name === b.name && a.surname === b.surn
 
 export default function NameTag() {
   // Not kept in the address, unlike the other generators: a staff list isn't something to send as a link
-  const [people, setPeople] = useState<Row[]>(() => [row(BLANK)])
-  /** The one person the sidebar edits; the others are picked by clicking their tag */
-  const [selected, setSelected] = useState(() => people[0].key)
-  const current = people.find(p => p.key === selected) ?? people[0]
+  // Each mode keeps its own list, edited the same way; the table's is filled by loading a file
   const [mode, setMode] = useState<'manual' | 'table'>('manual')
-  const [table, setTable] = useState<{ file: string; rows: TableRow[] }>()
+  const [lists, setLists] = useState<Record<'manual' | 'table', Row[]>>(() => ({ manual: [row(BLANK)], table: [] }))
+  const people = lists[mode]
+  const setPeople = (next: Row[]) => setLists(l => ({ ...l, [mode]: next }))
+  /** The one person the sidebar edits; the others are picked by clicking their tag */
+  const [selectedBy, setSelectedBy] = useState<Partial<Record<'manual' | 'table', number>>>({})
+  const current = people.find(p => p.key === selectedBy[mode]) ?? people[0]
+  const setSelected = (key: number) => setSelectedBy(s => ({ ...s, [mode]: key }))
+  const selected = current?.key
+  const [file, setFile] = useState('')
   const [tableError, setTableError] = useState('')
   const [dragging, setDragging] = useState(false)
 
@@ -51,10 +57,13 @@ export default function NameTag() {
     return () => { document.title = prev }
   }, [])
 
-  /** What's shown and downloaded: the manual list, or the table's rows labelled with their row numbers */
-  const items = useMemo(() => mode === 'manual'
-    ? people.map((p, i) => ({ key: `m${p.key}`, personKey: p.key as number | undefined, label: fullName(p) || String(i + 1), note: `${TAG.w} × ${TAG.h} мм`, person: p as Person }))
-    : (table?.rows ?? []).map(r => ({ key: `t${r.line}`, personKey: undefined, label: fullName(r.person) || 'Без имени', note: `строка ${r.line}`, person: r.person })), [mode, people, table])
+  /** What's shown and downloaded; a tag loaded from the table keeps its row number, to find it in the file */
+  const items = useMemo(() => people.map((p, i) => ({
+    key: p.key,
+    label: fullName(p) || (p.line ? 'Без имени' : String(i + 1)),
+    note: p.line ? `строка ${p.line}` : `${TAG.w} × ${TAG.h} мм`,
+    person: p as Person,
+  })), [people])
   const tags = useMemo(() => fonts ? items.map(it => buildTag(fonts, it.person)) : undefined, [fonts, items])
   /** The placeholders standing in for empty fields */
   const ghosts = useMemo(() => fonts ? items.map(({ person: p }) => buildTag(fonts, {
@@ -65,28 +74,38 @@ export default function NameTag() {
   const named = items.every(it => it.person.name.trim() || it.person.surname.trim())
   const ok = !!tags && tags.length > 0 && named && tags.every(t => t.issues.length === 0)
 
-  const loadFile = async (file: File) => {
+  /** A file's rows replace the table's list, edits made here included */
+  const loadRows = (rows: TableRow[], name: string) => {
+    const loaded = rows.map(r => ({ ...row(r.person), line: r.line }))
+    setLists(l => ({ ...l, table: loaded }))
+    setSelectedBy(s => ({ ...s, table: loaded[0]?.key }))
+    setFile(name)
+    setTableError('')
+  }
+  const loadRowsRef = useRef(loadRows)
+  loadRowsRef.current = loadRows
+
+  const loadFile = async (f: File) => {
     try {
-      const rows = readXlsx(await file.arrayBuffer())
+      const rows = readXlsx(await f.arrayBuffer())
       if (!rows.length) throw new Error('В таблице нет строк')
-      setTable({ file: file.name, rows })
-      setTableError('')
+      loadRows(rows, f.name)
     } catch (err) {
       setTableError(err instanceof Error && /xlsx|лист|строк/.test(err.message) ? err.message : 'Не получилось прочитать файл: нужен .xlsx')
     }
   }
 
-  // In the table mode rows pasted anywhere on the page stand in for a file
+  // In the table mode rows pasted anywhere on the page (but into a field, which adds them) stand in for a file
   useEffect(() => {
     if (mode !== 'table') return
     const onPaste = (e: ClipboardEvent) => {
+      if (e.defaultPrevented) return
       const text = e.clipboardData?.getData('text/plain') ?? ''
       if (!text.includes('\t')) return
       const rows = parsePasted(text)
       if (!rows.length) return
       e.preventDefault()
-      setTable({ file: 'Вставленные строки', rows })
-      setTableError('')
+      loadRowsRef.current(rows, 'Вставленные строки')
     }
     document.addEventListener('paste', onPaste)
     return () => document.removeEventListener('paste', onPaste)
@@ -100,10 +119,10 @@ export default function NameTag() {
     if (!focusNext.current) return
     focusNext.current = false
     form.current?.querySelector('input')?.focus()
-    figures.current.get(selected)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    if (selected !== undefined) figures.current.get(selected)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
   }, [selected])
 
-  const update = (key: number, patch: Partial<Person>) => setPeople(ps => ps.map(p => p.key === key ? { ...p, ...patch } : p))
+  const update = (key: number, patch: Partial<Person>) => setPeople(people.map(p => p.key === key ? { ...p, ...patch } : p))
   /** The neighbour after (or before) the one removed is selected */
   const remove = (key: number) => {
     const i = people.findIndex(p => p.key === key)
@@ -114,7 +133,7 @@ export default function NameTag() {
   const add = () => {
     const r = row(BLANK)
     focusNext.current = true
-    setPeople(ps => [...ps, r])
+    setPeople([...people, r])
     setSelected(r.key)
   }
   /** A table pasted into any field of a row replaces that row (if it's empty or the example) and goes on after it */
@@ -159,7 +178,32 @@ export default function NameTag() {
             <SegBtn active={mode === 'table'} onClick={() => setMode('table')}>Из таблицы</SegBtn>
           </Segments>
 
-          {mode === 'manual' ? (
+          {mode === 'table' && (
+            <div className="flex flex-col gap-2 tracking-normal">
+              <label
+                onDragOver={e => { e.preventDefault(); setDragging(true) }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) loadFile(f) }}
+                className={`flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-1 rounded-[4px] border border-dashed p-4 text-center text-[14px] leading-5
+                  ${dragging ? 'border-black bg-[#f5f5f5]' : tableError ? 'border-[#e30]' : 'border-black/20 hover:border-black/40'}`}
+              >
+                <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="sr-only"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = '' }} />
+                {file ? (
+                  <>
+                    <span className="font-medium break-all">{file}</span>
+                    <span className="text-[#999]">{people.length} {staff(people.length)} · заменить</span>
+                  </>
+                ) : (
+                  <span className="font-medium">Загрузить таблицу .xlsx</span>
+                )}
+              </label>
+              {tableError && <p className="text-[13px] leading-5 text-[#e30]">{tableError}</p>}
+              <a href={TEMPLATE} download="UMO_name-tags_template.xlsx" onClick={downloadTemplate} className={`${outlined} mt-2`}>Скачать шаблон</a>
+            </div>
+          )}
+
+          {current && (
             <div className="flex flex-col gap-6 tracking-normal">
               {(() => {
                 const p = current
@@ -168,7 +212,7 @@ export default function NameTag() {
                 return (
                   <div ref={form} onPasteCapture={e => paste(p.key, e)} className="flex flex-col gap-2">
                     <div className="flex items-baseline justify-between text-[14px] leading-5">
-                      <span className="font-medium">{fullName(p) || i + 1}</span>
+                      <span className="font-medium">{items[i]?.label}</span>
                       {/* «Сбросить» empties this tag's fields; «Удалить» only while there's another tag to go to */}
                       <div className="flex gap-4">
                         <button type="button" onClick={() => update(p.key, BLANK)} className="cursor-pointer text-[#999] hover:text-black">Сбросить</button>
@@ -187,29 +231,6 @@ export default function NameTag() {
               })()}
               <button type="button" onClick={add} className={outlined}>Добавить</button>
             </div>
-          ) : (
-            <div className="flex flex-col gap-2 tracking-normal">
-              <label
-                onDragOver={e => { e.preventDefault(); setDragging(true) }}
-                onDragLeave={() => setDragging(false)}
-                onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) loadFile(f) }}
-                className={`flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-1 rounded-[4px] border border-dashed p-4 text-center text-[14px] leading-5
-                  ${dragging ? 'border-black bg-[#f5f5f5]' : tableError ? 'border-[#e30]' : 'border-black/20 hover:border-black/40'}`}
-              >
-                <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="sr-only"
-                  onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = '' }} />
-                {table ? (
-                  <>
-                    <span className="font-medium break-all">{table.file}</span>
-                    <span className="text-[#999]">{table.rows.length} {staff(table.rows.length)} · заменить</span>
-                  </>
-                ) : (
-                  <span className="font-medium">Загрузить таблицу .xlsx</span>
-                )}
-              </label>
-              {tableError && <p className="text-[13px] leading-5 text-[#e30]">{tableError}</p>}
-              <a href={TEMPLATE} download="UMO_name-tags_template.xlsx" onClick={downloadTemplate} className={`${outlined} mt-2`}>Скачать шаблон</a>
-            </div>
           )}
         </div>
 
@@ -225,13 +246,13 @@ export default function NameTag() {
           {items.map((it, i) => {
             const tag = tags?.[i]
             const bad = !!tag && tag.issues.length > 0
-            const key = it.personKey
-            const pickable = key !== undefined && people.length > 1
-            const active = pickable && key === current.key
+            const key = it.key
+            const pickable = people.length > 1
+            const active = pickable && key === current?.key
             return (
               <figure
                 key={it.key}
-                ref={el => { if (key === undefined) return; if (el) figures.current.set(key, el); else figures.current.delete(key) }}
+                ref={el => { if (el) figures.current.set(key, el); else figures.current.delete(key) }}
                 className="@container flex flex-col gap-3"
               >
                 <figcaption className="flex items-baseline gap-2 text-[14px] leading-5">
@@ -242,7 +263,7 @@ export default function NameTag() {
                 <button
                   type="button"
                   disabled={!pickable}
-                  onClick={() => key !== undefined && setSelected(key)}
+                  onClick={() => setSelected(key)}
                   aria-pressed={pickable ? active : undefined}
                   className={`block rounded-[5.714cqw] outline-offset-4 ${pickable ? 'cursor-pointer' : 'cursor-default'}
                     ${active ? 'outline-2 outline-black' : pickable ? 'outline-1 outline-transparent hover:outline-black/20' : ''}`}
