@@ -5,6 +5,7 @@ import type { Variant } from '@/posters/cardData'
 import UmoLogo from './UmoLogo'
 import UmoYandexLockup from './UmoYandexLockup'
 import PlateArt from '@/plate/PlateArt'
+import { BASELINE as STRIP_BASELINE } from '@/plate/frame'
 import tocIcons from '@/icons/toc'
 import { useTypograf } from './typograf'
 import downloadSizes from 'virtual:download-sizes'
@@ -1240,7 +1241,7 @@ export default function Guide() {
               <H2 id="plate-frame">Рамка номера</H2>
               <Constructor to="/plate-frame" title="Редактор рамок номеров">
                 <PlateArt guide>
-                  <text y={3 + 0.68 * 18} fontFamily="CoFo Sans" fontWeight={500} fontSize={18} letterSpacing={-0.18} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Центр UMO | Название дилера</text>
+                  <text y={STRIP_BASELINE} fontFamily="CoFo Sans" fontWeight={500} fontSize={18} letterSpacing={-0.18} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Центр UMO | Название дилера</text>
                 </PlateArt>
               </Constructor>
             </Section>

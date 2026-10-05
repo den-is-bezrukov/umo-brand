@@ -3,7 +3,7 @@ import type { Cmd } from '@/livery/geometry'
 
 // The print strip of a number plate frame (Figma: UMO | Evrone, node 4970:2419): the 501×21 mm field under the plate of
 // a standard 522×132 frame, where the frame maker prints in white on the black plastic. One line of CoFo Sans Medium,
-// 18 mm with −1% tracking and the case-sensitive forms, its capitals 3 mm under the top of the field, set from the left edge or centred. The PDF has
+// 18 mm with −1% tracking and the case-sensitive forms, its capitals 2.5 mm under the top of the field, set from the left edge or centred. The PDF has
 // the field at 1:1 with the text in outlines, no bleed.
 
 /** The strip in the frame's millimetres (the frame is 522×132) */
@@ -13,8 +13,11 @@ const SIZE = 18
 const TRACKING = -0.01
 /** CoFo Sans cap height, 680 of 1000 units */
 const CAP = 0.68
-/** The capitals' top 3 mm under the strip's top, as Figma's cap-height trim places them */
-const BASELINE = 3 + CAP * SIZE
+/**
+ * The capitals' top 2.5 mm under the strip's top: half a millimetre above Figma's 3, as the line is mostly lowercase
+ * and Ц's tail, and its weight sat low between the plate and the frame's rounded bottom
+ */
+export const BASELINE = 2.5 + CAP * SIZE
 
 export type Align = 'left' | 'center'
 
