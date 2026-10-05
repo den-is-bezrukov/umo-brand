@@ -27,6 +27,9 @@ const same = (a: Person, b: Person) => a.name === b.name && a.surname === b.surn
 export default function NameTag() {
   // Not kept in the address, unlike the other generators: a staff list isn't something to send as a link
   const [people, setPeople] = useState<Row[]>(() => [row(BLANK)])
+  /** The one person the sidebar edits; the others are picked by clicking their tag */
+  const [selected, setSelected] = useState(() => people[0].key)
+  const current = people.find(p => p.key === selected) ?? people[0]
   const [mode, setMode] = useState<'manual' | 'table'>('manual')
   const [table, setTable] = useState<{ file: string; rows: TableRow[] }>()
   const [tableError, setTableError] = useState('')
@@ -44,8 +47,8 @@ export default function NameTag() {
 
   /** What's shown and downloaded: the manual list, or the table's rows labelled with their row numbers */
   const items = useMemo(() => mode === 'manual'
-    ? people.map((p, i) => ({ key: `m${p.key}`, label: String(i + 1), person: p as Person }))
-    : (table?.rows ?? []).map(r => ({ key: `t${r.line}`, label: `Строка ${r.line}`, person: r.person })), [mode, people, table])
+    ? people.map((p, i) => ({ key: `m${p.key}`, personKey: p.key as number | undefined, label: String(i + 1), person: p as Person }))
+    : (table?.rows ?? []).map(r => ({ key: `t${r.line}`, personKey: undefined, label: `Строка ${r.line}`, person: r.person })), [mode, people, table])
   const tags = useMemo(() => fonts ? items.map(it => buildTag(fonts, it.person)) : undefined, [fonts, items])
   /** The placeholders standing in for empty fields */
   const ghosts = useMemo(() => fonts ? items.map(({ person: p }) => buildTag(fonts, {
@@ -83,21 +86,30 @@ export default function NameTag() {
     return () => document.removeEventListener('paste', onPaste)
   }, [mode])
 
-  // A row just added takes the focus
-  const focusKey = useRef<number | null>(null)
-  const fields = useRef(new Map<number, HTMLDivElement>())
+  // A person just added takes the focus, and their tag scrolls into view
+  const focusNext = useRef(false)
+  const form = useRef<HTMLDivElement>(null)
+  const figures = useRef(new Map<number, HTMLElement>())
   useEffect(() => {
-    if (focusKey.current === null) return
-    fields.current.get(focusKey.current)?.querySelector('input')?.focus()
-    focusKey.current = null
-  }, [people])
+    if (!focusNext.current) return
+    focusNext.current = false
+    form.current?.querySelector('input')?.focus()
+    figures.current.get(selected)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+  }, [selected])
 
   const update = (key: number, patch: Partial<Person>) => setPeople(ps => ps.map(p => p.key === key ? { ...p, ...patch } : p))
-  const remove = (key: number) => setPeople(ps => ps.filter(p => p.key !== key))
+  /** The neighbour after (or before) the one removed is selected */
+  const remove = (key: number) => {
+    const i = people.findIndex(p => p.key === key)
+    const rest = people.filter(p => p.key !== key)
+    setPeople(rest)
+    setSelected(rest[Math.min(i, rest.length - 1)].key)
+  }
   const add = () => {
     const r = row(BLANK)
-    focusKey.current = r.key
+    focusNext.current = true
     setPeople(ps => [...ps, r])
+    setSelected(r.key)
   }
   /** A table pasted into any field of a row replaces that row (if it's empty or the example) and goes on after it */
   const paste = (key: number, e: React.ClipboardEvent) => {
@@ -106,11 +118,11 @@ export default function NameTag() {
     const rows = parsePasted(text).map(r => r.person)
     if (!rows.length) return
     e.preventDefault()
-    setPeople(ps => {
-      const i = ps.findIndex(p => p.key === key)
-      const replace = same(ps[i], BLANK)
-      return [...ps.slice(0, replace ? i : i + 1), ...rows.map(row), ...ps.slice(i + 1)]
-    })
+    const added = rows.map(row)
+    const i = people.findIndex(p => p.key === key)
+    const replace = same(people[i], BLANK)
+    setPeople([...people.slice(0, replace ? i : i + 1), ...added, ...people.slice(i + 1)])
+    setSelected(added[0].key)
   }
 
   const handleExport = async () => {
@@ -143,15 +155,12 @@ export default function NameTag() {
 
           {mode === 'manual' ? (
             <div className="flex flex-col gap-6 tracking-normal">
-              {people.map((p, i) => {
+              {(() => {
+                const p = current
+                const i = people.indexOf(p)
                 const issues = tags?.[i]?.issues ?? []
                 return (
-                  <div
-                    key={p.key}
-                    ref={el => { if (el) fields.current.set(p.key, el); else fields.current.delete(p.key) }}
-                    onPasteCapture={e => paste(p.key, e)}
-                    className="flex flex-col gap-2"
-                  >
+                  <div ref={form} onPasteCapture={e => paste(p.key, e)} className="flex flex-col gap-2">
                     <div className="flex items-baseline justify-between text-[14px] leading-5">
                       <span className="font-medium">№&nbsp;{i + 1}</span>
                       {people.length > 1 && (
@@ -165,7 +174,7 @@ export default function NameTag() {
                     <TextArea value={p.position} onChange={v => update(p.key, { position: v })} placeholder="Должность" invalid={issues.some(t => t.startsWith('Должность'))} />
                   </div>
                 )
-              })}
+              })()}
               <button type="button" onClick={add} className={outlined}>Добавить</button>
             </div>
           ) : (
@@ -206,13 +215,30 @@ export default function NameTag() {
           {items.map((it, i) => {
             const tag = tags?.[i]
             const bad = !!tag && tag.issues.length > 0
+            const key = it.personKey
+            const pickable = key !== undefined && people.length > 1
+            const active = pickable && key === current.key
             return (
-              <figure key={it.key} className="flex flex-col gap-3">
+              <figure
+                key={it.key}
+                ref={el => { if (key === undefined) return; if (el) figures.current.set(key, el); else figures.current.delete(key) }}
+                className="@container flex flex-col gap-3"
+              >
                 <figcaption className="flex items-baseline gap-2 text-[14px] leading-5">
                   <span className="font-medium">{it.label}</span>
                   <span className="text-[#999]">{TAG.w} × {TAG.h} мм</span>
                 </figcaption>
-                <TagArt text={tag ? toD(tag.cmds) : undefined} ghost={ghosts?.[i] ? toD(ghosts[i].cmds) : undefined} color={bad ? RED : undefined} />
+                {/* In the manual list a tag is picked for editing by clicking it; the picked one is outlined */}
+                <button
+                  type="button"
+                  disabled={!pickable}
+                  onClick={() => key !== undefined && setSelected(key)}
+                  aria-pressed={pickable ? active : undefined}
+                  className={`block rounded-[5.714cqw] outline-offset-4 ${pickable ? 'cursor-pointer' : 'cursor-default'}
+                    ${active ? 'outline-2 outline-black' : pickable ? 'outline-1 outline-transparent hover:outline-black/20' : ''}`}
+                >
+                  <TagArt text={tag ? toD(tag.cmds) : undefined} ghost={ghosts?.[i] ? toD(ghosts[i].cmds) : undefined} color={bad ? RED : undefined} />
+                </button>
                 {bad && (
                   <ul className="text-[13px] leading-5 text-[#e30]">
                     {tag.issues.map(t => <li key={t}>{t}</li>)}
