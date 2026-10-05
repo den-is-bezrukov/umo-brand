@@ -276,10 +276,10 @@ export default function NameTag() {
 
         <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:pt-0">
           {/* Until every tag is ready, the progress in the button's place, leading through the tags not ready yet; with a
-              single tag, nothing: its form says enough, and «Готово 0 из 1» would read oddly */}
+              single tag, nothing: its form says enough, and «Готово: 0 из 1» would read oddly */}
           {failing.length > 0 ? items.length > 1 && (
             <button type="button" onClick={() => nextFailing(failing)} className="flex w-full cursor-pointer items-center justify-center p-3 text-[14px] leading-[1.13] tracking-[-0.01em] text-[#999] hover:text-black">
-              Готово {items.length - failing.length} из {items.length}
+              Готово: {items.length - failing.length} из {items.length}
             </button>
           ) : items.length > 0 && (
             <DownloadButton onClick={handleExport} busy={exporting} disabled={!ok}>
