@@ -8,7 +8,7 @@ import TagArt from '@/nametag/TagArt'
 // Name tag generator (Figma: UMO | Evrone, node 4021:2878): a dealership's staff list in, one zip out with the tags
 // in outlines, a page each, and the maker's requirements. Two modes: «Вручную», a list typed on the page, and «Из
 // таблицы», the template filled in and loaded as .xlsx (or its rows pasted), shown as it is. Editing it means taking it
-// to «Вручную», each tag keeping its row number. Rows copied from a spreadsheet can be pasted into the manual list too.
+// to «Вручную». Rows copied from a spreadsheet can be pasted into the manual list too.
 
 const TEMPLATE = `${import.meta.env.BASE_URL}downloads/UMO_name-tags_template.xlsx`
 
@@ -17,8 +17,7 @@ const PLACEHOLDER: Person = { name: 'Имя', surname: 'Фамилия', positio
 const BLANK: Person = { name: '', surname: '', position: '' }
 const RED = '#e30'
 
-/** A person on the page; `line` is the spreadsheet row they were loaded from */
-interface Row extends Person { key: number; line?: number }
+interface Row extends Person { key: number }
 
 let nextKey = 0
 const row = (p: Person): Row => ({ ...p, key: nextKey++ })
@@ -60,11 +59,11 @@ export default function NameTag() {
     return () => { document.title = prev }
   }, [])
 
-  /** What's shown and downloaded; a tag loaded from the table keeps its row number, to find it in the file */
+  /** What's shown and downloaded, titled by name, and numbered as the PDF's pages */
   const items = useMemo(() => (mode === 'table' && !file ? [] : people).map((p, i) => ({
     key: p.key,
-    label: fullName(p) || (p.line ? 'Без имени' : String(i + 1)),
-    note: p.line ? `строка ${p.line}` : `${TAG.w} × ${TAG.h} мм`,
+    label: fullName(p) || `Бейдж ${i + 1}`,
+    note: fullName(p) ? `Бейдж ${i + 1}` : `${TAG.w} × ${TAG.h} мм`,
     person: p as Person,
   })), [mode, file, people])
   const tags = useMemo(() => fonts ? items.map(it => buildTag(fonts, it.person)) : undefined, [fonts, items])
@@ -79,7 +78,7 @@ export default function NameTag() {
 
   /** A file's rows replace the list, whatever was on it */
   const loadRows = (rows: TableRow[], name: string) => {
-    const loaded = rows.map(r => ({ ...row(r.person), line: r.line }))
+    const loaded = rows.map(r => row(r.person))
     setList(loaded)
     setSelected(loaded[0]?.key)
     setFile(name)
