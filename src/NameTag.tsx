@@ -22,6 +22,9 @@ interface Row extends Person { key: number }
 let nextKey = 0
 const row = (p: Person): Row => ({ ...p, key: nextKey++ })
 
+/** A tag's title in the sidebar and over its preview; empty until a name is typed, and the number stands in */
+const fullName = (p: Person) => [p.name, p.surname].map(v => v.replace(/\s+/g, ' ').trim()).filter(Boolean).join(' ')
+
 const same = (a: Person, b: Person) => a.name === b.name && a.surname === b.surname && a.position === b.position
 
 export default function NameTag() {
@@ -47,8 +50,8 @@ export default function NameTag() {
 
   /** What's shown and downloaded: the manual list, or the table's rows labelled with their row numbers */
   const items = useMemo(() => mode === 'manual'
-    ? people.map((p, i) => ({ key: `m${p.key}`, personKey: p.key as number | undefined, label: String(i + 1), person: p as Person }))
-    : (table?.rows ?? []).map(r => ({ key: `t${r.line}`, personKey: undefined, label: `Строка ${r.line}`, person: r.person })), [mode, people, table])
+    ? people.map((p, i) => ({ key: `m${p.key}`, personKey: p.key as number | undefined, label: fullName(p) || String(i + 1), note: `${TAG.w} × ${TAG.h} мм`, person: p as Person }))
+    : (table?.rows ?? []).map(r => ({ key: `t${r.line}`, personKey: undefined, label: fullName(r.person) || 'Без имени', note: `строка ${r.line}`, person: r.person })), [mode, people, table])
   const tags = useMemo(() => fonts ? items.map(it => buildTag(fonts, it.person)) : undefined, [fonts, items])
   /** The placeholders standing in for empty fields */
   const ghosts = useMemo(() => fonts ? items.map(({ person: p }) => buildTag(fonts, {
@@ -162,7 +165,7 @@ export default function NameTag() {
                 return (
                   <div ref={form} onPasteCapture={e => paste(p.key, e)} className="flex flex-col gap-2">
                     <div className="flex items-baseline justify-between text-[14px] leading-5">
-                      <span className="font-medium">{i + 1}</span>
+                      <span className="font-medium">{fullName(p) || i + 1}</span>
                       {people.length > 1 && (
                         <button type="button" onClick={() => remove(p.key)} className="cursor-pointer text-[#999] hover:text-black">Удалить</button>
                       )}
@@ -232,7 +235,7 @@ export default function NameTag() {
               >
                 <figcaption className="flex items-baseline gap-2 text-[14px] leading-5">
                   <span className="font-medium">{it.label}</span>
-                  <span className="text-[#999]">{TAG.w} × {TAG.h} мм</span>
+                  <span className="text-[#999]">{it.note}</span>
                 </figcaption>
                 {/* In the manual list a tag is picked for editing by clicking it; the picked one is outlined */}
                 <button
