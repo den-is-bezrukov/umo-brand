@@ -8,8 +8,8 @@ import type { Cmd } from '@/livery/geometry'
 
 // Loaded only when the files are downloaded, so the page doesn't carry pdf-lib until then.
 
-/** How the tag should look, for the maker: the source's UMO_name-tag.png (the tag on a shirt), as WebP (cwebp -q 90) */
-const REFERENCE = new URL('../assets/nametag/reference.webp', import.meta.url).href
+/** How the tag should look, for the maker: the guide's photo of the tag on a shirt */
+const REFERENCE = new URL('../assets/guide/name-tag.webp', import.meta.url).href
 
 const PT = 72 / 25.4
 /** The source's colour, C60 M40 Y40 K100: nominal, the material decides the real one */

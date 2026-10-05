@@ -1262,7 +1262,8 @@ export default function Guide() {
               </Constructor>
             </Section>
 
-            {/* The reference photo from Yandex Disk 02 UMO/Name Tag (UMO_name-tag.png, 900×540), as the maker gets it */}
+            {/* Figma 4980:9768 (700×420): the original photo (1400×1400) cut to that frame at its full size, 1400×840; the
+                maker gets it in the archive too */}
             <Section>
               <Head>
                 <H2 id="name-tag">Бейдж</H2>
@@ -1272,7 +1273,7 @@ export default function Guide() {
                 </Text>
               </Head>
               <Constructor to="/name-tag" title="Конструктор бейджей">
-                <Fig name="name-tag" w={900} h={540} alt="Бейдж UMO на рубашке сотрудника" />
+                <Fig name="name-tag" w={700} h={420} alt="Бейдж UMO на рубашке сотрудника" />
               </Constructor>
             </Section>
           </Chapter>
