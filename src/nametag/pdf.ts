@@ -8,6 +8,9 @@ import type { Cmd } from '@/livery/geometry'
 
 // Loaded only when the files are downloaded, so the page doesn't carry pdf-lib until then.
 
+/** How the tag should look, for the maker: the source's UMO_name-tag.png (the tag on a shirt), as JPEG */
+const REFERENCE = new URL('../assets/nametag/reference.jpg', import.meta.url).href
+
 const PT = 72 / 25.4
 /** The source's colour, C60 M40 Y40 K100: nominal, the material decides the real one */
 const INK: [number, number, number, number] = [0.6, 0.4, 0.4, 1]
@@ -77,14 +80,16 @@ function spec(count: number): string {
 
 СОСТАВ
 
-UMO_name-tags.pdf — макеты бейджей, ${count} шт., по одному на странице, 1:1
+UMO_name-tags.pdf           — макеты бейджей, ${count} шт., по одному на странице, 1:1
+UMO_name-tag_reference.jpg  — референс внешнего вида
 Размер 70 × 25 мм, углы скруглены радиусом 4 мм.
 Контур — линия реза. Текст и логотип уже в кривых.
 
 
 ВНЕШНИЙ ВИД
 
-Матовая шлифованная серебристая поверхность, тёмный текст и логотип.
+Как на референсе: матовая шлифованная серебристая поверхность, тёмный
+текст и логотип.
 Размер, форма и вёрстка — строго по макету.
 Цвета в файле условные: итоговый цвет текста определяется материалом.
 
@@ -119,9 +124,10 @@ UMO_name-tags.pdf — макеты бейджей, ${count} шт., по одно
 }
 
 export async function tagsZip(tags: Tag[]): Promise<Blob> {
-  const pdf = await tagsPdf(tags)
+  const [pdf, photo] = await Promise.all([tagsPdf(tags), fetch(REFERENCE).then(r => r.arrayBuffer())])
   const zip = zipSync({
     'UMO_name-tags.pdf': pdf,
+    'UMO_name-tag_reference.jpg': new Uint8Array(photo),
     '00_UMO_name-tags_spec.txt': strToU8(spec(tags.length)),
   }, { level: 0 })
   return new Blob([zip as BlobPart], { type: 'application/zip' })
