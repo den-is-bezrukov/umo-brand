@@ -178,31 +178,6 @@ export default function NameTag() {
             <SegBtn active={mode === 'table'} onClick={() => setMode('table')}>Из таблицы</SegBtn>
           </Segments>
 
-          {mode === 'table' && (
-            <div className="flex flex-col gap-2 tracking-normal">
-              <label
-                onDragOver={e => { e.preventDefault(); setDragging(true) }}
-                onDragLeave={() => setDragging(false)}
-                onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) loadFile(f) }}
-                className={`flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-1 rounded-[4px] border border-dashed p-4 text-center text-[14px] leading-5
-                  ${dragging ? 'border-black bg-[#f5f5f5]' : tableError ? 'border-[#e30]' : 'border-black/20 hover:border-black/40'}`}
-              >
-                <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="sr-only"
-                  onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = '' }} />
-                {file ? (
-                  <>
-                    <span className="font-medium break-all">{file}</span>
-                    <span className="text-[#999]">{people.length} {staff(people.length)} · заменить</span>
-                  </>
-                ) : (
-                  <span className="font-medium">Загрузить таблицу .xlsx</span>
-                )}
-              </label>
-              {tableError && <p className="text-[13px] leading-5 text-[#e30]">{tableError}</p>}
-              <a href={TEMPLATE} download="UMO_name-tags_template.xlsx" onClick={downloadTemplate} className={`${outlined} mt-2`}>Скачать шаблон</a>
-            </div>
-          )}
-
           {current && (
             <div className="flex flex-col gap-6 tracking-normal">
               {(() => {
@@ -230,6 +205,31 @@ export default function NameTag() {
                 )
               })()}
               <button type="button" onClick={add} className={outlined}>Добавить</button>
+            </div>
+          )}
+
+          {mode === 'table' && (
+            <div className="flex flex-col gap-2 tracking-normal">
+              <label
+                onDragOver={e => { e.preventDefault(); setDragging(true) }}
+                onDragLeave={() => setDragging(false)}
+                onDrop={e => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) loadFile(f) }}
+                className={`flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-1 rounded-[4px] border border-dashed p-4 text-center text-[14px] leading-5
+                  ${dragging ? 'border-black bg-[#f5f5f5]' : tableError ? 'border-[#e30]' : 'border-black/20 hover:border-black/40'}`}
+              >
+                <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="sr-only"
+                  onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = '' }} />
+                {file ? (
+                  <>
+                    <span className="font-medium break-all">{file}</span>
+                    <span className="text-[#999]">{people.length} {staff(people.length)} · заменить</span>
+                  </>
+                ) : (
+                  <span className="font-medium">Загрузить таблицу .xlsx</span>
+                )}
+              </label>
+              {tableError && <p className="text-[13px] leading-5 text-[#e30]">{tableError}</p>}
+              <a href={TEMPLATE} download="UMO_name-tags_template.xlsx" onClick={downloadTemplate} className={`${outlined} mt-2`}>Скачать шаблон таблицы</a>
             </div>
           )}
         </div>
