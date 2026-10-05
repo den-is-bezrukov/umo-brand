@@ -189,7 +189,7 @@ export default function NameTag() {
                 )}
               </label>
               {tableError && <p className="text-[13px] leading-5 text-[#e30]">{tableError}</p>}
-              <a href={TEMPLATE} download className={`${outlined} mt-2`}>Скачать шаблон</a>
+              <a href={TEMPLATE} download="UMO_name-tags_template.xlsx" onClick={downloadTemplate} className={`${outlined} mt-2`}>Скачать шаблон</a>
             </div>
           )}
         </div>
@@ -226,6 +226,20 @@ export default function NameTag() {
 
     </div>
   )
+}
+
+/**
+ * The template as an .xlsx with its type set: a server that sends it without one (Vite's dev server) has browsers sniff
+ * the zip inside and save a .zip
+ */
+async function downloadTemplate(e: React.MouseEvent) {
+  e.preventDefault()
+  const data = await (await fetch(TEMPLATE)).arrayBuffer()
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }))
+  a.download = 'UMO_name-tags_template.xlsx'
+  a.click()
+  URL.revokeObjectURL(a.href)
 }
 
 /** сотрудник, сотрудника, сотрудников */
