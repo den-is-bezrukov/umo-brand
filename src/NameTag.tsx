@@ -238,11 +238,14 @@ export default function NameTag() {
                     </div>
                     <TextArea value={p.position} onChange={v => update(p.key, { position: v })} placeholder="Должность" invalid={issues.some(t => t.startsWith('Должность') || t === NO_POSITION)} />
                     {/* The selected tag's actions under its fields, side by side as the other generators' «Копировать» and
-                        «Сбросить»: «Сбросить» empties the fields, «Удалить» only while there's another tag to go to */}
-                    <div className="mt-2 flex gap-2">
-                      <button type="button" onClick={() => update(p.key, BLANK)} className={outlined}>Сбросить</button>
-                      {people.length > 1 && <button type="button" onClick={() => remove(p.key)} className={outlined}>Удалить</button>}
-                    </div>
+                        «Сбросить»: «Сбросить» empties the fields, while there's something in them; «Удалить» only while
+                        there's another tag to go to */}
+                    {(!same(p, BLANK) || people.length > 1) && (
+                      <div className="mt-2 flex gap-2">
+                        {!same(p, BLANK) && <button type="button" onClick={() => update(p.key, BLANK)} className={outlined}>Сбросить</button>}
+                        {people.length > 1 && <button type="button" onClick={() => remove(p.key)} className={outlined}>Удалить</button>}
+                      </div>
+                    )}
                   </div>
                 )
               })()}
@@ -272,14 +275,16 @@ export default function NameTag() {
         </div>
 
         <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:pt-0">
-          {failing.length > 0 && (
-            <button type="button" onClick={() => nextFailing(failing)} className="mb-3 block w-full cursor-pointer text-center text-[13px] leading-5 text-[#999] hover:text-black">
-              {failing.length} бейдж{plural(failing.length)} не готов{failing.length === 1 ? '' : 'ы'} · <span className="underline underline-offset-[25%] decoration-current/40">{failing.length === 1 ? 'показать' : 'следующий'}</span>
+          {/* Until every tag is ready, a quiet status in the button's place, leading through the tags still in work */}
+          {failing.length > 0 ? (
+            <button type="button" onClick={() => nextFailing(failing)} className="flex w-full cursor-pointer items-center justify-center p-3 text-[14px] leading-[1.13] tracking-[-0.01em] text-[#999] hover:text-black">
+              {failing.length} бейдж{plural(failing.length)} в работе
             </button>
+          ) : items.length > 0 && (
+            <DownloadButton onClick={handleExport} busy={exporting} disabled={!ok}>
+              Скачать{items.length > 1 ? ` ${items.length} бейдж${plural(items.length)}` : ''}
+            </DownloadButton>
           )}
-          <DownloadButton onClick={handleExport} busy={exporting} disabled={!ok}>
-            Скачать{items.length > 1 ? ` ${items.length} бейдж${plural(items.length)}` : ''}
-          </DownloadButton>
         </div>
       </aside>
 
