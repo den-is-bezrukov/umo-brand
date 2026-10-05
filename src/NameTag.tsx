@@ -36,9 +36,9 @@ export default function NameTag() {
     setList(next)
     setFile('')
   }
-  /** The one person the sidebar edits; the others are picked by clicking their tag */
-  const [selectedKey, setSelected] = useState<number>()
-  const current = people.find(p => p.key === selectedKey) ?? people[0]
+  /** The one person the sidebar edits, picked by clicking their tag; a click beside the tags leaves none selected */
+  const [selectedKey, setSelected] = useState<number | null>(() => people[0].key)
+  const current = people.find(p => p.key === selectedKey)
   const selected = current?.key
   const [tableError, setTableError] = useState('')
   const [dragging, setDragging] = useState(false)
@@ -180,9 +180,9 @@ export default function NameTag() {
             <SegBtn active={mode === 'table'} onClick={() => setMode('table')}>Из таблицы</SegBtn>
           </Segments>
 
-          {mode === 'manual' && current && (
+          {mode === 'manual' && (
             <div className="flex flex-col gap-6 tracking-normal">
-              {(() => {
+              {current && (() => {
                 const p = current
                 const i = people.indexOf(p)
                 const issues = tags?.[i]?.issues ?? []
@@ -203,7 +203,7 @@ export default function NameTag() {
                 )
               })()}
               {/* About the whole list, so set apart from the tag's own buttons */}
-              <button type="button" onClick={add} className={`${outlined} mt-2`}>Добавить</button>
+              <button type="button" onClick={add} className={`${outlined} ${current ? 'mt-2' : ''}`}>Добавить</button>
             </div>
           )}
 
@@ -237,6 +237,7 @@ export default function NameTag() {
       {/* In the table mode the preview takes a dropped file too, and until one is loaded it's all an upload */}
       <main
         {...(mode === 'table' ? dropTarget : {})}
+        onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure button')) setSelected(null) }}
         className={`flex flex-1 flex-col bg-[#f5f5f5] p-6 pb-[112px] md:min-w-0 md:overflow-y-auto md:p-16
           ${mode === 'table' && file && dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
       >
@@ -252,10 +253,10 @@ export default function NameTag() {
             const tag = tags?.[i]
             const bad = !!tag && tag.issues.length > 0
             const key = it.key
-            // In the manual list a tag is picked for editing; in the table one, clicking a tag goes to edit it there
-            const pickable = mode === 'table' || people.length > 1
-            /** In the manual list the tags but the selected one are dimmed; with nothing selected (the table) all are clear */
-            const dimmed = mode === 'manual' && pickable && key !== current?.key
+            // In the manual list a tag is picked for editing; in the table one, clicking a tag goes to edit it there.
+            // The tags but the selected one are dimmed; with none selected (in the table always) all are clear
+            const active = mode === 'manual' && key === current?.key
+            const dimmed = mode === 'manual' && !!current && !active
             return (
               <figure
                 key={it.key}
@@ -265,11 +266,10 @@ export default function NameTag() {
                 {/* In the manual list a tag is picked for editing by clicking it; the picked one is outlined */}
                 <button
                   type="button"
-                  disabled={!pickable}
                   onClick={() => { setSelected(key); setMode('manual') }}
-                  aria-pressed={mode === 'manual' && pickable ? !dimmed : undefined}
-                  className={`block rounded-[5.714cqw] outline-offset-4 transition-opacity duration-150 ${pickable ? 'cursor-pointer' : 'cursor-default'}
-                    ${!pickable ? '' : mode === 'manual' && !dimmed ? 'outline-2 outline-black' : 'outline-1 outline-transparent hover:outline-black/20'}
+                  aria-pressed={mode === 'manual' ? active : undefined}
+                  className={`block cursor-pointer rounded-[5.714cqw] outline-offset-4 transition-opacity duration-150
+                    ${active ? 'outline-2 outline-black' : 'outline-1 outline-transparent hover:outline-black/20'}
                     ${dimmed ? 'opacity-40 hover:opacity-100' : ''}`}
                 >
                   <TagArt text={tag ? toD(tag.cmds) : undefined} ghost={ghosts?.[i] ? toD(ghosts[i].cmds) : undefined} color={bad ? RED : undefined} />
