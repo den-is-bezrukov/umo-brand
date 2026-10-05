@@ -9,8 +9,8 @@ import type { Cmd } from '@/livery/geometry'
 /** The strip in the frame's millimetres (the frame is 522×132) */
 export const STRIP = { x: 10.5, y: 110, w: 501, h: 21 }
 
-const SIZE = 18
-const TRACKING = -0.01
+export const SIZE = 18
+export const TRACKING = -0.01
 /** CoFo Sans cap height, 680 of 1000 units */
 const CAP = 0.68
 /**
@@ -23,6 +23,8 @@ export type Align = 'left' | 'center'
 
 export interface Strip {
   cmds: Cmd[]
+  /** Where the line starts in the strip, mm: 0, or centred */
+  x: number
   issues: string[]
 }
 
@@ -80,7 +82,16 @@ export function buildStrip(font: Font, raw: string, align: Align): Strip {
   else if (width > STRIP.w || ink.x2 > STRIP.w || ink.x1 < 0) issues.push(`Текст шире ${STRIP.w} мм`)
   const missing = [...new Set([...text.replace(/\s/g, '')].filter(c => !font.hasChar(c)))]
   if (missing.length) issues.push(`Нет в шрифте ${missing.map(c => `«${c}»`).join(', ')}`)
-  return { cmds: pathCmds(commands), issues }
+  return { cmds: pathCmds(commands), x, issues }
+}
+
+/**
+ * The fixed start of the line (the prefix) set alone from `x`, for editing the rest on the frame: its outlines and
+ * where the next character starts, the tracking after its last glyph included
+ */
+export function lineStart(font: Font, text: string, x: number): { cmds: Cmd[]; end: number } {
+  const { commands, width } = setLine(font, text, x, BASELINE)
+  return { cmds: pathCmds(commands), end: x + width + TRACKING * SIZE }
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any

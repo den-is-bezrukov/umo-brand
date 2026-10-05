@@ -1,9 +1,9 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Font } from 'opentype.js'
 import { Field, Segments, SegBtn, TextInput, GeneratorHeader, LinkButtons, DownloadButton } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
 import { loadFont, toD } from '@/livery/geometry'
-import { STRIP, buildStrip, type Align } from '@/plate/frame'
+import { STRIP, BASELINE, SIZE, TRACKING, buildStrip, lineStart, type Align } from '@/plate/frame'
 import PlateArt from '@/plate/PlateArt'
 
 // Number plate frame generator (Figma: UMO | Evrone, node 4970:2419): the dealer's line printed under the plate, as a
@@ -16,6 +16,49 @@ const PREFIX = 'Центр UMO | '
 const DEFAULT_NAME = 'Название'
 const DEFAULT_TEXT = PREFIX + DEFAULT_NAME
 const RED = '#ff2a1a'
+
+/** The frame's millimetres in container units: the container is the frame picture, 522 mm wide */
+const mm = (v: number) => `${v * 100 / 522}cqw`
+
+/**
+ * The strip's text edited on the frame: a transparent input on the line, CoFo Sans Medium 18 mm with the tracking and
+ * case forms of the print, its line box the strip's 21 mm round the baseline. Enter, Esc or a click elsewhere ends it
+ */
+function InlineLine({ font, x, value, onChange, color, onDone }: { font: Font; x: number; value: string; onChange: (v: string) => void; color: string; onDone: () => void }) {
+  const ref = useRef<HTMLInputElement>(null)
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+    el.focus()
+    el.setSelectionRange(el.value.length, el.value.length)
+  }, [])
+  const ascent = font.ascender / font.unitsPerEm * SIZE
+  const descent = -font.descender / font.unitsPerEm * SIZE
+  const top = STRIP.y + BASELINE - (STRIP.h - ascent - descent) / 2 - ascent
+  return (
+    <input
+      ref={ref}
+      value={value}
+      onChange={e => onChange(e.target.value)}
+      onBlur={onDone}
+      onKeyDown={e => { if (e.key === 'Escape' || e.key === 'Enter') onDone() }}
+      spellCheck={false}
+      aria-label="Дилер"
+      className="absolute m-0 block border-0 bg-transparent p-0 font-medium outline-none [font-feature-settings:'case'_1]"
+      style={{
+        left: mm(x),
+        top: mm(top),
+        width: mm(STRIP.x + STRIP.w - x),
+        height: mm(STRIP.h),
+        fontSize: mm(SIZE),
+        lineHeight: STRIP.h / SIZE,
+        letterSpacing: `${TRACKING}em`,
+        color,
+        caretColor: color,
+      }}
+    />
+  )
+}
 
 export default function PlateFrame() {
   const [link] = useState(linkParams)
@@ -43,6 +86,10 @@ export default function PlateFrame() {
 
   const strip = useMemo(() => font ? buildStrip(font, line, align) : undefined, [font, line, align])
   const noName = custom ? !text.trim() : !name.trim()
+  /** The dealer's name (or the free line) edited right on the frame, after a double click on it */
+  const [editing, setEditing] = useState(false)
+  /** While editing, the fixed prefix stays drawn and the field starts where the name does */
+  const start = useMemo(() => !font || !strip ? undefined : custom ? { cmds: [], end: strip.x } : lineStart(font, PREFIX, strip.x), [font, strip, custom])
   const ok = !!strip && strip.issues.length === 0 && !noName
 
   const reset = () => {
@@ -110,9 +157,22 @@ export default function PlateFrame() {
             <span className="font-medium">Поле печати</span>
             <span className="text-[#999]">{STRIP.w} × {STRIP.h} мм</span>
           </figcaption>
-          <PlateArt>
-            {strip && <path d={toD(strip.cmds)} fill={ok ? 'white' : RED} />}
-          </PlateArt>
+          {/* A double click on the frame edits the text right on it, as the name tags do */}
+          <div className="@container relative cursor-text" onDoubleClick={() => setEditing(true)}>
+            <PlateArt>
+              {strip && <path d={toD(editing && start ? start.cmds : strip.cmds)} fill={ok ? 'white' : RED} />}
+            </PlateArt>
+            {editing && font && start && (
+              <InlineLine
+                font={font}
+                x={STRIP.x + start.end}
+                value={custom ? text : name}
+                onChange={custom ? setText : setName}
+                color={ok ? 'white' : RED}
+                onDone={() => setEditing(false)}
+              />
+            )}
+          </div>
           {strip && strip.issues.length > 0 && (
             <ul className="text-[13px] leading-5 text-[#e30]">
               {strip.issues.map(t => <li key={t}>{t}</li>)}
