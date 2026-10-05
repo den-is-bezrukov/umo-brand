@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { TextInput, TextArea, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined } from '@/ui/form'
+import { Field, TextInput, TextArea, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined } from '@/ui/form'
 import { toD } from '@/livery/geometry'
 import { TAG, buildTag, loadFonts, type Fonts, type Person } from '@/nametag/tag'
 import { readXlsx, parsePasted, type TableRow } from '@/nametag/table'
@@ -167,11 +167,17 @@ export default function NameTag() {
                         <button type="button" onClick={() => remove(p.key)} className="cursor-pointer text-[#999] hover:text-black">Удалить</button>
                       )}
                     </div>
-                    <div className="flex flex-col gap-2">
-                      <TextInput value={p.name} onChange={v => update(p.key, { name: v })} placeholder="Имя" invalid={issues.some(t => t.startsWith('Имя'))} />
-                      <TextInput value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={issues.some(t => t.startsWith('Фамилия'))} />
+                    <div className="flex flex-col gap-4">
+                      <Field label="Имя">
+                        <TextInput value={p.name} onChange={v => update(p.key, { name: v })} placeholder="Имя" invalid={issues.some(t => t.startsWith('Имя'))} />
+                      </Field>
+                      <Field label="Фамилия">
+                        <TextInput value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={issues.some(t => t.startsWith('Фамилия'))} />
+                      </Field>
+                      <Field label="Должность">
+                        <TextArea value={p.position} onChange={v => update(p.key, { position: v })} placeholder="Должность" invalid={issues.some(t => t.startsWith('Должность'))} />
+                      </Field>
                     </div>
-                    <TextArea value={p.position} onChange={v => update(p.key, { position: v })} placeholder="Должность" invalid={issues.some(t => t.startsWith('Должность'))} />
                   </div>
                 )
               })()}
