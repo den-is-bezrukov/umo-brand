@@ -20,10 +20,13 @@ interface Block { size: number; leading: number; baseline: number; maxWidth: num
 /** The name on the first line, 4 mm clear of the logo */
 const NAME: Block = { size: 14 * PT, leading: 12 * PT, baseline: 7.6486, maxWidth: LOGO_X - MARGIN - MARGIN, maxLines: 1 }
 /**
- * The surname on the second, under the logo's bottom edge, so it may run the full width between the margins: long
- * surnames (Александровская is 40 mm) don't fit beside the logo, and the type size can't be reduced
+ * The surname on the second, and any line after the first, under the logo's bottom edge, so it may run the full width
+ * between the margins: long surnames (Александровская is 40 mm) don't fit beside the logo, and the type size can't be
+ * reduced
  */
 const SURNAME: Block = { ...NAME, maxWidth: TAG.w - 2 * MARGIN }
+/** Lines the name and surname may take together; at three the position is left one */
+const NAME_LINES = 3
 /**
  * The position, under the logo: the full width between the margins, up to two lines; a typed line break is kept.
  * Anchored at the bottom: `baseline` is the last line's, the source's second (21.23 mm), and a second line goes above
@@ -97,37 +100,42 @@ function setLines(font: Font, lines: string[], block: Block, first: number, labe
 }
 
 /**
- * A double surname too long for its line breaks after a hyphen, as on passports and door plates
- * («Петропавловская-» / «Преображенская»): at the last hyphen that leaves the first part fitting. The type size never
- * shrinks; a surname without a hyphen stays one line and turns red if it's too long.
+ * A double name or surname too long for its line breaks after a hyphen, as on passports and door plates
+ * («Петропавловская-» / «Преображенская»): at the last hyphen that leaves the first part within `maxWidth`. The type
+ * size never shrinks; one without a hyphen stays one line and turns red if it's too long.
  */
-function splitSurname(font: Font, surname: string): string[] {
-  if (!surname) return []
-  if (inkWidth(font, surname, SURNAME.size) <= SURNAME.maxWidth) return [surname]
-  const hyphens = [...surname.matchAll(/-/g)].map(m => m.index!).filter(i => i > 0 && i < surname.length - 1).reverse()
-  const at = hyphens.find(i => inkWidth(font, surname.slice(0, i + 1), SURNAME.size) <= SURNAME.maxWidth) ?? hyphens[hyphens.length - 1]
-  return at === undefined ? [surname] : [surname.slice(0, at + 1), surname.slice(at + 1)]
+function splitAtHyphen(font: Font, text: string, maxWidth: number): string[] {
+  if (!text) return []
+  if (inkWidth(font, text, NAME.size) <= maxWidth) return [text]
+  const hyphens = [...text.matchAll(/-/g)].map(m => m.index!).filter(i => i > 0 && i < text.length - 1).reverse()
+  const at = hyphens.find(i => inkWidth(font, text.slice(0, i + 1), NAME.size) <= maxWidth) ?? hyphens[hyphens.length - 1]
+  return at === undefined ? [text] : [text.slice(0, at + 1), text.slice(at + 1)]
 }
 
 export function buildTag(fonts: Fonts, person: Person): Tag {
-  const name = clean(person.name)
-  // A typed line break splits the surname; without one a long double surname breaks after a hyphen
-  const typed = person.surname.split('\n').map(clean).filter(Boolean)
-  const surname = typed.join(' ')
+  // A typed line break splits the name or surname; without one a long double one breaks after a hyphen
+  const typedName = person.name.split('\n').map(clean).filter(Boolean)
+  const typedSurname = person.surname.split('\n').map(clean).filter(Boolean)
+  const name = typedName.join(' ')
+  const surname = typedSurname.join(' ')
   const position = person.position.replace(/\r/g, '')
   const cmds: Cmd[] = []
   const issues: string[] = []
-  setLines(fonts.medium, name ? [name] : [], NAME, 0, 'Имя', cmds, issues)
-  const surnameLines = typed.length > 1 ? typed : splitSurname(fonts.medium, surname)
-  if (surnameLines.length > 2) issues.push('Фамилия — не больше двух строк')
-  setLines(fonts.medium, surnameLines.slice(0, 3), SURNAME, 1, 'Фамилия', cmds, issues)
-  // A surname in two lines leaves the position room for one
-  const block = surnameLines.length > 1 ? { ...POSITION, maxLines: 1 } : POSITION
+  const nameLines = typedName.length > 1 ? typedName : splitAtHyphen(fonts.medium, name, NAME.maxWidth)
+  const surnameLines = typedSurname.length > 1 ? typedSurname : splitAtHyphen(fonts.medium, surname, SURNAME.maxWidth)
+  // The surname starts on the second line even without a name; only the first line stands beside the logo
+  const first = Math.max(nameLines.length, 1)
+  nameLines.forEach((t, i) => setLines(fonts.medium, [t], i === 0 ? NAME : SURNAME, i, 'Имя', cmds, issues))
+  surnameLines.forEach((t, i) => setLines(fonts.medium, [t], SURNAME, first + i, 'Фамилия', cmds, issues))
+  const used = surnameLines.length ? first + surnameLines.length : nameLines.length
+  if (used > NAME_LINES) issues.push('Имя и фамилия — не больше трёх строк')
+  // Three lines of name and surname leave the position room for one
+  const block = used >= NAME_LINES ? { ...POSITION, maxLines: 1 } : POSITION
   const lines = wrap(fonts.regular, position, POSITION)
   const shown = lines.slice(0, block.maxLines + 1)
   setLines(fonts.regular, shown, block, 1 - shown.length, 'Должность', cmds, issues)
   if (lines.length > block.maxLines) {
-    issues.push(block.maxLines === 1 ? 'При фамилии в две строки должность — в одну: сократите её' : 'Должность длиннее двух строк: сократите её')
+    issues.push(block.maxLines === 1 ? 'При имени и фамилии в три строки должность — в одну: сократите её' : 'Должность длиннее двух строк: сократите её')
   }
   const missing = (font: Font, t: string) => [...t.replace(/\s/g, '')].filter(c => !font.hasChar(c))
   const absent = [...new Set([...missing(fonts.medium, name + surname), ...missing(fonts.regular, clean(position))])]

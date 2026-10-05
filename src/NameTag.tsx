@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { TextInput, TextArea, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined } from '@/ui/form'
+import { TextArea, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined } from '@/ui/form'
 import { toD } from '@/livery/geometry'
 import { buildTag, loadFonts, type Fonts, type Person } from '@/nametag/tag'
 import { readXlsx, parsePasted, type TableRow } from '@/nametag/table'
@@ -109,7 +109,7 @@ export default function NameTag() {
   useEffect(() => {
     if (!focusNext.current) return
     focusNext.current = false
-    form.current?.querySelector('input')?.focus()
+    form.current?.querySelector('textarea')?.focus()
     if (selected !== undefined) figures.current.get(selected)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
   }, [selected])
 
@@ -189,7 +189,7 @@ export default function NameTag() {
                 return (
                   <div ref={form} onPasteCapture={e => paste(p.key, e)} className="flex flex-col gap-2">
                     <div className="flex flex-col gap-2">
-                      <TextInput value={p.name} onChange={v => update(p.key, { name: v })} placeholder="Имя" invalid={issues.some(t => t.startsWith('Имя'))} />
+                      <TextArea value={p.name} onChange={v => update(p.key, { name: v })} placeholder="Имя" invalid={issues.some(t => t.startsWith('Имя'))} />
                       <TextArea value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={issues.some(t => t.startsWith('Фамилия'))} />
                     </div>
                     <TextArea value={p.position} onChange={v => update(p.key, { position: v })} placeholder="Должность" invalid={issues.some(t => t.startsWith('Должность'))} />
