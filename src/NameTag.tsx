@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { TextInput, TextArea, GeneratorHeader, LinkButtons, DownloadButton, outlined } from '@/ui/form'
-import { linkParams, useLinkState } from '@/ui/share'
+import { TextInput, TextArea, GeneratorHeader, DownloadButton, outlined } from '@/ui/form'
 import { toD } from '@/livery/geometry'
 import { TAG, buildTag, loadFonts, type Fonts, type Person } from '@/nametag/tag'
 import TagArt from '@/nametag/TagArt'
@@ -17,17 +16,6 @@ interface Row extends Person { key: number }
 
 let nextKey = 0
 const row = (p: Person): Row => ({ ...p, key: nextKey++ })
-
-/** The list in a link: a line per person, its fields split by a bar, a line break in the position as a tilde */
-const encode = (people: Person[]) => people.map(p => [p.name, p.surname, p.position].map(v => v.replace(/[|~]/g, ' ').replace(/\n/g, '~')).join('|')).join('\n')
-function decode(v: string | null): Person[] | null {
-  if (!v) return null
-  const people = v.split('\n').map(line => {
-    const [name = '', surname = '', position = ''] = line.split('|')
-    return { name, surname, position: position.replace(/~/g, '\n') }
-  })
-  return people.length ? people : null
-}
 
 /**
  * Rows of a spreadsheet: tab-separated cells. Three or more are name, surname and position; two with a space in the
@@ -47,8 +35,8 @@ function parseTable(text: string): Person[] {
 const same = (a: Person, b: Person) => a.name === b.name && a.surname === b.surname && a.position === b.position
 
 export default function NameTag() {
-  const [people, setPeople] = useState<Row[]>(() => (decode(linkParams().get('list')) ?? [DEFAULT]).map(row))
-  useLinkState({ list: people.length === 1 && same(people[0], DEFAULT) ? null : encode(people) })
+  // Not kept in the address, unlike the other generators: a staff list isn't something to send as a link
+  const [people, setPeople] = useState<Row[]>(() => [row(DEFAULT)])
 
   const [fonts, setFonts] = useState<Fonts>()
   const [exporting, setExporting] = useState(false)
@@ -150,7 +138,7 @@ export default function NameTag() {
           </div>
 
           <div className="pt-2 tracking-normal">
-            <LinkButtons onReset={reset} />
+            <button type="button" onClick={reset} title="Вернуть пример вместо списка" className={outlined}>Сбросить</button>
           </div>
         </div>
 
