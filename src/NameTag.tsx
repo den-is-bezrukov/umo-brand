@@ -15,7 +15,8 @@ const TEMPLATE = `${import.meta.env.BASE_URL}downloads/UMO_name-tags_template.xl
 /** Shown grey on the tag in place of an empty field, as the fields' placeholders; never in the PDF */
 const PLACEHOLDER: Person = { name: 'Имя', surname: 'Фамилия', position: 'Должность' }
 const BLANK: Person = { name: '', surname: '', position: '' }
-const NO_NAME = 'Нет имени и фамилии'
+const NO_NAME = 'Нет имени'
+const NO_SURNAME = 'Нет фамилии'
 const NO_POSITION = 'Нет должности'
 const RED = '#e30'
 
@@ -64,20 +65,26 @@ export default function NameTag() {
     surname: p.surname.trim() ? '' : PLACEHOLDER.surname,
     position: p.position.trim() ? '' : PLACEHOLDER.position,
   })) : undefined, [fonts, items])
-  /** A tag needs a name or surname and a position */
+  /** A tag needs a name, a surname and a position */
   const missing = items.map(({ person: p }) => [
-    ...(!p.name.trim() && !p.surname.trim() ? [NO_NAME] : []),
+    ...(!p.name.trim() ? [NO_NAME] : []),
+    ...(!p.surname.trim() ? [NO_SURNAME] : []),
     ...(!p.position.trim() ? [NO_POSITION] : []),
   ])
   /** The tag reached through the line over «Скачать»: its empty fields show as errors even while it's being edited */
   const [flagged, setFlagged] = useState<number | null>(null)
   /**
-   * What's shown as errors: text over its room at once; empty fields everywhere but on the tag being filled in, so a
-   * fresh page or a tag just added isn't red
+   * Tags added empty and not yet left: the one on a fresh page and each «Добавить» gives. Their empty fields aren't
+   * errors while they're being filled in for the first time
    */
+  const [fresh, setFresh] = useState<Set<number>>(() => new Set([people[0].key]))
+  useEffect(() => {
+    setFresh(f => [...f].some(k => k !== selected) ? new Set([...f].filter(k => k === selected)) : f)
+  }, [selected])
+  /** What's shown as errors: text over its room at once, empty fields on every tag but a fresh one being filled in */
   const problems = items.map((it, i) => [
     ...(tags?.[i]?.issues ?? []),
-    ...(it.key !== selected || it.key === flagged ? missing[i] : []),
+    ...(it.key === selected && fresh.has(it.key) && it.key !== flagged ? [] : missing[i]),
   ])
   /** The tags not ready, which keep «Скачать» off; the line over it counts them and leads through them */
   const failing = items.filter((_, i) => missing[i].length || tags?.[i]?.issues.length).map(it => it.key)
@@ -159,6 +166,7 @@ export default function NameTag() {
   }
   const add = () => {
     const r = row(BLANK)
+    setFresh(f => new Set(f).add(r.key))
     focusNext.current = true
     setPeople([...people, r])
     setSelected(r.key)
@@ -226,7 +234,7 @@ export default function NameTag() {
                   <div ref={form} onPasteCapture={e => paste(p.key, e)} className="flex flex-col gap-2">
                     <div className="flex flex-col gap-2">
                       <TextArea value={p.name} onChange={v => update(p.key, { name: v })} placeholder="Имя" invalid={issues.some(t => t.startsWith('Имя') || t === NO_NAME)} />
-                      <TextArea value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={issues.some(t => t.startsWith('Фамилия') || t === NO_NAME)} />
+                      <TextArea value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={issues.some(t => t.startsWith('Фамилия') || t === NO_SURNAME)} />
                     </div>
                     <TextArea value={p.position} onChange={v => update(p.key, { position: v })} placeholder="Должность" invalid={issues.some(t => t.startsWith('Должность') || t === NO_POSITION)} />
                     {/* The selected tag's actions under its fields, side by side as the other generators' «Копировать» and
@@ -265,8 +273,8 @@ export default function NameTag() {
 
         <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:pt-0">
           {failing.length > 0 && (
-            <button type="button" onClick={() => nextFailing(failing)} className="mb-3 block cursor-pointer text-left text-[13px] leading-5 text-[#e30]">
-              {failing.length} бейдж{plural(failing.length)} не готов{failing.length === 1 ? '' : 'ы'} · <span className="underline underline-offset-[25%] decoration-[#e30]/40">{failing.length === 1 ? 'показать' : 'следующий'}</span>
+            <button type="button" onClick={() => nextFailing(failing)} className="mb-3 block w-full cursor-pointer text-center text-[13px] leading-5 text-[#999] hover:text-black">
+              {failing.length} бейдж{plural(failing.length)} не готов{failing.length === 1 ? '' : 'ы'} · <span className="underline underline-offset-[25%] decoration-current/40">{failing.length === 1 ? 'показать' : 'следующий'}</span>
             </button>
           )}
           <DownloadButton onClick={handleExport} busy={exporting} disabled={!ok}>
