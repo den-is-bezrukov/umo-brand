@@ -270,7 +270,7 @@ export default function NameTag() {
                   aria-pressed={mode === 'manual' && pickable ? !dimmed : undefined}
                   className={`block rounded-[5.714cqw] outline-offset-4 transition-opacity duration-150 ${pickable ? 'cursor-pointer' : 'cursor-default'}
                     ${!pickable ? '' : mode === 'manual' && !dimmed ? 'outline-2 outline-black' : 'outline-1 outline-transparent hover:outline-black/20'}
-                    ${dimmed ? 'opacity-40 hover:opacity-70' : ''}`}
+                    ${dimmed ? 'opacity-40 hover:opacity-100' : ''}`}
                 >
                   <TagArt text={tag ? toD(tag.cmds) : undefined} ghost={ghosts?.[i] ? toD(ghosts[i].cmds) : undefined} color={bad ? RED : undefined} />
                 </button>
