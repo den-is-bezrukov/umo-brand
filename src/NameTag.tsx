@@ -16,6 +16,7 @@ const TEMPLATE = `${import.meta.env.BASE_URL}downloads/UMO_name-tags_template.xl
 const PLACEHOLDER: Person = { name: 'Имя', surname: 'Фамилия', position: 'Должность' }
 const BLANK: Person = { name: '', surname: '', position: '' }
 const NO_NAME = 'Нет имени и фамилии'
+const NO_POSITION = 'Нет должности'
 const RED = '#e30'
 
 interface Row extends Person { key: number }
@@ -63,16 +64,24 @@ export default function NameTag() {
     surname: p.surname.trim() ? '' : PLACEHOLDER.surname,
     position: p.position.trim() ? '' : PLACEHOLDER.position,
   })) : undefined, [fonts, items])
+  /** A tag needs a name or surname and a position */
+  const missing = items.map(({ person: p }) => [
+    ...(!p.name.trim() && !p.surname.trim() ? [NO_NAME] : []),
+    ...(!p.position.trim() ? [NO_POSITION] : []),
+  ])
+  /** The tag reached through the line over «Скачать»: its empty fields show as errors even while it's being edited */
+  const [flagged, setFlagged] = useState<number | null>(null)
   /**
-   * Set by a download with something unfinished. A tag without a name is an error only from then, so a fresh page or a
-   * tag just added isn't red; text over its room is red at once
+   * What's shown as errors: text over its room at once; empty fields everywhere but on the tag being filled in, so a
+   * fresh page or a tag just added isn't red
    */
-  const [attempted, setAttempted] = useState(false)
-  const unnamed = items.map(it => !it.person.name.trim() && !it.person.surname.trim())
-  const problems = items.map((_, i) => [...(tags?.[i]?.issues ?? []), ...(attempted && unnamed[i] ? [NO_NAME] : [])])
-  const ok = !!tags && tags.length > 0 && items.every((_, i) => !unnamed[i] && !tags[i].issues.length)
-  /** The tags the line over «Скачать» leads through */
-  const failing = items.filter((_, i) => problems[i].length).map(it => it.key)
+  const problems = items.map((it, i) => [
+    ...(tags?.[i]?.issues ?? []),
+    ...(it.key !== selected || it.key === flagged ? missing[i] : []),
+  ])
+  /** The tags not ready, which keep «Скачать» off; the line over it counts them and leads through them */
+  const failing = items.filter((_, i) => missing[i].length || tags?.[i]?.issues.length).map(it => it.key)
+  const ok = !!tags && items.length > 0 && failing.length === 0
 
   /** A file's rows replace the list, whatever was on it */
   const loadRows = (rows: TableRow[], name: string) => {
@@ -129,6 +138,7 @@ export default function NameTag() {
   }, [reveal]) // eslint-disable-line react-hooks/exhaustive-deps
   const goTo = (key: number) => {
     setSelected(key)
+    setFlagged(key)
     setMode('manual')
     setReveal(n => n + 1)
   }
@@ -179,14 +189,7 @@ export default function NameTag() {
   )
 
   const handleExport = async () => {
-    if (!tags) return
-    // Nothing downloads while a tag isn't finished: the first such one is opened instead, and empty names show as errors
-    if (!ok) {
-      setAttempted(true)
-      const first = items.find((_, i) => unnamed[i] || tags[i].issues.length)
-      if (first) goTo(first.key)
-      return
-    }
+    if (!tags || !ok) return
     setExporting(true)
     try {
       const { tagsZip } = await import('@/nametag/pdf')
@@ -225,7 +228,7 @@ export default function NameTag() {
                       <TextArea value={p.name} onChange={v => update(p.key, { name: v })} placeholder="Имя" invalid={issues.some(t => t.startsWith('Имя') || t === NO_NAME)} />
                       <TextArea value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={issues.some(t => t.startsWith('Фамилия') || t === NO_NAME)} />
                     </div>
-                    <TextArea value={p.position} onChange={v => update(p.key, { position: v })} placeholder="Должность" invalid={issues.some(t => t.startsWith('Должность'))} />
+                    <TextArea value={p.position} onChange={v => update(p.key, { position: v })} placeholder="Должность" invalid={issues.some(t => t.startsWith('Должность') || t === NO_POSITION)} />
                     {/* The selected tag's actions under its fields, side by side as the other generators' «Копировать» and
                         «Сбросить»: «Сбросить» empties the fields, «Удалить» only while there's another tag to go to */}
                     <div className="mt-2 flex gap-2">
@@ -263,10 +266,10 @@ export default function NameTag() {
         <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:pt-0">
           {failing.length > 0 && (
             <button type="button" onClick={() => nextFailing(failing)} className="mb-3 block cursor-pointer text-left text-[13px] leading-5 text-[#e30]">
-              {failing.length} бейдж{plural(failing.length)} с ошибк{failing.length === 1 ? 'ой' : 'ами'} · <span className="underline underline-offset-[25%] decoration-[#e30]/40">{failing.length === 1 ? 'показать' : 'следующий'}</span>
+              {failing.length} бейдж{plural(failing.length)} не готов{failing.length === 1 ? '' : 'ы'} · <span className="underline underline-offset-[25%] decoration-[#e30]/40">{failing.length === 1 ? 'показать' : 'следующий'}</span>
             </button>
           )}
-          <DownloadButton onClick={handleExport} busy={exporting} disabled={!tags || items.length === 0}>
+          <DownloadButton onClick={handleExport} busy={exporting} disabled={!ok}>
             Скачать{items.length > 1 ? ` ${items.length} бейдж${plural(items.length)}` : ''}
           </DownloadButton>
         </div>
@@ -304,7 +307,7 @@ export default function NameTag() {
                 {/* In the manual list a tag is picked for editing by clicking it; the picked one is outlined */}
                 <button
                   type="button"
-                  onClick={() => { setSelected(key); setMode('manual') }}
+                  onClick={() => { setSelected(key); setFlagged(null); setMode('manual') }}
                   aria-pressed={mode === 'manual' ? active : undefined}
                   className={`block cursor-pointer rounded-[5.714cqw] outline-offset-4 transition-opacity duration-150
                     ${active ? 'outline-2 outline-black' : 'outline-1 outline-transparent hover:outline-black/20'}
