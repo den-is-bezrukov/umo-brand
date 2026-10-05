@@ -275,11 +275,12 @@ export default function NameTag() {
         </div>
 
         <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:pt-0">
-          {/* Until every tag is ready, the progress in the button's place, leading through the tags not ready yet; with a
-              single tag, nothing: its form says enough, and «В работе 1» would only repeat it */}
+          {/* Until every tag is ready, the progress in the button's place: it counts the tags still in work, which a click
+              leads through («В работе 1 из 4», or «В работе 4» when it's all of them); with a single tag, nothing: its
+              form says enough */}
           {failing.length > 0 ? items.length > 1 && (
             <button type="button" onClick={() => nextFailing(failing)} className="flex w-full cursor-pointer items-center justify-center p-3 text-[14px] leading-[1.13] tracking-[-0.01em] text-[#999] hover:text-black">
-              {failing.length === items.length ? `В работе ${items.length}` : `${ready(items.length - failing.length)} ${items.length - failing.length} из ${items.length}`}
+              В работе {failing.length}{failing.length < items.length ? ` из ${items.length}` : ''}
             </button>
           ) : items.length > 0 && (
             <DownloadButton onClick={handleExport} busy={exporting} disabled={!ok}>
@@ -368,11 +369,6 @@ function alertLine(problems: string[]): string {
   const words = problems.filter(t => t in empty).map(t => empty[t])
   const missing = words.length ? `Нет ${words.length > 1 ? `${words.slice(0, -1).join(', ')} и ${words[words.length - 1]}` : words[0]}` : ''
   return [missing, ...problems.filter(t => !(t in empty))].filter(Boolean).join(' · ')
-}
-
-/** The verb agreeing with the count of tags ready: «Готов 1», «Готовы 2», «Готовы 5»; with none ready it's «В работе 4» */
-function ready(n: number): string {
-  return n % 10 === 1 && n % 100 !== 11 ? 'Готов' : 'Готовы'
 }
 
 /** бейдж, бейджа, бейджей */
