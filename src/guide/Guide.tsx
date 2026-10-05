@@ -65,7 +65,7 @@ const NAV: NavItem[] = [
     ],
   },
   { id: 'spaces', title: 'Пространства' },
-  { id: 'materials', title: 'Носители', children: [{ id: 'livery', title: 'Ливрея' }, { id: 'price-card', title: 'Прайс-карта' }, { id: 'plate-frame', title: 'Рамка номера' }] },
+  { id: 'materials', title: 'Носители', children: [{ id: 'livery', title: 'Ливрея' }, { id: 'price-card', title: 'Прайс-карта' }, { id: 'plate-frame', title: 'Рамка номера' }, { id: 'name-tag', title: 'Бейдж' }] },
 ]
 
 /** Chapter anchors that were renamed after the guide went out, mapped to their current ids. */
@@ -1259,6 +1259,20 @@ export default function Guide() {
                 <PlateArt guide>
                   <text y={STRIP_BASELINE} fontFamily="CoFo Sans" fontWeight={500} fontSize={18} letterSpacing={-0.18} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Центр UMO | Название дилера</text>
                 </PlateArt>
+              </Constructor>
+            </Section>
+
+            {/* The reference photo from Yandex Disk 02 UMO/Name Tag (UMO_name-tag.png, 900×540), as the maker gets it */}
+            <Section>
+              <Head>
+                <H2 id="name-tag">Бейдж</H2>
+                <Text>
+                  <p>Бейдж сотрудника дилерского центра: имя, фамилия и должность на матовой шлифованной пластине с логотипом UMO.</p>
+                  <p>Бейджи собираются в <Link to="/name-tag" className={TEXT_LINK}>конструкторе</Link>: введите сотрудников вручную или загрузите таблицу по шаблону. Конструктор проверит, что текст помещается без уменьшения кегля, и соберёт архив для изготовителя: PDF в кривых в масштабе 1:1, требования к материалу и референс внешнего вида.</p>
+                </Text>
+              </Head>
+              <Constructor to="/name-tag" title="Конструктор бейджей">
+                <Fig name="name-tag" w={900} h={540} alt="Бейдж UMO на рубашке сотрудника" />
               </Constructor>
             </Section>
           </Chapter>
