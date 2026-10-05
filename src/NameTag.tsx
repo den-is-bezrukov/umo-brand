@@ -276,10 +276,10 @@ export default function NameTag() {
 
         <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:pt-0">
           {/* Until every tag is ready, the progress in the button's place, leading through the tags not ready yet; with a
-              single tag, nothing: its form says enough, and «Готово 0 из 1» would read oddly */}
+              single tag, nothing: its form says enough, and «В работе 1» would only repeat it */}
           {failing.length > 0 ? items.length > 1 && (
             <button type="button" onClick={() => nextFailing(failing)} className="flex w-full cursor-pointer items-center justify-center p-3 text-[14px] leading-[1.13] tracking-[-0.01em] text-[#999] hover:text-black">
-              {ready(items.length - failing.length)} {items.length - failing.length} из {items.length}
+              {failing.length === items.length ? `В работе ${items.length}` : `${ready(items.length - failing.length)} ${items.length - failing.length} из ${items.length}`}
             </button>
           ) : items.length > 0 && (
             <DownloadButton onClick={handleExport} busy={exporting} disabled={!ok}>
@@ -370,9 +370,8 @@ function alertLine(problems: string[]): string {
   return [missing, ...problems.filter(t => !(t in empty))].filter(Boolean).join(' · ')
 }
 
-/** The verb agreeing with the count of tags ready: «Готов 1», «Готовы 2», «Готовы 5»; «Готово 0», as «готовы 0» jars */
+/** The verb agreeing with the count of tags ready: «Готов 1», «Готовы 2», «Готовы 5»; with none ready it's «В работе 4» */
 function ready(n: number): string {
-  if (n === 0) return 'Готово'
   return n % 10 === 1 && n % 100 !== 11 ? 'Готов' : 'Готовы'
 }
 
