@@ -22,12 +22,6 @@ interface Row extends Person { key: number }
 let nextKey = 0
 const row = (p: Person): Row => ({ ...p, key: nextKey++ })
 
-/**
- * A tag's title in the sidebar and over its preview, a typed line break after a hyphen joined back («Римская-Корсакова»);
- * empty until a name is typed, and the number stands in
- */
-const fullName = (p: Person) => [p.name, p.surname].map(v => v.replace(/-\s*\n\s*/g, '-').replace(/\s+/g, ' ').trim()).filter(Boolean).join(' ')
-
 const same = (a: Person, b: Person) => a.name === b.name && a.surname === b.surname && a.position === b.position
 
 export default function NameTag() {
@@ -59,14 +53,8 @@ export default function NameTag() {
     return () => { document.title = prev }
   }, [])
 
-  /** What's shown and downloaded, titled by name, and numbered as the PDF's pages */
-  const items = useMemo(() => (mode === 'table' && !file ? [] : people).map((p, i) => ({
-    key: p.key,
-    label: fullName(p) || `Бейдж ${i + 1}`,
-    /** Beside the name; once there's none the number is the title itself */
-    note: fullName(p) ? `Бейдж ${i + 1}` : '',
-    person: p as Person,
-  })), [mode, file, people])
+  /** What's shown and downloaded; no captions: the tags carry their own names, the selected one is outlined */
+  const items = useMemo(() => (mode === 'table' && !file ? [] : people).map(p => ({ key: p.key, person: p as Person })), [mode, file, people])
   const tags = useMemo(() => fonts ? items.map(it => buildTag(fonts, it.person)) : undefined, [fonts, items])
   /** The placeholders standing in for empty fields */
   const ghosts = useMemo(() => fonts ? items.map(({ person: p }) => buildTag(fonts, {
@@ -200,7 +188,6 @@ export default function NameTag() {
                 const issues = tags?.[i]?.issues ?? []
                 return (
                   <div ref={form} onPasteCapture={e => paste(p.key, e)} className="flex flex-col gap-2">
-                    <span className="text-[14px] font-medium leading-5">{items[i]?.label}</span>
                     <div className="flex flex-col gap-2">
                       <TextInput value={p.name} onChange={v => update(p.key, { name: v })} placeholder="Имя" invalid={issues.some(t => t.startsWith('Имя'))} />
                       <TextArea value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={issues.some(t => t.startsWith('Фамилия'))} />
@@ -260,7 +247,7 @@ export default function NameTag() {
             Загрузить таблицу .xlsx
           </label>
         ) : (
-        <div className="mx-auto grid w-full max-w-[1200px] grid-cols-[repeat(auto-fill,minmax(min(100%,360px),1fr))] gap-x-8 gap-y-10">
+        <div className="mx-auto grid w-full max-w-[1200px] grid-cols-[repeat(auto-fill,minmax(min(100%,360px),1fr))] gap-8">
           {items.map((it, i) => {
             const tag = tags?.[i]
             const bad = !!tag && tag.issues.length > 0
@@ -274,10 +261,6 @@ export default function NameTag() {
                 ref={el => { if (el) figures.current.set(key, el); else figures.current.delete(key) }}
                 className="@container flex flex-col gap-3"
               >
-                <figcaption className="flex items-baseline gap-2 text-[14px] leading-5">
-                  <span className="font-medium">{it.label}</span>
-                  {it.note && <span className="text-[#999]">{it.note}</span>}
-                </figcaption>
                 {/* In the manual list a tag is picked for editing by clicking it; the picked one is outlined */}
                 <button
                   type="button"
