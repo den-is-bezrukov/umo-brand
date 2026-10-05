@@ -254,21 +254,22 @@ export default function NameTag() {
             const key = it.key
             // In the manual list a tag is picked for editing; in the table one, clicking a tag goes to edit it there
             const pickable = mode === 'table' || people.length > 1
-            const active = mode === 'manual' && pickable && key === current?.key
+            /** In the manual list the tags but the selected one are dimmed; with nothing selected (the table) all are clear */
+            const dimmed = mode === 'manual' && pickable && key !== current?.key
             return (
               <figure
                 key={it.key}
                 ref={el => { if (el) figures.current.set(key, el); else figures.current.delete(key) }}
-                className="@container flex flex-col gap-3"
+                className="flex flex-col gap-3"
               >
-                {/* In the manual list a tag is picked for editing by clicking it; the picked one is outlined */}
+                {/* In the manual list a tag is picked for editing by clicking it */}
                 <button
                   type="button"
                   disabled={!pickable}
                   onClick={() => { setSelected(key); setMode('manual') }}
-                  aria-pressed={pickable ? active : undefined}
-                  className={`block rounded-[5.714cqw] outline-offset-4 ${pickable ? 'cursor-pointer' : 'cursor-default'}
-                    ${active ? 'outline-2 outline-black' : pickable ? 'outline-1 outline-transparent hover:outline-black/20' : ''}`}
+                  aria-pressed={mode === 'manual' && pickable ? !dimmed : undefined}
+                  className={`block transition-opacity duration-150 ${pickable ? 'cursor-pointer' : 'cursor-default'}
+                    ${dimmed ? 'opacity-40 hover:opacity-70' : pickable && mode === 'table' ? 'hover:opacity-70' : ''}`}
                 >
                   <TagArt text={tag ? toD(tag.cmds) : undefined} ghost={ghosts?.[i] ? toD(ghosts[i].cmds) : undefined} color={bad ? RED : undefined} />
                 </button>
