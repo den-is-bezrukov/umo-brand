@@ -34,7 +34,7 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
         <span aria-hidden>·</span>
         <Link to="/#materials" className={crumb}>Носители</Link>
       </nav>
-      <div className="relative flex items-center gap-1 self-start rounded-[4px] has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-black/30">
+      <div className="relative flex items-center gap-1 self-start">
         <h1 className="text-[24px] font-medium leading-none">{GENERATORS.find(g => g.path === current)!.title}</h1>
         <svg width="24" height="24" viewBox="-4 -4 24 24" fill="none" aria-hidden>
           <path d="M4 6L8 10L12 6" stroke="black" strokeWidth="2" strokeLinecap="square" />
