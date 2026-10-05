@@ -133,7 +133,8 @@ export function buildTag(fonts: Fonts, person: Person): Tag {
   const block = used >= NAME_LINES ? { ...POSITION, maxLines: 1 } : POSITION
   const lines = wrap(fonts.regular, position, POSITION)
   const shown = lines.slice(0, block.maxLines + 1)
-  setLines(fonts.regular, shown, block, 1 - shown.length, 'Должность', cmds, issues)
+  // Lines over the limit run down off the plate rather than up into the name
+  setLines(fonts.regular, shown, block, 1 - Math.min(shown.length, block.maxLines), 'Должность', cmds, issues)
   if (lines.length > block.maxLines) {
     issues.push(block.maxLines === 1 ? 'При имени и фамилии в три строки должность — в одну: сократите её' : 'Должность длиннее двух строк: сократите её')
   }

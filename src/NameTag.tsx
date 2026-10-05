@@ -15,6 +15,7 @@ const TEMPLATE = `${import.meta.env.BASE_URL}downloads/UMO_name-tags_template.xl
 /** Shown grey on the tag in place of an empty field, as the fields' placeholders; never in the PDF */
 const PLACEHOLDER: Person = { name: 'Имя', surname: 'Фамилия', position: 'Должность' }
 const BLANK: Person = { name: '', surname: '', position: '' }
+const NO_NAME = 'Нет имени и фамилии'
 const RED = '#e30'
 
 interface Row extends Person { key: number }
@@ -62,8 +63,16 @@ export default function NameTag() {
     surname: p.surname.trim() ? '' : PLACEHOLDER.surname,
     position: p.position.trim() ? '' : PLACEHOLDER.position,
   })) : undefined, [fonts, items])
-  const named = items.every(it => it.person.name.trim() || it.person.surname.trim())
-  const ok = !!tags && tags.length > 0 && named && tags.every(t => t.issues.length === 0)
+  /**
+   * Set by a download with something unfinished. A tag without a name is an error only from then, so a fresh page or a
+   * tag just added isn't red; text over its room is red at once
+   */
+  const [attempted, setAttempted] = useState(false)
+  const unnamed = items.map(it => !it.person.name.trim() && !it.person.surname.trim())
+  const problems = items.map((_, i) => [...(tags?.[i]?.issues ?? []), ...(attempted && unnamed[i] ? [NO_NAME] : [])])
+  const ok = !!tags && tags.length > 0 && items.every((_, i) => !unnamed[i] && !tags[i].issues.length)
+  /** The tags the line over «Скачать» leads through */
+  const failing = items.filter((_, i) => problems[i].length).map(it => it.key)
 
   /** A file's rows replace the list, whatever was on it */
   const loadRows = (rows: TableRow[], name: string) => {
@@ -113,6 +122,23 @@ export default function NameTag() {
     if (selected !== undefined) figures.current.get(selected)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
   }, [selected])
 
+  // Going to a tag with an error: select it for editing and bring it into view
+  const [reveal, setReveal] = useState(0)
+  useEffect(() => {
+    if (reveal && selected !== undefined) figures.current.get(selected)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }, [reveal]) // eslint-disable-line react-hooks/exhaustive-deps
+  const goTo = (key: number) => {
+    setSelected(key)
+    setMode('manual')
+    setReveal(n => n + 1)
+  }
+  /** The next tag with an error after the selected one, round the list */
+  const nextFailing = (keys: number[]) => {
+    const at = items.findIndex(it => it.key === selected)
+    const after = keys.find(k => items.findIndex(it => it.key === k) > at)
+    goTo(after ?? keys[0])
+  }
+
   const update = (key: number, patch: Partial<Person>) => setPeople(people.map(p => p.key === key ? { ...p, ...patch } : p))
   /** The neighbour after (or before) the one removed is selected */
   const remove = (key: number) => {
@@ -154,6 +180,13 @@ export default function NameTag() {
 
   const handleExport = async () => {
     if (!tags) return
+    // Nothing downloads while a tag isn't finished: the first such one is opened instead, and empty names show as errors
+    if (!ok) {
+      setAttempted(true)
+      const first = items.find((_, i) => unnamed[i] || tags[i].issues.length)
+      if (first) goTo(first.key)
+      return
+    }
     setExporting(true)
     try {
       const { tagsZip } = await import('@/nametag/pdf')
@@ -185,12 +218,12 @@ export default function NameTag() {
               {current && (() => {
                 const p = current
                 const i = people.indexOf(p)
-                const issues = tags?.[i]?.issues ?? []
+                const issues = problems[i] ?? []
                 return (
                   <div ref={form} onPasteCapture={e => paste(p.key, e)} className="flex flex-col gap-2">
                     <div className="flex flex-col gap-2">
-                      <TextArea value={p.name} onChange={v => update(p.key, { name: v })} placeholder="Имя" invalid={issues.some(t => t.startsWith('Имя'))} />
-                      <TextArea value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={issues.some(t => t.startsWith('Фамилия'))} />
+                      <TextArea value={p.name} onChange={v => update(p.key, { name: v })} placeholder="Имя" invalid={issues.some(t => t.startsWith('Имя') || t === NO_NAME)} />
+                      <TextArea value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={issues.some(t => t.startsWith('Фамилия') || t === NO_NAME)} />
                     </div>
                     <TextArea value={p.position} onChange={v => update(p.key, { position: v })} placeholder="Должность" invalid={issues.some(t => t.startsWith('Должность'))} />
                     {/* The selected tag's actions under its fields, side by side as the other generators' «Копировать» and
@@ -228,7 +261,12 @@ export default function NameTag() {
         </div>
 
         <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:pt-0">
-          <DownloadButton onClick={handleExport} busy={exporting} disabled={!ok}>
+          {failing.length > 0 && (
+            <button type="button" onClick={() => nextFailing(failing)} className="mb-3 block cursor-pointer text-left text-[13px] leading-5 text-[#e30]">
+              {failing.length} бейдж{plural(failing.length)} с ошибк{failing.length === 1 ? 'ой' : 'ами'} · <span className="underline underline-offset-[25%] decoration-[#e30]/40">{failing.length === 1 ? 'показать' : 'следующий'}</span>
+            </button>
+          )}
+          <DownloadButton onClick={handleExport} busy={exporting} disabled={!tags || items.length === 0}>
             Скачать{items.length > 1 ? ` ${items.length} бейдж${plural(items.length)}` : ''}
           </DownloadButton>
         </div>
@@ -251,7 +289,7 @@ export default function NameTag() {
         <div className="mx-auto grid w-full max-w-[1200px] grid-cols-[repeat(auto-fill,minmax(min(100%,360px),1fr))] gap-8">
           {items.map((it, i) => {
             const tag = tags?.[i]
-            const bad = !!tag && tag.issues.length > 0
+            const bad = problems[i].length > 0
             const key = it.key
             // In the manual list a tag is picked for editing; in the table one, clicking a tag goes to edit it there.
             // The tags but the selected one are dimmed; with none selected (in the table always) all are clear
@@ -276,7 +314,7 @@ export default function NameTag() {
                 </button>
                 {bad && (
                   <ul className="text-[13px] leading-5 text-[#e30]">
-                    {tag.issues.map(t => <li key={t}>{t}</li>)}
+                    {problems[i].map(t => <li key={t}>{t}</li>)}
                   </ul>
                 )}
               </figure>
