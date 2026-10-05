@@ -7,28 +7,29 @@ import { STRIP, buildStrip, type Align } from '@/plate/frame'
 import PlateArt from '@/plate/PlateArt'
 
 // Number plate frame generator (Figma: UMO | Evrone, node 4970:2419): the dealer's line printed under the plate, as a
-// 501×21 mm PDF with the text in outlines, for the frame maker. The line is always «Центр UMO | <dealer>»: the prefix is
-// fixed, so every dealer's frame reads the same and nobody has to hunt for the bar on the keyboard; only the name is
-// typed.
+// 501×21 mm PDF with the text in outlines, for the frame maker. The line is «Центр UMO | <dealer>»: the prefix is fixed,
+// so every dealer's frame reads the same and nobody has to hunt for the bar on the keyboard; only the name is typed.
+// A link with `text` (even empty: /plate-frame?text) opens a hidden mode where the whole line is free, for the odd case
+// the prefix doesn't fit; nothing on the page leads there.
 
 const PREFIX = 'Центр UMO | '
 const DEFAULT_NAME = 'Название'
-
-/** The dealer's name from a link: `name`, or the whole line of the first links (`text`) less the prefix */
-function nameFromLink(link: ReturnType<typeof linkParams>): string {
-  const name = link.get('name')
-  if (name !== null) return name
-  const text = link.get('text')
-  if (text === null) return DEFAULT_NAME
-  return text.replace(/^\s*Центр\s+UMO\s*\|\s*/i, '')
-}
+const DEFAULT_TEXT = PREFIX + DEFAULT_NAME
 const RED = '#ff2a1a'
 
 export default function PlateFrame() {
   const [link] = useState(linkParams)
-  const [name, setName] = useState(() => nameFromLink(link))
+  // The free line: on while the link has `text`, so it stays on as the address keeps it
+  const [custom] = useState(() => link.has('text'))
+  const [name, setName] = useState(link.get('name') ?? DEFAULT_NAME)
+  const [text, setText] = useState(link.get('text') || DEFAULT_TEXT)
   const [align, setAlign] = useState<Align>(link.get('align') === 'center' ? 'center' : 'left')
-  useLinkState({ name: name === DEFAULT_NAME ? null : name, align: align === 'left' ? null : align })
+  useLinkState({
+    name: custom || name === DEFAULT_NAME ? null : name,
+    text: custom ? text : null,
+    align: align === 'left' ? null : align,
+  })
+  const line = custom ? text : PREFIX + name
 
   const [font, setFont] = useState<Font>()
   const [exporting, setExporting] = useState(false)
@@ -40,12 +41,13 @@ export default function PlateFrame() {
     return () => { document.title = prev }
   }, [])
 
-  const strip = useMemo(() => font ? buildStrip(font, PREFIX + name, align) : undefined, [font, name, align])
-  const noName = !name.trim()
+  const strip = useMemo(() => font ? buildStrip(font, line, align) : undefined, [font, line, align])
+  const noName = custom ? !text.trim() : !name.trim()
   const ok = !!strip && strip.issues.length === 0 && !noName
 
   const reset = () => {
     setName(DEFAULT_NAME)
+    setText(DEFAULT_TEXT)
     setAlign('left')
   }
 
@@ -73,9 +75,16 @@ export default function PlateFrame() {
           <GeneratorHeader current="/plate-frame" />
 
           <div className="flex flex-col gap-4 tracking-normal">
-            <Field label="Название дилера">
-              <TextInput value={name} onChange={setName} placeholder={DEFAULT_NAME} invalid={noName || (!!strip && strip.issues.length > 0)} />
-            </Field>
+            {custom ? (
+              <Field label="Текст">
+                {/* Case-sensitive forms as in the print, so a bar stands with the capitals here too */}
+                <TextInput value={text} onChange={setText} placeholder={DEFAULT_TEXT} invalid={noName || (!!strip && strip.issues.length > 0)} className="[font-feature-settings:'case'_1]" />
+              </Field>
+            ) : (
+              <Field label="Дилер">
+                <TextInput value={name} onChange={setName} placeholder={DEFAULT_NAME} invalid={noName || (!!strip && strip.issues.length > 0)} />
+              </Field>
+            )}
 
             <Field label="Расположение">
               <Segments>
