@@ -24,8 +24,12 @@ const NAME: Block = { size: 14 * PT, leading: 12 * PT, baseline: 7.6486, maxWidt
  * surnames (Александровская is 40 mm) don't fit beside the logo, and the type size can't be reduced
  */
 const SURNAME: Block = { ...NAME, maxWidth: TAG.w - 2 * MARGIN }
-/** The position, under the logo: the full width between the margins, up to two lines; a typed line break is kept */
-const POSITION: Block = { size: 9 * PT, leading: 10.8 * PT, baseline: 17.4166, maxWidth: TAG.w - 2 * MARGIN, maxLines: 2 }
+/**
+ * The position, under the logo: the full width between the margins, up to two lines; a typed line break is kept.
+ * Anchored at the bottom: `baseline` is the last line's, the source's second (21.23 mm), and a second line goes above
+ * it, where the source has its first, so one line doesn't hang in the middle.
+ */
+const POSITION: Block = { size: 9 * PT, leading: 10.8 * PT, baseline: 17.4166 + 10.8 * PT, maxWidth: TAG.w - 2 * MARGIN, maxLines: 2 }
 
 /** The UMO logo of the source, in the tag's millimetres (nonzero fill) */
 export const LOGO = 'M61.6 6.55L64.5 6.55L64.5 5.445L61.6 5.45ZM64.499 4C65.512 4 66 4.418 66 5.445L66 6.555C66 7.582 65.512 8 64.499 8L61.601 8C60.588 8 60.1 7.582 60.1 6.555L60.1 5.445C60.1 4.419 60.588 4 61.601 4ZM50.1 6.55L47.5 6.55L47.5 4L46 4L46 6.555C46 7.582 46.488 8 47.501 8L50.099 8C51.112 8 51.6 7.582 51.6 6.555L51.6 4L50.1 4ZM58.1 4C59.112 4 59.6 4.418 59.6 5.445L59.6 8L58.1 8L58.1 5.45L56.6 5.45L56.6 8L55.1 8L55.1 5.45L56.6 5.45L56.6 4ZM55.1 5.45L53.6 5.45L53.6 8L52.1 8L52.1 5.445C52.1 4.419 52.587 4 53.6 4L55.1 4Z'
@@ -117,10 +121,11 @@ export function buildTag(fonts: Fonts, person: Person): Tag {
   const surnameLines = typed.length > 1 ? typed : splitSurname(fonts.medium, surname)
   if (surnameLines.length > 2) issues.push('Фамилия — не больше двух строк')
   setLines(fonts.medium, surnameLines.slice(0, 3), SURNAME, 1, 'Фамилия', cmds, issues)
-  // A surname in two lines moves the position a line down, leaving it room for one
-  const block = surnameLines.length > 1 ? { ...POSITION, baseline: POSITION.baseline + NAME.leading, maxLines: 1 } : POSITION
+  // A surname in two lines leaves the position room for one
+  const block = surnameLines.length > 1 ? { ...POSITION, maxLines: 1 } : POSITION
   const lines = wrap(fonts.regular, position, POSITION)
-  setLines(fonts.regular, lines.slice(0, block.maxLines + 1), block, 0, 'Должность', cmds, issues)
+  const shown = lines.slice(0, block.maxLines + 1)
+  setLines(fonts.regular, shown, block, 1 - shown.length, 'Должность', cmds, issues)
   if (lines.length > block.maxLines) {
     issues.push(block.maxLines === 1 ? 'При фамилии в две строки должность — в одну: сократите её' : 'Должность длиннее двух строк: сократите её')
   }
