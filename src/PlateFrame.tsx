@@ -9,7 +9,7 @@ import PlateArt from '@/plate/PlateArt'
 // Number plate frame generator (Figma: UMO | Evrone, node 4970:2419): the dealer's line printed under the plate, as a
 // 501×21 mm PDF with the text in outlines, for the frame maker.
 
-const DEFAULT_TEXT = 'Центр UMO | Название дилера'
+const DEFAULT_TEXT = 'Центр UMO | Название'
 const RED = '#ff2a1a'
 
 export default function PlateFrame() {
@@ -61,7 +61,8 @@ export default function PlateFrame() {
 
           <div className="flex flex-col gap-4 tracking-normal">
             <Field label="Текст">
-              <TextInput value={text} onChange={setText} invalid={!!strip && strip.issues.length > 0} />
+              {/* Case-sensitive forms as in the print, so the bar stands with the capitals here too */}
+              <TextInput value={text} onChange={setText} placeholder={DEFAULT_TEXT} invalid={!!strip && strip.issues.length > 0} className="[font-feature-settings:'case'_1]" />
             </Field>
 
             <Field label="Расположение">
