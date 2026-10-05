@@ -329,9 +329,7 @@ export default function NameTag() {
                   <TagArt text={tag ? toD(tag.cmds) : undefined} ghost={ghosts?.[i] ? toD(ghosts[i].cmds) : undefined} color={bad ? RED : undefined} />
                 </button>
                 {bad && (
-                  <ul className="text-[13px] leading-5 text-[#e30]">
-                    {problems[i].map(t => <li key={t}>{t}</li>)}
-                  </ul>
+                  <p className="text-[13px] leading-5 text-[#e30]">{alertLine(problems[i])}</p>
                 )}
               </figure>
             )
@@ -361,6 +359,14 @@ async function downloadTemplate(e: React.MouseEvent) {
 /** сотрудник, сотрудника, сотрудников */
 function staff(n: number): string {
   return 'сотрудник' + ({ '': '', 'а': 'а', 'ей': 'ов' } as Record<string, string>)[plural(n)]
+}
+
+/** A tag's errors in one line: the empty fields in one phrase («Нет имени, фамилии и должности»), then the rest */
+function alertLine(problems: string[]): string {
+  const empty = { [NO_NAME]: 'имени', [NO_SURNAME]: 'фамилии', [NO_POSITION]: 'должности' } as Record<string, string>
+  const words = problems.filter(t => t in empty).map(t => empty[t])
+  const missing = words.length ? `Нет ${words.length > 1 ? `${words.slice(0, -1).join(', ')} и ${words[words.length - 1]}` : words[0]}` : ''
+  return [missing, ...problems.filter(t => !(t in empty))].filter(Boolean).join(' · ')
 }
 
 /** бейдж, бейджа, бейджей */
