@@ -226,7 +226,7 @@ export default function NameTag() {
             <SegBtn active={mode === 'table'} onClick={() => setMode('table')}>Из таблицы</SegBtn>
           </Segments>
 
-          {mode === 'manual' && (
+          {mode === 'manual' && current && (
             <div className="flex flex-col gap-6 tracking-normal">
               {current && (() => {
                 const p = current
@@ -251,8 +251,6 @@ export default function NameTag() {
                   </div>
                 )
               })()}
-              {/* About the whole list, so set apart from the tag's own buttons */}
-              <button type="button" onClick={add} className={`${outlined} ${current ? 'mt-2' : ''}`}>Добавить</button>
             </div>
           )}
 
@@ -295,7 +293,7 @@ export default function NameTag() {
       {/* In the table mode the preview takes a dropped file too, and until one is loaded it's all an upload */}
       <main
         {...(mode === 'table' ? dropTarget : {})}
-        onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure button, figure textarea')) setSelected(null) }}
+        onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure button, figure textarea, [data-add]')) setSelected(null) }}
         className={`flex flex-1 flex-col bg-[#f5f5f5] p-6 pb-[112px] md:min-w-0 md:overflow-y-auto md:p-16
           ${mode === 'table' && file && dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
       >
@@ -363,6 +361,20 @@ export default function NameTag() {
               </figure>
             )
           })}
+          {/* «Добавить» as the next tag in the grid: a dashed plate of the tag's shape; the manual list only */}
+          {mode === 'manual' && (
+            <div className="@container self-start">
+            <button
+              type="button"
+              data-add
+              onClick={add}
+              className="flex aspect-[70/25] w-full cursor-pointer items-center justify-center gap-2 self-start rounded-[5.714cqw] border border-dashed border-black/20 text-[14px] font-medium leading-5 text-[#999] hover:border-black/40 hover:text-black"
+            >
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden><path d="M7 1V13M1 7H13" stroke="currentColor" strokeWidth="2" /></svg>
+              Добавить
+            </button>
+            </div>
+          )}
         </div>
         )}
       </main>
