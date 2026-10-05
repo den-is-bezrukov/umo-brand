@@ -280,7 +280,8 @@ export default function NameTag() {
           )}
         </div>
 
-        <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:mt-8 md:pt-0">
+        {/* No bar at all while there's nothing in it (a single tag in work), or it's an empty white strip on phones */}
+        {(failing.length === 0 ? items.length > 0 : items.length > 1) && <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:mt-8 md:pt-0">
           {/* Until every tag is ready, the progress in the button's place: it counts the tags still in work, which a click
               leads through («1 из 4 в работе», or «4 в работе» when it's all of them); with a single tag, nothing: its
               form says enough */}
@@ -293,7 +294,7 @@ export default function NameTag() {
               Скачать{items.length > 1 ? ` ${items.length} бейдж${plural(items.length)}` : ''}
             </DownloadButton>
           )}
-        </div>
+        </div>}
       </aside>
 
       {/* In the table mode the preview takes a dropped file too, and until one is loaded it's all an upload */}
