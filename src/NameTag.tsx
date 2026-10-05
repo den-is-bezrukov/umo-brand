@@ -169,9 +169,13 @@ export default function NameTag() {
                   <div ref={form} onPasteCapture={e => paste(p.key, e)} className="flex flex-col gap-2">
                     <div className="flex items-baseline justify-between text-[14px] leading-5">
                       <span className="font-medium">{fullName(p) || i + 1}</span>
-                      {people.length > 1 && (
-                        <button type="button" onClick={() => remove(p.key)} className="cursor-pointer text-[#999] hover:text-black">Удалить</button>
-                      )}
+                      {/* «Сбросить» empties this tag's fields; «Удалить» only while there's another tag to go to */}
+                      <div className="flex gap-4">
+                        <button type="button" onClick={() => update(p.key, BLANK)} className="cursor-pointer text-[#999] hover:text-black">Сбросить</button>
+                        {people.length > 1 && (
+                          <button type="button" onClick={() => remove(p.key)} className="cursor-pointer text-[#999] hover:text-black">Удалить</button>
+                        )}
+                      </div>
                     </div>
                     <div className="flex flex-col gap-2">
                       <TextInput value={p.name} onChange={v => update(p.key, { name: v })} placeholder="Имя" invalid={issues.some(t => t.startsWith('Имя'))} />
