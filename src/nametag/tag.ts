@@ -17,14 +17,12 @@ const LOGO_X = 46
 
 interface Block { size: number; leading: number; baseline: number; maxWidth: number; maxLines: number }
 
-/** The name on the first line, 4 mm clear of the logo */
-const NAME: Block = { size: 14 * PT, leading: 12 * PT, baseline: 7.6486, maxWidth: LOGO_X - MARGIN - MARGIN, maxLines: 1 }
 /**
- * The surname on the second, and any line after the first, under the logo's bottom edge, so it may run the full width
- * between the margins: long surnames (Александровская is 40 mm) don't fit beside the logo, and the type size can't be
- * reduced
+ * The name and surname: every line in the column left of the logo, 4 mm clear of it (38 mm). Lines running on under
+ * the logo were tried and looked broken; a double name or surname breaks after its hyphen instead, and one too long
+ * without a hyphen is an error (Александровская, 40 mm), as the type size can't be reduced
  */
-const SURNAME: Block = { ...NAME, maxWidth: TAG.w - 2 * MARGIN }
+const NAME: Block = { size: 14 * PT, leading: 12 * PT, baseline: 7.6486, maxWidth: LOGO_X - MARGIN - MARGIN, maxLines: 1 }
 /** Lines the name and surname may take together; at three the position is left one */
 const NAME_LINES = 3
 /**
@@ -140,11 +138,11 @@ export function buildTag(fonts: Fonts, person: Person): Tag {
   const surnameCmds: Cmd[] = []
   const positionCmds: Cmd[] = []
   const nameLines = typedName.length > 1 ? typedName : splitAtHyphen(fonts.medium, name, NAME.maxWidth)
-  const surnameLines = typedSurname.length > 1 ? typedSurname : splitAtHyphen(fonts.medium, surname, SURNAME.maxWidth)
-  // The surname starts on the second line even without a name; only the first line stands beside the logo
+  const surnameLines = typedSurname.length > 1 ? typedSurname : splitAtHyphen(fonts.medium, surname, NAME.maxWidth)
+  // The surname starts on the second line even without a name
   const first = Math.max(nameLines.length, 1)
-  nameLines.forEach((t, i) => setLines(fonts.medium, [t], i === 0 ? NAME : SURNAME, i, 'Имя', nameCmds, issues))
-  surnameLines.forEach((t, i) => setLines(fonts.medium, [t], SURNAME, first + i, 'Фамилия', surnameCmds, issues))
+  nameLines.forEach((t, i) => setLines(fonts.medium, [t], NAME, i, 'Имя', nameCmds, issues))
+  surnameLines.forEach((t, i) => setLines(fonts.medium, [t], NAME, first + i, 'Фамилия', surnameCmds, issues))
   const used = surnameLines.length ? first + surnameLines.length : nameLines.length
   if (used > NAME_LINES) issues.push('Имя и фамилия — не больше трёх строк')
   // Three lines of name and surname leave the position room for one
