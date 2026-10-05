@@ -3,8 +3,7 @@ import {
   moveTo, lineTo, appendBezierCurve, closePath, pushGraphicsState, popGraphicsState, setFillingCmykColor, setStrokingCmykColor, stroke,
 } from 'pdf-lib'
 import { zipSync, strToU8 } from 'fflate'
-import { TAG, LOGO, type Tag, type Person } from './tag'
-import { writeXlsx } from './table'
+import { TAG, LOGO, type Tag } from './tag'
 import type { Cmd } from '@/livery/geometry'
 
 // Loaded only when the files are downloaded, so the page doesn't carry pdf-lib until then.
@@ -78,8 +77,7 @@ function spec(count: number): string {
 
 СОСТАВ
 
-UMO_name-tags.pdf  — макеты бейджей, ${count} шт., по одному на странице, 1:1
-UMO_name-tags.xlsx — список: номер в нём совпадает со страницей PDF
+UMO_name-tags.pdf — макеты бейджей, ${count} шт., по одному на странице, 1:1
 Размер 70 × 25 мм, углы скруглены радиусом 4 мм.
 Контур — линия реза. Текст и логотип уже в кривых.
 
@@ -120,12 +118,10 @@ UMO_name-tags.xlsx — список: номер в нём совпадает с�
 `
 }
 
-/** The tags, the list they were made from and the requirements */
-export async function tagsZip(tags: Tag[], people: Person[]): Promise<Blob> {
+export async function tagsZip(tags: Tag[]): Promise<Blob> {
   const pdf = await tagsPdf(tags)
   const zip = zipSync({
     'UMO_name-tags.pdf': pdf,
-    'UMO_name-tags.xlsx': writeXlsx(people),
     '00_UMO_name-tags_spec.txt': strToU8(spec(tags.length)),
   }, { level: 0 })
   return new Blob([zip as BlobPart], { type: 'application/zip' })

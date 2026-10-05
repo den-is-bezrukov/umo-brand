@@ -118,7 +118,7 @@ export default function NameTag() {
     setExporting(true)
     try {
       const { tagsZip } = await import('@/nametag/pdf')
-      const blob = await tagsZip(tags, items.map(it => it.person))
+      const blob = await tagsZip(tags)
       const a = document.createElement('a')
       a.href = URL.createObjectURL(blob)
       a.download = 'UMO_name-tags.zip'
