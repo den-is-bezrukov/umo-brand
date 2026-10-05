@@ -7,8 +7,8 @@ import TagArt from '@/nametag/TagArt'
 
 // Name tag generator (Figma: UMO | Evrone, node 4021:2878): a dealership's staff list in, one zip out with the tags
 // in outlines, a page each, and the maker's requirements. Two modes: «Вручную», a list typed on the page, and «Из
-// таблицы», the template filled in and loaded as .xlsx (or its rows pasted) into a list edited the same way, each tag
-// keeping its row number. Rows copied from a spreadsheet can be pasted into the manual list too.
+// таблицы», the template filled in and loaded as .xlsx (or its rows pasted), shown as it is. Editing it means taking it
+// to «Вручную», each tag keeping its row number. Rows copied from a spreadsheet can be pasted into the manual list too.
 
 const TEMPLATE = `${import.meta.env.BASE_URL}downloads/UMO_name-tags_template.xlsx`
 
@@ -33,17 +33,20 @@ const same = (a: Person, b: Person) => a.name === b.name && a.surname === b.surn
 
 export default function NameTag() {
   // Not kept in the address, unlike the other generators: a staff list isn't something to send as a link
-  // Each mode keeps its own list, edited the same way; the table's is filled by loading a file
+  // One list for both modes. «Из таблицы» shows a loaded file as it is, with no form; clicking a tag there takes the
+  // list to «Вручную» to edit it, and the first edit makes it a list of its own, no longer the file
   const [mode, setMode] = useState<'manual' | 'table'>('manual')
-  const [lists, setLists] = useState<Record<'manual' | 'table', Row[]>>(() => ({ manual: [row(BLANK)], table: [] }))
-  const people = lists[mode]
-  const setPeople = (next: Row[]) => setLists(l => ({ ...l, [mode]: next }))
-  /** The one person the sidebar edits; the others are picked by clicking their tag */
-  const [selectedBy, setSelectedBy] = useState<Partial<Record<'manual' | 'table', number>>>({})
-  const current = people.find(p => p.key === selectedBy[mode]) ?? people[0]
-  const setSelected = (key: number) => setSelectedBy(s => ({ ...s, [mode]: key }))
-  const selected = current?.key
+  const [people, setList] = useState<Row[]>(() => [row(BLANK)])
+  /** The file the list is, while it's unedited */
   const [file, setFile] = useState('')
+  const setPeople = (next: Row[]) => {
+    setList(next)
+    setFile('')
+  }
+  /** The one person the sidebar edits; the others are picked by clicking their tag */
+  const [selectedKey, setSelected] = useState<number>()
+  const current = people.find(p => p.key === selectedKey) ?? people[0]
+  const selected = current?.key
   const [tableError, setTableError] = useState('')
   const [dragging, setDragging] = useState(false)
 
@@ -58,12 +61,12 @@ export default function NameTag() {
   }, [])
 
   /** What's shown and downloaded; a tag loaded from the table keeps its row number, to find it in the file */
-  const items = useMemo(() => people.map((p, i) => ({
+  const items = useMemo(() => (mode === 'table' && !file ? [] : people).map((p, i) => ({
     key: p.key,
     label: fullName(p) || (p.line ? 'Без имени' : String(i + 1)),
     note: p.line ? `строка ${p.line}` : `${TAG.w} × ${TAG.h} мм`,
     person: p as Person,
-  })), [people])
+  })), [mode, file, people])
   const tags = useMemo(() => fonts ? items.map(it => buildTag(fonts, it.person)) : undefined, [fonts, items])
   /** The placeholders standing in for empty fields */
   const ghosts = useMemo(() => fonts ? items.map(({ person: p }) => buildTag(fonts, {
@@ -74,11 +77,11 @@ export default function NameTag() {
   const named = items.every(it => it.person.name.trim() || it.person.surname.trim())
   const ok = !!tags && tags.length > 0 && named && tags.every(t => t.issues.length === 0)
 
-  /** A file's rows replace the table's list, edits made here included */
+  /** A file's rows replace the list, whatever was on it */
   const loadRows = (rows: TableRow[], name: string) => {
     const loaded = rows.map(r => ({ ...row(r.person), line: r.line }))
-    setLists(l => ({ ...l, table: loaded }))
-    setSelectedBy(s => ({ ...s, table: loaded[0]?.key }))
+    setList(loaded)
+    setSelected(loaded[0]?.key)
     setFile(name)
     setTableError('')
   }
@@ -178,7 +181,7 @@ export default function NameTag() {
             <SegBtn active={mode === 'table'} onClick={() => setMode('table')}>Из таблицы</SegBtn>
           </Segments>
 
-          {current && (
+          {mode === 'manual' && current && (
             <div className="flex flex-col gap-6 tracking-normal">
               {(() => {
                 const p = current
@@ -247,8 +250,9 @@ export default function NameTag() {
             const tag = tags?.[i]
             const bad = !!tag && tag.issues.length > 0
             const key = it.key
-            const pickable = people.length > 1
-            const active = pickable && key === current?.key
+            // In the manual list a tag is picked for editing; in the table one, clicking a tag goes to edit it there
+            const pickable = mode === 'table' || people.length > 1
+            const active = mode === 'manual' && pickable && key === current?.key
             return (
               <figure
                 key={it.key}
@@ -263,7 +267,7 @@ export default function NameTag() {
                 <button
                   type="button"
                   disabled={!pickable}
-                  onClick={() => setSelected(key)}
+                  onClick={() => { setSelected(key); setMode('manual') }}
                   aria-pressed={pickable ? active : undefined}
                   className={`block rounded-[5.714cqw] outline-offset-4 ${pickable ? 'cursor-pointer' : 'cursor-default'}
                     ${active ? 'outline-2 outline-black' : pickable ? 'outline-1 outline-transparent hover:outline-black/20' : ''}`}
