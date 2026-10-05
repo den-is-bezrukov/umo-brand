@@ -158,7 +158,7 @@ export default function NameTag() {
                   </div>
                 )
               })}
-              <button type="button" onClick={add} className={outlined}>Добавить сотрудника</button>
+              <button type="button" onClick={add} className={outlined}>Добавить</button>
             </div>
           ) : (
             <div className="flex flex-col gap-2 tracking-normal">
