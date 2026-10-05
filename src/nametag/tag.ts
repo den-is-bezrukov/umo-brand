@@ -1,5 +1,6 @@
 import { parse, type Font } from 'opentype.js'
 import { loadFont, type Cmd } from '@/livery/geometry'
+import { hasProfanity, PROFANITY } from '@/ui/profanity'
 
 // A dealership employee's name tag (Figma: UMO | Evrone, node 4021:2878), as in the hand-made Illustrator source in
 // Yandex Disk `02 UMO/Name Tag`: a 70×25 mm plate with 4 mm rounded corners, the name and surname in CoFo Sans Medium
@@ -158,6 +159,9 @@ export function buildTag(fonts: Fonts, person: Person): Tag {
   }
   const missing = (font: Font, t: string) => [...t.replace(/\s/g, '')].filter(c => !font.hasChar(c))
   const absent = [...new Set([...missing(fonts.medium, name + surname), ...missing(fonts.regular, clean(position))])]
+  for (const [label, t] of [['Имя', name], ['Фамилия', surname], ['Должность', position]]) {
+    if (hasProfanity(t)) issues.push(`${label}: ${PROFANITY.toLowerCase()}`)
+  }
   if (absent.length) issues.push(`Нет в шрифте ${absent.map(c => `«${c}»`).join(', ')}`)
   const box = (cmds: Cmd[], font: Font, b: Block, firstLine: number, lines: number, medium: boolean): FieldBox =>
     ({ cmds, top: lineTop(font, b.size, b.leading, b.baseline + firstLine * b.leading), lines: Math.max(lines, 1), size: b.size, leading: b.leading, medium })

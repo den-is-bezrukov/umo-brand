@@ -1,5 +1,6 @@
 import type { Font, Glyph } from 'opentype.js'
 import type { Cmd } from '@/livery/geometry'
+import { hasProfanity, PROFANITY } from '@/ui/profanity'
 
 // The print strip of a number plate frame (Figma: UMO | Evrone, node 4970:2419): the 501×21 mm field under the plate of
 // a standard 522×132 frame, where the frame maker prints in white on the black plastic. One line of CoFo Sans Medium,
@@ -80,6 +81,7 @@ export function buildStrip(font: Font, raw: string, align: Align): Strip {
   else if (width > STRIP.w || ink.x2 > STRIP.w || ink.x1 < 0) issues.push(`Текст шире ${STRIP.w} мм`)
   const missing = [...new Set([...text.replace(/\s/g, '')].filter(c => !font.hasChar(c)))]
   if (missing.length) issues.push(`Нет в шрифте ${missing.map(c => `«${c}»`).join(', ')}`)
+  if (hasProfanity(text)) issues.push(PROFANITY)
   return { cmds: pathCmds(commands), issues }
 }
 
