@@ -22,8 +22,11 @@ interface Row extends Person { key: number }
 let nextKey = 0
 const row = (p: Person): Row => ({ ...p, key: nextKey++ })
 
-/** A tag's title in the sidebar and over its preview; empty until a name is typed, and the number stands in */
-const fullName = (p: Person) => [p.name, p.surname].map(v => v.replace(/\s+/g, ' ').trim()).filter(Boolean).join(' ')
+/**
+ * A tag's title in the sidebar and over its preview, a typed line break after a hyphen joined back («Римская-Корсакова»);
+ * empty until a name is typed, and the number stands in
+ */
+const fullName = (p: Person) => [p.name, p.surname].map(v => v.replace(/-\s*\n\s*/g, '-').replace(/\s+/g, ' ').trim()).filter(Boolean).join(' ')
 
 const same = (a: Person, b: Person) => a.name === b.name && a.surname === b.surname && a.position === b.position
 
@@ -172,7 +175,7 @@ export default function NameTag() {
                     </div>
                     <div className="flex flex-col gap-2">
                       <TextInput value={p.name} onChange={v => update(p.key, { name: v })} placeholder="Имя" invalid={issues.some(t => t.startsWith('Имя'))} />
-                      <TextInput value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={issues.some(t => t.startsWith('Фамилия'))} />
+                      <TextArea value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={issues.some(t => t.startsWith('Фамилия'))} />
                     </div>
                     <TextArea value={p.position} onChange={v => update(p.key, { position: v })} placeholder="Должность" invalid={issues.some(t => t.startsWith('Должность'))} />
                   </div>

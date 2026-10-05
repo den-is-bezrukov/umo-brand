@@ -107,13 +107,16 @@ function splitSurname(font: Font, surname: string): string[] {
 
 export function buildTag(fonts: Fonts, person: Person): Tag {
   const name = clean(person.name)
-  const surname = clean(person.surname)
+  // A typed line break splits the surname; without one a long double surname breaks after a hyphen
+  const typed = person.surname.split('\n').map(clean).filter(Boolean)
+  const surname = typed.join(' ')
   const position = person.position.replace(/\r/g, '')
   const cmds: Cmd[] = []
   const issues: string[] = []
   setLines(fonts.medium, name ? [name] : [], NAME, 0, 'Имя', cmds, issues)
-  const surnameLines = splitSurname(fonts.medium, surname)
-  setLines(fonts.medium, surnameLines, SURNAME, 1, 'Фамилия', cmds, issues)
+  const surnameLines = typed.length > 1 ? typed : splitSurname(fonts.medium, surname)
+  if (surnameLines.length > 2) issues.push('Фамилия — не больше двух строк')
+  setLines(fonts.medium, surnameLines.slice(0, 3), SURNAME, 1, 'Фамилия', cmds, issues)
   // A surname in two lines moves the position a line down, leaving it room for one
   const block = surnameLines.length > 1 ? { ...POSITION, baseline: POSITION.baseline + NAME.leading, maxLines: 1 } : POSITION
   const lines = wrap(fonts.regular, position, POSITION)
