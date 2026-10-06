@@ -35,7 +35,13 @@ const HEADERS: Record<keyof Person, RegExp> = {
 const toPeople = (rows: Cells[]): Person[] => byHeaders(rows, HEADERS)
 
 /** The address umo.auto gives a dealer, put in when the dealer is picked */
-const addressOf = (name: string) => dealers.find(d => d.name === name.trim())?.address
+const addressOf = (name: string) => dealers.find(d => withoutUmo(d.name) === withoutUmo(name.trim()))?.address
+
+/**
+ * The dealers as the card names them: without the «UMO» of their marketing names («АГАТ Владимир»), as the logo and
+ * «Официальный дилер UMO» stand right by the name. For the full names, offer `DEALER_NAMES` as it is
+ */
+const DEALER_OPTIONS = DEALER_NAMES.map(withoutUmo)
 
 /** What the grey stand-in QR holds */
 const SAMPLE_LINK = 'https://umo.auto'
@@ -164,8 +170,7 @@ export default function BusinessCard() {
                   <ComboField
                     value={dealer.name}
                     onChange={pickDealer}
-                    options={DEALER_NAMES}
-                    shownAs={withoutUmo}
+                    options={DEALER_OPTIONS}
                     singleLine
                     placeholder="Название дилера"
                     label="Дилеры UMO"
