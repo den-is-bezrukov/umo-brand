@@ -91,7 +91,7 @@ export default function Livery() {
   // What goes into the files; a part that's off is in neither the preview, nor the decals, nor the spec
   const [on, setOn] = useState(() => {
     const off = (link.get('off') ?? '').split(',')
-    return { qr: !off.includes(PARTS.qr), tagline: !off.includes(PARTS.tagline), dealer: !off.includes(PARTS.dealer), rear: !off.includes(PARTS.rear), rearDealer: !off.includes(PARTS.rearDealer), rearTagline: !off.includes(PARTS.rearTagline) }
+    return { qr: !off.includes(PARTS.qr), tagline: !off.includes(PARTS.tagline), dealer: !off.includes(PARTS.dealer), rear: link.get('rear') === 'on', rearDealer: !off.includes(PARTS.rearDealer), rearTagline: !off.includes(PARTS.rearTagline) }
   })
   const toggle = (key: keyof typeof on) => (v: boolean) => setOn(o => ({ ...o, [key]: v }))
   const show = (link.get('show') ?? '').split(',')
@@ -126,7 +126,9 @@ export default function Livery() {
     link: url.trim() === DEFAULT_URL[model] ? null : url.trim(),
     top: dealer === DEFAULT_TOP ? null : dealer,
     bottom: tagline === DEFAULT_TAGLINE[model] ? null : tagline,
-    off: (Object.keys(PARTS) as (keyof typeof PARTS)[]).filter(k => !on[k]).map(k => PARTS[k]).join(','),
+    // The rear window is off by default, so it's the one part the link turns on
+    off: (Object.keys(PARTS) as (keyof typeof PARTS)[]).filter(k => k !== 'rear' && !on[k]).map(k => PARTS[k]).join(','),
+    rear: on.rear ? 'on' : null,
     rbottom: ownRearOn ? rearTagline : null,
     show: [...(dims ? ['dims'] : []), ...(seams ? ['seams'] : [])].join(','),
     size: large ? 'large' : null,
@@ -182,7 +184,7 @@ export default function Livery() {
     setRearTagline(undefined)
     setRearOpen(false)
     setUrl(DEFAULT_URL[model])
-    setOn({ qr: true, tagline: true, dealer: true, rear: true, rearDealer: true, rearTagline: true })
+    setOn({ qr: true, tagline: true, dealer: true, rear: false, rearDealer: true, rearTagline: true })
     setDims(false)
     setLarge(false)
     setQrSmall(false)
