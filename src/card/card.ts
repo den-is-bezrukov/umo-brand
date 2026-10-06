@@ -68,7 +68,8 @@ export const BACK_LOGO = logo(CARD.w - MARGIN - 15, MARGIN, 15)
 
 /** The dealership, set once for the whole list */
 export interface Dealer { name: string; address: string; site: string }
-export interface Person { name: string; surname: string; position: string; email: string; phone: string }
+/** `ext`, the extension, is the one optional field */
+export interface Person { name: string; surname: string; position: string; email: string; phone: string; ext: string }
 
 export type CardField = 'dealer' | 'type' | 'address' | 'site' | 'name' | 'surname' | 'position' | 'email' | 'phone'
 export const DEALER_FIELDS: CardField[] = ['dealer', 'address', 'site']
@@ -140,22 +141,28 @@ function wrap(font: Font, text: string, size: number, width: number): string[] {
   return lines.map(l => l.replace(/ /g, ' '))
 }
 
-/**
- * A Russian number as the card sets it, «+7 495 000 00 00 доб. 12345», from however it's typed (8 or +7, brackets,
- * dashes, «доб», «ext», «#» or a comma before the extension); 8 800 numbers keep their 8. Anything else stays as typed
- */
-export function formatPhone(raw: string): string {
-  const t = oneLine(raw)
-  const m = t.match(/^(.*?)(?:\s*(?:доб\.?|доп\.?|ext\.?|#|,)\s*(\d{1,6}))?$/i)
-  if (!m) return t
-  let d = m[1].replace(/\D/g, '')
-  if (/[^\d\s()+\-.]/.test(m[1])) return t
-  if (d.length === 10) d = '7' + d
-  if (d.length !== 11 || !/^[78]/.test(d)) return t
-  const free = d.startsWith('8800')
-  const n = `${free ? '8' : '+7'} ${d.slice(1, 4)} ${d.slice(4, 7)} ${d.slice(7, 9)} ${d.slice(9)}`
-  return m[2] ? `${n} доб. ${m[2]}` : n
+/** An extension typed or pasted with the number («… доб. 204», «ext 204», «#204», «, 204»), split off; null without one */
+export function splitPhone(raw: string): { phone: string; ext: string } | null {
+  const m = oneLine(raw).match(/^(.*?)\s*(?:доб\.?|доп\.?|ext\.?|#|,)\s*(\d{1,6})$/i)
+  return m ? { phone: m[1], ext: m[2] } : null
 }
+
+/**
+ * A Russian number as the card sets it, «+7 495 000 00 00», from however it's typed (8 or +7, brackets, dashes);
+ * 8 800 numbers keep their 8. Null if it isn't one
+ */
+export function formatPhone(raw: string): string | null {
+  const t = oneLine(raw)
+  if (/[^\d\s()+\-.]/.test(t)) return null
+  let d = t.replace(/\D/g, '')
+  if (d.length === 10) d = '7' + d
+  if (d.length !== 11 || !/^[78]/.test(d)) return null
+  return `${d.startsWith('8800') ? '8' : '+7'} ${d.slice(1, 4)} ${d.slice(4, 7)} ${d.slice(7, 9)} ${d.slice(9)}`
+}
+
+/** The phone line: the number set as `formatPhone` does (as typed if it isn't one) and its extension */
+export const phoneLine = (p: Pick<Person, 'phone' | 'ext'>) =>
+  [formatPhone(p.phone) ?? oneLine(p.phone), p.ext.trim() && `доб. ${p.ext.trim()}`].filter(Boolean).join(' ')
 
 /** The site as it reads on the card: no protocol, no «www.», no slash at the end */
 export const siteText = (raw: string) => oneLine(raw).replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/$/, '')
@@ -222,8 +229,12 @@ export function buildBack(fonts: Fonts, dealer: Dealer, person: Person, qr: QrDa
 
   // The person, from the bottom: the last line on the bottom margin
   y = CARD.h - MARGIN
-  const phone = formatPhone(person.phone)
-  if (phone) { lines('phone', 'Телефон', phone, y, SMALL, PERSON_W, 1, false); y -= PITCH }
+  const phone = phoneLine(person)
+  if (phone) {
+    lines('phone', 'Телефон', phone, y, SMALL, PERSON_W, 1, false)
+    if (!formatPhone(person.phone)) issues.push({ field: 'phone', text: 'Телефон: проверьте номер' })
+    y -= PITCH
+  }
   const email = oneLine(person.email)
   if (email) {
     lines('email', 'Почта', email, y, SMALL, PERSON_W, 1, false)
@@ -268,8 +279,8 @@ const esc = (t: string) => t.replace(/[\\;,]/g, m => '\\' + m)
  * 57–65 without it)
  */
 export function vcard(dealer: Dealer, p: Person): string {
-  const phone = formatPhone(p.phone)
-  const [main, ext] = phone.split(' доб. ')
+  const main = formatPhone(p.phone)
+  const ext = p.ext.trim()
   const site = siteText(dealer.site)
   return [
     'BEGIN:VCARD',

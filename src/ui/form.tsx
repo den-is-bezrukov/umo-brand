@@ -108,7 +108,7 @@ export function Segments({ children }: { children: React.ReactNode }) {
   return <div className="flex rounded-[4px] bg-[#f5f5f5]">{children}</div>
 }
 
-export function TextInput({ value, onChange, onBlur, placeholder, invalid, numeric, list, className = '' }: { value: string; onChange: (v: string) => void; onBlur?: () => void; placeholder?: string; invalid?: boolean; numeric?: boolean; list?: string; className?: string }) {
+export function TextInput({ value, onChange, onBlur, placeholder, invalid, numeric, inputMode, list, className = '' }: { value: string; onChange: (v: string) => void; onBlur?: () => void; placeholder?: string; invalid?: boolean; numeric?: boolean; inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode']; list?: string; className?: string }) {
   return (
     <input
       value={value}
@@ -117,7 +117,7 @@ export function TextInput({ value, onChange, onBlur, placeholder, invalid, numer
       onBlur={() => onBlur?.()}
       placeholder={placeholder}
       aria-invalid={invalid || undefined}
-      inputMode={numeric ? 'numeric' : undefined}
+      inputMode={inputMode ?? (numeric ? 'numeric' : undefined)}
       pattern={numeric ? '[0-9 ]*' : undefined}
       className={`h-10 w-full min-w-0 rounded-[4px] bg-[#f5f5f5] px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]
         ${invalid ? 'ring-1 ring-inset ring-[#e30]' : 'focus:ring-1 focus:ring-inset focus:ring-black'} ${className}`}

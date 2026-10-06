@@ -4,7 +4,7 @@ import { useStaff, TableSource, UploadArea, AddTile, Progress } from '@/ui/staff
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
 import { xlsxCells, pastedCells, byHeaders, type Cells } from '@/nametag/table'
-import { CARD, QR, FACE, BACK_LOGO, DEALER_FIELDS, buildBack, siteFor, siteText, vcard, type CardField, type Dealer, type Person, type QrData } from '@/card/card'
+import { CARD, QR, FACE, BACK_LOGO, DEALER_FIELDS, buildBack, siteFor, siteText, splitPhone, vcard, type CardField, type Dealer, type Person, type QrData } from '@/card/card'
 import type { Order } from '@/card/pdf'
 import CardArt from '@/card/CardArt'
 import { POSITIONS } from '@/data/positions'
@@ -17,7 +17,7 @@ import dealers from '@/data/dealers.json'
 
 const TEMPLATE = `${import.meta.env.BASE_URL}downloads/UMO_business-cards_template.xlsx`
 
-const BLANK: Person = { name: '', surname: '', position: '', email: '', phone: '' }
+const BLANK: Person = { name: '', surname: '', position: '', email: '', phone: '', ext: '' }
 /** Shown grey on the card in place of an empty required field; never in the PDF */
 const PLACEHOLDER = { dealer: 'Название дилера', address: 'Адрес', site: 'Сайт', name: 'Имя', surname: 'Фамилия', position: 'Должность', email: 'Почта', phone: 'Телефон' }
 const MISSING: Partial<Record<CardField, string>> = {
@@ -31,8 +31,13 @@ const HEADERS: Record<keyof Person, RegExp> = {
   position: /^должность$/i,
   email: /^(почта|e-?mail|эл.*почта)$/i,
   phone: /^(телефон|тел\.?)$/i,
+  ext: /^(доб\.?|добавочный)$/i,
 }
-const toPeople = (rows: Cells[]): Person[] => byHeaders(rows, HEADERS)
+/** A phone cell carrying its extension («… доб. 204») fills in the extension, unless it has a column of its own */
+const toPeople = (rows: Cells[]): Person[] => byHeaders(rows, HEADERS).map(p => {
+  const split = !p.ext.trim() && splitPhone(p.phone)
+  return split ? { ...p, ...split } : p
+})
 
 /** The address umo.auto gives a dealer, put in when the dealer is picked */
 const addressOf = (name: string) => dealers.find(d => withoutUmo(d.name) === withoutUmo(name.trim()))?.address
@@ -96,7 +101,7 @@ export default function BusinessCard() {
     const shownDealer = { name: or('dealer', dealer.name), address: or('address', dealer.address), site: or('site', dealer.site) }
     const shownPerson = {
       name: or('name', p.name), surname: or('surname', p.surname), position: or('position', p.position),
-      email: or('email', p.email), phone: or('phone', p.phone),
+      email: or('email', p.email), phone: or('phone', p.phone), ext: p.ext,
     }
     const qr = qrFor(p)
     const back = buildBack(fonts, shownDealer, shownPerson, qr)
@@ -232,7 +237,25 @@ export default function BusinessCard() {
                       <TextInput value={p.email} onChange={v => update(p.key, { email: v })} placeholder="Почта" invalid={bad('email', 'Почта')} />
                     </Labelled>
                     <Labelled label="Телефон">
-                      <TextInput value={p.phone} onChange={v => update(p.key, { phone: v })} placeholder="Телефон" invalid={bad('phone', 'Телефон')} />
+                      {/* The number takes only what a number is written with; a whole one pasted with its extension
+                          splits, the extension going to its own field */}
+                      <div className="flex gap-2">
+                        <TextInput
+                          value={p.phone}
+                          onChange={v => update(p.key, splitPhone(v) ?? { phone: v.replace(/[^\d+()\-\s]/g, '') })}
+                          placeholder="Телефон"
+                          inputMode="tel"
+                          invalid={bad('phone', 'Телефон')}
+                        />
+                        <div className="w-[88px] shrink-0">
+                          <TextInput
+                            value={p.ext}
+                            onChange={v => update(p.key, { ext: v.replace(/\D/g, '').slice(0, 6) })}
+                            placeholder="Доб."
+                            inputMode="numeric"
+                          />
+                        </div>
+                      </div>
                     </Labelled>
                     {qrField}
                   </div>
