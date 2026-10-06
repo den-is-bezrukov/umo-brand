@@ -3,7 +3,7 @@ import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, Do
 import { toD } from '@/livery/geometry'
 import { TAG, buildTag, loadFonts, type Field, type FieldBox, type Fonts, type Person } from '@/nametag/tag'
 import { readXlsx, parsePasted, type TableRow } from '@/nametag/table'
-import { POSITIONS } from '@/nametag/positions'
+import { POSITIONS } from '@/data/positions'
 import TagArt from '@/nametag/TagArt'
 
 // Name tag generator (Figma: UMO | Evrone, node 4021:2878): a dealership's staff list in, one zip out with the tags

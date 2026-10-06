@@ -3,6 +3,7 @@ import type { Font } from 'opentype.js'
 import { Field, OptionalField, Segments, SegBtn, TextArea, ComboField, UrlField, Checkbox, SizeSwitch, GeneratorHeader, LinkButtons, DownloadButton, isValidUrl } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
 import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
+import { DEFAULT_TAGLINE, TAGLINES } from '@/data/taglines'
 import { LIVERIES, SURFACES, withoutQr, type Model } from '@/livery/layout'
 import { loadFont, buildSheet, specMarks, toD, mm, type Sheet, type Line } from '@/livery/geometry'
 
@@ -13,16 +14,6 @@ import { loadFont, buildSheet, specMarks, toD, mm, type Sheet, type Line } from 
 /** The QR leads to the model's own page unless another link is set, as on the price card */
 const DEFAULT_URL: Record<Model, string> = { umo8: 'https://umo.auto/umo8', umo5: 'https://umo.auto/umo5' }
 const DEFAULT_TOP = 'UMO Название'
-// The tagline offered by default names what each model is
-const DEFAULT_BOTTOM: Record<Model, string> = {
-  umo8: 'Попробуй гибрид с технологиями Яндекса',
-  umo5: 'Попробуй электрокар с технологиями Яндекса',
-}
-/** The bottom text's suggestions per model: the default, and the same without «Попробуй» */
-const TAGLINES: Record<Model, string[]> = {
-  umo8: [DEFAULT_BOTTOM.umo8, 'Гибрид с технологиями Яндекса'],
-  umo5: [DEFAULT_BOTTOM.umo5, 'Электрокар с технологиями Яндекса'],
-}
 
 // The parts that can be left out, as the `off` link parameter names them
 const PARTS = { qr: 'qr', dealer: 'top', tagline: 'bottom', rear: 'rear' } as const
@@ -91,7 +82,7 @@ export default function Livery() {
   const [link] = useState(linkParams)
   const [model, setModel] = useState<Model>(link.get('model') === 'umo5' ? 'umo5' : 'umo8')
   const [dealer, setDealer] = useState(link.get('top') ?? DEFAULT_TOP)
-  const [tagline, setTagline] = useState(() => link.get('bottom') ?? DEFAULT_BOTTOM[model])
+  const [tagline, setTagline] = useState(() => link.get('bottom') ?? DEFAULT_TAGLINE[model])
   // Text of its own on the rear window; filled from the sides the first time it's turned on
   const [ownRear, setOwnRear] = useState(link.has('rtop') || link.has('rbottom'))
   const [rear, setRear] = useState<{ dealer: string; tagline: string } | undefined>(() =>
@@ -132,7 +123,7 @@ export default function Livery() {
     model: model === 'umo8' ? null : model,
     link: url.trim() === DEFAULT_URL[model] ? null : url.trim(),
     top: dealer === DEFAULT_TOP ? null : dealer,
-    bottom: tagline === DEFAULT_BOTTOM[model] ? null : tagline,
+    bottom: tagline === DEFAULT_TAGLINE[model] ? null : tagline,
     off: (Object.keys(PARTS) as (keyof typeof PARTS)[]).filter(k => !on[k]).map(k => PARTS[k]).join(','),
     rtop: ownRear && rear ? rear.dealer : null,
     rbottom: ownRear && rear ? rear.tagline : null,
@@ -177,7 +168,7 @@ export default function Livery() {
   // «Сбросить» keeps the model and brings the rest back to its defaults
   const reset = () => {
     setDealer(DEFAULT_TOP)
-    setTagline(DEFAULT_BOTTOM[model])
+    setTagline(DEFAULT_TAGLINE[model])
     setOwnRear(false)
     setRear(undefined)
     setUrl(DEFAULT_URL[model])

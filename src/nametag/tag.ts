@@ -1,6 +1,6 @@
 import { parse, type Font } from 'opentype.js'
 import { loadFont, type Cmd } from '@/livery/geometry'
-import { withListBreak } from './positions'
+import { withListBreak } from '@/data/positions'
 
 // A dealership employee's name tag (Figma: UMO | Evrone, node 4021:2878), as in the hand-made Illustrator source in
 // Yandex Disk `02 UMO/Name Tag`: a 70×25 mm plate with 4 mm rounded corners, the name and surname in CoFo Sans Medium
