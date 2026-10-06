@@ -28,8 +28,6 @@ type NavItem = { id: string; title: string; children?: NavItem[] }
  */
 const MEDIA_LIST: { id: string; to: string; title: string; w: number; h: number; picture: ReactNode }[] = [
   { id: 'livery', to: '/livery', title: 'Ливрея', w: 912, h: 456, picture: <Fig name="livery-umo5" flat="#f6f6f6" w={912} h={456} alt="UMO 5 с ливреей дилера" /> },
-  { id: 'business-card', to: '/business-card', title: 'Визитка', w: 444, h: 333, picture: <Fig name="business-card-card" w={444} h={333} alt="Визитка дилера UMO, обе стороны" /> },
-  { id: 'name-tag', to: '/name-tag', title: 'Бейдж', w: 444, h: 333, picture: <Fig name="name-tag-card" w={444} h={333} alt="Бейдж UMO на рубашке сотрудника" /> },
   {
     // Figma 4985:10019: the 210×297 card centred on the 444×333 grey
     id: 'price-card', to: '/price-card', title: 'Прайс-карта', w: 444, h: 333,
@@ -52,6 +50,8 @@ const MEDIA_LIST: { id: string; to: string; title: string; w: number; h: number;
       </div>
     ),
   },
+  { id: 'business-card', to: '/business-card', title: 'Визитка', w: 444, h: 333, picture: <Fig name="business-card-card" w={444} h={333} alt="Визитка дилера UMO, обе стороны" /> },
+  { id: 'name-tag', to: '/name-tag', title: 'Бейдж', w: 444, h: 333, picture: <Fig name="name-tag-card" w={444} h={333} alt="Бейдж UMO на рубашке сотрудника" /> },
 ]
 const isWide = (m: { w: number; h: number }) => m.w / m.h >= 2
 function packMedia<T extends { w: number; h: number }>(items: T[]): T[] {
@@ -1324,7 +1324,7 @@ export default function Guide() {
             <Section>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
                 <Text>
-                  <p>Носители — шаблоны, через которые бренд встречает покупателя у дилера: <Link to="/livery" className={TEXT_LINK}>ливрея демо-автомобиля</Link>, <Link to="/business-card" className={TEXT_LINK}>визитка</Link>, <Link to="/name-tag" className={TEXT_LINK}>бейдж сотрудника</Link>, <Link to="/price-card" className={TEXT_LINK}>прайс-карта</Link> и <Link to="/plate-frame" className={TEXT_LINK}>рамка номера</Link>.</p>
+                  <p>Носители — шаблоны, через которые бренд встречает покупателя у дилера: <Link to="/livery" className={TEXT_LINK}>ливрея демо-автомобиля</Link>, <Link to="/price-card" className={TEXT_LINK}>прайс-карта</Link>, <Link to="/plate-frame" className={TEXT_LINK}>рамка номера</Link>, <Link to="/business-card" className={TEXT_LINK}>визитка</Link> и <Link to="/name-tag" className={TEXT_LINK}>бейдж сотрудника</Link>.</p>
                 </Text>
                 <Text>
                   <p>Каждый собирается в своём конструкторе: дилер вводит свои данные, а макет, шрифты и отступы уже настроены. На выходе — файлы, готовые к печати и производству.</p>
