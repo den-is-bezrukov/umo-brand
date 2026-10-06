@@ -130,19 +130,19 @@ export default function NameTag() {
     return () => document.removeEventListener('paste', onPaste)
   }, [mode])
 
-  // A person just added takes the focus, and their tag scrolls into view; added with «Добавить», the tile under it
-  // comes into view with it, so a long list can be filled in one after another without scrolling to the tile
+  // A person just added takes the focus, and their tag scrolls into view; added with «Добавить», it comes to the middle
+  // of the canvas with the tile under it in view, so a long list fills in one after another without scrolling. A tag
+  // selected by a click stays put, under the cursor.
   const focusNext = useRef(false)
-  const showAdd = useRef(false)
+  const centre = useRef(false)
   const form = useRef<HTMLDivElement>(null)
   const figures = useRef(new Map<number, HTMLElement>())
   useEffect(() => {
     if (!focusNext.current) return
     focusNext.current = false
     form.current?.querySelector('textarea')?.focus()
-    const target = showAdd.current ? document.querySelector('[data-add]') : selected !== undefined ? figures.current.get(selected) : null
-    showAdd.current = false
-    target?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    if (selected !== undefined) figures.current.get(selected)?.scrollIntoView({ block: centre.current ? 'center' : 'nearest', behavior: 'smooth' })
+    centre.current = false
   }, [selected])
 
   // Going to a tag with an error: select it for editing and bring it into view
@@ -175,7 +175,7 @@ export default function NameTag() {
     const r = row(BLANK)
     setFresh(f => new Set(f).add(r.key))
     focusNext.current = true
-    showAdd.current = true
+    centre.current = true
     setPeople([...people, r])
     setSelected(r.key)
   }
