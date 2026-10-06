@@ -20,6 +20,48 @@ const img = (name: string) => images[`../assets/guide/${name}.svg`] ?? images[`.
 
 type NavItem = { id: string; title: string; children?: NavItem[] }
 
+/**
+ * The media of Носители, in the order of the sections they stood in. A wide picture (2:1 and wider) takes a whole row of
+ * the overview grid, narrow ones pair up, and a narrow one moves up next to an unpaired one before it (what CSS
+ * `grid-auto-flow: dense` would do). `MEDIA` is that packed order, so the grid and the sidebar's sub-items list the
+ * media as they actually stand.
+ */
+const MEDIA_LIST: { id: string; to: string; title: string; w: number; h: number; picture: ReactNode }[] = [
+  { id: 'livery', to: '/livery', title: 'Ливрея', w: 912, h: 456, picture: <Fig name="livery-umo8" w={912} h={456} alt="UMO 8 с ливреей дилера" /> },
+  {
+    id: 'price-card', to: '/price-card', title: 'Прайс-карта', w: 444, h: 444,
+    picture: (
+      <div className="flex aspect-square items-center justify-center bg-[#f5f5f5]">
+        <div className="w-[57%]">
+          <PriceCardPreview variant="umo5-max" fullPrice="3 715 000" creditPrice="2 790 000" image={img('pricecard-umo5-car')} alt="Прайс-карта UMO 5" />
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: 'plate-frame', to: '/plate-frame', title: 'Рамка номера', w: 912, h: 304,
+    picture: (
+      <PlateArt guide>
+        <text y={STRIP_BASELINE} fontFamily="CoFo Sans" fontWeight={500} fontSize={18} letterSpacing={-0.18} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Центр UMO | Название дилера</text>
+      </PlateArt>
+    ),
+  },
+  { id: 'name-tag', to: '/name-tag', title: 'Бейдж', w: 444, h: 444, picture: <SquarePicture name="name-tag" alt="Бейдж UMO на рубашке сотрудника" /> },
+
+]
+const isWide = (m: { w: number; h: number }) => m.w / m.h >= 2
+function packMedia<T extends { w: number; h: number }>(items: T[]): T[] {
+  const packed: T[] = []
+  let unpaired = -1
+  for (const m of items) {
+    if (isWide(m)) packed.push(m)
+    else if (unpaired === -1) unpaired = packed.push(m) - 1
+    else { packed.splice(unpaired + 1, 0, m); unpaired = -1 }
+  }
+  return packed
+}
+const MEDIA = packMedia(MEDIA_LIST)
+
 const NAV: NavItem[] = [
   {
     id: 'brand',
@@ -65,7 +107,7 @@ const NAV: NavItem[] = [
     ],
   },
   { id: 'spaces', title: 'Пространства' },
-  { id: 'materials', title: 'Носители', children: [{ id: 'livery', title: 'Ливрея' }, { id: 'price-card', title: 'Прайс-карта' }, { id: 'plate-frame', title: 'Рамка номера' }, { id: 'name-tag', title: 'Бейдж' }] },
+  { id: 'materials', title: 'Носители', children: MEDIA.map(({ id, title }) => ({ id, title })) },
 ]
 
 /** Chapter anchors that were renamed after the guide went out, mapped to their current ids. */
@@ -659,16 +701,12 @@ function Constructor({ to, title, flush, children }: { to: string; title: string
   )
 }
 
-/**
- * Overview of the chapter's media (Figma 4844:6695): each one's picture right over its ↗ row to the constructor. Wide pictures
- * (2:1 and wider) take the whole width, the rest go in pairs; the grid packs densely, so a narrow one moves up next to
- * the previous narrow one. Each card carries its medium's anchor (the sidebar's sub-items link to them).
- */
-function Carriers({ items }: { items: { id: string; to: string; title: string; w: number; h: number; picture: ReactNode }[] }) {
+/** The Носители overview (Figma 4844:6695): each medium's picture right over its ↗ row to the constructor, carrying its anchor; in `MEDIA` order. */
+function Carriers({ items }: { items: typeof MEDIA }) {
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-flow-dense md:grid-cols-2">
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
       {items.map(c => (
-        <div key={c.to} id={c.id} className={`scroll-mt-24 ${c.w / c.h >= 2 ? 'md:col-span-2' : ''}`}>
+        <div key={c.to} id={c.id} className={`scroll-mt-24 ${isWide(c) ? 'md:col-span-2' : ''}`}>
           <Constructor to={c.to} title={c.title} flush>{c.picture}</Constructor>
         </div>
       ))}
@@ -1256,30 +1294,7 @@ export default function Guide() {
                   <p>Каждый собирается в своём конструкторе: дилер вводит свои данные, а макет, шрифты и отступы уже настроены. На выходе — файлы, готовые к печати и производству.</p>
                 </Text>
               </div>
-              <Carriers
-                items={[
-                  { id: 'livery', to: '/livery', title: 'Ливрея', w: 912, h: 456, picture: <Fig name="livery-umo8" w={912} h={456} alt="UMO 8 с ливреей дилера" /> },
-                  {
-                    id: 'price-card', to: '/price-card', title: 'Прайс-карта', w: 444, h: 444,
-                    picture: (
-                      <div className="flex aspect-square items-center justify-center bg-[#f5f5f5]">
-                        <div className="w-[57%]">
-                          <PriceCardPreview variant="umo5-max" fullPrice="3 715 000" creditPrice="2 790 000" image={img('pricecard-umo5-car')} alt="Прайс-карта UMO 5" />
-                        </div>
-                      </div>
-                    ),
-                  },
-                  {
-                    id: 'plate-frame', to: '/plate-frame', title: 'Рамка номера', w: 912, h: 304,
-                    picture: (
-                      <PlateArt guide>
-                        <text y={STRIP_BASELINE} fontFamily="CoFo Sans" fontWeight={500} fontSize={18} letterSpacing={-0.18} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Центр UMO | Название дилера</text>
-                      </PlateArt>
-                    ),
-                  },
-                  { id: 'name-tag', to: '/name-tag', title: 'Бейдж', w: 444, h: 444, picture: <SquarePicture name="name-tag" alt="Бейдж UMO на рубашке сотрудника" /> },
-                ]}
-              />
+              <Carriers items={MEDIA} />
             </Section>
           </Chapter>
 
