@@ -39,7 +39,7 @@ export function cleanText(text: string): string {
  * opentype.js doesn't apply this feature itself; it's a single substitution, done here glyph by glyph.
  */
 const caseForms = new WeakMap<Font, Map<number, number>>()
-function caseMap(font: Font): Map<number, number> {
+export function caseMap(font: Font): Map<number, number> {
   let map = caseForms.get(font)
   if (!map) {
     map = new Map()
@@ -97,7 +97,7 @@ export function lineStart(font: Font, text: string, x: number): { cmds: Cmd[]; e
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function pathCmds(commands: any[]): Cmd[] {
+export function pathCmds(commands: any[]): Cmd[] {
   const cmds: Cmd[] = []
   let cx = 0
   let cy = 0

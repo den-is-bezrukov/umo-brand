@@ -78,9 +78,9 @@ function fromD(d: string, scale: number, dx: number, dy: number): Cmd[] {
  * once, so the film doesn't fall apart into squares. Contours run clockwise with the dark side on the right; where
  * two dark modules touch only at a corner the trace turns right, keeping them separate pieces.
  */
-function qrOutline(url: string, x: number, y: number, size: number): Cmd[] {
+export function qrOutline(url: string, x: number, y: number, size: number, errorCorrectionLevel: 'L' | 'M' = 'M'): Cmd[] {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const qr = (QRCode as any).create(url, { errorCorrectionLevel: 'M' })
+  const qr = (QRCode as any).create(url, { errorCorrectionLevel })
   const n: number = qr.modules.size
   const dark = (r: number, c: number) => r >= 0 && c >= 0 && r < n && c < n && !!qr.modules.data[r * n + c]
   const key = (vx: number, vy: number) => vy * (n + 1) + vx

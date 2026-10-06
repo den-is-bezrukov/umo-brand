@@ -32,9 +32,28 @@ export function toPeople(rows: { line: number; cells: string[] }[]): TableRow[] 
   })
 }
 
+export interface Cells { line: number; cells: string[] }
+
 /** Copied cells: tab-separated, a line per row */
+export function pastedCells(text: string): Cells[] {
+  return text.replace(/\r/g, '').split('\n').map((l, i) => ({ line: i + 1, cells: l.split('\t') }))
+}
+
 export function parsePasted(text: string): TableRow[] {
-  return toPeople(text.replace(/\r/g, '').split('\n').map((l, i) => ({ line: i + 1, cells: l.split('\t') })))
+  return toPeople(pastedCells(text))
+}
+
+/**
+ * Rows of cells into records with the fields of `headers`: by a header row found by its titles, in any column order,
+ * or else in the order of `headers`
+ */
+export function byHeaders<K extends string>(rows: Cells[], headers: Record<K, RegExp>): Record<K, string>[] {
+  const keys = Object.keys(headers) as K[]
+  const filled = rows.map(r => r.cells.map(c => (c ?? '').trim())).filter(c => c.some(Boolean))
+  const head = filled[0]
+  const found = head ? keys.map(k => head.findIndex(c => headers[k].test(c))) : []
+  const cols = found.some(i => i >= 0) ? found : null
+  return (cols ? filled.slice(1) : filled).map(c => Object.fromEntries(keys.map((k, i) => [k, c[cols ? cols[i] : i] ?? ''])) as Record<K, string>)
 }
 
 const xml = (s: string) => new DOMParser().parseFromString(s, 'application/xml')
@@ -51,6 +70,11 @@ function column(ref: string): number {
 
 /** The first sheet of an .xlsx; throws on anything else */
 export function readXlsx(data: ArrayBuffer): TableRow[] {
+  return toPeople(xlsxCells(data))
+}
+
+/** The first sheet's rows of cells */
+export function xlsxCells(data: ArrayBuffer): Cells[] {
   const files = unzipSync(new Uint8Array(data))
   const read = (path: string) => files[path] ? strFromU8(files[path]) : undefined
   const workbook = read('xl/workbook.xml')
@@ -61,7 +85,7 @@ export function readXlsx(data: ArrayBuffer): TableRow[] {
   const sheet = read(sheetPath)
   if (!sheet) throw new Error('В файле нет листа')
   const shared = all(xml(read('xl/sharedStrings.xml') ?? '<sst/>'), 'si').map(text)
-  const rows = all(xml(sheet), 'row').map(r => {
+  return all(xml(sheet), 'row').map(r => {
     const cells: string[] = []
     for (const c of all(r, 'c')) {
       const type = c.getAttribute('t')
@@ -70,5 +94,4 @@ export function readXlsx(data: ArrayBuffer): TableRow[] {
     }
     return { line: Number(r.getAttribute('r')), cells: Array.from(cells, c => c ?? '') }
   })
-  return toPeople(rows)
 }

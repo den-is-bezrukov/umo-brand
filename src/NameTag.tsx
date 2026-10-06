@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined } from '@/ui/form'
+import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined } from '@/ui/form'
+import { useStaff, TableSource, UploadArea, AddTile, Progress, plural } from '@/ui/staff'
 import { toD } from '@/livery/geometry'
 import { TAG, buildTag, loadFonts, type Field, type FieldBox, type Fonts, type Person } from '@/nametag/tag'
-import { readXlsx, parsePasted, type TableRow } from '@/nametag/table'
+import { readXlsx, parsePasted } from '@/nametag/table'
 import { POSITIONS } from '@/data/positions'
 import TagArt from '@/nametag/TagArt'
 
@@ -20,33 +21,19 @@ const NO_NAME = 'Нет имени'
 const NO_SURNAME = 'Нет фамилии'
 const NO_POSITION = 'Нет должности'
 
-interface Row extends Person { key: number }
-
-let nextKey = 0
-const row = (p: Person): Row => ({ ...p, key: nextKey++ })
-
-const same = (a: Person, b: Person) => a.name === b.name && a.surname === b.surname && a.position === b.position
-
 export default function NameTag() {
   // Not kept in the address, unlike the other generators: a staff list isn't something to send as a link
   // One list for both modes. «Из таблицы» shows a loaded file as it is, with no form; clicking a tag there takes the
   // list to «Вручную» to edit it, and the first edit makes it a list of its own, no longer the file
-  const [mode, setMode] = useState<'manual' | 'table'>('manual')
-  const [people, setList] = useState<Row[]>(() => [row(BLANK)])
-  /** The file the list is, while it's unedited */
-  const [file, setFile] = useState('')
-  const setPeople = (next: Row[]) => {
-    setList(next)
-    setFile('')
-  }
-  /** The one person the sidebar edits, picked by clicking their tag's row; a click above, under or between them leaves none selected */
-  const [selectedKey, setSelected] = useState<number | null>(() => people[0].key)
+  const staff = useStaff<Person>({
+    blank: BLANK,
+    readFile: data => readXlsx(data).map(r => r.person),
+    readPasted: text => parsePasted(text).map(r => r.person),
+  })
+  const { mode, setMode, people, current, selected, setSelected, update } = staff
   /** A field being edited on the tag itself, after a double click on its text */
   const [editing, setEditing] = useState<{ key: number; field: Field } | null>(null)
-  const current = people.find(p => p.key === selectedKey)
-  const selected = current?.key
-  const [tableError, setTableError] = useState('')
-  const [dragging, setDragging] = useState(false)
+  staff.useDeleteKey(!!editing)
 
   const [fonts, setFonts] = useState<Fonts>()
   const [exporting, setExporting] = useState(false)
@@ -59,7 +46,7 @@ export default function NameTag() {
   }, [])
 
   /** What's shown and downloaded; no captions: the tags carry their own names, the selected one is outlined */
-  const items = useMemo(() => (mode === 'table' && !file ? [] : people).map(p => ({ key: p.key, person: p as Person })), [mode, file, people])
+  const items = useMemo(() => staff.items.map(p => ({ key: p.key, person: p as Person })), [staff.items])
   const tags = useMemo(() => fonts ? items.map(it => buildTag(fonts, it.person)) : undefined, [fonts, items])
   /** The placeholders standing in for empty fields */
   const ghosts = useMemo(() => fonts ? items.map(({ person: p }) => buildTag(fonts, {
@@ -73,150 +60,14 @@ export default function NameTag() {
     ...(!p.surname.trim() ? [NO_SURNAME] : []),
     ...(!p.position.trim() ? [NO_POSITION] : []),
   ])
-  /** The tag reached through the line over «Скачать»: its empty fields show as errors even while it's being edited */
-  const [flagged, setFlagged] = useState<number | null>(null)
-  /**
-   * Tags added empty and not yet left: the one on a fresh page and each «Добавить» gives. Their empty fields aren't
-   * errors while they're being filled in for the first time
-   */
-  const [fresh, setFresh] = useState<Set<number>>(() => new Set([people[0].key]))
-  useEffect(() => {
-    setFresh(f => [...f].some(k => k !== selected) ? new Set([...f].filter(k => k === selected)) : f)
-  }, [selected])
   /** What's shown as errors: text over its room at once, empty fields on every tag but a fresh one being filled in */
   const problems = items.map((it, i) => [
     ...(tags?.[i]?.issues ?? []),
-    ...(it.key === selected && fresh.has(it.key) && it.key !== flagged ? [] : missing[i]),
+    ...(staff.showsMissing(it.key) ? missing[i] : []),
   ])
   /** The tags not ready, which keep «Скачать» off; the line over it counts them and leads through them */
   const failing = items.filter((_, i) => missing[i].length || tags?.[i]?.issues.length).map(it => it.key)
   const ok = !!tags && items.length > 0 && failing.length === 0
-
-  /** A file's rows replace the list, whatever was on it */
-  const loadRows = (rows: TableRow[], name: string) => {
-    const loaded = rows.map(r => row(r.person))
-    setList(loaded)
-    setSelected(loaded[0]?.key)
-    setFile(name)
-    setTableError('')
-  }
-  const loadRowsRef = useRef(loadRows)
-  loadRowsRef.current = loadRows
-
-  const loadFile = async (f: File) => {
-    try {
-      const rows = readXlsx(await f.arrayBuffer())
-      if (!rows.length) throw new Error('В таблице нет строк')
-      loadRows(rows, f.name)
-    } catch (err) {
-      setTableError(err instanceof Error && /xlsx|лист|строк/.test(err.message) ? err.message : 'Не получилось прочитать файл: нужен .xlsx')
-    }
-  }
-
-  // In the table mode rows pasted anywhere on the page (but into a field, which adds them) stand in for a file
-  useEffect(() => {
-    if (mode !== 'table') return
-    const onPaste = (e: ClipboardEvent) => {
-      if (e.defaultPrevented) return
-      const text = e.clipboardData?.getData('text/plain') ?? ''
-      if (!text.includes('\t')) return
-      const rows = parsePasted(text)
-      if (!rows.length) return
-      e.preventDefault()
-      loadRowsRef.current(rows, 'Вставленные строки')
-    }
-    document.addEventListener('paste', onPaste)
-    return () => document.removeEventListener('paste', onPaste)
-  }, [mode])
-
-  // A person just added takes the focus, and their tag scrolls into view; added with «Добавить», it comes to the middle
-  // of the canvas with the tile under it in view, so a long list fills in one after another without scrolling. A tag
-  // selected by a click stays put, under the cursor.
-  const focusNext = useRef(false)
-  const centre = useRef(false)
-  const form = useRef<HTMLDivElement>(null)
-  const figures = useRef(new Map<number, HTMLElement>())
-  useEffect(() => {
-    if (!focusNext.current) return
-    focusNext.current = false
-    form.current?.querySelector('textarea')?.focus()
-    if (selected !== undefined) figures.current.get(selected)?.scrollIntoView({ block: centre.current ? 'center' : 'nearest', behavior: 'smooth' })
-    centre.current = false
-  }, [selected])
-
-  // Going to a tag with an error: select it for editing and bring it into view
-  const [reveal, setReveal] = useState(0)
-  useEffect(() => {
-    if (reveal && selected !== undefined) figures.current.get(selected)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
-  }, [reveal]) // eslint-disable-line react-hooks/exhaustive-deps
-  const goTo = (key: number) => {
-    setSelected(key)
-    setFlagged(key)
-    setMode('manual')
-    setReveal(n => n + 1)
-  }
-  /** The next tag with an error after the selected one, round the list */
-  const nextFailing = (keys: number[]) => {
-    const at = items.findIndex(it => it.key === selected)
-    const after = keys.find(k => items.findIndex(it => it.key === k) > at)
-    goTo(after ?? keys[0])
-  }
-
-  const update = (key: number, patch: Partial<Person>) => setPeople(people.map(p => p.key === key ? { ...p, ...patch } : p))
-  /** The neighbour after (or before) the one removed is selected */
-  const remove = (key: number) => {
-    const i = people.findIndex(p => p.key === key)
-    const rest = people.filter(p => p.key !== key)
-    setPeople(rest)
-    setSelected(rest[Math.min(i, rest.length - 1)].key)
-  }
-  const add = () => {
-    const r = row(BLANK)
-    setFresh(f => new Set(f).add(r.key))
-    focusNext.current = true
-    centre.current = true
-    setPeople([...people, r])
-    setSelected(r.key)
-  }
-  // Delete or Backspace removes the selected tag, as on any canvas, while the focus isn't in a field (where they edit
-  // the text) and there's more than one, as «Удалить» does
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Delete' && e.key !== 'Backspace') return
-      if (mode !== 'manual' || !current || people.length < 2 || editing) return
-      const t = e.target as HTMLElement
-      if (t.closest('input, textarea, select, [contenteditable]')) return
-      e.preventDefault()
-      remove(current.key)
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-  })
-
-  /** A table pasted into any field of a row replaces that row (if it's empty or the example) and goes on after it */
-  const paste = (key: number, e: React.ClipboardEvent) => {
-    const text = e.clipboardData.getData('text/plain')
-    if (!text.includes('\t')) return
-    const rows = parsePasted(text).map(r => r.person)
-    if (!rows.length) return
-    e.preventDefault()
-    const added = rows.map(row)
-    const i = people.findIndex(p => p.key === key)
-    const replace = same(people[i], BLANK)
-    setPeople([...people.slice(0, replace ? i : i + 1), ...added, ...people.slice(i + 1)])
-    setSelected(added[0].key)
-  }
-
-  /** A file dropped here loads the table */
-  const dropTarget = {
-    onDragOver: (e: React.DragEvent) => { e.preventDefault(); setDragging(true) },
-    onDragLeave: (e: React.DragEvent) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(false) },
-    onDrop: (e: React.DragEvent) => { e.preventDefault(); setDragging(false); const f = e.dataTransfer.files[0]; if (f) loadFile(f) },
-  }
-  const fileInput = (
-    <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="sr-only"
-      onChange={e => { const f = e.target.files?.[0]; if (f) loadFile(f); e.target.value = '' }} />
-  )
 
   const handleExport = async () => {
     if (!tags || !ok) return
@@ -253,7 +104,7 @@ export default function NameTag() {
                 const i = people.indexOf(p)
                 const issues = problems[i] ?? []
                 return (
-                  <div ref={form} onPasteCapture={e => paste(p.key, e)} className="flex flex-col gap-2">
+                  <div ref={staff.form} onPasteCapture={e => staff.paste(p.key, e)} className="flex flex-col gap-2">
                     <div className="flex flex-col gap-4">
                       <Labelled label="Имя">
                         <TextArea value={p.name} onChange={v => update(p.key, { name: v })} placeholder="Имя" invalid={issues.some(t => t.startsWith('Имя') || t === NO_NAME)} />
@@ -273,10 +124,10 @@ export default function NameTag() {
                     {/* The selected tag's actions under its fields, side by side as the other generators' «Копировать» and
                         «Сбросить»: «Сбросить» empties the fields, while there's something in them; «Удалить» only while
                         there's another tag to go to */}
-                    {(!same(p, BLANK) || people.length > 1) && (
+                    {(!staff.isBlank(p) || people.length > 1) && (
                       <div className="mt-2 flex gap-2">
-                        {!same(p, BLANK) && <button type="button" onClick={() => update(p.key, BLANK)} className={outlined}>Сбросить</button>}
-                        {people.length > 1 && <button type="button" onClick={() => remove(p.key)} className={outlined}>Удалить</button>}
+                        {!staff.isBlank(p) && <button type="button" onClick={() => update(p.key, BLANK)} className={outlined}>Сбросить</button>}
+                        {people.length > 1 && <button type="button" onClick={() => staff.remove(p.key)} className={outlined}>Удалить</button>}
                       </div>
                     )}
                   </div>
@@ -285,24 +136,7 @@ export default function NameTag() {
             </div>
           )}
 
-          {mode === 'table' && (
-            <div className="flex flex-col gap-2 tracking-normal">
-              {/* The loaded file, to replace it; until there's one the preview is the upload */}
-              {file && (
-                <label
-                  {...dropTarget}
-                  className={`flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-1 rounded-[4px] border border-dashed p-4 text-center text-[14px] leading-5
-                    ${dragging ? 'border-black bg-[#f5f5f5]' : tableError ? 'border-[#e30]' : 'border-black/20 hover:border-black/40'}`}
-                >
-                  {fileInput}
-                  <span className="font-medium break-all">{file}</span>
-                  <span className="text-[#999]">{people.length} {staff(people.length)} · заменить</span>
-                </label>
-              )}
-              {tableError && <p className="text-[13px] leading-5 text-[#e30]">{tableError}</p>}
-              <a href={TEMPLATE} download="UMO_name-tags_template.xlsx" onClick={downloadTemplate} className={`${outlined} ${file ? 'mt-2' : ''}`}>Скачать шаблон таблицы</a>
-            </div>
-          )}
+          {mode === 'table' && <TableSource staff={staff} template={TEMPLATE} />}
         </div>
 
         {/* No bar at all while there's nothing in it (a single tag in work), or it's an empty white strip on phones */}
@@ -311,9 +145,7 @@ export default function NameTag() {
               leads through («1 из 4 в работе», or «4 в работе» when it's all of them); with a single tag, nothing: its
               form says enough */}
           {failing.length > 0 ? items.length > 1 && (
-            <button type="button" onClick={() => nextFailing(failing)} className="flex w-full cursor-pointer items-center justify-center p-3 text-[14px] leading-[1.13] tracking-[-0.01em] text-[#999] hover:text-black">
-              {failing.length}{failing.length < items.length ? ` из ${items.length}` : ''} в работе
-            </button>
+            <Progress failing={failing.length} total={items.length} onClick={() => staff.nextOf(failing)} />
           ) : items.length > 0 && (
             <DownloadButton onClick={handleExport} busy={exporting} disabled={!ok}>
               Скачать{items.length > 1 ? ` ${items.length} бейдж${plural(items.length)}` : ''}
@@ -324,17 +156,13 @@ export default function NameTag() {
 
       {/* In the table mode the preview takes a dropped file too, and until one is loaded it's all an upload */}
       <main
-        {...(mode === 'table' ? dropTarget : {})}
+        {...(mode === 'table' ? staff.dropTarget : {})}
         onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure, [data-add]')) setSelected(null) }}
         className={`flex flex-1 flex-col bg-[#f5f5f5] p-6 pb-[112px] md:min-w-0 md:overflow-y-auto md:p-16
-          ${mode === 'table' && file && dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
+          ${mode === 'table' && staff.file && staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
       >
-        {mode === 'table' && !file ? (
-          <label className={`flex min-h-[240px] flex-1 cursor-pointer items-center justify-center rounded-[4px] border border-dashed text-[14px] font-medium leading-5
-            ${dragging ? 'border-black bg-black/5' : 'border-black/20 hover:border-black/40'}`}>
-            {fileInput}
-            Загрузить таблицу .xlsx
-          </label>
+        {mode === 'table' && !staff.file ? (
+          <UploadArea staff={staff} />
         ) : (
         <div className="m-auto grid w-full grid-cols-1 gap-8">
           {items.map((it, i) => {
@@ -352,8 +180,8 @@ export default function NameTag() {
               // The whole row of the canvas is the tag's: pointing or clicking anywhere across it hovers or picks it
               <figure
                 key={it.key}
-                ref={el => { if (el) figures.current.set(key, el); else figures.current.delete(key) }}
-                onClick={() => { setSelected(key); setFlagged(null); setMode('manual') }}
+                ref={staff.figureRef(key)}
+                onClick={() => staff.pick(key)}
                 className="group/row flex cursor-pointer justify-center"
               >
                 <div className="@container flex w-full max-w-[480px] flex-col gap-3">
@@ -399,44 +227,13 @@ export default function NameTag() {
             )
           })}
           {/* «Добавить» as the next tag in the grid: a dashed plate of the tag's shape; the manual list only */}
-          {mode === 'manual' && (
-            <div className="@container mx-auto w-full max-w-[480px] self-start">
-            <button
-              type="button"
-              data-add
-              onClick={add}
-              className="flex aspect-[70/25] w-full cursor-pointer items-center justify-center gap-2 self-start rounded-[5.714cqw] border border-dashed border-black/20 text-[14px] font-medium leading-5 text-[#999] hover:border-black/40 hover:text-black"
-            >
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden><path d="M7 1V13M1 7H13" stroke="currentColor" strokeWidth="2" /></svg>
-              Добавить
-            </button>
-            </div>
-          )}
+          {mode === 'manual' && <AddTile onClick={staff.add} aspect="70 / 25" radius="5.714cqw" />}
         </div>
         )}
       </main>
 
     </div>
   )
-}
-
-/**
- * The template as an .xlsx with its type set: a server that sends it without one (Vite's dev server) has browsers sniff
- * the zip inside and save a .zip
- */
-async function downloadTemplate(e: React.MouseEvent) {
-  e.preventDefault()
-  const data = await (await fetch(TEMPLATE)).arrayBuffer()
-  const a = document.createElement('a')
-  a.href = URL.createObjectURL(new Blob([data], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }))
-  a.download = 'UMO_name-tags_template.xlsx'
-  a.click()
-  URL.revokeObjectURL(a.href)
-}
-
-/** сотрудник, сотрудника, сотрудников */
-function staff(n: number): string {
-  return 'сотрудник' + ({ '': '', 'а': 'а', 'ей': 'ов' } as Record<string, string>)[plural(n)]
 }
 
 /**
@@ -522,13 +319,4 @@ function alertLine(problems: string[]): string {
   const words = problems.filter(t => t in empty).map(t => empty[t])
   const missing = words.length ? `Нет ${words.length > 1 ? `${words.slice(0, -1).join(', ')} и ${words[words.length - 1]}` : words[0]}` : ''
   return [missing, ...problems.filter(t => !(t in empty))].filter(Boolean).join(' · ')
-}
-
-/** бейдж, бейджа, бейджей */
-function plural(n: number): string {
-  const d = n % 10
-  const dd = n % 100
-  if (d === 1 && dd !== 11) return ''
-  if (d >= 2 && d <= 4 && (dd < 12 || dd > 14)) return 'а'
-  return 'ей'
 }
