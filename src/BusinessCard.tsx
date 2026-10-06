@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined, rowAction, isValidUrl, ALERT_LABEL } from '@/ui/form'
+import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined, rowAction, isValidUrl, ALERT_LABEL, Checkbox } from '@/ui/form'
 import { useStaff, TableSource, UploadArea, AddTile, Progress } from '@/ui/staff'
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
 import { xlsxCells, pastedCells, byHeaders, type Cells } from '@/nametag/table'
 import { CARD, QR, FACE, BACK_LOGO, DEALER_FIELDS, buildBack, siteFor, siteText, splitPhone, type CardField, type Dealer, type Person, type QrData } from '@/card/card'
-import type { Order } from '@/card/pdf'
 import CardArt from '@/card/CardArt'
 import { POSITIONS } from '@/data/positions'
 import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
@@ -73,7 +72,9 @@ export default function BusinessCard() {
   // const [qrMode, setQrMode] = useState<'link' | 'contact'>('link')
   /** The QR's link, following the site until it's edited */
   const [qrLink, setQrLink] = useState<string | null>(null)
-  const [order, setOrder] = useState<Order>('face-once')
+  // The face before every back (else once, before all of them), and crop marks around each card
+  const [faceEach, setFaceEach] = useState(false)
+  const [marks, setMarks] = useState(false)
 
   const [fonts, setFonts] = useState<Fonts>()
   const [exporting, setExporting] = useState(false)
@@ -147,7 +148,7 @@ export default function BusinessCard() {
     setExporting(true)
     try {
       const { cardsPdf } = await import('@/card/pdf')
-      const blob = await cardsPdf(cards.map(c => c.back), order)
+      const blob = await cardsPdf(cards.map(c => c.back), { faceEach, marks })
       const a = document.createElement('a')
       a.href = URL.createObjectURL(blob)
       a.download = 'UMO_business-cards.pdf'
@@ -273,13 +274,10 @@ export default function BusinessCard() {
 
             {mode === 'table' && <TableSource staff={staff} template={TEMPLATE} />}
 
-            <div className="mt-6">
-            <Labelled label="Страницы">
-              <Segments>
-                <SegBtn active={order === 'face-once'} onClick={() => setOrder('face-once')}>Лицо один раз</SegBtn>
-                <SegBtn active={order === 'pairs'} onClick={() => setOrder('pairs')}>Лицо к каждой</SegBtn>
-              </Segments>
-            </Labelled>
+            {/* The whole file's, set apart */}
+            <div className="mt-6 flex flex-col gap-4">
+              <Checkbox checked={faceEach} onChange={setFaceEach}>Обложка у всех</Checkbox>
+              <Checkbox checked={marks} onChange={setMarks}>Метки реза</Checkbox>
             </div>
           </div>
         </div>
@@ -310,12 +308,12 @@ export default function BusinessCard() {
           <UploadArea staff={staff} />
         ) : (
         <div className="m-auto grid w-full grid-cols-1 gap-8">
-          {/* The face, the same for everyone */}
-          <div className="flex justify-center">
+          {/* The face, the same for everyone: once at the top, or over every back with «Обложка у всех», as in the file */}
+          {!faceEach && <div className="flex justify-center">
             <div className={`w-full max-w-[480px] transition-opacity duration-150 ${mode === 'manual' && current ? 'opacity-40' : ''}`}>
               <CardArt text={face} />
             </div>
-          </div>
+          </div>}
           {items.map((p, i) => {
             const card = cards?.[i]
             const active = mode === 'manual' && p.key === current?.key
@@ -327,6 +325,7 @@ export default function BusinessCard() {
             return (
               <figure key={p.key} ref={staff.figureRef(p.key)} onClick={() => staff.pick(p.key)} className="group/row flex cursor-pointer justify-center">
                 <div className="flex w-full max-w-[480px] flex-col gap-3">
+                  {faceEach && <div className={`mb-1 transition-opacity duration-150 ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}><CardArt text={face} /></div>}
                   <button
                     type="button"
                     aria-pressed={mode === 'manual' ? active : undefined}
