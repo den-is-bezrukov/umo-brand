@@ -10,7 +10,8 @@ import { linkParams, useLinkState } from '@/ui/share'
 
 const POSTER_W = 1754
 const POSTER_H = 2480
-const DEFAULT_URL = 'https://umo.auto/'
+/** The QR leads to the model's own page unless another link is set */
+const DEFAULT_URL: Record<Model, string> = { umo8: 'https://umo.auto/umo8', umo5: 'https://umo.auto/umo5' }
 
 type Model = 'umo8' | 'umo5'
 type Trim = 'max' | 'ultra' | 'pro'
@@ -67,7 +68,7 @@ function fromLink() {
     creditSet: credit !== null,
     // Off unless the link has it: `credit=auto` follows the full price, seven digits are a price set by hand
     creditOn: link.has('credit'),
-    url: link.get('link') ?? DEFAULT_URL,
+    url: link.get('link') ?? DEFAULT_URL[model],
   }
 }
 
@@ -104,7 +105,7 @@ export default function App() {
     trim: trim === TRIMS[model][0] ? null : trim,
     full: fullPrice === DEFAULTS[`${model}-${trim}`] ? null : digits(fullPrice),
     credit: !creditOn ? null : creditSet ? digits(creditPrice) : 'auto',
-    link: url.trim() === DEFAULT_URL ? null : url.trim(),
+    link: url.trim() === DEFAULT_URL[model] ? null : url.trim(),
   })
   const [qrSvg, setQrSvg] = useState<string | undefined>(undefined)
   const [exporting, setExporting] = useState(false)
@@ -120,11 +121,11 @@ export default function App() {
   const credit = creditOn ? creditPrice : undefined
 
   useEffect(() => {
-    const effective = urlValid ? url.trim() : DEFAULT_URL
+    const effective = urlValid ? url.trim() : DEFAULT_URL[model]
     QRCode.toString(effective, { type: 'svg', margin: 1, color: { dark: '#000000', light: '#ffffff' } })
       .then(raw => setQrSvg(raw.replace('<svg ', '<svg style="width:100%;height:100%;display:block" ')))
       .catch(() => setQrSvg(undefined))
-  }, [url])
+  }, [url, model])
 
   useEffect(() => {
     const prev = document.title
@@ -150,6 +151,8 @@ export default function App() {
     const t = TRIMS[m][0]
     setModel(m); setTrim(t)
     resetPrices(m, t)
+    // The link follows the model while it's still the old model's own page
+    if (url.trim() === DEFAULT_URL[model]) setUrl(DEFAULT_URL[m])
   }
 
   const switchTrim = (t: Trim) => {
@@ -161,14 +164,14 @@ export default function App() {
   const reset = () => {
     switchModel(model)
     setCreditOn(false)
-    setUrl(DEFAULT_URL)
+    setUrl(DEFAULT_URL[model])
   }
 
   const handleExport = async () => {
     setExporting(true)
     try {
       ensurePdfFonts()
-      const qrUrl = urlValid ? url.trim() : DEFAULT_URL
+      const qrUrl = urlValid ? url.trim() : DEFAULT_URL[model]
       const props = { fullPrice, creditPrice: credit, qrUrl }
       const doc = <PriceCardPdf variant={`${model}-${trim}` as Variant} {...props} />
       const blob = await pdf(doc).toBlob()
