@@ -44,8 +44,6 @@ export default function NameTag() {
   const [selectedKey, setSelected] = useState<number | null>(() => people[0].key)
   /** A field being edited on the tag itself, after a double click on its text */
   const [editing, setEditing] = useState<{ key: number; field: Field } | null>(null)
-  /** The tag whose position was set to «Другая…» and may still be empty */
-  const [otherKey, setOtherKey] = useState<number | null>(null)
   const current = people.find(p => p.key === selectedKey)
   const selected = current?.key
   const [tableError, setTableError] = useState('')
@@ -247,8 +245,6 @@ export default function NameTag() {
                       <Labelled label="Должность">
                         <PositionPicker
                           value={p.position}
-                          other={otherKey === p.key}
-                          onOther={on => setOtherKey(on ? p.key : null)}
                           onChange={v => update(p.key, { position: v })}
                           invalid={issues.some(t => t.startsWith('Должность') || t === NO_POSITION)}
                         />
@@ -417,44 +413,33 @@ function staff(n: number): string {
   return 'сотрудник' + ({ '': '', 'а': 'а', 'ей': 'ов' } as Record<string, string>)[plural(n)]
 }
 
-const OTHER = '__other'
 const listed = (v: string) => POSITIONS.find(t => t.replace(/\s+/g, ' ') === v.replace(/\s+/g, ' ').trim())
 
 /**
- * The position: a native select of the typical positions, dressed as the other fields (a transparent select over a
- * plain box with a chevron, as the generator switcher in the header), with «Другая…» last, which opens a field for
- * any other position under it. A pick from the list carries its line break (`POSITIONS`)
+ * The position: one field, typed freely (Enter breaks the line), with a chevron at its end that opens a native select
+ * of the typical positions (a transparent select over the chevron only, so a click on the text still types). A pick
+ * fills the field with the entry and its line break (`POSITIONS`)
  */
-function PositionPicker({ value, other, onOther, onChange, invalid }: { value: string; other: boolean; onOther: (on: boolean) => void; onChange: (v: string) => void; invalid: boolean }) {
+function PositionPicker({ value, onChange, invalid }: { value: string; onChange: (v: string) => void; invalid: boolean }) {
   const hit = listed(value)
-  const custom = other || (!!value.trim() && !hit)
-  const selected = custom ? OTHER : hit ? String(POSITIONS.indexOf(hit)) : ''
   return (
-    <div className="flex flex-col gap-2">
-      <div className={`relative flex h-10 items-center justify-between rounded-[4px] bg-[#f5f5f5] px-3 text-[14px] leading-5
-        ${invalid && !custom ? 'ring-1 ring-inset ring-[#e30]' : 'has-[select:focus-visible]:ring-1 has-[select:focus-visible]:ring-inset has-[select:focus-visible]:ring-black'}`}>
-        <span className={`truncate ${selected ? 'text-black' : 'text-[#999]'}`}>
-          {selected === OTHER ? 'Другая' : hit ? hit.replace('\n', ' ') : 'Должность'}
-        </span>
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden className="shrink-0">
+    <div className="relative">
+      <TextArea value={value} onChange={onChange} placeholder="Должность" invalid={invalid} className="pr-10" />
+      <div className="absolute top-0 right-0 flex size-10 items-center justify-center">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
           <path d="M4 6L8 10L12 6" stroke="black" strokeWidth="1.5" />
         </svg>
         <select
-          value={selected}
-          onChange={e => {
-            const v = e.target.value
-            if (v === OTHER) { onOther(true); if (hit) onChange('') }
-            else { onOther(false); onChange(POSITIONS[Number(v)]) }
-          }}
-          aria-label="Должность"
+          value={hit ? String(POSITIONS.indexOf(hit)) : ''}
+          onChange={e => onChange(POSITIONS[Number(e.target.value)])}
+          aria-label="Типовые должности"
+          title="Типовые должности"
           className="absolute inset-0 cursor-pointer appearance-none opacity-0 outline-none"
         >
-          <option value="" disabled>Должность</option>
+          <option value="" disabled>Типовые должности</option>
           {POSITIONS.map((t, i) => <option key={t} value={i}>{t.replace('\n', ' ')}</option>)}
-          <option value={OTHER}>Другая…</option>
         </select>
       </div>
-      {custom && <TextArea value={value} onChange={onChange} placeholder="Своя должность" invalid={invalid} />}
     </div>
   )
 }

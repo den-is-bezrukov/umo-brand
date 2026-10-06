@@ -140,7 +140,7 @@ function useAutoHeight(value: string) {
 const areaClass = 'block min-h-10 w-full min-w-0 resize-none overflow-hidden rounded-[4px] bg-[#f5f5f5] py-[10px] px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]'
 
 /** Multi-line text where Enter is a line break the layout keeps */
-export function TextArea({ value, onChange, placeholder, invalid }: { value: string; onChange: (v: string) => void; placeholder?: string; invalid?: boolean }) {
+export function TextArea({ value, onChange, placeholder, invalid, className = '' }: { value: string; onChange: (v: string) => void; placeholder?: string; invalid?: boolean; className?: string }) {
   const ref = useAutoHeight(value)
   return (
     <textarea
@@ -150,7 +150,7 @@ export function TextArea({ value, onChange, placeholder, invalid }: { value: str
       onChange={e => onChange(e.target.value)}
       placeholder={placeholder}
       aria-invalid={invalid || undefined}
-      className={`${areaClass} ${invalid ? 'ring-1 ring-inset ring-[#e30]' : 'focus:ring-1 focus:ring-inset focus:ring-black'}`}
+      className={`${areaClass} ${invalid ? 'ring-1 ring-inset ring-[#e30]' : 'focus:ring-1 focus:ring-inset focus:ring-black'} ${className}`}
     />
   )
 }
