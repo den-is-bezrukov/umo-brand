@@ -13,7 +13,7 @@ import { loadFont, buildSheet, specMarks, toD, mm, type Sheet, type Line } from 
 
 /** The QR leads to the model's own page unless another link is set, as on the price card */
 const DEFAULT_URL: Record<Model, string> = { umo8: 'https://umo.auto/umo8', umo5: 'https://umo.auto/umo5' }
-const DEFAULT_TOP = 'UMO Название'
+const DEFAULT_TOP = 'Центр UMO'
 
 // The parts that can be left out, as the `off` link parameter names them
 const PARTS = { qr: 'qr', dealer: 'top', tagline: 'bottom', rear: 'rear' } as const
