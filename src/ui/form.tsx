@@ -141,10 +141,11 @@ function useAutoHeight(value: string) {
 const areaClass = 'block min-h-10 w-full min-w-0 resize-none overflow-hidden rounded-[4px] bg-[#f5f5f5] py-[10px] px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]'
 
 /** Multi-line text where Enter is a line break the layout keeps */
-export function TextArea({ value, onChange, placeholder, invalid, className = '' }: { value: string; onChange: (v: string) => void; placeholder?: string; invalid?: boolean; className?: string }) {
+export function TextArea({ value, onChange, placeholder, invalid, className = '', ...rest }: { value: string; onChange: (v: string) => void; placeholder?: string; invalid?: boolean; className?: string } & Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'value' | 'onChange'>) {
   const ref = useAutoHeight(value)
   return (
     <textarea
+      {...rest}
       ref={ref}
       rows={1}
       value={value}

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useId, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, TextArea, TextInput, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined } from '@/ui/form'
 import { toD } from '@/livery/geometry'
 import { TAG, buildTag, loadFonts, type Field, type FieldBox, type Fonts, type Person } from '@/nametag/tag'
@@ -416,59 +416,123 @@ function staff(n: number): string {
 
 /** The list entry the value is, whatever its case and spacing */
 const listed = (v: string) => POSITIONS.find(t => t.replace(/\s+/g, ' ').toLowerCase() === v.replace(/\s+/g, ' ').trim().toLowerCase())
-const MANUAL = '__manual'
+const ANCHOR = typeof CSS !== 'undefined' && CSS.supports('anchor-name: --a')
 
 /**
- * The position: one field that is a native select of the typical positions while it's empty or holds one of them (a
- * transparent select over a box dressed as the other fields, so the whole field opens the list, from its own edge),
- * with «Ввести вручную…» first, which turns the same field into a text field (Enter breaks the line); a position not
- * in the list shows there too, its chevron still opening the list, marked on the entry a typed position matches. A
- * pick carries its line break (`POSITIONS`). No
- * title in the list: the empty value is a hidden option
+ * The position: a text field (Enter breaks the line) with the typical positions offered under it while it's focused,
+ * narrowed to those containing what's typed — a combobox on the platform: the list is a manual popover (the browser
+ * lays it over everything) placed under the field by CSS anchor positioning (Chrome, Safari 26; elsewhere from the
+ * field's box when it opens). Arrows move through it, Enter picks, Esc or leaving the field closes it; a pick carries
+ * its line break (`POSITIONS`). The chevron opens the whole list
  */
 function PositionPicker({ value, onChange, invalid }: { value: string; onChange: (v: string) => void; invalid: boolean }) {
-  const hit = listed(value)
-  const [typing, setTyping] = useState(false)
-  const manual = typing || (!!value.trim() && !hit)
   const box = useRef<HTMLDivElement>(null)
-  useEffect(() => { if (typing) box.current?.querySelector('textarea')?.focus() }, [typing])
-  const options = (
-    <>
-      <option value="" hidden disabled />
-      <option value={MANUAL}>Ввести вручную…</option>
-      {POSITIONS.map((t, i) => <option key={t} value={i}>{t.replace('\n', ' ')}</option>)}
-    </>
-  )
-  const pick = (v: string) => {
-    if (v === MANUAL) setTyping(true)
-    else { setTyping(false); onChange(POSITIONS[Number(v)]) }
+  const list = useRef<HTMLDivElement>(null)
+  const [open, setOpen] = useState(false)
+  const [all, setAll] = useState(false)
+  const [active, setActive] = useState(-1)
+  const typed = value.replace(/\s+/g, ' ').trim().toLowerCase()
+  const hit = listed(value)
+  const matching = POSITIONS.filter(t => t.replace(/\s+/g, ' ').toLowerCase().includes(typed))
+  const shown = all || !typed || hit || !matching.length ? POSITIONS : matching
+  const id = useId()
+
+  useEffect(() => {
+    const el = list.current
+    if (!el) return
+    if (open && !el.matches(':popover-open')) {
+      if (!ANCHOR && box.current) {
+        const r = box.current.getBoundingClientRect()
+        Object.assign(el.style, { top: `${r.bottom + 4}px`, left: `${r.left}px`, width: `${r.width}px` })
+      }
+      el.showPopover()
+    } else if (!open && el.matches(':popover-open')) el.hidePopover()
+  }, [open])
+  useEffect(() => { setActive(-1) }, [typed, all])
+  useEffect(() => {
+    list.current?.querySelector(`[data-i="${active}"]`)?.scrollIntoView({ block: 'nearest' })
+  }, [active])
+
+  const pick = (t: string) => {
+    onChange(t)
+    setOpen(false)
+    setAll(false)
   }
-  const chevron = (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden className="shrink-0">
-      <path d="M4 6L8 10L12 6" stroke="black" strokeWidth="1.5" />
-    </svg>
-  )
-  const select = (className: string) => (
-    <select value={hit ? String(POSITIONS.indexOf(hit)) : ''} onChange={e => pick(e.target.value)} aria-label="Должность"
-      className={`absolute cursor-pointer appearance-none opacity-0 outline-none ${className}`}>
-      {options}
-    </select>
-  )
-  if (manual) return (
-    <div ref={box} className="relative">
-      <TextArea value={value} onChange={onChange} placeholder="Должность" invalid={invalid} className="pr-10" />
-      <div className="absolute top-0 right-0 flex size-10 items-center justify-center">
-        {chevron}
-        {select('inset-0')}
-      </div>
-    </div>
-  )
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      if (!open) { setOpen(true); return }
+      const n = shown.length
+      setActive(i => e.key === 'ArrowDown' ? (i + 1) % n : (i <= 0 ? n - 1 : i - 1))
+    } else if (e.key === 'Enter' && open && active >= 0) {
+      e.preventDefault()
+      pick(shown[active])
+    } else if (e.key === 'Escape' && open) {
+      e.preventDefault()
+      setOpen(false)
+    }
+  }
+
   return (
-    <div className={`relative flex h-10 items-center justify-between gap-2 rounded-[4px] bg-[#f5f5f5] px-3 text-[14px] leading-5
-      ${invalid ? 'ring-1 ring-inset ring-[#e30]' : 'has-[select:focus-visible]:ring-1 has-[select:focus-visible]:ring-inset has-[select:focus-visible]:ring-black'}`}>
-      <span className={`truncate ${hit ? 'text-black' : 'text-[#999]'}`}>{hit ? hit.replace('\n', ' ') : 'Должность'}</span>
-      {chevron}
-      {select('inset-0')}
+    <div ref={box} className="relative [anchor-name:--position-field]">
+      <TextArea
+        value={value}
+        onChange={v => { onChange(v); setAll(false); setOpen(true) }}
+        placeholder="Должность"
+        invalid={invalid}
+        className="pr-10"
+        role="combobox"
+        aria-expanded={open}
+        aria-controls={id}
+        aria-autocomplete="list"
+        aria-activedescendant={open && active >= 0 ? `${id}-${active}` : undefined}
+        onFocus={() => setOpen(true)}
+        onBlur={() => { setOpen(false); setAll(false) }}
+        onKeyDown={onKeyDown}
+      />
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-label="Типовые должности"
+        onMouseDown={e => e.preventDefault()}
+        onClick={() => { box.current?.querySelector('textarea')?.focus(); setAll(true); setOpen(o => !o || !all) }}
+        className="absolute top-0 right-0 flex size-10 cursor-pointer items-center justify-center"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+          <path d="M4 6L8 10L12 6" stroke="black" strokeWidth="1.5" />
+        </svg>
+      </button>
+      <div
+        ref={list}
+        id={id}
+        popover="manual"
+        role="listbox"
+        aria-label="Типовые должности"
+        onMouseDown={e => e.preventDefault()}
+        className="max-h-[288px] overflow-y-auto rounded-[4px] border border-black/10 bg-white p-1 text-[14px] leading-5 text-black shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
+        // The popover's own styles centre it on the screen (inset 0, margin auto): undone here, then put under the field
+        style={{
+          position: 'fixed',
+          inset: 'auto',
+          margin: 0,
+          ...(ANCHOR ? { positionAnchor: '--position-field', top: 'calc(anchor(bottom) + 4px)', left: 'anchor(left)', width: 'anchor-size(width)' } : {}),
+        } as React.CSSProperties}
+      >
+        {shown.map((t, i) => (
+          <div
+            key={t}
+            id={`${id}-${i}`}
+            data-i={i}
+            role="option"
+            aria-selected={t === hit}
+            onMouseEnter={() => setActive(i)}
+            onClick={() => pick(t)}
+            className={`cursor-pointer rounded-[2px] px-2 py-1.5 ${i === active ? 'bg-[#f5f5f5]' : ''} ${t === hit ? 'font-medium' : ''}`}
+          >
+            {t.replace('\n', ' ')}
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
