@@ -355,7 +355,7 @@ export function OptionalField({ label, on, onChange, extra, children }: { label:
   )
 }
 
-const rowAction = 'flex shrink-0 cursor-pointer items-center gap-2 text-[14px] leading-5 text-black outline-none transition-colors hover:text-black/50 focus-visible:ring-2 focus-visible:ring-black/30'
+export const rowAction = 'flex shrink-0 cursor-pointer items-center gap-2 text-[14px] leading-5 text-black outline-none transition-colors hover:text-black/50 focus-visible:ring-2 focus-visible:ring-black/30'
 
 /** Corners for the size switch, on the 16 grid with the ticks' 2 px stroke and square ends: at the outer corners to grow, turned in to shrink */
 function SizeIcon({ grow }: { grow: boolean }) {

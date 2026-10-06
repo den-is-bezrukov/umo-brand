@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined, isValidUrl } from '@/ui/form'
+import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined, rowAction, isValidUrl } from '@/ui/form'
 import { useStaff, TableSource, UploadArea, AddTile, Progress } from '@/ui/staff'
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
@@ -58,7 +58,11 @@ export default function BusinessCard() {
   staff.useDeleteKey(false)
 
   // Not kept in the address, as the name tag's: a staff list isn't something to send as a link
-  const [dealer, setDealer] = useState<Dealer>({ name: '', address: '', site: '' })
+  /** The site follows the dealer's name (`siteFor`) until it's edited: null */
+  const [input, setDealer] = useState<Omit<Dealer, 'site'> & { site: string | null }>({ name: '', address: '', site: null })
+  const dealer: Dealer = { ...input, site: input.site ?? siteFor(input.name) }
+  /** The address and the site, under «Изменить»: a dealer picked from the list fills them in */
+  const [dealerOpen, setDealerOpen] = useState(false)
   const [qrMode, setQrMode] = useState<'link' | 'contact'>('link')
   /** The QR's link, following the site until it's edited */
   const [qrLink, setQrLink] = useState<string | null>(null)
@@ -121,7 +125,8 @@ export default function BusinessCard() {
   /** The dealership's first field at fault takes the focus */
   const toDealer = () => {
     const at = dealerMissing[0] ?? [...dealerWrong][0] ?? 'dealer'
-    dealerForm.current?.querySelector<HTMLElement>(`[data-field="${at}"] textarea, [data-field="${at}"] input`)?.focus()
+    if (at !== 'dealer') setDealerOpen(true)
+    setTimeout(() => dealerForm.current?.querySelector<HTMLElement>(`[data-field="${at}"] textarea, [data-field="${at}"] input`)?.focus())
   }
 
   const pickDealer = (v: string) => setDealer(d => ({
@@ -148,6 +153,16 @@ export default function BusinessCard() {
   }
 
   const face = toD(FACE)
+  /** The QR, the whole list's, set beside the person's contacts as it stands beside them on the card */
+  const qrField = (
+    <Labelled label="QR-код">
+      <Segments>
+        <SegBtn active={qrMode === 'link'} onClick={() => setQrMode('link')}>Ссылка</SegBtn>
+        <SegBtn active={qrMode === 'contact'} onClick={() => setQrMode('contact')}>Контакт</SegBtn>
+      </Segments>
+      {qrMode === 'link' && <UrlField value={link} onChange={setQrLink} />}
+    </Labelled>
+  )
   const showBar = dealerIssues.length > 0 || (failing.length === 0 ? items.length > 0 : items.length > 1)
 
   return (
@@ -165,8 +180,13 @@ export default function BusinessCard() {
           <div className="flex flex-col gap-10 tracking-normal">
             {/* The dealership: the whole list's */}
             <div ref={dealerForm} className="flex flex-col gap-4">
-              <div data-field="dealer">
-                <Labelled label="Дилер">
+              <div data-field="dealer" className="flex flex-col gap-2">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-[14px] leading-5 text-[#999]">Дилер</p>
+                  <button type="button" onClick={() => setDealerOpen(o => !o)} aria-expanded={dealerOpen} className={rowAction}>
+                    {dealerOpen ? 'Свернуть' : 'Изменить'}
+                  </button>
+                </div>
                   <ComboField
                     value={dealer.name}
                     onChange={pickDealer}
@@ -176,38 +196,19 @@ export default function BusinessCard() {
                     label="Дилеры UMO"
                     invalid={dealerWrong.has('dealer')}
                   />
-                </Labelled>
               </div>
+              {dealerOpen && <>
               <div data-field="address">
                 <Labelled label="Адрес">
-                  <TextArea value={dealer.address} onChange={v => setDealer(d => ({ ...d, address: v }))} placeholder="Адрес" invalid={dealerWrong.has('address')} />
+                  <TextArea value={input.address} onChange={v => setDealer(d => ({ ...d, address: v }))} placeholder="Адрес" invalid={dealerWrong.has('address')} />
                 </Labelled>
               </div>
               <div data-field="site">
                 <Labelled label="Сайт">
-                  {/* The dealership's umo.auto subdomain offered, once there's a name to make it from */}
-                  {siteFor(dealer.name) ? (
-                    <ComboField
-                      value={dealer.site}
-                      onChange={v => setDealer(d => ({ ...d, site: v }))}
-                      options={[siteFor(dealer.name)]}
-                      singleLine
-                      placeholder="Сайт"
-                      label="Сайт на umo.auto"
-                      invalid={dealerWrong.has('site')}
-                    />
-                  ) : (
-                    <TextInput value={dealer.site} onChange={v => setDealer(d => ({ ...d, site: v }))} placeholder="Сайт" invalid={dealerWrong.has('site')} />
-                  )}
+                  <TextInput value={dealer.site} onChange={v => setDealer(d => ({ ...d, site: v }))} placeholder="Сайт" invalid={dealerWrong.has('site')} />
                 </Labelled>
               </div>
-              <Labelled label="QR-код">
-                <Segments>
-                  <SegBtn active={qrMode === 'link'} onClick={() => setQrMode('link')}>Ссылка</SegBtn>
-                  <SegBtn active={qrMode === 'contact'} onClick={() => setQrMode('contact')}>Контакт</SegBtn>
-                </Segments>
-                {qrMode === 'link' && <UrlField value={link} onChange={setQrLink} />}
-              </Labelled>
+              </>}
             </div>
 
             {mode === 'manual' && current && (() => {
@@ -233,6 +234,7 @@ export default function BusinessCard() {
                     <Labelled label="Телефон">
                       <TextInput value={p.phone} onChange={v => update(p.key, { phone: v })} placeholder="Телефон" invalid={bad('phone', 'Телефон')} />
                     </Labelled>
+                    {qrField}
                   </div>
                   {(!staff.isBlank(p) || people.length > 1) && (
                     <div className="mt-2 flex gap-2">
@@ -245,6 +247,8 @@ export default function BusinessCard() {
             })()}
 
             {mode === 'table' && <TableSource staff={staff} template={TEMPLATE} />}
+            {/* With no person's form open (the table mode, none selected), on its own */}
+            {!(mode === 'manual' && current) && qrField}
 
             <Labelled label="Страницы">
               <Segments>
