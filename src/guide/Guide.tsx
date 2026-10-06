@@ -649,10 +649,10 @@ function PreviewLink({ asset, label, children }: { asset: Asset; label: string; 
     : <a href={`/downloads/${asset.file}`} download aria-label={label} data-preview className={className}>{children}</a>
 }
 
-/** A constructor page's preview over its ↗ row */
-function Constructor({ to, title, children }: { to: string; title: string; children: ReactNode }) {
+/** A constructor page's preview over its ↗ row; `flush` sets the row right under the preview, with no gap. */
+function Constructor({ to, title, flush, children }: { to: string; title: string; flush?: boolean; children: ReactNode }) {
   return (
-    <div className="group/preview flex flex-col gap-6">
+    <div className={`group/preview flex flex-col ${flush ? '' : 'gap-6'}`}>
       <PreviewLink asset={{ to, title }} label={title}>{children}</PreviewLink>
       <Assets items={[{ to, title }]} preview={to} />
     </div>
@@ -660,7 +660,7 @@ function Constructor({ to, title, children }: { to: string; title: string; child
 }
 
 /**
- * Overview of the chapter's media (Figma 4844:6695): each one's picture over its ↗ row to the constructor. Wide pictures
+ * Overview of the chapter's media (Figma 4844:6695): each one's picture right over its ↗ row to the constructor. Wide pictures
  * (2:1 and wider) take the whole width, the rest go in pairs; the grid packs densely, so a narrow one moves up next to
  * the previous narrow one and the list keeps the order of the sections below.
  */
@@ -669,7 +669,7 @@ function Carriers({ items }: { items: { to: string; title: string; w: number; h:
     <div className="grid grid-cols-1 gap-6 md:grid-flow-dense md:grid-cols-2">
       {items.map(c => (
         <div key={c.to} className={c.w / c.h >= 2 ? 'md:col-span-2' : ''}>
-          <Constructor to={c.to} title={c.title}>{c.picture}</Constructor>
+          <Constructor to={c.to} title={c.title} flush>{c.picture}</Constructor>
         </div>
       ))}
     </div>
