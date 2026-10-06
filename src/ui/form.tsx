@@ -354,21 +354,33 @@ export function OptionalField({ label, on, onChange, extra, children }: { label:
   )
 }
 
+/** Corners for the size switch, on the 16 grid with the ticks' 2 px stroke and square ends: at the outer corners to grow, turned in to shrink */
+function SizeIcon({ grow }: { grow: boolean }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" aria-hidden>
+      {grow
+        ? <path d="M9 3H13V7M7 13H3V9" />
+        : <path d="M13 7H9V3M3 9H7V13" />}
+    </svg>
+  )
+}
+
 /**
- * Size as one word at the end of a field's label row (Figma: UMO | Evrone, node 4900:4662), naming what a press does:
- * the text's «Увеличить» while it's small, «Уменьшить» once it's large; the QR's «Мельче» / «Крупнее». Shown only
- * where the other size is available.
+ * Size at the end of a field's label row (Figma: UMO | Evrone, node 4900:4662), the same words for the text and the QR,
+ * naming what a press does: «Крупнее» while it's small, «Мельче» once it's large, each with its arrows. Shown only where
+ * the other size is available.
  */
-export function SizeSwitch({ large, onChange, label = 'Крупный текст', words = ['Увеличить', 'Уменьшить'] }: { large: boolean; onChange: (v: boolean) => void; label?: string; words?: [grow: string, shrink: string] }) {
+export function SizeSwitch({ large, onChange, label }: { large: boolean; onChange: (v: boolean) => void; label: string }) {
   return (
     <button
       type="button"
       onClick={() => onChange(!large)}
       aria-pressed={large}
       aria-label={label}
-      className="shrink-0 cursor-pointer text-[14px] font-medium leading-5 text-black outline-none transition-colors hover:text-black/50 focus-visible:ring-2 focus-visible:ring-black/30"
+      className="flex shrink-0 cursor-pointer items-center gap-1 text-[14px] font-medium leading-5 text-black outline-none transition-colors hover:text-black/50 focus-visible:ring-2 focus-visible:ring-black/30"
     >
-      {large ? words[1] : words[0]}
+      <SizeIcon grow={!large} />
+      {large ? 'Мельче' : 'Крупнее'}
     </button>
   )
 }

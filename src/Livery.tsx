@@ -221,7 +221,7 @@ export default function Livery() {
               label="QR-код"
               on={on.qr}
               onChange={toggle('qr')}
-              extra={<SizeSwitch large={!qrSmall} onChange={v => setQrSmall(!v)} label="Крупный QR-код" words={['Крупнее', 'Мельче']} />}
+              extra={<SizeSwitch large={!qrSmall} onChange={v => setQrSmall(!v)} label="Крупный QR-код" />}
             >
               <UrlField value={url} onChange={setUrl} />
             </OptionalField>
@@ -235,7 +235,7 @@ export default function Livery() {
               on={on.tagline}
               onChange={toggle('tagline')}
               // The larger size is for the sides laid out without the big QR: no QR or the small one
-              extra={(!on.qr || qrSmall) && canLarge ? <SizeSwitch large={large} onChange={setLarge} /> : undefined}
+              extra={(!on.qr || qrSmall) && canLarge ? <SizeSwitch large={large} onChange={setLarge} label="Крупный текст" /> : undefined}
             >
               <ComboField value={tagline} onChange={setTagline} options={TAGLINES[model]} label="Варианты текста" invalid={sides.some(s => s.tagline.issues.length > 0) || !tagline.trim()} />
             </OptionalField>
