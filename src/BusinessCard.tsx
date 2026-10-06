@@ -183,7 +183,8 @@ export default function BusinessCard() {
             <SegBtn active={mode === 'table'} onClick={() => setMode('table')}>Из таблицы</SegBtn>
           </Segments>
 
-          <div className="flex flex-col gap-10 tracking-normal">
+          {/* The dealership and the person in one column, 16 px apart as any fields; the pages, the whole file's, set apart */}
+          <div className="flex flex-col gap-4 tracking-normal">
             {/* The dealership: the whole list's */}
             <div ref={dealerForm} className="flex flex-col gap-4">
               <div data-field="dealer" className="flex flex-col gap-2">
@@ -272,12 +273,14 @@ export default function BusinessCard() {
 
             {mode === 'table' && <TableSource staff={staff} template={TEMPLATE} />}
 
+            <div className="mt-6">
             <Labelled label="Страницы">
               <Segments>
                 <SegBtn active={order === 'face-once'} onClick={() => setOrder('face-once')}>Лицо один раз</SegBtn>
                 <SegBtn active={order === 'pairs'} onClick={() => setOrder('pairs')}>Лицо к каждой</SegBtn>
               </Segments>
             </Labelled>
+            </div>
           </div>
         </div>
 
