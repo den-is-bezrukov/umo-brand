@@ -167,7 +167,7 @@ const ANCHOR = typeof CSS !== 'undefined' && CSS.supports('anchor-name: --a')
  * through it, Enter picks, Esc or leaving the field closes it; the chevron opens the whole list. An option may carry a
  * line break, kept in the value it gives and shown as a space in the list. First made for the name tag's position
  */
-export function ComboField({ value, onChange, options, placeholder, label, invalid }: { value: string; onChange: (v: string) => void; options: string[]; placeholder?: string; label: string; invalid?: boolean }) {
+export function ComboField({ value, onChange, options, placeholder, label, invalid, singleLine, shownAs = t => t }: { value: string; onChange: (v: string) => void; options: string[]; placeholder?: string; label: string; invalid?: boolean; /** Enter doesn't break the line, pasted breaks become spaces */ singleLine?: boolean; /** How an option reads in the list, when it differs from the value it gives */ shownAs?: (t: string) => string }) {
   const box = useRef<HTMLDivElement>(null)
   const list = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
@@ -211,6 +211,9 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
     } else if (e.key === 'Enter' && open && active >= 0) {
       e.preventDefault()
       pick(shown[active])
+    } else if (e.key === 'Enter' && singleLine) {
+      e.preventDefault()
+      setOpen(false)
     } else if (e.key === 'Escape' && open) {
       e.preventDefault()
       setOpen(false)
@@ -221,7 +224,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
     <div ref={box} className="relative" style={{ anchorName: anchor } as React.CSSProperties}>
       <TextArea
         value={value}
-        onChange={v => { onChange(v); setAll(false); setOpen(true) }}
+        onChange={v => { onChange(singleLine ? v.replace(/\s*\n\s*/g, ' ') : v); setAll(false); setOpen(true) }}
         placeholder={placeholder}
         invalid={invalid}
         className="pr-10"
@@ -273,7 +276,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
             onClick={() => pick(t)}
             className={`cursor-pointer rounded-[2px] px-2 py-1.5 ${i === active ? 'bg-[#f5f5f5]' : ''} ${t === hit ? 'font-medium' : ''}`}
           >
-            {t.replace('\n', ' ')}
+            {shownAs(t).replace('\n', ' ')}
           </div>
         ))}
       </div>

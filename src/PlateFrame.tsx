@@ -1,20 +1,23 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Font } from 'opentype.js'
-import { Field, Segments, SegBtn, TextInput, GeneratorHeader, LinkButtons, DownloadButton } from '@/ui/form'
+import { Field, Segments, SegBtn, TextInput, ComboField, GeneratorHeader, LinkButtons, DownloadButton } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
 import { loadFont, toD } from '@/livery/geometry'
 import { STRIP, BASELINE, SIZE, TRACKING, buildStrip, lineStart, type Align } from '@/plate/frame'
 import PlateArt from '@/plate/PlateArt'
+import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
 
 // Number plate frame generator (Figma: UMO | Evrone, node 4970:2419): the dealer's line printed under the plate, as a
-// 501×21 mm PDF with the text in outlines, for the frame maker. The line is «Центр UMO | <dealer>»: the prefix is fixed,
-// so every dealer's frame reads the same and nobody has to hunt for the bar on the keyboard; only the name is typed.
+// 501×21 mm PDF with the text in outlines, for the frame maker. The line is the dealer's marketing name as umo.auto
+// lists it («UMO АГАТ Владимир»): the «UMO » is fixed, so only the name is typed or picked from the suggestions.
 // A link with `text` (even empty: /plate-frame?text) opens a hidden mode where the whole line is free, for the odd case
 // the prefix doesn't fit; nothing on the page leads there.
 
-const PREFIX = 'Центр UMO | '
+const PREFIX = 'UMO '
 const DEFAULT_NAME = 'Название'
 const DEFAULT_TEXT = PREFIX + DEFAULT_NAME
+/** The dealers' names for the suggestions, without the fixed «UMO » */
+const NAMES = DEALER_NAMES.map(withoutUmo)
 const RED = '#ff2a1a'
 
 /** The frame's millimetres in container units: the container is the frame picture, 522 mm wide */
@@ -129,7 +132,7 @@ export default function PlateFrame() {
               </Field>
             ) : (
               <Field label="Дилер">
-                <TextInput value={name} onChange={setName} placeholder={DEFAULT_NAME} invalid={noName || (!!strip && strip.issues.length > 0)} />
+                <ComboField value={name} onChange={setName} options={NAMES} placeholder={DEFAULT_NAME} label="Дилеры" singleLine invalid={noName || (!!strip && strip.issues.length > 0)} />
               </Field>
             )}
 

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import type { Font } from 'opentype.js'
 import { Field, OptionalField, Segments, SegBtn, TextArea, ComboField, UrlField, Checkbox, SizeSwitch, GeneratorHeader, LinkButtons, DownloadButton, isValidUrl } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
+import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
 import { LIVERIES, SURFACES, withoutQr, type Model } from '@/livery/layout'
 import { loadFont, buildSheet, specMarks, toD, mm, type Sheet, type Line } from '@/livery/geometry'
 
@@ -10,7 +11,7 @@ import { loadFont, buildSheet, specMarks, toD, mm, type Sheet, type Line } from 
 // dealer name or tagline that would run onto them shows up before the files go to the wrap shop.
 
 const DEFAULT_URL = 'https://umo.auto/'
-const DEFAULT_TOP = 'Центр UMO'
+const DEFAULT_TOP = 'UMO Название'
 // The tagline offered by default names what each model is
 const DEFAULT_BOTTOM: Record<Model, string> = {
   umo8: 'Попробуй гибрид с технологиями Яндекса',
@@ -221,7 +222,7 @@ export default function Livery() {
             </OptionalField>
 
             <OptionalField label="Текст сверху" on={on.dealer} onChange={toggle('dealer')}>
-              <TextArea value={dealer} onChange={setDealer} invalid={sides.some(s => s.dealer.issues.length > 0) || !dealer.trim()} />
+              <ComboField value={dealer} onChange={setDealer} options={DEALER_NAMES} shownAs={withoutUmo} label="Дилеры" invalid={sides.some(s => s.dealer.issues.length > 0) || !dealer.trim()} />
             </OptionalField>
 
             <OptionalField
