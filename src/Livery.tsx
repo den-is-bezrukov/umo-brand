@@ -4,7 +4,7 @@ import { Field, OptionalField, Segments, SegBtn, TextArea, ComboField, UrlField,
 import { linkParams, useLinkState } from '@/ui/share'
 import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
 import { DEFAULT_TAGLINE, TAGLINES } from '@/data/taglines'
-import { LIVERIES, SURFACES, withoutQr, type Model } from '@/livery/layout'
+import { LIVERIES, SURFACES, withoutQr, smallQr, type Model } from '@/livery/layout'
 import { loadFont, buildSheet, specMarks, toD, mm, type Sheet, type Line } from '@/livery/geometry'
 
 // Dealer livery generator: lettering for both sides and the rear window of a dealer's demo car (Figma: UMO | Evrone,
@@ -104,6 +104,8 @@ export default function Livery() {
   const [dims, setDims] = useState(show.includes('dims'))
   // The bottom text larger, 60 mm in two lines; the QR-less sides have room for it
   const [large, setLarge] = useState(link.get('size') === 'large')
+  // The sides' QR as tall as the lettering, behind it; the rear window keeps its own
+  const [qrSmall, setQrSmall] = useState(link.get('qr') === 'small')
 
   // Another model brings its own tagline in place of the old model's suggestion (the default or the one without
   // «Попробуй»), unless the field holds text of the dealer's own
@@ -129,6 +131,7 @@ export default function Livery() {
     rbottom: ownRear && rear ? rear.tagline : null,
     show: [...(dims ? ['dims'] : []), ...(seams ? ['seams'] : [])].join(','),
     size: large ? 'large' : null,
+    qr: qrSmall ? 'small' : null,
   })
   const [font, setFont] = useState<Font>()
   const [exporting, setExporting] = useState(false)
@@ -153,9 +156,12 @@ export default function Livery() {
   const qr = on.qr ? qrUrl : null
   const sheets = useMemo(
     () => font
-      ? SURFACES.filter(id => id !== 'rear' || on.rear).map(id => buildSheet(font, qr ? layout[id] : withoutQr(layout[id]), { ...(id === 'rear' ? rearText : sideText), url: qr, large }))
+      ? SURFACES.filter(id => id !== 'rear' || on.rear).map(id => {
+        const surface = !qr ? withoutQr(layout[id]) : qrSmall && id !== 'rear' ? smallQr(layout[id]) : layout[id]
+        return buildSheet(font, surface, { ...(id === 'rear' ? rearText : sideText), url: qr, large })
+      })
       : [],
-    [font, layout, on.rear, sideText.dealer, sideText.tagline, rearText.dealer, rearText.tagline, qr, large],
+    [font, layout, on.rear, sideText.dealer, sideText.tagline, rearText.dealer, rearText.tagline, qr, qrSmall, large],
   )
   // Which sheets a field's text goes on, to mark it when one of them has a problem with it
   const sides = sheets.filter(s => s.surface.id !== 'rear' || !ownRearOn)
@@ -175,6 +181,7 @@ export default function Livery() {
     setOn({ qr: true, tagline: true, dealer: true, rear: true })
     setDims(false)
     setLarge(false)
+    setQrSmall(false)
   }
   const ok = sheets.length > 0 && sheets.every(s => s.issues.length === 0)
 
@@ -210,7 +217,12 @@ export default function Livery() {
               </Segments>
             </Field>
 
-            <OptionalField label="QR-код" on={on.qr} onChange={toggle('qr')}>
+            <OptionalField
+              label="QR-код"
+              on={on.qr}
+              onChange={toggle('qr')}
+              extra={<SizeSwitch large={!qrSmall} onChange={v => setQrSmall(!v)} label="Крупный QR-код" words={['Крупнее', 'Мельче']} />}
+            >
               <UrlField value={url} onChange={setUrl} />
             </OptionalField>
 
@@ -222,8 +234,8 @@ export default function Livery() {
               label="Текст снизу"
               on={on.tagline}
               onChange={toggle('tagline')}
-              // The larger size is for the QR-less sides only, so the switch shows only without the QR
-              extra={!on.qr && canLarge ? <SizeSwitch large={large} onChange={setLarge} /> : undefined}
+              // The larger size is for the sides laid out without the big QR: no QR or the small one
+              extra={(!on.qr || qrSmall) && canLarge ? <SizeSwitch large={large} onChange={setLarge} /> : undefined}
             >
               <ComboField value={tagline} onChange={setTagline} options={TAGLINES[model]} label="Варианты текста" invalid={sides.some(s => s.tagline.issues.length > 0) || !tagline.trim()} />
             </OptionalField>

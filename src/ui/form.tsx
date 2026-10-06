@@ -355,19 +355,20 @@ export function OptionalField({ label, on, onChange, extra, children }: { label:
 }
 
 /**
- * Text size as one word at the end of a field's label row (Figma: UMO | Evrone, node 4900:4662): «Увеличить» while the
- * text is small, «Уменьшить» once it's large; a press switches. Shown only where the larger size is available.
+ * Size as one word at the end of a field's label row (Figma: UMO | Evrone, node 4900:4662), naming what a press does:
+ * the text's «Увеличить» while it's small, «Уменьшить» once it's large; the QR's «Мельче» / «Крупнее». Shown only
+ * where the other size is available.
  */
-export function SizeSwitch({ large, onChange }: { large: boolean; onChange: (v: boolean) => void }) {
+export function SizeSwitch({ large, onChange, label = 'Крупный текст', words = ['Увеличить', 'Уменьшить'] }: { large: boolean; onChange: (v: boolean) => void; label?: string; words?: [grow: string, shrink: string] }) {
   return (
     <button
       type="button"
       onClick={() => onChange(!large)}
       aria-pressed={large}
-      aria-label="Крупный текст"
+      aria-label={label}
       className="shrink-0 cursor-pointer text-[14px] font-medium leading-5 text-black outline-none transition-colors hover:text-black/50 focus-visible:ring-2 focus-visible:ring-black/30"
     >
-      {large ? 'Уменьшить' : 'Увеличить'}
+      {large ? words[1] : words[0]}
     </button>
   )
 }

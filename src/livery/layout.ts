@@ -370,6 +370,65 @@ export function withoutQr(s: Surface): Surface {
   }
 }
 
+// The small QR (Figma: UMO | Evrone, nodes 4991:10211 for UMO 8, 4985:10180 for UMO 5): the QR-less side with a QR as
+// tall as its lettering, 160, `SMALL_QR_GAP` behind the model number, at the rear end of the sheet
+const SMALL_QR = 160
+const SMALL_QR_GAP = 100
+
+/** A length for a spec label: whole millimetres, or halves with a decimal comma */
+const mmLabel = (v: number) => String(Math.round(v * 2) / 2).replace('.', ',')
+
+/**
+ * The side with the small QR: laid out as without the QR, the sheet `SMALL_QR_GAP + SMALL_QR` longer towards the rear
+ * with the QR there, level with the lettering; the front edge stays where it was on the body. Sides only.
+ */
+export function smallQr(s: Surface): Surface {
+  const bare = withoutQr(s)
+  const add = SMALL_QR_GAP + SMALL_QR
+  const w = bare.w
+  // The dealer name sits at the front edge: left-aligned when the front is at the sheet's start
+  const frontStart = bare.dealer.align === 'left'
+  // With the front at the end the QR comes first and everything else moves along
+  const dx = frontStart ? 0 : add
+  const shiftX = <T extends { x: number }>(o: T): T => ({ ...o, x: o.x + dx })
+  const moveObstacle = (o: Obstacle): Obstacle =>
+    o.kind === 'seam'
+      ? { ...o, top: [o.top[0] + dx, o.top[1]], bottom: [o.bottom[0] + dx, o.bottom[1]] }
+      : { ...o, x: o.x + dx }
+  const { cols, rows, grid } = bare.dims
+  const qrCols: Surface['dims']['cols'] = frontStart
+    ? [{ from: w, to: w + SMALL_QR_GAP, label: String(SMALL_QR_GAP) }, { from: w + SMALL_QR_GAP, to: w + add, label: String(SMALL_QR) }]
+    : [{ from: 0, to: SMALL_QR, label: String(SMALL_QR) }, { from: SMALL_QR, to: add, label: String(SMALL_QR_GAP) }]
+  // The bottom row (`y` set) runs ahead of the sheet, along it and behind it; the sheet grows into the distance behind
+  const col = (c: Surface['dims']['cols'][number]): Surface['dims']['cols'][number] => {
+    if (c.y === undefined) return { ...c, from: c.from + dx, to: c.to + dx }
+    if (c.from >= 0 && c.to <= w) return { ...c, from: 0, to: w + add, label: mmLabel(w + add) }
+    const behind = frontStart ? c.from >= w : c.to <= 0
+    if (!behind) return { ...c, from: c.from + dx, to: c.to + dx }
+    const [from, to] = frontStart ? [w + add, c.to] : [c.from + dx, 0]
+    return { ...c, from, to, label: `~${Math.round(to - from)}` }
+  }
+  return {
+    ...bare,
+    w: w + add,
+    qr: { x: frontStart ? w + SMALL_QR_GAP : 0, y: bare.umo.y, size: SMALL_QR },
+    umo: shiftX(bare.umo),
+    num: shiftX(bare.num),
+    dealer: shiftX(bare.dealer),
+    tagline: shiftX(bare.tagline),
+    taglineLarge: bare.taglineLarge && shiftX(bare.taglineLarge),
+    obstacles: bare.obstacles.map(moveObstacle),
+    photo: { ...bare.photo, x: bare.photo.x - dx },
+    dims: {
+      cols: [...cols.map(col), ...qrCols],
+      rows: rows.map(r => (r.at === undefined ? r : { ...r, at: r.at + dx })),
+      // Lines across the whole sheet reach the QR; the rest move with what they mark
+      grid: grid.map(([x1, y1, x2, y2, part]) =>
+        x1 === 0 && x2 === w ? [0, y1, w + add, y2, part] : [x1 + dx, y1, x2 + dx, y2, part]),
+    },
+  }
+}
+
 export const SURFACES: SurfaceId[] = ['left', 'right', 'rear']
 
 // ─── UMO 5 ───────────────────────────────────────────────────────────────────
