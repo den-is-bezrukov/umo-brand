@@ -367,7 +367,7 @@ function SizeIcon({ grow }: { grow: boolean }) {
 
 /**
  * Size at the end of a field's label row (Figma: UMO | Evrone, node 4900:4662), the same words for the text and the QR,
- * naming what a press does: «Крупнее» while it's small, «Мельче» once it's large, each with its arrows. Shown only where
+ * naming what a press does: «Крупнее» while it's small, «Мельче» once it's large, each followed by its corners. Shown only where
  * the other size is available.
  */
 export function SizeSwitch({ large, onChange, label }: { large: boolean; onChange: (v: boolean) => void; label: string }) {
@@ -379,8 +379,8 @@ export function SizeSwitch({ large, onChange, label }: { large: boolean; onChang
       aria-label={label}
       className="flex shrink-0 cursor-pointer items-center gap-1 text-[14px] font-medium leading-5 text-black outline-none transition-colors hover:text-black/50 focus-visible:ring-2 focus-visible:ring-black/30"
     >
-      <SizeIcon grow={!large} />
       {large ? 'Мельче' : 'Крупнее'}
+      <SizeIcon grow={!large} />
     </button>
   )
 }
