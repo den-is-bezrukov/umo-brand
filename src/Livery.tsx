@@ -16,7 +16,7 @@ const DEFAULT_URL: Record<Model, string> = { umo8: 'https://umo.auto/umo8', umo5
 const DEFAULT_TOP = 'Центр UMO'
 
 // The parts that can be left out, as the `off` link parameter names them
-const PARTS = { qr: 'qr', dealer: 'top', tagline: 'bottom', rear: 'rear', rearDealer: 'rdealer' } as const
+const PARTS = { qr: 'qr', dealer: 'top', tagline: 'bottom', rear: 'rear', rearDealer: 'rdealer', rearTagline: 'rslogan' } as const
 const RED = '#ff2a1a'
 
 function SheetPreview({ sheet, seams, dims }: { sheet: Sheet; seams: boolean; dims: boolean }) {
@@ -92,7 +92,7 @@ export default function Livery() {
   // What goes into the files; a part that's off is in neither the preview, nor the decals, nor the spec
   const [on, setOn] = useState(() => {
     const off = (link.get('off') ?? '').split(',')
-    return { qr: !off.includes(PARTS.qr), tagline: !off.includes(PARTS.tagline), dealer: !off.includes(PARTS.dealer), rear: !off.includes(PARTS.rear), rearDealer: !off.includes(PARTS.rearDealer) }
+    return { qr: !off.includes(PARTS.qr), tagline: !off.includes(PARTS.tagline), dealer: !off.includes(PARTS.dealer), rear: !off.includes(PARTS.rear), rearDealer: !off.includes(PARTS.rearDealer), rearTagline: !off.includes(PARTS.rearTagline) }
   })
   const toggle = (key: keyof typeof on) => (v: boolean) => setOn(o => ({ ...o, [key]: v }))
   const show = (link.get('show') ?? '').split(',')
@@ -145,13 +145,13 @@ export default function Livery() {
   const urlValid = isValidUrl(url.trim())
   const qrUrl = urlValid ? url.trim() : DEFAULT_URL[model]
 
-  // The rear window's own slogan is offered while the rear window and the slogan are on
-  const ownRearOffered = on.rear && on.tagline
+  // The rear window's own slogan is offered while the rear window carries a slogan
+  const ownRearOffered = on.rear && on.tagline && on.rearTagline
   const ownRearOn = ownRearOffered && ownRear && rearTagline !== undefined
   const sideText = { dealer: on.dealer ? dealer : null, tagline: on.tagline ? tagline : null }
   const rearText = {
     dealer: on.rearDealer ? sideText.dealer : null,
-    tagline: ownRearOn ? rearTagline! : sideText.tagline,
+    tagline: !on.rearTagline ? null : ownRearOn ? rearTagline! : sideText.tagline,
   }
   const qr = on.qr ? qrUrl : null
   const sheets = useMemo(
@@ -178,7 +178,7 @@ export default function Livery() {
     setOwnRear(false)
     setRearTagline(undefined)
     setUrl(DEFAULT_URL[model])
-    setOn({ qr: true, tagline: true, dealer: true, rear: true, rearDealer: true })
+    setOn({ qr: true, tagline: true, dealer: true, rear: true, rearDealer: true, rearTagline: true })
     setDims(false)
     setLarge(false)
     setQrSmall(false)
@@ -242,12 +242,13 @@ export default function Livery() {
 
             <OptionalField label="Заднее стекло" on={on.rear} onChange={toggle('rear')} />
 
-            {ownRearOffered && <Checkbox checked={ownRear} onChange={toggleOwnRear}>Другой слоган на стекле</Checkbox>}
+            {/* Whether the rear window carries the slogan at all, then whether it's the sides' */}
+            {on.rear && on.tagline && <Checkbox checked={on.rearTagline} onChange={toggle('rearTagline')}>Слоган на стекле</Checkbox>}
 
-            {ownRearOn && (
-              <Field label="Слоган на стекле">
-                <ComboField value={rearTagline!} onChange={setRearTagline} options={TAGLINES[model]} label="Варианты текста" invalid={rearSheet.some(s => s.tagline.issues.length > 0) || !rearTagline!.trim()} />
-              </Field>
+            {ownRearOffered && (
+              <OptionalField label="Другой слоган на стекле" on={ownRear} onChange={toggleOwnRear}>
+                {ownRearOn && <ComboField value={rearTagline!} onChange={setRearTagline} options={TAGLINES[model]} label="Варианты текста" invalid={rearSheet.some(s => s.tagline.issues.length > 0) || !rearTagline!.trim()} />}
+              </OptionalField>
             )}
 
             {/* The sides' dealer, in one line; whether the rear window carries it at all */}
