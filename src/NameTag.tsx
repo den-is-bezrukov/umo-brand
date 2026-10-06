@@ -1,5 +1,5 @@
-import { useEffect, useId, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, TextArea, TextInput, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined } from '@/ui/form'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined } from '@/ui/form'
 import { toD } from '@/livery/geometry'
 import { TAG, buildTag, loadFonts, type Field, type FieldBox, type Fonts, type Person } from '@/nametag/tag'
 import { readXlsx, parsePasted, type TableRow } from '@/nametag/table'
@@ -414,127 +414,12 @@ function staff(n: number): string {
   return 'сотрудник' + ({ '': '', 'а': 'а', 'ей': 'ов' } as Record<string, string>)[plural(n)]
 }
 
-/** The list entry the value is, whatever its case and spacing */
-const listed = (v: string) => POSITIONS.find(t => t.replace(/\s+/g, ' ').toLowerCase() === v.replace(/\s+/g, ' ').trim().toLowerCase())
-const ANCHOR = typeof CSS !== 'undefined' && CSS.supports('anchor-name: --a')
-
 /**
- * The position: a text field (Enter breaks the line) with the typical positions offered under it while it's focused,
- * narrowed to those containing what's typed — a combobox on the platform: the list is a manual popover (the browser
- * lays it over everything) placed under the field by CSS anchor positioning (Chrome, Safari 26; elsewhere from the
- * field's box when it opens). Arrows move through it, Enter picks, Esc or leaving the field closes it; a pick carries
- * its line break (`POSITIONS`). The chevron opens the whole list
+ * The position: a combobox of the typical positions (`POSITIONS`, each carrying its line break on the tag), free text
+ * still allowed
  */
 function PositionPicker({ value, onChange, invalid }: { value: string; onChange: (v: string) => void; invalid: boolean }) {
-  const box = useRef<HTMLDivElement>(null)
-  const list = useRef<HTMLDivElement>(null)
-  const [open, setOpen] = useState(false)
-  const [all, setAll] = useState(false)
-  const [active, setActive] = useState(-1)
-  const typed = value.replace(/\s+/g, ' ').trim().toLowerCase()
-  const hit = listed(value)
-  const matching = POSITIONS.filter(t => t.replace(/\s+/g, ' ').toLowerCase().includes(typed))
-  const shown = all || !typed || hit || !matching.length ? POSITIONS : matching
-  const id = useId()
-
-  useEffect(() => {
-    const el = list.current
-    if (!el) return
-    if (open && !el.matches(':popover-open')) {
-      if (!ANCHOR && box.current) {
-        const r = box.current.getBoundingClientRect()
-        Object.assign(el.style, { top: `${r.bottom + 4}px`, left: `${r.left}px`, width: `${r.width}px` })
-      }
-      el.showPopover()
-    } else if (!open && el.matches(':popover-open')) el.hidePopover()
-  }, [open])
-  useEffect(() => { setActive(-1) }, [typed, all])
-  useEffect(() => {
-    list.current?.querySelector(`[data-i="${active}"]`)?.scrollIntoView({ block: 'nearest' })
-  }, [active])
-
-  const pick = (t: string) => {
-    onChange(t)
-    setOpen(false)
-    setAll(false)
-  }
-  const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
-      e.preventDefault()
-      if (!open) { setOpen(true); return }
-      const n = shown.length
-      setActive(i => e.key === 'ArrowDown' ? (i + 1) % n : (i <= 0 ? n - 1 : i - 1))
-    } else if (e.key === 'Enter' && open && active >= 0) {
-      e.preventDefault()
-      pick(shown[active])
-    } else if (e.key === 'Escape' && open) {
-      e.preventDefault()
-      setOpen(false)
-    }
-  }
-
-  return (
-    <div ref={box} className="relative [anchor-name:--position-field]">
-      <TextArea
-        value={value}
-        onChange={v => { onChange(v); setAll(false); setOpen(true) }}
-        placeholder="Должность"
-        invalid={invalid}
-        className="pr-10"
-        role="combobox"
-        aria-expanded={open}
-        aria-controls={id}
-        aria-autocomplete="list"
-        aria-activedescendant={open && active >= 0 ? `${id}-${active}` : undefined}
-        onFocus={() => setOpen(true)}
-        onBlur={() => { setOpen(false); setAll(false) }}
-        onKeyDown={onKeyDown}
-      />
-      <button
-        type="button"
-        tabIndex={-1}
-        aria-label="Типовые должности"
-        onMouseDown={e => e.preventDefault()}
-        onClick={() => { box.current?.querySelector('textarea')?.focus(); setAll(true); setOpen(o => !o || !all) }}
-        className="absolute top-0 right-0 flex size-10 cursor-pointer items-center justify-center"
-      >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-          <path d="M4 6L8 10L12 6" stroke="black" strokeWidth="1.5" />
-        </svg>
-      </button>
-      <div
-        ref={list}
-        id={id}
-        popover="manual"
-        role="listbox"
-        aria-label="Типовые должности"
-        onMouseDown={e => e.preventDefault()}
-        className="max-h-[288px] overflow-y-auto rounded-[4px] border border-black/10 bg-white p-1 text-[14px] leading-5 text-black shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
-        // The popover's own styles centre it on the screen (inset 0, margin auto): undone here, then put under the field
-        style={{
-          position: 'fixed',
-          inset: 'auto',
-          margin: 0,
-          ...(ANCHOR ? { positionAnchor: '--position-field', top: 'calc(anchor(bottom) + 4px)', left: 'anchor(left)', width: 'anchor-size(width)' } : {}),
-        } as React.CSSProperties}
-      >
-        {shown.map((t, i) => (
-          <div
-            key={t}
-            id={`${id}-${i}`}
-            data-i={i}
-            role="option"
-            aria-selected={t === hit}
-            onMouseEnter={() => setActive(i)}
-            onClick={() => pick(t)}
-            className={`cursor-pointer rounded-[2px] px-2 py-1.5 ${i === active ? 'bg-[#f5f5f5]' : ''} ${t === hit ? 'font-medium' : ''}`}
-          >
-            {t.replace('\n', ' ')}
-          </div>
-        ))}
-      </div>
-    </div>
-  )
+  return <ComboField value={value} onChange={onChange} options={POSITIONS} placeholder="Должность" label="Типовые должности" invalid={invalid} />
 }
 
 /** The outlines of every field but the one being edited, which the inline field stands in for */

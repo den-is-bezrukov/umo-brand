@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 // Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag). Light UI per the Figma layout
@@ -154,6 +154,130 @@ export function TextArea({ value, onChange, placeholder, invalid, className = ''
       aria-invalid={invalid || undefined}
       className={`${areaClass} ${invalid ? 'ring-1 ring-inset ring-[#e30]' : 'focus:ring-1 focus:ring-inset focus:ring-black'} ${className}`}
     />
+  )
+}
+
+const oneLine = (t: string) => t.replace(/\s+/g, ' ').trim().toLowerCase()
+const ANCHOR = typeof CSS !== 'undefined' && CSS.supports('anchor-name: --a')
+
+/**
+ * A text field (Enter breaks the line) with suggestions under it while it's focused, narrowed to those containing what's
+ * typed — a combobox on the platform: the list is a manual popover (the browser lays it over everything) placed under
+ * the field by CSS anchor positioning (Chrome, Safari 26; elsewhere from the field's box when it opens). Arrows move
+ * through it, Enter picks, Esc or leaving the field closes it; the chevron opens the whole list. An option may carry a
+ * line break, kept in the value it gives and shown as a space in the list. First made for the name tag's position
+ */
+export function ComboField({ value, onChange, options, placeholder, label, invalid }: { value: string; onChange: (v: string) => void; options: string[]; placeholder?: string; label: string; invalid?: boolean }) {
+  const box = useRef<HTMLDivElement>(null)
+  const list = useRef<HTMLDivElement>(null)
+  const [open, setOpen] = useState(false)
+  const [all, setAll] = useState(false)
+  const [active, setActive] = useState(-1)
+  const typed = value.replace(/\s+/g, ' ').trim().toLowerCase()
+  const hit = options.find(t => oneLine(t) === typed)
+  const matching = options.filter(t => oneLine(t).includes(typed))
+  const shown = all || !typed || hit || !matching.length ? options : matching
+  const id = useId()
+  /** Each field its own anchor */
+  const anchor = `--combo${id.replace(/[^a-z0-9]/gi, '')}`
+
+  useEffect(() => {
+    const el = list.current
+    if (!el) return
+    if (open && !el.matches(':popover-open')) {
+      if (!ANCHOR && box.current) {
+        const r = box.current.getBoundingClientRect()
+        Object.assign(el.style, { top: `${r.bottom + 4}px`, left: `${r.left}px`, width: `${r.width}px` })
+      }
+      el.showPopover()
+    } else if (!open && el.matches(':popover-open')) el.hidePopover()
+  }, [open])
+  useEffect(() => { setActive(-1) }, [typed, all])
+  useEffect(() => {
+    list.current?.querySelector(`[data-i="${active}"]`)?.scrollIntoView({ block: 'nearest' })
+  }, [active])
+
+  const pick = (t: string) => {
+    onChange(t)
+    setOpen(false)
+    setAll(false)
+  }
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+      e.preventDefault()
+      if (!open) { setOpen(true); return }
+      const n = shown.length
+      setActive(i => e.key === 'ArrowDown' ? (i + 1) % n : (i <= 0 ? n - 1 : i - 1))
+    } else if (e.key === 'Enter' && open && active >= 0) {
+      e.preventDefault()
+      pick(shown[active])
+    } else if (e.key === 'Escape' && open) {
+      e.preventDefault()
+      setOpen(false)
+    }
+  }
+
+  return (
+    <div ref={box} className="relative" style={{ anchorName: anchor } as React.CSSProperties}>
+      <TextArea
+        value={value}
+        onChange={v => { onChange(v); setAll(false); setOpen(true) }}
+        placeholder={placeholder}
+        invalid={invalid}
+        className="pr-10"
+        role="combobox"
+        aria-expanded={open}
+        aria-controls={id}
+        aria-autocomplete="list"
+        aria-activedescendant={open && active >= 0 ? `${id}-${active}` : undefined}
+        onFocus={() => setOpen(true)}
+        onBlur={() => { setOpen(false); setAll(false) }}
+        onKeyDown={onKeyDown}
+      />
+      <button
+        type="button"
+        tabIndex={-1}
+        aria-label={label}
+        onMouseDown={e => e.preventDefault()}
+        onClick={() => { box.current?.querySelector('textarea')?.focus(); setAll(true); setOpen(o => !o || !all) }}
+        className="absolute top-0 right-0 flex size-10 cursor-pointer items-center justify-center"
+      >
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
+          <path d="M4 6L8 10L12 6" stroke="black" strokeWidth="1.5" />
+        </svg>
+      </button>
+      <div
+        ref={list}
+        id={id}
+        popover="manual"
+        role="listbox"
+        aria-label={label}
+        onMouseDown={e => e.preventDefault()}
+        className="max-h-[288px] overflow-y-auto rounded-[4px] border border-black/10 bg-white p-1 text-[14px] leading-5 text-black shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
+        // The popover's own styles centre it on the screen (inset 0, margin auto): undone here, then put under the field
+        style={{
+          position: 'fixed',
+          inset: 'auto',
+          margin: 0,
+          ...(ANCHOR ? { positionAnchor: anchor, top: 'calc(anchor(bottom) + 4px)', left: 'anchor(left)', width: 'anchor-size(width)' } : {}),
+        } as React.CSSProperties}
+      >
+        {shown.map((t, i) => (
+          <div
+            key={t}
+            id={`${id}-${i}`}
+            data-i={i}
+            role="option"
+            aria-selected={t === hit}
+            onMouseEnter={() => setActive(i)}
+            onClick={() => pick(t)}
+            className={`cursor-pointer rounded-[2px] px-2 py-1.5 ${i === active ? 'bg-[#f5f5f5]' : ''} ${t === hit ? 'font-medium' : ''}`}
+          >
+            {t.replace('\n', ' ')}
+          </div>
+        ))}
+      </div>
+    </div>
   )
 }
 
