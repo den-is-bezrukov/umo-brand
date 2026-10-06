@@ -179,6 +179,21 @@ export default function NameTag() {
     setPeople([...people, r])
     setSelected(r.key)
   }
+  // Delete or Backspace removes the selected tag, as on any canvas, while the focus isn't in a field (where they edit
+  // the text) and there's more than one, as «Удалить» does
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Delete' && e.key !== 'Backspace') return
+      if (mode !== 'manual' || !current || people.length < 2 || editing) return
+      const t = e.target as HTMLElement
+      if (t.closest('input, textarea, select, [contenteditable]')) return
+      e.preventDefault()
+      remove(current.key)
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  })
+
   /** A table pasted into any field of a row replaces that row (if it's empty or the example) and goes on after it */
   const paste = (key: number, e: React.ClipboardEvent) => {
     const text = e.clipboardData.getData('text/plain')
