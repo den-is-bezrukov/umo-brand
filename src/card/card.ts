@@ -160,6 +160,23 @@ export function formatPhone(raw: string): string {
 /** The site as it reads on the card: no protocol, no «www.», no slash at the end */
 export const siteText = (raw: string) => oneLine(raw).replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/$/, '')
 
+const TRANSLIT: Record<string, string> = {
+  а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n',
+  о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'kh', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'shch', ъ: '', ы: 'y',
+  ь: '', э: 'e', ю: 'yu', я: 'ya',
+}
+
+/**
+ * The site offered for a dealership: its name without «UMO», transliterated, as a subdomain of umo.auto, as the
+ * Figma card has it («dealername.umo.auto»): «UMO АГАТ Владимир» → agat-vladimir.umo.auto. Such subdomains don't
+ * exist yet; it's a suggestion, typed over freely
+ */
+export function siteFor(dealer: string): string {
+  const slug = [...oneLine(dealer).replace(/^UMO\s+/i, '').toLowerCase()].map(c => TRANSLIT[c] ?? c).join('')
+    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
+  return slug ? `${slug}.umo.auto` : ''
+}
+
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 
 /**

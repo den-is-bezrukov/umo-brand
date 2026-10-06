@@ -4,7 +4,7 @@ import { useStaff, TableSource, UploadArea, AddTile, Progress } from '@/ui/staff
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
 import { xlsxCells, pastedCells, byHeaders, type Cells } from '@/nametag/table'
-import { CARD, QR, FACE, BACK_LOGO, DEALER_FIELDS, buildBack, siteText, vcard, type CardField, type Dealer, type Person, type QrData } from '@/card/card'
+import { CARD, QR, FACE, BACK_LOGO, DEALER_FIELDS, buildBack, siteFor, siteText, vcard, type CardField, type Dealer, type Person, type QrData } from '@/card/card'
 import type { Order } from '@/card/pdf'
 import CardArt from '@/card/CardArt'
 import { POSITIONS } from '@/data/positions'
@@ -180,7 +180,20 @@ export default function BusinessCard() {
               </div>
               <div data-field="site">
                 <Labelled label="Сайт">
-                  <TextInput value={dealer.site} onChange={v => setDealer(d => ({ ...d, site: v }))} placeholder="Сайт" invalid={dealerWrong.has('site')} />
+                  {/* The dealership's umo.auto subdomain offered, once there's a name to make it from */}
+                  {siteFor(dealer.name) ? (
+                    <ComboField
+                      value={dealer.site}
+                      onChange={v => setDealer(d => ({ ...d, site: v }))}
+                      options={[siteFor(dealer.name)]}
+                      singleLine
+                      placeholder="Сайт"
+                      label="Сайт на umo.auto"
+                      invalid={dealerWrong.has('site')}
+                    />
+                  ) : (
+                    <TextInput value={dealer.site} onChange={v => setDealer(d => ({ ...d, site: v }))} placeholder="Сайт" invalid={dealerWrong.has('site')} />
+                  )}
                 </Labelled>
               </div>
               <Labelled label="QR-код">
