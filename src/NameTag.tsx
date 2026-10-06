@@ -317,7 +317,7 @@ export default function NameTag() {
             Загрузить таблицу .xlsx
           </label>
         ) : (
-        <div className="mx-auto grid w-full max-w-[1200px] grid-cols-[repeat(auto-fill,minmax(min(100%,360px),1fr))] gap-8">
+        <div className="mx-auto grid w-full max-w-[480px] grid-cols-1 gap-8">
           {items.map((it, i) => {
             const tag = tags?.[i]
             const edited = editing?.key === it.key ? editing.field : null

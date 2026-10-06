@@ -41,9 +41,11 @@ const MEDIA_LIST: { id: string; to: string; title: string; w: number; h: number;
   {
     id: 'plate-frame', to: '/plate-frame', title: 'Рамка номера', w: 912, h: 304,
     picture: (
-      <PlateArt guide>
+      <div className="flex aspect-4/3 items-center justify-center overflow-hidden bg-[#f5f5f5] md:block md:aspect-auto">
+      <PlateArt guide className="w-[130%] max-w-none shrink-0 md:w-full">
         <text y={STRIP_BASELINE} fontFamily="CoFo Sans" fontWeight={500} fontSize={18} letterSpacing={-0.18} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Центр UMO | Название дилера</text>
       </PlateArt>
+    </div>
     ),
   },
   { id: 'name-tag', to: '/name-tag', title: 'Бейдж', w: 444, h: 444, picture: <Fig name="name-tag-square" w={444} h={444} alt="Бейдж UMO на рубашке сотрудника" /> },
@@ -518,11 +520,19 @@ function Caption({ children, cross, download }: { children: ReactNode; cross?: b
   )
 }
 
-/** One exported Figma frame. `w`/`h` are the frame's 1x size in the 1440px layout and set the aspect ratio. */
-/** `href` makes the whole figure a download link, its caption led by ↓ like the rows of `Assets`. */
-function Fig({ name, w, h, alt = '', eager, caption, cross, href, className = '' }: {
-  name: string; w: number; h: number; alt?: string; eager?: boolean; caption?: ReactNode; cross?: boolean; href?: string; className?: string
+/** Whether a picture is a landscape photo that goes 4:3 on phones: 2:1 and wider, raster (schemes are SVG and stay whole). */
+const isWidePhoto = (name: string, w: number, h: number) => w / h >= 2 && !img(name)?.endsWith('.svg')
+
+/**
+ * One exported Figma frame. `w`/`h` are the frame's 1x size in the 1440px layout and set the aspect ratio. On phones a
+ * landscape photo (`isWidePhoto`) is cropped to 4:3, as a 2:1 strip 343px wide is too thin; `focus` is the crop's
+ * horizontal point in % (default the centre). `href` makes the whole figure a download link, its caption led by ↓
+ * like the rows of `Assets`.
+ */
+function Fig({ name, w, h, alt = '', eager, caption, cross, href, focus = 50, className = '' }: {
+  name: string; w: number; h: number; alt?: string; eager?: boolean; caption?: ReactNode; cross?: boolean; href?: string; focus?: number; className?: string
 }) {
+  const wide = isWidePhoto(name, w, h)
   const figure = (
     <figure className={`flex flex-col gap-3 ${href ? '' : className}`}>
       <img
@@ -532,8 +542,8 @@ function Fig({ name, w, h, alt = '', eager, caption, cross, href, className = ''
         height={h * 2}
         loading={eager ? 'eager' : 'lazy'}
         decoding="async"
-        className="block h-auto w-full bg-[#f5f5f5]"
-        style={{ aspectRatio: `${w} / ${h}` }}
+        className={`block h-auto w-full bg-[#f5f5f5] ${wide ? 'aspect-4/3 object-cover md:aspect-(--ratio)' : ''}`}
+        style={wide ? ({ '--ratio': `${w} / ${h}`, objectPosition: `${focus}% 50%` } as CSSProperties) : { aspectRatio: `${w} / ${h}` }}
       />
       {caption && <Caption cross={cross} download={!!href}>{caption}</Caption>}
     </figure>
@@ -948,7 +958,7 @@ export default function Guide() {
                     <Text><p>Через умный транспорт трансформировать культуру повседневных поездок.</p></Text>
                   </Head>
                 </div>
-                <Fig name="umo5-kv" w={912} h={456} />
+                <Fig name="umo5-kv" focus={72} w={912} h={456} />
               </Section>
 
               <Section>
@@ -1225,7 +1235,7 @@ export default function Guide() {
                 <Text><p>Ключевой образ и рекламные материалы для UMO Model 5</p></Text>
               </Head>
               <div className="flex flex-col gap-6">
-                <Fig name="umo5-kv" w={912} h={456} alt="Ключевой образ UMO 5" />
+                <Fig name="umo5-kv" focus={72} w={912} h={456} alt="Ключевой образ UMO 5" />
                 <div className="grid grid-cols-1 sm:grid-cols-[600fr_288fr] gap-6">
                   <Poster bg="umo5-banner-bg" w={600} h={368} title="Новый UMO 5" subtitle={UMO5_SUBTITLE} alt="Горизонтальный баннер UMO 5" />
                   <Poster bg="umo5-square-bg" w={288} h={368} title="Новый UMO 5" subtitle={UMO5_SUBTITLE} center alt="Вертикальный баннер UMO 5" />
@@ -1279,7 +1289,7 @@ export default function Guide() {
             <Section>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
                 <Text>
-                  <p>Носители — шаблоны, через которые бренд встречает покупателя у дилера: ливрея демо-автомобиля, прайс-карта, рамка номера и бейдж сотрудника.</p>
+                  <p>Носители — шаблоны, через которые бренд встречает покупателя у дилера: <Link to="/livery" className={TEXT_LINK}>ливрея демо-автомобиля</Link>, <Link to="/price-card" className={TEXT_LINK}>прайс-карта</Link>, <Link to="/name-tag" className={TEXT_LINK}>бейдж сотрудника</Link> и <Link to="/plate-frame" className={TEXT_LINK}>рамка номера</Link>.</p>
                 </Text>
                 <Text>
                   <p>Каждый собирается в своём конструкторе: дилер вводит свои данные, а макет, шрифты и отступы уже настроены. На выходе — файлы, готовые к печати и производству.</p>
