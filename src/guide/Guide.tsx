@@ -1334,7 +1334,7 @@ export default function Guide() {
             </Section>
           </Chapter>
 
-          <footer className="text-[16px] leading-[1.25] tracking-[-0.01em] text-[#999]">Редакция 2026. ООО «ЭМ РУС». 0+</footer>
+          <footer className="text-[16px] leading-[1.25] tracking-[-0.01em] text-[#999]">Стандарты бренда UMO 2026. ООО «ЭМ РУС». 0+</footer>
         </div>
       </main>
       </div>
