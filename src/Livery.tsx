@@ -226,12 +226,12 @@ export default function Livery() {
               <UrlField value={url} onChange={setUrl} />
             </OptionalField>
 
-            <OptionalField label="Текст сверху" on={on.dealer} onChange={toggle('dealer')}>
+            <OptionalField label="Дилер" on={on.dealer} onChange={toggle('dealer')}>
               <ComboField value={dealer} onChange={setDealer} options={DEALER_NAMES} shownAs={withoutUmo} label="Дилеры" invalid={sides.some(s => s.dealer.issues.length > 0) || !dealer.trim()} />
             </OptionalField>
 
             <OptionalField
-              label="Текст снизу"
+              label="Слоган"
               on={on.tagline}
               onChange={toggle('tagline')}
               // The larger size is for the sides laid out without the big QR: no QR or the small one
@@ -245,13 +245,13 @@ export default function Livery() {
             {ownRearOffered && <Checkbox checked={ownRear} onChange={toggleOwnRear}>Другой текст на стекле</Checkbox>}
 
             {ownRearOn && on.dealer && (
-              <Field label="Текст сверху на стекле">
+              <Field label="Дилер на стекле">
                 <TextArea value={rear!.dealer} onChange={v => setRear({ ...rear!, dealer: v })} invalid={rearSheet.some(s => s.dealer.issues.length > 0) || !rear!.dealer.trim()} />
               </Field>
             )}
 
             {ownRearOn && on.tagline && (
-              <Field label="Текст снизу на стекле">
+              <Field label="Слоган на стекле">
                 <ComboField value={rear!.tagline} onChange={v => setRear({ ...rear!, tagline: v })} options={TAGLINES[model]} label="Варианты текста" invalid={rearSheet.some(s => s.tagline.issues.length > 0) || !rear!.tagline.trim()} />
               </Field>
             )}

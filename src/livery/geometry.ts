@@ -251,7 +251,7 @@ export function buildSheet(font: Font, base: Surface, input: { dealer: string | 
   const { qr, umo, num, stack } = surface
   const none: TextResult = { lines: [], issues: [] }
   const dealer = input.dealer === null ? none
-    : setText(font, input.dealer, surface.dealer, 'Текст сверху', surface, stack && surface.dealer.baseline)
+    : setText(font, input.dealer, surface.dealer, 'Имя дилера', surface, stack && surface.dealer.baseline)
   // Stacked, the tagline follows the dealer name, or takes its place
   const afterDealer = dealer.lines.length
     ? surface.dealer.baseline + (dealer.lines.length - 1) * surface.dealer.leading + (stack?.gap ?? 0)
@@ -261,7 +261,7 @@ export function buildSheet(font: Font, base: Surface, input: { dealer: string | 
     ? { ...surface.tagline, maxLines: surface.tagline.maxLines + surface.dealer.maxLines }
     : surface.tagline
   const tagline = input.tagline === null ? none
-    : setText(font, input.tagline, taglineBlock, 'Текст снизу', surface, stack && afterDealer)
+    : setText(font, input.tagline, taglineBlock, 'Слоган', surface, stack && afterDealer)
   let sheetSurface = surface
   const digit = surface.numGlyph ?? EIGHT
   let lettering = [fromD(UMO.d, umo.h / UMO.h, umo.x, umo.y), fromD(digit.d, num.h / digit.h, num.x, num.y)]
