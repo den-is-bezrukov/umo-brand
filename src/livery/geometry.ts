@@ -273,21 +273,24 @@ export function buildSheet(font: Font, base: Surface, input: { dealer: string | 
       : null
     const top = Math.min(umo.y, num.y)
     const bottom = last ? last.first + (last.n - 1) * last.block.leading + last.block.size * DESCENDER : Math.max(umo.y + umo.h, num.y + num.h)
-    // With the QR the sheet keeps the QR's height and the column is centred on it; without, the sheet is cut down to
-    // the column, centred where the full sheet was
-    const height = bottom - top
-    const crop = input.url === null
-    const dy = crop ? -top : (surface.h - height) / 2 - top
-    lettering = lettering.map(c => moveCmds(c, 0, dy))
+    // The sheet is cut down to the column, centred where the full sheet was. A QR there is as tall as the column, so
+    // with less text it shrinks with it (with all the text the column fills its 250 and nothing changes); it stays at
+    // the start, the column keeping its gap after it, and the sheet narrows by as much, centred too.
+    // Within a millimetre of the full height is the full height: with all the text the last descender ends at 249,8
+    const height = bottom - top > surface.h - 1 ? surface.h : bottom - top
+    const shrink = input.url === null ? 0 : qr.size - height
+    const dx = -shrink
+    const dy = -top
+    lettering = lettering.map(c => moveCmds(c, dx, dy))
     for (const l of [...dealer.lines, ...tagline.lines]) {
-      l.cmds = moveCmds(l.cmds, 0, dy)
-      l.ink = { ...l.ink, y1: l.ink.y1 + dy, y2: l.ink.y2 + dy }
+      l.cmds = moveCmds(l.cmds, dx, dy)
+      l.ink = { ...l.ink, x1: l.ink.x1 + dx, x2: l.ink.x2 + dx, y1: l.ink.y1 + dy, y2: l.ink.y2 + dy }
     }
-    const sized = crop ? { ...surface, h: height, photo: { ...surface.photo, y: surface.photo.y + (surface.h - height) / 2 } } : surface
-    sheetSurface = { ...sized, dims: stackDims(sized, top + dy, bottom + dy, !!last) }
+    sheetSurface = { ...sized(surface, height, shrink), dims: stackDims(sized(surface, height, shrink), 0, height, !!last) }
   }
+  const code = sheetSurface.qr
   const fixed = [
-    ...(input.url === null ? [] : [qrOutline(input.url, qr.x, qr.y, qr.size)]),
+    ...(input.url === null ? [] : [qrOutline(input.url, code.x, code.y, code.size)]),
     ...lettering,
   ]
   const shapes = [
@@ -296,9 +299,38 @@ export function buildSheet(font: Font, base: Surface, input: { dealer: string | 
     ...tagline.lines.map(l => l.cmds),
   ]
   const issues = [...dealer.issues, ...tagline.issues]
-  if (input.dealer !== null && !input.dealer.trim()) issues.unshift('Нет текста сверху')
-  if (input.tagline !== null && !input.tagline.trim()) issues.unshift('Нет текста снизу')
+  if (input.dealer !== null && !input.dealer.trim()) issues.unshift('Нет имени дилера')
+  if (input.tagline !== null && !input.tagline.trim()) issues.unshift('Нет слогана')
   return { surface: sheetSurface, shapes, fixed, dealer, tagline, issues }
+}
+
+/**
+ * A stacked surface cut down to its column, `height` tall, centred where the full sheet was; `shrink` takes as much
+ * off the QR at its start, moving everything after it back and narrowing the sheet. The spec's columns, vertical lines
+ * and full height follow.
+ */
+function sized(s: Surface, height: number, shrink: number): Surface {
+  const end = s.qr.x + s.qr.size
+  const x = (v: number) => (v >= end - 0.01 ? v - shrink : v)
+  const w = s.w - shrink
+  return {
+    ...s,
+    w,
+    h: height,
+    qr: { x: s.qr.x, y: 0, size: s.qr.size - shrink },
+    umo: { ...s.umo, x: x(s.umo.x) },
+    num: { ...s.num, x: x(s.num.x) },
+    photo: { ...s.photo, x: s.photo.x + shrink / 2, y: s.photo.y + (s.h - height) / 2 },
+    dims: {
+      cols: s.dims.cols.map(c => {
+        const from = x(c.from)
+        const to = x(c.to)
+        return { ...c, from, to, label: mm(to - from), ...(c.y === undefined ? {} : { y: c.y - (s.h - height) }) }
+      }),
+      rows: s.dims.rows.map(r => (r.x < 0 ? { ...r, from: 0, to: height, label: mm(height) } : r)),
+      grid: s.dims.grid.map(([x1, y1, x2, y2, part]) => (x1 === x2 ? [x(x1), 0, x(x2), height, part] : [x(x1), y1, x(x2), y2, part])),
+    },
+  }
 }
 
 /** A dimension to half a millimetre, so rows add up to the sheet: 87,5 + 75 + 87,5 */
