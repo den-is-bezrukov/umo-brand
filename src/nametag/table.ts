@@ -11,6 +11,40 @@ export interface TableRow { line: number; person: Person }
 
 const HEADERS: Record<keyof Person, RegExp> = { name: /^имя$/i, surname: /^фамилия$/i, position: /^должность$/i }
 
+/** A column with the whole name, as HR systems export it: «ФИО», «Ф.И.О.», «Сотрудник», «Фамилия Имя Отчество» */
+export const FULL_NAME = /^(ф\.?\s*и\.?\s*о\.?|сотрудник|фамилия,?\s+имя(,?\s+отчество)?)$/i
+
+const PATRONYMIC = /^[а-яё]+(вич|вна|ична|инична)$/i
+const TURKIC = /^(оглы|кызы|улы|гызы)$/i
+
+/**
+ * Name and surname out of a whole name, or null where it can't be told which is which. A patronymic (with оглы or кызы
+ * after it) goes, and where it stood tells the order: last, «Петров Иван Сергеевич»; in the middle, «Иван Сергеевич
+ * Петров». Without one, two words are read in the order the place they came from uses: `nameFirst` in the name field
+ * («Иван Петров»), surname first in a ФИО column. More words than that are left alone; hyphenated ones are one word.
+ */
+export function splitFullName(text: string, nameFirst: boolean): { name: string; surname: string } | null {
+  if (text.includes('\n')) return null
+  const words = text.trim().split(/\s+/).filter(Boolean)
+  // The patronymic's words: one on -вич / -вна, or the father's name with оглы / кызы after it
+  const t = words.findIndex((w, i) => i > 1 && TURKIC.test(w))
+  const p = t >= 0 ? t - 1 : words.findIndex((w, i) => i > 0 && PATRONYMIC.test(w))
+  if (p >= 0) {
+    const end = t >= 0 ? t : p
+    const rest = words.filter((_, i) => i < p || i > end)
+    if (rest.length !== 2) return null
+    return end === words.length - 1 ? { surname: rest[0], name: rest[1] } : { name: rest[0], surname: rest[1] }
+  }
+  if (words.length !== 2) return null
+  return nameFirst ? { name: words[0], surname: words[1] } : { surname: words[0], name: words[1] }
+}
+
+/** A row's name and surname from its ФИО cell, when it has no name or surname of its own; all of it as the name if it can't be split */
+export function fromFullName<T extends { name: string; surname: string }>(person: T, full: string): T {
+  if (person.name.trim() || person.surname.trim() || !full.trim()) return person
+  return { ...person, ...(splitFullName(full, false) ?? { name: full.trim(), surname: '' }) }
+}
+
 /**
  * Rows of cells into people. Three or more cells are name, surname and position; two with a space in the first are
  * «Имя Фамилия» and position, otherwise name and surname.
@@ -18,11 +52,12 @@ const HEADERS: Record<keyof Person, RegExp> = { name: /^имя$/i, surname: /^ф
 export function toPeople(rows: { line: number; cells: string[] }[]): TableRow[] {
   const filled = rows.map(r => ({ ...r, cells: r.cells.map(c => (c ?? '').trim()) })).filter(r => r.cells.some(Boolean))
   const head = filled[0]
-  const cols = head && head.cells.some(c => HEADERS.name.test(c))
+  const cols = head && head.cells.some(c => HEADERS.name.test(c) || FULL_NAME.test(c))
     ? Object.fromEntries(Object.entries(HEADERS).map(([k, re]) => [k, head.cells.findIndex(c => re.test(c))])) as Record<keyof Person, number>
     : null
+  const full = cols ? head.cells.findIndex(c => FULL_NAME.test(c)) : -1
   return (cols ? filled.slice(1) : filled).map(({ line, cells: c }) => {
-    if (cols) return { line, person: { name: c[cols.name] ?? '', surname: c[cols.surname] ?? '', position: c[cols.position] ?? '' } }
+    if (cols) return { line, person: fromFullName({ name: c[cols.name] ?? '', surname: c[cols.surname] ?? '', position: c[cols.position] ?? '' }, c[full] ?? '') }
     if (c.length >= 3) return { line, person: { name: c[0], surname: c[1], position: c.slice(2).filter(Boolean).join(' ') } }
     if (c.length === 2 && c[0].includes(' ')) {
       const [name, ...rest] = c[0].split(/\s+/)

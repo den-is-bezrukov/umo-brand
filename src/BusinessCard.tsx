@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined, rowAction, isValidUrl, ALERT_LABEL, Checkbox } from '@/ui/form'
-import { useStaff, TableSource, UploadArea, AddTile, Progress } from '@/ui/staff'
+import { useStaff, TableSource, UploadArea, AddTile, Progress, fullNameField } from '@/ui/staff'
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
-import { xlsxCells, pastedCells, byHeaders, type Cells } from '@/nametag/table'
+import { xlsxCells, pastedCells, byHeaders, FULL_NAME, fromFullName, type Cells } from '@/nametag/table'
 import { CARD, QR, FACE, BACK_LOGO, DEALER_FIELDS, buildBack, siteFor, siteText, splitPhone, type CardField, type Dealer, type Person, type QrData } from '@/card/card'
 import CardArt from '@/card/CardArt'
 import { POSITIONS } from '@/data/positions'
@@ -33,7 +33,8 @@ const HEADERS: Record<keyof Person, RegExp> = {
   ext: /^(доб\.?|добавочный)$/i,
 }
 /** A phone cell carrying its extension («… доб. 204») fills in the extension, unless it has a column of its own */
-const toPeople = (rows: Cells[]): Person[] => byHeaders(rows, HEADERS).map(p => {
+const toPeople = (rows: Cells[]): Person[] => byHeaders(rows, { ...HEADERS, full: FULL_NAME }).map(({ full, ...row }) => {
+  const p = fromFullName(row, full)
   const split = !p.ext.trim() && splitPhone(p.phone)
   return split ? { ...p, ...split } : p
 })
@@ -229,7 +230,7 @@ export default function BusinessCard() {
                 <div ref={staff.form} onPasteCapture={e => staff.paste(p.key, e)} className="flex flex-col gap-2">
                   <div className="flex flex-col gap-4">
                     <Labelled label="Имя">
-                      <TextInput value={p.name} onChange={v => update(p.key, { name: v })} placeholder="Имя" invalid={bad('name', 'Имя')} />
+                      <TextInput value={p.name} onChange={v => update(p.key, { name: v })} {...fullNameField(p, s => update(p.key, s))} placeholder="Имя" invalid={bad('name', 'Имя')} />
                     </Labelled>
                     <Labelled label="Фамилия">
                       <TextInput value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={bad('surname', 'Фамилия') || issues.some(t => t.startsWith('Имя и фамилия'))} />

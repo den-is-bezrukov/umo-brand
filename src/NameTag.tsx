@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined } from '@/ui/form'
-import { useStaff, TableSource, UploadArea, AddTile, Progress, plural } from '@/ui/staff'
+import { useStaff, TableSource, UploadArea, AddTile, Progress, plural, fullNameField } from '@/ui/staff'
 import { toD } from '@/livery/geometry'
 import { TAG, buildTag, loadFonts, type Field, type FieldBox, type Fonts, type Person } from '@/nametag/tag'
 import { readXlsx, parsePasted } from '@/nametag/table'
@@ -107,7 +107,7 @@ export default function NameTag() {
                   <div ref={staff.form} onPasteCapture={e => staff.paste(p.key, e)} className="flex flex-col gap-2">
                     <div className="flex flex-col gap-4">
                       <Labelled label="Имя">
-                        <TextArea value={p.name} onChange={v => update(p.key, { name: v })} placeholder="Имя" invalid={issues.some(t => t.startsWith('Имя') || t === NO_NAME)} />
+                        <TextArea value={p.name} onChange={v => update(p.key, { name: v })} {...fullNameField(p, s => update(p.key, s))} placeholder="Имя" invalid={issues.some(t => t.startsWith('Имя') || t === NO_NAME)} />
                       </Labelled>
                       <Labelled label="Фамилия">
                         <TextArea value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={issues.some(t => t.startsWith('Фамилия') || t === NO_SURNAME)} />

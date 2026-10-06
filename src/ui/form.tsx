@@ -115,13 +115,14 @@ export function Segments({ children }: { children: React.ReactNode }) {
   return <div className="flex rounded-[8px] bg-[#f5f5f5]">{children}</div>
 }
 
-export function TextInput({ value, onChange, onBlur, placeholder, invalid, numeric, inputMode, list, className = '' }: { value: string; onChange: (v: string) => void; onBlur?: () => void; placeholder?: string; invalid?: boolean; numeric?: boolean; inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode']; list?: string; className?: string }) {
+export function TextInput({ value, onChange, onBlur, onPaste, placeholder, invalid, numeric, inputMode, list, className = '' }: { value: string; onChange: (v: string) => void; onBlur?: () => void; onPaste?: (e: React.ClipboardEvent) => void; placeholder?: string; invalid?: boolean; numeric?: boolean; inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode']; list?: string; className?: string }) {
   return (
     <input
       value={value}
       list={list}
       onChange={e => onChange(e.target.value)}
       onBlur={() => onBlur?.()}
+      onPaste={onPaste}
       placeholder={placeholder}
       aria-invalid={invalid || undefined}
       inputMode={inputMode ?? (numeric ? 'numeric' : undefined)}

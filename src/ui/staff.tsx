@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { outlined } from '@/ui/form'
+import { splitFullName } from '@/nametag/table'
 
 // A staff list, shared by the generators that make one item per person (name tags, business cards): two modes,
 // «Вручную», a list typed on the page with one person selected in the sidebar, and «Из таблицы», a filled-in template
@@ -25,6 +26,24 @@ export interface StaffOptions<P> {
   readFile: (data: ArrayBuffer) => P[]
   /** Rows copied from a spreadsheet (tab-separated) */
   readPasted: (text: string) => P[]
+}
+
+/**
+ * The name field takes a whole name: pasted into it, or left in it, while the surname is still empty, «Иван Петров» (or
+ * «Петров Иван Сергеевич») goes into both fields (`splitFullName`, name first unless a patronymic says otherwise).
+ * A name of two words without a hyphen stays whole once the surname is filled in first.
+ */
+export function fullNameField(person: { name: string; surname: string }, set: (patch: { name: string; surname: string }) => void) {
+  const split = (text: string) => (person.surname.trim() ? null : splitFullName(text, true))
+  return {
+    onPaste: (e: React.ClipboardEvent) => {
+      const text = e.clipboardData.getData('text/plain')
+      if (text.includes('\t') || person.name.trim()) return
+      const s = split(text)
+      if (s) { e.preventDefault(); set(s) }
+    },
+    onBlur: () => { const s = split(person.name); if (s) set(s) },
+  }
 }
 
 export function useStaff<P extends object>({ blank, readFile, readPasted }: StaffOptions<P>) {
