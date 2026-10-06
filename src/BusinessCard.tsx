@@ -4,7 +4,7 @@ import { useStaff, TableSource, UploadArea, AddTile, Progress } from '@/ui/staff
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
 import { xlsxCells, pastedCells, byHeaders, type Cells } from '@/nametag/table'
-import { CARD, QR, FACE, BACK_LOGO, DEALER_FIELDS, buildBack, siteFor, siteText, splitPhone, vcard, type CardField, type Dealer, type Person, type QrData } from '@/card/card'
+import { CARD, QR, FACE, BACK_LOGO, DEALER_FIELDS, buildBack, siteFor, siteText, splitPhone, type CardField, type Dealer, type Person, type QrData } from '@/card/card'
 import type { Order } from '@/card/pdf'
 import CardArt from '@/card/CardArt'
 import { POSITIONS } from '@/data/positions'
@@ -68,7 +68,9 @@ export default function BusinessCard() {
   const dealer: Dealer = { ...input, site: input.site ?? siteFor(input.name) }
   /** The address and the site, under «Изменить»: a dealer picked from the list fills them in */
   const [dealerOpen, setDealerOpen] = useState(false)
-  const [qrMode, setQrMode] = useState<'link' | 'contact'>('link')
+  // The QR as a contact (a vCard per person, `vcard` in card.ts) is off for now: the QR is a link only. To bring it
+  // back, restore this state, the branch in `qrFor` and the «Ссылка / Контакт» segments in `qrField`
+  // const [qrMode, setQrMode] = useState<'link' | 'contact'>('link')
   /** The QR's link, following the site until it's edited */
   const [qrLink, setQrLink] = useState<string | null>(null)
   const [order, setOrder] = useState<Order>('face-once')
@@ -85,9 +87,8 @@ export default function BusinessCard() {
 
   const siteLink = siteText(dealer.site) ? `https://${siteText(dealer.site)}` : ''
   const link = qrLink ?? siteLink
-  const qrFor = (p: Person): QrData | null => qrMode === 'contact'
-    ? { text: vcard(dealer, p), level: 'L' }
-    : isValidUrl(link) ? { text: link.trim(), level: 'M' } : null
+  const qrFor = (_p: Person): QrData | null => /* qrMode === 'contact' ? { text: vcard(dealer, _p), level: 'L' } : */
+    isValidUrl(link) ? { text: link.trim(), level: 'M' } : null
 
   const items = staff.items
   /** Each card as built, with the placeholders standing in for empty required fields */
@@ -108,7 +109,7 @@ export default function BusinessCard() {
     // Without a link yet, a grey code stands in for it, as the placeholders do
     const ghostQr = qr ? [] : qrOutline(SAMPLE_LINK, QR.x, QR.y, QR.size)
     return { back, ghost, ghostQr, issues: back.issues.filter(i => !i.field || !ghost.has(i.field)) }
-  }) : undefined, [fonts, items, dealer, qrMode, link]) // eslint-disable-line react-hooks/exhaustive-deps
+  }) : undefined, [fonts, items, dealer, link]) // eslint-disable-line react-hooks/exhaustive-deps
 
   /** The dealership's errors, the same on every card */
   const dealerMissing = (['dealer', 'address', 'site'] as const).filter(f => !(f === 'dealer' ? dealer.name : dealer[f]).trim())
@@ -161,11 +162,11 @@ export default function BusinessCard() {
   /** The QR, the whole list's, set beside the person's contacts as it stands beside them on the card */
   const qrField = (
     <Labelled label="QR-код">
-      <Segments>
+      {/* <Segments>
         <SegBtn active={qrMode === 'link'} onClick={() => setQrMode('link')}>Ссылка</SegBtn>
         <SegBtn active={qrMode === 'contact'} onClick={() => setQrMode('contact')}>Контакт</SegBtn>
-      </Segments>
-      {qrMode === 'link' && <UrlField value={link} onChange={setQrLink} />}
+      </Segments> */}
+      <UrlField value={link} onChange={setQrLink} />
     </Labelled>
   )
   const showBar = dealerIssues.length > 0 || (failing.length === 0 ? items.length > 0 : items.length > 1)
