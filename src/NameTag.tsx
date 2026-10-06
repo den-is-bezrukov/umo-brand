@@ -154,9 +154,10 @@ export default function NameTag() {
         </div>}
       </aside>
 
-      {/* In the table mode the preview takes a dropped file too, and until one is loaded it's all an upload */}
+      {/* The whole preview takes a dropped table in either mode, saying so only in the table mode, where until a file is
+          loaded it's all an upload */}
       <main
-        {...(mode === 'table' ? staff.dropTarget : {})}
+        {...staff.dropTarget}
         onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure, [data-add]')) setSelected(null) }}
         className={`flex flex-1 flex-col bg-[#f5f5f5] p-6 pb-[112px] md:min-w-0 md:overflow-y-auto md:p-16
           ${mode === 'table' && staff.file && staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}

@@ -69,7 +69,9 @@ export function useStaff<P extends object>({ blank, readFile, readPasted }: Staf
   const loadRowsRef = useRef(loadRows)
   loadRowsRef.current = loadRows
 
+  // A file is a table, so loading one (dropped on the canvas in either mode) goes to «Из таблицы», where it shows
   const loadFile = async (f: File) => {
+    setMode('table')
     try {
       const rows = readFile(await f.arrayBuffer())
       if (!rows.length) throw new Error('В таблице нет строк')
@@ -188,7 +190,7 @@ export function useStaff<P extends object>({ blank, readFile, readPasted }: Staf
     setSelected(added[0].key)
   }
 
-  /** A file dropped here loads the table */
+  /** A file dropped here loads the table: the whole canvas in either mode, shown only in the table mode */
   const dropTarget = {
     onDragOver: (e: React.DragEvent) => { e.preventDefault(); setDragging(true) },
     onDragLeave: (e: React.DragEvent) => { if (!e.currentTarget.contains(e.relatedTarget as Node)) setDragging(false) },
