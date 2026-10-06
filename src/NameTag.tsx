@@ -40,7 +40,7 @@ export default function NameTag() {
     setList(next)
     setFile('')
   }
-  /** The one person the sidebar edits, picked by clicking their tag; a click beside the tags leaves none selected */
+  /** The one person the sidebar edits, picked by clicking their tag's row; a click above, under or between them leaves none selected */
   const [selectedKey, setSelected] = useState<number | null>(() => people[0].key)
   /** A field being edited on the tag itself, after a double click on its text */
   const [editing, setEditing] = useState<{ key: number; field: Field } | null>(null)
@@ -311,7 +311,7 @@ export default function NameTag() {
       {/* In the table mode the preview takes a dropped file too, and until one is loaded it's all an upload */}
       <main
         {...(mode === 'table' ? dropTarget : {})}
-        onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure button, figure textarea, [data-add]')) setSelected(null) }}
+        onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure, [data-add]')) setSelected(null) }}
         className={`flex flex-1 flex-col bg-[#f5f5f5] p-6 pb-[112px] md:min-w-0 md:overflow-y-auto md:p-16
           ${mode === 'table' && file && dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
       >
@@ -322,7 +322,7 @@ export default function NameTag() {
             Загрузить таблицу .xlsx
           </label>
         ) : (
-        <div className="m-auto grid w-full max-w-[480px] grid-cols-1 gap-8">
+        <div className="m-auto grid w-full grid-cols-1 gap-8">
           {items.map((it, i) => {
             const tag = tags?.[i]
             const edited = editing?.key === it.key ? editing.field : null
@@ -333,17 +333,19 @@ export default function NameTag() {
             const active = mode === 'manual' && key === current?.key
             const dimmed = mode === 'manual' && !!current && !active
             return (
+              // The whole row of the canvas is the tag's: pointing or clicking anywhere across it hovers or picks it
               <figure
                 key={it.key}
                 ref={el => { if (el) figures.current.set(key, el); else figures.current.delete(key) }}
-                className="@container flex flex-col gap-3"
+                onClick={() => { setSelected(key); setFlagged(null); setMode('manual') }}
+                className="group/row flex cursor-pointer justify-center"
               >
+                <div className="@container flex w-full max-w-[480px] flex-col gap-3">
                 {/* In the manual list a tag is picked for editing by clicking it; the picked one is outlined. A double click
                     on its text edits that field right there */}
                 <div className="relative">
                 <button
                   type="button"
-                  onClick={() => { setSelected(key); setFlagged(null); setMode('manual') }}
                   onDoubleClick={e => {
                     if (!tag || !ghosts?.[i]) return
                     const r = e.currentTarget.getBoundingClientRect()
@@ -354,8 +356,8 @@ export default function NameTag() {
                   }}
                   aria-pressed={mode === 'manual' ? active : undefined}
                   className={`block w-full cursor-pointer rounded-[5.714cqw] outline-offset-4 transition-opacity duration-150
-                    ${active ? 'outline-2 outline-black' : 'outline-1 outline-transparent hover:outline-black/20'}
-                    ${dimmed ? 'opacity-40 hover:opacity-100' : ''}`}
+                    ${active ? 'outline-2 outline-black' : 'outline-1 outline-transparent group-hover/row:outline-black/20'}
+                    ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
                 >
                   <TagArt
                     text={tag ? toD(fieldsBut(tag.fields, edited)) : undefined}
@@ -376,12 +378,13 @@ export default function NameTag() {
                 {bad && (
                   <p className="text-[13px] leading-5 text-[#e30]">{alertLine(problems[i])}</p>
                 )}
+                </div>
               </figure>
             )
           })}
           {/* «Добавить» as the next tag in the grid: a dashed plate of the tag's shape; the manual list only */}
           {mode === 'manual' && (
-            <div className="@container self-start">
+            <div className="@container mx-auto w-full max-w-[480px] self-start">
             <button
               type="button"
               data-add
