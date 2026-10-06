@@ -414,14 +414,16 @@ function staff(n: number): string {
   return 'сотрудник' + ({ '': '', 'а': 'а', 'ей': 'ов' } as Record<string, string>)[plural(n)]
 }
 
-const listed = (v: string) => POSITIONS.find(t => t.replace(/\s+/g, ' ') === v.replace(/\s+/g, ' ').trim())
+/** The list entry the value is, whatever its case and spacing */
+const listed = (v: string) => POSITIONS.find(t => t.replace(/\s+/g, ' ').toLowerCase() === v.replace(/\s+/g, ' ').trim().toLowerCase())
 const MANUAL = '__manual'
 
 /**
  * The position: one field that is a native select of the typical positions while it's empty or holds one of them (a
  * transparent select over a box dressed as the other fields, so the whole field opens the list, from its own edge),
  * with «Ввести вручную…» first, which turns the same field into a text field (Enter breaks the line); a position not
- * in the list shows there too, its chevron still opening the list. A pick carries its line break (`POSITIONS`). No
+ * in the list shows there too, its chevron still opening the list, marked on the entry a typed position matches. A
+ * pick carries its line break (`POSITIONS`). No
  * title in the list: the empty value is a hidden option
  */
 function PositionPicker({ value, onChange, invalid }: { value: string; onChange: (v: string) => void; invalid: boolean }) {
@@ -447,7 +449,7 @@ function PositionPicker({ value, onChange, invalid }: { value: string; onChange:
     </svg>
   )
   const select = (className: string) => (
-    <select value={!manual && hit ? String(POSITIONS.indexOf(hit)) : ''} onChange={e => pick(e.target.value)} aria-label="Должность"
+    <select value={hit ? String(POSITIONS.indexOf(hit)) : ''} onChange={e => pick(e.target.value)} aria-label="Должность"
       className={`absolute cursor-pointer appearance-none opacity-0 outline-none ${className}`}>
       {options}
     </select>
