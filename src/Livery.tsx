@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Font } from 'opentype.js'
-import { Field, OptionalField, Segments, SegBtn, TextArea, ComboField, UrlField, Checkbox, SizeSwitch, GeneratorHeader, LinkButtons, DownloadButton, isValidUrl } from '@/ui/form'
+import { Field, OptionalField, Segments, SegBtn, ComboField, UrlField, Checkbox, SizeSwitch, GeneratorHeader, LinkButtons, DownloadButton, isValidUrl } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
 import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
 import { DEFAULT_TAGLINE, TAGLINES } from '@/data/taglines'
@@ -246,7 +246,7 @@ export default function Livery() {
 
             {ownRearOn && on.dealer && (
               <Field label="Дилер на стекле">
-                <TextArea value={rear!.dealer} onChange={v => setRear({ ...rear!, dealer: v })} invalid={rearSheet.some(s => s.dealer.issues.length > 0) || !rear!.dealer.trim()} />
+                <ComboField value={rear!.dealer} onChange={v => setRear({ ...rear!, dealer: v })} options={DEALER_NAMES} shownAs={withoutUmo} label="Дилеры" invalid={rearSheet.some(s => s.dealer.issues.length > 0) || !rear!.dealer.trim()} />
               </Field>
             )}
 
