@@ -264,7 +264,7 @@ export default function Livery() {
 
             {on.rear && rearShown && on.tagline && (
               <OptionalField
-                label="Слоган"
+                label="Слоган на стекле"
                 on={on.rearTagline}
                 onChange={toggle('rearTagline')}
                 extra={ownRear ? undefined : <RowAction onClick={() => toggleOwnRear(true)}>Изменить</RowAction>}
@@ -273,7 +273,7 @@ export default function Livery() {
               </OptionalField>
             )}
 
-            {on.rear && rearShown && on.dealer && <Checkbox checked={on.rearDealer} onChange={toggle('rearDealer')}>Дилер</Checkbox>}
+            {on.rear && rearShown && on.dealer && <Checkbox checked={on.rearDealer} onChange={toggle('rearDealer')}>Дилер на стекле</Checkbox>}
 
             {/* Overlays on the preview only */}
             <Checkbox checked={dims} onChange={setDims}>Показать размеры</Checkbox>
