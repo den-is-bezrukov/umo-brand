@@ -19,7 +19,6 @@ const BLANK: Person = { name: '', surname: '', position: '' }
 const NO_NAME = 'Нет имени'
 const NO_SURNAME = 'Нет фамилии'
 const NO_POSITION = 'Нет должности'
-const RED = '#e30'
 
 interface Row extends Person { key: number }
 
@@ -342,6 +341,8 @@ export default function NameTag() {
             const tag = tags?.[i]
             const edited = editing?.key === it.key ? editing.field : null
             const bad = problems[i].length > 0
+            // Only the fields at fault turn red; a missing one is said under the tag, the rest stays as it is
+            const wrong = faultyFields(tag?.issues ?? [])
             const key = it.key
             // In the manual list a tag is picked for editing; in the table one, clicking a tag goes to edit it there.
             // The tags but the selected one are dimmed; with none selected (in the table always) all are clear
@@ -375,9 +376,9 @@ export default function NameTag() {
                     ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
                 >
                   <TagArt
-                    text={tag ? toD(fieldsBut(tag.fields, edited)) : undefined}
+                    text={tag ? toD(fieldsBut(tag.fields, edited, f => !wrong.has(f))) : undefined}
+                    alert={tag && wrong.size ? toD(fieldsBut(tag.fields, edited, f => wrong.has(f))) : undefined}
                     ghost={ghosts?.[i] ? toD(fieldsBut(ghosts[i].fields, edited)) : undefined}
-                    color={bad ? RED : undefined}
                   />
                 </button>
                 {edited && tag && (
@@ -446,9 +447,22 @@ function PositionPicker({ value, onChange, invalid }: { value: string; onChange:
   return <ComboField value={value} onChange={onChange} options={POSITIONS} placeholder="Должность" label="Типовые должности" invalid={invalid} />
 }
 
-/** The outlines of every field but the one being edited, which the inline field stands in for */
-function fieldsBut(fields: Record<Field, FieldBox>, except: Field | null) {
-  return (Object.keys(fields) as Field[]).filter(f => f !== except).flatMap(f => fields[f].cmds)
+/** The outlines of every field (of those `only` keeps) but the one being edited, which the inline field stands in for */
+function fieldsBut(fields: Record<Field, FieldBox>, except: Field | null, only: (f: Field) => boolean = () => true) {
+  return (Object.keys(fields) as Field[]).filter(f => f !== except && only(f)).flatMap(f => fields[f].cmds)
+}
+
+/** The fields a tag's issues are about, by the label they start with (`buildTag`); a missing glyph could be in any */
+function faultyFields(issues: string[]): Set<Field> {
+  const wrong = new Set<Field>()
+  for (const t of issues) {
+    if (t.startsWith('Имя и фамилия')) { wrong.add('name'); wrong.add('surname') }
+    else if (t.startsWith('Имя')) wrong.add('name')
+    else if (t.startsWith('Фамилия')) wrong.add('surname')
+    else if (t.startsWith('Должность') || t.startsWith('При имени')) wrong.add('position')
+    else if (t.startsWith('Нет в шрифте')) { wrong.add('name'); wrong.add('surname'); wrong.add('position') }
+  }
+  return wrong
 }
 
 /** The field under a double click at `y` mm: the one whose lines it hits, else the nearest; empty fields by their placeholders */
