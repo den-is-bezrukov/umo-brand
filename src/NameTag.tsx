@@ -44,6 +44,8 @@ export default function NameTag() {
   const [selectedKey, setSelected] = useState<number | null>(() => people[0].key)
   /** A field being edited on the tag itself, after a double click on its text */
   const [editing, setEditing] = useState<{ key: number; field: Field } | null>(null)
+  /** The tag whose position was set to «Другая…» and may still be empty */
+  const [otherKey, setOtherKey] = useState<number | null>(null)
   const current = people.find(p => p.key === selectedKey)
   const selected = current?.key
   const [tableError, setTableError] = useState('')
@@ -243,7 +245,13 @@ export default function NameTag() {
                         <TextArea value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={issues.some(t => t.startsWith('Фамилия') || t === NO_SURNAME)} />
                       </Labelled>
                       <Labelled label="Должность">
-                        <TextInput value={p.position.replace(/\s*\n\s*/g, ' ')} onChange={v => update(p.key, { position: v })} placeholder="Должность" list="positions" invalid={issues.some(t => t.startsWith('Должность') || t === NO_POSITION)} />
+                        <PositionPicker
+                          value={p.position}
+                          other={otherKey === p.key}
+                          onOther={on => setOtherKey(on ? p.key : null)}
+                          onChange={v => update(p.key, { position: v })}
+                          invalid={issues.some(t => t.startsWith('Должность') || t === NO_POSITION)}
+                        />
                       </Labelled>
                     </div>
                     {/* The selected tag's actions under its fields, side by side as the other generators' «Копировать» and
@@ -298,11 +306,6 @@ export default function NameTag() {
       </aside>
 
       {/* In the table mode the preview takes a dropped file too, and until one is loaded it's all an upload */}
-      {/* The position field's suggestions, one line each: a pick takes its line break from the list on the tag */}
-      <datalist id="positions">
-        {POSITIONS.map(t => <option key={t} value={t.replace('\n', ' ')} />)}
-      </datalist>
-
       <main
         {...(mode === 'table' ? dropTarget : {})}
         onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure button, figure textarea, [data-add]')) setSelected(null) }}
@@ -412,6 +415,48 @@ async function downloadTemplate(e: React.MouseEvent) {
 /** сотрудник, сотрудника, сотрудников */
 function staff(n: number): string {
   return 'сотрудник' + ({ '': '', 'а': 'а', 'ей': 'ов' } as Record<string, string>)[plural(n)]
+}
+
+const OTHER = '__other'
+const listed = (v: string) => POSITIONS.find(t => t.replace(/\s+/g, ' ') === v.replace(/\s+/g, ' ').trim())
+
+/**
+ * The position: a native select of the typical positions, dressed as the other fields (a transparent select over a
+ * plain box with a chevron, as the generator switcher in the header), with «Другая…» last, which opens a field for
+ * any other position under it. A pick from the list carries its line break (`POSITIONS`)
+ */
+function PositionPicker({ value, other, onOther, onChange, invalid }: { value: string; other: boolean; onOther: (on: boolean) => void; onChange: (v: string) => void; invalid: boolean }) {
+  const hit = listed(value)
+  const custom = other || (!!value.trim() && !hit)
+  const selected = custom ? OTHER : hit ? String(POSITIONS.indexOf(hit)) : ''
+  return (
+    <div className="flex flex-col gap-2">
+      <div className={`relative flex h-10 items-center justify-between rounded-[4px] bg-[#f5f5f5] px-3 text-[14px] leading-5
+        ${invalid && !custom ? 'ring-1 ring-inset ring-[#e30]' : 'has-[select:focus-visible]:ring-1 has-[select:focus-visible]:ring-inset has-[select:focus-visible]:ring-black'}`}>
+        <span className={`truncate ${selected ? 'text-black' : 'text-[#999]'}`}>
+          {selected === OTHER ? 'Другая' : hit ? hit.replace('\n', ' ') : 'Должность'}
+        </span>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden className="shrink-0">
+          <path d="M4 6L8 10L12 6" stroke="black" strokeWidth="1.5" />
+        </svg>
+        <select
+          value={selected}
+          onChange={e => {
+            const v = e.target.value
+            if (v === OTHER) { onOther(true); if (hit) onChange('') }
+            else { onOther(false); onChange(POSITIONS[Number(v)]) }
+          }}
+          aria-label="Должность"
+          className="absolute inset-0 cursor-pointer appearance-none opacity-0 outline-none"
+        >
+          <option value="" disabled>Должность</option>
+          {POSITIONS.map((t, i) => <option key={t} value={i}>{t.replace('\n', ' ')}</option>)}
+          <option value={OTHER}>Другая…</option>
+        </select>
+      </div>
+      {custom && <TextArea value={value} onChange={onChange} placeholder="Своя должность" invalid={invalid} />}
+    </div>
+  )
 }
 
 /** The outlines of every field but the one being edited, which the inline field stands in for */
