@@ -244,6 +244,7 @@ export default function NameTag() {
                       </Labelled>
                       <Labelled label="Должность">
                         <PositionPicker
+                          key={p.key}
                           value={p.position}
                           onChange={v => update(p.key, { position: v })}
                           invalid={issues.some(t => t.startsWith('Должность') || t === NO_POSITION)}
@@ -414,32 +415,58 @@ function staff(n: number): string {
 }
 
 const listed = (v: string) => POSITIONS.find(t => t.replace(/\s+/g, ' ') === v.replace(/\s+/g, ' ').trim())
+const MANUAL = '__manual'
 
 /**
- * The position: one field, typed freely (Enter breaks the line), with a chevron at its end that opens a native select
- * of the typical positions (a transparent select over the chevron only, so a click on the text still types). A pick
- * fills the field with the entry and its line break (`POSITIONS`)
+ * The position: one field that is a native select of the typical positions while it's empty or holds one of them (a
+ * transparent select over a box dressed as the other fields, so the whole field opens the list, from its own edge),
+ * with «Ввести вручную…» first, which turns the same field into a text field (Enter breaks the line); a position not
+ * in the list shows there too, its chevron still opening the list. A pick carries its line break (`POSITIONS`). No
+ * title in the list: the empty value is a hidden option
  */
 function PositionPicker({ value, onChange, invalid }: { value: string; onChange: (v: string) => void; invalid: boolean }) {
   const hit = listed(value)
-  return (
-    <div className="relative">
+  const [typing, setTyping] = useState(false)
+  const manual = typing || (!!value.trim() && !hit)
+  const box = useRef<HTMLDivElement>(null)
+  useEffect(() => { if (typing) box.current?.querySelector('textarea')?.focus() }, [typing])
+  const options = (
+    <>
+      <option value="" hidden disabled />
+      <option value={MANUAL}>Ввести вручную…</option>
+      {POSITIONS.map((t, i) => <option key={t} value={i}>{t.replace('\n', ' ')}</option>)}
+    </>
+  )
+  const pick = (v: string) => {
+    if (v === MANUAL) setTyping(true)
+    else { setTyping(false); onChange(POSITIONS[Number(v)]) }
+  }
+  const chevron = (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden className="shrink-0">
+      <path d="M4 6L8 10L12 6" stroke="black" strokeWidth="1.5" />
+    </svg>
+  )
+  const select = (className: string) => (
+    <select value={!manual && hit ? String(POSITIONS.indexOf(hit)) : ''} onChange={e => pick(e.target.value)} aria-label="Должность"
+      className={`absolute cursor-pointer appearance-none opacity-0 outline-none ${className}`}>
+      {options}
+    </select>
+  )
+  if (manual) return (
+    <div ref={box} className="relative">
       <TextArea value={value} onChange={onChange} placeholder="Должность" invalid={invalid} className="pr-10" />
       <div className="absolute top-0 right-0 flex size-10 items-center justify-center">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-          <path d="M4 6L8 10L12 6" stroke="black" strokeWidth="1.5" />
-        </svg>
-        <select
-          value={hit ? String(POSITIONS.indexOf(hit)) : ''}
-          onChange={e => onChange(POSITIONS[Number(e.target.value)])}
-          aria-label="Типовые должности"
-          title="Типовые должности"
-          className="absolute inset-0 cursor-pointer appearance-none opacity-0 outline-none"
-        >
-          <option value="" disabled>Типовые должности</option>
-          {POSITIONS.map((t, i) => <option key={t} value={i}>{t.replace('\n', ' ')}</option>)}
-        </select>
+        {chevron}
+        {select('inset-0')}
       </div>
+    </div>
+  )
+  return (
+    <div className={`relative flex h-10 items-center justify-between gap-2 rounded-[4px] bg-[#f5f5f5] px-3 text-[14px] leading-5
+      ${invalid ? 'ring-1 ring-inset ring-[#e30]' : 'has-[select:focus-visible]:ring-1 has-[select:focus-visible]:ring-inset has-[select:focus-visible]:ring-black'}`}>
+      <span className={`truncate ${hit ? 'text-black' : 'text-[#999]'}`}>{hit ? hit.replace('\n', ' ') : 'Должность'}</span>
+      {chevron}
+      {select('inset-0')}
     </div>
   )
 }
