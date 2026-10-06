@@ -277,7 +277,8 @@ export default function BusinessCard() {
 
             {/* The whole file's, set apart */}
             <div className="mt-6 flex flex-col gap-4">
-              <Checkbox checked={faceEach} onChange={setFaceEach}>Обложка у всех</Checkbox>
+              {/* With one card the face goes once either way */}
+              {items.length > 1 && <Checkbox checked={faceEach} onChange={setFaceEach}>Обложка у всех</Checkbox>}
               <Checkbox checked={marks} onChange={setMarks}>Метки реза</Checkbox>
             </div>
           </div>
