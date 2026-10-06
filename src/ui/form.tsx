@@ -377,7 +377,7 @@ export function SizeSwitch({ large, onChange, label }: { large: boolean; onChang
       onClick={() => onChange(!large)}
       aria-pressed={large}
       aria-label={label}
-      className="flex shrink-0 cursor-pointer items-center gap-1 text-[14px] leading-5 text-black outline-none transition-colors hover:text-black/50 focus-visible:ring-2 focus-visible:ring-black/30"
+      className="flex shrink-0 cursor-pointer items-center gap-2 text-[14px] leading-5 text-black outline-none transition-colors hover:text-black/50 focus-visible:ring-2 focus-visible:ring-black/30"
     >
       {large ? 'Мельче' : 'Крупнее'}
       <SizeIcon grow={!large} />
