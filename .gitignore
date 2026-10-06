@@ -11,3 +11,6 @@ logs/
 *.log
 .claude-replay.*
 .tmp-*
+
+# Local preview servers for Claude chats
+.claude/launch.json
