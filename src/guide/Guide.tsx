@@ -1206,8 +1206,8 @@ export default function Guide() {
             <Section>
               <H2 id="made-in-moscow">Сделано в Москве</H2>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <Fig name="moscow-umo5" w={444} h={368} alt="Шильдик «Сделано в Москве» на UMO 5" />
-                <Fig name="moscow-umo8" w={444} h={368} alt="Шильдик «Сделано в Москве» на UMO 8" />
+                <Fig name="moscow-umo5" w={444} h={333} alt="Шильдик «Сделано в Москве» на UMO 5" />
+                <Fig name="moscow-umo8" w={444} h={333} alt="Шильдик «Сделано в Москве» на UMO 8" />
               </div>
             </Section>
           </Chapter>
