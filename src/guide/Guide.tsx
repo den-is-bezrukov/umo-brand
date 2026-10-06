@@ -27,7 +27,7 @@ type NavItem = { id: string; title: string; children?: NavItem[] }
  * media as they actually stand.
  */
 const MEDIA_LIST: { id: string; to: string; title: string; w: number; h: number; picture: ReactNode }[] = [
-  { id: 'livery', to: '/livery', title: 'Ливрея', w: 912, h: 456, picture: <Fig name="livery-umo8" w={912} h={456} alt="UMO 8 с ливреей дилера" /> },
+  { id: 'livery', to: '/livery', title: 'Ливрея', w: 912, h: 456, picture: <Fig name="livery-umo5" w={912} h={456} alt="UMO 5 с ливреей дилера" /> },
   {
     id: 'price-card', to: '/price-card', title: 'Прайс-карта', w: 444, h: 444,
     picture: (
@@ -46,7 +46,7 @@ const MEDIA_LIST: { id: string; to: string; title: string; w: number; h: number;
       </PlateArt>
     ),
   },
-  { id: 'name-tag', to: '/name-tag', title: 'Бейдж', w: 444, h: 444, picture: <SquarePicture name="name-tag" alt="Бейдж UMO на рубашке сотрудника" /> },
+  { id: 'name-tag', to: '/name-tag', title: 'Бейдж', w: 444, h: 444, picture: <Fig name="name-tag-square" w={444} h={444} alt="Бейдж UMO на рубашке сотрудника" /> },
 
 ]
 const isWide = (m: { w: number; h: number }) => m.w / m.h >= 2
@@ -710,15 +710,6 @@ function Carriers({ items }: { items: typeof MEDIA }) {
           <Constructor to={c.to} title={c.title} flush>{c.picture}</Constructor>
         </div>
       ))}
-    </div>
-  )
-}
-
-/** A square crop of a guide picture, for the overview's narrow cards. */
-function SquarePicture({ name, alt }: { name: string; alt: string }) {
-  return (
-    <div className="aspect-square overflow-hidden bg-[#f5f5f5]">
-      <img src={img(name)} alt={alt} loading="lazy" decoding="async" className="size-full object-cover" />
     </div>
   )
 }
