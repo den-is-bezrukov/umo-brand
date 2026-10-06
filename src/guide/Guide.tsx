@@ -42,7 +42,7 @@ const MEDIA_LIST: { id: string; to: string; title: string; w: number; h: number;
     id: 'plate-frame', to: '/plate-frame', title: 'Рамка номера', w: 912, h: 304,
     picture: (
       <div className="flex aspect-4/3 items-center justify-center overflow-hidden bg-[#f5f5f5] md:block md:aspect-auto">
-      <PlateArt guide className="w-[130%] max-w-none shrink-0 md:w-full">
+      <PlateArt guide className="w-[130%]! max-w-none shrink-0 md:w-full!">
         <text y={STRIP_BASELINE} fontFamily="CoFo Sans" fontWeight={500} fontSize={18} letterSpacing={-0.18} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Центр UMO | Название дилера</text>
       </PlateArt>
     </div>
