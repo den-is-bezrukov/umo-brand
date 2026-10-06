@@ -168,8 +168,14 @@ export default function Livery() {
   // or it has a slogan of its own
   const rearOptions = on.dealer || on.tagline
   const rearCustom = (on.dealer && !on.rearDealer) || (on.tagline && (!on.rearTagline || ownRear))
-  // Opened from a link with such settings it stays open once they go back to the sides', not folding under the cursor
-  const [rearOpen, setRearOpen] = useState(rearCustom)
+  const [rearOpen, setRearOpen] = useState(false)
+  const rearShown = rearOptions && (rearOpen || rearCustom)
+  const resetRear = () => {
+    setOn(o => ({ ...o, rearDealer: true, rearTagline: true }))
+    setOwnRear(false)
+    setRearTagline(undefined)
+    setRearOpen(false)
+  }
   const sloganSheets = sheets.filter(s => s.surface.id !== 'rear' || !ownRearOn)
   const rearSheet = ownRearOn ? sheets.filter(s => s.surface.id === 'rear') : []
 
@@ -247,29 +253,27 @@ export default function Livery() {
               <ComboField value={tagline} onChange={setTagline} options={TAGLINES[model]} label="Варианты текста" invalid={sloganSheets.some(s => s.tagline.issues.length > 0) || !tagline.trim()} />
             </OptionalField>
 
-            {/* The rear window carries what the sides do; «Настроить» opens what can differ, kept open while something does */}
+            {/* The rear window carries what the sides do; «Изменить» opens what can differ there, «По умолчанию» puts it back
+                and folds it, so nothing set apart from the sides is ever hidden */}
             <OptionalField
               label="Заднее стекло"
               on={on.rear}
               onChange={toggle('rear')}
-              extra={rearOptions && !rearCustom ? <RowAction onClick={() => setRearOpen(!rearOpen)}>{rearOpen ? 'Свернуть' : 'Настроить'}</RowAction> : undefined}
+              extra={rearOptions ? <RowAction onClick={rearShown ? resetRear : () => setRearOpen(true)}>{rearShown ? 'По умолчанию' : 'Изменить'}</RowAction> : undefined}
             />
 
-            {on.rear && rearOptions && (rearOpen || rearCustom) && (
-              <div className="flex flex-col gap-4 pl-6">
-                {on.dealer && <Checkbox checked={on.rearDealer} onChange={toggle('rearDealer')}>Дилер</Checkbox>}
-                {on.tagline && (
-                  <OptionalField
-                    label="Слоган"
-                    on={on.rearTagline}
-                    onChange={toggle('rearTagline')}
-                    extra={<RowAction onClick={() => toggleOwnRear(!ownRear)}>{ownRear ? 'Как на бортах' : 'Изменить'}</RowAction>}
-                  >
-                    {ownRearOn && <ComboField value={rearTagline!} onChange={setRearTagline} options={TAGLINES[model]} label="Варианты текста" invalid={rearSheet.some(s => s.tagline.issues.length > 0) || !rearTagline!.trim()} />}
-                  </OptionalField>
-                )}
-              </div>
+            {on.rear && rearShown && on.tagline && (
+              <OptionalField
+                label="Слоган"
+                on={on.rearTagline}
+                onChange={toggle('rearTagline')}
+                extra={ownRear ? undefined : <RowAction onClick={() => toggleOwnRear(true)}>Изменить</RowAction>}
+              >
+                {ownRearOn && <ComboField value={rearTagline!} onChange={setRearTagline} options={TAGLINES[model]} label="Варианты текста" invalid={rearSheet.some(s => s.tagline.issues.length > 0) || !rearTagline!.trim()} />}
+              </OptionalField>
             )}
+
+            {on.rear && rearShown && on.dealer && <Checkbox checked={on.rearDealer} onChange={toggle('rearDealer')}>Дилер</Checkbox>}
 
             {/* Overlays on the preview only */}
             <Checkbox checked={dims} onChange={setDims}>Показать размеры</Checkbox>
