@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined, isValidUrl } from '@/ui/form'
 import { useStaff, TableSource, UploadArea, AddTile, Progress } from '@/ui/staff'
-import { toD, type Cmd } from '@/livery/geometry'
+import { toD, qrOutline, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
 import { xlsxCells, pastedCells, byHeaders, type Cells } from '@/nametag/table'
-import { CARD, FACE, BACK_LOGO, DEALER_FIELDS, buildBack, siteText, vcard, type CardField, type Dealer, type Person, type QrData } from '@/card/card'
+import { CARD, QR, FACE, BACK_LOGO, DEALER_FIELDS, buildBack, siteText, vcard, type CardField, type Dealer, type Person, type QrData } from '@/card/card'
 import type { Order } from '@/card/pdf'
 import CardArt from '@/card/CardArt'
 import { POSITIONS } from '@/data/positions'
@@ -19,9 +19,10 @@ const TEMPLATE = `${import.meta.env.BASE_URL}downloads/UMO_business-cards_templa
 
 const BLANK: Person = { name: '', surname: '', position: '', email: '', phone: '' }
 /** Shown grey on the card in place of an empty required field; never in the PDF */
-const PLACEHOLDER = { dealer: 'Название дилера', address: 'Адрес', name: 'Имя', surname: 'Фамилия', position: 'Должность' }
+const PLACEHOLDER = { dealer: 'Название дилера', address: 'Адрес', site: 'Сайт', name: 'Имя', surname: 'Фамилия', position: 'Должность', email: 'Почта', phone: 'Телефон' }
 const MISSING: Partial<Record<CardField, string>> = {
-  dealer: 'Нет названия дилера', address: 'Нет адреса', name: 'Нет имени', surname: 'Нет фамилии', position: 'Нет должности',
+  dealer: 'Нет названия дилера', address: 'Нет адреса', site: 'Нет сайта',
+  name: 'Нет имени', surname: 'Нет фамилии', position: 'Нет должности', email: 'Нет почты', phone: 'Нет телефона',
 }
 
 const HEADERS: Record<keyof Person, RegExp> = {
@@ -35,6 +36,9 @@ const toPeople = (rows: Cells[]): Person[] => byHeaders(rows, HEADERS)
 
 /** The address umo.auto gives a dealer, put in when the dealer is picked */
 const addressOf = (name: string) => dealers.find(d => d.name === name.trim())?.address
+
+/** What the grey stand-in QR holds */
+const SAMPLE_LINK = 'https://umo.auto'
 
 const PERSON_FIELDS: CardField[] = ['name', 'surname', 'position', 'email', 'phone']
 
@@ -79,21 +83,27 @@ export default function BusinessCard() {
       ghost.add(field)
       return PLACEHOLDER[field]
     }
-    const shownDealer = { ...dealer, name: or('dealer', dealer.name), address: or('address', dealer.address) }
-    const shownPerson = { ...p, name: or('name', p.name), surname: or('surname', p.surname), position: or('position', p.position) }
-    const back = buildBack(fonts, shownDealer, shownPerson, qrFor(p))
-    return { back, ghost, issues: back.issues.filter(i => !i.field || !ghost.has(i.field)) }
+    const shownDealer = { name: or('dealer', dealer.name), address: or('address', dealer.address), site: or('site', dealer.site) }
+    const shownPerson = {
+      name: or('name', p.name), surname: or('surname', p.surname), position: or('position', p.position),
+      email: or('email', p.email), phone: or('phone', p.phone),
+    }
+    const qr = qrFor(p)
+    const back = buildBack(fonts, shownDealer, shownPerson, qr)
+    // Without a link yet, a grey code stands in for it, as the placeholders do
+    const ghostQr = qr ? [] : qrOutline(SAMPLE_LINK, QR.x, QR.y, QR.size)
+    return { back, ghost, ghostQr, issues: back.issues.filter(i => !i.field || !ghost.has(i.field)) }
   }) : undefined, [fonts, items, dealer, qrMode, link]) // eslint-disable-line react-hooks/exhaustive-deps
 
   /** The dealership's errors, the same on every card */
-  const dealerMissing = (['dealer', 'address'] as const).filter(f => !(f === 'dealer' ? dealer.name : dealer.address).trim())
+  const dealerMissing = (['dealer', 'address', 'site'] as const).filter(f => !(f === 'dealer' ? dealer.name : dealer[f]).trim())
   const dealerIssues = [
     ...dealerMissing.map(f => MISSING[f]!),
     ...new Set(cards?.[0]?.issues.filter(i => i.field && DEALER_FIELDS.includes(i.field)).map(i => i.text) ?? []),
   ]
   const dealerWrong = new Set<CardField>(cards?.[0]?.issues.filter(i => i.field && DEALER_FIELDS.includes(i.field)).map(i => i.field!) ?? [])
 
-  const missing = items.map(p => (['name', 'surname', 'position'] as const).filter(f => !p[f].trim()))
+  const missing = items.map(p => (['name', 'surname', 'position', 'email', 'phone'] as const).filter(f => !p[f].trim()))
   const problems = items.map((p, i) => [...new Set([
     ...(staff.showsMissing(p.key) ? missing[i].map(f => MISSING[f]!) : []),
     ...(cards?.[i]?.issues.filter(x => !x.field || PERSON_FIELDS.includes(x.field)).map(x => x.text) ?? []),
@@ -170,7 +180,7 @@ export default function BusinessCard() {
               </div>
               <div data-field="site">
                 <Labelled label="Сайт">
-                  <TextInput value={dealer.site} onChange={v => setDealer(d => ({ ...d, site: v }))} placeholder="dealer.ru" invalid={dealerWrong.has('site')} />
+                  <TextInput value={dealer.site} onChange={v => setDealer(d => ({ ...d, site: v }))} placeholder="Сайт" invalid={dealerWrong.has('site')} />
                 </Labelled>
               </div>
               <Labelled label="QR-код">
@@ -200,10 +210,10 @@ export default function BusinessCard() {
                       <ComboField key={p.key} value={p.position} onChange={v => update(p.key, { position: v })} options={POSITIONS} placeholder="Должность" label="Типовые должности" invalid={bad('position', 'Должность')} />
                     </Labelled>
                     <Labelled label="Почта">
-                      <TextInput value={p.email} onChange={v => update(p.key, { email: v })} placeholder="name@dealer.ru" invalid={bad('email', 'Почта')} />
+                      <TextInput value={p.email} onChange={v => update(p.key, { email: v })} placeholder="Почта" invalid={bad('email', 'Почта')} />
                     </Labelled>
                     <Labelled label="Телефон">
-                      <TextInput value={p.phone} onChange={v => update(p.key, { phone: v })} placeholder="+7 495 000 00 00 доб. 123" invalid={bad('phone', 'Телефон')} />
+                      <TextInput value={p.phone} onChange={v => update(p.key, { phone: v })} placeholder="Телефон" invalid={bad('phone', 'Телефон')} />
                     </Labelled>
                   </div>
                   {(!staff.isBlank(p) || people.length > 1) && (
@@ -280,7 +290,7 @@ export default function BusinessCard() {
                     <CardArt
                       text={card ? toD([...BACK_LOGO, ...card.back.qr, ...paths(f => !card.ghost.has(f) && !wrong.has(f))]) : undefined}
                       alert={card ? toD(paths(f => !card.ghost.has(f) && wrong.has(f))) : undefined}
-                      ghost={card ? toD(paths(f => card.ghost.has(f))) : undefined}
+                      ghost={card ? toD([...card.ghostQr, ...paths(f => card.ghost.has(f))]) : undefined}
                     />
                   </button>
                   {problems[i].length > 0 && <p className="text-[13px] leading-5 text-[#e30]">{problems[i].join(' · ')}</p>}
