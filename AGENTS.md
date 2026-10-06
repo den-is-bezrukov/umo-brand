@@ -63,7 +63,7 @@ Vector schemes (clear space, minimum size, co-branding, type specimens, model le
 
 The UMO 5 / UMO 8 ad banners in Ключевой образ are `Poster` components: a photo-only background (`<model>-<banner|square>-bg.webp`, about 3x the Figma frame) with the title, subtitle and `UmoYandexLockup` laid over it in container-width units, so text and lockup stay sharp at any size. The backgrounds were cut from the source photos using the layer geometry in Figma; the direct export of the banner photo layers is broken the same way as stretched frames.
 
-On phones (below `md`) landscape photos — raster `Fig`s 2:1 and wider (`isWidePhoto`) — are cropped to 4:3 with `object-cover`; `focus` sets the crop's horizontal point in % where the subject isn't central (`umo5-kv`: 72, the car without the runner's sliver). SVG schemes stay whole. The Рамка номера card is 4:3 on phones too, its drawing enlarged to 130% so the plate fills 74% of the width.
+On phones (below `md`) landscape photos — raster `Fig`s 2:1 and wider (`isWidePhoto`) — are cropped to 4:3 with `object-cover`; `focus` sets the crop's horizontal point in % where the subject isn't central (`umo5-kv`: 72, the car without the runner's sliver). An object on a flat background (`flat`, its colour: the livery, #f6f6f6) is fitted into the 4:3 frame whole instead, never cropped. SVG schemes stay whole. The Рамка номера card is 4:3 on phones too, its drawing enlarged to 130% so the plate fills 74% of the width.
 
 Body copy (`Text`) takes its width from its length on the 12-column Figma grid: up to 150 characters 6 columns (432px), up to 300 — 8 (600px), longer — 9 (678px). Don't set widths by hand; texts paired side by side sit in a grid with `*:max-w-none` and fill their cells.
 

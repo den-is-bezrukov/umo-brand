@@ -27,7 +27,7 @@ type NavItem = { id: string; title: string; children?: NavItem[] }
  * media as they actually stand.
  */
 const MEDIA_LIST: { id: string; to: string; title: string; w: number; h: number; picture: ReactNode }[] = [
-  { id: 'livery', to: '/livery', title: 'Ливрея', w: 912, h: 456, picture: <Fig name="livery-umo5" w={912} h={456} alt="UMO 5 с ливреей дилера" /> },
+  { id: 'livery', to: '/livery', title: 'Ливрея', w: 912, h: 456, picture: <Fig name="livery-umo5" flat="#f6f6f6" w={912} h={456} alt="UMO 5 с ливреей дилера" /> },
   {
     id: 'price-card', to: '/price-card', title: 'Прайс-карта', w: 444, h: 444,
     picture: (
@@ -526,11 +526,12 @@ const isWidePhoto = (name: string, w: number, h: number) => w / h >= 2 && !img(n
 /**
  * One exported Figma frame. `w`/`h` are the frame's 1x size in the 1440px layout and set the aspect ratio. On phones a
  * landscape photo (`isWidePhoto`) is cropped to 4:3, as a 2:1 strip 343px wide is too thin; `focus` is the crop's
- * horizontal point in % (default the centre). `href` makes the whole figure a download link, its caption led by ↓
+ * horizontal point in % (default the centre). An object on a flat background (`flat`, that background's colour) isn't
+ * cropped — it is fitted into the 4:3 frame whole, the frame filled with its colour. `href` makes the whole figure a download link, its caption led by ↓
  * like the rows of `Assets`.
  */
-function Fig({ name, w, h, alt = '', eager, caption, cross, href, focus = 50, className = '' }: {
-  name: string; w: number; h: number; alt?: string; eager?: boolean; caption?: ReactNode; cross?: boolean; href?: string; focus?: number; className?: string
+function Fig({ name, w, h, alt = '', eager, caption, cross, href, focus = 50, flat, className = '' }: {
+  name: string; w: number; h: number; alt?: string; eager?: boolean; caption?: ReactNode; cross?: boolean; href?: string; focus?: number; flat?: string; className?: string
 }) {
   const wide = isWidePhoto(name, w, h)
   const figure = (
@@ -542,8 +543,8 @@ function Fig({ name, w, h, alt = '', eager, caption, cross, href, focus = 50, cl
         height={h * 2}
         loading={eager ? 'eager' : 'lazy'}
         decoding="async"
-        className={`block h-auto w-full bg-[#f5f5f5] ${wide ? 'aspect-4/3 object-cover md:aspect-(--ratio)' : ''}`}
-        style={wide ? ({ '--ratio': `${w} / ${h}`, objectPosition: `${focus}% 50%` } as CSSProperties) : { aspectRatio: `${w} / ${h}` }}
+        className={`block h-auto w-full bg-[#f5f5f5] ${wide ? `aspect-4/3 ${flat ? 'object-contain' : 'object-cover'} md:aspect-(--ratio)` : ''}`}
+        style={wide ? ({ '--ratio': `${w} / ${h}`, objectPosition: `${focus}% 50%`, ...(flat && { background: flat }) } as CSSProperties) : { aspectRatio: `${w} / ${h}` }}
       />
       {caption && <Caption cross={cross} download={!!href}>{caption}</Caption>}
     </figure>
