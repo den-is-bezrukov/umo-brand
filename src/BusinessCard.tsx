@@ -306,7 +306,7 @@ export default function BusinessCard() {
                       ghost={card ? toD([...card.ghostQr, ...paths(f => card.ghost.has(f))]) : undefined}
                     />
                   </button>
-                  {problems[i].length > 0 && <p className="text-[13px] leading-5 text-[#e30]">{problems[i].join(' · ')}</p>}
+                  {problems[i].length > 0 && <p className="text-[13px] leading-5 text-[#e30]">{alertLine(problems[i])}</p>}
                 </div>
               </figure>
             )
@@ -318,6 +318,17 @@ export default function BusinessCard() {
 
     </div>
   )
+}
+
+/**
+ * A card's errors in one line, as the name tag's: the empty fields in one phrase («Нет имени, фамилии, почты и
+ * телефона»), then the rest
+ */
+function alertLine(problems: string[]): string {
+  const all = Object.values(MISSING) as string[]
+  const empty = all.filter(t => problems.includes(t)).map(t => t.replace(/^Нет /, ''))
+  const missing = empty.length ? `Нет ${empty.length > 1 ? `${empty.slice(0, -1).join(', ')} и ${empty[empty.length - 1]}` : empty[0]}` : ''
+  return [missing, ...problems.filter(t => !all.includes(t))].filter(Boolean).join(' · ')
 }
 
 /** визитки, визиток: «Скачать 2 визитки», «Скачать 5 визиток», «Скачать 21 визитку» */
