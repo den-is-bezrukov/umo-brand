@@ -16,7 +16,7 @@ const DEFAULT_URL: Record<Model, string> = { umo8: 'https://umo.auto/umo8', umo5
 const DEFAULT_TOP = 'Центр UMO'
 
 // The parts that can be left out, as the `off` link parameter names them
-const PARTS = { qr: 'qr', dealer: 'top', tagline: 'bottom', rear: 'rear' } as const
+const PARTS = { qr: 'qr', dealer: 'top', tagline: 'bottom', rear: 'rear', rearDealer: 'rdealer' } as const
 const RED = '#ff2a1a'
 
 function SheetPreview({ sheet, seams, dims }: { sheet: Sheet; seams: boolean; dims: boolean }) {
@@ -83,17 +83,16 @@ export default function Livery() {
   const [model, setModel] = useState<Model>(link.get('model') === 'umo5' ? 'umo5' : 'umo8')
   const [dealer, setDealer] = useState(link.get('top') ?? DEFAULT_TOP)
   const [tagline, setTagline] = useState(() => link.get('bottom') ?? DEFAULT_TAGLINE[model])
-  // Text of its own on the rear window; filled from the sides the first time it's turned on
-  const [ownRear, setOwnRear] = useState(link.has('rtop') || link.has('rbottom'))
-  const [rear, setRear] = useState<{ dealer: string; tagline: string } | undefined>(() =>
-    link.has('rtop') || link.has('rbottom')
-      ? { dealer: link.get('rtop') ?? dealer.replace(/\s*\n\s*/g, ' '), tagline: link.get('rbottom') ?? tagline }
-      : undefined)
+  // A slogan of its own on the rear window, filled from the sides' the first time it's turned on. The dealer there is
+  // always the sides' (one line), only left out or not: there's no reason for it to differ. Links from when it could
+  // carry its own (`rtop`) open with the sides'.
+  const [ownRear, setOwnRear] = useState(link.has('rbottom'))
+  const [rearTagline, setRearTagline] = useState<string | undefined>(() => link.get('rbottom') ?? undefined)
   const [url, setUrl] = useState(link.get('link') ?? DEFAULT_URL[model])
   // What goes into the files; a part that's off is in neither the preview, nor the decals, nor the spec
   const [on, setOn] = useState(() => {
     const off = (link.get('off') ?? '').split(',')
-    return { qr: !off.includes(PARTS.qr), tagline: !off.includes(PARTS.tagline), dealer: !off.includes(PARTS.dealer), rear: !off.includes(PARTS.rear) }
+    return { qr: !off.includes(PARTS.qr), tagline: !off.includes(PARTS.tagline), dealer: !off.includes(PARTS.dealer), rear: !off.includes(PARTS.rear), rearDealer: !off.includes(PARTS.rearDealer) }
   })
   const toggle = (key: keyof typeof on) => (v: boolean) => setOn(o => ({ ...o, [key]: v }))
   const show = (link.get('show') ?? '').split(',')
@@ -112,7 +111,7 @@ export default function Livery() {
   const chooseModel = (m: Model) => {
     const swap = (t: string) => { const i = TAGLINES[model].indexOf(t); return i < 0 ? t : TAGLINES[m][i] }
     setTagline(swap(tagline))
-    if (rear) setRear({ ...rear, tagline: swap(rear.tagline) })
+    if (rearTagline !== undefined) setRearTagline(swap(rearTagline))
     if (url.trim() === DEFAULT_URL[model]) setUrl(DEFAULT_URL[m])
     setModel(m)
   }
@@ -127,8 +126,7 @@ export default function Livery() {
     top: dealer === DEFAULT_TOP ? null : dealer,
     bottom: tagline === DEFAULT_TAGLINE[model] ? null : tagline,
     off: (Object.keys(PARTS) as (keyof typeof PARTS)[]).filter(k => !on[k]).map(k => PARTS[k]).join(','),
-    rtop: ownRear && rear ? rear.dealer : null,
-    rbottom: ownRear && rear ? rear.tagline : null,
+    rbottom: ownRear && rearTagline !== undefined ? rearTagline : null,
     show: [...(dims ? ['dims'] : []), ...(seams ? ['seams'] : [])].join(','),
     size: large ? 'large' : null,
     qr: qrSmall ? 'small' : null,
@@ -147,12 +145,14 @@ export default function Livery() {
   const urlValid = isValidUrl(url.trim())
   const qrUrl = urlValid ? url.trim() : DEFAULT_URL[model]
 
-  // The rear window's own text is offered while the rear window and some text are on
-  const ownRearOffered = on.rear && (on.dealer || on.tagline)
-  const ownRearOn = ownRearOffered && ownRear && !!rear
-  const pick = (t: { dealer: string; tagline: string }) => ({ dealer: on.dealer ? t.dealer : null, tagline: on.tagline ? t.tagline : null })
-  const sideText = pick({ dealer, tagline })
-  const rearText = ownRearOn ? pick(rear!) : sideText
+  // The rear window's own slogan is offered while the rear window and the slogan are on
+  const ownRearOffered = on.rear && on.tagline
+  const ownRearOn = ownRearOffered && ownRear && rearTagline !== undefined
+  const sideText = { dealer: on.dealer ? dealer : null, tagline: on.tagline ? tagline : null }
+  const rearText = {
+    dealer: on.rearDealer ? sideText.dealer : null,
+    tagline: ownRearOn ? rearTagline! : sideText.tagline,
+  }
   const qr = on.qr ? qrUrl : null
   const sheets = useMemo(
     () => font
@@ -164,11 +164,11 @@ export default function Livery() {
     [font, layout, on.rear, sideText.dealer, sideText.tagline, rearText.dealer, rearText.tagline, qr, qrSmall, large],
   )
   // Which sheets a field's text goes on, to mark it when one of them has a problem with it
-  const sides = sheets.filter(s => s.surface.id !== 'rear' || !ownRearOn)
+  const sloganSheets = sheets.filter(s => s.surface.id !== 'rear' || !ownRearOn)
   const rearSheet = ownRearOn ? sheets.filter(s => s.surface.id === 'rear') : []
 
   const toggleOwnRear = (on: boolean) => {
-    if (on && !rear) setRear({ dealer: dealer.replace(/\s*\n\s*/g, ' '), tagline })
+    if (on && rearTagline === undefined) setRearTagline(tagline)
     setOwnRear(on)
   }
   // «Сбросить» keeps the model and brings the rest back to its defaults
@@ -176,9 +176,9 @@ export default function Livery() {
     setDealer(DEFAULT_TOP)
     setTagline(DEFAULT_TAGLINE[model])
     setOwnRear(false)
-    setRear(undefined)
+    setRearTagline(undefined)
     setUrl(DEFAULT_URL[model])
-    setOn({ qr: true, tagline: true, dealer: true, rear: true })
+    setOn({ qr: true, tagline: true, dealer: true, rear: true, rearDealer: true })
     setDims(false)
     setLarge(false)
     setQrSmall(false)
@@ -227,7 +227,7 @@ export default function Livery() {
             </OptionalField>
 
             <OptionalField label="Дилер" on={on.dealer} onChange={toggle('dealer')}>
-              <ComboField value={dealer} onChange={setDealer} options={DEALER_NAMES} shownAs={withoutUmo} label="Дилеры" invalid={sides.some(s => s.dealer.issues.length > 0) || !dealer.trim()} />
+              <ComboField value={dealer} onChange={setDealer} options={DEALER_NAMES} shownAs={withoutUmo} label="Дилеры" invalid={sheets.some(s => s.dealer.issues.length > 0) || !dealer.trim()} />
             </OptionalField>
 
             <OptionalField
@@ -237,24 +237,21 @@ export default function Livery() {
               // The larger size is for the sides laid out without the big QR: no QR or the small one
               extra={(!on.qr || qrSmall) && canLarge ? <SizeSwitch large={large} onChange={setLarge} label="Крупный текст" /> : undefined}
             >
-              <ComboField value={tagline} onChange={setTagline} options={TAGLINES[model]} label="Варианты текста" invalid={sides.some(s => s.tagline.issues.length > 0) || !tagline.trim()} />
+              <ComboField value={tagline} onChange={setTagline} options={TAGLINES[model]} label="Варианты текста" invalid={sloganSheets.some(s => s.tagline.issues.length > 0) || !tagline.trim()} />
             </OptionalField>
 
             <OptionalField label="Заднее стекло" on={on.rear} onChange={toggle('rear')} />
 
-            {ownRearOffered && <Checkbox checked={ownRear} onChange={toggleOwnRear}>Другой текст на стекле</Checkbox>}
+            {ownRearOffered && <Checkbox checked={ownRear} onChange={toggleOwnRear}>Другой слоган на стекле</Checkbox>}
 
-            {ownRearOn && on.dealer && (
-              <Field label="Дилер на стекле">
-                <ComboField value={rear!.dealer} onChange={v => setRear({ ...rear!, dealer: v })} options={DEALER_NAMES} shownAs={withoutUmo} label="Дилеры" invalid={rearSheet.some(s => s.dealer.issues.length > 0) || !rear!.dealer.trim()} />
-              </Field>
-            )}
-
-            {ownRearOn && on.tagline && (
+            {ownRearOn && (
               <Field label="Слоган на стекле">
-                <ComboField value={rear!.tagline} onChange={v => setRear({ ...rear!, tagline: v })} options={TAGLINES[model]} label="Варианты текста" invalid={rearSheet.some(s => s.tagline.issues.length > 0) || !rear!.tagline.trim()} />
+                <ComboField value={rearTagline!} onChange={setRearTagline} options={TAGLINES[model]} label="Варианты текста" invalid={rearSheet.some(s => s.tagline.issues.length > 0) || !rearTagline!.trim()} />
               </Field>
             )}
+
+            {/* The sides' dealer, in one line; whether the rear window carries it at all */}
+            {on.rear && on.dealer && <Checkbox checked={on.rearDealer} onChange={toggle('rearDealer')}>Дилер на стекле</Checkbox>}
 
             {/* Overlays on the preview only */}
             <Checkbox checked={dims} onChange={setDims}>Показать размеры</Checkbox>
