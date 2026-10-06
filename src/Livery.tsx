@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Font } from 'opentype.js'
-import { Field, OptionalField, Segments, SegBtn, ComboField, UrlField, Checkbox, SizeSwitch, GeneratorHeader, LinkButtons, DownloadButton, isValidUrl } from '@/ui/form'
+import { Field, OptionalField, Segments, SegBtn, ComboField, UrlField, Checkbox, SizeSwitch, RowAction, GeneratorHeader, LinkButtons, DownloadButton, isValidUrl } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
 import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
 import { DEFAULT_TAGLINE, TAGLINES } from '@/data/taglines'
@@ -164,6 +164,12 @@ export default function Livery() {
     [font, layout, on.rear, sideText.dealer, sideText.tagline, rearText.dealer, rearText.tagline, qr, qrSmall, large],
   )
   // Which sheets a field's text goes on, to mark it when one of them has a problem with it
+  // The rear window's own settings: there are some while the sides carry a text; they differ when a text is left off it
+  // or it has a slogan of its own
+  const rearOptions = on.dealer || on.tagline
+  const rearCustom = (on.dealer && !on.rearDealer) || (on.tagline && (!on.rearTagline || ownRear))
+  // Opened from a link with such settings it stays open once they go back to the sides', not folding under the cursor
+  const [rearOpen, setRearOpen] = useState(rearCustom)
   const sloganSheets = sheets.filter(s => s.surface.id !== 'rear' || !ownRearOn)
   const rearSheet = ownRearOn ? sheets.filter(s => s.surface.id === 'rear') : []
 
@@ -177,6 +183,7 @@ export default function Livery() {
     setTagline(DEFAULT_TAGLINE[model])
     setOwnRear(false)
     setRearTagline(undefined)
+    setRearOpen(false)
     setUrl(DEFAULT_URL[model])
     setOn({ qr: true, tagline: true, dealer: true, rear: true, rearDealer: true, rearTagline: true })
     setDims(false)
@@ -240,19 +247,29 @@ export default function Livery() {
               <ComboField value={tagline} onChange={setTagline} options={TAGLINES[model]} label="Варианты текста" invalid={sloganSheets.some(s => s.tagline.issues.length > 0) || !tagline.trim()} />
             </OptionalField>
 
-            <OptionalField label="Заднее стекло" on={on.rear} onChange={toggle('rear')} />
+            {/* The rear window carries what the sides do; «Настроить» opens what can differ, kept open while something does */}
+            <OptionalField
+              label="Заднее стекло"
+              on={on.rear}
+              onChange={toggle('rear')}
+              extra={rearOptions && !rearCustom ? <RowAction onClick={() => setRearOpen(!rearOpen)}>{rearOpen ? 'Свернуть' : 'Настроить'}</RowAction> : undefined}
+            />
 
-            {/* Whether the rear window carries the slogan at all, then whether it's the sides' */}
-            {on.rear && on.tagline && <Checkbox checked={on.rearTagline} onChange={toggle('rearTagline')}>Слоган на стекле</Checkbox>}
-
-            {ownRearOffered && (
-              <OptionalField label="Другой слоган на стекле" on={ownRear} onChange={toggleOwnRear}>
-                {ownRearOn && <ComboField value={rearTagline!} onChange={setRearTagline} options={TAGLINES[model]} label="Варианты текста" invalid={rearSheet.some(s => s.tagline.issues.length > 0) || !rearTagline!.trim()} />}
-              </OptionalField>
+            {on.rear && rearOptions && (rearOpen || rearCustom) && (
+              <div className="flex flex-col gap-4 pl-6">
+                {on.dealer && <Checkbox checked={on.rearDealer} onChange={toggle('rearDealer')}>Дилер</Checkbox>}
+                {on.tagline && (
+                  <OptionalField
+                    label="Слоган"
+                    on={on.rearTagline}
+                    onChange={toggle('rearTagline')}
+                    extra={<RowAction onClick={() => toggleOwnRear(!ownRear)}>{ownRear ? 'Как на бортах' : 'Изменить'}</RowAction>}
+                  >
+                    {ownRearOn && <ComboField value={rearTagline!} onChange={setRearTagline} options={TAGLINES[model]} label="Варианты текста" invalid={rearSheet.some(s => s.tagline.issues.length > 0) || !rearTagline!.trim()} />}
+                  </OptionalField>
+                )}
+              </div>
             )}
-
-            {/* The sides' dealer, in one line; whether the rear window carries it at all */}
-            {on.rear && on.dealer && <Checkbox checked={on.rearDealer} onChange={toggle('rearDealer')}>Дилер на стекле</Checkbox>}
 
             {/* Overlays on the preview only */}
             <Checkbox checked={dims} onChange={setDims}>Показать размеры</Checkbox>

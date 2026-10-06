@@ -354,6 +354,13 @@ export function OptionalField({ label, on, onChange, extra, children }: { label:
   )
 }
 
+/** A word at the end of a field's label row that does what it says (the size switch's «Крупнее», the rear window's «Настроить») */
+const rowAction = 'flex shrink-0 cursor-pointer items-center gap-2 text-[14px] leading-5 text-black outline-none transition-colors hover:text-black/50 focus-visible:ring-2 focus-visible:ring-black/30'
+
+export function RowAction({ onClick, children }: { onClick: () => void; children: React.ReactNode }) {
+  return <button type="button" onClick={onClick} className={rowAction}>{children}</button>
+}
+
 /** Corners for the size switch, on the 16 grid with the ticks' 2 px stroke and square ends: at the outer corners to grow, turned in to shrink */
 function SizeIcon({ grow }: { grow: boolean }) {
   return (
@@ -377,7 +384,7 @@ export function SizeSwitch({ large, onChange, label }: { large: boolean; onChang
       onClick={() => onChange(!large)}
       aria-pressed={large}
       aria-label={label}
-      className="flex shrink-0 cursor-pointer items-center gap-2 text-[14px] leading-5 text-black outline-none transition-colors hover:text-black/50 focus-visible:ring-2 focus-visible:ring-black/30"
+      className={rowAction}
     >
       {large ? 'Мельче' : 'Крупнее'}
       <SizeIcon grow={!large} />
