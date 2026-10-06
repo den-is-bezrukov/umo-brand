@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Font } from 'opentype.js'
-import { Field, OptionalField, Segments, SegBtn, TextArea, UrlField, Checkbox, SizeSwitch, GeneratorHeader, LinkButtons, DownloadButton, isValidUrl } from '@/ui/form'
+import { Field, OptionalField, Segments, SegBtn, TextArea, ComboField, UrlField, Checkbox, SizeSwitch, GeneratorHeader, LinkButtons, DownloadButton, isValidUrl } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
 import { LIVERIES, SURFACES, withoutQr, type Model } from '@/livery/layout'
 import { loadFont, buildSheet, specMarks, toD, mm, type Sheet, type Line } from '@/livery/geometry'
@@ -15,6 +15,11 @@ const DEFAULT_TOP = 'Автодом\nЦентр UMO'
 const DEFAULT_BOTTOM: Record<Model, string> = {
   umo8: 'Попробуй гибрид с технологиями Яндекса',
   umo5: 'Попробуй электрокар с технологиями Яндекса',
+}
+/** The bottom text's suggestions per model: the default, and the same without «Попробуй» */
+const TAGLINES: Record<Model, string[]> = {
+  umo8: [DEFAULT_BOTTOM.umo8, 'Гибрид с технологиями Яндекса'],
+  umo5: [DEFAULT_BOTTOM.umo5, 'Электрокар с технологиями Яндекса'],
 }
 
 // The parts that can be left out, as the `off` link parameter names them
@@ -107,10 +112,12 @@ export default function Livery() {
   // The bottom text larger, 60 mm in two lines; the QR-less sides have room for it
   const [large, setLarge] = useState(link.get('size') === 'large')
 
-  // Another model brings its own default tagline, unless the field holds text of the dealer's own
+  // Another model brings its own tagline in place of the old model's suggestion (the default or the one without
+  // «Попробуй»), unless the field holds text of the dealer's own
   const chooseModel = (m: Model) => {
-    if (tagline === DEFAULT_BOTTOM[model]) setTagline(DEFAULT_BOTTOM[m])
-    if (rear && rear.tagline === DEFAULT_BOTTOM[model]) setRear({ ...rear, tagline: DEFAULT_BOTTOM[m] })
+    const swap = (t: string) => { const i = TAGLINES[model].indexOf(t); return i < 0 ? t : TAGLINES[m][i] }
+    setTagline(swap(tagline))
+    if (rear) setRear({ ...rear, tagline: swap(rear.tagline) })
     setModel(m)
   }
   // The larger tagline is a choice only where the QR-less sides have one (both models do)
@@ -224,7 +231,7 @@ export default function Livery() {
               // The larger size is for the QR-less sides only, so the switch shows only without the QR
               extra={!on.qr && canLarge ? <SizeSwitch large={large} onChange={setLarge} /> : undefined}
             >
-              <TextArea value={tagline} onChange={setTagline} invalid={sides.some(s => s.tagline.issues.length > 0) || !tagline.trim()} />
+              <ComboField value={tagline} onChange={setTagline} options={TAGLINES[model]} label="Варианты текста" invalid={sides.some(s => s.tagline.issues.length > 0) || !tagline.trim()} />
             </OptionalField>
 
             <OptionalField label="Заднее стекло" on={on.rear} onChange={toggle('rear')} />
@@ -239,7 +246,7 @@ export default function Livery() {
 
             {ownRearOn && on.tagline && (
               <Field label="Текст снизу на стекле">
-                <TextArea value={rear!.tagline} onChange={v => setRear({ ...rear!, tagline: v })} invalid={rearSheet.some(s => s.tagline.issues.length > 0) || !rear!.tagline.trim()} />
+                <ComboField value={rear!.tagline} onChange={v => setRear({ ...rear!, tagline: v })} options={TAGLINES[model]} label="Варианты текста" invalid={rearSheet.some(s => s.tagline.issues.length > 0) || !rear!.tagline.trim()} />
               </Field>
             )}
 
