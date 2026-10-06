@@ -95,10 +95,16 @@ export function SegBtn({ active, onClick, disabled, title, children }: { active:
 // Spacing per Figma (UMO | Evrone, node 4900:4595): 8 px from a label to its control, 16 px between groups — the gap
 // of the column the groups sit in.
 
+/**
+ * A field with an error isn't edged in red: its label turns red instead, found by the control's aria-invalid under it
+ * (`ALERT_LABEL` on the label, `group/field` on what holds both), so every generator's fields do it with nothing passed
+ */
+export const ALERT_LABEL = 'group-has-[[aria-invalid=true]]/field:text-[#e30]'
+
 export function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-2">
-      <p className="text-[14px] leading-5 text-[#999] whitespace-nowrap">{label}</p>
+    <div className="group/field flex flex-col gap-2">
+      <p className={`text-[14px] leading-5 text-[#999] whitespace-nowrap ${ALERT_LABEL}`}>{label}</p>
       {children}
     </div>
   )
@@ -121,7 +127,7 @@ export function TextInput({ value, onChange, onBlur, placeholder, invalid, numer
       inputMode={inputMode ?? (numeric ? 'numeric' : undefined)}
       pattern={numeric ? '[0-9 ]*' : undefined}
       className={`h-10 w-full min-w-0 rounded-[8px] bg-[#f5f5f5] px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]
-        ${invalid ? 'ring-1 ring-inset ring-[#e30]' : 'focus:ring-1 focus:ring-inset focus:ring-black/40'} ${className}`}
+        focus:ring-1 focus:ring-inset focus:ring-black/40 ${className}`}
     />
   )
 }
@@ -154,7 +160,7 @@ export function TextArea({ value, onChange, placeholder, invalid, className = ''
       onChange={e => onChange(e.target.value)}
       placeholder={placeholder}
       aria-invalid={invalid || undefined}
-      className={`${areaClass} ${invalid ? 'ring-1 ring-inset ring-[#e30]' : 'focus:ring-1 focus:ring-inset focus:ring-black/40'} ${className}`}
+      className={`${areaClass} focus:ring-1 focus:ring-inset focus:ring-black/40 ${className}`}
     />
   )
 }
@@ -315,7 +321,7 @@ export function UrlField({ value, onChange }: { value: string; onChange: (v: str
         placeholder="https://..."
         aria-invalid={error || undefined}
         spellCheck={false}
-        className={`${areaClass} break-all pr-9 ${error ? 'ring-1 ring-inset ring-[#e30]' : 'focus:ring-1 focus:ring-inset focus:ring-black/40'}`}
+        className={`${areaClass} break-all pr-9 focus:ring-1 focus:ring-inset focus:ring-black/40`}
       />
       {/* On the first line, however many lines the link takes */}
       <div className="pointer-events-none absolute top-0 right-0 flex h-10 w-9 items-center justify-center">
@@ -334,9 +340,9 @@ export function UrlField({ value, onChange }: { value: string; onChange: (v: str
 }
 
 /** A grey 16 px box with a black tick, 8 px from its label (Figma: UMO | Evrone, node 4900:4656), on a native checkbox for keyboard and screen readers */
-export function Checkbox({ checked, onChange, children }: { checked: boolean; onChange: (v: boolean) => void; children: React.ReactNode }) {
+export function Checkbox({ checked, onChange, children, className = '' }: { checked: boolean; onChange: (v: boolean) => void; children: React.ReactNode; className?: string }) {
   return (
-    <label className="flex cursor-pointer items-center gap-2 text-[14px] leading-5 text-black">
+    <label className={`flex cursor-pointer items-center gap-2 text-[14px] leading-5 text-black ${className}`}>
       <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="peer sr-only" />
       <span aria-hidden className="flex size-4 shrink-0 items-center justify-center rounded-[2px] bg-[#f5f5f5] peer-focus-visible:ring-2 peer-focus-visible:ring-black/30">
         {checked && <Tick />}
@@ -349,9 +355,9 @@ export function Checkbox({ checked, onChange, children }: { checked: boolean; on
 /** A part that can be left out: its checkbox is the label, and the field shows only while it's on; `extra` sits at the end of the label row */
 export function OptionalField({ label, on, onChange, extra, children }: { label: string; on: boolean; onChange: (v: boolean) => void; extra?: React.ReactNode; children?: React.ReactNode }) {
   return (
-    <div className="flex flex-col gap-2">
+    <div className="group/field flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2">
-        <Checkbox checked={on} onChange={onChange}>{label}</Checkbox>
+        <Checkbox checked={on} onChange={onChange} className={ALERT_LABEL}>{label}</Checkbox>
         {on && extra}
       </div>
       {on && children}

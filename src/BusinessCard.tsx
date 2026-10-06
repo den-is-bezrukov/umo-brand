@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined, rowAction, isValidUrl } from '@/ui/form'
+import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined, rowAction, isValidUrl, ALERT_LABEL } from '@/ui/form'
 import { useStaff, TableSource, UploadArea, AddTile, Progress } from '@/ui/staff'
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
@@ -187,9 +187,9 @@ export default function BusinessCard() {
           <div className="flex flex-col gap-4 tracking-normal">
             {/* The dealership: the whole list's */}
             <div ref={dealerForm} className="flex flex-col gap-4">
-              <div data-field="dealer" className="flex flex-col gap-2">
+              <div data-field="dealer" className="group/field flex flex-col gap-2">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-[14px] leading-5 text-[#999]">Дилер</p>
+                  <p className={`text-[14px] leading-5 text-[#999] ${ALERT_LABEL}`}>Дилер</p>
                   <button type="button" onClick={() => setDealerOpen(o => !o)} aria-expanded={dealerOpen} className={rowAction}>
                     {dealerOpen ? 'Свернуть' : 'Изменить'}
                   </button>
