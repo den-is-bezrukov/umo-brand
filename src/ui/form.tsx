@@ -13,11 +13,12 @@ function Tick({ color = 'black' }: { color?: string }) {
   )
 }
 
+/** In alphabetical order, as the switcher lists them */
 const GENERATORS = [
-  { path: '/price-card', title: 'Прайс-карта' },
-  { path: '/livery', title: 'Ливрея' },
-  { path: '/plate-frame', title: 'Рамка номера' },
   { path: '/name-tag', title: 'Бейдж' },
+  { path: '/livery', title: 'Ливрея' },
+  { path: '/price-card', title: 'Прайс-карта' },
+  { path: '/plate-frame', title: 'Рамка номера' },
 ]
 
 /**
