@@ -21,18 +21,20 @@ const img = (name: string) => images[`../assets/guide/${name}.svg`] ?? images[`.
 type NavItem = { id: string; title: string; children?: NavItem[] }
 
 /**
- * The media of Носители, in the order of the sections they stood in. A wide picture (2:1 and wider) takes a whole row of
+ * The media of Носители, in the Figma order (4985:10011). A wide picture (2:1 and wider) takes a whole row of
  * the overview grid, narrow ones pair up, and a narrow one moves up next to an unpaired one before it (what CSS
  * `grid-auto-flow: dense` would do). `MEDIA` is that packed order, so the grid and the sidebar's sub-items list the
  * media as they actually stand.
  */
 const MEDIA_LIST: { id: string; to: string; title: string; w: number; h: number; picture: ReactNode }[] = [
   { id: 'livery', to: '/livery', title: 'Ливрея', w: 912, h: 456, picture: <Fig name="livery-umo5" flat="#f6f6f6" w={912} h={456} alt="UMO 5 с ливреей дилера" /> },
+  { id: 'name-tag', to: '/name-tag', title: 'Бейдж', w: 444, h: 333, picture: <Fig name="name-tag-card" w={444} h={333} alt="Бейдж UMO на рубашке сотрудника" /> },
   {
-    id: 'price-card', to: '/price-card', title: 'Прайс-карта', w: 444, h: 444,
+    // Figma 4985:10019: the 210×297 card centred on the 444×333 grey
+    id: 'price-card', to: '/price-card', title: 'Прайс-карта', w: 444, h: 333,
     picture: (
-      <div className="flex aspect-square items-center justify-center bg-[#f5f5f5]">
-        <div className="w-[57%]">
+      <div className="flex aspect-4/3 items-center justify-center bg-[#f5f5f5]">
+        <div className="w-[47.3%]">
           <PriceCardPreview variant="umo5-max" fullPrice="3 715 000" creditPrice="2 790 000" image={img('pricecard-umo5-car')} alt="Прайс-карта UMO 5" />
         </div>
       </div>
@@ -42,14 +44,12 @@ const MEDIA_LIST: { id: string; to: string; title: string; w: number; h: number;
     id: 'plate-frame', to: '/plate-frame', title: 'Рамка номера', w: 912, h: 304,
     picture: (
       <div className="flex aspect-4/3 items-center justify-center overflow-hidden bg-[#f5f5f5] md:block md:aspect-auto">
-      <PlateArt guide className="w-[130%]! max-w-none shrink-0 md:w-full!">
-        <text y={STRIP_BASELINE} fontFamily="CoFo Sans" fontWeight={500} fontSize={18} letterSpacing={-0.18} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Центр UMO | Название дилера</text>
-      </PlateArt>
-    </div>
+        <PlateArt guide className="w-[130%]! max-w-none shrink-0 md:w-full!">
+          <text y={STRIP_BASELINE} fontFamily="CoFo Sans" fontWeight={500} fontSize={18} letterSpacing={-0.18} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Центр UMO | Название дилера</text>
+        </PlateArt>
+      </div>
     ),
   },
-  { id: 'name-tag', to: '/name-tag', title: 'Бейдж', w: 444, h: 444, picture: <Fig name="name-tag-square" w={444} h={444} alt="Бейдж UMO на рубашке сотрудника" /> },
-
 ]
 const isWide = (m: { w: number; h: number }) => m.w / m.h >= 2
 function packMedia<T extends { w: number; h: number }>(items: T[]): T[] {
@@ -1290,7 +1290,7 @@ export default function Guide() {
             <Section>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
                 <Text>
-                  <p>Носители — шаблоны, через которые бренд встречает покупателя у дилера: <Link to="/livery" className={TEXT_LINK}>ливрея демо-автомобиля</Link>, <Link to="/price-card" className={TEXT_LINK}>прайс-карта</Link>, <Link to="/name-tag" className={TEXT_LINK}>бейдж сотрудника</Link> и <Link to="/plate-frame" className={TEXT_LINK}>рамка номера</Link>.</p>
+                  <p>Носители — шаблоны, через которые бренд встречает покупателя у дилера: <Link to="/livery" className={TEXT_LINK}>ливрея демо-автомобиля</Link>, <Link to="/name-tag" className={TEXT_LINK}>бейдж сотрудника</Link>, <Link to="/price-card" className={TEXT_LINK}>прайс-карта</Link> и <Link to="/plate-frame" className={TEXT_LINK}>рамка номера</Link>.</p>
                 </Text>
                 <Text>
                   <p>Каждый собирается в своём конструкторе: дилер вводит свои данные, а макет, шрифты и отступы уже настроены. На выходе — файлы, готовые к печати и производству.</p>
