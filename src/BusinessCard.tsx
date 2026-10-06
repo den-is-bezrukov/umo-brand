@@ -308,12 +308,12 @@ export default function BusinessCard() {
           <UploadArea staff={staff} />
         ) : (
         <div className="m-auto grid w-full grid-cols-1 gap-8">
-          {/* The face, the same for everyone: once at the top, or over every back with «Обложка у всех», as in the file */}
-          {!faceEach && <div className="flex justify-center">
+          {/* The face, the same for everyone, once at the top whatever the file's page order («Обложка у всех» is the file's) */}
+          <div className="flex justify-center">
             <div className={`w-full max-w-[480px] transition-opacity duration-150 ${mode === 'manual' && current ? 'opacity-40' : ''}`}>
               <CardArt text={face} />
             </div>
-          </div>}
+          </div>
           {items.map((p, i) => {
             const card = cards?.[i]
             const active = mode === 'manual' && p.key === current?.key
@@ -325,7 +325,6 @@ export default function BusinessCard() {
             return (
               <figure key={p.key} ref={staff.figureRef(p.key)} onClick={() => staff.pick(p.key)} className="group/row flex cursor-pointer justify-center">
                 <div className="flex w-full max-w-[480px] flex-col gap-3">
-                  {faceEach && <div className={`mb-1 transition-opacity duration-150 ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}><CardArt text={face} /></div>}
                   <button
                     type="button"
                     aria-pressed={mode === 'manual' ? active : undefined}
