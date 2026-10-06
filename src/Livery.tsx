@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Font } from 'opentype.js'
-import { Field, OptionalField, Segments, SegBtn, ComboField, UrlField, Checkbox, SizeSwitch, RowAction, GeneratorHeader, LinkButtons, DownloadButton, isValidUrl } from '@/ui/form'
+import { Field, OptionalField, Segments, SegBtn, ComboField, UrlField, Checkbox, SizeSwitch, GeneratorHeader, LinkButtons, DownloadButton, isValidUrl } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
 import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
 import { DEFAULT_TAGLINE, TAGLINES } from '@/data/taglines'
@@ -166,23 +166,16 @@ export default function Livery() {
   // Which sheets a field's text goes on, to mark it when one of them has a problem with it
   const sloganSheets = sheets.filter(s => s.surface.id !== 'rear' || !ownRearOn)
   const rearSheet = ownRearOn ? sheets.filter(s => s.surface.id === 'rear') : []
-  // The rear window's options: there are some while the sides carry a text, opened by «Изменить» and kept shown while
-  // something differs from the sides, so nothing set apart from them is hidden; «По умолчанию» puts them back and folds
-  const rearOptions = on.dealer || on.tagline
-  const rearCustom = (on.dealer && !on.rearDealer) || (on.tagline && (!on.rearTagline || ownRearOn))
-  const [rearOpen, setRearOpen] = useState(false)
-  const rearShown = rearOptions && (rearOpen || rearCustom)
-  const resetRear = () => {
-    setOn(o => ({ ...o, rearDealer: true, rearTagline: true }))
-    setRearTagline(undefined)
-    setRearOpen(false)
+  // Turning the rear window off forgets its settings, so it comes back carrying the sides' texts
+  const toggleRear = (v: boolean) => {
+    if (!v) setRearTagline(undefined)
+    setOn(o => ({ ...o, rear: v, ...(v ? {} : { rearDealer: true, rearTagline: true }) }))
   }
   // «Сбросить» keeps the model and brings the rest back to its defaults
   const reset = () => {
     setDealer(DEFAULT_TOP)
     setTagline(DEFAULT_TAGLINE[model])
     setRearTagline(undefined)
-    setRearOpen(false)
     setUrl(DEFAULT_URL[model])
     setOn({ qr: true, tagline: true, dealer: true, rear: false, rearDealer: true, rearTagline: true })
     setDims(false)
@@ -251,11 +244,10 @@ export default function Livery() {
             <OptionalField
               label="Заднее стекло"
               on={on.rear}
-              onChange={toggle('rear')}
-              extra={rearOptions ? <RowAction onClick={rearShown ? resetRear : () => setRearOpen(true)}>{rearShown ? 'По умолчанию' : 'Изменить'}</RowAction> : undefined}
+              onChange={toggleRear}
             />
 
-            {on.rear && rearShown && on.tagline && (
+            {on.rear && on.tagline && (
               <OptionalField
                 label="Слоган на стекле"
                 on={on.rearTagline}
@@ -265,7 +257,7 @@ export default function Livery() {
               </OptionalField>
             )}
 
-            {on.rear && rearShown && on.dealer && <Checkbox checked={on.rearDealer} onChange={toggle('rearDealer')}>Дилер на стекле</Checkbox>}
+            {on.rear && on.dealer && <Checkbox checked={on.rearDealer} onChange={toggle('rearDealer')}>Дилер на стекле</Checkbox>}
 
             {/* Overlays on the preview only */}
             <Checkbox checked={dims} onChange={setDims}>Показать размеры</Checkbox>
