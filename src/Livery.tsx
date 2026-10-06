@@ -10,7 +10,7 @@ import { loadFont, buildSheet, specMarks, toD, mm, type Sheet, type Line } from 
 // dealer name or tagline that would run onto them shows up before the files go to the wrap shop.
 
 const DEFAULT_URL = 'https://umo.auto/'
-const DEFAULT_TOP = 'Автодом\nЦентр UMO'
+const DEFAULT_TOP = 'Центр UMO'
 // The tagline offered by default names what each model is
 const DEFAULT_BOTTOM: Record<Model, string> = {
   umo8: 'Попробуй гибрид с технологиями Яндекса',
