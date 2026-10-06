@@ -2,6 +2,7 @@ import { parse, type Font } from 'opentype.js'
 import QRCode from 'qrcode'
 import { UMO, EIGHT } from './logo'
 import type { Surface, TextBlock, Obstacle, TextPart } from './layout'
+import { hasProfanity, PROFANITY } from '@/ui/profanity'
 
 // Everything on a livery sheet is a filled outline in millimetres: the shapes the plotter cuts. The preview draws them
 // as SVG, the export writes the same commands into the PDF.
@@ -213,6 +214,11 @@ function setText(font: Font, raw: string, block: TextBlock, name: string, surfac
     const extra = firstBaseline === undefined ? i < wrapped.length - block.maxLines : i >= block.maxLines
     return { text: t, cmds: pathCmds(path.commands), ink, issues, extra }
   })
+  // The lines with an obscene word turn red; a word spaced out across lines turns them all
+  if (hasProfanity(text)) {
+    const bad = lines.filter(l => hasProfanity(l.text))
+    for (const l of bad.length ? bad : lines) l.issues.push(`${name}: ${PROFANITY.toLowerCase()}`)
+  }
   const issues = [...new Set(lines.flatMap(l => l.issues))]
   const missing = [...new Set([...text.replace(/\s/g, '')].filter(c => !font.hasChar(c)))]
   if (missing.length) issues.push(`${name}: нет в шрифте ${missing.map(c => `«${c}»`).join(', ')}`)
