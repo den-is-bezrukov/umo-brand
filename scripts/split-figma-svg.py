@@ -41,10 +41,9 @@ def make(src, name, keep, box, drop=()):
 
 make('b552.svg','clearspace','Frame 53',(0,0,912,456))
 make('b552.svg','minsize','Frame 51',(0,480,912,304))
-make('b1445.svg','cobrand-square','Frame 52',(0,0,912,304))
-make('b1445.svg','cobrand-square-example','Frame 53',(0,328,912,304))
-make('b1616.svg','cobrand-horizontal','Frame 50',(0,0,912,304))
-make('b1616.svg','cobrand-horizontal-example','Frame 51',(0,328,912,304))
+# cobrand-square(-example) and cobrand-horizontal(-example) are the 444×333 cards of Figma 4818:1328 (4818:1480,
+# 4818:1514, 4995:10273, 4995:10305), exported as SVG one by one: they export 684 wide with the content centred, so
+# their viewBox is shifted by 120 (as the lettering ones below).
 make('b1845.svg','type-styles',None,(0,0,912,456))
 make('b1784.svg','font-geist','Frame 47',(0,512,288,216),drop=('Frame 39_2',))
 make('b1784.svg','font-helvetica','Frame 48',(312,512,288,216),drop=('Frame 39_3',))

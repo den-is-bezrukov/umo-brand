@@ -65,7 +65,7 @@ The UMO 5 / UMO 8 ad banners in Ключевой образ are `Poster` compone
 
 On phones (below `md`) landscape photos — raster `Fig`s 2:1 and wider (`isWidePhoto`) — are cropped to 4:3 with `object-cover`; `focus` sets the crop's horizontal point in % where the subject isn't central (`umo5-kv`: 72, the car without the runner's sliver). An object on a flat background (`flat`, its colour: the livery, #f6f6f6) is fitted into the 4:3 frame whole instead, never cropped. SVG schemes stay whole. The Рамка номера card is 4:3 on phones too, its drawing enlarged to 130% so the plate fills 74% of the width.
 
-Кобрендинг (Figma 4818:1328) is two columns, a scheme over its example, on 4:3 grey cards: `SchemeCard` puts the existing 912×304 SVGs in the card scaled up from the centre (`scale`, measured against the Figma card: 1.39 / 1.355 for the schemes, 1.28 / 1.285 for the lockups). The schemes open large on a click (`Zoom`, a lightbox: a click anywhere or Esc closes it, the page doesn't scroll under it).
+Кобрендинг (Figma 4818:1328) is two columns, a scheme over its example, on 4:3 cards: the four 444×333 Figma cards exported as SVG (see the note in `scripts/split-figma-svg.py`: they export 684 wide, viewBox shifted by 120). The schemes open large on a click (`Zoom`, a lightbox: a click anywhere or Esc closes it, the page doesn't scroll under it).
 
 Body copy (`Text`) takes its width from its length on the 12-column Figma grid: up to 150 characters 6 columns (432px), up to 300 — 8 (600px), longer — 9 (678px). Don't set widths by hand; texts paired side by side sit in a grid with `*:max-w-none` and fill their cells.
 
