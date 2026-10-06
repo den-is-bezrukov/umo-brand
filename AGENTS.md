@@ -31,6 +31,7 @@ This is the canonical project structure. Start with task-relevant files below. O
 - `src/ui/share.ts` - Generator settings in the page address (`linkParams`, `useLinkState`), so a set-up card or livery is sent as a link
 - `src/guide/Guide.tsx` - Brand guide page (see "Brand guide" below)
 - `src/posters/` - Poster components: `PriceCard.tsx` (web preview) and `pdf/PriceCardPdf.tsx` (PDF export), sharing data from `cardData.ts`
+- `src/data/dealers.json` - UMO dealers as umo.auto lists them (name, city, short address, coordinates, hours, models), not used by any page yet. Collected by `node scripts/fetch-dealers.mjs`, which opens a booking draft per model on umo.auto and switches it through every city (the page's `updateFormValues` server action, its id found in the page's scripts); run it by hand and review the changes with `git diff`
 - `src/icons/` - SVG path data for the UMO logo/badges and small UI icons, imported directly by component name
 - `src/index.css` - Global CSS entrypoint and Tailwind CSS v4 import
 - `index.html` - Vite HTML shell containing the `#root` element and loading `src/main.tsx`. On iOS only, a script adds `maximum-scale=1` to the viewport: iOS Safari zooms into any field under 16px on focus and doesn't zoom back (the sidebar fields are 14px, the text edited on a tag or frame smaller), while still allowing a pinch zoom; on Android the same setting would block pinching
