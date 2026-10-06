@@ -1290,7 +1290,7 @@ export default function Guide() {
             <Section>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
                 <Text>
-                  <p>Носители — шаблоны, через которые бренд встречает покупателя у дилера: <Link to="/livery" className={TEXT_LINK}>ливрея <span className="whitespace-nowrap">демо-автомобиля</span></Link>, <Link to="/price-card" className={TEXT_LINK}>прайс-карта</Link>, <Link to="/name-tag" className={TEXT_LINK}>бейдж сотрудника</Link> и <Link to="/plate-frame" className={TEXT_LINK}>рамка номера</Link>.</p>
+                  <p>Носители — шаблоны, через которые бренд встречает покупателя у дилера: <Link to="/livery" className={TEXT_LINK}>ливрея демо-автомобиля</Link>, <Link to="/price-card" className={TEXT_LINK}>прайс-карта</Link>, <Link to="/name-tag" className={TEXT_LINK}>бейдж сотрудника</Link> и <Link to="/plate-frame" className={TEXT_LINK}>рамка номера</Link>.</p>
                 </Text>
                 <Text>
                   <p>Каждый собирается в своём конструкторе: дилер вводит свои данные, а макет, шрифты и отступы уже настроены. На выходе — файлы, готовые к печати и производству.</p>
