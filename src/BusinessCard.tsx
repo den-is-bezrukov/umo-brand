@@ -159,7 +159,7 @@ export default function BusinessCard() {
   }
 
   const face = toD(FACE)
-  /** The QR, the whole list's, set beside the person's contacts as it stands beside them on the card */
+  /** The QR, the whole list's: with the dealership, under «Изменить» after the site it follows */
   const qrField = (
     <Labelled label="QR-код">
       {/* <Segments>
@@ -214,6 +214,7 @@ export default function BusinessCard() {
                   <TextInput value={dealer.site} onChange={v => setDealer(d => ({ ...d, site: v }))} placeholder="Сайт" invalid={dealerWrong.has('site')} />
                 </Labelled>
               </div>
+              {qrField}
               </>}
             </div>
 
@@ -258,7 +259,6 @@ export default function BusinessCard() {
                         </div>
                       </div>
                     </Labelled>
-                    {qrField}
                   </div>
                   {(!staff.isBlank(p) || people.length > 1) && (
                     <div className="mt-2 flex gap-2">
@@ -271,8 +271,6 @@ export default function BusinessCard() {
             })()}
 
             {mode === 'table' && <TableSource staff={staff} template={TEMPLATE} />}
-            {/* With no person's form open (the table mode, none selected), on its own */}
-            {!(mode === 'manual' && current) && qrField}
 
             <Labelled label="Страницы">
               <Segments>
