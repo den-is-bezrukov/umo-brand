@@ -422,8 +422,8 @@ const MANUAL = '__manual'
  * The position: one field that is a native select of the typical positions while it's empty or holds one of them (a
  * transparent select over a box dressed as the other fields, so the whole field opens the list, from its own edge),
  * with «Ввести вручную…» first, which turns the same field into a text field (Enter breaks the line); a position not
- * in the list shows there too, its chevron still opening the list: narrowed to the entries containing what's typed,
- * or whole with the entry it matches marked. A pick carries its line break (`POSITIONS`). No
+ * in the list shows there too, its chevron still opening the list, marked on the entry a typed position matches. A
+ * pick carries its line break (`POSITIONS`). No
  * title in the list: the empty value is a hidden option
  */
 function PositionPicker({ value, onChange, invalid }: { value: string; onChange: (v: string) => void; invalid: boolean }) {
@@ -432,16 +432,11 @@ function PositionPicker({ value, onChange, invalid }: { value: string; onChange:
   const manual = typing || (!!value.trim() && !hit)
   const box = useRef<HTMLDivElement>(null)
   useEffect(() => { if (typing) box.current?.querySelector('textarea')?.focus() }, [typing])
-  // A position typed in part narrows the list to the entries containing it, none marked, so any of them picks; with no
-  // match, or a full one (marked), the whole list
-  const typed = value.replace(/\s+/g, ' ').trim().toLowerCase()
-  const matching = POSITIONS.filter(t => t.replace(/\s+/g, ' ').toLowerCase().includes(typed))
-  const shown = manual && typed && !hit && matching.length ? matching : POSITIONS
   const options = (
     <>
       <option value="" hidden disabled />
       <option value={MANUAL}>Ввести вручную…</option>
-      {shown.map(t => <option key={t} value={POSITIONS.indexOf(t)}>{t.replace('\n', ' ')}</option>)}
+      {POSITIONS.map((t, i) => <option key={t} value={i}>{t.replace('\n', ' ')}</option>)}
     </>
   )
   const pick = (v: string) => {
