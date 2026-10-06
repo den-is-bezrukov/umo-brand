@@ -1,5 +1,6 @@
 import { parse, type Font } from 'opentype.js'
 import { loadFont, type Cmd } from '@/livery/geometry'
+import { withListBreak } from './positions'
 
 // A dealership employee's name tag (Figma: UMO | Evrone, node 4021:2878), as in the hand-made Illustrator source in
 // Yandex Disk `02 UMO/Name Tag`: a 70×25 mm plate with 4 mm rounded corners, the name and surname in CoFo Sans Medium
@@ -133,7 +134,7 @@ export function buildTag(fonts: Fonts, person: Person): Tag {
   const typedSurname = person.surname.split('\n').map(clean).filter(Boolean)
   const name = typedName.join(' ')
   const surname = typedSurname.join(' ')
-  const position = person.position.replace(/\r/g, '')
+  const position = withListBreak(person.position.replace(/\r/g, ''))
   const issues: string[] = []
   const nameCmds: Cmd[] = []
   const surnameCmds: Cmd[] = []

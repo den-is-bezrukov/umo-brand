@@ -106,10 +106,11 @@ export function Segments({ children }: { children: React.ReactNode }) {
   return <div className="flex rounded-[4px] bg-[#f5f5f5]">{children}</div>
 }
 
-export function TextInput({ value, onChange, onBlur, placeholder, invalid, numeric, className = '' }: { value: string; onChange: (v: string) => void; onBlur?: () => void; placeholder?: string; invalid?: boolean; numeric?: boolean; className?: string }) {
+export function TextInput({ value, onChange, onBlur, placeholder, invalid, numeric, list, className = '' }: { value: string; onChange: (v: string) => void; onBlur?: () => void; placeholder?: string; invalid?: boolean; numeric?: boolean; list?: string; className?: string }) {
   return (
     <input
       value={value}
+      list={list}
       onChange={e => onChange(e.target.value)}
       onBlur={() => onBlur?.()}
       placeholder={placeholder}

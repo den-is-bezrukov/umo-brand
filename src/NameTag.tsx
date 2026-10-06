@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, TextArea, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined } from '@/ui/form'
+import { Field as Labelled, TextArea, TextInput, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined } from '@/ui/form'
 import { toD } from '@/livery/geometry'
 import { TAG, buildTag, loadFonts, type Field, type FieldBox, type Fonts, type Person } from '@/nametag/tag'
 import { readXlsx, parsePasted, type TableRow } from '@/nametag/table'
+import { POSITIONS } from '@/nametag/positions'
 import TagArt from '@/nametag/TagArt'
 
 // Name tag generator (Figma: UMO | Evrone, node 4021:2878): a dealership's staff list in, one zip out with the tags
@@ -242,7 +243,7 @@ export default function NameTag() {
                         <TextArea value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={issues.some(t => t.startsWith('Фамилия') || t === NO_SURNAME)} />
                       </Labelled>
                       <Labelled label="Должность">
-                        <TextArea value={p.position} onChange={v => update(p.key, { position: v })} placeholder="Должность" invalid={issues.some(t => t.startsWith('Должность') || t === NO_POSITION)} />
+                        <TextInput value={p.position.replace(/\s*\n\s*/g, ' ')} onChange={v => update(p.key, { position: v })} placeholder="Должность" list="positions" invalid={issues.some(t => t.startsWith('Должность') || t === NO_POSITION)} />
                       </Labelled>
                     </div>
                     {/* The selected tag's actions under its fields, side by side as the other generators' «Копировать» and
@@ -297,6 +298,11 @@ export default function NameTag() {
       </aside>
 
       {/* In the table mode the preview takes a dropped file too, and until one is loaded it's all an upload */}
+      {/* The position field's suggestions, one line each: a pick takes its line break from the list on the tag */}
+      <datalist id="positions">
+        {POSITIONS.map(t => <option key={t} value={t.replace('\n', ' ')} />)}
+      </datalist>
+
       <main
         {...(mode === 'table' ? dropTarget : {})}
         onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure button, figure textarea, [data-add]')) setSelected(null) }}
