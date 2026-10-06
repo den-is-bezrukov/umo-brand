@@ -1,6 +1,6 @@
 /**
  * Obscene words, so a generator never sets one on an official UMO layout («Центр UMO | <мат>» on umo.autos).
- * Only the obscene vocabulary (мат) and a few English words of the kind; jokes and rude-but-printable words pass.
+ * The obscene vocabulary (мат), vulgar words (жопа, говно, срать…) and a few English ones; jokes and insults pass.
  * Text is checked word by word after normalising disguises: case, ё, Latin and digit look-alikes, letters spaced
  * or dotted apart («х у й», «х.у.й»), a star in place of a letter («х*й»). Roots that occur inside ordinary words
  * (еб in хлеб and небо, бля in рубля, манда in команда) are anchored to the start of the word or to a prefix.
@@ -27,6 +27,17 @@ const RUSSIAN = [
   /^г[ао]нд[оа]н/, // гондон; not гондола
   /^шлюх/,
   /^сук[аиуео]?$/, /^суч(?:ар|к|ь)/,
+  // Vulgar but not мат: just as out of place on a dealer's frame or badge
+  /ж[о*]п/, // жопа
+  /г[оа*]вн/, // говно
+  /дерьм/,
+  /^(?:на|обо?|вы|за|про|по|от|у|до)?сра(?:ть|л|ч|н|к)/, /^(?:на|обо?|вы|за|по)?сру(?:$|т|н)/, // срать, засранец; not сравнить, сразу, сруб
+  /^(?:на|обо?|вы|за|по|об)?сс(?:ать|ал|ык)/, // ссать, ссыкло; not ссылка, ссора, ссуда, Ссанг Йонг
+  /^(?:на|по|до)?хер(?:$|ня|ни|ню|н[её]|ов|ач|ь)/, // херня, нахер; not Херсон, херес
+  /др[о*]ч/, // дрочить
+  /п[еи]рд(?!ик)/, // пердеть
+  /(?<!с)трах(?:ать|ал|ае|аю|ну|ер)/, // трахать; not страх, трахея
+  /сиськ/, /шалав/, /^мраз/, /ублюд/, /^чмо(?:ш|$)/,
 ]
 const ENGLISH = [/f[u*]+c?k/, /^c[u*]nts?$/, /^sh[i*]t(?!ake)/, /b[i*]tch/, /assh[o*]le/, /^wh[o*]res?$/, /^f[a*]gg?[o*]?t?s?$/, /n[i*]gg[ae]r/, /^d[i*]ckhead/]
 
