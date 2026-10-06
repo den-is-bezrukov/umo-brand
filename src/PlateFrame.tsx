@@ -14,7 +14,7 @@ import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
 // the prefix doesn't fit; nothing on the page leads there.
 
 const PREFIX = 'UMO '
-const DEFAULT_NAME = 'Название'
+const DEFAULT_NAME = 'Центр'
 const DEFAULT_TEXT = PREFIX + DEFAULT_NAME
 /** The dealers' names for the suggestions, without the fixed «UMO » */
 const NAMES = DEALER_NAMES.map(withoutUmo)
