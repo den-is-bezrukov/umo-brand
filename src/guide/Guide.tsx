@@ -662,13 +662,13 @@ function Constructor({ to, title, flush, children }: { to: string; title: string
 /**
  * Overview of the chapter's media (Figma 4844:6695): each one's picture right over its ↗ row to the constructor. Wide pictures
  * (2:1 and wider) take the whole width, the rest go in pairs; the grid packs densely, so a narrow one moves up next to
- * the previous narrow one and the list keeps the order of the sections below.
+ * the previous narrow one. Each card carries its medium's anchor (the sidebar's sub-items link to them).
  */
-function Carriers({ items }: { items: { to: string; title: string; w: number; h: number; picture: ReactNode }[] }) {
+function Carriers({ items }: { items: { id: string; to: string; title: string; w: number; h: number; picture: ReactNode }[] }) {
   return (
     <div className="grid grid-cols-1 gap-6 md:grid-flow-dense md:grid-cols-2">
       {items.map(c => (
-        <div key={c.to} className={c.w / c.h >= 2 ? 'md:col-span-2' : ''}>
+        <div key={c.to} id={c.id} className={`scroll-mt-24 ${c.w / c.h >= 2 ? 'md:col-span-2' : ''}`}>
           <Constructor to={c.to} title={c.title} flush>{c.picture}</Constructor>
         </div>
       ))}
@@ -1258,9 +1258,9 @@ export default function Guide() {
               </div>
               <Carriers
                 items={[
-                  { to: '/livery', title: 'Ливрея', w: 912, h: 456, picture: <Fig name="livery-umo8" w={912} h={456} alt="UMO 8 с ливреей дилера" /> },
+                  { id: 'livery', to: '/livery', title: 'Ливрея', w: 912, h: 456, picture: <Fig name="livery-umo8" w={912} h={456} alt="UMO 8 с ливреей дилера" /> },
                   {
-                    to: '/price-card', title: 'Прайс-карта', w: 444, h: 444,
+                    id: 'price-card', to: '/price-card', title: 'Прайс-карта', w: 444, h: 444,
                     picture: (
                       <div className="flex aspect-square items-center justify-center bg-[#f5f5f5]">
                         <div className="w-[57%]">
@@ -1270,72 +1270,16 @@ export default function Guide() {
                     ),
                   },
                   {
-                    to: '/plate-frame', title: 'Рамка номера', w: 912, h: 304,
+                    id: 'plate-frame', to: '/plate-frame', title: 'Рамка номера', w: 912, h: 304,
                     picture: (
                       <PlateArt guide>
                         <text y={STRIP_BASELINE} fontFamily="CoFo Sans" fontWeight={500} fontSize={18} letterSpacing={-0.18} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Центр UMO | Название дилера</text>
                       </PlateArt>
                     ),
                   },
-                  { to: '/name-tag', title: 'Бейдж', w: 444, h: 444, picture: <SquarePicture name="name-tag" alt="Бейдж UMO на рубашке сотрудника" /> },
+                  { id: 'name-tag', to: '/name-tag', title: 'Бейдж', w: 444, h: 444, picture: <SquarePicture name="name-tag" alt="Бейдж UMO на рубашке сотрудника" /> },
                 ]}
               />
-            </Section>
-
-            <Section>
-              <Head>
-                <H2 id="livery">Ливрея</H2>
-                <Text>
-                  <p>Ливрея превращает демо-автомобиль дилера в носитель бренда: на бортах и заднем стекле — название модели, имя дилерского центра и QR-код.</p>
-                  <p>Файлы для оклейки собираются в <Link to="/livery" className={TEXT_LINK}>конструкторе</Link>: укажите название дилера, теглайн и ссылку для QR-кода. Конструктор проверит, что текст не заходит на шов между дверями и ручку, и соберёт архив: векторные PDF для плоттерной резки в масштабе 1:1 и спецификацию с размерами для монтажа.</p>
-                </Text>
-              </Head>
-              <Constructor to="/livery" title="Конструктор ливреи">
-                <Fig name="livery-umo8" w={912} h={456} alt="UMO 8 с ливреей дилера, левый борт" />
-              </Constructor>
-            </Section>
-
-            <Section>
-              <Head>
-                <H2 id="price-card">Прайс-карта</H2>
-                <Text>
-                  <p>Прайс-карта стоит рядом с автомобилем и отвечает на главный вопрос — сколько он стоит.</p>
-                  <p>Карты для всех моделей и комплектаций собираются в <Link to="/price-card" className={TEXT_LINK}>конструкторе</Link>: выберите модель и комплектацию, укажите цену с кредитом и без и ссылку для QR-кода. Макет, шрифты и отступы уже настроены — получится готовый к печати PDF формата A3.</p>
-                </Text>
-              </Head>
-              <Constructor to="/price-card" title="Конструктор прайс-карты">
-                <div className="bg-[#f5f5f5] p-6 md:flex md:aspect-[2/1] md:items-center md:justify-center md:p-0">
-                  <div className="grid grid-cols-2 gap-3 md:w-[58.46%] md:gap-x-[4.5%]">
-                    <PriceCardPreview variant="umo8-max" fullPrice="6 515 000" creditPrice="5 000 000" image={img('pricecard-umo8-car')} alt="Прайс-карта UMO 8, комплектация Макс" />
-                    <PriceCardPreview variant="umo5-max" fullPrice="3 715 000" creditPrice="2 790 000" image={img('pricecard-umo5-car')} alt="Прайс-карта UMO 5, комплектация Макс" />
-                  </div>
-                </div>
-              </Constructor>
-            </Section>
-
-            {/* Figma 4970:2280: the heading, then the frame straight away, no text */}
-            <Section>
-              <H2 id="plate-frame">Рамка номера</H2>
-              <Constructor to="/plate-frame" title="Редактор рамок номеров">
-                <PlateArt guide>
-                  <text y={STRIP_BASELINE} fontFamily="CoFo Sans" fontWeight={500} fontSize={18} letterSpacing={-0.18} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Центр UMO | Название дилера</text>
-                </PlateArt>
-              </Constructor>
-            </Section>
-
-            {/* Figma 4980:9768 (700×420): the original photo (1400×1400) cut to that frame at its full size, 1400×840; the
-                maker gets it in the archive too */}
-            <Section>
-              <Head>
-                <H2 id="name-tag">Бейдж</H2>
-                <Text>
-                  <p>Бейдж сотрудника дилерского центра: имя, фамилия и должность на матовой шлифованной пластине с логотипом UMO.</p>
-                  <p>Бейджи собираются в <Link to="/name-tag" className={TEXT_LINK}>конструкторе</Link>: введите сотрудников вручную или загрузите таблицу по шаблону. Конструктор проверит, что текст помещается без уменьшения кегля, и соберёт архив для изготовителя: PDF в кривых в масштабе 1:1, требования к материалу и референс внешнего вида.</p>
-                </Text>
-              </Head>
-              <Constructor to="/name-tag" title="Конструктор бейджей">
-                <Fig name="name-tag" w={700} h={420} alt="Бейдж UMO на рубашке сотрудника" />
-              </Constructor>
             </Section>
           </Chapter>
 
