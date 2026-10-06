@@ -725,6 +725,43 @@ function Carriers({ items }: { items: typeof MEDIA }) {
   )
 }
 
+/**
+ * A 912×304 scheme or lockup (SVG) on a 4:3 grey card (Figma 4818:1328), scaled up by `scale` from the card's centre to
+ * the size it has in the card's Figma frame; the frame's empty grey falls outside the card.
+ */
+function SchemeCard({ name, scale, alt }: { name: string; scale: number; alt: string }) {
+  return (
+    <div className="flex aspect-4/3 items-center justify-center overflow-hidden bg-[#f5f5f5]">
+      <img src={img(name)} alt={alt} loading="lazy" decoding="async" className="block h-auto max-w-none shrink-0" style={{ width: `${scale * 100}%` }} />
+    </div>
+  )
+}
+
+/** A picture that opens large over the page on a click (a lightbox); a click anywhere or Esc closes it. */
+function Zoom({ label, children }: { label: string; children: ReactNode }) {
+  const [open, setOpen] = useState(false)
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    const overflow = document.documentElement.style.overflow
+    document.documentElement.style.overflow = 'hidden'
+    window.addEventListener('keydown', onKey)
+    return () => { window.removeEventListener('keydown', onKey); document.documentElement.style.overflow = overflow }
+  }, [open])
+  return (
+    <>
+      <button type="button" aria-label={label} onClick={() => setOpen(true)} className="block w-full cursor-zoom-in outline-none focus-visible:ring-2 focus-visible:ring-black/30">
+        {children}
+      </button>
+      {open && (
+        <div role="dialog" aria-label={label} onClick={() => setOpen(false)} className="fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-white p-4 md:p-12">
+          <div className="w-[min(100%,calc((100dvh-2rem)*4/3))] md:w-[min(100%,calc((100dvh-6rem)*4/3))]">{children}</div>
+        </div>
+      )}
+    </>
+  )
+}
+
 /** A heading + text group. Sections are separated by 144px; a Chapter adds 72px on top of its first one. */
 function Section({ children }: { children: ReactNode }) {
   return <section className="flex flex-col gap-8 md:gap-12">{children}</section>
@@ -1130,16 +1167,23 @@ export default function Guide() {
                   </Text>
                 </div>
               </Head>
-              <div className="group/preview flex flex-col gap-6">
-                <Fig name="cobrand-square" w={912} h={304} alt="Схема кобрендинга с квадратным логотипом" />
-                <PreviewLink asset={{ file: 'umo-yandex.svg' }} label="Скачать логотип UMO | Яндекс, SVG">
-                  <Fig name="cobrand-square-example" w={912} h={304} alt="UMO и Яндекс" />
-                </PreviewLink>
-                <Assets items={[{ file: 'umo-yandex.svg' }, { file: 'umo-yandex-png.zip' }]} preview="umo-yandex.svg" />
-              </div>
-              <div className="flex flex-col gap-6">
-                <Fig name="cobrand-horizontal" w={912} h={304} alt="Схема кобрендинга с горизонтальным логотипом" />
-                <Fig name="cobrand-horizontal-example" w={912} h={304} alt="UMO и EVM" />
+              {/* Figma 4818:1328: two columns, a scheme over its example; each column stacks on phones */}
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div className="group/preview flex flex-col gap-6">
+                  <Zoom label="Схема кобрендинга с квадратным логотипом">
+                    <SchemeCard name="cobrand-square" scale={1.39} alt="Схема кобрендинга с квадратным логотипом" />
+                  </Zoom>
+                  <PreviewLink asset={{ file: 'umo-yandex.svg' }} label="Скачать логотип UMO | Яндекс, SVG">
+                    <SchemeCard name="cobrand-square-example" scale={1.28} alt="UMO и Яндекс" />
+                  </PreviewLink>
+                  <Assets items={[{ file: 'umo-yandex.svg' }, { file: 'umo-yandex-png.zip' }]} preview="umo-yandex.svg" />
+                </div>
+                <div className="flex flex-col gap-6">
+                  <Zoom label="Схема кобрендинга с горизонтальным логотипом">
+                    <SchemeCard name="cobrand-horizontal" scale={1.355} alt="Схема кобрендинга с горизонтальным логотипом" />
+                  </Zoom>
+                  <SchemeCard name="cobrand-horizontal-example" scale={1.285} alt="UMO и EVM" />
+                </div>
               </div>
             </Section>
           </Chapter>
