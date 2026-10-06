@@ -82,7 +82,7 @@ function SheetPreview({ sheet, seams, dims }: { sheet: Sheet; seams: boolean; di
 export default function Livery() {
   // Settings come from the link the page was opened with (see `useLinkState` below), defaults for the rest
   const [link] = useState(linkParams)
-  const [model, setModel] = useState<Model>(link.get('model') === 'umo5' ? 'umo5' : 'umo8')
+  const [model, setModel] = useState<Model>(link.get('model') === 'umo8' ? 'umo8' : 'umo5')
   const [dealer, setDealer] = useState(link.get('top') ?? DEFAULT_TOP)
   const [tagline, setTagline] = useState(() => link.get('bottom') ?? DEFAULT_TAGLINE[model])
   // The rear window's slogan follows the sides' until it's edited (as the price card's credit price follows the full
@@ -124,7 +124,8 @@ export default function Livery() {
   // The rear window's own slogan, once edited apart from the sides'
   const ownRearOn = on.rear && on.tagline && on.rearTagline && rearTagline !== undefined && rearTagline !== tagline
   useLinkState({
-    model: model === 'umo8' ? null : model,
+    // UMO 5 by default (it was UMO 8, so links from then without `model` now open UMO 5)
+    model: model === 'umo5' ? null : model,
     link: url.trim() === DEFAULT_URL[model] ? null : url.trim(),
     top: dealer === DEFAULT_TOP ? null : dealer,
     bottom: tagline === DEFAULT_TAGLINE[model] ? null : tagline,
@@ -213,8 +214,8 @@ export default function Livery() {
           <div className="flex flex-col gap-4 tracking-normal">
             <Field label="Модель">
               <Segments>
-                <SegBtn active={model === 'umo8'} onClick={() => chooseModel('umo8')}>UMO 8</SegBtn>
                 <SegBtn active={model === 'umo5'} onClick={() => chooseModel('umo5')}>UMO 5</SegBtn>
+                <SegBtn active={model === 'umo8'} onClick={() => chooseModel('umo8')}>UMO 8</SegBtn>
               </Segments>
             </Field>
 

@@ -4,11 +4,11 @@ import { Link, useNavigate } from 'react-router-dom'
 // Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag, business card). Light UI per the Figma layout
 // (UMO | Evrone, nodes 4844:6865 and 4900:4588), matching the brand guide.
 
-/** The tick of checkboxes and of a good link (Figma 4900:4657): a 2 px stroke with square ends */
+/** The tick of checkboxes and of a good link (Figma 4900:4657, 5015:11196): a 2 px stroke with square ends and bevelled corners, as every icon here */
 function Tick({ color = 'black' }: { color?: string }) {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-      <path d="M11.5 4L5.5 10L2.5 7" stroke={color} strokeWidth="2" strokeLinecap="square" />
+      <path d="M11.5 4L5.5 10L2.5 7" stroke={color} strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" />
     </svg>
   )
 }
@@ -40,7 +40,7 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
       <div className="relative flex items-center gap-1 self-start">
         <h1 className="text-[24px] font-medium leading-none">{GENERATORS.find(g => g.path === current)!.title}</h1>
         <svg width="24" height="24" viewBox="-4 -4 24 24" fill="none" aria-hidden className="relative top-px -ml-px">
-          <path d="M4 6L8 10L12 6" stroke="black" strokeWidth="2" strokeLinecap="square" />
+          <path d="M4 6L8 10L12 6" stroke="black" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" />
         </svg>
         <select
           value={current}
@@ -83,11 +83,11 @@ export function SegBtn({ active, onClick, disabled, title, children }: { active:
       disabled={disabled}
       title={title}
       aria-pressed={active}
-      className={`flex-1 min-w-0 flex items-center justify-center rounded-[4px] border px-3 py-[9px] cursor-pointer outline-none
+      className={`flex-1 min-w-0 flex items-center justify-center rounded-[8px] border px-3 py-[9px] cursor-pointer outline-none
         focus-visible:ring-2 focus-visible:ring-black/30 disabled:cursor-not-allowed disabled:opacity-40
-        ${active ? 'border-black' : 'border-transparent hover:enabled:border-black/20'}`}
+        ${active ? 'border-black/10 bg-white text-black' : 'border-transparent text-[#808080]'}`}
     >
-      <span className="font-medium text-[14px] leading-5 text-black whitespace-nowrap">{children}</span>
+      <span className="font-medium text-[14px] leading-5 whitespace-nowrap">{children}</span>
     </button>
   )
 }
@@ -105,7 +105,8 @@ export function Field({ label, children }: { label: string; children: React.Reac
 }
 
 export function Segments({ children }: { children: React.ReactNode }) {
-  return <div className="flex rounded-[4px] bg-[#f5f5f5]">{children}</div>
+  // The picked one a white tile edged at 10% on the grey, the others grey text; no hover (Figma 5015:11137)
+  return <div className="flex rounded-[8px] bg-[#f5f5f5]">{children}</div>
 }
 
 export function TextInput({ value, onChange, onBlur, placeholder, invalid, numeric, inputMode, list, className = '' }: { value: string; onChange: (v: string) => void; onBlur?: () => void; placeholder?: string; invalid?: boolean; numeric?: boolean; inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode']; list?: string; className?: string }) {
@@ -119,8 +120,8 @@ export function TextInput({ value, onChange, onBlur, placeholder, invalid, numer
       aria-invalid={invalid || undefined}
       inputMode={inputMode ?? (numeric ? 'numeric' : undefined)}
       pattern={numeric ? '[0-9 ]*' : undefined}
-      className={`h-10 w-full min-w-0 rounded-[4px] bg-[#f5f5f5] px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]
-        ${invalid ? 'ring-1 ring-inset ring-[#e30]' : 'focus:ring-1 focus:ring-inset focus:ring-black'} ${className}`}
+      className={`h-10 w-full min-w-0 rounded-[8px] bg-[#f5f5f5] px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]
+        ${invalid ? 'ring-1 ring-inset ring-[#e30]' : 'focus:ring-1 focus:ring-inset focus:ring-black/40'} ${className}`}
     />
   )
 }
@@ -139,7 +140,7 @@ function useAutoHeight(value: string) {
   return ref
 }
 
-const areaClass = 'block min-h-10 w-full min-w-0 resize-none overflow-hidden rounded-[4px] bg-[#f5f5f5] py-[10px] px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]'
+const areaClass = 'block min-h-10 w-full min-w-0 resize-none overflow-hidden rounded-[8px] bg-[#f5f5f5] py-[10px] px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]'
 
 /** Multi-line text where Enter is a line break the layout keeps */
 export function TextArea({ value, onChange, placeholder, invalid, className = '', ...rest }: { value: string; onChange: (v: string) => void; placeholder?: string; invalid?: boolean; className?: string } & Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'value' | 'onChange'>) {
@@ -153,7 +154,7 @@ export function TextArea({ value, onChange, placeholder, invalid, className = ''
       onChange={e => onChange(e.target.value)}
       placeholder={placeholder}
       aria-invalid={invalid || undefined}
-      className={`${areaClass} ${invalid ? 'ring-1 ring-inset ring-[#e30]' : 'focus:ring-1 focus:ring-inset focus:ring-black'} ${className}`}
+      className={`${areaClass} ${invalid ? 'ring-1 ring-inset ring-[#e30]' : 'focus:ring-1 focus:ring-inset focus:ring-black/40'} ${className}`}
     />
   )
 }
@@ -246,8 +247,8 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
         onClick={() => { box.current?.querySelector('textarea')?.focus(); setAll(true); setOpen(o => !o || !all) }}
         className="absolute top-0 right-0 flex size-10 cursor-pointer items-center justify-center"
       >
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden>
-          <path d="M4 6L8 10L12 6" stroke="black" strokeWidth="1.5" />
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+          <path d="M3 5L7 9L11 5" stroke="black" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" />
         </svg>
       </button>
       <div
@@ -257,13 +258,15 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
         role="listbox"
         aria-label={label}
         onMouseDown={e => e.preventDefault()}
-        className="max-h-[288px] overflow-y-auto rounded-[4px] border border-black/10 bg-white p-1 text-[14px] leading-5 text-black shadow-[0_8px_24px_rgba(0,0,0,0.12)]"
+        // White, 2 px inside its edge, a soft shadow and no line; rows 8 px round, the pointed one grey, the picked one
+        // medium with a tick (Figma 5015:11234)
+        className="max-h-[288px] overflow-y-auto rounded-[8px] bg-white p-[2px] text-[14px] leading-5 text-black shadow-[0_10px_15px_rgba(0,0,0,0.1)]"
         // The popover's own styles centre it on the screen (inset 0, margin auto): undone here, then put under the field
         style={{
           position: 'fixed',
           inset: 'auto',
           margin: 0,
-          ...(ANCHOR ? { positionAnchor: anchor, top: 'calc(anchor(bottom) + 4px)', left: 'anchor(left)', width: 'anchor-size(width)' } : {}),
+          ...(ANCHOR ? { positionAnchor: anchor, top: 'calc(anchor(bottom) + 8px)', left: 'anchor(left)', width: 'anchor-size(width)' } : {}),
         } as React.CSSProperties}
       >
         {shown.map((t, i) => (
@@ -275,9 +278,10 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
             aria-selected={t === hit}
             onMouseEnter={() => setActive(i)}
             onClick={() => pick(t)}
-            className={`cursor-pointer rounded-[2px] px-2 py-1.5 ${i === active ? 'bg-[#f5f5f5]' : ''} ${t === hit ? 'font-medium' : ''}`}
+            className={`flex cursor-pointer items-start gap-2 rounded-[8px] px-3 py-[10px] ${i === active ? 'bg-[#f5f5f5]' : ''} ${t === hit ? 'font-medium' : ''}`}
           >
-            {shownAs(t).replace('\n', ' ')}
+            <span className="min-w-0 flex-1">{shownAs(t).replace('\n', ' ')}</span>
+            {t === hit && <span className="flex h-5 w-4 shrink-0 items-center justify-center"><Tick /></span>}
           </div>
         ))}
       </div>
@@ -311,7 +315,7 @@ export function UrlField({ value, onChange }: { value: string; onChange: (v: str
         placeholder="https://..."
         aria-invalid={error || undefined}
         spellCheck={false}
-        className={`${areaClass} break-all pr-9 ${error ? 'ring-1 ring-inset ring-[#e30]' : 'focus:ring-1 focus:ring-inset focus:ring-black'}`}
+        className={`${areaClass} break-all pr-9 ${error ? 'ring-1 ring-inset ring-[#e30]' : 'focus:ring-1 focus:ring-inset focus:ring-black/40'}`}
       />
       {/* On the first line, however many lines the link takes */}
       <div className="pointer-events-none absolute top-0 right-0 flex h-10 w-9 items-center justify-center">
@@ -355,12 +359,13 @@ export function OptionalField({ label, on, onChange, extra, children }: { label:
   )
 }
 
-export const rowAction = 'flex shrink-0 cursor-pointer items-center gap-2 text-[14px] leading-5 text-black outline-none transition-colors hover:text-black/50 focus-visible:ring-2 focus-visible:ring-black/30'
+// Grey #808080, black on hover, the icon with it (Figma 5017:11279)
+export const rowAction = 'flex shrink-0 cursor-pointer items-center gap-2 text-[14px] leading-5 text-[#808080] outline-none transition-colors hover:text-black focus-visible:ring-2 focus-visible:ring-black/30'
 
 /** Corners for the size switch, on the 16 grid with the ticks' 2 px stroke and square ends: at the outer corners to grow, turned in to shrink */
 function SizeIcon({ grow }: { grow: boolean }) {
   return (
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" aria-hidden>
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" aria-hidden>
       {grow
         ? <path d="M9 3H13V7M7 13H3V9" />
         : <path d="M13 7H9V3M3 9H7V13" />}
@@ -388,7 +393,8 @@ export function SizeSwitch({ large, onChange, label }: { large: boolean; onChang
   )
 }
 
-export const outlined = 'flex min-w-16 flex-1 items-center justify-center rounded-[4px] border border-black/10 p-3 text-[14px] font-medium leading-[1.13] tracking-[-0.01em] text-black cursor-pointer outline-none hover:border-black/30 focus-visible:ring-2 focus-visible:ring-black/30'
+// Edged at 10%, at 40% on hover (Figma 5015:11171)
+export const outlined = 'flex min-w-16 flex-1 items-center justify-center rounded-[8px] border border-black/10 px-3 py-[9px] text-[14px] font-medium leading-5 text-black cursor-pointer outline-none hover:border-black/40 focus-visible:ring-2 focus-visible:ring-black/30'
 
 /**
  * «Копировать» and «Сбросить» side by side (Figma 4939:3762): the first copies the page address — the settings are in
@@ -423,7 +429,7 @@ export function DownloadButton({ onClick, busy, disabled, children }: { onClick:
       type="button"
       onClick={onClick}
       disabled={busy || disabled}
-      className="flex w-full min-w-16 items-center justify-center gap-2 rounded-[4px] bg-black p-3 text-[14px] font-medium leading-[1.13] tracking-[-0.01em] text-white cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 hover:enabled:bg-[#333]"
+      className="flex w-full min-w-16 items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] text-[14px] font-medium leading-5 text-white cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 hover:enabled:bg-[#333]"
     >
       {busy && (
         <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" aria-hidden>

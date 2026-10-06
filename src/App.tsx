@@ -50,7 +50,7 @@ function ActivePoster({ model, trim, fullPrice, creditPrice, qrSvg }: { model: M
 /** The card the page was opened with: model and trim from the link if they exist, prices as given or the trim's own */
 function fromLink() {
   const link = linkParams()
-  const model: Model = link.get('model') === 'umo5' ? 'umo5' : 'umo8'
+  const model: Model = link.get('model') === 'umo8' ? 'umo8' : 'umo5'
   const asked = link.get('trim') as Trim | null
   const trim = asked && TRIMS[model].includes(asked) ? asked : TRIMS[model][0]
   // A price is taken as it is in the link only if it looks like one: seven digits, 1 000 000 to 9 999 999
@@ -101,7 +101,8 @@ export default function App() {
   // The address carries what differs from the defaults, so the card can be sent as a link
   const digits = (v: string) => v.replace(/\D/g, '')
   useLinkState({
-    model: model === 'umo8' ? null : model,
+    // UMO 5 by default (it was UMO 8, so links from then without `model` now open UMO 5)
+    model: model === 'umo5' ? null : model,
     trim: trim === TRIMS[model][0] ? null : trim,
     full: fullPrice === DEFAULTS[`${model}-${trim}`] ? null : digits(fullPrice),
     credit: !creditOn ? null : creditSet ? digits(creditPrice) : 'auto',
@@ -200,8 +201,8 @@ export default function App() {
           <div className="grid grid-cols-2 gap-x-3 gap-y-4 md:grid-cols-1 tracking-normal">
             <Field label="Модель">
               <Segments>
-                <SegBtn active={model === 'umo8'} onClick={() => switchModel('umo8')}>UMO 8</SegBtn>
                 <SegBtn active={model === 'umo5'} onClick={() => switchModel('umo5')}>UMO 5</SegBtn>
+                <SegBtn active={model === 'umo8'} onClick={() => switchModel('umo8')}>UMO 8</SegBtn>
               </Segments>
             </Field>
 

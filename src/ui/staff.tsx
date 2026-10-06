@@ -232,7 +232,7 @@ export function TableSource<P extends object>({ staff, template }: { staff: Staf
       {s.file && (
         <label
           {...s.dropTarget}
-          className={`flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-1 rounded-[4px] border border-dashed p-4 text-center text-[14px] leading-5
+          className={`flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-1 rounded-[8px] border border-dashed p-4 text-center text-[14px] leading-5
             ${s.dragging ? 'border-black bg-[#f5f5f5]' : s.tableError ? 'border-[#e30]' : 'border-black/20 hover:border-black/40'}`}
         >
           <FileInput staff={s} />
@@ -250,7 +250,7 @@ export function TableSource<P extends object>({ staff, template }: { staff: Staf
 export function UploadArea<P extends object>({ staff }: { staff: Staff<P> }) {
   const s = staff as unknown as Staff<object>
   return (
-    <label className={`flex min-h-[240px] flex-1 cursor-pointer items-center justify-center rounded-[4px] border border-dashed text-[14px] font-medium leading-5
+    <label className={`flex min-h-[240px] flex-1 cursor-pointer items-center justify-center rounded-[8px] border border-dashed text-[14px] font-medium leading-5
       ${s.dragging ? 'border-black bg-black/5' : 'border-black/20 hover:border-black/40'}`}>
       <FileInput staff={s} />
       Загрузить таблицу .xlsx
@@ -282,7 +282,7 @@ export function AddTile({ onClick, aspect, radius }: { onClick: () => void; aspe
  */
 export function Progress({ failing, total, onClick }: { failing: number; total: number; onClick: () => void }) {
   return (
-    <button type="button" onClick={onClick} className="flex w-full cursor-pointer items-center justify-center p-3 text-[14px] leading-[1.13] tracking-[-0.01em] text-[#999] hover:text-black">
+    <button type="button" onClick={onClick} className="flex w-full cursor-pointer items-center justify-center px-3 py-[10px] text-[14px] leading-5 text-[#808080] hover:text-black">
       {failing}{failing < total ? ` из ${total}` : ''} в работе
     </button>
   )

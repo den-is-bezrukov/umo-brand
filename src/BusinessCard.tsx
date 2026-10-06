@@ -287,7 +287,7 @@ export default function BusinessCard() {
         {showBar && <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:mt-8 md:pt-0">
           {/* The dealership first, as every card needs it; then the cards in work, as the name tag counts them */}
           {dealerIssues.length > 0 ? (
-            <button type="button" onClick={toDealer} className="flex w-full cursor-pointer items-center justify-center p-3 text-[14px] leading-[1.13] tracking-[-0.01em] text-[#999] hover:text-black">
+            <button type="button" onClick={toDealer} className="flex w-full cursor-pointer items-center justify-center px-3 py-[10px] text-[14px] leading-5 text-[#808080] hover:text-black">
               {dealerIssues[0]}
             </button>
           ) : failing.length > 0 ? items.length > 1 && (
