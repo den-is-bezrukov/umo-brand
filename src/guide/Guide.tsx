@@ -659,6 +659,32 @@ function Constructor({ to, title, children }: { to: string; title: string; child
   )
 }
 
+/**
+ * Overview of the chapter's media (Figma 4844:6695): each one's picture over its ↗ row to the constructor. Wide pictures
+ * (2:1 and wider) take the whole width, the rest go in pairs; the grid packs densely, so a narrow one moves up next to
+ * the previous narrow one and the list keeps the order of the sections below.
+ */
+function Carriers({ items }: { items: { to: string; title: string; w: number; h: number; picture: ReactNode }[] }) {
+  return (
+    <div className="grid grid-cols-1 gap-6 md:grid-flow-dense md:grid-cols-2">
+      {items.map(c => (
+        <div key={c.to} className={c.w / c.h >= 2 ? 'md:col-span-2' : ''}>
+          <Constructor to={c.to} title={c.title}>{c.picture}</Constructor>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+/** A square crop of a guide picture, for the overview's narrow cards. */
+function SquarePicture({ name, alt }: { name: string; alt: string }) {
+  return (
+    <div className="aspect-square overflow-hidden bg-[#f5f5f5]">
+      <img src={img(name)} alt={alt} loading="lazy" decoding="async" className="size-full object-cover" />
+    </div>
+  )
+}
+
 /** A heading + text group. Sections are separated by 144px; a Chapter adds 72px on top of its first one. */
 function Section({ children }: { children: ReactNode }) {
   return <section className="flex flex-col gap-8 md:gap-12">{children}</section>
@@ -1220,7 +1246,42 @@ export default function Guide() {
           </Chapter>
 
           {/* ── Носители ── */}
-          <Chapter id="materials" title="Носители" loose>
+          <Chapter id="materials" title="Носители">
+            <Section>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
+                <Text>
+                  <p>Носители — шаблоны, через которые бренд встречает покупателя у дилера: ливрея демо-автомобиля, прайс-карта, рамка номера и бейдж сотрудника.</p>
+                </Text>
+                <Text>
+                  <p>Каждый собирается в своём конструкторе: дилер вводит свои данные, а макет, шрифты и отступы уже настроены. На выходе — файлы, готовые к печати и производству.</p>
+                </Text>
+              </div>
+              <Carriers
+                items={[
+                  { to: '/livery', title: 'Ливрея', w: 912, h: 456, picture: <Fig name="livery-umo8" w={912} h={456} alt="UMO 8 с ливреей дилера" /> },
+                  {
+                    to: '/price-card', title: 'Прайс-карта', w: 444, h: 444,
+                    picture: (
+                      <div className="flex aspect-square items-center justify-center bg-[#f5f5f5]">
+                        <div className="w-[57%]">
+                          <PriceCardPreview variant="umo5-max" fullPrice="3 715 000" creditPrice="2 790 000" image={img('pricecard-umo5-car')} alt="Прайс-карта UMO 5" />
+                        </div>
+                      </div>
+                    ),
+                  },
+                  {
+                    to: '/plate-frame', title: 'Рамка номера', w: 912, h: 304,
+                    picture: (
+                      <PlateArt guide>
+                        <text y={STRIP_BASELINE} fontFamily="CoFo Sans" fontWeight={500} fontSize={18} letterSpacing={-0.18} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Центр UMO | Название дилера</text>
+                      </PlateArt>
+                    ),
+                  },
+                  { to: '/name-tag', title: 'Бейдж', w: 444, h: 444, picture: <SquarePicture name="name-tag" alt="Бейдж UMO на рубашке сотрудника" /> },
+                ]}
+              />
+            </Section>
+
             <Section>
               <Head>
                 <H2 id="livery">Ливрея</H2>
