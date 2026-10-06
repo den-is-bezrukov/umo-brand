@@ -156,10 +156,6 @@ export default function PlateFrame() {
 
       <main className="flex flex-1 items-center bg-[#f5f5f5] p-6 pb-[112px] md:min-w-0 md:overflow-y-auto md:p-16">
         <figure className="mx-auto flex w-full max-w-[1200px] flex-col gap-2">
-          <figcaption className="flex items-baseline gap-2 text-[14px] leading-5">
-            <span className="font-medium">Поле печати</span>
-            <span className="text-[#999]">{STRIP.w} × {STRIP.h} мм</span>
-          </figcaption>
           {/* A double click on the frame edits the text right on it, as the name tags do */}
           <div className="@container relative cursor-text" onDoubleClick={() => setEditing(true)}>
             <PlateArt>
@@ -176,8 +172,12 @@ export default function PlateFrame() {
               />
             )}
           </div>
+          <figcaption className="flex items-baseline justify-center gap-2 text-[14px] leading-5">
+            <span className="font-medium">Поле печати</span>
+            <span className="text-[#999]">{STRIP.w} × {STRIP.h} мм</span>
+          </figcaption>
           {strip && strip.issues.length > 0 && (
-            <ul className="text-[13px] leading-5 text-[#e30]">
+            <ul className="text-center text-[13px] leading-5 text-[#e30]">
               {strip.issues.map(t => <li key={t}>{t}</li>)}
             </ul>
           )}

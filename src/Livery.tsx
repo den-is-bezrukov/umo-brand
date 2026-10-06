@@ -31,11 +31,8 @@ function SheetPreview({ sheet, seams, dims }: { sheet: Sheet; seams: boolean; di
   const decal = s.decal ?? '#fff'
   return (
     <figure className="flex min-w-0 flex-col gap-2">
-      <figcaption className="flex items-baseline gap-2 text-[14px] leading-5">
-        <span className="font-medium">{s.title}</span>
-        <span className="text-[#999]">{mm(s.w)} × {mm(s.h)} мм</span>
-      </figcaption>
-      <svg viewBox={`${vx} ${vy} ${vw} ${vh}`} className="block w-full rounded-[4px]" style={{ background: s.photo.background === '#000000' ? '#000' : '#e8e8e8' }}>
+      {/* The car straight on the canvas, no plate behind it: the side photos are cut out; the rear ones are photos */}
+      <svg viewBox={`${vx} ${vy} ${vw} ${vh}`} className="block w-full">
         <image
           href={s.photo.src}
           width={s.photo.w}
@@ -68,8 +65,13 @@ function SheetPreview({ sheet, seams, dims }: { sheet: Sheet; seams: boolean; di
           )}
         </g>
       </svg>
+      {/* Under the picture, centred, as on every generator's canvas */}
+      <figcaption className="flex items-baseline justify-center gap-2 text-[14px] leading-5">
+        <span className="font-medium">{s.title}</span>
+        <span className="text-[#999]">{mm(s.w)} × {mm(s.h)} мм</span>
+      </figcaption>
       {sheet.issues.length > 0 && (
-        <ul className="text-[13px] leading-5 text-[#e30]">
+        <ul className="text-center text-[13px] leading-5 text-[#e30]">
           {sheet.issues.map(t => <li key={t}>{t}</li>)}
         </ul>
       )}
