@@ -9,6 +9,13 @@
     </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script>
+      // iOS Safari zooms into a field set under 16px on focus and doesn't zoom back; the sidebar fields are 14px and the
+      // text edited on a tag or frame smaller still. maximum-scale stops that on iOS, which still lets a pinch zoom;
+      // elsewhere it would block pinching (Android), so only there
+      if (/iP(hone|ad|od)/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1))
+        document.querySelector('meta[name=viewport]').content += ', maximum-scale=1'
+    </script>
     <meta name="theme-color" content="#ffffff" />
     <title><!-- site:title --></title>
     <!-- site:head-end -->
