@@ -330,8 +330,9 @@ export default function BusinessCard() {
                   <button
                     type="button"
                     aria-pressed={mode === 'manual' ? active : undefined}
-                    className={`block w-full cursor-pointer outline-offset-4 transition-opacity duration-150
-                      ${active ? 'outline-2 outline-black' : 'outline-1 outline-transparent group-hover/row:outline-black/20'}
+                    // The selected card edged as the price card's page: a 1 px line at 10% black around it (ring-1 there)
+                    className={`block w-full cursor-pointer outline-1 outline-offset-0 transition-opacity duration-150
+                      ${active ? 'outline-black/10' : 'outline-transparent group-hover/row:outline-black/10'}
                       ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
                   >
                     <CardArt
