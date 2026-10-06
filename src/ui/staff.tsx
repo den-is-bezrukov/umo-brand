@@ -267,7 +267,7 @@ export function AddTile({ onClick, aspect, radius }: { onClick: () => void; aspe
         data-add
         onClick={onClick}
         style={{ aspectRatio: aspect, borderRadius: radius }}
-        className="flex w-full cursor-pointer items-center justify-center gap-2 self-start border border-dashed border-black/20 text-[14px] font-medium leading-5 text-[#999] hover:border-black/40 hover:text-black"
+        className="flex w-full cursor-pointer items-center justify-center gap-2 self-start border border-black/10 text-[14px] font-medium leading-5 text-black hover:border-black/40"
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden><path d="M7 1V13M1 7H13" stroke="currentColor" strokeWidth="2" /></svg>
         Добавить
