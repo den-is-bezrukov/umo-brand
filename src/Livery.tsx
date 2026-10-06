@@ -83,10 +83,9 @@ export default function Livery() {
   const [model, setModel] = useState<Model>(link.get('model') === 'umo5' ? 'umo5' : 'umo8')
   const [dealer, setDealer] = useState(link.get('top') ?? DEFAULT_TOP)
   const [tagline, setTagline] = useState(() => link.get('bottom') ?? DEFAULT_TAGLINE[model])
-  // A slogan of its own on the rear window, filled from the sides' the first time it's turned on. The dealer there is
-  // always the sides' (one line), only left out or not: there's no reason for it to differ. Links from when it could
-  // carry its own (`rtop`) open with the sides'.
-  const [ownRear, setOwnRear] = useState(link.has('rbottom'))
+  // The rear window's slogan follows the sides' until it's edited (as the price card's credit price follows the full
+  // one); the dealer there is always the sides' (one line), only left off or not: there's no reason for it to differ.
+  // Links from when it could carry its own (`rtop`) open with the sides'.
   const [rearTagline, setRearTagline] = useState<string | undefined>(() => link.get('rbottom') ?? undefined)
   const [url, setUrl] = useState(link.get('link') ?? DEFAULT_URL[model])
   // What goes into the files; a part that's off is in neither the preview, nor the decals, nor the spec
@@ -120,13 +119,15 @@ export default function Livery() {
   const noQrSide = layout.left.noQr
   const canLarge = noQrSide.kind === 'layout' && !!noQrSide.taglineLarge
 
+  // The rear window's own slogan, once edited apart from the sides'
+  const ownRearOn = on.rear && on.tagline && on.rearTagline && rearTagline !== undefined && rearTagline !== tagline
   useLinkState({
     model: model === 'umo8' ? null : model,
     link: url.trim() === DEFAULT_URL[model] ? null : url.trim(),
     top: dealer === DEFAULT_TOP ? null : dealer,
     bottom: tagline === DEFAULT_TAGLINE[model] ? null : tagline,
     off: (Object.keys(PARTS) as (keyof typeof PARTS)[]).filter(k => !on[k]).map(k => PARTS[k]).join(','),
-    rbottom: ownRear && rearTagline !== undefined ? rearTagline : null,
+    rbottom: ownRearOn ? rearTagline : null,
     show: [...(dims ? ['dims'] : []), ...(seams ? ['seams'] : [])].join(','),
     size: large ? 'large' : null,
     qr: qrSmall ? 'small' : null,
@@ -145,9 +146,6 @@ export default function Livery() {
   const urlValid = isValidUrl(url.trim())
   const qrUrl = urlValid ? url.trim() : DEFAULT_URL[model]
 
-  // The rear window's own slogan is offered while the rear window carries a slogan
-  const ownRearOffered = on.rear && on.tagline && on.rearTagline
-  const ownRearOn = ownRearOffered && ownRear && rearTagline !== undefined
   const sideText = { dealer: on.dealer ? dealer : null, tagline: on.tagline ? tagline : null }
   const rearText = {
     dealer: on.rearDealer ? sideText.dealer : null,
@@ -164,30 +162,23 @@ export default function Livery() {
     [font, layout, on.rear, sideText.dealer, sideText.tagline, rearText.dealer, rearText.tagline, qr, qrSmall, large],
   )
   // Which sheets a field's text goes on, to mark it when one of them has a problem with it
-  // The rear window's own settings: there are some while the sides carry a text; they differ when a text is left off it
-  // or it has a slogan of its own
+  const sloganSheets = sheets.filter(s => s.surface.id !== 'rear' || !ownRearOn)
+  const rearSheet = ownRearOn ? sheets.filter(s => s.surface.id === 'rear') : []
+  // The rear window's options: there are some while the sides carry a text, opened by «Изменить» and kept shown while
+  // something differs from the sides, so nothing set apart from them is hidden; «По умолчанию» puts them back and folds
   const rearOptions = on.dealer || on.tagline
-  const rearCustom = (on.dealer && !on.rearDealer) || (on.tagline && (!on.rearTagline || ownRear))
+  const rearCustom = (on.dealer && !on.rearDealer) || (on.tagline && (!on.rearTagline || ownRearOn))
   const [rearOpen, setRearOpen] = useState(false)
   const rearShown = rearOptions && (rearOpen || rearCustom)
   const resetRear = () => {
     setOn(o => ({ ...o, rearDealer: true, rearTagline: true }))
-    setOwnRear(false)
     setRearTagline(undefined)
     setRearOpen(false)
-  }
-  const sloganSheets = sheets.filter(s => s.surface.id !== 'rear' || !ownRearOn)
-  const rearSheet = ownRearOn ? sheets.filter(s => s.surface.id === 'rear') : []
-
-  const toggleOwnRear = (on: boolean) => {
-    if (on && rearTagline === undefined) setRearTagline(tagline)
-    setOwnRear(on)
   }
   // «Сбросить» keeps the model and brings the rest back to its defaults
   const reset = () => {
     setDealer(DEFAULT_TOP)
     setTagline(DEFAULT_TAGLINE[model])
-    setOwnRear(false)
     setRearTagline(undefined)
     setRearOpen(false)
     setUrl(DEFAULT_URL[model])
@@ -267,9 +258,8 @@ export default function Livery() {
                 label="Слоган на стекле"
                 on={on.rearTagline}
                 onChange={toggle('rearTagline')}
-                extra={ownRear ? undefined : <RowAction onClick={() => toggleOwnRear(true)}>Изменить</RowAction>}
               >
-                {ownRearOn && <ComboField value={rearTagline!} onChange={setRearTagline} options={TAGLINES[model]} label="Варианты текста" invalid={rearSheet.some(s => s.tagline.issues.length > 0) || !rearTagline!.trim()} />}
+                <ComboField value={ownRearOn ? rearTagline! : tagline} onChange={setRearTagline} options={TAGLINES[model]} label="Варианты текста" invalid={(ownRearOn ? rearSheet : sloganSheets).some(s => s.tagline.issues.length > 0) || !(ownRearOn ? rearTagline! : tagline).trim()} />
               </OptionalField>
             )}
 
