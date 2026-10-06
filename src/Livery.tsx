@@ -10,7 +10,8 @@ import { loadFont, buildSheet, specMarks, toD, mm, type Sheet, type Line } from 
 // node 4021:2908). The preview puts the sheets on photos of the car, with the door seam and handle marked, so a
 // dealer name or tagline that would run onto them shows up before the files go to the wrap shop.
 
-const DEFAULT_URL = 'https://umo.auto/'
+/** The QR leads to the model's own page unless another link is set, as on the price card */
+const DEFAULT_URL: Record<Model, string> = { umo8: 'https://umo.auto/umo8', umo5: 'https://umo.auto/umo5' }
 const DEFAULT_TOP = 'UMO Название'
 // The tagline offered by default names what each model is
 const DEFAULT_BOTTOM: Record<Model, string> = {
@@ -97,7 +98,7 @@ export default function Livery() {
     link.has('rtop') || link.has('rbottom')
       ? { dealer: link.get('rtop') ?? dealer.replace(/\s*\n\s*/g, ' '), tagline: link.get('rbottom') ?? tagline }
       : undefined)
-  const [url, setUrl] = useState(link.get('link') ?? DEFAULT_URL)
+  const [url, setUrl] = useState(link.get('link') ?? DEFAULT_URL[model])
   // What goes into the files; a part that's off is in neither the preview, nor the decals, nor the spec
   const [on, setOn] = useState(() => {
     const off = (link.get('off') ?? '').split(',')
@@ -119,6 +120,7 @@ export default function Livery() {
     const swap = (t: string) => { const i = TAGLINES[model].indexOf(t); return i < 0 ? t : TAGLINES[m][i] }
     setTagline(swap(tagline))
     if (rear) setRear({ ...rear, tagline: swap(rear.tagline) })
+    if (url.trim() === DEFAULT_URL[model]) setUrl(DEFAULT_URL[m])
     setModel(m)
   }
   // The larger tagline is a choice only where the QR-less sides have one (both models do)
@@ -128,7 +130,7 @@ export default function Livery() {
 
   useLinkState({
     model: model === 'umo8' ? null : model,
-    link: url.trim() === DEFAULT_URL ? null : url.trim(),
+    link: url.trim() === DEFAULT_URL[model] ? null : url.trim(),
     top: dealer === DEFAULT_TOP ? null : dealer,
     bottom: tagline === DEFAULT_BOTTOM[model] ? null : tagline,
     off: (Object.keys(PARTS) as (keyof typeof PARTS)[]).filter(k => !on[k]).map(k => PARTS[k]).join(','),
@@ -149,7 +151,7 @@ export default function Livery() {
   }, [])
 
   const urlValid = isValidUrl(url.trim())
-  const qrUrl = urlValid ? url.trim() : DEFAULT_URL
+  const qrUrl = urlValid ? url.trim() : DEFAULT_URL[model]
 
   // The rear window's own text is offered while the rear window and some text are on
   const ownRearOffered = on.rear && (on.dealer || on.tagline)
@@ -178,7 +180,7 @@ export default function Livery() {
     setTagline(DEFAULT_BOTTOM[model])
     setOwnRear(false)
     setRear(undefined)
-    setUrl(DEFAULT_URL)
+    setUrl(DEFAULT_URL[model])
     setOn({ qr: true, tagline: true, dealer: true, rear: true })
     setDims(false)
     setLarge(false)
