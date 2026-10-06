@@ -31,6 +31,8 @@ const LEADING = SMALL
 
 /** The dealership's column, left of the logo */
 const DEALER_W = 65
+/** The address, under the logo, runs on to its right edge: the full width between the margins */
+const ADDRESS_W = 80
 /** The person's column, left of the QR with 5 mm to it */
 const PERSON_W = 60
 
@@ -196,7 +198,7 @@ export function buildBack(fonts: Fonts, dealer: Dealer, person: Person, qr: QrDa
   y += AFTER_HEADING
   lines('type', 'Подпись', TYPE, y, SMALL, DEALER_W, 1, false)
   y += PITCH
-  const address = lines('address', 'Адрес', dealer.address, y, SMALL, DEALER_W, 2, true)
+  const address = lines('address', 'Адрес', dealer.address, y, SMALL, ADDRESS_W, 2, true)
   y += (address - 1) * LEADING + PITCH
   const site = siteText(dealer.site)
   if (site) lines('site', 'Сайт', site, y, SMALL, DEALER_W, 1, false)
