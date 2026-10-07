@@ -386,7 +386,8 @@ export function ItemFrame<P extends object>({ staff, item, n, children }: { staf
   const hover = '[@media(hover:hover)]:hidden [@media(hover:hover)]:group-hover/row:flex [@media(hover:hover)]:group-focus-within/row:flex'
   return (
     <div className="relative">
-      <span aria-hidden className="pointer-events-none absolute top-0 right-full mr-[5px] hidden w-10 text-center text-[14px] leading-5 text-[#808080] [font-feature-settings:'tnum'_1] md:block">{n}</span>
+      {/* A lone item has no number: a «1» there says nothing */}
+      {staff.items.length > 1 && <span aria-hidden className="pointer-events-none absolute top-0 right-full mr-[5px] hidden w-10 text-center text-[14px] leading-5 text-[#808080] [font-feature-settings:'tnum'_1] md:block">{n}</span>}
       {children}
       {staff.mode === 'manual' && (
         <div className={`mt-2 justify-end md:absolute md:top-0 md:left-full md:mt-0 md:ml-[5px] md:flex-col ${active ? 'flex' : 'hidden'} ${hover}`}>
