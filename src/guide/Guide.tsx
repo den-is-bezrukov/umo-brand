@@ -625,7 +625,7 @@ function Swatch({ color, name, values, dark, className = '' }: {
       <div className="flex flex-col gap-2">
         {values.map(([use, value]) => (
           <div key={use} className="flex justify-between gap-4">
-            <p className="opacity-60">{use}</p>
+            <p>{use}</p>
             {/^(#|C\d|K\d)/.test(value) ? <CopyValue value={value} /> : <p className="text-right">{value}</p>}
           </div>
         ))}
