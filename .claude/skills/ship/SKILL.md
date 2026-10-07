@@ -46,10 +46,11 @@ Work happens on a `claude/*` branch in a worktree. Bring it up to date with the 
 git push origin HEAD:main
 ```
 
-Then wait for the deploy run and report its result with the URL (name the workflow: the latest run on `main` may be CI, not the deploy):
+Then wait for the deploy run of the commit just pushed and report its result with the URL. Name the workflow (the latest run on `main` may be CI) and the commit: right after a push the new run may not be listed yet, and the latest one is then the previous deploy, already green:
 
 ```bash
-gh run watch "$(gh run list --branch main --workflow deploy.yml --limit 1 --json databaseId -q '.[0].databaseId')" --exit-status
+sha=$(git rev-parse HEAD); for i in 1 2 3 4 5 6; do id=$(gh run list --workflow deploy.yml --commit "$sha" --limit 1 --json databaseId -q '.[0].databaseId'); [ -n "$id" ] && break; sleep 10; done
+gh run watch "$id" --exit-status
 ```
 
 If it fails, read the log (`gh run view --log-failed`), fix and push again, then tell the user what broke.
