@@ -195,7 +195,7 @@ export default function BusinessCard() {
                 <div className="flex items-center justify-between gap-2">
                   <p className={`text-[14px] leading-5 text-[#999] ${ALERT_LABEL}`}>Дилер</p>
                   <button type="button" onClick={() => setDealerOpen(o => !o)} aria-expanded={dealerOpen} className={rowAction}>
-                    {dealerOpen ? 'Свернуть' : 'Изменить'}
+                    {dealerOpen ? 'Свернуть' : 'Редактировать'}
                   </button>
                 </div>
                   <ComboField
