@@ -20,7 +20,7 @@ const BusinessCard = lazy(() => import('./BusinessCard'))
 // sent here, once per page. Only a new path counts: the generators rewrite the query with every setting changed, the
 // guide the hash with every section scrolled to. Sent a tick later, so a redirect (/golos, an unknown path) counts once.
 let lastHit = ''
-let lastHref = document.referrer
+let lastHref: string = (window as any).siteReferrer ?? document.referrer
 function MetrikaHits() {
   const { pathname } = useLocation()
   useEffect(() => {

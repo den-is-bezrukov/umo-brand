@@ -6,6 +6,8 @@
     // GitHub Pages SPA redirect: keep the whole address, query and hash too — the generators' settings ride in the query
     var path = window.location.pathname + window.location.search + window.location.hash;
     sessionStorage.setItem('redirect', path);
+    // and where the visitor came from, which the redirect to / would lose: Metrika reads it (index.html)
+    sessionStorage.setItem('referrer', document.referrer);
     window.location.replace('/');
   </script>
 </head>
