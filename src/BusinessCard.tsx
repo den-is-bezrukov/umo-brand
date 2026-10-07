@@ -280,7 +280,7 @@ export default function BusinessCard() {
           </div>
         </div>
 
-        {showBar && <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:mt-8 md:pt-0">
+        {showBar && <div className="bg-white p-6 pt-0 md:sticky md:mt-8">
           {/* The dealership first, as every card needs it; then the cards in work, as the name tag counts them */}
           {dealerIssues.length > 0 ? (
             <button type="button" onClick={toDealer} className="flex w-full cursor-pointer items-center justify-center px-3 py-[10px] text-[14px] leading-5 text-[#808080] hover:text-black">
@@ -299,7 +299,7 @@ export default function BusinessCard() {
       <main
         {...staff.dropTarget}
         onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure, [data-add]')) staff.setSelected(null) }}
-        className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 pt-6 pb-[112px] md:min-w-0 md:overflow-y-auto md:p-16
+        className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 md:min-w-0 md:overflow-y-auto md:p-16
           ${mode === 'table' && staff.file && staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
       >
         {mode === 'table' && !staff.file ? (

@@ -133,7 +133,7 @@ export default function NameTag() {
         </div>
 
         {/* No bar at all while there's nothing in it (a single tag in work), or it's an empty white strip on phones */}
-        {(failing.length === 0 ? items.length > 0 : items.length > 1) && <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:mt-8 md:pt-0">
+        {(failing.length === 0 ? items.length > 0 : items.length > 1) && <div className="bg-white p-6 pt-0 md:sticky md:mt-8">
           {/* Until every tag is ready, the progress in the button's place: it counts the tags still in work, which a click
               leads through («1 из 4 в работе», or «4 в работе» when it's all of them); with a single tag, nothing: its
               form says enough */}
@@ -152,7 +152,7 @@ export default function NameTag() {
       <main
         {...staff.dropTarget}
         onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure, [data-add]')) setSelected(null) }}
-        className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 pt-6 pb-[112px] md:min-w-0 md:overflow-y-auto md:p-16
+        className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 md:min-w-0 md:overflow-y-auto md:p-16
           ${mode === 'table' && staff.file && staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
       >
         {mode === 'table' && !staff.file ? (
