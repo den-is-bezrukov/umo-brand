@@ -725,7 +725,7 @@ function Assets({ items, preview }: { items: Asset[]; preview?: string }) {
         const linked = preview === ('to' in a ? a.to : a.file)
         const lit = pointed !== undefined && pointed === ('to' in a ? a.to : a.file)
         const name = `min-w-0 flex-1 font-medium ${UNDERLINE} group-hover:decoration-black/40 group-hover:duration-0 ${linked ? 'group-has-[[data-preview]:hover]/preview:decoration-black/40 group-has-[[data-preview]:hover]/preview:duration-0' : ''} ${lit ? 'decoration-black/40 duration-0' : ''}`
-        const meta = `shrink-0 text-[#999] [font-feature-settings:"tnum"_1] group-hover:text-black ${linked ? 'group-has-[[data-preview]:hover]/preview:text-black' : ''} ${lit ? 'text-black' : ''}`
+        const meta = `shrink-0 text-[#808080] [font-feature-settings:"tnum"_1] group-hover:text-black ${linked ? 'group-has-[[data-preview]:hover]/preview:text-black' : ''} ${lit ? 'text-black' : ''}`
         if ('to' in a) {
           return (
             <Link key={a.to} to={a.to} className={row}>
@@ -837,8 +837,8 @@ function Head({ children }: { children: ReactNode }) {
 // Vercel's own release: Google Fonts has no direct download link any more, only its specimen page.
 const GEIST_ZIP = 'https://github.com/vercel/geist-font/releases/download/v1.7.2/geist-font-v1.7.2.zip'
 
-const UMO5_SUBTITLE = <>Электромобиль с Алисой на борту<br />от 2.5 млн ₽</>
-const UMO8_SUBTITLE = <>Гибридный кроссовер<br />с Алисой на борту от 5 млн. ₽</>
+const UMO5_SUBTITLE = <>Электромобиль с Алисой на борту<br />от 2,5 млн ₽</>
+const UMO8_SUBTITLE = <>Гибридный кроссовер<br />с Алисой на борту от 5 млн ₽</>
 
 const DICTIONARY: { good: ReactNode; bad: ReactNode; why: string }[] = [
   {
@@ -929,7 +929,7 @@ function Dictionary() {
         <div key={i} className={`grid grid-cols-1 ${cols} gap-x-6 gap-y-2 border-t border-[#e6e6e6] py-4`}>
           <p className="font-medium"><span className="md:hidden">✓&nbsp;</span>{row.good}</p>
           <p><span className="md:hidden">✗&nbsp;</span>{row.bad}</p>
-          <p className="text-black/60 md:text-black">{row.why}</p>
+          <p className="text-[#808080] md:text-black">{row.why}</p>
         </div>
       ))}
     </div>
@@ -1477,7 +1477,7 @@ export default function Guide() {
           </Section>
           */}
 
-          <footer className="text-[16px] leading-[1.25] tracking-[-0.01em] text-[#999]">Стандарты бренда UMO 2026. ООО «ЭМ РУС». 0+</footer>
+          <footer className="text-[16px] leading-[1.25] tracking-[-0.01em] text-[#808080]">Стандарты бренда UMO 2026. ООО «ЭМ РУС». 0+</footer>
         </div>
       </main>
       </div>
