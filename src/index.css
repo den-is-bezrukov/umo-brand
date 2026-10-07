@@ -8,6 +8,17 @@
   src: url('/fonts/Geist_Y-Medium.woff2') format('woff2');
 }
 
+/* The Alice mark, typed as «@» in the Alice Okniks font as Yandex sets it; only that glyph is shipped (Medium, 1 KB),
+   cut from the font with fontTools. Used in Голос → Примеры. */
+@font-face {
+  font-family: 'Alice Okniks';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/AliceOkniks-at.woff') format('woff');
+  unicode-range: U+0040;
+}
+
 @font-face {
   font-family: 'CoFo Sans';
   font-style: normal;

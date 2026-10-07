@@ -853,14 +853,54 @@ const DICTIONARY: { good: ReactNode; bad: ReactNode; why: string }[] = [
   { good: 'Заголовки без точек в конце, точки в конце предложений', bad: 'Заголовки с точкой, нет знаков препинания, эмодзи в тексте', why: 'Пунктуация и оформление текстовых стилей по правилам русского языка' },
 ]
 
-const EXAMPLES: [string, ReactNode][] = [
-  ['Умный', 'Оснащён технологиями Яндекса'],
-  ['Просторный', 'Найдётся место для всего на свете'],
-  ['Тихий', 'Не создает шума на дорогах'],
-  ['Проще — говоря', 'Управляйте голосом с помощью Алисы'],
-  ['Запоминающиеся фары', <>Светодиодная оптика даёт яркий ровный свет<br className="hidden lg:inline" /> и не слепит встречных водителей</>],
-  ['Удобная посадка', 'Угол раскрытия дверей на 90° обеспечивает лёгкую посадку даже с крупным багажом в руках'],
-]
+/**
+ * Голос → Примеры (Figma 5030:11343): the voice as it reads in the brand's own messages — chat-like grey bubbles
+ * (round but the bottom-left corner), photos with a line over them. Three columns from `md`, each a stack; in the
+ * middle and right ones the photo takes what's left, so the columns end level. On phones they stack in one column,
+ * the photos 3:4.
+ */
+function Bubble({ title, children }: { title?: ReactNode; children?: ReactNode }) {
+  return (
+    <div className="flex flex-col gap-2 rounded-t-2xl rounded-br-2xl bg-[#f5f5f5] p-4 leading-[1.25]">
+      {title && <p className="text-[20px] font-medium tracking-[-0.01em]">{title}</p>}
+      {children && <p className="text-[16px]">{children}</p>}
+    </div>
+  )
+}
+
+function PhotoCard({ name, title, children, grow }: { name: string; title: ReactNode; children?: ReactNode; grow?: boolean }) {
+  return (
+    <div className={`relative aspect-3/4 overflow-hidden bg-[#f5f5f5] ${grow ? 'md:aspect-auto md:min-h-0 md:flex-1' : ''}`}>
+      <img src={img(name)} alt="" loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover" />
+      <div className="absolute inset-x-4 top-4 flex flex-col gap-2 leading-[1.25] text-white">
+        <p className="text-[20px] font-medium tracking-[-0.01em]">{title}</p>
+        {children && <p className="text-[16px]">{children}</p>}
+      </div>
+    </div>
+  )
+}
+
+function Examples() {
+  return (
+    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+      <div className="flex flex-col gap-6">
+        <PhotoCard name="voice-alice" title="Проще — говоря">Управляйте голосом с помощью Алисы</PhotoCard>
+        <Bubble title="Умный">Оснащён технологиями Яндекса</Bubble>
+        <Bubble title="Просторный">Найдётся место для всего на свете</Bubble>
+        <Bubble title="Тихий">Не создает шума<br />на дорогах</Bubble>
+      </div>
+      <div className="flex flex-col gap-6">
+        <Bubble title={<>Электромобиль с <span className="font-['Alice_Okniks']">@</span> Алисой и сервисами Яндекса. Запас хода до 420 км, разгон до 100 км/ч за 8,7 секунды</>} />
+        <PhotoCard name="voice-runner" grow title="Практичный и инновационный UMO поможет сделать город комфортнее" />
+      </div>
+      <div className="flex flex-col gap-6">
+        <PhotoCard name="voice-charging" grow title="Послушаем, как поют птицы в парке, пока заряжается UMO" />
+        <Bubble title="Запоминающиеся фары">Светодиодная оптика даёт яркий ровный свет<br />и не слепит встречных водителей</Bubble>
+        <Bubble title="Удобная посадка">Угол раскрытия дверей на 90° обеспечивает лёгкую посадку даже с крупным багажом в руках</Bubble>
+      </div>
+    </div>
+  )
+}
 
 const MISUSE: [string, string][] = [
   ['misuse-proportions', 'Изменение расположения и размеров элементов'],
@@ -1100,15 +1140,7 @@ export default function Guide() {
                   <H2 id="examples">Примеры</H2>
                   <Text><p>Лучше один раз увидеть: UMO говорит по-человечески и уважительно на вы.</p></Text>
                 </Head>
-                {/* Type and rhythm of the Словарь table above: 16px, rows 16px above and under, 8px from title to text */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 text-[16px] leading-[1.25] tracking-[-0.01em]">
-                  {EXAMPLES.map(([title, text]) => (
-                    <div key={title} className="flex flex-col gap-2 border-t border-[#e6e6e6] py-4">
-                      <p className="font-medium">{title}</p>
-                      <p>{text}</p>
-                    </div>
-                  ))}
-                </div>
+                <Examples />
               </Section>
             </div>
           </div>
