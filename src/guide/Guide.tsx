@@ -112,6 +112,8 @@ const NAV: NavItem[] = [
   },
   { id: 'spaces', title: 'Пространства' },
   { id: 'materials', title: 'Носители', children: MEDIA.map(({ id, title }) => ({ id, title })) },
+  // The heading reads «Вопросы и согласование»; the contents keep it short
+  { id: 'contact', title: 'Вопросы' },
 ]
 
 /** Chapter anchors that were renamed after the guide went out, mapped to their current ids. */
@@ -1469,7 +1471,7 @@ export default function Guide() {
           {/* Вопросы: CONTACT stands for the brand contact until there is one */}
           <Section>
             <Head>
-              <H2 id="contact">Вопросы</H2>
+              <H2 id="contact">Вопросы и согласование</H2>
               <Text>
                 <p>Если ответа нет в стандартах или макет вывески, рекламы или другого носителя нужно согласовать, напишите на <a href="mailto:CONTACT" className={TEXT_LINK}>CONTACT</a>. Приложите макет и расскажите, где он будет размещён.</p>
               </Text>
