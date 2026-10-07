@@ -5,6 +5,7 @@ import PriceCard from '@/posters/PriceCard'
 import PriceCardPdf from '@/posters/pdf/PriceCardPdf'
 import { ensurePdfFonts } from '@/posters/pdf/pdfFonts'
 import type { Variant } from '@/posters/cardData'
+import { goal } from '@/ui/metrika'
 import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField, GeneratorHeader, LinkButtons, DownloadButton } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
 
@@ -180,6 +181,7 @@ export default function App() {
       link.href = URL.createObjectURL(blob)
       link.download = `UMO-${model === 'umo8' ? '8' : '5'}-${trim.toUpperCase()}.pdf`
       link.click()
+      goal('download_price_card', { model, trim, credit: creditOn, ownLink: qrUrl !== DEFAULT_URL[model] })
       URL.revokeObjectURL(link.href)
     } finally {
       setExporting(false)

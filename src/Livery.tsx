@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Font } from 'opentype.js'
+import { goal } from '@/ui/metrika'
 import { Field, OptionalField, Segments, SegBtn, ComboField, UrlField, Checkbox, SizeSwitch, GeneratorHeader, LinkButtons, DownloadButton, isValidUrl } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
 import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
@@ -197,6 +198,7 @@ export default function Livery() {
       link.href = URL.createObjectURL(blob)
       link.download = `${prefix}_dealer-livery.zip`
       link.click()
+      goal('download_livery', { model, qr: on.qr ? (qrSmall ? 'small' : 'large') : 'off', dealer: on.dealer, tagline: on.tagline, rear: on.rear })
       URL.revokeObjectURL(link.href)
     } finally {
       setExporting(false)

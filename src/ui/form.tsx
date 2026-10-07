@@ -1,5 +1,6 @@
 import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { goal } from './metrika'
 
 // Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag, business card). Light UI per the Figma layout
 // (UMO | Evrone, nodes 4844:6865 and 4900:4588), matching the brand guide.
@@ -419,7 +420,10 @@ export function LinkButtons({ onReset }: { onReset: () => void }) {
     <div className="flex gap-2">
       <button
         type="button"
-        onClick={() => navigator.clipboard.writeText(window.location.href).then(() => setCopied(true))}
+        onClick={() => navigator.clipboard.writeText(window.location.href).then(() => {
+          setCopied(true)
+          goal('copy_link', { page: location.pathname })
+        })}
         title="Скопировать ссылку на эти настройки"
         className={outlined}
       >

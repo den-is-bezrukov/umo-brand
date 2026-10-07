@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Font } from 'opentype.js'
+import { goal } from '@/ui/metrika'
 import { Field, Segments, SegBtn, TextInput, ComboField, GeneratorHeader, LinkButtons, DownloadButton } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
 import { loadFont, toD } from '@/livery/geometry'
@@ -111,6 +112,7 @@ export default function PlateFrame() {
       a.href = URL.createObjectURL(blob)
       a.download = 'UMO_plate-frame_501x21.pdf'
       a.click()
+      goal('download_plate_frame', { free: custom, align })
       URL.revokeObjectURL(a.href)
     } finally {
       setExporting(false)

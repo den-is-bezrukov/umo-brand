@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined } from '@/ui/form'
 import { useStaff, TableSource, UploadArea, AddTile, Progress, plural, fullNameField } from '@/ui/staff'
+import { goal } from '@/ui/metrika'
 import { toD } from '@/livery/geometry'
 import { TAG, buildTag, loadFonts, type Field, type FieldBox, type Fonts, type Person } from '@/nametag/tag'
 import { readXlsx, parsePasted } from '@/nametag/table'
@@ -79,6 +80,7 @@ export default function NameTag() {
       a.href = URL.createObjectURL(blob)
       a.download = 'UMO_name-tags.zip'
       a.click()
+      goal('download_name_tag', { count: tags.length })
       URL.revokeObjectURL(a.href)
     } finally {
       setExporting(false)
