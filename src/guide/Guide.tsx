@@ -146,6 +146,12 @@ function useActiveSection() {
         if (Math.abs(top - currentTop) < 1) current.push(id)
         else if (top > currentTop) { current = [id]; currentTop = top }
       }
+      // At the very bottom the last headings can't scroll up to the line (Вопросы is short), so the last one on
+      // screen is the one you're reading.
+      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+        const last = [...ALL_IDS].reverse().find(id => (document.getElementById(id)?.getBoundingClientRect().top ?? Infinity) < window.innerHeight)
+        if (last && !current.includes(last)) current = [last]
+      }
       setActive(prev => (prev.join() === current.join() ? prev : current))
     }
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }
