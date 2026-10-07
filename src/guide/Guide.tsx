@@ -1200,17 +1200,17 @@ export default function Guide() {
               </Head>
               <Previews className="flex flex-col gap-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <PreviewLink asset={{ file: 'umo-icon-black.zip' }} label="Скачать иконку, белый логотип на чёрном">
-                    <Fig name="icon-app" w={444} h={333} caption="Иконка мобильного приложения" />
-                  </PreviewLink>
-                  <PreviewLink asset={{ file: 'umo-favicon.svg' }} label="Скачать фавиконку, SVG">
-                    <Fig name="icon-favicon" w={444} h={333} caption="Фавиконка и иконка закладок в браузере" alt="Фавиконка во вкладке тёмного браузера" />
-                  </PreviewLink>
                   <PreviewLink asset={{ file: 'umo-icon-white.zip' }} label="Скачать иконку, чёрный логотип на белом">
                     <Fig name="icon-userpic" w={444} h={333} caption="Юзерпик аккаунта соцсетей" />
                   </PreviewLink>
                   <PreviewLink asset={{ file: 'umo-favicon.svg' }} label="Скачать фавиконку, SVG">
-                    <Fig name="icon-favicon-light" w={444} h={333} alt="Фавиконка во вкладке светлого браузера" />
+                    <Fig name="icon-favicon-light" w={444} h={333} caption="Фавиконка и иконка закладок в браузере" alt="Фавиконка во вкладке светлого браузера" />
+                  </PreviewLink>
+                  <PreviewLink asset={{ file: 'umo-icon-black.zip' }} label="Скачать иконку, белый логотип на чёрном">
+                    <Fig name="icon-app" w={444} h={333} caption="Иконка мобильного приложения" />
+                  </PreviewLink>
+                  <PreviewLink asset={{ file: 'umo-favicon.svg' }} label="Скачать фавиконку, SVG">
+                    <Fig name="icon-favicon" w={444} h={333} alt="Фавиконка во вкладке тёмного браузера" />
                   </PreviewLink>
                 </div>
                 <Assets items={[{ file: 'umo-icon-black.zip' }, { file: 'umo-icon-white.zip' }, { file: 'umo-favicon.svg' }, { file: 'umo-favicon.ico' }]} />
