@@ -623,32 +623,39 @@ function Swatch({ color, name, values, dark, className = '' }: {
     >
       <p className="text-[18px] md:text-[20px] font-medium leading-[1.25]">{name}</p>
       <div className="flex flex-col gap-2">
-        {values.map(([use, value]) => (
-          <div key={use} className="flex justify-between gap-4">
-            <p>{use}</p>
-            {/^(#|C\d|K\d)/.test(value) ? <CopyValue value={value} /> : <p className="text-right">{value}</p>}
-          </div>
-        ))}
+        {values.map(([use, value]) => /^(#|C\d|K\d)/.test(value)
+          ? <CopyRow key={use} use={use} value={value} />
+          : (
+            <div key={use} className="flex justify-between gap-4">
+              <p>{use}</p>
+              <p className="text-right">{value}</p>
+            </div>
+          ))}
       </div>
     </div>
   )
 }
 
-/** A colour code that copies itself on a click, saying so in its place for a moment. */
-function CopyValue({ value }: { value: string }) {
+/**
+ * A swatch row with a colour code: the whole row, label and code, copies the code on a click and says so in the
+ * code's place for a moment.
+ */
+function CopyRow({ use, value }: { use: string; value: string }) {
   const [copied, setCopied] = useState(false)
   useEffect(() => {
     if (!copied) return
     const t = setTimeout(() => setCopied(false), 1500)
     return () => clearTimeout(t)
   }, [copied])
+  const text = `${UNDERLINE} group-hover:decoration-current/40 group-hover:duration-0`
   return (
     <button
       type="button"
       onClick={() => navigator.clipboard.writeText(value).then(() => setCopied(true), () => {})}
-      className={`cursor-pointer whitespace-nowrap text-right tabular-nums ${UNDERLINE} hover:decoration-current/40 hover:duration-0`}
+      className="group flex cursor-pointer justify-between gap-4 text-left"
     >
-      {copied ? 'Скопировано' : value}
+      <span className={text}>{use}</span>
+      <span className={`whitespace-nowrap text-right tabular-nums ${text}`}>{copied ? 'Скопировано' : value}</span>
     </button>
   )
 }
@@ -1196,11 +1203,11 @@ export default function Guide() {
                   <PreviewLink asset={{ file: 'umo-icon-black.zip' }} label="Скачать иконку, белый логотип на чёрном">
                     <Fig name="icon-app" w={444} h={333} caption="Иконка мобильного приложения" />
                   </PreviewLink>
-                  <PreviewLink asset={{ file: 'umo-icon-white.zip' }} label="Скачать иконку, чёрный логотип на белом">
-                    <Fig name="icon-userpic" w={444} h={333} caption="Юзерпик аккаунта соцсетей" />
-                  </PreviewLink>
                   <PreviewLink asset={{ file: 'umo-favicon.svg' }} label="Скачать фавиконку, SVG">
                     <Fig name="icon-favicon" w={444} h={333} caption="Фавиконка и иконка закладок в браузере" alt="Фавиконка во вкладке тёмного браузера" />
+                  </PreviewLink>
+                  <PreviewLink asset={{ file: 'umo-icon-white.zip' }} label="Скачать иконку, чёрный логотип на белом">
+                    <Fig name="icon-userpic" w={444} h={333} caption="Юзерпик аккаунта соцсетей" />
                   </PreviewLink>
                   <PreviewLink asset={{ file: 'umo-favicon.svg' }} label="Скачать фавиконку, SVG">
                     <Fig name="icon-favicon-light" w={444} h={333} alt="Фавиконка во вкладке светлого браузера" />
