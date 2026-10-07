@@ -1468,15 +1468,14 @@ export default function Guide() {
             </Section>
           </Chapter>
 
-          {/* Вопросы: CONTACT stands for the brand contact until there is one */}
-          <Section>
-            <Head>
-              <H2 id="contact">Вопросы и согласование</H2>
+          {/* ── Вопросы ── CONTACT stands for the brand contact until there is one */}
+          <Chapter id="contact" title="Вопросы и согласование">
+            <Section>
               <Text>
                 <p>Если ответа нет в стандартах или макет вывески, рекламы или другого носителя нужно согласовать, напишите на <a href="mailto:CONTACT" className={TEXT_LINK}>CONTACT</a>. Приложите макет и расскажите, где он будет размещён.</p>
               </Text>
-            </Head>
-          </Section>
+            </Section>
+          </Chapter>
 
           <footer className="text-[16px] leading-[1.25] tracking-[-0.01em] text-[#808080]">Стандарты бренда UMO 2026. ООО «ЭМ РУС». 0+</footer>
         </div>
