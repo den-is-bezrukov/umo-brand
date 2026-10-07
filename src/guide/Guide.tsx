@@ -103,12 +103,11 @@ const NAV: NavItem[] = [
   },
   { id: 'color', title: 'Цвет' },
   {
-    id: 'key-visual',
-    title: 'Ключевой образ',
+    id: 'photography',
+    title: 'Фотография',
     children: [
-      { id: 'photography', title: 'Фотография' },
-      { id: 'kv-umo5', title: 'UMO 5' },
-      { id: 'kv-umo8', title: 'UMO 8' },
+      { id: 'photo-umo5', title: 'UMO 5' },
+      { id: 'photo-umo8', title: 'UMO 8' },
     ],
   },
   { id: 'spaces', title: 'Пространства' },
@@ -502,7 +501,7 @@ function textLength(node: ReactNode): number {
 /**
  * Body copy. Its width on the 12-column Figma grid follows from how much text there is: up to 150 characters
  * (a line or two) 6 columns, up to 300 — 8, longer — 9, so short notes don't stretch thin and long copy doesn't
- * stand as a tall column. Texts paired side by side (Кобрендинг, Ключевой образ) fill their grid cells instead —
+ * stand as a tall column. Texts paired side by side (Кобрендинг, Фотография) fill their grid cells instead —
  * their grid sets `*:max-w-none`.
  */
 function Text({ children }: { children: ReactNode }) {
@@ -1353,51 +1352,49 @@ export default function Guide() {
             </Section>
           </Chapter>
 
-          {/* ── Ключевой образ ── */}
-          <Chapter id="key-visual" title="Ключевой образ">
+          {/* ── Фотография ── */}
+          <Chapter id="photography" title="Фотография">
             <Section>
-              <Text>
-                <p>Ключевой образ — лицо модели в рекламе.</p>
-                <p>Как и логотип, он собран из модулей: фотография, короткий заголовок и локап UMO | Яндекс. Образ у каждой модели свой, а правила общие — поэтому реклама UMO узнаётся с первого взгляда.</p>
-              </Text>
-              {/* Picture above the heading, as in Позиционирование; the anchor sits on it so links land on the picture */}
-              <div id="photography" className="scroll-mt-24"><Fig name="keyvisual" w={912} h={456} /></div>
-              <Head>
-                <H2>Фотография</H2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
-                  <Text><p>Без излишней постановочности и драмы. Изображение захватывает взгляд, потому что все, что видит зритель, происходит здесь и сейчас.</p></Text>
-                  <Text><p>Автомобили становятся частью мира аудитории, но показаны в выгодном ракурсе, который подчеркивает преимущества или рассказывает историю за счет окружения.</p></Text>
-                </div>
-              </Head>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
+                <Text><p>Без излишней постановочности и драмы. Изображение захватывает взгляд, потому что все, что видит зритель, происходит здесь и сейчас.</p></Text>
+                <Text><p>Автомобили становятся частью мира аудитории, но показаны в выгодном ракурсе, который подчеркивает преимущества или рассказывает историю за счет окружения.</p></Text>
+              </div>
+              <Fig name="keyvisual" w={912} h={456} />
             </Section>
 
             <Section>
               <Head>
-                <H2 id="kv-umo5">UMO 5</H2>
-                <Text><p>Ключевой образ и рекламные материалы для UMO Model 5</p></Text>
+                <H2 id="photo-umo5">UMO 5</H2>
+                <Text><p>Снимки UMO Model 5 и пример их применения в рекламе</p></Text>
               </Head>
               <div className="flex flex-col gap-6">
-                <Fig name="umo5-kv" focus={72} w={912} h={456} alt="Ключевой образ UMO 5" />
-                <div className="grid grid-cols-1 sm:grid-cols-[600fr_288fr] gap-6">
-                  <Poster bg="umo5-banner-bg" w={600} h={368} title="Новый UMO 5" subtitle={UMO5_SUBTITLE} alt="Горизонтальный баннер UMO 5" />
-                  <Poster bg="umo5-square-bg" w={288} h={368} title="Новый UMO 5" subtitle={UMO5_SUBTITLE} center alt="Вертикальный баннер UMO 5" />
-                </div>
+                <Fig name="umo5-kv" focus={72} w={912} h={456} alt="UMO 5" />
+                <figure className="flex flex-col gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-[600fr_288fr] gap-6">
+                    <Poster bg="umo5-banner-bg" w={600} h={368} title="Новый UMO 5" subtitle={UMO5_SUBTITLE} alt="Горизонтальный баннер UMO 5" />
+                    <Poster bg="umo5-square-bg" w={288} h={368} title="Новый UMO 5" subtitle={UMO5_SUBTITLE} center alt="Вертикальный баннер UMO 5" />
+                  </div>
+                  <Caption>Пример применения в рекламе</Caption>
+                </figure>
               </div>
             </Section>
 
             <Section>
               <Head>
-                <H2 id="kv-umo8">UMO 8</H2>
-                <Text><p>Ключевой образ и рекламные материалы для UMO Model 8</p></Text>
+                <H2 id="photo-umo8">UMO 8</H2>
+                <Text><p>Снимки UMO Model 8 и пример их применения в рекламе</p></Text>
               </Head>
               <div className="flex flex-col gap-6">
-                <div className="grid grid-cols-1 sm:grid-cols-[288fr_600fr] gap-6">
-                  <div className="order-2 sm:order-none">
-                    <Poster bg="umo8-square-bg" w={288} h={368} title="Новый UMO 8" subtitle={UMO8_SUBTITLE} center alt="Вертикальный баннер UMO 8" />
+                <figure className="flex flex-col gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-[288fr_600fr] gap-6">
+                    <div className="order-2 sm:order-none">
+                      <Poster bg="umo8-square-bg" w={288} h={368} title="Новый UMO 8" subtitle={UMO8_SUBTITLE} center alt="Вертикальный баннер UMO 8" />
+                    </div>
+                    <Poster bg="umo8-banner-bg" w={600} h={368} title="Новый UMO 8" subtitle={UMO8_SUBTITLE} alt="Горизонтальный баннер UMO 8" />
                   </div>
-                  <Poster bg="umo8-banner-bg" w={600} h={368} title="Новый UMO 8" subtitle={UMO8_SUBTITLE} alt="Горизонтальный баннер UMO 8" />
-                </div>
-                <Fig name="umo8-kv" w={912} h={456} alt="Ключевой образ UMO 8" />
+                  <Caption>Пример применения в рекламе</Caption>
+                </figure>
+                <Fig name="umo8-kv" w={912} h={456} alt="UMO 8" />
               </div>
             </Section>
           </Chapter>
