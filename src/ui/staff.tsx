@@ -355,7 +355,8 @@ function staffWord(n: number): string {
   return 'сотрудник' + ({ '': '', 'а': 'а', 'ей': 'ов' } as Record<string, string>)[plural(n)]
 }
 
-const ICON = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinejoin: 'bevel' as const }
+// A 1 px stroke here, finer than the sidebar's 2 px icons, as the column stands quietly beside the item (Figma 5030:11424)
+const ICON = { fill: 'none', stroke: 'currentColor', strokeWidth: 1, strokeLinecap: 'square' as const, strokeLinejoin: 'bevel' as const }
 
 /** The item's actions (Figma 5030:11424): 30 px buttons (40 on phones, for a finger), the icon #808080, black on a white tile on hover */
 function Action({ label, hidden, onClick, children }: { label: string; hidden?: boolean; onClick: () => void; children: React.ReactNode }) {
@@ -394,13 +395,13 @@ export function ItemFrame<P extends object>({ staff, item, n, children }: { staf
       {staff.mode === 'manual' && (
         <div className={`mt-2 justify-end md:mt-0 md:flex-col ${active ? 'flex' : 'hidden'} ${hover}`}>
           <Action label="Дублировать" onClick={() => staff.duplicate(item.key)}>
-            <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><rect x="6" y="2" width="8" height="8" strokeLinecap="square" /><path d="M3 6H2V14H10V13" /></svg>
+            <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M3.5 6H2V14H10V12.5M6 2H14V10H6V2Z" /></svg>
           </Action>
           <Action label="Сбросить" hidden={staff.isBlank(item)} onClick={() => staff.clear(item.key)}>
-            <svg width="14" height="14" viewBox="0 0 14 14" {...ICON} aria-hidden><path d="M2.5 8.5C2.5 10.9853 4.51472 13 7 13C9.48528 13 11.5 10.9853 11.5 8.5C11.5 6.01472 9.48528 4 7 4L2.5 4" /><path d="M4.75 1.5L2.25 4L4.75 6.5" strokeLinecap="square" /></svg>
+            <svg width="14" height="14" viewBox="0 0 14 14" {...ICON} aria-hidden><path d="M2.5 8.5C2.5 10.9853 4.51472 13 7 13C9.48528 13 11.5 10.9853 11.5 8.5C11.5 6.01472 9.48528 4 7 4L2.25 4M4.75 6.5L2.25 4L4.75 1.5" /></svg>
           </Action>
           <Action label="Удалить" hidden={staff.people.length < 2} onClick={() => staff.remove(item.key)}>
-            <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M12 4L8 8M8 8L4 4M8 8L12 12M8 8L4 12" strokeLinecap="square" /></svg>
+            <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M12 4L8 8M8 8L4 4M8 8L12 12M8 8L4 12" /></svg>
           </Action>
         </div>
       )}
