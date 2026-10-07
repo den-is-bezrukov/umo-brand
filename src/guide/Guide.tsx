@@ -93,7 +93,7 @@ const NAV: NavItem[] = [
     ],
   },
   { id: 'typography', title: 'Типографика', children: [{ id: 'type-styles', title: 'Стили и иерархия' }] },
-  { id: 'color', title: 'Цвет', children: [{ id: 'greys', title: 'Оттенки серого' }] },
+  { id: 'color', title: 'Цвет' },
   {
     id: 'lettering',
     title: 'Леттеринг',
@@ -609,28 +609,28 @@ function LogoPlate({ w, h, logo, bg, dark, caption, className = '' }: {
 }
 
 /**
- * A brand colour: a tile of it (`w`×`h` sets the ratio) over its name and values, one row each (where it's used, the
- * value). A white tile gets a hairline edge, or it would vanish into the page.
+ * A brand colour as a tile with its values printed on it, as the logo schemes carry their measures: the name at the
+ * top, each value at the bottom on one line with a short label (where it's used), as the download rows. Codes copy on a click. `dark` sets the text
+ * white; a white tile gets a hairline edge, or it would vanish into the page.
  */
-function Swatch({ w, h, color, name, values }: {
-  w: number; h: number; color: string; name: string; values: [string, string][]
+function Swatch({ color, name, values, dark, className = '' }: {
+  color: string; name: string; values: [string, string][]; dark?: boolean; className?: string
 }) {
   return (
-    <figure className="flex flex-col gap-3">
-      <div
-        className={color.toLowerCase() === '#ffffff' ? 'shadow-[inset_0_0_0_1px_rgb(0_0_0/0.1)]' : ''}
-        style={{ aspectRatio: `${w} / ${h}`, background: color }}
-      />
-      <figcaption className="text-[16px] leading-[1.25] tracking-[-0.01em]">
-        <p className="pb-3 font-medium">{name}</p>
+    <div
+      className={`flex flex-col justify-between gap-3 p-6 text-[16px] leading-[1.25] tracking-[-0.01em] ${dark ? 'text-white' : 'text-black'} ${color === '#ffffff' ? 'shadow-[inset_0_0_0_1px_rgb(0_0_0/0.1)]' : ''} ${className}`}
+      style={{ background: color }}
+    >
+      <p className="font-medium">{name}</p>
+      <div className="flex flex-col gap-2">
         {values.map(([use, value]) => (
-          <p key={use} className="flex justify-between gap-4 border-t border-[#e6e6e6] py-2">
-            <span>{use}</span>
-            {/^(#|C\d|K\d)/.test(value) ? <CopyValue value={value} /> : <span className="text-right">{value}</span>}
-          </p>
+          <div key={use} className="flex justify-between gap-4">
+            <p className="opacity-60">{use}</p>
+            {/^(#|C\d|K\d)/.test(value) ? <CopyValue value={value} /> : <p className="text-right">{value}</p>}
+          </div>
         ))}
-      </figcaption>
-    </figure>
+      </div>
+    </div>
   )
 }
 
@@ -646,7 +646,7 @@ function CopyValue({ value }: { value: string }) {
     <button
       type="button"
       onClick={() => navigator.clipboard.writeText(value).then(() => setCopied(true), () => {})}
-      className={`cursor-pointer text-right tabular-nums ${LINK_HOVER}`}
+      className={`cursor-pointer whitespace-nowrap text-right tabular-nums ${UNDERLINE} hover:decoration-current/40 hover:duration-0`}
     >
       {copied ? 'Скопировано' : value}
     </button>
@@ -1267,30 +1267,23 @@ export default function Guide() {
             <Section>
               <Text>
                 <p>У UMO два цвета — чёрный и белый. Яркого цвета у бренда нет: его приносят автомобиль, фотография и среда, а чёрно-белая графика не спорит с ними и узнаётся на любом фоне.</p>
+                <p>В печати чёрный двух видов: глубокий составной для плёнки, вывесок и больших плашек, чистый K100 для текста и мелких деталей. Серые — служебные: фон, линии и подписи.</p>
                 <p>Как выбрать между чёрным и белым логотипом — в разделе <a href="#logo-color" className={TEXT_LINK}>Цвет логотипа</a>.</p>
               </Text>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <Swatch w={444} h={333} color="#000000" name="Чёрный" values={[
-                  ['Экран', '#000000'],
-                  ['Печать: плёнка, вывески, плашки', 'C60 M40 Y40 K100'],
-                  ['Печать: текст и мелкие детали', 'K100'],
-                ]} />
-                <Swatch w={444} h={333} color="#ffffff" name="Белый" values={[
-                  ['Экран', '#FFFFFF'],
-                  ['Печать на светлом', 'без краски, цвет бумаги'],
-                  ['Печать на тёмном', 'белая краска'],
-                ]} />
-              </div>
-            </Section>
-            <Section>
-              <Head>
-                <H2 id="greys">Оттенки серого</H2>
-                <Text><p>Серые — служебные, а не цвета бренда: подложки, линии и второстепенный текст. Они уступают место чёрному и белому и не встречаются без них.</p></Text>
-              </Head>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                <Swatch w={288} h={216} color="#f5f5f5" name="Подложка" values={[['Экран', '#F5F5F5'], ['Печать', 'K4']]} />
-                <Swatch w={288} h={216} color="#e6e6e6" name="Линии" values={[['Экран', '#E6E6E6'], ['Печать', 'K10']]} />
-                <Swatch w={288} h={216} color="#808080" name="Второстепенный текст" values={[['Экран', '#808080'], ['Печать', 'K50']]} />
+              <div className="flex flex-col gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <Swatch color="#000000" dark name="Чёрный" className="aspect-4/3" values={[
+                    ['Экран', '#000000'], ['Плёнка, вывески', 'C60 M40 Y40 K100'], ['Текст', 'K100'],
+                  ]} />
+                  <Swatch color="#ffffff" name="Белый" className="aspect-4/3" values={[
+                    ['Экран', '#FFFFFF'], ['На светлом', 'без краски'], ['На тёмном', 'белая краска'],
+                  ]} />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  <Swatch color="#f5f5f5" name="Фон" className="aspect-4/3" values={[['Экран', '#F5F5F5'], ['Печать', 'K4']]} />
+                  <Swatch color="#e6e6e6" name="Линии" className="aspect-4/3" values={[['Экран', '#E6E6E6'], ['Печать', 'K10']]} />
+                  <Swatch color="#808080" dark name="Подписи" className="aspect-4/3" values={[['Экран', '#808080'], ['Печать', 'K50']]} />
+                </div>
               </div>
             </Section>
           </Chapter>
