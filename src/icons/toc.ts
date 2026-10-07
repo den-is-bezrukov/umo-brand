@@ -4,5 +4,5 @@
 // «Свернуть». The chevrons are drawn with square ends and bevelled corners, as the generators' icons.
 export default {
   menu: 'M1 4H15M1 8H15M1 12H15',
-  close: 'M5 3L8 6L11 3M5 13L8 10L11 13',
+  close: 'M4 2L8 6L12 2M4 14L8 10L12 14',
 }
