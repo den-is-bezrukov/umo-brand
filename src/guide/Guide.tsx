@@ -1193,10 +1193,15 @@ export default function Guide() {
             <Section>
               <Head>
                 <H2 id="icons">Логотип на иконках</H2>
-                <Text>
-                  <p>Размещая логотип на мелких форматах рекомендуется учитывать минимальные размеры и отступы.</p>
-                  <p>Иконка сайта — исключение.</p>
-                </Text>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
+                  <Text>
+                    <p>Размещая логотип на мелких форматах рекомендуется учитывать минимальные размеры и отступы.</p>
+                    <p>Иконка сайта — исключение.</p>
+                  </Text>
+                  <Text>
+                    <p>Мелкие форматы — это аватарка (юзерпик) дилера в VK, Telegram и WhatsApp, профиль на Авито и Дроме, карточка организации на Яндекс Картах и в 2ГИС.</p>
+                  </Text>
+                </div>
               </Head>
               <Previews className="flex flex-col gap-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
