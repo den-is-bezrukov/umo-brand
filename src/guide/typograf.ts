@@ -13,6 +13,12 @@ Typograf.addRule({
   name: 'common/nbsp/umoUnits',
   handler: text => text.replace(/(\d) (мм|см|px|pt|rem|млн|млрд|тыс)(?=[\s.,;:!?)»]|$)/g, `$1${NBSP}$2`),
 })
+// A sentence's first word doesn't hang at the end of a line after the previous sentence («…Яндекса. Запас /
+// хода…»): it's tied to the word after it.
+Typograf.addRule({
+  name: 'common/nbsp/umoSentenceStart',
+  handler: text => text.replace(/([.!?…]) (\p{Lu}[\p{L}\d-]*) /gu, `$1 $2${NBSP}`),
+})
 Typograf.addRule({ name: 'ru/nbsp/umoRuble', handler: text => text.replace(/ ₽/g, `${NBSP}₽`) })
 
 // Only spacing rules: the copy already has proper quotes, dashes and ellipses, and a per-node pass
