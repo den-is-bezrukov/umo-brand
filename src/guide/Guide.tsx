@@ -626,11 +626,30 @@ function Swatch({ w, h, color, name, values }: {
         {values.map(([use, value]) => (
           <p key={use} className="flex justify-between gap-4 border-t border-[#e6e6e6] py-2">
             <span>{use}</span>
-            <span className="text-right tabular-nums">{value}</span>
+            {/^(#|C\d|K\d)/.test(value) ? <CopyValue value={value} /> : <span className="text-right">{value}</span>}
           </p>
         ))}
       </figcaption>
     </figure>
+  )
+}
+
+/** A colour code that copies itself on a click, saying so in its place for a moment. */
+function CopyValue({ value }: { value: string }) {
+  const [copied, setCopied] = useState(false)
+  useEffect(() => {
+    if (!copied) return
+    const t = setTimeout(() => setCopied(false), 1500)
+    return () => clearTimeout(t)
+  }, [copied])
+  return (
+    <button
+      type="button"
+      onClick={() => navigator.clipboard.writeText(value).then(() => setCopied(true), () => {})}
+      className={`cursor-pointer text-right tabular-nums ${LINK_HOVER}`}
+    >
+      {copied ? 'Скопировано' : value}
+    </button>
   )
 }
 
