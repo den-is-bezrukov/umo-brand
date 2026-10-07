@@ -1369,13 +1369,10 @@ export default function Guide() {
               </Head>
               <div className="flex flex-col gap-6">
                 <Fig name="umo5-kv" focus={72} w={912} h={456} alt="UMO 5" />
-                <figure className="flex flex-col gap-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-[600fr_288fr] gap-6">
-                    <Poster bg="umo5-banner-bg" w={600} h={368} title="Новый UMO 5" subtitle={UMO5_SUBTITLE} alt="Горизонтальный баннер UMO 5" />
-                    <Poster bg="umo5-square-bg" w={288} h={368} title="Новый UMO 5" subtitle={UMO5_SUBTITLE} center alt="Вертикальный баннер UMO 5" />
-                  </div>
-                  <Caption>Пример применения в рекламе</Caption>
-                </figure>
+                <div className="grid grid-cols-1 sm:grid-cols-[600fr_288fr] gap-6">
+                  <Poster bg="umo5-banner-bg" w={600} h={368} title="Новый UMO 5" subtitle={UMO5_SUBTITLE} alt="Горизонтальный баннер UMO 5" />
+                  <Poster bg="umo5-square-bg" w={288} h={368} title="Новый UMO 5" subtitle={UMO5_SUBTITLE} center alt="Вертикальный баннер UMO 5" />
+                </div>
               </div>
             </Section>
 
@@ -1385,15 +1382,12 @@ export default function Guide() {
                 <Text><p>Снимки UMO Model 8 и пример их применения в рекламе</p></Text>
               </Head>
               <div className="flex flex-col gap-6">
-                <figure className="flex flex-col gap-3">
-                  <div className="grid grid-cols-1 sm:grid-cols-[288fr_600fr] gap-6">
-                    <div className="order-2 sm:order-none">
-                      <Poster bg="umo8-square-bg" w={288} h={368} title="Новый UMO 8" subtitle={UMO8_SUBTITLE} center alt="Вертикальный баннер UMO 8" />
-                    </div>
-                    <Poster bg="umo8-banner-bg" w={600} h={368} title="Новый UMO 8" subtitle={UMO8_SUBTITLE} alt="Горизонтальный баннер UMO 8" />
+                <div className="grid grid-cols-1 sm:grid-cols-[288fr_600fr] gap-6">
+                  <div className="order-2 sm:order-none">
+                    <Poster bg="umo8-square-bg" w={288} h={368} title="Новый UMO 8" subtitle={UMO8_SUBTITLE} center alt="Вертикальный баннер UMO 8" />
                   </div>
-                  <Caption>Пример применения в рекламе</Caption>
-                </figure>
+                  <Poster bg="umo8-banner-bg" w={600} h={368} title="Новый UMO 8" subtitle={UMO8_SUBTITLE} alt="Горизонтальный баннер UMO 8" />
+                </div>
                 <Fig name="umo8-kv" w={912} h={456} alt="UMO 8" />
               </div>
             </Section>
