@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined } from '@/ui/form'
-import { useStaff, TableSource, UploadArea, AddTile, Progress, plural, fullNameField } from '@/ui/staff'
+import { useStaff, TableSource, UploadArea, AddTile, Progress, plural, fullNameField, ItemFrame, Removed } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD } from '@/livery/geometry'
 import { TAG, buildTag, loadFonts, type Field, type FieldBox, type Fonts, type Person } from '@/nametag/tag'
@@ -123,15 +123,6 @@ export default function NameTag() {
                         />
                       </Labelled>
                     </div>
-                    {/* The selected tag's actions under its fields, side by side as the other generators' «Копировать» and
-                        «Сбросить»: «Сбросить» empties the fields, while there's something in them; «Удалить» only while
-                        there's another tag to go to */}
-                    {(!staff.isBlank(p) || people.length > 1) && (
-                      <div className="mt-2 flex gap-2">
-                        {!staff.isBlank(p) && <button type="button" onClick={() => update(p.key, BLANK)} className={outlined}>Сбросить</button>}
-                        {people.length > 1 && <button type="button" onClick={() => staff.remove(p.key)} className={outlined}>Удалить</button>}
-                      </div>
-                    )}
                   </div>
                 )
               })()}
@@ -180,7 +171,9 @@ export default function NameTag() {
             const active = mode === 'manual' && key === current?.key
             const dimmed = mode === 'manual' && !!current && !active
             return (
-              // The whole row of the canvas is the tag's: pointing or clicking anywhere across it hovers or picks it
+              <Fragment key={it.key}>
+              <Removed staff={staff} at={i} aspect="70 / 25" radius="5.714cqw" />
+              {/* The whole row of the canvas is the tag's: pointing or clicking anywhere across it hovers or picks it */}
               <figure
                 key={it.key}
                 ref={staff.figureRef(key)}
@@ -190,7 +183,7 @@ export default function NameTag() {
                 <div className="@container flex w-full max-w-[480px] flex-col gap-3">
                 {/* In the manual list a tag is picked for editing by clicking it; the picked one is outlined. A double click
                     on its text edits that field right there */}
-                <div className="relative">
+                <ItemFrame staff={staff} item={staff.items[i]} n={i + 1}>
                 <button
                   type="button"
                   onDoubleClick={e => {
@@ -223,14 +216,16 @@ export default function NameTag() {
                     onDone={() => setEditing(null)}
                   />
                 )}
-                </div>
+                </ItemFrame>
                 {bad && (
                   <p className="text-[13px] leading-5 text-[#e30]">{alertLine(problems[i])}</p>
                 )}
                 </div>
               </figure>
+              </Fragment>
             )
           })}
+          <Removed staff={staff} at={items.length} aspect="70 / 25" radius="5.714cqw" />
           {/* «Добавить» as the next tag in the grid: a dashed plate of the tag's shape; the manual list only */}
           {mode === 'manual' && <AddTile onClick={staff.add} aspect="70 / 25" radius="5.714cqw" />}
         </div>

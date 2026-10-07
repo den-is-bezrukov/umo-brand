@@ -161,12 +161,43 @@ export function useStaff<P extends object>({ blank, readFile, readPasted }: Staf
   }
 
   const update = (key: number, patch: Partial<P>) => setPeople(people.map(p => p.key === key ? { ...p, ...patch } : p))
+  /**
+   * The one just removed, for «Вернуть» in its place for a few seconds: there's no undo otherwise, and the cross stands
+   * right by the item
+   */
+  const [removed, setRemoved] = useState<{ item: Row<P>; index: number } | null>(null)
+  useEffect(() => {
+    if (!removed) return
+    const t = setTimeout(() => setRemoved(null), 5000)
+    return () => clearTimeout(t)
+  }, [removed])
   /** The neighbour after (or before) the one removed is selected */
   const remove = (key: number) => {
     const i = people.findIndex(p => p.key === key)
     const rest = people.filter(p => p.key !== key)
+    setRemoved({ item: people[i], index: i })
     setPeople(rest)
     setSelected(rest[Math.min(i, rest.length - 1)].key)
+  }
+  /** The removed one back where it stood, selected */
+  const restore = () => {
+    if (!removed) return
+    setPeople([...people.slice(0, removed.index), removed.item, ...people.slice(removed.index)])
+    setSelected(removed.item.key)
+    setRemoved(null)
+  }
+  /** A copy right after the item, selected, its first field focused: the colleague with the same position and phone */
+  const duplicate = (key: number) => {
+    const i = people.findIndex(p => p.key === key)
+    const copy = row(plain(people[i]))
+    focusNext.current = true
+    setPeople([...people.slice(0, i + 1), copy, ...people.slice(i + 1)])
+    setSelected(copy.key)
+  }
+  /** The item's fields emptied, as a fresh one, so they aren't errors until it's left */
+  const clear = (key: number) => {
+    setFresh(f => new Set(f).add(key))
+    update(key, blank)
   }
   const add = () => {
     const r = row(blank)
@@ -219,6 +250,7 @@ export function useStaff<P extends object>({ blank, readFile, readPasted }: Staf
   return {
     mode, setMode, people, items, file, current, selected, setSelected, tableError, dragging, dropTarget, loadFile,
     showsMissing, form, figureRef, nextOf, pick, update, remove, add, isBlank, paste, useDeleteKey,
+    duplicate, clear, removed, restore,
   }
 }
 
@@ -321,4 +353,64 @@ export function plural(n: number): '' | 'а' | 'ей' {
 /** сотрудник, сотрудника, сотрудников */
 function staffWord(n: number): string {
   return 'сотрудник' + ({ '': '', 'а': 'а', 'ей': 'ов' } as Record<string, string>)[plural(n)]
+}
+
+const ICON = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinejoin: 'bevel' as const }
+
+/** The item's actions (Figma 5030:11424): 40 px buttons, the icon #808080, black on a white tile on hover */
+function Action({ label, hidden, onClick, children }: { label: string; hidden?: boolean; onClick: () => void; children: React.ReactNode }) {
+  return (
+    <button
+      type="button"
+      title={label}
+      aria-label={label}
+      // A click here is the action's, not the row's, which would select the item again
+      onClick={e => { e.stopPropagation(); onClick() }}
+      className={`flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] outline-none hover:bg-white hover:text-black focus-visible:ring-2 focus-visible:ring-black/30 ${hidden ? 'invisible' : ''}`}
+    >
+      {children}
+    </button>
+  )
+}
+
+/**
+ * An item on the canvas with its number to the left (from 1, as the table's rows; wide screens only) and, while it's the
+ * one selected, its actions to the right (Figma 5008:10960): «Дублировать», «Сбросить» (while there's something to
+ * empty), «Удалить» (while there's another), the most used and harmless first, the cross furthest. On phones, where
+ * there's no room beside the item, they stand in a row under it. Slots stay put when an action isn't offered.
+ */
+export function ItemFrame<P extends object>({ staff, item, n, children }: { staff: Staff<P>; item: Row<P>; n: number; children: React.ReactNode }) {
+  const active = staff.mode === 'manual' && item.key === staff.selected
+  return (
+    <div className="relative">
+      <span aria-hidden className="pointer-events-none absolute top-0 right-full mr-[5px] hidden w-10 text-center text-[14px] leading-5 text-[#808080] [font-feature-settings:'tnum'_1] md:block">{n}</span>
+      {children}
+      {active && (
+        <div className="mt-2 flex justify-end md:absolute md:top-0 md:left-full md:mt-0 md:ml-[5px] md:flex-col">
+          <Action label="Дублировать" onClick={() => staff.duplicate(item.key)}>
+            <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><rect x="6" y="2" width="8" height="8" strokeLinecap="square" /><path d="M3 6H2V14H10V13" /></svg>
+          </Action>
+          <Action label="Сбросить" hidden={staff.isBlank(item)} onClick={() => staff.clear(item.key)}>
+            <svg width="14" height="14" viewBox="0 0 14 14" {...ICON} aria-hidden><path d="M2.5 8.5C2.5 10.9853 4.51472 13 7 13C9.48528 13 11.5 10.9853 11.5 8.5C11.5 6.01472 9.48528 4 7 4L2.5 4" /><path d="M4.75 1.5L2.25 4L4.75 6.5" strokeLinecap="square" /></svg>
+          </Action>
+          <Action label="Удалить" hidden={staff.people.length < 2} onClick={() => staff.remove(item.key)}>
+            <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M12 4L8 8M8 8L4 4M8 8L12 12M8 8L4 12" strokeLinecap="square" /></svg>
+          </Action>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** In place of an item just removed, as tall as it was, for five seconds: «Удалено · Вернуть» */
+export function Removed<P extends object>({ staff, at, aspect, radius }: { staff: Staff<P>; at: number; aspect: string; radius?: string }) {
+  if (staff.removed?.index !== at || staff.mode !== 'manual') return null
+  return (
+    <div className="@container mx-auto w-full max-w-[480px]">
+      <div style={{ aspectRatio: aspect, borderRadius: radius }} className="flex w-full items-center justify-center gap-2 text-[14px] leading-5 text-[#808080]">
+        Удалено ·
+        <button type="button" onClick={e => { e.stopPropagation(); staff.restore() }} className="cursor-pointer text-black outline-none hover:text-[#808080] focus-visible:ring-2 focus-visible:ring-black/30">Вернуть</button>
+      </div>
+    </div>
+  )
 }

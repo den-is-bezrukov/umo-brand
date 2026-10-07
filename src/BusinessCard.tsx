@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined, rowAction, isValidUrl, ALERT_LABEL, Checkbox } from '@/ui/form'
-import { useStaff, TableSource, UploadArea, AddTile, Progress, fullNameField } from '@/ui/staff'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
+import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadButton, Segments, SegBtn, rowAction, isValidUrl, ALERT_LABEL, Checkbox } from '@/ui/form'
+import { useStaff, TableSource, UploadArea, AddTile, Progress, fullNameField, ItemFrame, Removed } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
@@ -265,12 +265,6 @@ export default function BusinessCard() {
                       </div>
                     </Labelled>
                   </div>
-                  {(!staff.isBlank(p) || people.length > 1) && (
-                    <div className="mt-2 flex gap-2">
-                      {!staff.isBlank(p) && <button type="button" onClick={() => update(p.key, BLANK)} className={outlined}>Сбросить</button>}
-                      {people.length > 1 && <button type="button" onClick={() => staff.remove(p.key)} className={outlined}>Удалить</button>}
-                    </div>
-                  )}
                 </div>
               )
             })()}
@@ -327,8 +321,11 @@ export default function BusinessCard() {
               ? (Object.entries(card.back.fields) as [CardField, Cmd[]][]).filter(([f]) => only(f)).flatMap(([, c]) => c)
               : []
             return (
-              <figure key={p.key} ref={staff.figureRef(p.key)} onClick={() => staff.pick(p.key)} className="group/row flex cursor-pointer justify-center">
+              <Fragment key={p.key}>
+              <Removed staff={staff} at={i} aspect={`${CARD.w} / ${CARD.h}`} />
+              <figure ref={staff.figureRef(p.key)} onClick={() => staff.pick(p.key)} className="group/row flex cursor-pointer justify-center">
                 <div className="flex w-full max-w-[480px] flex-col gap-3">
+                  <ItemFrame staff={staff} item={p} n={i + 1}>
                   <button
                     type="button"
                     aria-pressed={mode === 'manual' ? active : undefined}
@@ -343,11 +340,14 @@ export default function BusinessCard() {
                       ghost={card ? toD([...card.ghostQr, ...paths(f => card.ghost.has(f))]) : undefined}
                     />
                   </button>
+                  </ItemFrame>
                   {problems[i].length > 0 && <p className="text-[13px] leading-5 text-[#e30]">{alertLine(problems[i])}</p>}
                 </div>
               </figure>
+              </Fragment>
             )
           })}
+          <Removed staff={staff} at={items.length} aspect={`${CARD.w} / ${CARD.h}`} />
           {mode === 'manual' && <AddTile onClick={staff.add} aspect={`${CARD.w} / ${CARD.h}`} />}
         </div>
         )}
