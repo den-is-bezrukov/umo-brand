@@ -359,6 +359,7 @@ const ICON = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinej
 
 /** The item's actions (Figma 5030:11424): 40 px buttons, the icon #808080, black on a white tile on hover */
 function Action({ label, hidden, onClick, children }: { label: string; hidden?: boolean; onClick: () => void; children: React.ReactNode }) {
+  if (hidden) return null
   return (
     <button
       type="button"
@@ -366,7 +367,7 @@ function Action({ label, hidden, onClick, children }: { label: string; hidden?: 
       aria-label={label}
       // A click here is the action's, not the row's, which would select the item again
       onClick={e => { e.stopPropagation(); onClick() }}
-      className={`flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] outline-none hover:bg-white hover:text-black focus-visible:ring-2 focus-visible:ring-black/30 ${hidden ? 'invisible' : ''}`}
+      className={`flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] outline-none hover:bg-white hover:text-black focus-visible:ring-2 focus-visible:ring-black/30`}
     >
       {children}
     </button>
@@ -377,7 +378,7 @@ function Action({ label, hidden, onClick, children }: { label: string; hidden?: 
  * An item on the canvas with its number to the left (from 1, as the table's rows; wide screens only) and, while it's the
  * one selected, its actions to the right (Figma 5008:10960): «Дублировать», «Сбросить» (while there's something to
  * empty), «Удалить» (while there's another), the most used and harmless first, the cross furthest. On phones, where
- * there's no room beside the item, they stand in a row under it. Slots stay put when an action isn't offered.
+ * there's no room beside the item, they stand in a row under it. An action not offered leaves no gap: the next moves up.
  */
 export function ItemFrame<P extends object>({ staff, item, n, children }: { staff: Staff<P>; item: Row<P>; n: number; children: React.ReactNode }) {
   const active = staff.mode === 'manual' && item.key === staff.selected
