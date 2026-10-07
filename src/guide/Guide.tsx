@@ -873,7 +873,8 @@ function PhotoCard({ name, title, children, grow }: { name: string; title: React
     <div className={`relative aspect-3/4 overflow-hidden bg-[#f5f5f5] ${grow ? 'md:aspect-auto md:min-h-0 md:flex-1' : ''}`}>
       <img src={img(name)} alt="" loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover" />
       <div className="absolute inset-x-4 top-4 flex flex-col gap-2 leading-[1.25] text-white">
-        <p className="text-[20px] font-medium tracking-[-0.01em]">{title}</p>
+        {/* A line alone over a photo is 240 wide, as in Figma, so it breaks the same way on any card */}
+        <p className={`text-[20px] font-medium tracking-[-0.01em] ${children ? '' : 'max-w-[240px]'}`}>{title}</p>
         {children && <p className="text-[16px]">{children}</p>}
       </div>
     </div>
