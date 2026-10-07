@@ -341,7 +341,7 @@ export default function BusinessCard() {
                     />
                   </button>
                   </ItemFrame>
-                  {problems[i].length > 0 && <p className="text-[13px] leading-5 text-[#e30]">{alertLine(problems[i])}</p>}
+                  {problems[i].length > 0 && <p className={`text-[13px] leading-5 text-[#e30] ${BESIDE}`}>{alertLine(problems[i])}</p>}
                 </div>
               </figure>
               </Fragment>
