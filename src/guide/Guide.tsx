@@ -621,7 +621,7 @@ function Swatch({ color, name, values, dark, className = '' }: {
       className={`flex flex-col justify-between gap-3 p-6 text-[16px] leading-[1.25] tracking-[-0.01em] ${dark ? 'text-white' : 'text-black'} ${color === '#ffffff' ? 'shadow-[inset_0_0_0_1px_rgb(0_0_0/0.1)]' : ''} ${className}`}
       style={{ background: color }}
     >
-      <p className="font-medium">{name}</p>
+      <p className="text-[24px] md:text-[32px] font-medium leading-none">{name}</p>
       <div className="flex flex-col gap-2">
         {values.map(([use, value]) => (
           <div key={use} className="flex justify-between gap-4">
