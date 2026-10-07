@@ -357,7 +357,7 @@ function staffWord(n: number): string {
 
 const ICON = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinejoin: 'bevel' as const }
 
-/** The item's actions (Figma 5030:11424): 40 px buttons, the icon #808080, black on a white tile on hover */
+/** The item's actions (Figma 5030:11424): 30 px buttons (40 on phones, for a finger), the icon #808080, black on a white tile on hover */
 function Action({ label, hidden, onClick, children }: { label: string; hidden?: boolean; onClick: () => void; children: React.ReactNode }) {
   if (hidden) return null
   return (
@@ -367,7 +367,7 @@ function Action({ label, hidden, onClick, children }: { label: string; hidden?: 
       aria-label={label}
       // A click here is the action's, not the row's, which would select the item again
       onClick={e => { e.stopPropagation(); onClick() }}
-      className={`flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] outline-none hover:bg-white hover:text-black focus-visible:ring-2 focus-visible:ring-black/30`}
+      className={`flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] md:size-[30px] outline-none hover:bg-white hover:text-black focus-visible:ring-2 focus-visible:ring-black/30`}
     >
       {children}
     </button>
@@ -387,10 +387,10 @@ export function ItemFrame<P extends object>({ staff, item, n, children }: { staf
   return (
     <div className="relative">
       {children}
-      {/* One column right of the item, 10 px off it, from its top (Figma 5030:11397): the number, then the actions */}
-      <div className="md:absolute md:top-0 md:left-full md:ml-[10px] md:flex md:w-10 md:flex-col">
+      {/* One column right of the item, 8 px off it, from its top (Figma 5030:11397): the number, then the actions */}
+      <div className="md:absolute md:top-0 md:left-full md:ml-2 md:flex md:w-[30px] md:flex-col">
       {/* A lone item has no number: a «1» there says nothing */}
-      {staff.items.length > 1 && <span aria-hidden className="pointer-events-none hidden h-7 text-center text-[14px] leading-5 text-[#808080] [font-feature-settings:'tnum'_1] md:block">{n}</span>}
+      {staff.items.length > 1 && <span aria-hidden className="pointer-events-none hidden pb-[5px] text-center text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1] md:block">{n}</span>}
       {staff.mode === 'manual' && (
         <div className={`mt-2 justify-end md:mt-0 md:flex-col ${active ? 'flex' : 'hidden'} ${hover}`}>
           <Action label="Дублировать" onClick={() => staff.duplicate(item.key)}>

@@ -308,7 +308,7 @@ export default function BusinessCard() {
         <div className="m-auto grid w-full grid-cols-1 gap-8">
           {/* The face, the same for everyone, once at the top whatever the file's page order («Обложка у всех» is the file's) */}
           <div className="flex justify-center">
-            <div className={`w-full max-w-[480px] transition-opacity duration-150 ${mode === 'manual' && current ? 'opacity-40' : ''}`}>
+            <div className={`w-full max-w-[480px] outline-1 outline-black/10 transition-opacity duration-150 ${mode === 'manual' && current ? 'opacity-40' : ''}`}>
               <CardArt text={face} />
             </div>
           </div>
@@ -331,7 +331,7 @@ export default function BusinessCard() {
                     aria-pressed={mode === 'manual' ? active : undefined}
                     // The selected card edged as the price card's page: a 1 px line at 10% black around it (ring-1 there), black on hover
                     className={`block w-full cursor-pointer outline-1 outline-offset-0 transition-opacity duration-150
-                      ${active ? 'outline-black/10' : 'outline-transparent'} group-hover/row:outline-black
+                      outline-black/10 group-hover/row:outline-black
                       ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
                   >
                     <CardArt
