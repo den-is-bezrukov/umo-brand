@@ -171,13 +171,13 @@ export function useStaff<P extends object>({ blank, readFile, readPasted }: Staf
     const t = setTimeout(() => setRemoved(null), 5000)
     return () => clearTimeout(t)
   }, [removed])
-  /** The neighbour after (or before) the one removed is selected */
+  /** Removing the selected one selects its neighbour after (or before) it; removing another keeps the selection */
   const remove = (key: number) => {
     const i = people.findIndex(p => p.key === key)
     const rest = people.filter(p => p.key !== key)
     setRemoved({ item: people[i], index: i })
     setPeople(rest)
-    setSelected(rest[Math.min(i, rest.length - 1)].key)
+    if (key === selected) setSelected(rest[Math.min(i, rest.length - 1)].key)
   }
   /** The removed one back where it stood, selected */
   const restore = () => {
@@ -375,19 +375,21 @@ function Action({ label, hidden, onClick, children }: { label: string; hidden?: 
 }
 
 /**
- * An item on the canvas with its number to the left (from 1, as the table's rows; wide screens only) and, while it's the
- * one selected, its actions to the right (Figma 5008:10960): «Дублировать», «Сбросить» (while there's something to
+ * An item on the canvas with its number to the left (from 1, as the table's rows; wide screens only) and its actions to
+ * the right (Figma 5008:10960), shown while the pointer is in its row (or the focus in it), on any item, acting on it
+ * without selecting it; with no pointer to hover (touch screens), under the selected one only. The actions: «Дублировать», «Сбросить» (while there's something to
  * empty), «Удалить» (while there's another), the most used and harmless first, the cross furthest. On phones, where
  * there's no room beside the item, they stand in a row under it. An action not offered leaves no gap: the next moves up.
  */
 export function ItemFrame<P extends object>({ staff, item, n, children }: { staff: Staff<P>; item: Row<P>; n: number; children: React.ReactNode }) {
   const active = staff.mode === 'manual' && item.key === staff.selected
+  const hover = '[@media(hover:hover)]:hidden [@media(hover:hover)]:group-hover/row:flex [@media(hover:hover)]:group-focus-within/row:flex'
   return (
     <div className="relative">
       <span aria-hidden className="pointer-events-none absolute top-0 right-full mr-[5px] hidden w-10 text-center text-[14px] leading-5 text-[#808080] [font-feature-settings:'tnum'_1] md:block">{n}</span>
       {children}
-      {active && (
-        <div className="mt-2 flex justify-end md:absolute md:top-0 md:left-full md:mt-0 md:ml-[5px] md:flex-col">
+      {staff.mode === 'manual' && (
+        <div className={`mt-2 justify-end md:absolute md:top-0 md:left-full md:mt-0 md:ml-[5px] md:flex-col ${active ? 'flex' : 'hidden'} ${hover}`}>
           <Action label="Дублировать" onClick={() => staff.duplicate(item.key)}>
             <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><rect x="6" y="2" width="8" height="8" strokeLinecap="square" /><path d="M3 6H2V14H10V13" /></svg>
           </Action>
