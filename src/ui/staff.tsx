@@ -358,7 +358,7 @@ function staffWord(n: number): string {
 // A 1 px stroke here, finer than the sidebar's 2 px icons, as the column stands quietly beside the item (Figma 5030:11424)
 const ICON = { fill: 'none', stroke: 'currentColor', strokeWidth: 1, strokeLinecap: 'square' as const, strokeLinejoin: 'bevel' as const }
 
-/** The item's actions (Figma 5030:11424): 30 px buttons (40 on phones, for a finger), the icon #808080, black on a white tile on hover */
+/** The item's actions (Figma 5030:11424): 30 px buttons (40 on phones, for a finger), the icon #808080, black on hover, no tile, as the other quiet controls */
 function Action({ label, hidden, onClick, children }: { label: string; hidden?: boolean; onClick: () => void; children: React.ReactNode }) {
   if (hidden) return null
   return (
@@ -368,7 +368,7 @@ function Action({ label, hidden, onClick, children }: { label: string; hidden?: 
       aria-label={label}
       // A click here is the action's, not the row's, which would select the item again
       onClick={e => { e.stopPropagation(); onClick() }}
-      className={`flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] md:size-[30px] outline-none hover:bg-white hover:text-black focus-visible:ring-2 focus-visible:ring-black/30`}
+      className={`flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] md:size-[30px] outline-none hover:text-black focus-visible:ring-2 focus-visible:ring-black/30`}
     >
       {children}
     </button>
