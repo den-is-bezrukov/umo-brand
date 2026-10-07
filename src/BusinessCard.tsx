@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined, rowAction, isValidUrl, ALERT_LABEL, Checkbox } from '@/ui/form'
 import { useStaff, TableSource, UploadArea, AddTile, Progress, fullNameField } from '@/ui/staff'
+import { goal } from '@/ui/metrika'
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
 import { xlsxCells, pastedCells, byHeaders, FULL_NAME, fromFullName, type Cells } from '@/nametag/table'
@@ -154,6 +155,7 @@ export default function BusinessCard() {
       a.href = URL.createObjectURL(blob)
       a.download = 'UMO_business-cards.pdf'
       a.click()
+      goal('download_business_card', { count: cards.length, faceEach, marks })
       URL.revokeObjectURL(a.href)
     } finally {
       setExporting(false)

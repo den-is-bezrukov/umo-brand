@@ -5,6 +5,7 @@ import React, { lazy, Suspense, useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import './index.css'
+import { COUNTER } from './ui/metrika'
 
 // Pages are split so the guide doesn't download the PDF renderer the price card needs.
 const App = lazy(() => import('./App'))
@@ -26,7 +27,7 @@ function MetrikaHits() {
     const timer = setTimeout(() => {
       const ym = (window as any).ym
       if (!ym || location.pathname === lastHit) return
-      ym(113514674, 'hit', location.href, { referer: lastHref })
+      ym(COUNTER, 'hit', location.href, { referer: lastHref })
       lastHit = location.pathname
       lastHref = location.href
     })
