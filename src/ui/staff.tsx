@@ -313,10 +313,10 @@ export function UploadArea<P extends object>({ staff }: { staff: Staff<P> }) {
 
 /** «Добавить» as the next item on the canvas: a dashed plate of the item's shape; the manual list only */
 /**
- * The room the items' column takes beside them on phones (40 + 8 px), kept by whatever stands in the list without one
+ * The room the items' column takes beside them on phones (40 + 8 px), mirrored on the left so the items stand centred, kept by whatever stands in the list without one
  * («Добавить», «Удалено», the business card's face), so they all line up
  */
-export const BESIDE = 'pr-12 md:pr-0'
+export const BESIDE = 'px-12 md:px-0'
 
 export function AddTile({ onClick, aspect, radius }: { onClick: () => void; aspect: string; radius?: string }) {
   return (
@@ -394,7 +394,7 @@ export function ItemFrame<P extends object>({ staff, item, n, children }: { staf
   return (
     // On wide screens the column hangs outside the item; on phones it takes its room beside it, kept whether or not
     // the actions show, so picking another item doesn't move the list (the item's own width shrinks instead)
-    <div className="relative flex items-start gap-2 md:block">
+    <div className="relative flex items-start gap-2 pl-12 md:block md:pl-0">
       {/* The item's own box, a container for what's set in its units (the name tag's corners, text edited in place) */}
       <div className="@container relative min-w-0 flex-1">{children}</div>
       {/* One column right of the item, 8 px off it, from its top (Figma 5030:11397): the number, then the actions */}
