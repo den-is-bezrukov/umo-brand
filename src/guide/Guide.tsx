@@ -1468,10 +1468,10 @@ export default function Guide() {
           </Chapter>
 
           {/* ── Контакты ── CONTACT stands for the brand contact until there is one.
-              The last chapter and the footer take at least the screen, counted from the chapter's anchor (96px under
-              the top) down to the page's bottom padding (68, 92 from md, 24 from lg), so a click on Контакты lands it at
-              the top and the contents light it, however short it is. */}
-          <div className="flex min-h-[calc(100svh-96px-68px+var(--spacing-chapter)-var(--spacing-section))] flex-col gap-section md:min-h-[calc(100svh-96px-92px+var(--spacing-chapter)-var(--spacing-section))] lg:min-h-[calc(100svh-96px-24px+var(--spacing-chapter)-var(--spacing-section))]">
+              The last chapter and the footer take at least two thirds of the screen, counted from the chapter's anchor
+              down to the page's bottom padding (68, 92 from md, 24 from lg): just enough for its heading to reach the
+              upper third, where the contents light it, however short it is. */}
+          <div className="flex min-h-[calc(66.7svh+8px-68px+var(--spacing-chapter)-var(--spacing-section))] flex-col gap-section md:min-h-[calc(66.7svh+8px-92px+var(--spacing-chapter)-var(--spacing-section))] lg:min-h-[calc(66.7svh+8px-24px+var(--spacing-chapter)-var(--spacing-section))]">
             <Chapter id="contact" title="Контакты">
               <Section>
                 <Text>
