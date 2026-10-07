@@ -375,8 +375,8 @@ function Action({ label, hidden, onClick, children }: { label: string; hidden?: 
 }
 
 /**
- * An item on the canvas with its number to the left (from 1, as the table's rows; wide screens only) and its actions to
- * the right (Figma 5008:10960), shown while the pointer is in its row (or the focus in it), on any item, acting on it
+ * An item on the canvas with its number (from 1, as the table's rows; wide screens only) and its actions in one column
+ * to its right (Figma 5030:11397; they were the number left and the actions right, 5008:10960), shown while the pointer is in its row (or the focus in it), on any item, acting on it
  * without selecting it; with no pointer to hover (touch screens), under the selected one only. The actions: «Дублировать», «Сбросить» (while there's something to
  * empty), «Удалить» (while there's another), the most used and harmless first, the cross furthest. On phones, where
  * there's no room beside the item, they stand in a row under it. An action not offered leaves no gap: the next moves up.
@@ -386,11 +386,13 @@ export function ItemFrame<P extends object>({ staff, item, n, children }: { staf
   const hover = '[@media(hover:hover)]:hidden [@media(hover:hover)]:group-hover/row:flex [@media(hover:hover)]:group-focus-within/row:flex'
   return (
     <div className="relative">
-      {/* A lone item has no number: a «1» there says nothing */}
-      {staff.items.length > 1 && <span aria-hidden className="pointer-events-none absolute top-0 right-full mr-[5px] hidden w-10 text-center text-[14px] leading-5 text-[#808080] [font-feature-settings:'tnum'_1] md:block">{n}</span>}
       {children}
+      {/* One column right of the item, 10 px off it, from its top (Figma 5030:11397): the number, then the actions */}
+      <div className="md:absolute md:top-0 md:left-full md:ml-[10px] md:flex md:w-10 md:flex-col">
+      {/* A lone item has no number: a «1» there says nothing */}
+      {staff.items.length > 1 && <span aria-hidden className="pointer-events-none hidden h-7 text-center text-[14px] leading-5 text-[#808080] [font-feature-settings:'tnum'_1] md:block">{n}</span>}
       {staff.mode === 'manual' && (
-        <div className={`mt-2 justify-end md:absolute md:top-0 md:left-full md:mt-0 md:ml-[5px] md:flex-col ${active ? 'flex' : 'hidden'} ${hover}`}>
+        <div className={`mt-2 justify-end md:mt-0 md:flex-col ${active ? 'flex' : 'hidden'} ${hover}`}>
           <Action label="Дублировать" onClick={() => staff.duplicate(item.key)}>
             <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><rect x="6" y="2" width="8" height="8" strokeLinecap="square" /><path d="M3 6H2V14H10V13" /></svg>
           </Action>
@@ -402,6 +404,7 @@ export function ItemFrame<P extends object>({ staff, item, n, children }: { staf
           </Action>
         </div>
       )}
+      </div>
     </div>
   )
 }
