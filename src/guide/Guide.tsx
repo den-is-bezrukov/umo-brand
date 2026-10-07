@@ -646,7 +646,7 @@ function CopyRow({ use, value }: { use: string; value: string }) {
   const [copied, setCopied] = useState(false)
   useEffect(() => {
     if (!copied) return
-    const t = setTimeout(() => setCopied(false), 1000)
+    const t = setTimeout(() => setCopied(false), 500)
     return () => clearTimeout(t)
   }, [copied])
   const text = `${UNDERLINE} group-hover:decoration-current/40 group-hover:duration-0`
