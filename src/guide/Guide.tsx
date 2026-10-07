@@ -93,7 +93,6 @@ const NAV: NavItem[] = [
     ],
   },
   { id: 'typography', title: 'Типографика', children: [{ id: 'type-styles', title: 'Стили и иерархия' }] },
-  { id: 'color', title: 'Цвет' },
   {
     id: 'lettering',
     title: 'Леттеринг',
@@ -102,6 +101,7 @@ const NAV: NavItem[] = [
       { id: 'made-in-moscow', title: 'Сделано в Москве' },
     ],
   },
+  { id: 'color', title: 'Цвет' },
   {
     id: 'key-visual',
     title: 'Ключевой образ',
@@ -1297,32 +1297,6 @@ export default function Guide() {
             </Section>
           </Chapter>
 
-          {/* ── Цвет ── */}
-          <Chapter id="color" title="Цвет">
-            <Section>
-              <Text>
-                <p>У UMO два цвета — чёрный и белый. Яркого цвета у бренда нет: его приносят автомобиль, фотография и среда, а чёрно-белая графика не спорит с ними и узнаётся на любом фоне.</p>
-                <p>В печати чёрный двух видов: глубокий составной для плёнки, вывесок и больших плашек, чистый K100 для текста и мелких деталей. Серые — служебные: фон, линии и подписи.</p>
-                <p>Как выбрать между чёрным и белым логотипом — в разделе <a href="#logo-color" className={TEXT_LINK}>Цвет логотипа</a>.</p>
-              </Text>
-              <div className="flex flex-col gap-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <Swatch color="#000000" dark name="Чёрный" className="aspect-4/3" values={[
-                    ['Экран', '#000000'], ['Плёнка, вывески', 'C60 M40 Y40 K100'], ['Текст', 'K100'],
-                  ]} />
-                  <Swatch color="#ffffff" name="Белый" className="aspect-4/3" values={[
-                    ['Экран', '#FFFFFF'], ['На светлом', 'без краски'], ['На тёмном', 'белая краска'],
-                  ]} />
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                  <Swatch color="#f5f5f5" name="Фон" className="aspect-4/3" values={[['Экран', '#F5F5F5'], ['Печать', 'K4']]} />
-                  <Swatch color="#e6e6e6" name="Линии" className="aspect-4/3" values={[['Экран', '#E6E6E6'], ['Печать', 'K10']]} />
-                  <Swatch color="#808080" dark name="Подписи" className="aspect-4/3" values={[['Экран', '#808080'], ['Печать', 'K50']]} />
-                </div>
-              </div>
-            </Section>
-          </Chapter>
-
           {/* ── Леттеринг ── */}
           <Chapter id="lettering" title="Леттеринг" loose>
             <Section>
@@ -1349,6 +1323,32 @@ export default function Guide() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <Fig name="moscow-umo5" w={444} h={333} alt="Шильдик «Сделано в Москве» на UMO 5" />
                 <Fig name="moscow-umo8" w={444} h={333} alt="Шильдик «Сделано в Москве» на UMO 8" />
+              </div>
+            </Section>
+          </Chapter>
+
+          {/* ── Цвет ── */}
+          <Chapter id="color" title="Цвет">
+            <Section>
+              <Text>
+                <p>У UMO два цвета — чёрный и белый. Яркого цвета у бренда нет: его приносят автомобиль, фотография и среда, а чёрно-белая графика не спорит с ними и узнаётся на любом фоне.</p>
+                <p>В печати чёрный двух видов: глубокий составной для плёнки, вывесок и больших плашек, чистый K100 для текста и мелких деталей. Серые — служебные: фон, линии и подписи.</p>
+                <p>Как выбрать между чёрным и белым логотипом — в разделе <a href="#logo-color" className={TEXT_LINK}>Цвет логотипа</a>.</p>
+              </Text>
+              <div className="flex flex-col gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <Swatch color="#000000" dark name="Чёрный" className="aspect-4/3" values={[
+                    ['Экран', '#000000'], ['Плёнка, вывески', 'C60 M40 Y40 K100'], ['Текст', 'K100'],
+                  ]} />
+                  <Swatch color="#ffffff" name="Белый" className="aspect-4/3" values={[
+                    ['Экран', '#FFFFFF'], ['На светлом', 'без краски'], ['На тёмном', 'белая краска'],
+                  ]} />
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  <Swatch color="#f5f5f5" name="Фон" className="aspect-4/3" values={[['Экран', '#F5F5F5'], ['Печать', 'K4']]} />
+                  <Swatch color="#e6e6e6" name="Линии" className="aspect-4/3" values={[['Экран', '#E6E6E6'], ['Печать', 'K10']]} />
+                  <Swatch color="#808080" dark name="Подписи" className="aspect-4/3" values={[['Экран', '#808080'], ['Печать', 'K50']]} />
+                </div>
               </div>
             </Section>
           </Chapter>
