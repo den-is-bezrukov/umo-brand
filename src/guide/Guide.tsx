@@ -112,8 +112,7 @@ const NAV: NavItem[] = [
   },
   { id: 'spaces', title: 'Пространства' },
   { id: 'materials', title: 'Носители', children: MEDIA.map(({ id, title }) => ({ id, title })) },
-  // The heading reads «Вопросы и согласование»; the contents keep it short
-  { id: 'contact', title: 'Вопросы' },
+  { id: 'contact', title: 'Контакты' },
 ]
 
 /** Chapter anchors that were renamed after the guide went out, mapped to their current ids. */
@@ -1468,16 +1467,21 @@ export default function Guide() {
             </Section>
           </Chapter>
 
-          {/* ── Вопросы ── CONTACT stands for the brand contact until there is one */}
-          <Chapter id="contact" title="Вопросы и согласование">
-            <Section>
-              <Text>
-                <p>Если ответа нет в стандартах или макет вывески, рекламы или другого носителя нужно согласовать, напишите на <a href="mailto:CONTACT" className={TEXT_LINK}>CONTACT</a>. Приложите макет и расскажите, где он будет размещён.</p>
-              </Text>
-            </Section>
-          </Chapter>
+          {/* ── Контакты ── CONTACT stands for the brand contact until there is one.
+              The last chapter and the footer take at least the screen, counted from the chapter's anchor (96px under
+              the top) down to the page's bottom padding (68, 92 from md, 24 from lg), so a click on Контакты lands it at
+              the top and the contents light it, however short it is. */}
+          <div className="flex min-h-[calc(100svh-96px-68px+var(--spacing-chapter)-var(--spacing-section))] flex-col gap-section md:min-h-[calc(100svh-96px-92px+var(--spacing-chapter)-var(--spacing-section))] lg:min-h-[calc(100svh-96px-24px+var(--spacing-chapter)-var(--spacing-section))]">
+            <Chapter id="contact" title="Контакты">
+              <Section>
+                <Text>
+                  <p>Если ответа нет в стандартах или макет вывески, рекламы или другого носителя нужно согласовать, напишите на <a href="mailto:CONTACT" className={TEXT_LINK}>CONTACT</a>. Приложите макет и расскажите, где он будет размещён.</p>
+                </Text>
+              </Section>
+            </Chapter>
 
-          <footer className="text-[16px] leading-[1.25] tracking-[-0.01em] text-[#808080]">Стандарты бренда UMO 2026. ООО «ЭМ РУС». 0+</footer>
+            <footer className="mt-auto text-[16px] leading-[1.25] tracking-[-0.01em] text-[#808080]">Стандарты бренда UMO 2026. ООО «ЭМ РУС». 0+</footer>
+          </div>
         </div>
       </main>
       </div>
