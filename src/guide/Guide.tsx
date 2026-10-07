@@ -1185,7 +1185,7 @@ export default function Guide() {
                     <Fig name="icon-favicon-light" w={444} h={333} alt="Фавиконка во вкладке светлого браузера" />
                   </PreviewLink>
                 </div>
-                <Assets items={[{ file: 'umo-favicon.svg' }, { file: 'umo-favicon.ico' }]} preview="umo-favicon.svg" />
+                <Assets items={[{ file: 'umo-favicon.svg' }, { file: 'umo-favicon.ico' }, { file: 'umo-icon-black.zip' }, { file: 'umo-icon-white.zip' }]} preview="umo-favicon.svg" />
               </div>
             </Section>
 
