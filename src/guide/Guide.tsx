@@ -197,12 +197,14 @@ function NavLink({ id, title, active, current, onNavigate, pad }: { id: string; 
   )
 }
 
-/** Table-of-contents icon, 16×16 on a 20px line: the menu bars to open the contents, the cross to fold them. */
+/** Table-of-contents icon, 16×16 on a 20px line: the menu bars to open the contents, the chevrons to fold them. */
 function TocIcon({ name }: { name: keyof typeof tocIcons }) {
+  // The bars end flush at 1 and 15; the chevrons' square ends and bevels are part of their drawing
+  const ends = name === 'close' ? { strokeLinecap: 'square', strokeLinejoin: 'bevel' } as const : {}
   return (
     <span aria-hidden className="flex h-5 shrink-0 items-center">
       <svg width="16" height="16" viewBox="0 0 16 16" className="block">
-        <path d={tocIcons[name]} fill="none" stroke="currentColor" strokeWidth="2" />
+        <path d={tocIcons[name]} fill="none" stroke="currentColor" strokeWidth="2" {...ends} />
       </svg>
     </span>
   )
