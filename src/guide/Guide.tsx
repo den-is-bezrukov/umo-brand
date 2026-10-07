@@ -93,6 +93,7 @@ const NAV: NavItem[] = [
     ],
   },
   { id: 'typography', title: 'Типографика', children: [{ id: 'type-styles', title: 'Стили и иерархия' }] },
+  { id: 'color', title: 'Цвет', children: [{ id: 'greys', title: 'Оттенки серого' }] },
   {
     id: 'lettering',
     title: 'Леттеринг',
@@ -607,6 +608,32 @@ function LogoPlate({ w, h, logo, bg, dark, caption, className = '' }: {
   )
 }
 
+/**
+ * A brand colour: a tile of it (`w`×`h` sets the ratio) over its name and values, one row each (where it's used, the
+ * value). A white tile gets a hairline edge, or it would vanish into the page.
+ */
+function Swatch({ w, h, color, name, values }: {
+  w: number; h: number; color: string; name: string; values: [string, string][]
+}) {
+  return (
+    <figure className="flex flex-col gap-3">
+      <div
+        className={color.toLowerCase() === '#ffffff' ? 'shadow-[inset_0_0_0_1px_rgb(0_0_0/0.1)]' : ''}
+        style={{ aspectRatio: `${w} / ${h}`, background: color }}
+      />
+      <figcaption className="text-[16px] leading-[1.25] tracking-[-0.01em]">
+        <p className="pb-3 font-medium">{name}</p>
+        {values.map(([use, value]) => (
+          <p key={use} className="flex justify-between gap-4 border-t border-[#e6e6e6] py-2">
+            <span>{use}</span>
+            <span className="text-right tabular-nums">{value}</span>
+          </p>
+        ))}
+      </figcaption>
+    </figure>
+  )
+}
+
 /** 210×280 colour example that still needs its photo background, exported from Figma with the logo baked in. */
 function Photo({ name }: { name: string }) {
   return (
@@ -1103,7 +1130,7 @@ export default function Guide() {
                     <LogoPlate w={210} h={280} logo={120} bg="#ffea00" />
                     <Photo name="color-light" />
                   </div>
-                  <Caption>Примеры подбора цвета</Caption>
+                  <Caption>Примеры подбора цвета. Фоны здесь только для наглядности, это не цвета бренда</Caption>
                 </figure>
               </div>
             </Section>
@@ -1213,6 +1240,39 @@ export default function Guide() {
                 </Text>
               </Head>
               <Fig name="type-styles" w={912} h={456} alt="Заголовок 3 rem, подзаголовок 1.5 rem, основной текст 1 rem" />
+            </Section>
+          </Chapter>
+
+          {/* ── Цвет ── */}
+          <Chapter id="color" title="Цвет">
+            <Section>
+              <Text>
+                <p>У UMO два цвета — чёрный и белый. Яркого цвета у бренда нет: его приносят автомобиль, фотография и среда, а чёрно-белая графика не спорит с ними и узнаётся на любом фоне.</p>
+                <p>Как выбрать между чёрным и белым логотипом — в разделе <a href="#logo-color" className={TEXT_LINK}>Цвет логотипа</a>.</p>
+              </Text>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <Swatch w={444} h={333} color="#000000" name="Чёрный" values={[
+                  ['Экран', '#000000'],
+                  ['Печать: плёнка, вывески, плашки', 'C60 M40 Y40 K100'],
+                  ['Печать: текст и мелкие детали', 'K100'],
+                ]} />
+                <Swatch w={444} h={333} color="#ffffff" name="Белый" values={[
+                  ['Экран', '#FFFFFF'],
+                  ['Печать на светлом', 'без краски, цвет бумаги'],
+                  ['Печать на тёмном', 'белая краска'],
+                ]} />
+              </div>
+            </Section>
+            <Section>
+              <Head>
+                <H2 id="greys">Оттенки серого</H2>
+                <Text><p>Серые — служебные, а не цвета бренда: подложки, линии и второстепенный текст. Они уступают место чёрному и белому и не встречаются без них.</p></Text>
+              </Head>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <Swatch w={288} h={216} color="#f5f5f5" name="Подложка" values={[['Экран', '#F5F5F5'], ['Печать', 'K4']]} />
+                <Swatch w={288} h={216} color="#e6e6e6" name="Линии" values={[['Экран', '#E6E6E6'], ['Печать', 'K10']]} />
+                <Swatch w={288} h={216} color="#808080" name="Второстепенный текст" values={[['Экран', '#808080'], ['Печать', 'K50']]} />
+              </div>
             </Section>
           </Chapter>
 
@@ -1333,6 +1393,17 @@ export default function Guide() {
               <Carriers items={MEDIA} />
             </Section>
           </Chapter>
+
+          {/* Вопросы: waits for the brand contact; uncomment with the address in place of CONTACT.
+          <Section>
+            <Head>
+              <H2 id="contact">Вопросы и согласование</H2>
+              <Text>
+                <p>Если ответа нет в стандартах или макет вывески, рекламы или другого носителя нужно согласовать, напишите на <a href="mailto:CONTACT" className={TEXT_LINK}>CONTACT</a>. Приложите макет и расскажите, где он будет размещён.</p>
+              </Text>
+            </Head>
+          </Section>
+          */}
 
           <footer className="text-[16px] leading-[1.25] tracking-[-0.01em] text-[#999]">Стандарты бренда UMO 2026. ООО «ЭМ РУС». 0+</footer>
         </div>
