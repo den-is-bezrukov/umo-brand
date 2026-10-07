@@ -1,4 +1,4 @@
-import { isValidElement, useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode, type RefObject } from 'react'
+import { createContext, isValidElement, useContext, useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode, type RefObject } from 'react'
 import { Link } from 'react-router-dom'
 import PriceCard from '@/posters/PriceCard'
 import type { Variant } from '@/posters/cardData'
@@ -701,6 +701,7 @@ function fileSize(bytes: number): [number, string] {
  * row as soon as one of them is under 10 (0,7 КБ), and none otherwise.
  */
 function Assets({ items, preview }: { items: Asset[]; preview?: string }) {
+  const pointed = useContext(PointedPreview)?.[0]
   const sizes = items.flatMap(a => ('file' in a ? [fileSize(downloadSizes[a.file] ?? 0)] : []))
   const digits = sizes.some(([n]) => n < 10) ? 1 : 0
   const number = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: digits, maximumFractionDigits: digits })
@@ -714,8 +715,9 @@ function Assets({ items, preview }: { items: Asset[]; preview?: string }) {
         const row = 'group flex items-center gap-4 border-t border-[#e6e6e6] py-[14px] text-[16px] leading-none tracking-[-0.01em]'
         // The row a preview above stands for lights up while the preview is pointed at
         const linked = preview === ('to' in a ? a.to : a.file)
-        const name = `min-w-0 flex-1 font-medium ${UNDERLINE} group-hover:decoration-black/40 group-hover:duration-0 ${linked ? 'group-has-[[data-preview]:hover]/preview:decoration-black/40 group-has-[[data-preview]:hover]/preview:duration-0' : ''}`
-        const meta = `shrink-0 text-[#999] [font-feature-settings:"tnum"_1] group-hover:text-black ${linked ? 'group-has-[[data-preview]:hover]/preview:text-black' : ''}`
+        const lit = pointed !== undefined && pointed === ('to' in a ? a.to : a.file)
+        const name = `min-w-0 flex-1 font-medium ${UNDERLINE} group-hover:decoration-black/40 group-hover:duration-0 ${linked ? 'group-has-[[data-preview]:hover]/preview:decoration-black/40 group-has-[[data-preview]:hover]/preview:duration-0' : ''} ${lit ? 'decoration-black/40 duration-0' : ''}`
+        const meta = `shrink-0 text-[#999] [font-feature-settings:"tnum"_1] group-hover:text-black ${linked ? 'group-has-[[data-preview]:hover]/preview:text-black' : ''} ${lit ? 'text-black' : ''}`
         if ('to' in a) {
           return (
             <Link key={a.to} to={a.to} className={row}>
@@ -745,9 +747,24 @@ function Assets({ items, preview }: { items: Asset[]; preview?: string }) {
  */
 function PreviewLink({ asset, label, children }: { asset: Asset; label: string; children: ReactNode }) {
   const className = 'block outline-none focus-visible:ring-2 focus-visible:ring-black/30'
+  const setPointed = useContext(PointedPreview)?.[1]
+  const key = 'to' in asset ? asset.to : asset.file
+  const hover = setPointed && { onPointerEnter: () => setPointed(key), onPointerLeave: () => setPointed(undefined) }
   return 'to' in asset
-    ? <Link to={asset.to} aria-label={label} data-preview className={className}>{children}</Link>
-    : <a href={`/downloads/${asset.file}`} download aria-label={label} data-preview className={className}>{children}</a>
+    ? <Link to={asset.to} aria-label={label} data-preview={setPointed ? undefined : ''} className={className} {...hover}>{children}</Link>
+    : <a href={`/downloads/${asset.file}`} download aria-label={label} data-preview={setPointed ? undefined : ''} className={className} {...hover}>{children}</a>
+}
+
+/** The file or page whose picture is pointed at, inside a `Previews` group. */
+const PointedPreview = createContext<[string | undefined, (key: string | undefined) => void] | null>(null)
+
+/**
+ * A group where pictures lead to different rows of the `Assets` under them (Логотип на иконках: the favicon, the app
+ * icon, the userpic), so pointing at one lights its own row rather than the single `preview` one.
+ */
+function Previews({ className, children }: { className: string; children: ReactNode }) {
+  const pointed = useState<string>()
+  return <PointedPreview.Provider value={pointed}><div className={className}>{children}</div></PointedPreview.Provider>
 }
 
 /** A constructor page's preview over its ↗ row; `flush` sets the row right under the preview, with no gap. */
@@ -1174,10 +1191,14 @@ export default function Guide() {
                   <p>Иконка сайта — исключение.</p>
                 </Text>
               </Head>
-              <div className="group/preview flex flex-col gap-6">
+              <Previews className="flex flex-col gap-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  <Fig name="icon-app" w={444} h={333} caption="Иконка мобильного приложения" />
-                  <Fig name="icon-userpic" w={444} h={333} caption="Юзерпик аккаунта соцсетей" />
+                  <PreviewLink asset={{ file: 'umo-icon-black.zip' }} label="Скачать иконку, белый логотип на чёрном">
+                    <Fig name="icon-app" w={444} h={333} caption="Иконка мобильного приложения" />
+                  </PreviewLink>
+                  <PreviewLink asset={{ file: 'umo-icon-white.zip' }} label="Скачать иконку, чёрный логотип на белом">
+                    <Fig name="icon-userpic" w={444} h={333} caption="Юзерпик аккаунта соцсетей" />
+                  </PreviewLink>
                   <PreviewLink asset={{ file: 'umo-favicon.svg' }} label="Скачать фавиконку, SVG">
                     <Fig name="icon-favicon" w={444} h={333} caption="Фавиконка и иконка закладок в браузере" alt="Фавиконка во вкладке тёмного браузера" />
                   </PreviewLink>
@@ -1185,8 +1206,8 @@ export default function Guide() {
                     <Fig name="icon-favicon-light" w={444} h={333} alt="Фавиконка во вкладке светлого браузера" />
                   </PreviewLink>
                 </div>
-                <Assets items={[{ file: 'umo-favicon.svg' }, { file: 'umo-favicon.ico' }, { file: 'umo-icon-black.zip' }, { file: 'umo-icon-white.zip' }]} preview="umo-favicon.svg" />
-              </div>
+                <Assets items={[{ file: 'umo-icon-black.zip' }, { file: 'umo-icon-white.zip' }, { file: 'umo-favicon.svg' }, { file: 'umo-favicon.ico' }]} />
+              </Previews>
             </Section>
 
             <Section>
