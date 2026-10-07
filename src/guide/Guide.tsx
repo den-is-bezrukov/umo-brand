@@ -1466,7 +1466,7 @@ export default function Guide() {
             </Section>
           </Chapter>
 
-          {/* Вопросы: waits for the brand contact; uncomment with the address in place of CONTACT.
+          {/* Вопросы: CONTACT stands for the brand contact until there is one */}
           <Section>
             <Head>
               <H2 id="contact">Вопросы и согласование</H2>
@@ -1475,7 +1475,6 @@ export default function Guide() {
               </Text>
             </Head>
           </Section>
-          */}
 
           <footer className="text-[16px] leading-[1.25] tracking-[-0.01em] text-[#808080]">Стандарты бренда UMO 2026. ООО «ЭМ РУС». 0+</footer>
         </div>
