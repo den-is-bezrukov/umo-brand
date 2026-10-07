@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadButton, Segments, SegBtn, rowAction, isValidUrl, ALERT_LABEL, Checkbox } from '@/ui/form'
-import { useStaff, TableSource, UploadArea, AddTile, Progress, fullNameField, ItemFrame, Removed } from '@/ui/staff'
+import { useStaff, TableSource, UploadArea, AddTile, Progress, fullNameField, ItemFrame, Removed, BESIDE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
@@ -308,8 +308,8 @@ export default function BusinessCard() {
         <div className="m-auto grid w-full grid-cols-1 gap-8">
           {/* The face, the same for everyone, once at the top whatever the file's page order («Обложка у всех» is the file's) */}
           <div className="flex justify-center">
-            <div className={`w-full max-w-[480px] outline-1 outline-black/10 transition-opacity duration-150 ${mode === 'manual' && current ? 'opacity-40' : ''}`}>
-              <CardArt text={face} />
+            <div className={`w-full max-w-[480px] ${BESIDE} transition-opacity duration-150 ${mode === 'manual' && current ? 'opacity-40' : ''}`}>
+              <div className="outline-1 outline-black/10"><CardArt text={face} /></div>
             </div>
           </div>
           {items.map((p, i) => {

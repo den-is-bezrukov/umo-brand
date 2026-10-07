@@ -312,9 +312,15 @@ export function UploadArea<P extends object>({ staff }: { staff: Staff<P> }) {
 }
 
 /** «Добавить» as the next item on the canvas: a dashed plate of the item's shape; the manual list only */
+/**
+ * The room the items' column takes beside them on phones (40 + 8 px), kept by whatever stands in the list without one
+ * («Добавить», «Удалено», the business card's face), so they all line up
+ */
+export const BESIDE = 'pr-12 md:pr-0'
+
 export function AddTile({ onClick, aspect, radius }: { onClick: () => void; aspect: string; radius?: string }) {
   return (
-    <div className="@container mx-auto w-full max-w-[480px] self-start">
+    <div className={`@container mx-auto w-full max-w-[480px] self-start ${BESIDE}`}>
       <button
         type="button"
         data-add
@@ -386,14 +392,17 @@ export function ItemFrame<P extends object>({ staff, item, n, children }: { staf
   const active = staff.mode === 'manual' && item.key === staff.selected
   const hover = '[@media(hover:hover)]:hidden [@media(hover:hover)]:group-hover/row:flex [@media(hover:hover)]:group-focus-within/row:flex'
   return (
-    <div className="relative">
-      {children}
+    // On wide screens the column hangs outside the item; on phones it takes its room beside it, kept whether or not
+    // the actions show, so picking another item doesn't move the list (the item's own width shrinks instead)
+    <div className="relative flex items-start gap-2 md:block">
+      {/* The item's own box, a container for what's set in its units (the name tag's corners, text edited in place) */}
+      <div className="@container relative min-w-0 flex-1">{children}</div>
       {/* One column right of the item, 8 px off it, from its top (Figma 5030:11397): the number, then the actions */}
-      <div className="md:absolute md:top-0 md:left-full md:ml-2 md:flex md:w-[30px] md:flex-col">
+      <div className="flex w-10 shrink-0 flex-col items-center md:absolute md:top-0 md:left-full md:ml-2 md:w-[30px]">
       {/* A lone item has no number: a «1» there says nothing */}
-      {staff.items.length > 1 && <span aria-hidden className="pointer-events-none hidden pb-[5px] text-center text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1] md:block">{n}</span>}
+      {staff.items.length > 1 && <span aria-hidden className="pointer-events-none pb-[5px] text-center text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1]">{n}</span>}
       {staff.mode === 'manual' && (
-        <div className={`mt-2 justify-end md:mt-0 md:flex-col ${active ? 'flex' : 'hidden'} ${hover}`}>
+        <div className={`flex-col ${active ? 'flex' : 'hidden'} ${hover}`}>
           <Action label="Дублировать" onClick={() => staff.duplicate(item.key)}>
             <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M3.5 6H2V14H10V12.5M6 2H14V10H6V2Z" /></svg>
           </Action>
@@ -414,7 +423,7 @@ export function ItemFrame<P extends object>({ staff, item, n, children }: { staf
 export function Removed<P extends object>({ staff, at, aspect, radius }: { staff: Staff<P>; at: number; aspect: string; radius?: string }) {
   if (staff.removed?.index !== at || staff.mode !== 'manual') return null
   return (
-    <div className="@container mx-auto w-full max-w-[480px]">
+    <div className={`@container mx-auto w-full max-w-[480px] ${BESIDE}`}>
       <div style={{ aspectRatio: aspect, borderRadius: radius }} className="flex w-full items-center justify-center gap-2 text-[14px] leading-5 text-[#808080]">
         Удалено ·
         <button type="button" onClick={e => { e.stopPropagation(); staff.restore() }} className="cursor-pointer text-black outline-none hover:text-[#808080] focus-visible:ring-2 focus-visible:ring-black/30">Вернуть</button>
