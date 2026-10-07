@@ -640,7 +640,7 @@ function Swatch({ color, name, values, dark, className = '' }: {
 
 /**
  * A swatch row with a colour code: the whole row, label and code, copies the code on a click and says so in the
- * code's place for a moment.
+ * label's place for a moment, the code staying in view as what was copied.
  */
 function CopyRow({ use, value }: { use: string; value: string }) {
   const [copied, setCopied] = useState(false)
@@ -656,8 +656,8 @@ function CopyRow({ use, value }: { use: string; value: string }) {
       onClick={() => navigator.clipboard.writeText(value).then(() => setCopied(true), () => {})}
       className="group flex cursor-pointer justify-between gap-4 text-left"
     >
-      <span className={text}>{use}</span>
-      <span className={`whitespace-nowrap text-right tabular-nums ${text}`}>{copied ? 'Скопировано' : value}</span>
+      <span className={text}>{copied ? 'Скопировано' : use}</span>
+      <span className={`whitespace-nowrap text-right tabular-nums ${text}`}>{value}</span>
     </button>
   )
 }
