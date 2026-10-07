@@ -1213,7 +1213,7 @@ export default function Guide() {
                     <Fig name="icon-favicon" w={444} h={333} alt="Фавиконка во вкладке тёмного браузера" />
                   </PreviewLink>
                 </div>
-                <Assets items={[{ file: 'umo-icon-black.zip' }, { file: 'umo-icon-white.zip' }, { file: 'umo-favicon.svg' }, { file: 'umo-favicon.ico' }]} />
+                <Assets items={[{ file: 'umo-icon-white.zip' }, { file: 'umo-icon-black.zip' }, { file: 'umo-favicon.svg' }, { file: 'umo-favicon.ico' }]} />
               </Previews>
             </Section>
 
