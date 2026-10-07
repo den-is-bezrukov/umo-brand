@@ -121,9 +121,6 @@ export default function BusinessCard() {
     ...new Set(cards?.[0]?.issues.filter(i => i.field && DEALER_FIELDS.includes(i.field)).map(i => i.text) ?? []),
   ]
   const dealerWrong = new Set<CardField>(cards?.[0]?.issues.filter(i => i.field && DEALER_FIELDS.includes(i.field)).map(i => i.field!) ?? [])
-  // A missing dealership field is shown as any error is, by its red label, and nowhere else: the line in place of
-  // «Скачать» that said «Нет названия дилера» went. While the address and site are folded away, «Дилер» turns red for them.
-  const dealerAlert = new Set<CardField>([...dealerWrong, ...dealerMissing])
 
   const missing = items.map(p => (['name', 'surname', 'position', 'email', 'phone'] as const).filter(f => !p[f].trim()))
   const problems = items.map((p, i) => [...new Set([
@@ -133,6 +130,13 @@ export default function BusinessCard() {
   const failing = items.filter((_, i) => missing[i].length || cards?.[i]?.issues.some(x => !x.field || PERSON_FIELDS.includes(x.field))).map(p => p.key)
   const ok = !!cards && items.length > 0 && failing.length === 0 && dealerIssues.length === 0
 
+  const dealerForm = useRef<HTMLDivElement>(null)
+  /** The dealership's first field at fault takes the focus */
+  const toDealer = () => {
+    const at = dealerMissing[0] ?? [...dealerWrong][0] ?? 'dealer'
+    if (at !== 'dealer') setDealerOpen(true)
+    setTimeout(() => dealerForm.current?.querySelector<HTMLElement>(`[data-field="${at}"] textarea, [data-field="${at}"] input`)?.focus())
+  }
 
   const pickDealer = (v: string) => setDealer(d => ({
     ...d,
@@ -169,7 +173,7 @@ export default function BusinessCard() {
       <UrlField value={link} onChange={setQrLink} />
     </Labelled>
   )
-  const showBar = failing.length === 0 ? items.length > 0 && dealerIssues.length === 0 : items.length > 1
+  const showBar = dealerIssues.length > 0 || (failing.length === 0 ? items.length > 0 : items.length > 1)
 
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
@@ -186,7 +190,7 @@ export default function BusinessCard() {
           {/* The dealership and the person in one column, 16 px apart as any fields; the pages, the whole file's, set apart */}
           <div className="flex flex-col gap-4 tracking-normal">
             {/* The dealership: the whole list's */}
-            <div className="flex flex-col gap-4">
+            <div ref={dealerForm} className="flex flex-col gap-4">
               <div data-field="dealer" className="group/field flex flex-col gap-2">
                 <div className="flex items-center justify-between gap-2">
                   <p className={`text-[14px] leading-5 text-[#999] ${ALERT_LABEL}`}>Дилер</p>
@@ -201,18 +205,18 @@ export default function BusinessCard() {
                     singleLine
                     placeholder="Название дилера"
                     label="Дилеры UMO"
-                    invalid={dealerAlert.has('dealer') || (!dealerOpen && (dealerAlert.has('address') || dealerAlert.has('site')))}
+                    invalid={dealerWrong.has('dealer')}
                   />
               </div>
               {dealerOpen && <>
               <div data-field="address">
                 <Labelled label="Адрес">
-                  <TextArea value={input.address} onChange={v => setDealer(d => ({ ...d, address: v }))} placeholder="Адрес" invalid={dealerAlert.has('address')} />
+                  <TextArea value={input.address} onChange={v => setDealer(d => ({ ...d, address: v }))} placeholder="Адрес" invalid={dealerWrong.has('address')} />
                 </Labelled>
               </div>
               <div data-field="site">
                 <Labelled label="Сайт">
-                  <TextInput value={dealer.site} onChange={v => setDealer(d => ({ ...d, site: v }))} placeholder="Сайт" invalid={dealerAlert.has('site')} />
+                  <TextInput value={dealer.site} onChange={v => setDealer(d => ({ ...d, site: v }))} placeholder="Сайт" invalid={dealerWrong.has('site')} />
                 </Labelled>
               </div>
               {qrField}
@@ -277,8 +281,12 @@ export default function BusinessCard() {
         </div>
 
         {showBar && <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:mt-8 md:pt-0">
-          {/* The cards in work, as the name tag counts them; a dealership missing something says so only by its labels */}
-          {failing.length > 0 ? items.length > 1 && (
+          {/* The dealership first, as every card needs it; then the cards in work, as the name tag counts them */}
+          {dealerIssues.length > 0 ? (
+            <button type="button" onClick={toDealer} className="flex w-full cursor-pointer items-center justify-center px-3 py-[10px] text-[14px] leading-5 text-[#808080] hover:text-black">
+              {dealerIssues[0]}
+            </button>
+          ) : failing.length > 0 ? items.length > 1 && (
             <Progress failing={failing.length} total={items.length} onClick={() => staff.nextOf(failing)} />
           ) : items.length > 0 && (
             <DownloadButton onClick={handleExport} busy={exporting} disabled={!ok}>
