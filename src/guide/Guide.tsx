@@ -1100,9 +1100,10 @@ export default function Guide() {
                   <H2 id="examples">Примеры</H2>
                   <Text><p>Лучше один раз увидеть: UMO говорит по-человечески и уважительно на вы.</p></Text>
                 </Head>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 text-[18px] md:text-[20px] leading-[1.25] tracking-[-0.01em]">
+                {/* Type and rhythm of the Словарь table above: 16px, rows 16px above and under, 8px from title to text */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-6 text-[16px] leading-[1.25] tracking-[-0.01em]">
                   {EXAMPLES.map(([title, text]) => (
-                    <div key={title} className="flex flex-col gap-3 border-t border-[#e6e6e6] py-6">
+                    <div key={title} className="flex flex-col gap-2 border-t border-[#e6e6e6] py-4">
                       <p className="font-medium">{title}</p>
                       <p>{text}</p>
                     </div>
