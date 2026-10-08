@@ -293,7 +293,7 @@ export default function Livery() {
         />
       </aside>
 
-      <main className="flex-1 bg-[#f5f5f5] p-6 pb-[140px] md:min-w-0 md:overflow-y-auto md:p-16">
+      <main className="flex-1 bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
         <div className="mx-auto flex max-w-[1200px] flex-col gap-10">
           {sheets.slice(0, 2).map(s => <SheetPreview key={s.surface.id} sheet={s} seams={seams} dims={dims} />)}
           {sheets[2] && (

@@ -163,7 +163,7 @@ export default function PlateFrame() {
         />
       </aside>
 
-      <main className="flex flex-1 items-center bg-[#f5f5f5] p-6 pb-[140px] md:min-w-0 md:overflow-y-auto md:p-16">
+      <main className="flex flex-1 items-center bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
         <figure className="mx-auto flex w-full max-w-[1200px] flex-col gap-2">
           {/* A double click on the frame edits the text right on it, as the name tags do */}
           <div className="@container relative cursor-text" onDoubleClick={() => setEditing(true)}>
