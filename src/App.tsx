@@ -337,7 +337,7 @@ export default function App() {
             })}
             <Removed staff={staff} at={items.length} aspect={ASPECT} width={rowW} />
             {/* The next card starts as the last one: most often the same model in another trim or at another price */}
-            <AddTile onClick={() => staff.add(plain(items[items.length - 1]))} aspect={ASPECT} width={rowW} />
+            <AddTile onClick={() => staff.add(plain(items[items.length - 1]))} />
           </div>
         )}
       </main>

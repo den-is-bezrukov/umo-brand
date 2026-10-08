@@ -229,7 +229,7 @@ export default function NameTag() {
           })}
           <Removed staff={staff} at={items.length} aspect="70 / 25" radius="5.714cqw" />
           {/* «Добавить» as the next tag in the grid: a dashed plate of the tag's shape; the manual list only */}
-          {mode === 'manual' && <AddTile onClick={() => staff.add()} aspect="70 / 25" radius="5.714cqw" />}
+          {mode === 'manual' && <AddTile onClick={() => staff.add()} />}
         </div>
         )}
       </main>

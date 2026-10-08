@@ -314,22 +314,24 @@ export function UploadArea<P extends object>({ staff }: { staff: Staff<P> }) {
   )
 }
 
-/** «Добавить» as the next item on the canvas: a dashed plate of the item's shape; the manual list only */
 /**
  * The room the items' column takes beside them on phones (40 + 8 px), mirrored on the left so the items stand centred, kept by whatever stands in the list without one
- * («Добавить», «Удалено», the business card's face), so they all line up
+ * («Удалено», the business card's face), so they all line up
  */
 export const BESIDE = 'px-12 md:px-0'
 
-export function AddTile({ onClick, aspect, radius, width }: { onClick: () => void; aspect: string; radius?: string; width?: number }) {
+/**
+ * «Добавить» under the list: a secondary button as wide as its text («Копировать»'s edge, 10% and 40% on hover),
+ * centred under the items. It was a tile in the item's shape, too large, the price card's above all
+ */
+export function AddTile({ onClick }: { onClick: () => void }) {
   return (
-    <div style={width ? { maxWidth: width } : undefined} className={`@container mx-auto w-full max-w-[480px] self-start ${BESIDE}`}>
+    <div className="flex justify-center">
       <button
         type="button"
         data-add
         onClick={onClick}
-        style={{ aspectRatio: aspect, borderRadius: radius }}
-        className="flex w-full cursor-pointer items-center justify-center gap-2 self-start border border-black/10 text-[14px] font-medium leading-5 text-black hover:border-black/40"
+        className="flex cursor-pointer items-center gap-2 rounded-[8px] border border-black/10 px-3 py-[9px] text-[14px] font-medium leading-5 text-black outline-none hover:border-black/40 focus-visible:ring-2 focus-visible:ring-black/30"
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden><path d="M7 1V13M1 7H13" stroke="currentColor" strokeWidth="2" /></svg>
         Добавить
