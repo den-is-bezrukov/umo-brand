@@ -24,12 +24,13 @@ const GENERATORS = [
 ]
 
 /**
- * The top of a generator's sidebar (Figma 4900:4589): breadcrumbs back to the guide and to its Носители chapter, and
- * the title, whose chevron opens the browser's own picker to switch to the other generator — a native select laid
- * transparent over the title.
+ * The top of a generator's sidebar (Figma 4900:4589, the switch 5015:11122): breadcrumbs back to the guide and to its
+ * Носители chapter, and the generators in one line, a ring: the current one black where the title always stood, 24 px
+ * from the panel's edge, the others grey after it in the list's order, going round and running out under the panel's
+ * right edge. The line turns with the wheel (either way) or a drag, and comes back round to the current one when left;
+ * a click turns the picked one into the title's place, then opens it.
  */
 export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' }) {
-  const navigate = useNavigate()
   const crumb = 'underline decoration-transparent decoration-[2.5%] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 hover:decoration-black/40 hover:duration-0'
   return (
     <div className="flex flex-col gap-4">
@@ -38,20 +39,165 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
         <span aria-hidden>·</span>
         <Link to="/#materials" className={crumb}>Носители</Link>
       </nav>
-      <div className="relative flex items-center gap-1 self-start">
-        <h1 className="text-[24px] font-medium leading-none">{GENERATORS.find(g => g.path === current)!.title}</h1>
-        <svg width="24" height="24" viewBox="-4 -4 24 24" fill="none" aria-hidden className="relative top-px -ml-px">
-          <path d="M4 6L8 10L12 6" stroke="black" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" />
-        </svg>
-        <select
-          value={current}
-          onChange={e => navigate(e.target.value)}
-          aria-label="Конструктор"
-          className="absolute inset-0 cursor-pointer appearance-none opacity-0 outline-none"
-        >
-          {GENERATORS.map(g => <option key={g.path} value={g.path}>{g.title}</option>)}
-        </select>
-      </div>
+      <GeneratorRing current={current} />
+    </div>
+  )
+}
+
+/** Where the current generator stands, the panel's padding */
+const RING_START = 24
+const RING_TURN_MS = 300
+
+function GeneratorRing({ current }: { current: string }) {
+  const navigate = useNavigate()
+  const at = GENERATORS.findIndex(g => g.path === current)
+  const ring = [...GENERATORS.slice(at), ...GENERATORS.slice(0, at)]
+  const rowRef = useRef<HTMLDivElement>(null)
+  const copyRef = useRef<HTMLDivElement>(null)
+  // One turn of the ring in px (the names with a 16 px gap after each), and how far it's turned, unbounded
+  const [turn, setTurn] = useState(0)
+  const [offset, setOffset] = useState(0)
+  const [eased, setEased] = useState(false)
+  const offsetRef = useRef(0)
+  const hover = useRef(false)
+  const timer = useRef<number>(0)
+  const glide = useRef(0)
+  const drag = useRef<{ x: number; start: number; moved: boolean; t: number; v: number } | null>(null)
+  const dragged = useRef(false)
+  const still = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  useLayoutEffect(() => {
+    const measure = () => copyRef.current && setTurn(copyRef.current.offsetWidth)
+    measure()
+    document.fonts?.ready.then(measure)
+  }, [])
+
+  const move = (to: number, ease: boolean) => {
+    offsetRef.current = to
+    setEased(ease && !still)
+    setOffset(to)
+  }
+  // Back round to the current one, the shorter way
+  const settle = () => {
+    if (!turn) return
+    const home = Math.round(offsetRef.current / turn) * turn
+    if (home !== offsetRef.current) move(home, true)
+  }
+  const later = (ms: number) => {
+    clearTimeout(timer.current)
+    timer.current = window.setTimeout(() => (hover.current ? later(ms) : settle()), ms)
+  }
+  useEffect(() => () => { clearTimeout(timer.current); cancelAnimationFrame(glide.current) }, [])
+
+  // The wheel turns the line either way; a passive listener couldn't keep the page from scrolling
+  useEffect(() => {
+    const row = rowRef.current
+    if (!row) return
+    const wheel = (e: WheelEvent) => {
+      const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
+      if (!d) return
+      e.preventDefault()
+      cancelAnimationFrame(glide.current)
+      move(offsetRef.current + d * (e.deltaMode === 1 ? 16 : 1), false)
+      later(1500)
+    }
+    row.addEventListener('wheel', wheel, { passive: false })
+    return () => row.removeEventListener('wheel', wheel)
+  })
+
+  const down = (e: React.PointerEvent) => {
+    if (e.button !== 0) return
+    cancelAnimationFrame(glide.current)
+    clearTimeout(timer.current)
+    drag.current = { x: e.clientX, start: offsetRef.current, moved: false, t: e.timeStamp, v: 0 }
+    dragged.current = false
+  }
+  const pointerMove = (e: React.PointerEvent) => {
+    const d = drag.current
+    if (!d) return
+    const dx = e.clientX - d.x
+    if (!d.moved && Math.abs(dx) < 5) return
+    if (!d.moved) {
+      d.moved = true
+      dragged.current = true
+      rowRef.current?.setPointerCapture(e.pointerId)
+    }
+    const to = d.start - dx
+    const dt = e.timeStamp - d.t
+    if (dt > 0) d.v = (to - offsetRef.current) / dt
+    d.t = e.timeStamp
+    move(to, false)
+  }
+  const up = () => {
+    const d = drag.current
+    drag.current = null
+    if (!d?.moved) return
+    // Let it run on a little, slowing down, then come back round after a while
+    let v = still ? 0 : d.v
+    let last = performance.now()
+    const step = (now: number) => {
+      const dt = now - last
+      last = now
+      move(offsetRef.current + v * dt, false)
+      v *= Math.pow(0.995, dt)
+      if (Math.abs(v) > 0.02) glide.current = requestAnimationFrame(step)
+      else later(2000)
+    }
+    glide.current = requestAnimationFrame(step)
+  }
+
+  const open = (e: React.MouseEvent, k: number, i: number, path: string) => {
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
+    e.preventDefault()
+    if (dragged.current && e.detail) return
+    const item = copyRef.current?.children[i] as HTMLElement | undefined
+    if (still || !item) return navigate(path)
+    clearTimeout(timer.current)
+    cancelAnimationFrame(glide.current)
+    move(k * turn + item.offsetLeft, true)
+    window.setTimeout(() => navigate(path), RING_TURN_MS)
+  }
+
+  // Enough turns of the ring around where it stands to fill the line, also while it eases between two places
+  const base = turn ? Math.floor(offset / turn) : 0
+  const turns = turn ? [base - 2, base - 1, base, base + 1, base + 2] : [0]
+  const name = 'text-[20px] font-medium leading-5 tracking-[-0.01em] whitespace-nowrap'
+
+  return (
+    <div
+      ref={rowRef}
+      className="relative -mx-6 h-5 cursor-default touch-pan-y select-none overflow-hidden"
+      onPointerEnter={() => { hover.current = true }}
+      onPointerLeave={() => { hover.current = false; later(400) }}
+      onPointerDown={down}
+      onPointerMove={pointerMove}
+      onPointerUp={up}
+      onPointerCancel={up}
+    >
+      <nav
+        aria-label="Конструкторы"
+        className="absolute inset-y-0 left-0"
+        style={{ transform: `translateX(${RING_START - offset}px)`, transition: eased ? `transform ${RING_TURN_MS}ms cubic-bezier(.3,0,0,1)` : undefined }}
+        onTransitionEnd={() => setEased(false)}
+      >
+        {turns.map(k => (
+          <div key={k} ref={k === 0 ? copyRef : undefined} aria-hidden={k !== 0} className="absolute top-0 flex" style={{ left: k * turn }}>
+            {ring.map((g, i) => i === 0 && k === 0
+              ? <h1 key={g.path} className={`${name} pr-4`}>{g.title}</h1>
+              : <Link
+                  key={g.path}
+                  to={g.path}
+                  tabIndex={k === 0 ? undefined : -1}
+                  draggable={false}
+                  onClick={e => open(e, k, i, g.path)}
+                  className={`${name} pr-4 ${i === 0 ? 'text-black' : 'text-[#bfbfbf] hover:text-black'} outline-none focus-visible:text-black`}
+                >{g.title}</Link>)}
+          </div>
+        ))}
+      </nav>
+      {/* The shades over the panel's edges (Figma 5062:671, 5061:539): two layers each, as set there, the left one solid for its outer quarter */}
+      <div aria-hidden className="pointer-events-none absolute inset-y-0 left-0 w-6" style={{ background: 'linear-gradient(90deg, #ffffff80 25%, #fff0), linear-gradient(90deg, #fff 25%, #fff0)' }} />
+      <div aria-hidden className="pointer-events-none absolute inset-y-0 right-0 w-12" style={{ background: 'linear-gradient(90deg, #fff0, #ffffff80), linear-gradient(90deg, #fff0, #fff)' }} />
     </div>
   )
 }
