@@ -682,10 +682,13 @@ export function LinkButtons({ onReset, disabled }: { onReset?: () => void; disab
   )
 }
 
-/** Under the download while fields are empty: one line for several, a click leading to the first */
+/** Under the download while the whole form is empty */
 export const NOT_FILLED = 'Не хватает данных'
-/** The empty fields said under the download: the last one left by name («Дилер не выбран»), several as one line */
-export const unfilled = (said: string[]) => said.length === 1 ? said[0] : NOT_FILLED
+/**
+ * The empty fields said under the download, in the form's order: the first by name in its context («Дилер не выбран»,
+ * then «Имя не указано» once it's picked), going on as they're filled in; the whole form empty (`of` fields) as one line
+ */
+export const unfilled = (said: string[], of: number) => of > 1 && said.length === of ? NOT_FILLED : said[0]
 
 /**
  * The download, at the foot of the sidebar: always there, saying only the file's format, so the page says what it's for

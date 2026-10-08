@@ -180,8 +180,8 @@ export default function BusinessCard() {
       <UrlField value={link} onChange={setQrLink} />
     </Labelled>
   )
-  /** A card's first fault: a wrong value said as it is, empty fields as the form not filled in */
-  const problemOf = (i: number) => cards?.[i]?.issues.find(x => !x.field || PERSON_FIELDS.includes(x.field))?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!)) : undefined)
+  /** A card's first fault: a wrong value said as it is, else its first empty field by name (the dealership's are filled) */
+  const problemOf = (i: number) => cards?.[i]?.issues.find(x => !x.field || PERSON_FIELDS.includes(x.field))?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!), 0) : undefined)
 
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
@@ -296,7 +296,7 @@ export default function BusinessCard() {
           onClick={handleExport}
           busy={exporting}
           disabled={!ok}
-          note={(dealerMissing.length ? unfilled([...dealerMissing, ...(items.length === 1 ? missing[0] : [])].map(f => UNFILLED[f]!)) : dealerIssues[0]) ?? (!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : problemOf(0))}
+          note={(dealerMissing.length ? unfilled([...dealerMissing, ...(items.length === 1 ? missing[0] : [])].map(f => UNFILLED[f]!), items.length === 1 ? 8 : 0) : dealerIssues[0]) ?? (!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : problemOf(0))}
           onNote={dealerIssues.length ? toDealer : items.length ? () => staff.nextOf(failing) : undefined}
           className="md:mt-8"
         />

@@ -117,12 +117,12 @@ function check(c: Card) {
 /** A card's first fault in the form's order, said over «Скачать PDF», and the field it's in */
 function firstIssue(c: Card): { field: 'url' | 'full' | 'credit'; text: string } | null {
   const i = check(c)
-  // Empty fields: the last one left by name, several as one line
+  // Empty fields: the first by name, the whole form as one line
   const empty = unfilled([
     ...(!c.url.trim() ? ['Ссылка QR-кода не указана'] : []),
     ...(!priceNum(c.full) ? ['Цена не указана'] : []),
     ...(c.creditOn && !priceNum(c.credit) ? ['Цена в кредит не указана'] : []),
-  ])
+  ], c.creditOn ? 3 : 2)
   if (i.urlBad) return { field: 'url', text: c.url.trim() ? 'Проверьте ссылку QR-кода' : empty }
   if (i.fullTooLow) return { field: 'full', text: priceNum(c.full) ? 'Цена меньше 999 999' : empty }
   if (i.creditTooLow) return { field: 'credit', text: priceNum(c.credit) ? 'Цена в кредит меньше 999 999' : empty }

@@ -142,7 +142,7 @@ export default function NameTag() {
           onClick={handleExport}
           busy={exporting}
           disabled={!ok}
-          note={!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : tags?.[0]?.issues[0] ?? (missing[0].length ? unfilled(missing[0].map(t => UNFILLED[t])) : undefined)}
+          note={!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : tags?.[0]?.issues[0] ?? (missing[0].length ? unfilled(missing[0].map(t => UNFILLED[t]), 3) : undefined)}
           onNote={items.length ? () => staff.nextOf(failing) : undefined}
           className="md:mt-8"
         />
