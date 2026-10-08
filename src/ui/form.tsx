@@ -650,14 +650,14 @@ export function SizeSwitch({ large, onChange, label }: { large: boolean; onChang
 // Edged at 10%, at 40% on hover (Figma 5015:11171)
 export const outlined = 'flex min-w-16 flex-1 items-center justify-center rounded-[8px] border border-black/10 px-3 py-[9px] text-[14px] font-medium leading-5 text-black cursor-pointer outline-none hover:border-black/40 focus-visible:ring-2 focus-visible:ring-black/30 disabled:cursor-default disabled:text-[#999] disabled:hover:border-black/10'
 
-/** A word the download bar's line says for a moment («Ссылка на макет скопирована»), from a button under it */
+/** A word the download bar's line says for a moment («Ссылка с настройками скопирована»), from a button under it */
 const flashes = new Set<(text: string) => void>()
 const flash = (text: string) => flashes.forEach(f => f(text))
 
 /**
  * «Поделиться» and «Сбросить» side by side (Figma 4939:3762). The first sends the page address — the settings are in
  * it — so a set-up card or livery goes as a link: on phones through the system's share sheet, elsewhere copied, the
- * line over the buttons saying «Ссылка на макет скопирована» for two seconds (it was «Копировать», then «Копировать ссылку»,
+ * line over the buttons saying «Ссылка с настройками скопирована» for two seconds (it was «Копировать», then «Копировать ссылку»,
  * saying «Скопировано» on itself). The second brings the settings back to the defaults, which a page reload can't, as
  * the address keeps them. Without `onReset` only «Поделиться» (the price card: each card has its own «Сбросить» beside
  * it). «Поделиться» is off while the result isn't ready (`incomplete`, as «Скачать»): a link is sent for what it makes,
@@ -675,7 +675,7 @@ export function LinkButtons({ onReset, incomplete }: { onReset?: () => void; inc
       return
     }
     await navigator.clipboard.writeText(url)
-    flash('Ссылка на макет скопирована')
+    flash('Ссылка с настройками скопирована')
     goal('copy_link', { page: location.pathname })
   }
   return (
