@@ -51,7 +51,8 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
 
 /** Where the current generator stands, the panel's padding */
 const RING_START = 24
-const RING_TURN_MS = 300
+/** The turn into place, as the guide's contents open in the Figma prototype */
+const RING_TURN_MS = 250
 /** While another name is pointed at, the current one greys out like the rest, so only one stands out */
 const DIM_CURRENT = 'group-has-[a:hover]/ring:not-hover:text-[#bfbfbf]'
 /** How long the line stays turned once left, before coming back round to the current one */
@@ -187,7 +188,7 @@ function GeneratorRing({ current }: { current: string }) {
       <nav
         aria-label="Конструкторы"
         className="group/ring absolute inset-y-0 left-0"
-        style={{ transform: `translateX(${RING_START - offset}px)`, transition: eased ? `transform ${RING_TURN_MS}ms cubic-bezier(.3,0,0,1)` : undefined }}
+        style={{ transform: `translateX(${RING_START - offset}px)`, transition: eased ? `transform ${RING_TURN_MS}ms cubic-bezier(0.75,0,0.25,1)` : undefined }}
         onTransitionEnd={() => setEased(false)}
       >
         {turns.map(k => (
