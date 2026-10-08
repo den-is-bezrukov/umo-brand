@@ -190,7 +190,7 @@ function GeneratorRing({ current }: { current: string }) {
                   tabIndex={k === 0 ? undefined : -1}
                   draggable={false}
                   onClick={e => open(e, k, i, g.path)}
-                  className={`${name} mr-6 ${i === 0 ? 'text-black' : 'text-[#bfbfbf]'} underline decoration-transparent decoration-[2.5%] [text-decoration-skip-ink:none] outline-none hover:text-black hover:decoration-black focus-visible:text-black focus-visible:decoration-black`}
+                  className={`${name} mr-6 ${i === 0 ? 'text-black' : 'text-[#bfbfbf]'} underline decoration-transparent decoration-[2.5%] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 ease-[ease] outline-none hover:text-black hover:decoration-black/40 hover:duration-0 focus-visible:text-black focus-visible:decoration-black/40`}
                 >{g.title}</Link>)}
           </div>
         ))}
