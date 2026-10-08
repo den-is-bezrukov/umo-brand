@@ -26,7 +26,7 @@ const GENERATORS = [
 /**
  * The top of a generator's sidebar (Figma 4900:4589, the switch and its hover 5008:10784): breadcrumbs back to the guide and to its
  * Носители chapter, and the generators in one line, a ring: the current one black where the title always stood, 24 px
- * from the panel's edge, the others grey after it in the list's order, going round and running out under the panel's
+ * from the panel's edge, the others grey after it, 20 px apart in the list's order, going round and running out under the panel's
  * right edge. The line turns with the wheel (either way) or a drag, and comes back round to the current one when left;
  * a click turns the picked one into the title's place, then opens it.
  */
@@ -52,7 +52,7 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
 /** Where the current generator stands, the panel's padding */
 const RING_START = 24
 /** Each name's room either side, half the gap, so the names touch and the pointer passes from one to the next with no gap between */
-const RING_PAD = 12
+const RING_PAD = 10
 /** The turn into place */
 const RING_TURN_MS = 333
 /** How long the line stays turned once left, before coming back round to the current one */
@@ -64,7 +64,7 @@ function GeneratorRing({ current }: { current: string }) {
   const ring = [...GENERATORS.slice(at), ...GENERATORS.slice(0, at)]
   const rowRef = useRef<HTMLDivElement>(null)
   const copyRef = useRef<HTMLDivElement>(null)
-  // One turn of the ring in px (the names with a 24 px gap after each), and how far it's turned, unbounded
+  // One turn of the ring in px (the names with their room either side), and how far it's turned, unbounded
   const [turn, setTurn] = useState(0)
   const [offset, setOffset] = useState(0)
   const [eased, setEased] = useState(false)
@@ -194,14 +194,15 @@ function GeneratorRing({ current }: { current: string }) {
         {turns.map(k => (
           <div key={k} ref={k === 0 ? copyRef : undefined} aria-hidden={k !== 0} className="absolute top-0 flex" style={{ left: k * turn }}>
             {ring.map((g, i) => i === 0 && k === 0
-              ? <h1 key={g.path} className={`${name} px-3`}>{g.title}</h1>
+              ? <h1 key={g.path} className={name} style={{ paddingInline: RING_PAD }}>{g.title}</h1>
               : <Link
                   key={g.path}
                   to={g.path}
                   tabIndex={k === 0 ? undefined : -1}
                   draggable={false}
                   onClick={e => open(e, k, i, g.path)}
-                  className={`${name} px-3 ${i === 0 ? 'text-black' : 'text-[#bfbfbf] hover:text-[#808080] focus-visible:text-[#808080]'} outline-none`}
+                  style={{ paddingInline: RING_PAD }}
+                  className={`${name} ${i === 0 ? 'text-black' : 'text-[#bfbfbf] hover:text-[#808080] focus-visible:text-[#808080]'} outline-none`}
                 >{g.title}</Link>)}
           </div>
         ))}
