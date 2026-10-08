@@ -1485,7 +1485,7 @@ export default function Guide() {
               <Section>
                 <Text>
                   <p>Если ответа нет в стандартах или макет вывески, рекламы или другого носителя нужно согласовать, <a href="https://t.me/umo_support_bot" target="_blank" rel="noopener" className={TEXT_LINK}>напишите боту поддержки</a>. Приложите макет и расскажите, где он будет размещён, — разберёмся вместе.</p>
-                  <p>Спасибо, что бережёте бренд.</p>
+                  <p>Спасибо, что делаете UMO вместе с нами.</p>
                 </Text>
               </Section>
             </Chapter>
