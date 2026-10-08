@@ -68,7 +68,7 @@ function SheetPreview({ sheet, seams, dims }: { sheet: Sheet; seams: boolean; di
       </svg>
       {/* Under the picture, centred, as on every generator's canvas */}
       <figcaption className="flex items-baseline justify-center gap-2 text-[14px] leading-5">
-        <span className="font-medium">{s.title}</span>
+        <span>{s.title}</span>
         <span className="text-[#999]">{mm(s.w)} × {mm(s.h)} мм</span>
       </figcaption>
       {sheet.issues.length > 0 && (

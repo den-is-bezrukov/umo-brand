@@ -203,7 +203,7 @@ export default function PlateFrame() {
             )}
           </div>
           <figcaption className="flex items-baseline justify-center gap-2 text-[14px] leading-5">
-            <span className="font-medium">Поле печати</span>
+            <span>Поле печати</span>
             <span className="text-[#999]">{STRIP.w} × {STRIP.h} мм</span>
           </figcaption>
           {wrong && (
