@@ -103,6 +103,8 @@ export default function PlateFrame() {
   /** Red only for a wrong line, never an empty one */
   const wrong = !noName && !!strip && strip.issues.length > 0
 
+  /** Nothing to copy or reset: no dealer, the line on the left */
+  const blank = noName && align === 'left'
   const form = useRef<HTMLDivElement>(null)
   /** The line under the download leads to the field, which opens its suggestions on focus */
   const toField = () => form.current?.querySelector<HTMLElement>('input, textarea')?.focus()
@@ -160,7 +162,7 @@ export default function PlateFrame() {
           </div>
 
           {/* Nothing to copy or reset until there's a dealer or the line is centred */}
-          {!(noName && align === 'left') && (
+          {!blank && (
             <div className="pt-4 tracking-normal">
               <LinkButtons onReset={reset} />
             </div>
@@ -175,6 +177,8 @@ export default function PlateFrame() {
           disabled={!ok}
           note={noName ? (custom ? 'Текст не указан' : 'Дилер не выбран') : strip?.issues[0]}
           onNote={toField}
+          // Without «Копировать» and «Сбросить» over it, 40 px off the form, as the name tag's
+          className={blank ? 'md:mt-8' : ''}
         />
       </aside>
 
