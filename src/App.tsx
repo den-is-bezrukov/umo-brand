@@ -124,8 +124,8 @@ function firstIssue(c: Card): { field: 'url' | 'full' | 'credit'; text: string }
     ...(c.creditOn && !priceNum(c.credit) ? ['Цена в кредит не указана'] : []),
   ], c.creditOn ? 3 : 2)
   if (i.urlBad) return { field: 'url', text: c.url.trim() ? 'Проверьте ссылку QR-кода' : empty }
-  if (i.fullTooLow) return { field: 'full', text: priceNum(c.full) ? 'Цена меньше 999 999' : empty }
-  if (i.creditTooLow) return { field: 'credit', text: priceNum(c.credit) ? 'Цена в кредит меньше 999 999' : empty }
+  if (i.fullTooLow) return { field: 'full', text: priceNum(c.full) ? 'Цена слишком низкая' : empty }
+  if (i.creditTooLow) return { field: 'credit', text: priceNum(c.credit) ? 'Цена в кредит слишком низкая' : empty }
   if (i.fullLessThanCredit) return { field: 'full', text: 'Полная цена меньше цены в кредит' }
   return null
 }
