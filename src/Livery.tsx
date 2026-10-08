@@ -198,7 +198,15 @@ export default function Livery() {
       link.href = URL.createObjectURL(blob)
       link.download = `${prefix}_dealer-livery.zip`
       link.click()
-      goal('download_livery', { model, qr: on.qr ? (qrSmall ? 'small' : 'large') : 'off', dealer: on.dealer, tagline: on.tagline, rear: on.rear })
+      // Texts go along only when they aren't from the suggestions: what dealers put on the car themselves
+      const flat = (t: string) => t.replace(/\s+/g, ' ').trim()
+      const own = (shown: boolean, t: string, list: string[]) => shown && !list.some(o => flat(o) === flat(t)) ? flat(t).slice(0, 200) : undefined
+      const texts = Object.fromEntries(Object.entries({
+        dealerText: own(on.dealer, dealer, DEALER_NAMES),
+        taglineText: own(on.tagline, tagline, TAGLINES[model]),
+        rearTaglineText: own(ownRearOn, rearTagline ?? '', TAGLINES[model]),
+      }).filter(([, t]) => t !== undefined)) as Record<string, string>
+      goal('download_livery', { model, qr: on.qr ? (qrSmall ? 'small' : 'large') : 'off', dealer: on.dealer, tagline: on.tagline, rear: on.rear, ...texts })
       URL.revokeObjectURL(link.href)
     } finally {
       setExporting(false)
