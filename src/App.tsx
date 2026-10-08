@@ -204,7 +204,7 @@ export default function App() {
       // On phones the card's number and actions take 40 + 8 px beside it, mirrored on the left (`BESIDE`)
       const md = window.matchMedia('(min-width: 768px)').matches
       setWide(md)
-      setCardW(md ? Math.min(width, height * POSTER_W / POSTER_H) : width - 96)
+      setCardW(Math.floor(md ? Math.min(width, height * POSTER_W / POSTER_H) : width - 96))
     })
     observer.observe(el)
     return () => observer.disconnect()
@@ -311,19 +311,19 @@ export default function App() {
                   <figure ref={staff.figureRef(c.key)} onClick={() => staff.pick(c.key)} className="group/row flex cursor-pointer justify-center">
                     <div className="w-full" style={{ maxWidth: rowW }}>
                       <ItemFrame staff={frame} item={c} n={i + 1}>
-                        <button
-                          type="button"
-                          aria-pressed={items.length > 1 ? active : undefined}
-                          // Edged at 10% black, black on hover, as the business cards
-                          className={`relative block cursor-pointer bg-white outline-1 outline-offset-0 transition-opacity duration-150
-                            outline-black/10 group-hover/row:outline-black
+                        {/* A plain box, not a button: a button's centred text shifted the card's own layout. Clipped to
+                            the card, so the photo doesn't run past its edge, and edged outside it at 10% black, 40% on
+                            hover (the secondary buttons' edge) */}
+                        <div
+                          className={`relative overflow-hidden bg-white outline-1 outline-offset-0 transition-opacity duration-150
+                            outline-black/10 group-hover/row:outline-black/40
                             ${!active ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
-                          style={{ width: cardW, height: POSTER_H * scale }}
+                          style={{ width: cardW, height: Math.round(POSTER_H * scale) }}
                         >
                           <div style={{ transformOrigin: 'top left', transform: `scale(${scale})`, position: 'absolute', top: 0, left: 0 }}>
                             <PriceCard variant={`${c.model}-${c.trim}` as Variant} fullPrice={c.full} creditPrice={c.creditOn ? c.credit : undefined} qrSvg={qrSvgs[qrUrlOf(c)]} />
                           </div>
-                        </button>
+                        </div>
                       </ItemFrame>
                     </div>
                   </figure>
