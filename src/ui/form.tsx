@@ -707,13 +707,14 @@ export function DownloadBar({ format, onClick, busy, disabled, note, onNote, cla
   onNote?: () => void
   className?: string
 }) {
-  const line = 'block w-full text-center text-[14px] leading-5 text-[#808080]'
+  // Black: with the buttons off around it, the next step is the one thing here to act on
+  const line = 'block w-full text-center text-[14px] leading-5 text-black'
   return (
     <div className={`flex flex-col md:sticky md:bottom-0 md:z-10 md:bg-white md:p-6 md:pt-0 ${className}`}>
       {disabled && note && (
         <div className="px-6 pb-6 md:my-2 md:p-0">
           {onNote
-            ? <button type="button" onClick={onNote} className={`${line} cursor-pointer hover:text-black`}>{note}</button>
+            ? <button type="button" onClick={onNote} className={`${line} cursor-pointer hover:text-[#808080]`}>{note}</button>
             : <p className={line}>{note}</p>}
         </div>
       )}
