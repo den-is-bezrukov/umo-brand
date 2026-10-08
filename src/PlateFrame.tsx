@@ -198,9 +198,11 @@ export default function PlateFrame() {
             )}
           </div>
           <figcaption className="text-center text-[14px] leading-5 text-[#808080]">
-            Поле печати, {STRIP.w}&nbsp;×&nbsp;{STRIP.h}&nbsp;мм
-            {/* The reset, by what it resets, as the livery's sheets and the cards' own */}
-            {!blank && <CaptionReset onClick={reset} />}
+            <span className="relative">
+              Поле печати, {STRIP.w}&nbsp;×&nbsp;{STRIP.h}&nbsp;мм
+              {/* The reset, by what it resets, as the livery's sheets and the cards' own */}
+              {!blank && <CaptionReset onClick={reset} />}
+            </span>
           </figcaption>
           {wrong && (
             <ul className="text-center text-[13px] leading-5 text-[#e30]">

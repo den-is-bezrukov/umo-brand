@@ -385,16 +385,18 @@ const ResetIcon = () => (
 /**
  * «Сбросить» at the end of a sheet's caption on the canvas (the livery's sides and glass, the plate frame's strip), as
  * the items' own reset beside them: the same icon, #808080, black on hover; shown while the pointer is on the sheet
- * (`group/sheet`), always on touch screens. Only while there's something to reset
+ * (`group/sheet`), always on touch screens. Only while there's something to reset. Put it in a `relative` span with the
+ * caption's text
  */
 export function CaptionReset({ onClick, label = 'Сбросить' }: { onClick: () => void; label?: string }) {
+  // Hung after the caption's text, out of its flow, so the caption stays centred whether or not it shows
   return (
     <button
       type="button"
       title={label}
       aria-label={label}
       onClick={onClick}
-      className="-my-[5px] ml-1 inline-flex size-[30px] cursor-pointer items-center justify-center rounded-[8px] align-middle text-[#808080] outline-none hover:text-black focus-visible:ring-2 focus-visible:ring-black/30 [@media(hover:hover)]:invisible [@media(hover:hover)]:group-hover/sheet:visible [@media(hover:hover)]:focus-visible:visible"
+      className="absolute top-1/2 left-full ml-1 flex size-[30px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] outline-none hover:text-black focus-visible:ring-2 focus-visible:ring-black/30 [@media(hover:hover)]:invisible [@media(hover:hover)]:group-hover/sheet:visible [@media(hover:hover)]:focus-visible:visible"
     >
       <ResetIcon />
     </button>
