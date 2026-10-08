@@ -94,10 +94,12 @@ export default function NameTag() {
         <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
           <GeneratorHeader current="/name-tag" />
 
-          <Segments>
-            <SegBtn active={mode === 'manual'} onClick={() => setMode('manual')}>Вручную</SegBtn>
-            <SegBtn active={mode === 'table'} onClick={() => setMode('table')}>Из таблицы</SegBtn>
-          </Segments>
+          <Labelled label="Данные">
+            <Segments>
+              <SegBtn active={mode === 'manual'} onClick={() => setMode('manual')}>Вручную</SegBtn>
+              <SegBtn active={mode === 'table'} onClick={() => setMode('table')}>Из таблицы</SegBtn>
+            </Segments>
+          </Labelled>
 
           {mode === 'manual' && current && (
             <div className="flex flex-col gap-6 tracking-normal">
