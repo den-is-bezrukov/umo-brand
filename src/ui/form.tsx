@@ -148,6 +148,8 @@ function GeneratorRing({ current, turnTo }: { current: string; turnTo: React.Mut
     document.fonts?.ready.then(measure)
     const row = rowRef.current
     if (!row) return
+    // Measured before the first paint too, so a narrow panel doesn't flash the plain line before the ring
+    setWidth(row.offsetWidth)
     const observer = new ResizeObserver(() => setWidth(row.offsetWidth))
     observer.observe(row)
     return () => observer.disconnect()
@@ -252,6 +254,8 @@ function GeneratorRing({ current, turnTo }: { current: string; turnTo: React.Mut
   // Enough turns of the ring around where it stands to fill the line, also while it eases between two places
   const base = turn ? Math.floor(offset / turn) : 0
   const turns = turn && !fits ? [base - 2, base - 1, base, base + 1, base + 2] : [0]
+  // A plain line keeps the names in their order, as tabs: a pick only turns black, nothing jumps; the ring starts at the current one
+  const shown = fits ? GENERATORS : ring
   const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
 
 
@@ -274,7 +278,7 @@ function GeneratorRing({ current, turnTo }: { current: string; turnTo: React.Mut
       >
         {turns.map(k => (
           <div key={k} ref={k === 0 ? copyRef : undefined} aria-hidden={k !== 0} className="absolute top-0 flex" style={{ left: k * turn }}>
-            {ring.map((g, i) => i === 0 && k === 0
+            {shown.map((g, i) => g.path === current && k === 0
               ? <h1 key={g.path} className={name} style={{ paddingInline: RING_PAD }}>{g.title}</h1>
               : <Link
                   key={g.path}
@@ -283,7 +287,7 @@ function GeneratorRing({ current, turnTo }: { current: string; turnTo: React.Mut
                   draggable={false}
                   onClick={e => open(e, k, i, g.path)}
                   style={{ paddingInline: RING_PAD }}
-                  className={`${name} ${i === 0 ? 'text-black' : 'text-[#bfbfbf] hover:text-[#808080] focus-visible:text-[#808080]'} outline-none`}
+                  className={`${name} ${g.path === current ? 'text-black' : 'text-[#bfbfbf] hover:text-[#808080] focus-visible:text-[#808080]'} outline-none`}
                 >{g.title}</Link>)}
           </div>
         ))}
