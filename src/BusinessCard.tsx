@@ -5,7 +5,7 @@ import { goal } from '@/ui/metrika'
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
 import { xlsxCells, pastedCells, byHeaders, FULL_NAME, fromFullName, type Cells } from '@/nametag/table'
-import { CARD, QR, FACE, BACK_LOGO, DEALER_FIELDS, buildBack, siteFor, siteText, splitPhone, type CardField, type Dealer, type Person, type QrData } from '@/card/card'
+import { CARD, QR, FACE, BACK_LOGO, DEALER_FIELDS, buildBack, siteFor, siteText, splitPhone, maskPhone, type CardField, type Dealer, type Person, type QrData } from '@/card/card'
 import CardArt from '@/card/CardArt'
 import { POSITIONS } from '@/data/positions'
 import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
@@ -269,13 +269,21 @@ export default function BusinessCard() {
                       })()}
                     </Labelled>
                     <Labelled label="Телефон">
-                      {/* The number takes only what a number is written with; a whole one pasted with its extension
-                          splits, the extension going to its own field */}
+                      {/* A live mask: the number set as the card sets it while it's typed, the caret staying after the same
+                          digit; a whole one pasted with its extension splits, the extension going to its own field */}
                       <div className="flex gap-2">
                         <TextInput
                           value={p.phone}
-                          onChange={v => update(p.key, splitPhone(v) ?? { phone: v.replace(/[^\d+()\-\s]/g, '') })}
-                          placeholder="+7 890 123 45 67"
+                          onChange={v => {
+                            const el = document.activeElement as HTMLInputElement
+                            const split = splitPhone(v)
+                            const raw = split ? split.phone : v
+                            const before = split ? Infinity : v.slice(0, el.selectionStart ?? v.length).replace(/\D/g, '').length
+                            const { text, caret } = maskPhone(raw, before)
+                            update(p.key, split ? { phone: text, ext: split.ext } : { phone: text })
+                            requestAnimationFrame(() => { if (document.activeElement === el) el.setSelectionRange(caret, caret) })
+                          }}
+                          placeholder="+7 987 654 32 10"
                           inputMode="tel"
                           invalid={bad('phone', 'Телефон')}
                         />

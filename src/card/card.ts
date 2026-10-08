@@ -160,6 +160,28 @@ export function formatPhone(raw: string): string | null {
   return `${d.startsWith('8800') ? '8' : '+7'} ${d.slice(1, 4)} ${d.slice(4, 7)} ${d.slice(7, 9)} ${d.slice(9)}`
 }
 
+/**
+ * The phone field's live mask: digits only, set as the card sets them while they're typed, «+7 987 654 32 10». A first
+ * 8 is the country code and becomes +7 (8 800 keeps its 8), a number typed without one gets +7; ten digits after it
+ * at most. `digits` is how many digits stand before a caret, to put it back after the same digit
+ */
+export function maskPhone(raw: string, digits = Infinity): { text: string; caret: number } {
+  let d = raw.replace(/\D/g, '')
+  if (!d) return { text: raw.trim() === '+' ? '+' : '', caret: raw.trim() === '+' ? 1 : 0 }
+  let before = Math.min(digits, d.length)
+  if (!/^[78]/.test(d)) { d = '7' + d; before++ }
+  const prefix = d.startsWith('8800') ? '8' : '+7'
+  const rest = d.slice(1, 11)
+  const groups = [rest.slice(0, 3), rest.slice(3, 6), rest.slice(6, 8), rest.slice(8, 10)].filter(Boolean)
+  const text = [prefix, ...groups].join(' ')
+  // The caret after the `before`-th digit, the country code's counting as one
+  let caret = before === 0 ? 0 : text.length
+  for (let i = 0, seen = 0; i < text.length && before > 0; i++) {
+    if (/\d/.test(text[i]) && ++seen === before) { caret = i + 1; break }
+  }
+  return { text, caret }
+}
+
 /** The phone line: the number set as `formatPhone` does (as typed if it isn't one) and its extension */
 export const phoneLine = (p: Pick<Person, 'phone' | 'ext'>) =>
   [formatPhone(p.phone) ?? oneLine(p.phone), p.ext.trim() && `доб. ${p.ext.trim()}`].filter(Boolean).join(' ')
