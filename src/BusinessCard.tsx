@@ -24,6 +24,8 @@ const MISSING: Partial<Record<CardField, string>> = {
   dealer: 'Нет названия дилера', address: 'Нет адреса', site: 'Нет сайта',
   name: 'Нет имени', surname: 'Нет фамилии', position: 'Нет должности', email: 'Нет почты', phone: 'Нет телефона',
 }
+/** The mail services the email field suggests after the dealer's own domain, the most used in Russia first */
+const MAIL_DOMAINS = ['yandex.ru', 'mail.ru', 'gmail.com', 'ya.ru', 'bk.ru', 'inbox.ru', 'list.ru', 'rambler.ru']
 /** The last empty field, said by name under the download */
 const UNFILLED: Partial<Record<CardField, string>> = {
   dealer: 'Дилер не выбран', address: 'Адрес не указан', site: 'Сайт не указан',
@@ -253,10 +255,18 @@ export default function BusinessCard() {
                       <ComboField key={p.key} value={p.position} onChange={v => update(p.key, { position: v })} options={POSITIONS} placeholder="Должность" label="Типовые должности" invalid={bad('position', 'Должность')} />
                     </Labelled>
                     <Labelled label="Почта">
-                      {/* The browser's own suggestion: what's typed before the @, at the card's site (agat-vladimir.umo.auto
-                          follows the dealer's name, or the site as edited) */}
-                      <TextInput value={p.email} onChange={v => update(p.key, { email: v })} placeholder="Почта" invalid={bad('email', 'Почта')} inputMode="email" list={mailDomain && !p.email.includes('@') ? 'mail-at-site' : undefined} />
-                      {mailDomain && <datalist id="mail-at-site"><option value={`${p.email.trim()}@${mailDomain}`} /></datalist>}
+                      {/* The browser's own suggestions: what's typed before the @ at the card's site first (agat-vladimir.umo.auto
+                          follows the dealer's name, or the site as edited), then the common mail services; the browser
+                          narrows them as the domain is typed */}
+                      <TextInput value={p.email} onChange={v => update(p.key, { email: v })} placeholder="Почта" invalid={bad('email', 'Почта')} inputMode="email" list="mail-domains" />
+                      {(() => {
+                        const local = p.email.split('@')[0].trim()
+                        return local && (
+                          <datalist id="mail-domains">
+                            {[...new Set([mailDomain, ...MAIL_DOMAINS].filter(Boolean))].map(d => <option key={d} value={`${local}@${d}`} />)}
+                          </datalist>
+                        )
+                      })()}
                     </Labelled>
                     <Labelled label="Телефон">
                       {/* The number takes only what a number is written with; a whole one pasted with its extension
