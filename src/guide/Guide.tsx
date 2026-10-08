@@ -1484,7 +1484,8 @@ export default function Guide() {
             <Chapter id="contact" title="Контакты">
               <Section>
                 <Text>
-                  <p>Если ответа нет в стандартах или макет вывески, рекламы или другого носителя нужно согласовать, <a href="https://t.me/umo_support_bot" target="_blank" rel="noopener" className={TEXT_LINK}>напишите боту поддержки</a>. Приложите макет и расскажите, где он будет размещён.</p>
+                  <p>Если ответа нет в стандартах или макет вывески, рекламы или другого носителя нужно согласовать, <a href="https://t.me/umo_support_bot" target="_blank" rel="noopener" className={TEXT_LINK}>напишите боту поддержки</a>.</p>
+                  <p>Приложите макет и расскажите, где он будет размещён.</p>
                 </Text>
               </Section>
             </Chapter>
