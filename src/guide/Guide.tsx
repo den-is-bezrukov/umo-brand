@@ -1464,7 +1464,7 @@ export default function Guide() {
             <Section>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
                 <Text>
-                  <p>Готовый дизайн, который встречает клиента UMO у дилера: <Link to="/livery" className={TEXT_LINK}>ливрея демо-автомобиля</Link>, <Link to="/business-card" className={TEXT_LINK}>визитка</Link>, <Link to="/name-tag" className={TEXT_LINK}>бейдж сотрудника</Link>, <Link to="/price-card" className={TEXT_LINK}>прайс-карта</Link> и <Link to="/plate-frame" className={TEXT_LINK}>рамка номера</Link>.</p>
+                  <p>Готовый дизайн, который встречает клиента у дилера UMO: <Link to="/livery" className={TEXT_LINK}>ливрея демо-автомобиля</Link>, <Link to="/business-card" className={TEXT_LINK}>визитка</Link>, <Link to="/name-tag" className={TEXT_LINK}>бейдж сотрудника</Link>, <Link to="/price-card" className={TEXT_LINK}>прайс-карта</Link> и <Link to="/plate-frame" className={TEXT_LINK}>рамка номера</Link>.</p>
                 </Text>
                 <Text>
                   <p>Каждый собирается в конструкторе: введите свои данные и получите файлы, готовые к печати или производству.</p>
