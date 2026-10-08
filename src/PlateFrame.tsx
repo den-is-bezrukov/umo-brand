@@ -155,7 +155,7 @@ export default function PlateFrame() {
             </Field>
           </div>
 
-          <div className="pt-2 tracking-normal">
+          <div className="pt-4 tracking-normal">
             <LinkButtons onReset={reset} />
           </div>
         </div>

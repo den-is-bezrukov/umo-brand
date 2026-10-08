@@ -278,7 +278,7 @@ export default function Livery() {
             {/* <Checkbox checked={seams} onChange={setSeams}>Швы</Checkbox> */}
           </div>
 
-          <div className="pt-2 tracking-normal">
+          <div className="pt-4 tracking-normal">
             <LinkButtons onReset={reset} />
           </div>
         </div>

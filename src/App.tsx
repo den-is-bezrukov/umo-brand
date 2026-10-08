@@ -296,7 +296,7 @@ export default function App() {
             </OptionalField>
           </div>
 
-          <div className="pt-2 tracking-normal">
+          <div className="pt-4 tracking-normal">
             {/* No «Сбросить» here: each card has its own beside it */}
             <LinkButtons />
           </div>
