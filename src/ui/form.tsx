@@ -36,8 +36,8 @@ const GENERATORS = [
  */
 const underline = 'underline decoration-transparent decoration-[0.35px] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 hover:duration-0'
 const crumb = `${underline} hover:decoration-black/40`
-/** On a grey name the line is the name's own colour (40% of it, as the breadcrumbs' is of black, was too faint) */
-const ringUnderline = (current: boolean) => `${underline} ${current ? 'hover:decoration-black/40 focus-visible:decoration-black/40' : 'hover:decoration-[#bfbfbf] focus-visible:decoration-[#bfbfbf]'}`
+/** A grey name darkens to the generators' quiet grey #808080 on hover, its line in the same colour */
+const ringUnderline = (current: boolean) => `${underline} ${current ? 'hover:decoration-black/40 focus-visible:decoration-black/40' : 'hover:text-[#808080] hover:decoration-[#808080] focus-visible:text-[#808080] focus-visible:decoration-[#808080]'}`
 
 export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' }) {
   return (
