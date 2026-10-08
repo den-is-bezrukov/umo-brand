@@ -384,8 +384,9 @@ const ResetIcon = () => (
 
 /**
  * «Сбросить» at the end of a sheet's caption on the canvas (the livery's sides and glass, the plate frame's strip), as
- * the items' own reset beside them: the same icon, #808080, black on hover; shown while the pointer is on the sheet
- * (`group/sheet`), always on touch screens. Only while there's something to reset. Put it in a `relative` span with the
+ * the items' own reset beside them: the same icon, #808080, black on hover; always in view while there's something to
+ * reset (unlike the items' actions, shown on hover: a page with one layout has nothing to pick, and the icon showing
+ * says the layout was changed). Put it in a `relative` span with the
  * caption's text
  */
 export function CaptionReset({ onClick, label = 'Сбросить' }: { onClick: () => void; label?: string }) {
@@ -397,7 +398,7 @@ export function CaptionReset({ onClick, label = 'Сбросить' }: { onClick:
       title={label}
       aria-label={label}
       onClick={onClick}
-      className="absolute top-[calc(50%-1px)] left-full ml-1 flex size-[30px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] outline-none hover:text-black focus-visible:ring-2 focus-visible:ring-black/30 [@media(hover:hover)]:invisible [@media(hover:hover)]:group-hover/sheet:visible [@media(hover:hover)]:focus-visible:visible"
+      className="absolute top-[calc(50%-1px)] left-full ml-1 flex size-[30px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] outline-none hover:text-black focus-visible:ring-2 focus-visible:ring-black/30"
     >
       <ResetIcon />
     </button>
