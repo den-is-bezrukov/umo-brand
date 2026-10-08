@@ -74,3 +74,9 @@ body {
   --spacing-section: clamp(6rem, 3.359rem + 11.268vw, 13.5rem);
   --spacing-chapter: clamp(9rem, 5.831rem + 13.521vw, 18rem);
 }
+
+/* The ring round «Удалено · Вернуть»'s cross running out (`Removed` in src/ui/staff.tsx) */
+@keyframes countdown {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: 1; }
+}

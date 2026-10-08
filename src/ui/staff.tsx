@@ -9,6 +9,9 @@ import { splitFullName } from '@/nametag/table'
 
 export type Mode = 'manual' | 'table'
 
+/** How long «Удалено · Вернуть» stays; the ring round its cross runs out over it */
+const REMOVED_MS = 4000
+
 export type Row<P> = P & { key: number }
 
 let nextKey = 0
@@ -170,7 +173,7 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
   const [removed, setRemoved] = useState<{ item: Row<P>; index: number } | null>(null)
   useEffect(() => {
     if (!removed) return
-    const t = setTimeout(() => setRemoved(null), 4000)
+    const t = setTimeout(() => setRemoved(null), REMOVED_MS)
     return () => clearTimeout(t)
   }, [removed])
   /** Removing the selected one selects its neighbour after (or before) it; removing another keeps the selection */
@@ -431,8 +434,9 @@ export function ItemFrame<P extends object>({ staff, item, n, children }: { staf
 }
 
 /**
- * In place of an item just removed, for four seconds (it was five), 40 px tall as the buttons (it was as tall as the
- * item): «Удалено · Вернуть ×», the cross closing it at once for one sure of the removal
+ * In place of an item just removed, for four seconds, 40 px tall as the buttons (it was as tall as the item):
+ * «Удалено · Вернуть ×», the cross closing it at once for one sure of the removal. A ring round the cross runs out over
+ * the four seconds, as Telegram's undo, so it shows how long is left (none with reduced motion)
  */
 export function Removed<P extends object>({ staff, at }: { staff: Staff<P>; at: number }) {
   if (staff.removed?.index !== at || staff.mode !== 'manual') return null
@@ -441,8 +445,12 @@ export function Removed<P extends object>({ staff, at }: { staff: Staff<P>; at: 
       Удалено ·
       <button type="button" onClick={e => { e.stopPropagation(); staff.restore() }} className="cursor-pointer text-black outline-none hover:text-[#808080] focus-visible:ring-2 focus-visible:ring-black/30">Вернуть</button>
       {/* The items' own cross (1 px, #808080, black on hover), as «Удалить» beside them */}
-      <button type="button" title="Закрыть" aria-label="Закрыть" onClick={e => { e.stopPropagation(); staff.dismiss() }} className="flex size-[30px] cursor-pointer items-center justify-center rounded-[8px] text-[#808080] outline-none hover:text-black focus-visible:ring-2 focus-visible:ring-black/30">
+      <button type="button" title="Закрыть" aria-label="Закрыть" onClick={e => { e.stopPropagation(); staff.dismiss() }} className="relative flex size-[30px] cursor-pointer items-center justify-center rounded-full text-[#808080] outline-none hover:text-black focus-visible:ring-2 focus-visible:ring-black/30">
         <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M12 4L8 8M8 8L4 4M8 8L12 12M8 8L4 12" /></svg>
+        {/* The ring, from the top clockwise, a new one for each removal */}
+        <svg key={staff.removed.item.key} width="30" height="30" viewBox="0 0 30 30" aria-hidden className="pointer-events-none absolute inset-0 -rotate-90 motion-reduce:hidden">
+          <circle cx="15" cy="15" r="13" fill="none" stroke="currentColor" strokeWidth="1" pathLength={1} strokeDasharray="1" style={{ animation: `countdown ${REMOVED_MS}ms linear forwards` }} />
+        </svg>
       </button>
     </div>
   )
