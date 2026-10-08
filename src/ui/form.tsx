@@ -693,8 +693,8 @@ export const unfilled = (said: string[], of: number) => of > 1 && said.length ==
 
 /**
  * The download, at the foot of the sidebar: always there, saying only the file's format, so the page says what it's for
- * at once. Off while something's in the way, with a quiet line over it saying what («Не хватает данных», «Цена меньше
- * 999 999», «1 из 4 в работе»), a click there leading to it where it can (it stood under the button for a while, its
+ * at once. Off while something's in the way, with a black line over it saying what («Дилер не выбран», «Цена слишком
+ * низкая», «1 из 4 в работе»), a click there leading to it where it can (it stood under the button for a while, its
  * room kept so the button didn't move). On phones the button alone is pinned to the bottom of the screen, with
  * nothing behind it, so it covers little of the canvas, and the line stays at the foot of the form
  */
