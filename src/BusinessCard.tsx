@@ -269,10 +269,11 @@ export default function BusinessCard() {
                       })()}
                     </Labelled>
                     <Labelled label="Телефон">
-                      {/* One field of two parts, a 1 px white gap between them (Figma 5077:7). The number is a live mask, set
+                      {/* One field of two parts with no line between them (Figma 5077:45), each 8 px round, so a focused part
+                          is edged on its own. The number is a live mask, set
                           as the card sets it while it's typed, the caret staying after the same digit; a whole one pasted
                           with its extension splits. The extension follows «Доб.», grey, its placeholder and prefix both */}
-                      <div className="flex gap-px overflow-clip rounded-[8px]">
+                      <div className="flex rounded-[8px] bg-[#f5f5f5]">
                         <TextInput
                           value={p.phone}
                           onChange={v => {
@@ -287,9 +288,8 @@ export default function BusinessCard() {
                           placeholder="+7 987 654 32 10"
                           inputMode="tel"
                           invalid={bad('phone', 'Телефон')}
-                          className="rounded-none!"
                         />
-                        <label className="flex h-10 min-w-20 shrink-0 cursor-text items-center bg-[#f5f5f5] px-3 text-[14px] leading-5 focus-within:ring-1 focus-within:ring-inset focus-within:ring-black/40">
+                        <label className="flex h-10 min-w-20 shrink-0 cursor-text items-center rounded-[8px] bg-[#f5f5f5] px-3 text-[14px] leading-5 focus-within:ring-1 focus-within:ring-inset focus-within:ring-black/40">
                           <span className="text-[#999]">Доб.&nbsp;</span>
                           <input
                             value={p.ext}
