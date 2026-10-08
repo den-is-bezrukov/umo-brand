@@ -14,7 +14,7 @@ function Tick({ color = 'black' }: { color?: string }) {
   )
 }
 
-/** In alphabetical order, as the switcher lists them */
+/** In alphabetical order, as the ring lists them */
 const GENERATORS = [
   { path: '/name-tag', title: 'Бейдж' },
   { path: '/business-card', title: 'Визитка' },
@@ -37,15 +37,79 @@ const GENERATORS = [
 const crumb = 'underline decoration-transparent decoration-[0.35px] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 hover:decoration-black/40 hover:duration-0'
 
 export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' }) {
+  // A pick in the list turns the ring as a click on it does
+  const turnTo = useRef<((e: React.MouseEvent, path: string) => void) | null>(null)
   return (
     <div className="flex flex-col gap-4">
       <nav className="flex items-center gap-2 text-[14px] font-medium leading-5 tracking-normal [font-feature-settings:'case'_1]">
         <Link to="/" className={crumb}>Бренд UMO</Link>
         <span aria-hidden>·</span>
-        <Link to="/#materials" className={crumb}>Носители</Link>
+        <CrumbMenu current={current} onPick={(e, path) => turnTo.current?.(e, path)} />
       </nav>
-      <GeneratorRing current={current} />
+      <GeneratorRing current={current} turnTo={turnTo} />
     </div>
+  )
+}
+
+/** How long the pointer may be away from «Носители» and the list before the list closes */
+const MENU_CLOSE_MS = 200
+
+/**
+ * «Носители ⌄» (Figma 5008:10778): the chapter the generators belong to, with a chevron 8 px after it (8×16, a 1.2 px
+ * stroke) saying it lists them. Pointing at either lists all the generators under it, in their order, the current one
+ * medium with a tick, styled as the combobox's suggestions; a click on the word still leads to the guide, a tap on the
+ * chevron opens the list on touch screens. The siblings under their parent, as Vercel's or GitHub's breadcrumbs switch
+ * projects (tried: the list from the current name in the ring, and from the last name in view)
+ */
+function CrumbMenu({ current, onPick }: { current: string; onPick: (e: React.MouseEvent, path: string) => void }) {
+  const [open, setOpen] = useState(false)
+  const timer = useRef<number>(0)
+  const show = (e: React.PointerEvent) => { if (e.pointerType === 'touch') return; clearTimeout(timer.current); setOpen(true) }
+  const hide = (e: React.PointerEvent) => { if (e.pointerType === 'touch') return; clearTimeout(timer.current); timer.current = window.setTimeout(() => setOpen(false), MENU_CLOSE_MS) }
+  useEffect(() => () => clearTimeout(timer.current), [])
+  useEffect(() => {
+    if (!open) return
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
+    const away = (e: PointerEvent) => { if (!(e.target as Element).closest('[data-crumb-menu]')) setOpen(false) }
+    document.addEventListener('keydown', key)
+    document.addEventListener('pointerdown', away)
+    return () => { document.removeEventListener('keydown', key); document.removeEventListener('pointerdown', away) }
+  }, [open])
+  return (
+    <span data-crumb-menu className="relative flex items-center gap-2" onPointerEnter={show} onPointerLeave={hide}>
+      <Link to="/#materials" className={crumb}>Носители</Link>
+      <button type="button" aria-label="Конструкторы" aria-expanded={open} onClick={() => setOpen(o => !o)} className="flex h-4 w-2 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-black/30">
+        <svg width="8" height="16" viewBox="0 0 8 16" fill="none" aria-hidden>
+          <path d="M1 7L4 10L7 7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="square" strokeLinejoin="bevel" />
+        </svg>
+      </button>
+      {open && (
+        // 6 px under the crumbs, its rows' text under «Носители» (the rows' 12 px padding and the list's 2 px inside its
+        // edge); white, 2 px inside its edge, a soft shadow, no line, as the combobox's suggestions (Figma 5015:11234)
+        <nav
+          aria-label="Конструкторы"
+          // As wide as its longest row, unlike the suggestions, which take their field's width
+          className="absolute top-full -left-[14px] z-20 mt-1.5 w-max rounded-[8px] bg-white p-[2px] font-normal whitespace-nowrap [font-feature-settings:normal] text-black shadow-[0_10px_15px_rgba(0,0,0,0.1)]"
+        >
+          {/* The gap above is part of the list's hover area, so the pointer crosses it without closing it */}
+          <div aria-hidden className="absolute inset-x-0 -top-1.5 h-1.5" />
+          {GENERATORS.map(g => g.path === current ? (
+            // The tick right after the word, not at the row's end
+            <div key={g.path} aria-current="page" className="flex items-center gap-2 rounded-[8px] px-3 py-[10px] font-medium">
+              {g.title}
+              <span className="flex h-5 w-4 shrink-0 items-center justify-center"><Tick /></span>
+            </div>
+          ) : (
+            <Link
+              key={g.path}
+              to={g.path}
+              onClick={e => { setOpen(false); onPick(e, g.path) }}
+              className="flex rounded-[8px] px-3 py-[10px] outline-none hover:bg-[#f5f5f5] focus-visible:bg-[#f5f5f5]"
+            >{g.title}</Link>
+          ))}
+        </nav>
+      )}
+    </span>
   )
 }
 
@@ -58,7 +122,7 @@ const RING_TURN_MS = 333
 /** How long the line stays turned once left, before coming back round to the current one */
 const RING_BACK_MS = 250
 
-function GeneratorRing({ current }: { current: string }) {
+function GeneratorRing({ current, turnTo }: { current: string; turnTo: React.MutableRefObject<((e: React.MouseEvent, path: string) => void) | null> }) {
   const navigate = useNavigate()
   const at = GENERATORS.findIndex(g => g.path === current)
   const ring = [...GENERATORS.slice(at), ...GENERATORS.slice(0, at)]
@@ -168,11 +232,17 @@ function GeneratorRing({ current }: { current: string }) {
     move(k * turn + item.offsetLeft, true)
     window.setTimeout(() => navigate(path), RING_TURN_MS)
   }
+  // The crumbs' list turns the ring to its pick, forwards from where it stands
+  turnTo.current = (e, path) => {
+    dragged.current = false
+    open(e, turn ? Math.round(offsetRef.current / turn) : 0, ring.findIndex(g => g.path === path), path)
+  }
 
   // Enough turns of the ring around where it stands to fill the line, also while it eases between two places
   const base = turn ? Math.floor(offset / turn) : 0
   const turns = turn ? [base - 2, base - 1, base, base + 1, base + 2] : [0]
   const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
+
 
   return (
     <div
@@ -213,6 +283,7 @@ function GeneratorRing({ current }: { current: string }) {
     </div>
   )
 }
+
 
 export function isValidUrl(v: string): boolean {
   if (!v.trim()) return false
