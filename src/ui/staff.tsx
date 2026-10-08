@@ -170,7 +170,7 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
   const [removed, setRemoved] = useState<{ item: Row<P>; index: number } | null>(null)
   useEffect(() => {
     if (!removed) return
-    const t = setTimeout(() => setRemoved(null), 5000)
+    const t = setTimeout(() => setRemoved(null), 4000)
     return () => clearTimeout(t)
   }, [removed])
   /** Removing the selected one selects its neighbour after (or before) it; removing another keeps the selection */
@@ -253,7 +253,7 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
   return {
     mode, setMode, people, items, file, current, selected, setSelected, tableError, dragging, dropTarget, loadFile,
     showsMissing, form, figureRef, nextOf, pick, update, remove, add, isBlank, paste, useDeleteKey,
-    duplicate, clear, removed, restore,
+    duplicate, clear, removed, restore, dismiss: () => setRemoved(null),
   }
 }
 
@@ -430,13 +430,20 @@ export function ItemFrame<P extends object>({ staff, item, n, children }: { staf
   )
 }
 
-/** In place of an item just removed, for five seconds, 40 px tall as the buttons (it was as tall as the item): «Удалено · Вернуть» */
+/**
+ * In place of an item just removed, for four seconds (it was five), 40 px tall as the buttons (it was as tall as the
+ * item): «Удалено · Вернуть ×», the cross closing it at once for one sure of the removal
+ */
 export function Removed<P extends object>({ staff, at }: { staff: Staff<P>; at: number }) {
   if (staff.removed?.index !== at || staff.mode !== 'manual') return null
   return (
     <div className="flex h-10 items-center justify-center gap-2 text-[14px] leading-5 text-[#808080]">
       Удалено ·
       <button type="button" onClick={e => { e.stopPropagation(); staff.restore() }} className="cursor-pointer text-black outline-none hover:text-[#808080] focus-visible:ring-2 focus-visible:ring-black/30">Вернуть</button>
+      {/* The items' own cross (1 px, #808080, black on hover), as «Удалить» beside them */}
+      <button type="button" title="Закрыть" aria-label="Закрыть" onClick={e => { e.stopPropagation(); staff.dismiss() }} className="flex size-[30px] cursor-pointer items-center justify-center rounded-[8px] text-[#808080] outline-none hover:text-black focus-visible:ring-2 focus-visible:ring-black/30">
+        <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M12 4L8 8M8 8L4 4M8 8L12 12M8 8L4 12" /></svg>
+      </button>
     </div>
   )
 }
