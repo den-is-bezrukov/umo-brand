@@ -325,7 +325,6 @@ export default function BusinessCard() {
           disabled={!ok}
           note={(dealerMissing.length ? unfilled([...dealerMissing, ...(items.length === 1 ? missing[0] : [])].map(f => UNFILLED[f]!), items.length === 1 ? 8 : 0) : dealerIssues[0]) ?? (!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : problemOf(0))}
           onNote={dealerIssues.length ? toDealer : items.length ? () => staff.nextOf(failing) : undefined}
-          className="md:mt-8"
         />
       </aside>
 

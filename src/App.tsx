@@ -302,10 +302,6 @@ export default function App() {
             </OptionalField>
           </div>
 
-          <div className="pt-4 tracking-normal">
-            {/* No «Сбросить» here: each card has its own beside it */}
-            <LinkButtons incomplete={failing.length > 0} />
-          </div>
         </div>
 
         {/* Download — 8px under «Копировать», sticking to the bottom of the sidebar when the window is shorter than the
@@ -318,6 +314,8 @@ export default function App() {
           disabled={failing.length > 0}
           note={items.length > 1 ? inWork(failing.length, items.length) : issue?.text}
           onNote={items.length > 1 ? () => staff.nextOf(failing) : toIssue}
+          // No «Сбросить» here: each card has its own beside it
+          links={<LinkButtons incomplete={failing.length > 0} />}
         />
       </aside>
 

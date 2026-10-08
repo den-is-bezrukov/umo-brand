@@ -161,12 +161,6 @@ export default function PlateFrame() {
             </Field>
           </div>
 
-          {/* Nothing to copy or reset until there's a dealer or the line is centred */}
-          {!blank && (
-            <div className="pt-4 tracking-normal">
-              <LinkButtons onReset={reset} incomplete={!ok} />
-            </div>
-          )}
         </div>
 
         {/* Over it while it's off, the fault, which the preview also says under the strip */}
@@ -177,8 +171,8 @@ export default function PlateFrame() {
           disabled={!ok}
           note={noName ? (custom ? 'Текст не указан' : 'Дилер не выбран') : strip?.issues[0]}
           onNote={toField}
-          // Without «Копировать» and «Сбросить» over it, 40 px off the form, as the name tag's
-          className={blank ? 'md:mt-8' : ''}
+          // Nothing to copy or reset until there's a dealer or the line is centred
+          links={!blank && <LinkButtons onReset={reset} incomplete={!ok} />}
         />
       </aside>
 

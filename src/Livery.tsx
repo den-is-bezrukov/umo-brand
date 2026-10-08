@@ -283,9 +283,6 @@ export default function Livery() {
             {/* <Checkbox checked={seams} onChange={setSeams}>Швы</Checkbox> */}
           </div>
 
-          <div className="pt-4 tracking-normal">
-            <LinkButtons onReset={atDefaults ? undefined : reset} incomplete={!ok || (on.qr && !urlValid)} />
-          </div>
         </div>
 
         {/* Over it while it's off, the first fault, which the preview also says under its sheet */}
@@ -296,6 +293,7 @@ export default function Livery() {
           disabled={!ok || (on.qr && !urlValid)}
           note={on.qr && !urlValid ? (url.trim() ? 'Проверьте ссылку QR-кода' : 'Ссылка QR-кода не указана') : sheets.flatMap(s => s.issues)[0]}
           onNote={on.qr && !urlValid ? () => urlRef.current?.querySelector('input')?.focus() : undefined}
+          links={<LinkButtons onReset={atDefaults ? undefined : reset} incomplete={!ok || (on.qr && !urlValid)} />}
         />
       </aside>
 

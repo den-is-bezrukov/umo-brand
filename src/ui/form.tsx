@@ -698,21 +698,23 @@ export const unfilled = (said: string[], of: number) => of > 1 && said.length ==
  * room kept so the button didn't move). On phones the button alone is pinned to the bottom of the screen, with
  * nothing behind it, so it covers little of the canvas, and the line stays at the foot of the form
  */
-export function DownloadBar({ format, onClick, busy, disabled, note, onNote, className = '' }: {
+export function DownloadBar({ format, onClick, busy, disabled, note, onNote, links }: {
   format: 'PDF' | 'ZIP'
   onClick: () => void
   busy: boolean
   disabled?: boolean
   note?: string
   onNote?: () => void
-  className?: string
+  /** «Копировать» and «Сбросить», under the download: off with it, so the line over them speaks for both */
+  links?: React.ReactNode
 }) {
   // Black: with the buttons off around it, the next step is the one thing here to act on
   const line = 'block w-full text-center text-[14px] leading-5 text-black'
   return (
-    <div className={`flex flex-col md:sticky md:bottom-0 md:z-10 md:bg-white md:p-6 md:pt-0 ${className}`}>
+    // 40 px off the form, as far as one field from the next
+    <div className="flex flex-col md:sticky md:bottom-0 md:z-10 md:mt-8 md:bg-white md:p-6 md:pt-0">
       {disabled && note && (
-        <div className="px-6 pb-6 md:my-2 md:p-0">
+        <div className="px-6 pb-6 md:mb-2 md:p-0">
           {onNote
             ? <button type="button" onClick={onNote} className={`${line} cursor-pointer hover:text-[#808080]`}>{note}</button>
             : <p className={line}>{note}</p>}
@@ -734,6 +736,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, onNote, cla
           {busy ? 'Генерация…' : `Скачать ${format}`}
         </button>
       </div>
+      {links && <div className="order-last px-6 pb-6 tracking-normal md:mt-2 md:p-0">{links}</div>}
     </div>
   )
 }
