@@ -680,15 +680,16 @@ export function LinkButtons({ onReset }: { onReset?: () => void }) {
   )
 }
 
+/** Under the download while fields are empty, whichever they are: one line for all, a click leading to the first */
+export const NOT_FILLED = 'Не хватает данных'
+
 /**
  * The download, at the foot of the sidebar: always there, saying only the file's format, so the page says what it's for
- * at once. Off while something's in the way, with a quiet line over it saying what («Форма не заполнена», «Цена меньше 999 999», «1 из 4 в работе»),
- * a click there leading to it where it can. On phones the button alone is pinned to the bottom of the screen, with
+ * at once. Off while something's in the way, with a quiet line under it saying what («Не хватает данных», «Цена меньше
+ * 999 999», «1 из 4 в работе»), a click there leading to it where it can; the line's room is kept when it's gone, so
+ * the button never moves as it comes and goes. On phones the button alone is pinned to the bottom of the screen, with
  * nothing behind it, so it covers little of the canvas, and the line stays at the foot of the form
  */
-/** Over the download while fields are empty, whichever they are: one line for all, a click leading to the first */
-export const NOT_FILLED = 'Форма не заполнена'
-
 export function DownloadBar({ format, onClick, busy, disabled, note, onNote, className = '' }: {
   format: 'PDF' | 'ZIP'
   onClick: () => void
@@ -698,16 +699,16 @@ export function DownloadBar({ format, onClick, busy, disabled, note, onNote, cla
   onNote?: () => void
   className?: string
 }) {
-  const line = 'block w-full text-center text-[14px] leading-5 text-[#808080] md:mb-2'
+  const line = 'block w-full text-center text-[14px] leading-5 text-[#808080]'
   return (
-    <div className={`md:sticky md:bottom-0 md:z-10 md:bg-white md:p-6 md:pt-0 ${className}`}>
-      {disabled && note && (
-        <div className="px-6 pb-6 md:p-0">
+    <div className={`flex flex-col md:sticky md:bottom-0 md:z-10 md:bg-white md:p-6 md:pt-0 ${className}`}>
+      {disabled && note ? (
+        <div className="order-last px-6 pb-6 md:mt-2 md:p-0">
           {onNote
             ? <button type="button" onClick={onNote} className={`${line} cursor-pointer hover:text-black`}>{note}</button>
             : <p className={line}>{note}</p>}
         </div>
-      )}
+      ) : <div className="order-last hidden h-5 md:mt-2 md:block" />}
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 p-6 md:pointer-events-auto md:static md:p-0">
         <button
           type="button"
