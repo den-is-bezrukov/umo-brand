@@ -1078,7 +1078,7 @@ export default function Guide() {
                     (the dealership) on to Носители and their constructors (they were «Стандарты» and «Носители») */}
                 <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
                   <a href="#positioning" className={LINK_HOVER}>Платформа</a>
-                  <a href="#spaces" className={LINK_HOVER}>Дилерам</a>
+                  <a href="#spaces" className={LINK_HOVER}>Материалы для дилеров</a>
                 </nav>
               </div>
               <Section>
