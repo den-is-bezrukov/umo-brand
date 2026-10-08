@@ -26,13 +26,15 @@ type NavItem = { id: string; title: string; children?: NavItem[] }
  * `grid-auto-flow: dense` would do). `MEDIA` is that packed order, so the grid and the sidebar's sub-items list the
  * media as they actually stand.
  */
-const MEDIA_LIST: { id: string; to: string; title: string; w: number; h: number; picture: ReactNode }[] = [
-  { id: 'livery', to: '/livery', title: 'Ливрея', w: 912, h: 456, picture: <Fig name="livery-umo5" flat="#f6f6f6" w={912} h={456} alt="UMO 5 с ливреей дилера" /> },
-  { id: 'business-card', to: '/business-card', title: 'Визитка', w: 444, h: 333, picture: <Fig name="business-card-card" w={444} h={333} alt="Визитка дилера UMO, обе стороны" /> },
-  { id: 'name-tag', to: '/name-tag', title: 'Бейдж', w: 444, h: 333, picture: <Fig name="name-tag-card" w={444} h={333} alt="Бейдж UMO на рубашке сотрудника" /> },
+// `row`: the ↗ row under the picture, named for what it opens, so a dealer sees there's a tool to click into (it was
+// the medium's name alone, as the contents list it)
+const MEDIA_LIST: { id: string; to: string; title: string; row: string; w: number; h: number; picture: ReactNode }[] = [
+  { id: 'livery', to: '/livery', title: 'Ливрея', row: 'Редактор ливреи', w: 912, h: 456, picture: <Fig name="livery-umo5" flat="#f6f6f6" w={912} h={456} alt="UMO 5 с ливреей дилера" /> },
+  { id: 'business-card', to: '/business-card', title: 'Визитка', row: 'Редактор визитки', w: 444, h: 333, picture: <Fig name="business-card-card" w={444} h={333} alt="Визитка дилера UMO, обе стороны" /> },
+  { id: 'name-tag', to: '/name-tag', title: 'Бейдж', row: 'Редактор бейджа', w: 444, h: 333, picture: <Fig name="name-tag-card" w={444} h={333} alt="Бейдж UMO на рубашке сотрудника" /> },
   {
     // Figma 4985:10019: the 210×297 card centred on the 444×333 grey
-    id: 'price-card', to: '/price-card', title: 'Прайс-карта', w: 444, h: 333,
+    id: 'price-card', to: '/price-card', title: 'Прайс-карта', row: 'Редактор прайс-карты', w: 444, h: 333,
     picture: (
       <div className="flex aspect-4/3 items-center justify-center bg-[#f5f5f5]">
         <div className="w-[47.3%]">
@@ -43,7 +45,7 @@ const MEDIA_LIST: { id: string; to: string; title: string; w: number; h: number;
   },
   {
     // Figma 5008:10482: the 261×66 plate in its frame centred on the 444×333 grey
-    id: 'plate-frame', to: '/plate-frame', title: 'Рамка номера', w: 444, h: 333,
+    id: 'plate-frame', to: '/plate-frame', title: 'Рамка номера', row: 'Редактор рамки номера', w: 444, h: 333,
     picture: (
       <div className="flex aspect-4/3 items-center justify-center bg-[#f5f5f5]">
         <PlateArt className="w-[58.8%]!">
@@ -797,7 +799,7 @@ function Carriers({ items }: { items: typeof MEDIA }) {
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
       {items.map(c => (
         <div key={c.to} id={c.id} className={`scroll-mt-24 ${isWide(c) ? 'md:col-span-2' : ''}`}>
-          <Constructor to={c.to} title={c.title} flush>{c.picture}</Constructor>
+          <Constructor to={c.to} title={c.row} flush>{c.picture}</Constructor>
         </div>
       ))}
     </div>
