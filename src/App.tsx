@@ -227,9 +227,14 @@ export default function App() {
       const one = items.length === 1 ? items[0] : null
       link.download = one ? `UMO-${one.model === 'umo8' ? '8' : '5'}-${one.trim.toUpperCase()}.pdf` : 'UMO_price-cards.pdf'
       link.click()
-      goal('download_price_card', one
-        ? { model: one.model, trim: one.trim, credit: one.creditOn, ownLink: qrUrlOf(one) !== DEFAULT_URL[one.model] }
-        : { cards: items.length, credit: items.some(c => c.creditOn), ownLink: items.some(c => qrUrlOf(c) !== DEFAULT_URL[c.model]) })
+      // QR links other than the model's page go along: where dealers send people
+      const ownLinks = [...new Set(items.map(qrUrlOf).filter(u => !Object.values(DEFAULT_URL).includes(u)))].join(' ').slice(0, 300)
+      goal('download_price_card', {
+        ...(one
+          ? { model: one.model, trim: one.trim, credit: one.creditOn, ownLink: qrUrlOf(one) !== DEFAULT_URL[one.model] }
+          : { cards: items.length, credit: items.some(c => c.creditOn), ownLink: items.some(c => qrUrlOf(c) !== DEFAULT_URL[c.model]) }),
+        ...(ownLinks && { link: ownLinks }),
+      })
       URL.revokeObjectURL(link.href)
     } finally {
       setExporting(false)

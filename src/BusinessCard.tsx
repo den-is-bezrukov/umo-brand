@@ -155,7 +155,9 @@ export default function BusinessCard() {
       a.href = URL.createObjectURL(blob)
       a.download = 'UMO_business-cards.pdf'
       a.click()
-      goal('download_business_card', { count: cards.length, faceEach, marks })
+      // The QR link goes along when it isn't the site made up from the dealer's name: what dealers put there
+      const ownLink = link.trim() !== `https://${siteText(siteFor(dealer.name))}`
+      goal('download_business_card', { count: cards.length, faceEach, marks, ...(ownLink && { link: link.trim().slice(0, 300) }) })
       URL.revokeObjectURL(a.href)
     } finally {
       setExporting(false)
