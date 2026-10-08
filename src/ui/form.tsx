@@ -51,6 +51,8 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
 
 /** Where the current generator stands, the panel's padding */
 const RING_START = 24
+/** Each name's room either side, half the gap, so the names touch and the pointer passes from one to the next with no gap between */
+const RING_PAD = 12
 /** The turn into place */
 const RING_TURN_MS = 333
 /** While another name is pointed at, the current one greys out like the rest, so only one stands out */
@@ -188,20 +190,20 @@ function GeneratorRing({ current }: { current: string }) {
       <nav
         aria-label="Конструкторы"
         className="group/ring absolute inset-y-0 left-0"
-        style={{ transform: `translateX(${RING_START - offset}px)`, transition: eased ? `transform ${RING_TURN_MS}ms cubic-bezier(0.67,0,0.33,1)` : undefined }}
+        style={{ transform: `translateX(${RING_START - RING_PAD - offset}px)`, transition: eased ? `transform ${RING_TURN_MS}ms cubic-bezier(0.67,0,0.33,1)` : undefined }}
         onTransitionEnd={() => setEased(false)}
       >
         {turns.map(k => (
           <div key={k} ref={k === 0 ? copyRef : undefined} aria-hidden={k !== 0} className="absolute top-0 flex" style={{ left: k * turn }}>
             {ring.map((g, i) => i === 0 && k === 0
-              ? <h1 key={g.path} className={`${name} pr-6 ${DIM_CURRENT}`}>{g.title}</h1>
+              ? <h1 key={g.path} className={`${name} px-3 ${DIM_CURRENT}`}>{g.title}</h1>
               : <Link
                   key={g.path}
                   to={g.path}
                   tabIndex={k === 0 ? undefined : -1}
                   draggable={false}
                   onClick={e => open(e, k, i, g.path)}
-                  className={`${name} mr-6 ${i === 0 ? `text-black ${DIM_CURRENT}` : 'text-[#bfbfbf]'} ${crumb} outline-none hover:text-black focus-visible:text-black focus-visible:decoration-black/40`}
+                  className={`${name} px-3 ${i === 0 ? `text-black ${DIM_CURRENT}` : 'text-[#bfbfbf]'} ${crumb} outline-none hover:text-black focus-visible:text-black focus-visible:decoration-black/40`}
                 >{g.title}</Link>)}
           </div>
         ))}
