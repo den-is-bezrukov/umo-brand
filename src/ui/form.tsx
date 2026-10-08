@@ -130,6 +130,8 @@ function GeneratorRing({ current, turnTo }: { current: string; turnTo: React.Mut
   const copyRef = useRef<HTMLDivElement>(null)
   // One turn of the ring in px (the names with their room either side), and how far it's turned, unbounded
   const [turn, setTurn] = useState(0)
+  // The line's width: when the whole ring fits it, as on a wide panel, it's a plain line, not repeated and not turned
+  const [width, setWidth] = useState(Infinity)
   const [offset, setOffset] = useState(0)
   const [eased, setEased] = useState(false)
   const offsetRef = useRef(0)
@@ -144,7 +146,15 @@ function GeneratorRing({ current, turnTo }: { current: string; turnTo: React.Mut
     const measure = () => copyRef.current && setTurn(copyRef.current.offsetWidth)
     measure()
     document.fonts?.ready.then(measure)
+    const row = rowRef.current
+    if (!row) return
+    const observer = new ResizeObserver(() => setWidth(row.offsetWidth))
+    observer.observe(row)
+    return () => observer.disconnect()
   }, [])
+  const fits = turn > 0 && RING_START - RING_PAD + turn <= width
+  // Turned some rounds on a narrow panel, then widened: the one line left stands at its start
+  useEffect(() => { if (fits && offsetRef.current) move(0, false) }, [fits]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const move = (to: number, ease: boolean) => {
     offsetRef.current = to
@@ -169,6 +179,7 @@ function GeneratorRing({ current, turnTo }: { current: string; turnTo: React.Mut
     const row = rowRef.current
     if (!row) return
     const wheel = (e: WheelEvent) => {
+      if (fits) return
       const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
       if (!d) return
       e.preventDefault()
@@ -181,7 +192,7 @@ function GeneratorRing({ current, turnTo }: { current: string; turnTo: React.Mut
   })
 
   const down = (e: React.PointerEvent) => {
-    if (e.button !== 0) return
+    if (e.button !== 0 || fits) return
     cancelAnimationFrame(glide.current)
     clearTimeout(timer.current)
     drag.current = { x: e.clientX, start: offsetRef.current, moved: false, t: e.timeStamp, v: 0 }
@@ -226,7 +237,7 @@ function GeneratorRing({ current, turnTo }: { current: string; turnTo: React.Mut
     e.preventDefault()
     if (dragged.current && e.detail) return
     const item = copyRef.current?.children[i] as HTMLElement | undefined
-    if (still || !item) return navigate(path)
+    if (still || fits || !item) return navigate(path)
     clearTimeout(timer.current)
     cancelAnimationFrame(glide.current)
     move(k * turn + item.offsetLeft, true)
@@ -240,7 +251,7 @@ function GeneratorRing({ current, turnTo }: { current: string; turnTo: React.Mut
 
   // Enough turns of the ring around where it stands to fill the line, also while it eases between two places
   const base = turn ? Math.floor(offset / turn) : 0
-  const turns = turn ? [base - 2, base - 1, base, base + 1, base + 2] : [0]
+  const turns = turn && !fits ? [base - 2, base - 1, base, base + 1, base + 2] : [0]
   const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
 
 
