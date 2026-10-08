@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Font } from 'opentype.js'
 import { goal } from '@/ui/metrika'
-import { Field, OptionalField, Segments, SegBtn, ComboField, UrlField, Checkbox, SizeSwitch, GeneratorHeader, LinkButtons, DownloadButton, isValidUrl } from '@/ui/form'
+import { Field, OptionalField, Segments, SegBtn, ComboField, UrlField, Checkbox, SizeSwitch, GeneratorHeader, LinkButtons, DownloadBar, isValidUrl } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
 import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
 import { DEFAULT_TAGLINE, TAGLINES } from '@/data/taglines'
@@ -283,12 +283,17 @@ export default function Livery() {
           </div>
         </div>
 
-        <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:pt-0">
-          <DownloadButton onClick={handleExport} busy={exporting} disabled={!ok || (on.qr && !urlValid)}>Скачать ZIP</DownloadButton>
-        </div>
+        {/* Over it while it's off, the first fault, which the preview also says under its sheet */}
+        <DownloadBar
+          format="ZIP"
+          onClick={handleExport}
+          busy={exporting}
+          disabled={!ok || (on.qr && !urlValid)}
+          note={on.qr && !urlValid ? (url.trim() ? 'Проверьте ссылку QR-кода' : 'Нет ссылки QR-кода') : sheets.flatMap(s => s.issues)[0]}
+        />
       </aside>
 
-      <main className="flex-1 bg-[#f5f5f5] p-6 pb-[112px] md:min-w-0 md:overflow-y-auto md:p-16">
+      <main className="flex-1 bg-[#f5f5f5] p-6 pb-[140px] md:min-w-0 md:overflow-y-auto md:p-16">
         <div className="mx-auto flex max-w-[1200px] flex-col gap-10">
           {sheets.slice(0, 2).map(s => <SheetPreview key={s.surface.id} sheet={s} seams={seams} dims={dims} />)}
           {sheets[2] && (

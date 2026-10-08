@@ -6,9 +6,9 @@ import PriceCardPdf from '@/posters/pdf/PriceCardPdf'
 import { ensurePdfFonts } from '@/posters/pdf/pdfFonts'
 import type { Variant } from '@/posters/cardData'
 import { goal } from '@/ui/metrika'
-import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField, GeneratorHeader, LinkButtons, DownloadButton } from '@/ui/form'
+import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField, GeneratorHeader, LinkButtons, DownloadBar } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
-import { useStaff, ItemFrame, AddTile, Removed, Progress, plural, plain, ITEM_EDGE, type Row } from '@/ui/staff'
+import { useStaff, ItemFrame, AddTile, Removed, inWork, plain, ITEM_EDGE, type Row } from '@/ui/staff'
 
 const POSTER_W = 1754
 const POSTER_H = 2480
@@ -114,7 +114,7 @@ function check(c: Card) {
   return { fullTooLow, creditTooLow, fullLessThanCredit, urlBad, ok: !fullTooLow && !creditTooLow && !fullLessThanCredit && !urlBad }
 }
 
-/** A card's first fault in the form's order, said in place of «Скачать», and the field it's in */
+/** A card's first fault in the form's order, said over «Скачать PDF», and the field it's in */
 function firstIssue(c: Card): { field: 'url' | 'full' | 'credit'; text: string } | null {
   const i = check(c)
   if (i.urlBad) return { field: 'url', text: c.url.trim() ? 'Проверьте ссылку QR-кода' : 'Нет ссылки QR-кода' }
@@ -126,9 +126,6 @@ function firstIssue(c: Card): { field: 'url' | 'full' | 'credit'; text: string }
 
 /** The link the QR leads to: the card's own if it's a link, the model's page otherwise */
 const qrUrlOf = (c: Card) => isValidUrl(c.url.trim()) ? c.url.trim() : DEFAULT_URL[c.model]
-
-/** прайс-карту, прайс-карты, прайс-карт: «Скачать 3 прайс-карты» */
-const cardsWord = (n: number) => ({ '': 'прайс-карту', 'а': 'прайс-карты', 'ей': 'прайс-карт' })[plural(n)]
 
 export default function App() {
   const [initial] = useState(fromLink)
@@ -305,27 +302,21 @@ export default function App() {
           </div>
         </div>
 
-        {/* Download — 8px under «Копировать» and «Сбросить», sticking to the bottom of the sidebar when the window is shorter
-            than the form; on phones pinned to the bottom of the screen, since the preview comes below the form. With
-            several cards and some in work, the progress leading through them stands in its place, as the business card's */}
-        <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:pt-0">
-          {/* One card: its first fault, a click taking the focus there; several: the cards in work, as the business card */}
-          {failing.length > 0 && items.length === 1 && issue ? (
-            <button type="button" onClick={toIssue} className="flex w-full cursor-pointer items-center justify-center px-3 py-[10px] text-[14px] leading-5 text-[#808080] hover:text-black">
-              {issue.text}
-            </button>
-          ) : failing.length > 0 && items.length > 1 ? (
-            <Progress failing={failing.length} total={items.length} onClick={() => staff.nextOf(failing)} />
-          ) : (
-            <DownloadButton onClick={handleExport} busy={exporting} disabled={failing.length > 0}>
-              {items.length > 1 ? `Скачать ${items.length} ${cardsWord(items.length)}` : 'Скачать PDF'}
-            </DownloadButton>
-          )}
-        </div>
+        {/* Download — 8px under «Копировать», sticking to the bottom of the sidebar when the window is shorter than the
+            form; on phones pinned to the bottom of the screen, since the preview comes below the form. Over it, while it's
+            off, one card's first fault (a click taking the focus there) or the cards in work, as the business card's */}
+        <DownloadBar
+          format="PDF"
+          onClick={handleExport}
+          busy={exporting}
+          disabled={failing.length > 0}
+          note={items.length > 1 ? inWork(failing.length, items.length) : issue?.text}
+          onNote={items.length > 1 ? () => staff.nextOf(failing) : toIssue}
+        />
       </aside>
 
       {/* ── The cards ── */}
-      <main ref={canvasRef} className="flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[112px] md:min-w-0 md:overflow-y-auto md:p-16">
+      <main ref={canvasRef} className="flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[140px] md:min-w-0 md:overflow-y-auto md:p-16">
         {scale > 0 && (
           <div className="m-auto grid w-full grid-cols-1 gap-8">
             {items.map((c, i) => {

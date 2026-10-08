@@ -144,7 +144,10 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
   // Going to an item with an error: select it for editing and bring it into view
   const [reveal, setReveal] = useState(0)
   useEffect(() => {
-    if (reveal && selected !== undefined) figures.current.get(selected)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    if (!reveal || selected === undefined) return
+    figures.current.get(selected)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    // and its first field at fault takes the focus, once the errors show
+    setTimeout(() => form.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus({ preventScroll: true }))
   }, [reveal]) // eslint-disable-line react-hooks/exhaustive-deps
   const goTo = (key: number) => {
     setSelected(key)
@@ -349,17 +352,8 @@ export function AddTile({ onClick }: { onClick: () => void }) {
   )
 }
 
-/**
- * Until every item is ready, the progress in the download button's place: it counts the items still in work, which a
- * click leads through («1 из 4 в работе», or «4 в работе» when it's all of them)
- */
-export function Progress({ failing, total, onClick }: { failing: number; total: number; onClick: () => void }) {
-  return (
-    <button type="button" onClick={onClick} className="flex w-full cursor-pointer items-center justify-center px-3 py-[10px] text-[14px] leading-5 text-[#808080] hover:text-black">
-      {failing}{failing < total ? ` из ${total}` : ''} в работе
-    </button>
-  )
-}
+/** The line over the download while items are in work: «1 из 4 в работе», or «4 в работе» when it's all of them */
+export const inWork = (failing: number, total: number) => `${failing}${failing < total ? ` из ${total}` : ''} в работе`
 
 /** The Russian ending for a count: '' (1, 21), 'а' (2–4, 22–24), 'ей' (5–20…) as in бейдж, бейджа, бейджей */
 export function plural(n: number): '' | 'а' | 'ей' {

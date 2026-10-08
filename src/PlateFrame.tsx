@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Font } from 'opentype.js'
 import { goal } from '@/ui/metrika'
-import { Field, Segments, SegBtn, TextInput, ComboField, GeneratorHeader, LinkButtons, DownloadButton } from '@/ui/form'
+import { Field, Segments, SegBtn, TextInput, ComboField, GeneratorHeader, LinkButtons, DownloadBar } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
 import { loadFont, toD } from '@/livery/geometry'
 import { STRIP, BASELINE, SIZE, TRACKING, buildStrip, lineStart, type Align } from '@/plate/frame'
@@ -153,12 +153,17 @@ export default function PlateFrame() {
           </div>
         </div>
 
-        <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:pt-0">
-          <DownloadButton onClick={handleExport} busy={exporting} disabled={!ok}>Скачать PDF</DownloadButton>
-        </div>
+        {/* Over it while it's off, the fault, which the preview also says under the strip */}
+        <DownloadBar
+          format="PDF"
+          onClick={handleExport}
+          busy={exporting}
+          disabled={!ok}
+          note={noName ? (custom ? 'Нет текста' : 'Нет названия дилера') : strip?.issues[0]}
+        />
       </aside>
 
-      <main className="flex flex-1 items-center bg-[#f5f5f5] p-6 pb-[112px] md:min-w-0 md:overflow-y-auto md:p-16">
+      <main className="flex flex-1 items-center bg-[#f5f5f5] p-6 pb-[140px] md:min-w-0 md:overflow-y-auto md:p-16">
         <figure className="mx-auto flex w-full max-w-[1200px] flex-col gap-2">
           {/* A double click on the frame edits the text right on it, as the name tags do */}
           <div className="@container relative cursor-text" onDoubleClick={() => setEditing(true)}>

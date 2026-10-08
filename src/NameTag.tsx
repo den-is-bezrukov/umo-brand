@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined } from '@/ui/form'
-import { useStaff, TableSource, UploadArea, AddTile, Progress, plural, fullNameField, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
+import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadBar, Segments, SegBtn, outlined } from '@/ui/form'
+import { useStaff, TableSource, UploadArea, AddTile, inWork, fullNameField, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD } from '@/livery/geometry'
 import { TAG, buildTag, loadFonts, type Field, type FieldBox, type Fonts, type Person } from '@/nametag/tag'
@@ -134,19 +134,16 @@ export default function NameTag() {
           {mode === 'table' && <TableSource staff={staff} template={TEMPLATE} />}
         </div>
 
-        {/* No bar at all while there's nothing in it (a single tag in work), or it's an empty white strip on phones */}
-        {(failing.length === 0 ? items.length > 0 : items.length > 1) && <div className="bg-white p-6 pt-0 md:sticky md:mt-8">
-          {/* Until every tag is ready, the progress in the button's place: it counts the tags still in work, which a click
-              leads through («1 из 4 в работе», or «4 в работе» when it's all of them); with a single tag, nothing: its
-              form says enough */}
-          {failing.length > 0 ? items.length > 1 && (
-            <Progress failing={failing.length} total={items.length} onClick={() => staff.nextOf(failing)} />
-          ) : items.length > 0 && (
-            <DownloadButton onClick={handleExport} busy={exporting} disabled={!ok}>
-              Скачать{items.length > 1 ? ` ${items.length} бейдж${plural(items.length)}` : ''}
-            </DownloadButton>
-          )}
-        </div>}
+        {/* On phones pinned to the bottom of the screen, as on every generator; 40 px off the form on wide screens */}
+        <DownloadBar
+          format="ZIP"
+          onClick={handleExport}
+          busy={exporting}
+          disabled={!ok}
+          note={!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : [...(tags?.[0]?.issues ?? []), ...missing[0]][0]}
+          onNote={items.length ? () => staff.nextOf(failing) : undefined}
+          className="md:mt-8"
+        />
       </aside>
 
       {/* The whole preview takes a dropped table in either mode, saying so only in the table mode, where until a file is
@@ -154,7 +151,7 @@ export default function NameTag() {
       <main
         {...staff.dropTarget}
         onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure, [data-add]')) setSelected(null) }}
-        className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 md:min-w-0 md:overflow-y-auto md:p-16
+        className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[140px] md:min-w-0 md:overflow-y-auto md:p-16
           ${mode === 'table' && staff.file && staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
       >
         {mode === 'table' && !staff.file ? (

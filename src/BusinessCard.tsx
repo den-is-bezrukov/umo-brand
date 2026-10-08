@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadButton, Segments, SegBtn, rowAction, isValidUrl, ALERT_LABEL, Checkbox } from '@/ui/form'
-import { useStaff, TableSource, UploadArea, AddTile, Progress, fullNameField, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
+import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadBar, Segments, SegBtn, rowAction, isValidUrl, ALERT_LABEL, Checkbox } from '@/ui/form'
+import { useStaff, TableSource, UploadArea, AddTile, inWork, fullNameField, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
@@ -175,7 +175,8 @@ export default function BusinessCard() {
       <UrlField value={link} onChange={setQrLink} />
     </Labelled>
   )
-  const showBar = dealerIssues.length > 0 || (failing.length === 0 ? items.length > 0 : items.length > 1)
+  /** A card's first fault, its empty fields included while it's fresh */
+  const problemOf = (i: number) => [...(cards?.[i]?.issues.filter(x => !x.field || PERSON_FIELDS.includes(x.field)).map(x => x.text) ?? []), ...missing[i].map(f => MISSING[f]!)][0]
 
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
@@ -284,26 +285,22 @@ export default function BusinessCard() {
           </div>
         </div>
 
-        {showBar && <div className="bg-white p-6 pt-0 md:sticky md:mt-8">
-          {/* The dealership first, as every card needs it; then the cards in work, as the name tag counts them */}
-          {dealerIssues.length > 0 ? (
-            <button type="button" onClick={toDealer} className="flex w-full cursor-pointer items-center justify-center px-3 py-[10px] text-[14px] leading-5 text-[#808080] hover:text-black">
-              {dealerIssues[0]}
-            </button>
-          ) : failing.length > 0 ? items.length > 1 && (
-            <Progress failing={failing.length} total={items.length} onClick={() => staff.nextOf(failing)} />
-          ) : items.length > 0 && (
-            <DownloadButton onClick={handleExport} busy={exporting} disabled={!ok}>
-              Скачать{items.length > 1 ? ` ${items.length} ${cardsWord(items.length)}` : ''}
-            </DownloadButton>
-          )}
-        </div>}
+        {/* The dealership first, as every card needs it; then the cards in work, as the name tag counts them */}
+        <DownloadBar
+          format="PDF"
+          onClick={handleExport}
+          busy={exporting}
+          disabled={!ok}
+          note={dealerIssues[0] ?? (!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : problemOf(0))}
+          onNote={dealerIssues.length ? toDealer : items.length ? () => staff.nextOf(failing) : undefined}
+          className="md:mt-8"
+        />
       </aside>
 
       <main
         {...staff.dropTarget}
         onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure, [data-add]')) staff.setSelected(null) }}
-        className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 md:min-w-0 md:overflow-y-auto md:p-16
+        className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[140px] md:min-w-0 md:overflow-y-auto md:p-16
           ${mode === 'table' && staff.file && staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
       >
         {mode === 'table' && !staff.file ? (
@@ -369,13 +366,4 @@ function alertLine(problems: string[]): string {
   const empty = all.filter(t => problems.includes(t)).map(t => t.replace(/^Нет /, ''))
   const missing = empty.length ? `Нет ${empty.length > 1 ? `${empty.slice(0, -1).join(', ')} и ${empty[empty.length - 1]}` : empty[0]}` : ''
   return [missing, ...problems.filter(t => !all.includes(t))].filter(Boolean).join(' · ')
-}
-
-/** визитки, визиток: «Скачать 2 визитки», «Скачать 5 визиток», «Скачать 21 визитку» */
-function cardsWord(n: number): string {
-  const d = n % 10
-  const dd = n % 100
-  if (d === 1 && dd !== 11) return 'визитку'
-  if (d >= 2 && d <= 4 && (dd < 12 || dd > 14)) return 'визитки'
-  return 'визиток'
 }

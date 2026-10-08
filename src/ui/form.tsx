@@ -680,20 +680,39 @@ export function LinkButtons({ onReset }: { onReset?: () => void }) {
   )
 }
 
-export function DownloadButton({ onClick, busy, disabled, children }: { onClick: () => void; busy: boolean; disabled?: boolean; children: React.ReactNode }) {
+/**
+ * The download, at the foot of the sidebar (on phones pinned to the bottom of the screen): always there, saying only the
+ * file's format, so the page says what it's for at once. Off while something's in the way, with a quiet line over it
+ * saying what («Нет должности», «1 из 4 в работе»), a click there leading to it where it can
+ */
+export function DownloadBar({ format, onClick, busy, disabled, note, onNote, className = '' }: {
+  format: 'PDF' | 'ZIP'
+  onClick: () => void
+  busy: boolean
+  disabled?: boolean
+  note?: string
+  onNote?: () => void
+  className?: string
+}) {
+  const line = 'mb-2 block w-full text-center text-[14px] leading-5 text-[#808080]'
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={busy || disabled}
-      className="flex w-full min-w-16 items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] text-[14px] font-medium leading-5 text-white cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 hover:enabled:bg-[#333]"
-    >
-      {busy && (
-        <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" aria-hidden>
-          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-        </svg>
-      )}
-      {busy ? 'Генерация…' : children}
-    </button>
+    <div className={`fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:pt-0 ${className}`}>
+      {disabled && note && (onNote
+        ? <button type="button" onClick={onNote} className={`${line} cursor-pointer hover:text-black`}>{note}</button>
+        : <p className={line}>{note}</p>)}
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={busy || disabled}
+        className="flex w-full min-w-16 items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] text-[14px] font-medium leading-5 text-white cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-40 hover:enabled:bg-[#333]"
+      >
+        {busy && (
+          <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" aria-hidden>
+            <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+          </svg>
+        )}
+        {busy ? 'Генерация…' : `Скачать ${format}`}
+      </button>
+    </div>
   )
 }
