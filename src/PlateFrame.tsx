@@ -202,9 +202,8 @@ export default function PlateFrame() {
               />
             )}
           </div>
-          <figcaption className="flex items-baseline justify-center gap-2 text-[14px] leading-5">
-            <span>Поле печати</span>
-            <span className="text-[#999]">{STRIP.w} × {STRIP.h} мм</span>
+          <figcaption className="text-center text-[14px] leading-5 text-[#808080]">
+            Поле печати, {STRIP.w}&nbsp;×&nbsp;{STRIP.h}&nbsp;мм
           </figcaption>
           {wrong && (
             <ul className="text-center text-[13px] leading-5 text-[#e30]">
