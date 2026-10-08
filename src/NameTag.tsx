@@ -140,7 +140,8 @@ export default function NameTag() {
           onClick={handleExport}
           busy={exporting}
           disabled={!ok}
-          note={!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : [...(tags?.[0]?.issues ?? []), ...missing[0]][0]}
+          // A blank tag says nothing: its empty fields say enough
+          note={!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : missing[0].length === 3 ? undefined : [...(tags?.[0]?.issues ?? []), ...missing[0]][0]}
           onNote={items.length ? () => staff.nextOf(failing) : undefined}
           className="md:mt-8"
         />

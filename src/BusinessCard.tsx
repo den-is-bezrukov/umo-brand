@@ -291,7 +291,8 @@ export default function BusinessCard() {
           onClick={handleExport}
           busy={exporting}
           disabled={!ok}
-          note={dealerIssues[0] ?? (!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : problemOf(0))}
+          // A blank form says nothing: its empty fields say enough
+          note={items.length === 1 && dealerMissing.length === 3 && missing[0].length === 5 ? undefined : dealerIssues[0] ?? (!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : problemOf(0))}
           onNote={dealerIssues.length ? toDealer : items.length ? () => staff.nextOf(failing) : undefined}
           className="md:mt-8"
         />
