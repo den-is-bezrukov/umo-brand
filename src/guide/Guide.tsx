@@ -27,15 +27,14 @@ type NavItem = { id: string; title: string; children?: NavItem[] }
  * media as they actually stand.
  */
 // `row`: the ↗ row under the picture, named for what a dealer does there, so it reads as a tool to click into (it was
-// the medium's name alone, as the contents list it, then «Редактор ливреи»…); `format`, on its right in place of the
-// path, the file it gives, as the constructor's «Скачать ZIP» / «Скачать PDF»
-const MEDIA_LIST: { id: string; to: string; title: string; row: string; format: 'PDF' | 'ZIP'; w: number; h: number; picture: ReactNode }[] = [
-  { id: 'livery', to: '/livery', title: 'Ливрея', row: 'Настроить ливрею', format: 'ZIP', w: 912, h: 456, picture: <Fig name="livery-umo5" flat="#f6f6f6" w={912} h={456} alt="UMO 5 с ливреей дилера" /> },
-  { id: 'business-card', to: '/business-card', title: 'Визитка', row: 'Сделать визитки', format: 'PDF', w: 444, h: 333, picture: <Fig name="business-card-card" w={444} h={333} alt="Визитка дилера UMO, обе стороны" /> },
-  { id: 'name-tag', to: '/name-tag', title: 'Бейдж', row: 'Подписать бейджи', format: 'ZIP', w: 444, h: 333, picture: <Fig name="name-tag-card" w={444} h={333} alt="Бейдж UMO на рубашке сотрудника" /> },
+// the medium's name alone, as the contents list it, then «Редактор ливреи»…)
+const MEDIA_LIST: { id: string; to: string; title: string; row: string; w: number; h: number; picture: ReactNode }[] = [
+  { id: 'livery', to: '/livery', title: 'Ливрея', row: 'Настроить ливрею', w: 912, h: 456, picture: <Fig name="livery-umo5" flat="#f6f6f6" w={912} h={456} alt="UMO 5 с ливреей дилера" /> },
+  { id: 'business-card', to: '/business-card', title: 'Визитка', row: 'Сделать визитки', w: 444, h: 333, picture: <Fig name="business-card-card" w={444} h={333} alt="Визитка дилера UMO, обе стороны" /> },
+  { id: 'name-tag', to: '/name-tag', title: 'Бейдж', row: 'Подписать бейджи', w: 444, h: 333, picture: <Fig name="name-tag-card" w={444} h={333} alt="Бейдж UMO на рубашке сотрудника" /> },
   {
     // Figma 4985:10019: the 210×297 card centred on the 444×333 grey
-    id: 'price-card', to: '/price-card', title: 'Прайс-карта', row: 'Обновить прайс-карту', format: 'PDF', w: 444, h: 333,
+    id: 'price-card', to: '/price-card', title: 'Прайс-карта', row: 'Обновить прайс-карту', w: 444, h: 333,
     picture: (
       <div className="flex aspect-4/3 items-center justify-center bg-[#f5f5f5]">
         <div className="w-[47.3%]">
@@ -46,7 +45,7 @@ const MEDIA_LIST: { id: string; to: string; title: string; row: string; format: 
   },
   {
     // Figma 5008:10482: the 261×66 plate in its frame centred on the 444×333 grey
-    id: 'plate-frame', to: '/plate-frame', title: 'Рамка номера', row: 'Сделать рамку номера', format: 'PDF', w: 444, h: 333,
+    id: 'plate-frame', to: '/plate-frame', title: 'Рамка номера', row: 'Сделать рамку номера', w: 444, h: 333,
     picture: (
       <div className="flex aspect-4/3 items-center justify-center bg-[#f5f5f5]">
         <PlateArt className="w-[58.8%]!">
@@ -705,8 +704,7 @@ function PriceCardPreview({ variant, fullPrice, creditPrice, image, alt }: {
 }
 
 /** A file from public/downloads/ (the row shows its name and size) or a page of this site (its title and path). */
-/** A file to download, or a page of the site (`meta`, said on the right in place of its path: the constructors' file format) */
-type Asset = { file: string } | { to: string; title: string; meta?: string }
+type Asset = { file: string } | { to: string; title: string }
 
 /** Size in КБ below 1000 КБ, else МБ. */
 function fileSize(bytes: number): [number, string] {
@@ -741,7 +739,7 @@ function Assets({ items, preview }: { items: Asset[]; preview?: string }) {
             <Link key={a.to} to={a.to} className={row}>
               <span aria-hidden className="w-4 shrink-0 text-center font-medium">↗</span>
               <span className={name}>{a.title}</span>
-              <span className={meta}>{a.meta ?? a.to}</span>
+              <span className={meta}>{a.to}</span>
             </Link>
           )
         }
@@ -786,11 +784,11 @@ function Previews({ className, children }: { className: string; children: ReactN
 }
 
 /** A constructor page's preview over its ↗ row; `flush` sets the row right under the preview, with no gap. */
-function Constructor({ to, title, meta, flush, children }: { to: string; title: string; meta?: string; flush?: boolean; children: ReactNode }) {
+function Constructor({ to, title, flush, children }: { to: string; title: string; flush?: boolean; children: ReactNode }) {
   return (
     <div className={`group/preview flex flex-col ${flush ? '' : 'gap-6'}`}>
       <PreviewLink asset={{ to, title }} label={title}>{children}</PreviewLink>
-      <Assets items={[{ to, title, meta }]} preview={to} />
+      <Assets items={[{ to, title }]} preview={to} />
     </div>
   )
 }
@@ -801,7 +799,7 @@ function Carriers({ items }: { items: typeof MEDIA }) {
     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
       {items.map(c => (
         <div key={c.to} id={c.id} className={`scroll-mt-24 ${isWide(c) ? 'md:col-span-2' : ''}`}>
-          <Constructor to={c.to} title={c.row} meta={c.format} flush>{c.picture}</Constructor>
+          <Constructor to={c.to} title={c.row} flush>{c.picture}</Constructor>
         </div>
       ))}
     </div>
