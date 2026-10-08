@@ -164,7 +164,7 @@ export default function PlateFrame() {
           {/* Nothing to copy or reset until there's a dealer or the line is centred */}
           {!blank && (
             <div className="pt-4 tracking-normal">
-              <LinkButtons onReset={reset} />
+              <LinkButtons onReset={reset} incomplete={!ok} />
             </div>
           )}
         </div>

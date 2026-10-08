@@ -304,7 +304,7 @@ export default function App() {
 
           <div className="pt-4 tracking-normal">
             {/* No «Сбросить» here: each card has its own beside it */}
-            <LinkButtons />
+            <LinkButtons incomplete={failing.length > 0} />
           </div>
         </div>
 

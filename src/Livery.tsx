@@ -284,7 +284,7 @@ export default function Livery() {
           </div>
 
           <div className="pt-4 tracking-normal">
-            <LinkButtons onReset={atDefaults ? undefined : reset} />
+            <LinkButtons onReset={atDefaults ? undefined : reset} incomplete={!ok || (on.qr && !urlValid)} />
           </div>
         </div>
 

@@ -654,10 +654,10 @@ export const outlined = 'flex min-w-16 flex-1 items-center justify-center rounde
  * «Копировать» and «Сбросить» side by side (Figma 4939:3762): the first copies the page address — the settings are in
  * it — to send a set-up card or livery as a link, and says so for two seconds; the second brings the settings back to
  * the defaults, which a page reload can't, as the address keeps them. Without `onReset` only «Копировать» (the price
- * card: each card has its own «Сбросить» beside it). Both off while there's nothing set to copy or reset (`disabled`:
- * the plate frame with no dealer).
+ * card: each card has its own «Сбросить» beside it). «Копировать» is off while the result isn't ready (`incomplete`, as
+ * «Скачать»): a link is sent for what it makes, not a draft. «Сбросить» stays, as it can mend a broken form.
  */
-export function LinkButtons({ onReset, disabled }: { onReset?: () => void; disabled?: boolean }) {
+export function LinkButtons({ onReset, incomplete }: { onReset?: () => void; incomplete?: boolean }) {
   const [copied, setCopied] = useState(false)
   useEffect(() => {
     if (!copied) return
@@ -673,12 +673,12 @@ export function LinkButtons({ onReset, disabled }: { onReset?: () => void; disab
           goal('copy_link', { page: location.pathname })
         })}
         title="Скопировать ссылку на эти настройки"
-        disabled={disabled}
+        disabled={incomplete}
         className={outlined}
       >
         <span aria-live="polite">{copied ? 'Скопировано' : 'Копировать'}</span>
       </button>
-      {onReset && <button type="button" onClick={onReset} disabled={disabled} title="Вернуть настройки по умолчанию" className={outlined}>Сбросить</button>}
+      {onReset && <button type="button" onClick={onReset} title="Вернуть настройки по умолчанию" className={outlined}>Сбросить</button>}
     </div>
   )
 }
