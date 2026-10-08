@@ -8,7 +8,7 @@ import type { Variant } from '@/posters/cardData'
 import { goal } from '@/ui/metrika'
 import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField, GeneratorHeader, LinkButtons, DownloadButton } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
-import { useStaff, ItemFrame, AddTile, Removed, Progress, plural, plain, type Row } from '@/ui/staff'
+import { useStaff, ItemFrame, AddTile, Removed, Progress, plural, plain, ITEM_EDGE, type Row } from '@/ui/staff'
 
 const POSTER_W = 1754
 const POSTER_H = 2480
@@ -316,11 +316,10 @@ export default function App() {
                     <div className="w-full" style={{ maxWidth: rowW }}>
                       <ItemFrame staff={frame} item={c} n={i + 1}>
                         {/* A plain box, not a button: a button's centred text shifted the card's own layout. Clipped to
-                            the card, so the photo doesn't run past its edge, and edged outside it at 10% black, 40% on
-                            hover (the secondary buttons' edge) */}
+                            the card, so the photo doesn't run past its edge, and edged as every generator's items
+                            (`ITEM_EDGE`) */}
                         <div
-                          className={`relative overflow-hidden bg-white outline-1 outline-offset-0 transition-opacity duration-150
-                            outline-black/10 group-hover/row:outline-black/40
+                          className={`relative overflow-hidden bg-white ${ITEM_EDGE} transition-opacity duration-150
                             ${!active ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
                           style={{ width: cardW, height: Math.round(POSTER_H * scale) }}
                         >

@@ -321,6 +321,12 @@ export function UploadArea<P extends object>({ staff }: { staff: Staff<P> }) {
 export const BESIDE = 'px-12 md:px-0'
 
 /**
+ * An item's edge on the canvas, the same on every generator: 1 px outside it at 10% black, 40% while the pointer is in
+ * its row (the secondary buttons' edge; it was black, too loud for a poster)
+ */
+export const ITEM_EDGE = 'outline-1 outline-offset-0 outline-black/10 group-hover/row:outline-black/40'
+
+/**
  * «Добавить» under the list: a secondary button as wide as its text («Копировать»'s edge, 10% and 40% on hover),
  * centred under the items. It was a tile in the item's shape, too large, the price card's above all
  */

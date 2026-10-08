@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadButton, Segments, SegBtn, rowAction, isValidUrl, ALERT_LABEL, Checkbox } from '@/ui/form'
-import { useStaff, TableSource, UploadArea, AddTile, Progress, fullNameField, ItemFrame, Removed, BESIDE } from '@/ui/staff'
+import { useStaff, TableSource, UploadArea, AddTile, Progress, fullNameField, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
@@ -333,9 +333,8 @@ export default function BusinessCard() {
                   <button
                     type="button"
                     aria-pressed={mode === 'manual' ? active : undefined}
-                    // The selected card edged as the price card's page: a 1 px line at 10% black around it (ring-1 there), black on hover
-                    className={`block w-full cursor-pointer outline-1 outline-offset-0 transition-opacity duration-150
-                      outline-black/10 group-hover/row:outline-black
+                    // Edged as every generator's items (`ITEM_EDGE`)
+                    className={`block w-full cursor-pointer ${ITEM_EDGE} transition-opacity duration-150
                       ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
                   >
                     <CardArt

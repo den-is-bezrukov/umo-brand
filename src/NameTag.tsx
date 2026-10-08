@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadButton, Segments, SegBtn, outlined } from '@/ui/form'
-import { useStaff, TableSource, UploadArea, AddTile, Progress, plural, fullNameField, ItemFrame, Removed, BESIDE } from '@/ui/staff'
+import { useStaff, TableSource, UploadArea, AddTile, Progress, plural, fullNameField, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD } from '@/livery/geometry'
 import { TAG, buildTag, loadFonts, type Field, type FieldBox, type Fonts, type Person } from '@/nametag/tag'
@@ -197,10 +197,8 @@ export default function NameTag() {
                     setEditing({ key, field })
                   }}
                   aria-pressed={mode === 'manual' ? active : undefined}
-                  // The selected tag edged as the business card and the price card's page: 1 px at 10% black around it,
-                  // black on hover
-                  className={`block w-full cursor-pointer rounded-[5.714cqw] outline-1 outline-offset-0 transition-opacity duration-150
-                    outline-black/10 group-hover/row:outline-black
+                  // Edged as every generator's items (`ITEM_EDGE`)
+                  className={`block w-full cursor-pointer rounded-[5.714cqw] ${ITEM_EDGE} transition-opacity duration-150
                     ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
                 >
                   <TagArt
