@@ -1,4 +1,4 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { cloneElement, isValidElement, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { goal } from './metrika'
 
@@ -663,7 +663,12 @@ const flash = (text: string) => flashes.forEach(f => f(text))
  * it). «Поделиться» is off while the result isn't ready (`incomplete`, as «Скачать»): a link is sent for what it makes,
  * not a draft. «Сбросить» stays, as it can mend a broken form.
  */
-export function LinkButtons({ onReset, incomplete }: { onReset?: () => void; incomplete?: boolean }) {
+export function LinkButtons({ onReset, incomplete, only }: {
+  onReset?: () => void
+  incomplete?: boolean
+  /** One of the two alone: on phones «Поделиться» stands by the download and «Сбросить» at the foot of the form */
+  only?: 'share' | 'reset'
+}) {
   const share = async () => {
     const url = window.location.href
     // On phones the system's share sheet: the chat a link goes to in a tap or two, «Скопировать» among them
@@ -678,12 +683,19 @@ export function LinkButtons({ onReset, incomplete }: { onReset?: () => void; inc
     flash('Ссылка с настройками скопирована')
     goal('copy_link', { page: location.pathname })
   }
+  const shareButton = (
+    // White under it: on phones it stands over the canvas
+    <button type="button" onClick={share} title="Отправить ссылку на эти настройки" disabled={incomplete} className={`${outlined} bg-white`}>
+      Поделиться
+    </button>
+  )
+  const resetButton = onReset && <button type="button" onClick={onReset} title="Вернуть настройки по умолчанию" className={outlined}>Сбросить</button>
+  if (only === 'share') return shareButton
+  if (only === 'reset') return resetButton ?? null
   return (
     <div className="flex gap-2">
-      <button type="button" onClick={share} title="Отправить ссылку на эти настройки" disabled={incomplete} className={outlined}>
-        Поделиться
-      </button>
-      {onReset && <button type="button" onClick={onReset} title="Вернуть настройки по умолчанию" className={outlined}>Сбросить</button>}
+      {shareButton}
+      {resetButton}
     </div>
   )
 }
@@ -739,14 +751,22 @@ export function DownloadBar({ format, onClick, busy, disabled, note, onNote, lin
             : <p className={line}>{note}</p>}
         </div>
       )}
-      {links && <div className="px-6 pb-6 tracking-normal md:mb-2 md:p-0">{links}</div>}
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 p-6 md:pointer-events-auto md:static md:p-0">
+      {/* Wide screens: «Поделиться» and «Сбросить» in a row over the download. Phones: «Сбросить» at the foot of the form,
+          «Поделиться» pinned beside the download, the two sharing the row */}
+      {links && <div className="hidden tracking-normal md:mb-2 md:block">{links}</div>}
+      {isValidElement<{ onReset?: () => void }>(links) && links.props.onReset && (
+        <div className="flex px-6 pb-6 tracking-normal md:hidden">{cloneElement(links as React.ReactElement<{ only?: string }>, { only: 'reset' })}</div>
+      )}
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 flex gap-2 p-6 tracking-normal md:pointer-events-auto md:static md:p-0">
+        {isValidElement(links) && (
+          <div className="pointer-events-auto flex flex-1 md:hidden">{cloneElement(links as React.ReactElement<{ only?: string }>, { only: 'share' })}</div>
+        )}
         <button
           type="button"
           onClick={onClick}
           disabled={busy || disabled}
           // Off, it stays black with its text #999, the generators' disabled text (Figma 5008:10830, 5077:7), so the page still says what it's for; busy, white
-          className={`pointer-events-auto flex w-full min-w-16 items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] text-[14px] font-medium leading-5 ${disabled && !busy ? 'text-[#999]' : 'text-white'} cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed hover:enabled:bg-[#333]`}
+          className={`pointer-events-auto flex min-w-16 flex-1 items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] text-[14px] font-medium leading-5 ${disabled && !busy ? 'text-[#999]' : 'text-white'} cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed hover:enabled:bg-[#333]`}
         >
           {busy && (
             <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" aria-hidden>
