@@ -188,7 +188,7 @@ function GeneratorRing({ current }: { current: string }) {
       <nav
         aria-label="Конструкторы"
         className="group/ring absolute inset-y-0 left-0"
-        style={{ transform: `translateX(${RING_START - offset}px)`, transition: eased ? `transform ${RING_TURN_MS}ms cubic-bezier(0.5,0,0.5,1)` : undefined }}
+        style={{ transform: `translateX(${RING_START - offset}px)`, transition: eased ? `transform ${RING_TURN_MS}ms cubic-bezier(0.75,0,0.25,1)` : undefined }}
         onTransitionEnd={() => setEased(false)}
       >
         {turns.map(k => (
