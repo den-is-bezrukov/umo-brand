@@ -275,7 +275,7 @@ export default function BusinessCard() {
                         <TextInput
                           value={p.phone}
                           onChange={v => update(p.key, splitPhone(v) ?? { phone: v.replace(/[^\d+()\-\s]/g, '') })}
-                          placeholder="Телефон"
+                          placeholder="+7 890 123 45 67"
                           inputMode="tel"
                           invalid={bad('phone', 'Телефон')}
                         />
