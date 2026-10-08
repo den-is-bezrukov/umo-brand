@@ -30,8 +30,11 @@ const GENERATORS = [
  * right edge. The line turns with the wheel (either way) or a drag, and comes back round to the current one when left;
  * a click turns the picked one into the title's place, then opens it.
  */
-/** The header's links underline on hover as the guide's do (Figma 4865:1061): black at 40%, fading out */
-const crumb = 'underline decoration-transparent decoration-[2.5%] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 hover:decoration-black/40 hover:duration-0'
+/**
+ * The header's links underline on hover as the guide's do (Figma 4865:1061): black at 40%, fading out; the line as thin
+ * as 2.5% of the breadcrumbs' 14 px, at any size, so the generators' 24 px names don't get a heavier one
+ */
+const crumb = 'underline decoration-transparent decoration-[0.35px] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 hover:decoration-black/40 hover:duration-0'
 
 export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' }) {
   return (
