@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Font } from 'opentype.js'
 import { goal } from '@/ui/metrika'
 import { Field, OptionalField, Segments, SegBtn, ComboField, UrlField, Checkbox, SizeSwitch, GeneratorHeader, LinkButtons, DownloadBar, isValidUrl } from '@/ui/form'
+import { CaptionReset } from '@/ui/staff'
 import { linkParams, useLinkState } from '@/ui/share'
 import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
 import { DEFAULT_TAGLINE, TAGLINES } from '@/data/taglines'
@@ -20,7 +21,7 @@ const DEFAULT_TOP = 'Центр UMO'
 const PARTS = { qr: 'qr', dealer: 'top', tagline: 'bottom', rear: 'rear', rearDealer: 'rdealer', rearTagline: 'rslogan' } as const
 const RED = '#ff2a1a'
 
-function SheetPreview({ sheet, seams, dims }: { sheet: Sheet; seams: boolean; dims: boolean }) {
+function SheetPreview({ sheet, seams, dims, onReset }: { sheet: Sheet; seams: boolean; dims: boolean; onReset?: () => void }) {
   const s = sheet.surface
   const marks = specMarks(s)
   const [vx, vy, vw, vh] = s.photo.view
@@ -31,7 +32,7 @@ function SheetPreview({ sheet, seams, dims }: { sheet: Sheet; seams: boolean; di
   // White decals on UMO 8 and on glass, black on the white UMO 5's sides
   const decal = s.decal ?? '#fff'
   return (
-    <figure className="flex min-w-0 flex-col gap-2">
+    <figure className="group/sheet flex min-w-0 flex-col gap-2">
       {/* The car straight on the canvas, no plate behind it: the side photos are cut out; the rear ones are photos */}
       <svg viewBox={`${vx} ${vy} ${vw} ${vh}`} className="block w-full">
         <image
@@ -70,6 +71,7 @@ function SheetPreview({ sheet, seams, dims }: { sheet: Sheet; seams: boolean; di
       {/* One grey line, as quiet as the rest of the page's secondary text: the sheet is what's shown */}
       <figcaption className="text-center text-[14px] leading-5 text-[#808080]">
         {s.title}, {mm(s.w)}&nbsp;×&nbsp;{mm(s.h)}&nbsp;мм
+        {onReset && <CaptionReset onClick={onReset} />}
       </figcaption>
       {sheet.issues.length > 0 && (
         <ul className="text-center text-[13px] leading-5 text-[#e30]">
@@ -176,21 +178,24 @@ export default function Livery() {
     if (!v) setRearTagline(undefined)
     setOn(o => ({ ...o, rear: v, ...(v ? {} : { rearDealer: true, rearTagline: true }) }))
   }
-  // «Сбросить» keeps the model and brings the rest back to its defaults
-  const DEFAULT_ON = { qr: true, tagline: true, dealer: true, rear: false, rearDealer: true, rearTagline: true }
-  const reset = () => {
+  // The resets on the canvas, at the end of a sheet's caption, by what they reset. Both sides are made of the same
+  // fields, so either side's resets them both: the dealer, slogan and QR, their sizes; the model stays, as do the
+  // dimensions shown (a view, not the content). The glass's resets its own: its slogan follows the sides' again
+  const sidesAtDefaults = dealer === DEFAULT_TOP && tagline === DEFAULT_TAGLINE[model] && url === DEFAULT_URL[model]
+    && on.qr && on.tagline && on.dealer && !large && !qrSmall
+  const resetSides = () => {
     setDealer(DEFAULT_TOP)
     setTagline(DEFAULT_TAGLINE[model])
-    setRearTagline(undefined)
     setUrl(DEFAULT_URL[model])
-    setOn(DEFAULT_ON)
-    setDims(false)
+    setOn(o => ({ ...o, qr: true, tagline: true, dealer: true }))
     setLarge(false)
     setQrSmall(false)
   }
-  /** Nothing to reset: no «Сбросить» then, as the plate frame's; «Поделиться» stays, the livery being a whole one */
-  const atDefaults = dealer === DEFAULT_TOP && tagline === DEFAULT_TAGLINE[model] && rearTagline === undefined && url === DEFAULT_URL[model]
-    && (Object.keys(DEFAULT_ON) as (keyof typeof DEFAULT_ON)[]).every(k => on[k] === DEFAULT_ON[k]) && !dims && !large && !qrSmall
+  const rearAtDefaults = rearTagline === undefined && on.rearDealer && on.rearTagline
+  const resetRear = () => {
+    setRearTagline(undefined)
+    setOn(o => ({ ...o, rearDealer: true, rearTagline: true }))
+  }
   const ok = sheets.length > 0 && sheets.every(s => s.issues.length === 0)
 
   const handleExport = async () => {
@@ -293,16 +298,16 @@ export default function Livery() {
           disabled={!ok || (on.qr && !urlValid)}
           note={on.qr && !urlValid ? (url.trim() ? 'Проверьте ссылку QR-кода' : 'Ссылка QR-кода не указана') : sheets.flatMap(s => s.issues)[0]}
           onNote={on.qr && !urlValid ? () => urlRef.current?.querySelector('input')?.focus() : undefined}
-          links={<LinkButtons onReset={atDefaults ? undefined : reset} incomplete={!ok || (on.qr && !urlValid)} />}
+          links={<LinkButtons incomplete={!ok || (on.qr && !urlValid)} />}
         />
       </aside>
 
       <main className="flex-1 bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
         <div className="mx-auto flex max-w-[1200px] flex-col gap-10">
-          {sheets.slice(0, 2).map(s => <SheetPreview key={s.surface.id} sheet={s} seams={seams} dims={dims} />)}
+          {sheets.slice(0, 2).map(s => <SheetPreview key={s.surface.id} sheet={s} seams={seams} dims={dims} onReset={sidesAtDefaults ? undefined : resetSides} />)}
           {sheets[2] && (
             <div className="w-full md:w-1/2">
-              <SheetPreview sheet={sheets[2]} seams={seams} dims={dims} />
+              <SheetPreview sheet={sheets[2]} seams={seams} dims={dims} onReset={rearAtDefaults ? undefined : resetRear} />
             </div>
           )}
         </div>

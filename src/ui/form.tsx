@@ -1,4 +1,4 @@
-import { cloneElement, isValidElement, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { goal } from './metrika'
 
@@ -655,20 +655,12 @@ const flashes = new Set<(text: string) => void>()
 const flash = (text: string) => flashes.forEach(f => f(text))
 
 /**
- * «Поделиться» and «Сбросить» side by side (Figma 4939:3762). The first sends the page address — the settings are in
- * it — so a set-up card or livery goes as a link: on phones through the system's share sheet, elsewhere copied, the
- * line over the buttons saying «Ссылка с настройками скопирована» for two seconds (it was «Копировать», then «Копировать ссылку»,
- * saying «Скопировано» on itself). The second brings the settings back to the defaults, which a page reload can't, as
- * the address keeps them. Without `onReset` only «Поделиться» (the price card: each card has its own «Сбросить» beside
- * it). «Поделиться» is off while the result isn't ready (`incomplete`, as «Скачать»): a link is sent for what it makes,
- * not a draft. «Сбросить» stays, as it can mend a broken form.
+ * «Поделиться» (Figma 4939:3762): sends the page address — the settings are in it — so a set-up card or livery goes as a
+ * link: on phones through the system's share sheet, elsewhere copied, the line over it saying «Ссылка с настройками
+ * скопирована» for two seconds. Off while the result isn't ready (`incomplete`, as «Скачать»): a link is sent for what
+ * it makes, not a draft. «Сбросить» stood beside it until resets moved onto the canvas, by what they reset
  */
-export function LinkButtons({ onReset, incomplete, only }: {
-  onReset?: () => void
-  incomplete?: boolean
-  /** One of the two alone: on phones «Поделиться» stands by the download and «Сбросить» at the foot of the form */
-  only?: 'share' | 'reset'
-}) {
+export function LinkButtons({ incomplete }: { incomplete?: boolean }) {
   const share = async () => {
     const url = window.location.href
     // On phones the system's share sheet: the chat a link goes to in a tap or two, «Скопировать» among them
@@ -683,20 +675,11 @@ export function LinkButtons({ onReset, incomplete, only }: {
     flash('Ссылка с настройками скопирована')
     goal('copy_link', { page: location.pathname })
   }
-  const shareButton = (
+  return (
     // White under it: on phones it stands over the canvas
-    <button type="button" onClick={share} title="Отправить ссылку на эти настройки" disabled={incomplete} className={`${outlined} bg-white`}>
+    <button type="button" onClick={share} title="Отправить ссылку на эти настройки" disabled={incomplete} className={`${outlined} w-full bg-white`}>
       Поделиться
     </button>
-  )
-  const resetButton = onReset && <button type="button" onClick={onReset} title="Вернуть настройки по умолчанию" className={outlined}>Сбросить</button>
-  if (only === 'share') return shareButton
-  if (only === 'reset') return resetButton ?? null
-  return (
-    <div className="flex gap-2">
-      {shareButton}
-      {resetButton}
-    </div>
   )
 }
 
@@ -722,7 +705,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, onNote, lin
   disabled?: boolean
   note?: string
   onNote?: () => void
-  /** «Поделиться» and «Сбросить», right over the download: off with it, the line over them speaking for both */
+  /** «Поделиться», right over the download: off with it, the line over them speaking for both */
   links?: React.ReactNode
 }) {
   // Black: with the buttons off around it, the next step is the one thing here to act on
@@ -751,16 +734,10 @@ export function DownloadBar({ format, onClick, busy, disabled, note, onNote, lin
             : <p className={line}>{note}</p>}
         </div>
       )}
-      {/* Wide screens: «Поделиться» and «Сбросить» in a row over the download. Phones: «Сбросить» at the foot of the form,
-          «Поделиться» pinned beside the download, the two sharing the row */}
-      {links && <div className="hidden tracking-normal md:mb-2 md:block">{links}</div>}
-      {isValidElement<{ onReset?: () => void }>(links) && links.props.onReset && (
-        <div className="flex px-6 pb-6 tracking-normal md:hidden">{cloneElement(links as React.ReactElement<{ only?: string }>, { only: 'reset' })}</div>
-      )}
+      {/* Wide screens: «Поделиться» over the download. Phones: pinned beside it, the two sharing the row */}
+      {links && <div className="hidden tracking-normal md:mb-2 md:flex">{links}</div>}
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 flex gap-2 p-6 tracking-normal md:pointer-events-auto md:static md:p-0">
-        {isValidElement(links) && (
-          <div className="pointer-events-auto flex flex-1 md:hidden">{cloneElement(links as React.ReactElement<{ only?: string }>, { only: 'share' })}</div>
-        )}
+        {links && <div className="pointer-events-auto flex flex-1 md:hidden">{links}</div>}
         <button
           type="button"
           onClick={onClick}

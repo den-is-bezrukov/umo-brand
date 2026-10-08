@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Font } from 'opentype.js'
 import { goal } from '@/ui/metrika'
 import { Field, Segments, SegBtn, TextInput, ComboField, GeneratorHeader, LinkButtons, DownloadBar } from '@/ui/form'
+import { CaptionReset } from '@/ui/staff'
 import { linkParams, useLinkState } from '@/ui/share'
 import { loadFont, toD } from '@/livery/geometry'
 import { STRIP, BASELINE, SIZE, TRACKING, buildStrip, lineStart, type Align } from '@/plate/frame'
@@ -172,12 +173,12 @@ export default function PlateFrame() {
           note={noName ? (custom ? 'Текст не указан' : 'Дилер не выбран') : strip?.issues[0]}
           onNote={toField}
           // Nothing to copy or reset until there's a dealer or the line is centred
-          links={!blank && <LinkButtons onReset={reset} incomplete={!ok} />}
+          links={!blank && <LinkButtons incomplete={!ok} />}
         />
       </aside>
 
       <main className="flex flex-1 items-center bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
-        <figure className="mx-auto flex w-full max-w-[1200px] flex-col gap-2">
+        <figure className="group/sheet mx-auto flex w-full max-w-[1200px] flex-col gap-2">
           {/* A double click on the frame edits the text right on it, as the name tags do */}
           <div className="@container relative cursor-text" onDoubleClick={() => setEditing(true)}>
             <PlateArt>
@@ -198,6 +199,8 @@ export default function PlateFrame() {
           </div>
           <figcaption className="text-center text-[14px] leading-5 text-[#808080]">
             Поле печати, {STRIP.w}&nbsp;×&nbsp;{STRIP.h}&nbsp;мм
+            {/* The reset, by what it resets, as the livery's sheets and the cards' own */}
+            {!blank && <CaptionReset onClick={reset} />}
           </figcaption>
           {wrong && (
             <ul className="text-center text-[13px] leading-5 text-[#e30]">
