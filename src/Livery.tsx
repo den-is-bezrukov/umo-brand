@@ -21,7 +21,7 @@ const DEFAULT_TOP = 'Центр UMO'
 const PARTS = { qr: 'qr', dealer: 'top', tagline: 'bottom', rear: 'rear', rearDealer: 'rdealer', rearTagline: 'rslogan' } as const
 const RED = '#ff2a1a'
 
-function SheetPreview({ sheet, seams, dims, onReset }: { sheet: Sheet; seams: boolean; dims: boolean; onReset?: () => void }) {
+function SheetPreview({ sheet, seams, dims, onReset, resetLabel }: { sheet: Sheet; seams: boolean; dims: boolean; onReset?: () => void; resetLabel?: string }) {
   const s = sheet.surface
   const marks = specMarks(s)
   const [vx, vy, vw, vh] = s.photo.view
@@ -72,7 +72,7 @@ function SheetPreview({ sheet, seams, dims, onReset }: { sheet: Sheet; seams: bo
       <figcaption className="mt-0.5 text-center text-[14px] leading-5 text-[#808080]">
         <span className="relative">
           {s.title}, {mm(s.w)}&nbsp;×&nbsp;{mm(s.h)}&nbsp;мм
-          {onReset && <CaptionReset onClick={onReset} />}
+          {onReset && <CaptionReset onClick={onReset} label={resetLabel} />}
         </span>
       </figcaption>
       {sheet.issues.length > 0 && (
@@ -306,10 +306,10 @@ export default function Livery() {
 
       <main className="flex-1 bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
         <div className="mx-auto flex max-w-[1200px] flex-col gap-10">
-          {sheets.slice(0, 2).map(s => <SheetPreview key={s.surface.id} sheet={s} seams={seams} dims={dims} onReset={sidesAtDefaults ? undefined : resetSides} />)}
+          {sheets.slice(0, 2).map(s => <SheetPreview key={s.surface.id} sheet={s} seams={seams} dims={dims} onReset={sidesAtDefaults ? undefined : resetSides} resetLabel="Сбросить оба борта" />)}
           {sheets[2] && (
             <div className="w-full md:w-1/2">
-              <SheetPreview sheet={sheets[2]} seams={seams} dims={dims} onReset={rearAtDefaults ? undefined : resetRear} />
+              <SheetPreview sheet={sheets[2]} seams={seams} dims={dims} onReset={rearAtDefaults ? undefined : resetRear} resetLabel="Сбросить стекло" />
             </div>
           )}
         </div>
