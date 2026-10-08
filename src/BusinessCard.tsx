@@ -193,7 +193,7 @@ export default function BusinessCard() {
             <div ref={dealerForm} className="flex flex-col gap-4">
               <div data-field="dealer" className="group/field flex flex-col gap-2">
                 <div className="flex items-center justify-between gap-2">
-                  <p className={`text-[14px] leading-5 text-[#999] ${ALERT_LABEL}`}>Дилер</p>
+                  <p className={`text-[14px] leading-4 text-[#999] ${ALERT_LABEL}`}>Дилер</p>
                   <button type="button" onClick={() => setDealerOpen(o => !o)} aria-expanded={dealerOpen} className={rowAction}>
                     {dealerOpen ? 'Свернуть' : 'Редактировать'}
                   </button>

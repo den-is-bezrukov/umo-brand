@@ -252,7 +252,8 @@ export function SegBtn({ active, onClick, disabled, title, children }: { active:
   )
 }
 
-// Spacing per Figma (UMO | Evrone, node 4900:4595): 8 px from a label to its control, 16 px between groups — the gap
+// Spacing per Figma (UMO | Evrone, node 4900:4595): 8 px from a label to its control, labels on 16 px lines (5008:10789;
+// a checkbox's row too, as tall as its box, and the words at the end of a label row), 16 px between groups — the gap
 // of the column the groups sit in.
 
 /**
@@ -264,7 +265,7 @@ export const ALERT_LABEL = 'group-has-[[aria-invalid=true]]/field:text-[#e30]'
 export function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="group/field flex flex-col gap-2">
-      <p className={`text-[14px] leading-5 text-[#999] whitespace-nowrap ${ALERT_LABEL}`}>{label}</p>
+      <p className={`text-[14px] leading-4 text-[#999] whitespace-nowrap ${ALERT_LABEL}`}>{label}</p>
       {children}
     </div>
   )
@@ -503,7 +504,7 @@ export function UrlField({ value, onChange }: { value: string; onChange: (v: str
 /** A grey 16 px box with a black tick, 8 px from its label (Figma: UMO | Evrone, node 4900:4656), on a native checkbox for keyboard and screen readers */
 export function Checkbox({ checked, onChange, children, className = '' }: { checked: boolean; onChange: (v: boolean) => void; children: React.ReactNode; className?: string }) {
   return (
-    <label className={`flex cursor-pointer items-center gap-2 text-[14px] leading-5 text-black ${className}`}>
+    <label className={`flex cursor-pointer items-center gap-2 text-[14px] leading-4 text-black ${className}`}>
       <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="peer sr-only" />
       <span aria-hidden className="flex size-4 shrink-0 items-center justify-center rounded-[2px] bg-[#f5f5f5] peer-focus-visible:ring-2 peer-focus-visible:ring-black/30">
         {checked && <Tick />}
@@ -527,7 +528,7 @@ export function OptionalField({ label, on, onChange, extra, children }: { label:
 }
 
 // Grey #808080, black on hover, the icon with it (Figma 5017:11279)
-export const rowAction = 'flex shrink-0 cursor-pointer items-center gap-2 text-[14px] leading-5 text-[#808080] outline-none transition-colors hover:text-black focus-visible:ring-2 focus-visible:ring-black/30'
+export const rowAction = 'flex shrink-0 cursor-pointer items-center gap-2 text-[14px] leading-4 text-[#808080] outline-none transition-colors hover:text-black focus-visible:ring-2 focus-visible:ring-black/30'
 
 /** Corners for the size switch, on the 16 grid with the ticks' 2 px stroke and square ends: at the outer corners to grow, turned in to shrink */
 function SizeIcon({ grow }: { grow: boolean }) {
