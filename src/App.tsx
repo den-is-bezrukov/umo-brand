@@ -293,13 +293,19 @@ export default function App() {
               </Field>
             </div>
 
+            {/* The prices one under the other on phones too, as on wide screens: the credit checkbox under the full price,
+                so turning it on only adds a field under it (beside it, it read as a label with no field) */}
+            <div className="col-span-2 md:col-span-1">
             <Field label="Полная цена, ₽">
               <div data-field="full"><TextInput numeric value={card.full} placeholder="9 999 999" invalid={issues.fullTooLow || issues.fullLessThanCredit} onChange={changeFull} /></div>
             </Field>
+            </div>
 
+            <div className="col-span-2 md:col-span-1">
             <OptionalField label="В кредит, ₽" on={card.creditOn} onChange={creditOn => set({ creditOn })}>
               <div data-field="credit"><TextInput numeric value={card.credit} placeholder="8 999 999" invalid={issues.creditTooLow || issues.fullLessThanCredit} onChange={changeCredit} /></div>
             </OptionalField>
+            </div>
           </div>
 
         </div>
