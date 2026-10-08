@@ -197,7 +197,7 @@ export default function PlateFrame() {
               />
             )}
           </div>
-          <figcaption className="text-center text-[14px] leading-5 text-[#808080]">
+          <figcaption className="mt-0.5 text-center text-[14px] leading-5 text-[#808080]">
             <span className="relative">
               Поле печати, {STRIP.w}&nbsp;×&nbsp;{STRIP.h}&nbsp;мм
               {/* The reset, by what it resets, as the livery's sheets and the cards' own */}

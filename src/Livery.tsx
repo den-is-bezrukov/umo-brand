@@ -69,7 +69,7 @@ function SheetPreview({ sheet, seams, dims, onReset }: { sheet: Sheet; seams: bo
       </svg>
       {/* Under the picture, centred, as on every generator's canvas */}
       {/* One grey line, as quiet as the rest of the page's secondary text: the sheet is what's shown */}
-      <figcaption className="text-center text-[14px] leading-5 text-[#808080]">
+      <figcaption className="mt-0.5 text-center text-[14px] leading-5 text-[#808080]">
         <span className="relative">
           {s.title}, {mm(s.w)}&nbsp;×&nbsp;{mm(s.h)}&nbsp;мм
           {onReset && <CaptionReset onClick={onReset} />}
