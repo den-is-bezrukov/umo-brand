@@ -300,9 +300,12 @@ function useActiveInView(asideRef: RefObject<HTMLElement | null>, active: string
  * While the page slides up over the hero, the sidebar's toggle row stays fixed at the bottom of the screen, while the
  * sidebar runs off it, so the contents unroll between the logo and the row as the page rises. They fade in over the
  * first 160px of scroll: on the first screen there's only the logo and the row. The logo, 200px wide on the first
- * screen, shrinks with the scroll to its usual 120 (24 high) by the time the page reaches the top.
+ * screen, shrinks with the scroll to its usual 120 (24 high) by the time the page reaches the top. Returns whether the
+ * contents are in view (half faded in or more), so the toggle row says «Содержание» on the first screen, where there's
+ * nothing to fold, even while the list is expanded.
  */
 function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObject<HTMLElement | null>) {
+  const [shown, setShown] = useState(false)
   useEffect(() => {
     let frame = 0
     const update = () => {
@@ -319,6 +322,7 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
         const opacity = Math.min(1, window.scrollY / 160)
         nav.style.opacity = String(opacity)
         nav.style.visibility = opacity ? '' : 'hidden'
+        setShown(opacity >= 0.5)
       }
     }
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }
@@ -331,6 +335,7 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
       cancelAnimationFrame(frame)
     }
   }, [bodyRef, asideRef])
+  return shown
 }
 
 /**
@@ -950,11 +955,12 @@ export default function Guide() {
   useActiveInView(asideRef, active, expandAll)
   const quickRef = useRef<HTMLElement>(null)
   useHeroStrip(pageRef, quickRef, bodyRef)
-  useHeroReveal(bodyRef, asideRef)
-  // The contents row does what it says; on the first screen it also takes the page up over the photo, where the
-  // contents can be seen.
+  const tocShown = useHeroReveal(bodyRef, asideRef)
+  // The contents row does what it says; on the first screen, where the contents are out of view and it says
+  // «Содержание» whatever the list's state, it takes the page up over the photo and opens the list (an expanded one
+  // stays so).
   const onTocToggle = () => {
-    toggleExpandAll()
+    if (tocShown || !expandAll) toggleExpandAll()
     const top = bodyRef.current?.getBoundingClientRect().top ?? 0
     if (top > 1) window.scrollTo({ top: window.scrollY + top, behavior: 'smooth' })
   }
@@ -1018,7 +1024,7 @@ export default function Guide() {
         {/* The row is fixed to the bottom of the screen — not moved there by script, which lags the scroll a frame and
             makes it shake — so the list keeps its height free at the end. */}
         <div className="px-6 pb-[68px]"><Nav active={active} expandAll={expandAll} /></div>
-        <TocToggle expanded={expandAll} onClick={onTocToggle} className="fixed bottom-0 left-0 z-10 w-[320px] p-6 xl:w-[480px]" />
+        <TocToggle expanded={expandAll && tocShown} onClick={onTocToggle} className="fixed bottom-0 left-0 z-10 w-[320px] p-6 xl:w-[480px]" />
       </aside>
 
       {/* Mobile top bar. iOS 26 browsers draw the page under their translucent top bar and stick `top: 0` below it,
