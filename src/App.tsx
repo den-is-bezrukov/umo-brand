@@ -294,11 +294,11 @@ export default function App() {
             </div>
 
             <Field label="Полная цена, ₽">
-              <div data-field="full"><TextInput numeric value={card.full} invalid={issues.fullTooLow || issues.fullLessThanCredit} onChange={changeFull} /></div>
+              <div data-field="full"><TextInput numeric value={card.full} placeholder="9 999 999" invalid={issues.fullTooLow || issues.fullLessThanCredit} onChange={changeFull} /></div>
             </Field>
 
             <OptionalField label="В кредит, ₽" on={card.creditOn} onChange={creditOn => set({ creditOn })}>
-              <div data-field="credit"><TextInput numeric value={card.credit} invalid={issues.creditTooLow || issues.fullLessThanCredit} onChange={changeCredit} /></div>
+              <div data-field="credit"><TextInput numeric value={card.credit} placeholder="8 999 999" invalid={issues.creditTooLow || issues.fullLessThanCredit} onChange={changeCredit} /></div>
             </OptionalField>
           </div>
 
