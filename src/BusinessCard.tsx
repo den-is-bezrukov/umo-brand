@@ -269,9 +269,10 @@ export default function BusinessCard() {
                       })()}
                     </Labelled>
                     <Labelled label="Телефон">
-                      {/* A live mask: the number set as the card sets it while it's typed, the caret staying after the same
-                          digit; a whole one pasted with its extension splits, the extension going to its own field */}
-                      <div className="flex gap-2">
+                      {/* One field of two parts, a 1 px white gap between them (Figma 5077:7). The number is a live mask, set
+                          as the card sets it while it's typed, the caret staying after the same digit; a whole one pasted
+                          with its extension splits. The extension follows «Доб.», grey, its placeholder and prefix both */}
+                      <div className="flex gap-px overflow-clip rounded-[8px]">
                         <TextInput
                           value={p.phone}
                           onChange={v => {
@@ -286,15 +287,18 @@ export default function BusinessCard() {
                           placeholder="+7 987 654 32 10"
                           inputMode="tel"
                           invalid={bad('phone', 'Телефон')}
+                          className="rounded-none!"
                         />
-                        <div className="w-[88px] shrink-0">
-                          <TextInput
+                        <label className="flex h-10 min-w-20 shrink-0 cursor-text items-center bg-[#f5f5f5] px-3 text-[14px] leading-5 focus-within:ring-1 focus-within:ring-inset focus-within:ring-black/40">
+                          <span className="text-[#999]">Доб.&nbsp;</span>
+                          <input
                             value={p.ext}
-                            onChange={v => update(p.key, { ext: v.replace(/\D/g, '').slice(0, 6) })}
-                            placeholder="Доб."
+                            onChange={e => update(p.key, { ext: e.target.value.replace(/\D/g, '').slice(0, 6) })}
                             inputMode="numeric"
+                            aria-label="Добавочный"
+                            className="w-[6ch] min-w-0 bg-transparent text-black outline-none [font-variant-numeric:lining-nums_tabular-nums]"
                           />
-                        </div>
+                        </label>
                       </div>
                     </Labelled>
                   </div>
