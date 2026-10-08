@@ -339,7 +339,7 @@ export const BESIDE = 'px-12 md:px-0'
 export const ITEM_EDGE = 'outline-1 outline-offset-0 outline-black/10 group-hover/row:outline-black/40'
 
 /**
- * «Добавить» under the list: a secondary button as wide as its text («Копировать»'s edge, 10% and 40% on hover),
+ * «Добавить» under the list: a secondary button as wide as its text («Поделиться»'s edge, 10% and 40% on hover),
  * centred under the items. It was a tile in the item's shape, too large, the price card's above all
  */
 export function AddTile({ onClick }: { onClick: () => void }) {

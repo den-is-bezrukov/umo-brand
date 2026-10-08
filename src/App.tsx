@@ -304,7 +304,7 @@ export default function App() {
 
         </div>
 
-        {/* Download — 8px under «Копировать ссылку», sticking to the bottom of the sidebar when the window is shorter than
+        {/* Download — 8px under «Поделиться», sticking to the bottom of the sidebar when the window is shorter than
             the form; on phones pinned to the bottom of the screen, since the preview comes below the form. Over them, while
             it's off, one card's first fault (a click taking the focus there) or the cards in work, as the business card's */}
         <DownloadBar

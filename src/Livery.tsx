@@ -188,7 +188,7 @@ export default function Livery() {
     setLarge(false)
     setQrSmall(false)
   }
-  /** Nothing to reset: no «Сбросить» then, as the plate frame's; «Копировать ссылку» stays, the livery being a whole one */
+  /** Nothing to reset: no «Сбросить» then, as the plate frame's; «Поделиться» stays, the livery being a whole one */
   const atDefaults = dealer === DEFAULT_TOP && tagline === DEFAULT_TAGLINE[model] && rearTagline === undefined && url === DEFAULT_URL[model]
     && (Object.keys(DEFAULT_ON) as (keyof typeof DEFAULT_ON)[]).every(k => on[k] === DEFAULT_ON[k]) && !dims && !large && !qrSmall
   const ok = sheets.length > 0 && sheets.every(s => s.issues.length === 0)

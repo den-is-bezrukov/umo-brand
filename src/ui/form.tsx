@@ -650,35 +650,31 @@ export function SizeSwitch({ large, onChange, label }: { large: boolean; onChang
 // Edged at 10%, at 40% on hover (Figma 5015:11171)
 export const outlined = 'flex min-w-16 flex-1 items-center justify-center rounded-[8px] border border-black/10 px-3 py-[9px] text-[14px] font-medium leading-5 text-black cursor-pointer outline-none hover:border-black/40 focus-visible:ring-2 focus-visible:ring-black/30 disabled:cursor-default disabled:text-[#999] disabled:hover:border-black/10'
 
+/** A word the download bar's line says for a moment («Ссылка скопирована»), from a button under it */
+const flashes = new Set<(text: string) => void>()
+const flash = (text: string) => flashes.forEach(f => f(text))
+
 /**
- * «Копировать» and «Сбросить» side by side (Figma 4939:3762): the first copies the page address — the settings are in
- * it — to send a set-up card or livery as a link, and says so for two seconds; the second brings the settings back to
- * the defaults, which a page reload can't, as the address keeps them. Without `onReset` only «Копировать» (the price
- * card: each card has its own «Сбросить» beside it). «Копировать» is off while the result isn't ready (`incomplete`, as
- * «Скачать»): a link is sent for what it makes, not a draft. «Сбросить» stays, as it can mend a broken form.
+ * «Поделиться» and «Сбросить» side by side (Figma 4939:3762). The first sends the page address — the settings are in
+ * it — so a set-up card or livery goes as a link: it's copied, the line over the buttons saying «Ссылка скопирована»
+ * for two seconds (the phones' share sheet was proposed and dropped: the same button doing one thing everywhere) (it was «Копировать», then «Копировать ссылку»,
+ * saying «Скопировано» on itself). The second brings the settings back to the defaults, which a page reload can't, as
+ * the address keeps them. Without `onReset` only «Поделиться» (the price card: each card has its own «Сбросить» beside
+ * it). «Поделиться» is off while the result isn't ready (`incomplete`, as «Скачать»): a link is sent for what it makes,
+ * not a draft. «Сбросить» stays, as it can mend a broken form.
  */
 export function LinkButtons({ onReset, incomplete }: { onReset?: () => void; incomplete?: boolean }) {
-  const [copied, setCopied] = useState(false)
-  useEffect(() => {
-    if (!copied) return
-    const t = setTimeout(() => setCopied(false), 2000)
-    return () => clearTimeout(t)
-  }, [copied])
+  const share = async () => {
+    await navigator.clipboard.writeText(window.location.href)
+    flash('Ссылка скопирована')
+    goal('copy_link', { page: location.pathname })
+  }
   return (
     <div className="flex gap-2">
-      <button
-        type="button"
-        onClick={() => navigator.clipboard.writeText(window.location.href).then(() => {
-          setCopied(true)
-          goal('copy_link', { page: location.pathname })
-        })}
-        title="Скопировать ссылку на эти настройки"
-        disabled={incomplete}
-        className={outlined}
-      >
-        <span aria-live="polite">{copied ? 'Скопировано' : 'Копировать ссылку'}</span>
+      <button type="button" onClick={share} title="Отправить ссылку на эти настройки" disabled={incomplete} className={outlined}>
+        Поделиться
       </button>
-      {onReset && <button type="button" onClick={onReset} title="Вернуть настройки по умолчанию" className={`${outlined} flex-none!`}>Сбросить</button>}
+      {onReset && <button type="button" onClick={onReset} title="Вернуть настройки по умолчанию" className={outlined}>Сбросить</button>}
     </div>
   )
 }
@@ -705,15 +701,29 @@ export function DownloadBar({ format, onClick, busy, disabled, note, onNote, lin
   disabled?: boolean
   note?: string
   onNote?: () => void
-  /** «Копировать ссылку» and «Сбросить», right over the download: off with it, the line over them speaking for both */
+  /** «Поделиться» and «Сбросить», right over the download: off with it, the line over them speaking for both */
   links?: React.ReactNode
 }) {
   // Black: with the buttons off around it, the next step is the one thing here to act on
   const line = 'block w-full text-center text-[14px] leading-5 text-black'
+  // What a button under the line has just done, said there for two seconds
+  const [said, setSaid] = useState('')
+  useEffect(() => {
+    const f = (text: string) => setSaid(text)
+    flashes.add(f)
+    return () => { flashes.delete(f) }
+  }, [])
+  useEffect(() => {
+    if (!said) return
+    const t = setTimeout(() => setSaid(''), 2000)
+    return () => clearTimeout(t)
+  }, [said])
   return (
     // 40 px off the form, as far as one field from the next
     <div className="flex flex-col md:sticky md:bottom-0 md:z-10 md:mt-8 md:bg-white md:p-6 md:pt-0">
-      {disabled && note && (
+      {said ? (
+        <div className="px-6 pb-6 md:mb-2 md:p-0"><p role="status" className={line}>{said}</p></div>
+      ) : disabled && note && (
         <div className="px-6 pb-6 md:mb-2 md:p-0">
           {onNote
             ? <button type="button" onClick={onNote} className={`${line} cursor-pointer hover:text-[#808080]`}>{note}</button>
