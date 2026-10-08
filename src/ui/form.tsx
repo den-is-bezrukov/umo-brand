@@ -30,8 +30,10 @@ const GENERATORS = [
  * right edge. The line turns with the wheel (either way) or a drag, and comes back round to the current one when left;
  * a click turns the picked one into the title's place, then opens it.
  */
+/** The header's links underline on hover as the guide's do (Figma 4865:1061): black at 40%, fading out */
+const crumb = 'underline decoration-transparent decoration-[2.5%] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 hover:decoration-black/40 hover:duration-0'
+
 export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' }) {
-  const crumb = 'underline decoration-transparent decoration-[2.5%] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 hover:decoration-black/40 hover:duration-0'
   return (
     <div className="flex flex-col gap-4">
       <nav className="flex items-center gap-2 text-[14px] font-medium leading-5 tracking-normal [font-feature-settings:'case'_1]">
@@ -190,7 +192,7 @@ function GeneratorRing({ current }: { current: string }) {
                   tabIndex={k === 0 ? undefined : -1}
                   draggable={false}
                   onClick={e => open(e, k, i, g.path)}
-                  className={`${name} mr-6 ${i === 0 ? 'text-black' : 'text-[#bfbfbf]'} underline decoration-transparent decoration-[2.5%] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 ease-[ease] outline-none hover:text-black hover:decoration-black/40 hover:duration-0 focus-visible:text-black focus-visible:decoration-black/40`}
+                  className={`${name} mr-6 ${i === 0 ? 'text-black' : 'text-[#bfbfbf]'} ${crumb} outline-none hover:text-black focus-visible:text-black focus-visible:decoration-black/40`}
                 >{g.title}</Link>)}
           </div>
         ))}
