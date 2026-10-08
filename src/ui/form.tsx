@@ -350,7 +350,7 @@ export const ALERT_LABEL = 'group-has-[[aria-invalid=true]]/field:text-[#e30]'
 export function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="group/field flex flex-col gap-2">
-      <p className={`text-[14px] leading-4 text-[#999] whitespace-nowrap ${ALERT_LABEL}`}>{label}</p>
+      <p className={`text-[14px] leading-4 text-[#808080] whitespace-nowrap ${ALERT_LABEL}`}>{label}</p>
       {children}
     </div>
   )

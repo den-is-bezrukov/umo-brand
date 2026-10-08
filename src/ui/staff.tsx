@@ -305,7 +305,7 @@ export function TableSource<P extends object>({ staff, template }: { staff: Staf
         >
           <FileInput staff={s} />
           <span className="font-medium break-all">{s.file}</span>
-          <span className="text-[#999]">{s.people.length} {staffWord(s.people.length)} · заменить</span>
+          <span className="text-[#808080]">{s.people.length} {staffWord(s.people.length)} · заменить</span>
         </label>
       )}
       {s.tableError && <p className="text-[13px] leading-5 text-[#e30]">{s.tableError}</p>}
