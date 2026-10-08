@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Font } from 'opentype.js'
 import { goal } from '@/ui/metrika'
 import { Field, OptionalField, Segments, SegBtn, ComboField, UrlField, Checkbox, SizeSwitch, GeneratorHeader, LinkButtons, DownloadBar, isValidUrl } from '@/ui/form'
@@ -150,6 +150,7 @@ export default function Livery() {
   }, [])
 
   const urlValid = isValidUrl(url.trim())
+  const urlRef = useRef<HTMLDivElement>(null)
   const qrUrl = urlValid ? url.trim() : DEFAULT_URL[model]
 
   const sideText = { dealer: on.dealer ? dealer : null, tagline: on.tagline ? tagline : null }
@@ -236,7 +237,7 @@ export default function Livery() {
               onChange={toggle('qr')}
               extra={<SizeSwitch large={!qrSmall} onChange={v => setQrSmall(!v)} label="Крупный QR-код" />}
             >
-              <UrlField value={url} onChange={setUrl} />
+              <div ref={urlRef}><UrlField value={url} onChange={setUrl} /></div>
             </OptionalField>
 
             <OptionalField label="Дилер" on={on.dealer} onChange={toggle('dealer')}>
@@ -290,6 +291,7 @@ export default function Livery() {
           busy={exporting}
           disabled={!ok || (on.qr && !urlValid)}
           note={on.qr && !urlValid ? (url.trim() ? 'Проверьте ссылку QR-кода' : 'Ссылка QR-кода не указана') : sheets.flatMap(s => s.issues)[0]}
+          onNote={on.qr && !urlValid ? () => urlRef.current?.querySelector('input')?.focus() : undefined}
         />
       </aside>
 

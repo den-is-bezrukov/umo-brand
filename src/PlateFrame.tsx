@@ -103,6 +103,10 @@ export default function PlateFrame() {
   /** Red only for a wrong line, never an empty one */
   const wrong = !noName && !!strip && strip.issues.length > 0
 
+  const form = useRef<HTMLDivElement>(null)
+  /** The line under the download leads to the field, which opens its suggestions on focus */
+  const toField = () => form.current?.querySelector<HTMLElement>('input, textarea')?.focus()
+
   const reset = () => {
     setName('')
     setText('')
@@ -135,7 +139,7 @@ export default function PlateFrame() {
         <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
           <GeneratorHeader current="/plate-frame" />
 
-          <div className="flex flex-col gap-4 tracking-normal">
+          <div ref={form} className="flex flex-col gap-4 tracking-normal">
             {custom ? (
               <Field label="Текст">
                 {/* Case-sensitive forms as in the print, so a bar stands with the capitals here too */}
@@ -167,6 +171,7 @@ export default function PlateFrame() {
           busy={exporting}
           disabled={!ok}
           note={noName ? (custom ? 'Текст не указан' : 'Дилер не выбран') : strip?.issues[0]}
+          onNote={toField}
         />
       </aside>
 
