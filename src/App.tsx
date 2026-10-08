@@ -114,6 +114,16 @@ function check(c: Card) {
   return { fullTooLow, creditTooLow, fullLessThanCredit, urlBad, ok: !fullTooLow && !creditTooLow && !fullLessThanCredit && !urlBad }
 }
 
+/** A card's first fault in the form's order, said in place of «Скачать», and the field it's in */
+function firstIssue(c: Card): { field: 'url' | 'full' | 'credit'; text: string } | null {
+  const i = check(c)
+  if (i.urlBad) return { field: 'url', text: c.url.trim() ? 'Проверьте ссылку QR-кода' : 'Нет ссылки QR-кода' }
+  if (i.fullTooLow) return { field: 'full', text: priceNum(c.full) ? 'Цена меньше 999 999' : 'Нет цены' }
+  if (i.creditTooLow) return { field: 'credit', text: priceNum(c.credit) ? 'Цена в кредит меньше 999 999' : 'Нет цены в кредит' }
+  if (i.fullLessThanCredit) return { field: 'full', text: 'Полная цена меньше цены в кредит' }
+  return null
+}
+
 /** The link the QR leads to: the card's own if it's a link, the model's page otherwise */
 const qrUrlOf = (c: Card) => isValidUrl(c.url.trim()) ? c.url.trim() : DEFAULT_URL[c.model]
 
@@ -212,6 +222,13 @@ export default function App() {
 
   const issues = check(card)
   const failing = items.filter(c => !check(c).ok).map(c => c.key)
+  const issue = firstIssue(card)
+
+  const form = useRef<HTMLDivElement>(null)
+  /** The field at fault takes the focus, as the business card's dealership */
+  const toIssue = () => {
+    if (issue) form.current?.querySelector<HTMLElement>(`[data-field="${issue.field}"] :is(input, textarea)`)?.focus()
+  }
 
   const handleExport = async () => {
     setExporting(true)
@@ -250,7 +267,7 @@ export default function App() {
         <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
           <GeneratorHeader current="/price-card" />
 
-          <div className="grid grid-cols-2 gap-x-3 gap-y-4 md:grid-cols-1 tracking-normal">
+          <div ref={form} className="grid grid-cols-2 gap-x-3 gap-y-4 md:grid-cols-1 tracking-normal">
             <Field label="Модель">
               <Segments>
                 <SegBtn active={card.model === 'umo5'} onClick={() => switchModel('umo5')}>UMO 5</SegBtn>
@@ -267,18 +284,18 @@ export default function App() {
             </Field>
 
             {/* The link before the prices, as in Figma 4844:6865 */}
-            <div className="col-span-2 md:col-span-1">
+            <div data-field="url" className="col-span-2 md:col-span-1">
               <Field label="Ссылка QR-кода">
                 <UrlField value={card.url} onChange={url => set({ url })} />
               </Field>
             </div>
 
             <Field label="Полная цена, ₽">
-              <TextInput numeric value={card.full} invalid={issues.fullTooLow || issues.fullLessThanCredit} onChange={changeFull} />
+              <div data-field="full"><TextInput numeric value={card.full} invalid={issues.fullTooLow || issues.fullLessThanCredit} onChange={changeFull} /></div>
             </Field>
 
             <OptionalField label="В кредит, ₽" on={card.creditOn} onChange={creditOn => set({ creditOn })}>
-              <TextInput numeric value={card.credit} invalid={issues.creditTooLow || issues.fullLessThanCredit} onChange={changeCredit} />
+              <div data-field="credit"><TextInput numeric value={card.credit} invalid={issues.creditTooLow || issues.fullLessThanCredit} onChange={changeCredit} /></div>
             </OptionalField>
           </div>
 
@@ -292,7 +309,12 @@ export default function App() {
             than the form; on phones pinned to the bottom of the screen, since the preview comes below the form. With
             several cards and some in work, the progress leading through them stands in its place, as the business card's */}
         <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:pt-0">
-          {failing.length > 0 && items.length > 1 ? (
+          {/* One card: its first fault, a click taking the focus there; several: the cards in work, as the business card */}
+          {failing.length > 0 && items.length === 1 && issue ? (
+            <button type="button" onClick={toIssue} className="flex w-full cursor-pointer items-center justify-center px-3 py-[10px] text-[14px] leading-5 text-[#808080] hover:text-black">
+              {issue.text}
+            </button>
+          ) : failing.length > 0 && items.length > 1 ? (
             <Progress failing={failing.length} total={items.length} onClick={() => staff.nextOf(failing)} />
           ) : (
             <DownloadButton onClick={handleExport} busy={exporting} disabled={failing.length > 0}>
