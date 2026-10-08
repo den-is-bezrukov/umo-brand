@@ -94,6 +94,8 @@ export default function BusinessCard() {
   }, [])
 
   const siteLink = siteText(dealer.site) ? `https://${siteText(dealer.site)}` : ''
+  /** The domain the email field suggests: the site's, without a path */
+  const mailDomain = siteText(dealer.site).split('/')[0]
   const link = qrLink ?? siteLink
   const qrFor = (_p: Person): QrData | null => /* qrMode === 'contact' ? { text: vcard(dealer, _p), level: 'L' } : */
     isValidUrl(link) ? { text: link.trim(), level: 'M' } : null
@@ -251,7 +253,10 @@ export default function BusinessCard() {
                       <ComboField key={p.key} value={p.position} onChange={v => update(p.key, { position: v })} options={POSITIONS} placeholder="Должность" label="Типовые должности" invalid={bad('position', 'Должность')} />
                     </Labelled>
                     <Labelled label="Почта">
-                      <TextInput value={p.email} onChange={v => update(p.key, { email: v })} placeholder="Почта" invalid={bad('email', 'Почта')} />
+                      {/* The browser's own suggestion: what's typed before the @, at the card's site (agat-vladimir.umo.auto
+                          follows the dealer's name, or the site as edited) */}
+                      <TextInput value={p.email} onChange={v => update(p.key, { email: v })} placeholder="Почта" invalid={bad('email', 'Почта')} inputMode="email" list={mailDomain && !p.email.includes('@') ? 'mail-at-site' : undefined} />
+                      {mailDomain && <datalist id="mail-at-site"><option value={`${p.email.trim()}@${mailDomain}`} /></datalist>}
                     </Labelled>
                     <Labelled label="Телефон">
                       {/* The number takes only what a number is written with; a whole one pasted with its extension
