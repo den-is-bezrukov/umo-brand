@@ -330,7 +330,7 @@ export function SegBtn({ active, onClick, disabled, title, children }: { active:
       title={title}
       aria-pressed={active}
       className={`flex-1 min-w-0 flex items-center justify-center rounded-[8px] border px-3 py-[9px] cursor-pointer outline-none
-        focus-visible:ring-2 focus-visible:ring-black/30 disabled:cursor-not-allowed disabled:opacity-40
+        focus-visible:ring-2 focus-visible:ring-black/30 disabled:cursor-not-allowed disabled:text-[#999]
         ${active ? 'border-black/10 bg-white text-black' : 'border-transparent text-[#808080]'}`}
     >
       <span className="font-medium text-[14px] leading-5 whitespace-nowrap">{children}</span>
@@ -723,8 +723,8 @@ export function DownloadBar({ format, onClick, busy, disabled, note, onNote, cla
           type="button"
           onClick={onClick}
           disabled={busy || disabled}
-          // Off, it stays black with its text #808080 (Figma 5008:10830 has #666), so the page still says what it's for; busy, white
-          className={`pointer-events-auto flex w-full min-w-16 items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] text-[14px] font-medium leading-5 ${disabled && !busy ? 'text-[#808080]' : 'text-white'} cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed hover:enabled:bg-[#333]`}
+          // Off, it stays black with its text #999, the generators' disabled text (Figma 5008:10830, 5077:7), so the page still says what it's for; busy, white
+          className={`pointer-events-auto flex w-full min-w-16 items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] text-[14px] font-medium leading-5 ${disabled && !busy ? 'text-[#999]' : 'text-white'} cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed hover:enabled:bg-[#333]`}
         >
           {busy && (
             <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" aria-hidden>
