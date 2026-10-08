@@ -40,7 +40,8 @@ function singlePriceTop(qrUrl: string) {
   return qrLine - (40 * 1.13 + 15 + 96 * 0.974)
 }
 
-export default function PriceCardPdf({ variant, fullPrice, creditPrice, qrUrl }: Props) {
+/** One card, an A3 page: the file holds a page per card */
+function PriceCardPage({ variant, fullPrice, creditPrice, qrUrl }: Props) {
   const data = cards[variant]
   const svg = data.model === 'umo8' ? svgUmo8 : svgUmo5
 
@@ -53,7 +54,6 @@ export default function PriceCardPdf({ variant, fullPrice, creditPrice, qrUrl }:
     : px(560 + 95 - carH)  // bottom: -95px equivalent
 
   return (
-    <Document>
       <Page size="A3" style={{ padding: 0, backgroundColor: 'white' }}>
 
         {/* Car image */}
@@ -150,6 +150,13 @@ export default function PriceCardPdf({ variant, fullPrice, creditPrice, qrUrl }:
         </Text>
 
       </Page>
+  )
+}
+
+export default function PriceCardPdf({ pages }: { pages: Props[] }) {
+  return (
+    <Document>
+      {pages.map((c, i) => <PriceCardPage key={i} {...c} />)}
     </Document>
   )
 }

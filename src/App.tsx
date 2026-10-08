@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Fragment } from 'react'
 import { pdf } from '@react-pdf/renderer'
 import QRCode from 'qrcode'
 import PriceCard from '@/posters/PriceCard'
@@ -8,6 +8,7 @@ import type { Variant } from '@/posters/cardData'
 import { goal } from '@/ui/metrika'
 import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField, GeneratorHeader, LinkButtons, DownloadButton } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
+import { useStaff, ItemFrame, AddTile, Removed, Progress, plural, plain, type Row } from '@/ui/staff'
 
 const POSTER_W = 1754
 const POSTER_H = 2480
@@ -44,90 +45,149 @@ function creditFor(full: string) {
   return v > 0 ? formatPrice(String(v)) : ''
 }
 
-function ActivePoster({ model, trim, fullPrice, creditPrice, qrSvg }: { model: Model; trim: Trim; fullPrice: string; creditPrice?: string; qrSvg?: string }) {
-  return <PriceCard variant={`${model}-${trim}` as Variant} fullPrice={fullPrice} creditPrice={creditPrice} qrSvg={qrSvg} />
+/** One price card: model and trim, its prices and the QR's link */
+interface Card {
+  model: Model
+  trim: Trim
+  full: string
+  credit: string
+  /** The credit price was set by hand; until then it follows the full one, a million less */
+  creditSet: boolean
+  /** A card may have no credit offer: one price then, under «Цена:» */
+  creditOn: boolean
+  url: string
 }
 
-/** The card the page was opened with: model and trim from the link if they exist, prices as given or the trim's own */
-function fromLink() {
-  const link = linkParams()
-  const model: Model = link.get('model') === 'umo8' ? 'umo8' : 'umo5'
-  const asked = link.get('trim') as Trim | null
-  const trim = asked && TRIMS[model].includes(asked) ? asked : TRIMS[model][0]
-  // A price is taken as it is in the link only if it looks like one: seven digits, 1 000 000 to 9 999 999
-  const price = (key: string) => {
-    const v = link.get(key) ?? ''
-    return /^[1-9]\d{6}$/.test(v) ? formatPrice(v) : null
-  }
-  const full = price('full') ?? DEFAULTS[`${model}-${trim}`]
-  const credit = price('credit')
-  return {
-    model,
-    trim,
-    full,
-    credit: credit ?? creditFor(full),
-    creditSet: credit !== null,
-    // Off unless the link has it: `credit=auto` follows the full price, seven digits are a price set by hand
-    creditOn: link.has('credit'),
-    url: link.get('link') ?? DEFAULT_URL[model],
-  }
+/** A model's card as it comes: its first trim at its price, no credit, the QR to the model's page */
+function defaultCard(model: Model): Card {
+  const trim = TRIMS[model][0]
+  const full = DEFAULTS[`${model}-${trim}`]
+  return { model, trim, full, credit: creditFor(full), creditSet: false, creditOn: false, url: DEFAULT_URL[model] }
 }
+
+const sameCard = (a: Card, b: Card) => (Object.keys(b) as (keyof Card)[]).every(k => a[k] === b[k])
+
+/** At most this many cards come from a link */
+const MAX_CARDS = 20
+
+/**
+ * The cards the page was opened with. The first card's settings have no suffix, as links from when there was one card;
+ * the next ones carry their number (`model2`, `full3`), and `cards` says how many there are
+ */
+function fromLink(): Card[] {
+  const link = linkParams()
+  const count = Math.min(Math.max(Number(link.get('cards')) || 1, 1), MAX_CARDS)
+  return Array.from({ length: count }, (_, i) => {
+    const n = i === 0 ? '' : String(i + 1)
+    const model: Model = link.get(`model${n}`) === 'umo8' ? 'umo8' : 'umo5'
+    const asked = link.get(`trim${n}`) as Trim | null
+    const trim = asked && TRIMS[model].includes(asked) ? asked : TRIMS[model][0]
+    // A price is taken as it is in the link only if it looks like one: seven digits, 1 000 000 to 9 999 999
+    const price = (key: string) => {
+      const v = link.get(key + n) ?? ''
+      return /^[1-9]\d{6}$/.test(v) ? formatPrice(v) : null
+    }
+    const full = price('full') ?? DEFAULTS[`${model}-${trim}`]
+    const credit = price('credit')
+    return {
+      model,
+      trim,
+      full,
+      credit: credit ?? creditFor(full),
+      creditSet: credit !== null,
+      // Off unless the link has it: `credit=auto` follows the full price, seven digits are a price set by hand
+      creditOn: link.has(`credit${n}`),
+      url: link.get(`link${n}`) ?? DEFAULT_URL[model],
+    }
+  })
+}
+
+const MIN_CREDIT = 999_999
+
+/** What's wrong with a card, field by field */
+function check(c: Card) {
+  const fullMissing = priceNum(c.full) === 0
+  const creditTooLow = c.creditOn && priceNum(c.credit) < MIN_CREDIT
+  const fullLessThanCredit = c.creditOn && priceNum(c.full) < priceNum(c.credit)
+  const urlBad = !isValidUrl(c.url.trim())
+  return { fullMissing, creditTooLow, fullLessThanCredit, urlBad, ok: !fullMissing && !creditTooLow && !fullLessThanCredit && !urlBad }
+}
+
+/** The link the QR leads to: the card's own if it's a link, the model's page otherwise */
+const qrUrlOf = (c: Card) => isValidUrl(c.url.trim()) ? c.url.trim() : DEFAULT_URL[c.model]
+
+/** прайс-карту, прайс-карты, прайс-карт: «Скачать 3 прайс-карты» */
+const cardsWord = (n: number) => ({ '': 'прайс-карту', 'а': 'прайс-карты', 'ей': 'прайс-карт' })[plural(n)]
+
+const ASPECT = `${POSTER_W} / ${POSTER_H}`
 
 export default function App() {
   const [initial] = useState(fromLink)
-  const [model, setModel] = useState<Model>(initial.model)
-  const [trim, setTrim] = useState<Trim>(initial.trim)
-  const [fullPrice, setFullPrice] = useState(initial.full)
-  const [creditPrice, setCreditPrice] = useState(initial.credit)
-  // The credit price follows the full one (a million less) until it's set by hand; a card may have no credit offer
-  const [creditSet, setCreditSet] = useState(initial.creditSet)
-  const [creditOn, setCreditOn] = useState(initial.creditOn)
-  const [url, setUrl] = useState(initial.url)
+  // The cards are a list as the business cards are: one selected and edited in the sidebar, each with its number and
+  // actions beside it, «Добавить» under them. There's no table mode, and one card is always selected
+  const staff = useStaff<Card>({ blank: defaultCard('umo5'), readFile: () => [], readPasted: () => [], initial })
+  const { items, update } = staff
+  const card: Row<Card> = staff.current ?? items[0]
+  const set = (patch: Partial<Card>) => update(card.key, patch)
+  staff.useDeleteKey(false)
+  // A card's «Сбросить» brings it back to its model's defaults, as the sidebar's does; it isn't offered on one that is
+  const frame = {
+    ...staff,
+    clear: (key: number) => { const c = items.find(it => it.key === key); if (c) update(key, defaultCard(c.model)) },
+    isBlank: (c: Card) => sameCard(c, defaultCard(c.model)),
+  }
 
   const changeFull = (v: string) => {
     const full = formatPrice(v)
-    setFullPrice(full)
-    if (!creditSet) setCreditPrice(creditFor(full))
+    set(card.creditSet ? { full } : { full, credit: creditFor(full) })
   }
-  const changeCredit = (v: string) => {
-    setCreditPrice(formatPrice(v))
-    setCreditSet(true)
-  }
-  const resetPrices = (m: Model, t: Trim) => {
-    setFullPrice(DEFAULTS[`${m}-${t}`])
-    setCreditPrice(creditFor(DEFAULTS[`${m}-${t}`]))
-    setCreditSet(false)
-  }
+  const changeCredit = (v: string) => set({ credit: formatPrice(v), creditSet: true })
 
-  // The address carries what differs from the defaults, so the card can be sent as a link
+  const switchModel = (m: Model) => {
+    // The link follows the model while it's still the old model's own page; the credit stays on or off
+    const url = card.url.trim() === DEFAULT_URL[card.model] ? DEFAULT_URL[m] : card.url
+    set({ ...defaultCard(m), url, creditOn: card.creditOn })
+  }
+  const switchTrim = (t: Trim) => {
+    const full = DEFAULTS[`${card.model}-${t}`]
+    set({ trim: t, full, credit: creditFor(full), creditSet: false })
+  }
+  // «Сбросить» brings the selected card back to its defaults, keeping the model
+  const reset = () => set(defaultCard(card.model))
+
+  // The address carries what differs from the defaults, every card's, so the set can be sent as a link
   const digits = (v: string) => v.replace(/\D/g, '')
   useLinkState({
-    // UMO 5 by default (it was UMO 8, so links from then without `model` now open UMO 5)
-    model: model === 'umo5' ? null : model,
-    trim: trim === TRIMS[model][0] ? null : trim,
-    full: fullPrice === DEFAULTS[`${model}-${trim}`] ? null : digits(fullPrice),
-    credit: !creditOn ? null : creditSet ? digits(creditPrice) : 'auto',
-    link: url.trim() === DEFAULT_URL[model] ? null : url.trim(),
+    cards: items.length > 1 ? String(items.length) : null,
+    ...Object.fromEntries(items.flatMap((c, i) => {
+      const n = i === 0 ? '' : String(i + 1)
+      return [
+        // UMO 5 by default (it was UMO 8, so links from then without `model` now open UMO 5)
+        [`model${n}`, c.model === 'umo5' ? null : c.model],
+        [`trim${n}`, c.trim === TRIMS[c.model][0] ? null : c.trim],
+        [`full${n}`, c.full === DEFAULTS[`${c.model}-${c.trim}`] ? null : digits(c.full)],
+        [`credit${n}`, !c.creditOn ? null : c.creditSet ? digits(c.credit) : 'auto'],
+        [`link${n}`, c.url.trim() === DEFAULT_URL[c.model] ? null : c.url.trim()],
+      ]
+    })),
   })
-  const [qrSvg, setQrSvg] = useState<string | undefined>(undefined)
-  const [exporting, setExporting] = useState(false)
-  const [scale, setScale] = useState(0)
 
-  const urlValid = isValidUrl(url.trim())
-
-  const MIN_CREDIT = 999_999
-  const fullMissing = priceNum(fullPrice) === 0
-  const creditTooLow = creditOn && priceNum(creditPrice) < MIN_CREDIT
-  const fullLessThanCredit = creditOn && priceNum(fullPrice) < priceNum(creditPrice)
-  const pricesValid = !fullMissing && !creditTooLow && !fullLessThanCredit
-  const credit = creditOn ? creditPrice : undefined
-
+  // The QR codes, one per link in use, kept as they're made
+  const [qrSvgs, setQrSvgs] = useState<Record<string, string>>({})
+  const urls = [...new Set(items.map(qrUrlOf))]
   useEffect(() => {
-    const effective = urlValid ? url.trim() : DEFAULT_URL[model]
-    QRCode.toString(effective, { type: 'svg', margin: 1, color: { dark: '#000000', light: '#ffffff' } })
-      .then(raw => setQrSvg(raw.replace('<svg ', '<svg style="width:100%;height:100%;display:block" ')))
-      .catch(() => setQrSvg(undefined))
-  }, [url, model])
+    const missing = urls.filter(u => !(u in qrSvgs))
+    if (!missing.length) return
+    Promise.all(missing.map(u => QRCode.toString(u, { type: 'svg', margin: 1, color: { dark: '#000000', light: '#ffffff' } })
+      .then(raw => [u, raw.replace('<svg ', '<svg style="width:100%;height:100%;display:block" ')] as const)
+      .catch(() => null)))
+      .then(made => setQrSvgs(q => ({ ...q, ...Object.fromEntries(made.filter(m => m !== null)) })))
+  }, [urls.join('\n')]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const [exporting, setExporting] = useState(false)
+  // The cards' width on the canvas: on wide screens each card fits its height, as the one card did; on phones its width
+  const [cardW, setCardW] = useState(0)
+  const [wide, setWide] = useState(true)
 
   useEffect(() => {
     const prev = document.title
@@ -135,53 +195,41 @@ export default function App() {
     return () => { document.title = prev }
   }, [])
 
-  const previewRef = useRef<HTMLDivElement>(null)
+  const canvasRef = useRef<HTMLElement>(null)
   useEffect(() => {
-    const el = previewRef.current
+    const el = canvasRef.current
     if (!el) return
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect
-      // Wide screens fit the card to the preview area's height; narrow ones (stacked layout) to its width.
-      const byWidth = width / POSTER_W
-      setScale(window.matchMedia('(min-width: 768px)').matches ? Math.min(byWidth, height / POSTER_H) : byWidth)
+      // On phones the card's number and actions take 40 + 8 px beside it, mirrored on the left (`BESIDE`)
+      const md = window.matchMedia('(min-width: 768px)').matches
+      setWide(md)
+      setCardW(md ? Math.min(width, height * POSTER_W / POSTER_H) : width - 96)
     })
     observer.observe(el)
     return () => observer.disconnect()
   }, [])
+  const scale = cardW / POSTER_W
+  /** A row's width: the card, and on phones the room beside it for its number and actions */
+  const rowW = wide ? cardW : cardW + 96
 
-  const switchModel = (m: Model) => {
-    const t = TRIMS[m][0]
-    setModel(m); setTrim(t)
-    resetPrices(m, t)
-    // The link follows the model while it's still the old model's own page
-    if (url.trim() === DEFAULT_URL[model]) setUrl(DEFAULT_URL[m])
-  }
-
-  const switchTrim = (t: Trim) => {
-    setTrim(t)
-    resetPrices(model, t)
-  }
-
-  // «Сбросить» keeps the model and brings the rest back to its defaults
-  const reset = () => {
-    switchModel(model)
-    setCreditOn(false)
-    setUrl(DEFAULT_URL[model])
-  }
+  const issues = check(card)
+  const failing = items.filter(c => !check(c).ok).map(c => c.key)
 
   const handleExport = async () => {
     setExporting(true)
     try {
       ensurePdfFonts()
-      const qrUrl = urlValid ? url.trim() : DEFAULT_URL[model]
-      const props = { fullPrice, creditPrice: credit, qrUrl }
-      const doc = <PriceCardPdf variant={`${model}-${trim}` as Variant} {...props} />
-      const blob = await pdf(doc).toBlob()
+      const pages = items.map(c => ({ variant: `${c.model}-${c.trim}` as Variant, fullPrice: c.full, creditPrice: c.creditOn ? c.credit : undefined, qrUrl: qrUrlOf(c) }))
+      const blob = await pdf(<PriceCardPdf pages={pages} />).toBlob()
       const link = document.createElement('a')
       link.href = URL.createObjectURL(blob)
-      link.download = `UMO-${model === 'umo8' ? '8' : '5'}-${trim.toUpperCase()}.pdf`
+      const one = items.length === 1 ? items[0] : null
+      link.download = one ? `UMO-${one.model === 'umo8' ? '8' : '5'}-${one.trim.toUpperCase()}.pdf` : 'UMO_price-cards.pdf'
       link.click()
-      goal('download_price_card', { model, trim, credit: creditOn, ownLink: qrUrl !== DEFAULT_URL[model] })
+      goal('download_price_card', one
+        ? { model: one.model, trim: one.trim, credit: one.creditOn, ownLink: qrUrlOf(one) !== DEFAULT_URL[one.model] }
+        : { cards: items.length, credit: items.some(c => c.creditOn), ownLink: items.some(c => qrUrlOf(c) !== DEFAULT_URL[c.model]) })
       URL.revokeObjectURL(link.href)
     } finally {
       setExporting(false)
@@ -190,7 +238,7 @@ export default function App() {
 
   const trims8: { value: Trim; label: string }[] = [{ value: 'max', label: 'MAX' }, { value: 'ultra', label: 'ULTRA' }]
   const trims5: { value: Trim; label: string }[] = [{ value: 'pro', label: 'PRO' }, { value: 'max', label: 'MAX' }]
-  const trimOptions = model === 'umo8' ? trims8 : trims5
+  const trimOptions = card.model === 'umo8' ? trims8 : trims5
 
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
@@ -203,15 +251,15 @@ export default function App() {
           <div className="grid grid-cols-2 gap-x-3 gap-y-4 md:grid-cols-1 tracking-normal">
             <Field label="Модель">
               <Segments>
-                <SegBtn active={model === 'umo5'} onClick={() => switchModel('umo5')}>UMO 5</SegBtn>
-                <SegBtn active={model === 'umo8'} onClick={() => switchModel('umo8')}>UMO 8</SegBtn>
+                <SegBtn active={card.model === 'umo5'} onClick={() => switchModel('umo5')}>UMO 5</SegBtn>
+                <SegBtn active={card.model === 'umo8'} onClick={() => switchModel('umo8')}>UMO 8</SegBtn>
               </Segments>
             </Field>
 
             <Field label="Комплектация">
               <Segments>
                 {trimOptions.map(t => (
-                  <SegBtn key={t.value} active={trim === t.value} onClick={() => switchTrim(t.value)}>{t.label}</SegBtn>
+                  <SegBtn key={t.value} active={card.trim === t.value} onClick={() => switchTrim(t.value)}>{t.label}</SegBtn>
                 ))}
               </Segments>
             </Field>
@@ -219,16 +267,16 @@ export default function App() {
             {/* The link before the prices, as in Figma 4844:6865 */}
             <div className="col-span-2 md:col-span-1">
               <Field label="Ссылка QR-кода">
-                <UrlField value={url} onChange={setUrl} />
+                <UrlField value={card.url} onChange={url => set({ url })} />
               </Field>
             </div>
 
             <Field label="Полная цена, ₽">
-              <TextInput numeric value={fullPrice} invalid={fullMissing || fullLessThanCredit} onChange={changeFull} />
+              <TextInput numeric value={card.full} invalid={issues.fullMissing || issues.fullLessThanCredit} onChange={changeFull} />
             </Field>
 
-            <OptionalField label="В кредит, ₽" on={creditOn} onChange={setCreditOn}>
-              <TextInput numeric value={creditPrice} invalid={creditTooLow || fullLessThanCredit} onChange={changeCredit} />
+            <OptionalField label="В кредит, ₽" on={card.creditOn} onChange={creditOn => set({ creditOn })}>
+              <TextInput numeric value={card.credit} invalid={issues.creditTooLow || issues.fullLessThanCredit} onChange={changeCredit} />
             </OptionalField>
           </div>
 
@@ -238,23 +286,55 @@ export default function App() {
         </div>
 
         {/* Download — 8px under «Копировать» and «Сбросить», sticking to the bottom of the sidebar when the window is shorter
-            than the form; on phones pinned to the bottom of the screen, since the preview comes below the form */}
+            than the form; on phones pinned to the bottom of the screen, since the preview comes below the form. With
+            several cards and some in work, the progress leading through them stands in its place, as the business card's */}
         <div className="fixed inset-x-0 bottom-0 z-10 bg-white p-6 md:sticky md:pt-0">
-          <DownloadButton onClick={handleExport} busy={exporting} disabled={!urlValid || !pricesValid}>Скачать PDF</DownloadButton>
+          {failing.length > 0 && items.length > 1 ? (
+            <Progress failing={failing.length} total={items.length} onClick={() => staff.nextOf(failing)} />
+          ) : (
+            <DownloadButton onClick={handleExport} busy={exporting} disabled={failing.length > 0}>
+              {items.length > 1 ? `Скачать ${items.length} ${cardsWord(items.length)}` : 'Скачать PDF'}
+            </DownloadButton>
+          )}
         </div>
       </aside>
 
-      {/* ── Poster preview ── */}
-      <main className="flex flex-1 items-center justify-center bg-[#f5f5f5] p-6 pb-[112px] md:min-w-0 md:p-16">
-        <div ref={previewRef} className="flex size-full items-center justify-center">
-          {scale > 0 && (
-            <div className="bg-white ring-1 ring-black/10" style={{ width: POSTER_W * scale, height: POSTER_H * scale, position: 'relative', flexShrink: 0 }}>
-              <div style={{ transformOrigin: 'top left', transform: `scale(${scale})`, position: 'absolute', top: 0, left: 0 }}>
-                <ActivePoster model={model} trim={trim} fullPrice={fullPrice} creditPrice={credit} qrSvg={qrSvg} />
-              </div>
-            </div>
-          )}
-        </div>
+      {/* ── The cards ── */}
+      <main ref={canvasRef} className="flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[112px] md:min-w-0 md:overflow-y-auto md:p-16">
+        {scale > 0 && (
+          <div className="m-auto grid w-full grid-cols-1 gap-8">
+            {items.map((c, i) => {
+              const active = c.key === card.key
+              return (
+                <Fragment key={c.key}>
+                  <Removed staff={staff} at={i} aspect={ASPECT} width={rowW} />
+                  <figure ref={staff.figureRef(c.key)} onClick={() => staff.pick(c.key)} className="group/row flex cursor-pointer justify-center">
+                    <div className="w-full" style={{ maxWidth: rowW }}>
+                      <ItemFrame staff={frame} item={c} n={i + 1}>
+                        <button
+                          type="button"
+                          aria-pressed={items.length > 1 ? active : undefined}
+                          // Edged at 10% black, black on hover, as the business cards
+                          className={`relative block cursor-pointer bg-white outline-1 outline-offset-0 transition-opacity duration-150
+                            outline-black/10 group-hover/row:outline-black
+                            ${!active ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
+                          style={{ width: cardW, height: POSTER_H * scale }}
+                        >
+                          <div style={{ transformOrigin: 'top left', transform: `scale(${scale})`, position: 'absolute', top: 0, left: 0 }}>
+                            <PriceCard variant={`${c.model}-${c.trim}` as Variant} fullPrice={c.full} creditPrice={c.creditOn ? c.credit : undefined} qrSvg={qrSvgs[qrUrlOf(c)]} />
+                          </div>
+                        </button>
+                      </ItemFrame>
+                    </div>
+                  </figure>
+                </Fragment>
+              )
+            })}
+            <Removed staff={staff} at={items.length} aspect={ASPECT} width={rowW} />
+            {/* The next card starts as the last one: most often the same model in another trim or at another price */}
+            <AddTile onClick={() => staff.add(plain(items[items.length - 1]))} aspect={ASPECT} width={rowW} />
+          </div>
+        )}
       </main>
 
     </div>

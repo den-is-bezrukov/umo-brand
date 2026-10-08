@@ -26,6 +26,8 @@ export interface StaffOptions<P> {
   readFile: (data: ArrayBuffer) => P[]
   /** Rows copied from a spreadsheet (tab-separated) */
   readPasted: (text: string) => P[]
+  /** The list the page opens with (the price cards from a link); one blank item otherwise */
+  initial?: P[]
 }
 
 /**
@@ -46,9 +48,9 @@ export function fullNameField(person: { name: string; surname: string }, set: (p
   }
 }
 
-export function useStaff<P extends object>({ blank, readFile, readPasted }: StaffOptions<P>) {
+export function useStaff<P extends object>({ blank, readFile, readPasted, initial }: StaffOptions<P>) {
   const [mode, setMode] = useState<Mode>('manual')
-  const [people, setList] = useState<Row<P>[]>(() => [row(blank)])
+  const [people, setList] = useState<Row<P>[]>(() => initial?.length ? initial.map(p => row(p)) : [row(blank)])
   /** The file the list is, while it's unedited */
   const [file, setFile] = useState('')
   const setPeople = (next: Row<P>[]) => {
@@ -199,9 +201,10 @@ export function useStaff<P extends object>({ blank, readFile, readPasted }: Staf
     setFresh(f => new Set(f).add(key))
     update(key, blank)
   }
-  const add = () => {
-    const r = row(blank)
-    setFresh(f => new Set(f).add(r.key))
+  /** A new item at the end: empty, or a copy of `from` (the price card's next card starts as the last one) */
+  const add = (from?: P) => {
+    const r = row(from ?? blank)
+    if (!from) setFresh(f => new Set(f).add(r.key))
     focusNext.current = true
     centre.current = true
     setPeople([...people, r])
@@ -318,9 +321,9 @@ export function UploadArea<P extends object>({ staff }: { staff: Staff<P> }) {
  */
 export const BESIDE = 'px-12 md:px-0'
 
-export function AddTile({ onClick, aspect, radius }: { onClick: () => void; aspect: string; radius?: string }) {
+export function AddTile({ onClick, aspect, radius, width }: { onClick: () => void; aspect: string; radius?: string; width?: number }) {
   return (
-    <div className={`@container mx-auto w-full max-w-[480px] self-start ${BESIDE}`}>
+    <div style={width ? { maxWidth: width } : undefined} className={`@container mx-auto w-full max-w-[480px] self-start ${BESIDE}`}>
       <button
         type="button"
         data-add
@@ -420,10 +423,10 @@ export function ItemFrame<P extends object>({ staff, item, n, children }: { staf
 }
 
 /** In place of an item just removed, as tall as it was, for five seconds: «Удалено · Вернуть» */
-export function Removed<P extends object>({ staff, at, aspect, radius }: { staff: Staff<P>; at: number; aspect: string; radius?: string }) {
+export function Removed<P extends object>({ staff, at, aspect, radius, width }: { staff: Staff<P>; at: number; aspect: string; radius?: string; width?: number }) {
   if (staff.removed?.index !== at || staff.mode !== 'manual') return null
   return (
-    <div className={`@container mx-auto w-full max-w-[480px] ${BESIDE}`}>
+    <div style={width ? { maxWidth: width } : undefined} className={`@container mx-auto w-full max-w-[480px] ${BESIDE}`}>
       <div style={{ aspectRatio: aspect, borderRadius: radius }} className="flex w-full items-center justify-center gap-2 text-[14px] leading-5 text-[#808080]">
         Удалено ·
         <button type="button" onClick={e => { e.stopPropagation(); staff.restore() }} className="cursor-pointer text-black outline-none hover:text-[#808080] focus-visible:ring-2 focus-visible:ring-black/30">Вернуть</button>

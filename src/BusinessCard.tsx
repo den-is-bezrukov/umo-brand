@@ -350,7 +350,7 @@ export default function BusinessCard() {
             )
           })}
           <Removed staff={staff} at={items.length} aspect={`${CARD.w} / ${CARD.h}`} />
-          {mode === 'manual' && <AddTile onClick={staff.add} aspect={`${CARD.w} / ${CARD.h}`} />}
+          {mode === 'manual' && <AddTile onClick={() => staff.add()} aspect={`${CARD.w} / ${CARD.h}`} />}
         </div>
         )}
       </main>
