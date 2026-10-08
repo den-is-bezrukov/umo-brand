@@ -45,6 +45,22 @@ jobs:
           fi
       - run: npx tsc --noEmit
       - run: pnpm build
+      # Metrika's Webvisor replays a visit with the stylesheet it had, fetched from the site at viewing time, and every
+      # deploy replaces the hashed CSS. So the stylesheets of the last 15 days (as long as Webvisor keeps recordings)
+      # are carried over from the live site, listed in css-archive.txt with the last time each was current
+      - name: Keep the last 15 days' stylesheets for Webvisor
+        run: |
+          curl -sf https://umo.autos/css-archive.txt -o old.txt || touch old.txt
+          now=$(date +%s)
+          : > dist/css-archive.txt
+          for f in dist/assets/*.css; do echo "$(basename "$f") $now" >> dist/css-archive.txt; done
+          while read -r name ts; do
+            [[ "$name" =~ ^[A-Za-z0-9_-]+\.css$ && "$ts" =~ ^[0-9]+$ ]] || continue
+            [ -e "dist/assets/$name" ] && continue
+            [ $((now - ts)) -gt $((15 * 86400)) ] && continue
+            curl -sf "https://umo.autos/assets/$name" -o "dist/assets/$name" && echo "$name $ts" >> dist/css-archive.txt
+          done < old.txt
+          echo "Stylesheets kept: $(wc -l < dist/css-archive.txt)"
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
