@@ -656,8 +656,8 @@ const flash = (text: string) => flashes.forEach(f => f(text))
 
 /**
  * «Поделиться» and «Сбросить» side by side (Figma 4939:3762). The first sends the page address — the settings are in
- * it — so a set-up card or livery goes as a link: it's copied, the line over the buttons saying «Ссылка скопирована»
- * for two seconds (the phones' share sheet was proposed and dropped: the same button doing one thing everywhere) (it was «Копировать», then «Копировать ссылку»,
+ * it — so a set-up card or livery goes as a link: on phones through the system's share sheet, elsewhere copied, the
+ * line over the buttons saying «Ссылка скопирована» for two seconds (it was «Копировать», then «Копировать ссылку»,
  * saying «Скопировано» on itself). The second brings the settings back to the defaults, which a page reload can't, as
  * the address keeps them. Without `onReset` only «Поделиться» (the price card: each card has its own «Сбросить» beside
  * it). «Поделиться» is off while the result isn't ready (`incomplete`, as «Скачать»): a link is sent for what it makes,
@@ -665,7 +665,16 @@ const flash = (text: string) => flashes.forEach(f => f(text))
  */
 export function LinkButtons({ onReset, incomplete }: { onReset?: () => void; incomplete?: boolean }) {
   const share = async () => {
-    await navigator.clipboard.writeText(window.location.href)
+    const url = window.location.href
+    // On phones the system's share sheet: the chat a link goes to in a tap or two, «Скопировать» among them
+    if (navigator.share && matchMedia('(pointer: coarse)').matches) {
+      try {
+        await navigator.share({ url })
+        goal('copy_link', { page: location.pathname, shared: true })
+      } catch { /* closed without sending */ }
+      return
+    }
+    await navigator.clipboard.writeText(url)
     flash('Ссылка скопирована')
     goal('copy_link', { page: location.pathname })
   }
