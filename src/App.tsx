@@ -102,15 +102,16 @@ function fromLink(): Card[] {
   })
 }
 
-const MIN_CREDIT = 999_999
+// Neither price may be under 999 999
+const MIN_PRICE = 999_999
 
 /** What's wrong with a card, field by field */
 function check(c: Card) {
-  const fullMissing = priceNum(c.full) === 0
-  const creditTooLow = c.creditOn && priceNum(c.credit) < MIN_CREDIT
+  const fullTooLow = priceNum(c.full) < MIN_PRICE
+  const creditTooLow = c.creditOn && priceNum(c.credit) < MIN_PRICE
   const fullLessThanCredit = c.creditOn && priceNum(c.full) < priceNum(c.credit)
   const urlBad = !isValidUrl(c.url.trim())
-  return { fullMissing, creditTooLow, fullLessThanCredit, urlBad, ok: !fullMissing && !creditTooLow && !fullLessThanCredit && !urlBad }
+  return { fullTooLow, creditTooLow, fullLessThanCredit, urlBad, ok: !fullTooLow && !creditTooLow && !fullLessThanCredit && !urlBad }
 }
 
 /** The link the QR leads to: the card's own if it's a link, the model's page otherwise */
@@ -273,7 +274,7 @@ export default function App() {
             </div>
 
             <Field label="Полная цена, ₽">
-              <TextInput numeric value={card.full} invalid={issues.fullMissing || issues.fullLessThanCredit} onChange={changeFull} />
+              <TextInput numeric value={card.full} invalid={issues.fullTooLow || issues.fullLessThanCredit} onChange={changeFull} />
             </Field>
 
             <OptionalField label="В кредит, ₽" on={card.creditOn} onChange={creditOn => set({ creditOn })}>
