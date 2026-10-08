@@ -201,7 +201,7 @@ export default function PlateFrame() {
             <span className="relative">
               Поле печати, {STRIP.w}&nbsp;×&nbsp;{STRIP.h}&nbsp;мм
               {/* The reset, by what it resets, as the livery's sheets and the cards' own */}
-              {!blank && <CaptionReset onClick={reset} label="Сбросить рамку" />}
+              {!blank && <CaptionReset onClick={reset} label="Вернуть рамку по умолчанию" />}
             </span>
           </figcaption>
           {wrong && (

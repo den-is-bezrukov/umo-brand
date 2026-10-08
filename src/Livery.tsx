@@ -306,10 +306,10 @@ export default function Livery() {
 
       <main className="flex-1 bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
         <div className="mx-auto flex max-w-[1200px] flex-col gap-10">
-          {sheets.slice(0, 2).map(s => <SheetPreview key={s.surface.id} sheet={s} seams={seams} dims={dims} onReset={sidesAtDefaults ? undefined : resetSides} resetLabel="Сбросить оба борта" />)}
+          {sheets.slice(0, 2).map(s => <SheetPreview key={s.surface.id} sheet={s} seams={seams} dims={dims} onReset={sidesAtDefaults ? undefined : resetSides} resetLabel="Вернуть борта по умолчанию" />)}
           {sheets[2] && (
             <div className="w-full md:w-1/2">
-              <SheetPreview sheet={sheets[2]} seams={seams} dims={dims} onReset={rearAtDefaults ? undefined : resetRear} resetLabel="Сбросить стекло" />
+              <SheetPreview sheet={sheets[2]} seams={seams} dims={dims} onReset={rearAtDefaults ? undefined : resetRear} resetLabel="Вернуть стекло по умолчанию" />
             </div>
           )}
         </div>
