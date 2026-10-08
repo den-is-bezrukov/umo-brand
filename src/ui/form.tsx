@@ -49,6 +49,8 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
 /** Where the current generator stands, the panel's padding */
 const RING_START = 24
 const RING_TURN_MS = 300
+/** How long the line stays turned once left, before coming back round to the current one */
+const RING_BACK_MS = 250
 
 function GeneratorRing({ current }: { current: string }) {
   const navigate = useNavigate()
@@ -82,6 +84,7 @@ function GeneratorRing({ current }: { current: string }) {
   // Back round to the current one, the shorter way
   const settle = () => {
     if (!turn) return
+    cancelAnimationFrame(glide.current)
     const home = Math.round(offsetRef.current / turn) * turn
     if (home !== offsetRef.current) move(home, true)
   }
@@ -101,7 +104,7 @@ function GeneratorRing({ current }: { current: string }) {
       e.preventDefault()
       cancelAnimationFrame(glide.current)
       move(offsetRef.current + d * (e.deltaMode === 1 ? 16 : 1), false)
-      later(1500)
+      later(RING_BACK_MS)
     }
     row.addEventListener('wheel', wheel, { passive: false })
     return () => row.removeEventListener('wheel', wheel)
@@ -143,7 +146,7 @@ function GeneratorRing({ current }: { current: string }) {
       move(offsetRef.current + v * dt, false)
       v *= Math.pow(0.995, dt)
       if (Math.abs(v) > 0.02) glide.current = requestAnimationFrame(step)
-      else later(2000)
+      else later(RING_BACK_MS)
     }
     glide.current = requestAnimationFrame(step)
   }
@@ -169,8 +172,8 @@ function GeneratorRing({ current }: { current: string }) {
     <div
       ref={rowRef}
       className="relative -mx-6 h-6 cursor-default touch-pan-y select-none overflow-x-clip"
-      onPointerEnter={() => { hover.current = true }}
-      onPointerLeave={() => { hover.current = false; later(400) }}
+      onPointerEnter={e => { if (e.pointerType !== 'touch') hover.current = true }}
+      onPointerLeave={e => { hover.current = false; if (e.pointerType !== 'touch') later(RING_BACK_MS) }}
       onPointerDown={down}
       onPointerMove={pointerMove}
       onPointerUp={up}
