@@ -52,7 +52,7 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
 /** Where the current generator stands, the panel's padding */
 const RING_START = 24
 /** The turn into place */
-const RING_TURN_MS = 500
+const RING_TURN_MS = 250
 /** While another name is pointed at, the current one greys out like the rest, so only one stands out */
 const DIM_CURRENT = 'group-has-[a:hover]/ring:not-hover:text-[#bfbfbf]'
 /** How long the line stays turned once left, before coming back round to the current one */
