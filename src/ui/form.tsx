@@ -647,15 +647,16 @@ export function SizeSwitch({ large, onChange, label }: { large: boolean; onChang
 }
 
 // Edged at 10%, at 40% on hover (Figma 5015:11171)
-export const outlined = 'flex min-w-16 flex-1 items-center justify-center rounded-[8px] border border-black/10 px-3 py-[9px] text-[14px] font-medium leading-5 text-black cursor-pointer outline-none hover:border-black/40 focus-visible:ring-2 focus-visible:ring-black/30'
+export const outlined = 'flex min-w-16 flex-1 items-center justify-center rounded-[8px] border border-black/10 px-3 py-[9px] text-[14px] font-medium leading-5 text-black cursor-pointer outline-none hover:border-black/40 focus-visible:ring-2 focus-visible:ring-black/30 disabled:cursor-default disabled:text-[#999] disabled:hover:border-black/10'
 
 /**
  * «Копировать» and «Сбросить» side by side (Figma 4939:3762): the first copies the page address — the settings are in
  * it — to send a set-up card or livery as a link, and says so for two seconds; the second brings the settings back to
  * the defaults, which a page reload can't, as the address keeps them. Without `onReset` only «Копировать» (the price
- * card: each card has its own «Сбросить» beside it).
+ * card: each card has its own «Сбросить» beside it). Both off while there's nothing set to copy or reset (`disabled`:
+ * the plate frame with no dealer).
  */
-export function LinkButtons({ onReset }: { onReset?: () => void }) {
+export function LinkButtons({ onReset, disabled }: { onReset?: () => void; disabled?: boolean }) {
   const [copied, setCopied] = useState(false)
   useEffect(() => {
     if (!copied) return
@@ -671,11 +672,12 @@ export function LinkButtons({ onReset }: { onReset?: () => void }) {
           goal('copy_link', { page: location.pathname })
         })}
         title="Скопировать ссылку на эти настройки"
+        disabled={disabled}
         className={outlined}
       >
         <span aria-live="polite">{copied ? 'Скопировано' : 'Копировать'}</span>
       </button>
-      {onReset && <button type="button" onClick={onReset} title="Вернуть настройки по умолчанию" className={outlined}>Сбросить</button>}
+      {onReset && <button type="button" onClick={onReset} disabled={disabled} title="Вернуть настройки по умолчанию" className={outlined}>Сбросить</button>}
     </div>
   )
 }

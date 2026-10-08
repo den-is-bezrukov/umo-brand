@@ -160,7 +160,7 @@ export default function PlateFrame() {
           </div>
 
           <div className="pt-4 tracking-normal">
-            <LinkButtons onReset={reset} />
+            <LinkButtons onReset={reset} disabled={noName && align === 'left'} />
           </div>
         </div>
 
