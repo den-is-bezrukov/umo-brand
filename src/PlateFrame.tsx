@@ -15,8 +15,10 @@ import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
 // the prefix doesn't fit; nothing on the page leads there.
 
 const PREFIX = 'UMO '
-const DEFAULT_NAME = 'Центр'
-const DEFAULT_TEXT = PREFIX + DEFAULT_NAME
+/** The name field's placeholder, standing grey on the frame while it's empty; never in the PDF */
+const PLACEHOLDER_NAME = 'Центр'
+const PLACEHOLDER_TEXT = PREFIX + PLACEHOLDER_NAME
+const GHOST = '#808080'
 /** The dealers' names for the suggestions, without the fixed «UMO » */
 const NAMES = DEALER_NAMES.map(withoutUmo)
 const RED = '#ff2a1a'
@@ -68,15 +70,19 @@ export default function PlateFrame() {
   const [link] = useState(linkParams)
   // The free line: on while the link has `text`, so it stays on as the address keeps it
   const [custom] = useState(() => link.has('text'))
-  const [name, setName] = useState(link.get('name') ?? DEFAULT_NAME)
-  const [text, setText] = useState(link.get('text') || DEFAULT_TEXT)
+  // Empty at first, as the name tag's fields: «Центр» stood in as a value and read as filled in
+  const [name, setName] = useState(link.get('name') ?? '')
+  const [text, setText] = useState(link.get('text') ?? '')
   const [align, setAlign] = useState<Align>(link.get('align') === 'center' ? 'center' : 'left')
   useLinkState({
-    name: custom || name === DEFAULT_NAME ? null : name,
+    name: custom || !name ? null : name,
     text: custom ? text : null,
     align: align === 'left' ? null : align,
   })
   const line = custom ? text : PREFIX + name
+  const noName = custom ? !text.trim() : !name.trim()
+  /** What the frame shows: the placeholder while the field is empty */
+  const shown = noName ? (custom ? PLACEHOLDER_TEXT : PREFIX + PLACEHOLDER_NAME) : line
 
   const [font, setFont] = useState<Font>()
   const [exporting, setExporting] = useState(false)
@@ -88,17 +94,18 @@ export default function PlateFrame() {
     return () => { document.title = prev }
   }, [])
 
-  const strip = useMemo(() => font ? buildStrip(font, line, align) : undefined, [font, line, align])
-  const noName = custom ? !text.trim() : !name.trim()
+  const strip = useMemo(() => font ? buildStrip(font, shown, align) : undefined, [font, shown, align])
   /** The dealer's name (or the free line) edited right on the frame, after a double click on it */
   const [editing, setEditing] = useState(false)
   /** While editing, the fixed prefix stays drawn and the field starts where the name does */
   const start = useMemo(() => !font || !strip ? undefined : custom ? { cmds: [], end: strip.x } : lineStart(font, PREFIX, strip.x), [font, strip, custom])
   const ok = !!strip && strip.issues.length === 0 && !noName
+  /** Red only for a wrong line, never an empty one */
+  const wrong = !noName && !!strip && strip.issues.length > 0
 
   const reset = () => {
-    setName(DEFAULT_NAME)
-    setText(DEFAULT_TEXT)
+    setName('')
+    setText('')
     setAlign('left')
   }
 
@@ -132,11 +139,11 @@ export default function PlateFrame() {
             {custom ? (
               <Field label="Текст">
                 {/* Case-sensitive forms as in the print, so a bar stands with the capitals here too */}
-                <TextInput value={text} onChange={setText} placeholder={DEFAULT_TEXT} invalid={noName || (!!strip && strip.issues.length > 0)} className="[font-feature-settings:'case'_1]" />
+                <TextInput value={text} onChange={setText} placeholder={PLACEHOLDER_TEXT} invalid={wrong} className="[font-feature-settings:'case'_1]" />
               </Field>
             ) : (
               <Field label="Дилер">
-                <ComboField value={name} onChange={setName} options={NAMES} placeholder={DEFAULT_NAME} label="Дилеры" singleLine invalid={noName || (!!strip && strip.issues.length > 0)} />
+                <ComboField value={name} onChange={setName} options={NAMES} placeholder={PLACEHOLDER_NAME} label="Дилеры" singleLine invalid={wrong} />
               </Field>
             )}
 
@@ -168,7 +175,9 @@ export default function PlateFrame() {
           {/* A double click on the frame edits the text right on it, as the name tags do */}
           <div className="@container relative cursor-text" onDoubleClick={() => setEditing(true)}>
             <PlateArt>
-              {strip && <path d={toD(editing && start ? start.cmds : strip.cmds)} fill={ok ? 'white' : RED} />}
+              {/* Empty, the placeholder grey, the fixed «UMO » white over it */}
+              {strip && !(editing && noName) && <path d={toD(editing && start ? start.cmds : strip.cmds)} fill={noName ? GHOST : wrong ? RED : 'white'} />}
+              {strip && noName && start && <path d={toD(start.cmds)} fill="white" />}
             </PlateArt>
             {editing && font && start && (
               <InlineLine
@@ -176,7 +185,7 @@ export default function PlateFrame() {
                 x={STRIP.x + start.end}
                 value={custom ? text : name}
                 onChange={custom ? setText : setName}
-                color={ok ? 'white' : RED}
+                color={wrong ? RED : 'white'}
                 onDone={() => setEditing(false)}
               />
             )}
@@ -185,7 +194,7 @@ export default function PlateFrame() {
             <span className="font-medium">Поле печати</span>
             <span className="text-[#999]">{STRIP.w} × {STRIP.h} мм</span>
           </figcaption>
-          {strip && strip.issues.length > 0 && (
+          {wrong && (
             <ul className="text-center text-[13px] leading-5 text-[#e30]">
               {strip.issues.map(t => <li key={t}>{t}</li>)}
             </ul>
