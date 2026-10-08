@@ -31,13 +31,10 @@ const GENERATORS = [
  * a click turns the picked one into the title's place, then opens it.
  */
 /**
- * The header's links underline on hover as the guide's do (Figma 4865:1061): black at 40%, fading out; the line as thin
- * as 2.5% of the breadcrumbs' 14 px, at any size, so the generators' 24 px names don't get a heavier one
+ * The breadcrumbs underline on hover as the guide's links do (Figma 4865:1061): black at 40%, fading out, 0.35 px (2.5%
+ * of their 14 px). The generators' names don't: they are navigation, as the guide's contents, and only darken
  */
-const underline = 'underline decoration-transparent decoration-[0.35px] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 hover:duration-0'
-const crumb = `${underline} hover:decoration-black/40`
-/** A grey name darkens to the generators' quiet grey #808080 on hover, its line in the same colour */
-const ringUnderline = (current: boolean) => `${underline} ${current ? 'hover:decoration-black/40 focus-visible:decoration-black/40' : 'hover:text-[#808080] hover:decoration-[#808080] focus-visible:text-[#808080] focus-visible:decoration-[#808080]'}`
+const crumb = 'underline decoration-transparent decoration-[0.35px] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 hover:decoration-black/40 hover:duration-0'
 
 export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' }) {
   return (
@@ -204,7 +201,7 @@ function GeneratorRing({ current }: { current: string }) {
                   tabIndex={k === 0 ? undefined : -1}
                   draggable={false}
                   onClick={e => open(e, k, i, g.path)}
-                  className={`${name} px-3 ${i === 0 ? 'text-black' : 'text-[#bfbfbf]'} ${ringUnderline(i === 0)} outline-none`}
+                  className={`${name} px-3 ${i === 0 ? 'text-black' : 'text-[#bfbfbf] hover:text-[#808080] focus-visible:text-[#808080]'} outline-none`}
                 >{g.title}</Link>)}
           </div>
         ))}
