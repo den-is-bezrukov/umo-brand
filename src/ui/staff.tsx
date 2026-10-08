@@ -389,14 +389,15 @@ const ResetIcon = () => (
  * caption's text
  */
 export function CaptionReset({ onClick, label = 'Сбросить' }: { onClick: () => void; label?: string }) {
-  // Hung after the caption's text, out of its flow, so the caption stays centred whether or not it shows
+  // Hung after the caption's text, out of its flow, so the caption stays centred whether or not it shows; 2 px over
+  // the text's middle, where it stood before the caption moved 2 px down
   return (
     <button
       type="button"
       title={label}
       aria-label={label}
       onClick={onClick}
-      className="absolute top-1/2 left-full ml-1 flex size-[30px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] outline-none hover:text-black focus-visible:ring-2 focus-visible:ring-black/30 [@media(hover:hover)]:invisible [@media(hover:hover)]:group-hover/sheet:visible [@media(hover:hover)]:focus-visible:visible"
+      className="absolute top-[calc(50%-2px)] left-full ml-1 flex size-[30px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] outline-none hover:text-black focus-visible:ring-2 focus-visible:ring-black/30 [@media(hover:hover)]:invisible [@media(hover:hover)]:group-hover/sheet:visible [@media(hover:hover)]:focus-visible:visible"
     >
       <ResetIcon />
     </button>
