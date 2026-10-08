@@ -728,7 +728,7 @@ function Assets({ items, preview }: { items: Asset[]; preview?: string }) {
       style={two ? ({ '--rows': Math.ceil(items.length / 2) } as CSSProperties) : undefined}
     >
       {items.map(a => {
-        const row = 'group flex items-center gap-4 border-t border-[#e6e6e6] py-[14px] text-[16px] leading-none tracking-[-0.01em]'
+        const row = 'group flex items-center gap-2 border-t border-[#e6e6e6] py-[14px] text-[16px] leading-none tracking-[-0.01em]'
         // The row a preview above stands for lights up while the preview is pointed at
         const linked = preview === ('to' in a ? a.to : a.file)
         const lit = pointed !== undefined && pointed === ('to' in a ? a.to : a.file)
