@@ -1469,7 +1469,7 @@ export default function Guide() {
                   <p>Готовый дизайн, который встречает клиента у дилера UMO: <Link to="/livery" className={TEXT_LINK}>ливрея демо-автомобиля</Link>, <Link to="/business-card" className={TEXT_LINK}>визитка</Link>, <Link to="/name-tag" className={TEXT_LINK}>бейдж сотрудника</Link>, <Link to="/price-card" className={TEXT_LINK}>прайс-карта</Link> и <Link to="/plate-frame" className={TEXT_LINK}>рамка номера</Link>.</p>
                 </Text>
                 <Text>
-                  <p>Каждый собирается в конструкторе: введите свои данные и получите файлы, готовые к печати или производству.</p>
+                  <p>Каждый собирается в редакторе: введите свои данные и получите файлы, готовые к печати или производству.</p>
                 </Text>
               </div>
               <Carriers items={MEDIA} />
