@@ -676,9 +676,9 @@ export function LinkButtons({ onReset, incomplete }: { onReset?: () => void; inc
         disabled={incomplete}
         className={outlined}
       >
-        <span aria-live="polite">{copied ? 'Скопировано' : 'Копировать'}</span>
+        <span aria-live="polite">{copied ? 'Скопировано' : 'Копировать ссылку'}</span>
       </button>
-      {onReset && <button type="button" onClick={onReset} title="Вернуть настройки по умолчанию" className={outlined}>Сбросить</button>}
+      {onReset && <button type="button" onClick={onReset} title="Вернуть настройки по умолчанию" className={`${outlined} flex-none!`}>Сбросить</button>}
     </div>
   )
 }
@@ -705,7 +705,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, onNote, lin
   disabled?: boolean
   note?: string
   onNote?: () => void
-  /** «Копировать» and «Сбросить», under the download: off with it, so the line over them speaks for both */
+  /** «Копировать ссылку» and «Сбросить», right over the download: off with it, the line over them speaking for both */
   links?: React.ReactNode
 }) {
   // Black: with the buttons off around it, the next step is the one thing here to act on
@@ -720,6 +720,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, onNote, lin
             : <p className={line}>{note}</p>}
         </div>
       )}
+      {links && <div className="px-6 pb-6 tracking-normal md:mb-2 md:p-0">{links}</div>}
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 p-6 md:pointer-events-auto md:static md:p-0">
         <button
           type="button"
@@ -736,7 +737,6 @@ export function DownloadBar({ format, onClick, busy, disabled, note, onNote, lin
           {busy ? 'Генерация…' : `Скачать ${format}`}
         </button>
       </div>
-      {links && <div className="order-last px-6 pb-6 tracking-normal md:mt-2 md:p-0">{links}</div>}
     </div>
   )
 }
