@@ -721,7 +721,8 @@ export function DownloadBar({ format, onClick, busy, disabled, note, onNote, cla
           type="button"
           onClick={onClick}
           disabled={busy || disabled}
-          className="pointer-events-auto flex w-full min-w-16 items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] text-[14px] font-medium leading-5 text-white cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:bg-[#999] hover:enabled:bg-[#333]"
+          // Off, it stays black with its text dimmed (Figma 5008:10830), so the page still says what it's for; busy, white
+          className={`pointer-events-auto flex w-full min-w-16 items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] text-[14px] font-medium leading-5 ${disabled && !busy ? 'text-[#666]' : 'text-white'} cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed hover:enabled:bg-[#333]`}
         >
           {busy && (
             <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" aria-hidden>
