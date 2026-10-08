@@ -152,8 +152,6 @@ export default function App() {
     const full = DEFAULTS[`${card.model}-${t}`]
     set({ trim: t, full, credit: creditFor(full), creditSet: false })
   }
-  // «Сбросить» brings the selected card back to its defaults, keeping the model
-  const reset = () => set(defaultCard(card.model))
 
   // The address carries what differs from the defaults, every card's, so the set can be sent as a link
   const digits = (v: string) => v.replace(/\D/g, '')
@@ -286,7 +284,8 @@ export default function App() {
           </div>
 
           <div className="pt-2 tracking-normal">
-            <LinkButtons onReset={reset} />
+            {/* No «Сбросить» here: each card has its own beside it */}
+            <LinkButtons />
           </div>
         </div>
 

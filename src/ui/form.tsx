@@ -565,9 +565,10 @@ export const outlined = 'flex min-w-16 flex-1 items-center justify-center rounde
 /**
  * «Копировать» and «Сбросить» side by side (Figma 4939:3762): the first copies the page address — the settings are in
  * it — to send a set-up card or livery as a link, and says so for two seconds; the second brings the settings back to
- * the defaults, which a page reload can't, as the address keeps them.
+ * the defaults, which a page reload can't, as the address keeps them. Without `onReset` only «Копировать» (the price
+ * card: each card has its own «Сбросить» beside it).
  */
-export function LinkButtons({ onReset }: { onReset: () => void }) {
+export function LinkButtons({ onReset }: { onReset?: () => void }) {
   const [copied, setCopied] = useState(false)
   useEffect(() => {
     if (!copied) return
@@ -587,7 +588,7 @@ export function LinkButtons({ onReset }: { onReset: () => void }) {
       >
         <span aria-live="polite">{copied ? 'Скопировано' : 'Копировать'}</span>
       </button>
-      <button type="button" onClick={onReset} title="Вернуть настройки по умолчанию" className={outlined}>Сбросить</button>
+      {onReset && <button type="button" onClick={onReset} title="Вернуть настройки по умолчанию" className={outlined}>Сбросить</button>}
     </div>
   )
 }
