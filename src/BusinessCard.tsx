@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadBar, Segments, SegBtn, rowAction, isValidUrl, ALERT_LABEL, Checkbox } from '@/ui/form'
+import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadBar, NOT_FILLED, Segments, SegBtn, rowAction, isValidUrl, ALERT_LABEL, Checkbox } from '@/ui/form'
 import { useStaff, TableSource, UploadArea, AddTile, inWork, fullNameField, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
@@ -175,8 +175,8 @@ export default function BusinessCard() {
       <UrlField value={link} onChange={setQrLink} />
     </Labelled>
   )
-  /** A card's first fault, its empty fields included while it's fresh */
-  const problemOf = (i: number) => [...(cards?.[i]?.issues.filter(x => !x.field || PERSON_FIELDS.includes(x.field)).map(x => x.text) ?? []), ...missing[i].map(f => MISSING[f]!)][0]
+  /** A card's first fault: a wrong value said as it is, empty fields as the form not filled in */
+  const problemOf = (i: number) => cards?.[i]?.issues.find(x => !x.field || PERSON_FIELDS.includes(x.field))?.text ?? (missing[i].length ? NOT_FILLED : undefined)
 
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
@@ -291,8 +291,7 @@ export default function BusinessCard() {
           onClick={handleExport}
           busy={exporting}
           disabled={!ok}
-          // A blank form says nothing: its empty fields say enough
-          note={items.length === 1 && dealerMissing.length === 3 && missing[0].length === 5 ? undefined : dealerIssues[0] ?? (!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : problemOf(0))}
+          note={(dealerMissing.length ? NOT_FILLED : dealerIssues[0]) ?? (!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : problemOf(0))}
           onNote={dealerIssues.length ? toDealer : items.length ? () => staff.nextOf(failing) : undefined}
           className="md:mt-8"
         />

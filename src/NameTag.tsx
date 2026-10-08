@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadBar, Segments, SegBtn, outlined } from '@/ui/form'
+import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadBar, NOT_FILLED, Segments, SegBtn, outlined } from '@/ui/form'
 import { useStaff, TableSource, UploadArea, AddTile, inWork, fullNameField, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD } from '@/livery/geometry'
@@ -140,8 +140,7 @@ export default function NameTag() {
           onClick={handleExport}
           busy={exporting}
           disabled={!ok}
-          // A blank tag says nothing: its empty fields say enough
-          note={!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : missing[0].length === 3 ? undefined : [...(tags?.[0]?.issues ?? []), ...missing[0]][0]}
+          note={!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : tags?.[0]?.issues[0] ?? (missing[0].length ? NOT_FILLED : undefined)}
           onNote={items.length ? () => staff.nextOf(failing) : undefined}
           className="md:mt-8"
         />

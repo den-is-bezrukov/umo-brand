@@ -6,7 +6,7 @@ import PriceCardPdf from '@/posters/pdf/PriceCardPdf'
 import { ensurePdfFonts } from '@/posters/pdf/pdfFonts'
 import type { Variant } from '@/posters/cardData'
 import { goal } from '@/ui/metrika'
-import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField, GeneratorHeader, LinkButtons, DownloadBar } from '@/ui/form'
+import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField, GeneratorHeader, LinkButtons, DownloadBar, NOT_FILLED } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
 import { useStaff, ItemFrame, AddTile, Removed, inWork, plain, ITEM_EDGE, type Row } from '@/ui/staff'
 
@@ -117,9 +117,9 @@ function check(c: Card) {
 /** A card's first fault in the form's order, said over «Скачать PDF», and the field it's in */
 function firstIssue(c: Card): { field: 'url' | 'full' | 'credit'; text: string } | null {
   const i = check(c)
-  if (i.urlBad) return { field: 'url', text: c.url.trim() ? 'Проверьте ссылку QR-кода' : 'Нет ссылки QR-кода' }
-  if (i.fullTooLow) return { field: 'full', text: priceNum(c.full) ? 'Цена меньше 999 999' : 'Нет цены' }
-  if (i.creditTooLow) return { field: 'credit', text: priceNum(c.credit) ? 'Цена в кредит меньше 999 999' : 'Нет цены в кредит' }
+  if (i.urlBad) return { field: 'url', text: c.url.trim() ? 'Проверьте ссылку QR-кода' : NOT_FILLED }
+  if (i.fullTooLow) return { field: 'full', text: priceNum(c.full) ? 'Цена меньше 999 999' : NOT_FILLED }
+  if (i.creditTooLow) return { field: 'credit', text: priceNum(c.credit) ? 'Цена в кредит меньше 999 999' : NOT_FILLED }
   if (i.fullLessThanCredit) return { field: 'full', text: 'Полная цена меньше цены в кредит' }
   return null
 }

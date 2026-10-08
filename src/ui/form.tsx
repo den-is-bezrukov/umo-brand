@@ -682,10 +682,13 @@ export function LinkButtons({ onReset }: { onReset?: () => void }) {
 
 /**
  * The download, at the foot of the sidebar: always there, saying only the file's format, so the page says what it's for
- * at once. Off while something's in the way, with a quiet line over it saying what («Нет должности», «1 из 4 в работе»),
+ * at once. Off while something's in the way, with a quiet line over it saying what («Форма не заполнена», «Цена меньше 999 999», «1 из 4 в работе»),
  * a click there leading to it where it can. On phones the button alone is pinned to the bottom of the screen, with
  * nothing behind it, so it covers little of the canvas, and the line stays at the foot of the form
  */
+/** Over the download while fields are empty, whichever they are: one line for all, a click leading to the first */
+export const NOT_FILLED = 'Форма не заполнена'
+
 export function DownloadBar({ format, onClick, busy, disabled, note, onNote, className = '' }: {
   format: 'PDF' | 'ZIP'
   onClick: () => void

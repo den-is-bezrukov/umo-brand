@@ -145,9 +145,15 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
   const [reveal, setReveal] = useState(0)
   useEffect(() => {
     if (!reveal || selected === undefined) return
-    figures.current.get(selected)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
-    // and its first field at fault takes the focus, once the errors show
-    setTimeout(() => form.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus({ preventScroll: true }))
+    // and its first field at fault takes the focus, once the errors show. On phones the form is above the items on the
+    // same scroll, so the page goes to the field instead
+    const wide = matchMedia('(min-width: 768px)').matches
+    if (wide) figures.current.get(selected)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    setTimeout(() => {
+      const field = form.current?.querySelector<HTMLElement>('[aria-invalid="true"]')
+      field?.focus({ preventScroll: true })
+      if (!wide) field?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    })
   }, [reveal]) // eslint-disable-line react-hooks/exhaustive-deps
   const goTo = (key: number) => {
     setSelected(key)
