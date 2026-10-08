@@ -676,9 +676,10 @@ export function LinkButtons({ incomplete }: { incomplete?: boolean }) {
     goal('copy_link', { page: location.pathname })
   }
   return (
-    // White under it: on phones it stands over the canvas. Its stroke centred on its edge, half out, half in (a trial):
-    // inside, the stroke left 38 px of white beside the solid 40 of the download, which read larger
-    <button type="button" onClick={share} title="Отправить ссылку на эти настройки" disabled={incomplete} className={`${outlined} w-full border-0 bg-white py-[10px] shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)] hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.4),inset_0_0_0_0.5px_rgba(0,0,0,0.4)] disabled:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)]`}>
+    // White under it: on phones it stands over the canvas, and there its stroke is centred on its edge, half out, half
+    // in (a trial): inside, the stroke left 38 px of white beside the solid 40 of the download, which read larger. Wide
+    // screens keep the inside stroke
+    <button type="button" onClick={share} title="Отправить ссылку на эти настройки" disabled={incomplete} className={`${outlined} w-full bg-white max-md:border-0 max-md:py-[10px] max-md:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)] max-md:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.4),inset_0_0_0_0.5px_rgba(0,0,0,0.4)] max-md:disabled:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)]`}>
       Поделиться
     </button>
   )
