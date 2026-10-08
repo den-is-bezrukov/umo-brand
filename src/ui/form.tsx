@@ -736,14 +736,15 @@ export function DownloadBar({ format, onClick, busy, disabled, note, onNote, lin
       )}
       {/* Wide screens: «Поделиться» over the download. Phones: pinned beside it, the two sharing the row */}
       {links && <div className="hidden tracking-normal md:mb-2 md:flex">{links}</div>}
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 flex gap-2 p-6 tracking-normal md:pointer-events-auto md:static md:p-0">
-        {links && <div className="pointer-events-auto flex flex-1 md:hidden">{links}</div>}
+      {/* Equal columns, not flex: Safari sized the two flex halves by their content */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 grid auto-cols-fr grid-flow-col gap-2 p-6 tracking-normal md:pointer-events-auto md:static md:p-0">
+        {links && <div className="pointer-events-auto flex min-w-0 md:hidden">{links}</div>}
         <button
           type="button"
           onClick={onClick}
           disabled={busy || disabled}
           // Off, it stays black with its text #999, the generators' disabled text (Figma 5008:10830, 5077:7), so the page still says what it's for; busy, white
-          className={`pointer-events-auto flex min-w-16 flex-1 items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] text-[14px] font-medium leading-5 ${disabled && !busy ? 'text-[#999]' : 'text-white'} cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed hover:enabled:bg-[#333]`}
+          className={`pointer-events-auto flex min-w-0 items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] text-[14px] font-medium leading-5 ${disabled && !busy ? 'text-[#999]' : 'text-white'} cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed hover:enabled:bg-[#333]`}
         >
           {busy && (
             <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" aria-hidden>
