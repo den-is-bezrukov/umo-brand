@@ -159,9 +159,12 @@ export default function PlateFrame() {
             </Field>
           </div>
 
-          <div className="pt-4 tracking-normal">
-            <LinkButtons onReset={reset} disabled={noName && align === 'left'} />
-          </div>
+          {/* Nothing to copy or reset until there's a dealer or the line is centred */}
+          {!(noName && align === 'left') && (
+            <div className="pt-4 tracking-normal">
+              <LinkButtons onReset={reset} />
+            </div>
+          )}
         </div>
 
         {/* Over it while it's off, the fault, which the preview also says under the strip */}
