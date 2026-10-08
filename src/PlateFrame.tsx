@@ -112,7 +112,9 @@ export default function PlateFrame() {
       a.href = URL.createObjectURL(blob)
       a.download = 'UMO_plate-frame_501x21.pdf'
       a.click()
-      goal('download_plate_frame', { free: custom, align })
+      // The line goes along only when it isn't a dealer from the list: what dealers type for themselves
+      const listed = !custom && NAMES.includes(name.trim())
+      goal('download_plate_frame', { free: custom, align, listed, ...(listed ? {} : { line: line.trim().slice(0, 100) }) })
       URL.revokeObjectURL(a.href)
     } finally {
       setExporting(false)
