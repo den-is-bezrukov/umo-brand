@@ -1074,10 +1074,11 @@ export default function Guide() {
                 <p id="brand" className="scroll-mt-24 text-[32px] font-medium leading-none tracking-[-0.01em] md:text-[48px] lg:mt-[calc(8px-0.164em)] lg:max-w-[912px] lg:scroll-mt-[calc(24px-0.164em)] lg:text-[min(60px,6.58cqw)]">
                   Автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
                 </p>
-                {/* Quick links: into the guide, from its first section, and to the templated media, the constructors among them */}
+                {/* Quick links: into the brand platform, from its first section, and to the templated media with their
+                    constructors, named for whom they're for (they were «Стандарты» and «Носители») */}
                 <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
-                  <a href="#positioning" className={LINK_HOVER}>Стандарты</a>
-                  <a href="#materials" className={LINK_HOVER}>{TITLES.materials}</a>
+                  <a href="#positioning" className={LINK_HOVER}>Платформа</a>
+                  <a href="#materials" className={LINK_HOVER}>Дилерам</a>
                 </nav>
               </div>
               <Section>
