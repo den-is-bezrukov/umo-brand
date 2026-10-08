@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Font } from 'opentype.js'
 import { goal } from '@/ui/metrika'
-import { Field, Segments, SegBtn, TextInput, ComboField, GeneratorHeader, LinkButtons, DownloadBar, NOT_FILLED } from '@/ui/form'
+import { Field, Segments, SegBtn, TextInput, ComboField, GeneratorHeader, LinkButtons, DownloadBar } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
 import { loadFont, toD } from '@/livery/geometry'
 import { STRIP, BASELINE, SIZE, TRACKING, buildStrip, lineStart, type Align } from '@/plate/frame'
@@ -166,7 +166,7 @@ export default function PlateFrame() {
           onClick={handleExport}
           busy={exporting}
           disabled={!ok}
-          note={noName ? NOT_FILLED : strip?.issues[0]}
+          note={noName ? (custom ? 'Текст не указан' : 'Дилер не выбран') : strip?.issues[0]}
         />
       </aside>
 

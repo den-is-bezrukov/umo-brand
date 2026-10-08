@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { Font } from 'opentype.js'
 import { goal } from '@/ui/metrika'
-import { Field, OptionalField, Segments, SegBtn, ComboField, UrlField, Checkbox, SizeSwitch, GeneratorHeader, LinkButtons, DownloadBar, NOT_FILLED, isValidUrl } from '@/ui/form'
+import { Field, OptionalField, Segments, SegBtn, ComboField, UrlField, Checkbox, SizeSwitch, GeneratorHeader, LinkButtons, DownloadBar, isValidUrl } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
 import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
 import { DEFAULT_TAGLINE, TAGLINES } from '@/data/taglines'
@@ -289,7 +289,7 @@ export default function Livery() {
           onClick={handleExport}
           busy={exporting}
           disabled={!ok || (on.qr && !urlValid)}
-          note={on.qr && !urlValid ? (url.trim() ? 'Проверьте ссылку QR-кода' : NOT_FILLED) : sheets.flatMap(s => s.issues)[0]}
+          note={on.qr && !urlValid ? (url.trim() ? 'Проверьте ссылку QR-кода' : 'Ссылка QR-кода не указана') : sheets.flatMap(s => s.issues)[0]}
         />
       </aside>
 

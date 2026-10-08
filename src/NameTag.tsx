@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadBar, NOT_FILLED, Segments, SegBtn, outlined } from '@/ui/form'
+import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadBar, unfilled, Segments, SegBtn, outlined } from '@/ui/form'
 import { useStaff, TableSource, UploadArea, AddTile, inWork, fullNameField, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD } from '@/livery/geometry'
@@ -21,6 +21,8 @@ const BLANK: Person = { name: '', surname: '', position: '' }
 const NO_NAME = 'Нет имени'
 const NO_SURNAME = 'Нет фамилии'
 const NO_POSITION = 'Нет должности'
+/** The last empty field, said by name under the download */
+const UNFILLED: Record<string, string> = { [NO_NAME]: 'Имя не указано', [NO_SURNAME]: 'Фамилия не указана', [NO_POSITION]: 'Должность не указана' }
 
 export default function NameTag() {
   // Not kept in the address, unlike the other generators: a staff list isn't something to send as a link
@@ -140,7 +142,7 @@ export default function NameTag() {
           onClick={handleExport}
           busy={exporting}
           disabled={!ok}
-          note={!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : tags?.[0]?.issues[0] ?? (missing[0].length ? NOT_FILLED : undefined)}
+          note={!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : tags?.[0]?.issues[0] ?? (missing[0].length ? unfilled(missing[0].map(t => UNFILLED[t])) : undefined)}
           onNote={items.length ? () => staff.nextOf(failing) : undefined}
           className="md:mt-8"
         />

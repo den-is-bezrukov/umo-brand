@@ -680,8 +680,10 @@ export function LinkButtons({ onReset }: { onReset?: () => void }) {
   )
 }
 
-/** Under the download while fields are empty, whichever they are: one line for all, a click leading to the first */
+/** Under the download while fields are empty: one line for several, a click leading to the first */
 export const NOT_FILLED = 'Не хватает данных'
+/** The empty fields said under the download: the last one left by name («Дилер не выбран»), several as one line */
+export const unfilled = (said: string[]) => said.length === 1 ? said[0] : NOT_FILLED
 
 /**
  * The download, at the foot of the sidebar: always there, saying only the file's format, so the page says what it's for

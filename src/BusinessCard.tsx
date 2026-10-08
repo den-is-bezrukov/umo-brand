@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadBar, NOT_FILLED, Segments, SegBtn, rowAction, isValidUrl, ALERT_LABEL, Checkbox } from '@/ui/form'
+import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadBar, unfilled, Segments, SegBtn, rowAction, isValidUrl, ALERT_LABEL, Checkbox } from '@/ui/form'
 import { useStaff, TableSource, UploadArea, AddTile, inWork, fullNameField, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
@@ -23,6 +23,11 @@ const PLACEHOLDER = { dealer: 'Название дилера', address: 'Адр�
 const MISSING: Partial<Record<CardField, string>> = {
   dealer: 'Нет названия дилера', address: 'Нет адреса', site: 'Нет сайта',
   name: 'Нет имени', surname: 'Нет фамилии', position: 'Нет должности', email: 'Нет почты', phone: 'Нет телефона',
+}
+/** The last empty field, said by name under the download */
+const UNFILLED: Partial<Record<CardField, string>> = {
+  dealer: 'Дилер не выбран', address: 'Адрес не указан', site: 'Сайт не указан',
+  name: 'Имя не указано', surname: 'Фамилия не указана', position: 'Должность не указана', email: 'Почта не указана', phone: 'Телефон не указан',
 }
 
 const HEADERS: Record<keyof Person, RegExp> = {
@@ -176,7 +181,7 @@ export default function BusinessCard() {
     </Labelled>
   )
   /** A card's first fault: a wrong value said as it is, empty fields as the form not filled in */
-  const problemOf = (i: number) => cards?.[i]?.issues.find(x => !x.field || PERSON_FIELDS.includes(x.field))?.text ?? (missing[i].length ? NOT_FILLED : undefined)
+  const problemOf = (i: number) => cards?.[i]?.issues.find(x => !x.field || PERSON_FIELDS.includes(x.field))?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!)) : undefined)
 
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
@@ -291,7 +296,7 @@ export default function BusinessCard() {
           onClick={handleExport}
           busy={exporting}
           disabled={!ok}
-          note={(dealerMissing.length ? NOT_FILLED : dealerIssues[0]) ?? (!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : problemOf(0))}
+          note={(dealerMissing.length ? unfilled([...dealerMissing, ...(items.length === 1 ? missing[0] : [])].map(f => UNFILLED[f]!)) : dealerIssues[0]) ?? (!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : problemOf(0))}
           onNote={dealerIssues.length ? toDealer : items.length ? () => staff.nextOf(failing) : undefined}
           className="md:mt-8"
         />
