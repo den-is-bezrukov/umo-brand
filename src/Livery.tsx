@@ -177,16 +177,20 @@ export default function Livery() {
     setOn(o => ({ ...o, rear: v, ...(v ? {} : { rearDealer: true, rearTagline: true }) }))
   }
   // «Сбросить» keeps the model and brings the rest back to its defaults
+  const DEFAULT_ON = { qr: true, tagline: true, dealer: true, rear: false, rearDealer: true, rearTagline: true }
   const reset = () => {
     setDealer(DEFAULT_TOP)
     setTagline(DEFAULT_TAGLINE[model])
     setRearTagline(undefined)
     setUrl(DEFAULT_URL[model])
-    setOn({ qr: true, tagline: true, dealer: true, rear: false, rearDealer: true, rearTagline: true })
+    setOn(DEFAULT_ON)
     setDims(false)
     setLarge(false)
     setQrSmall(false)
   }
+  /** Nothing to reset: no «Сбросить» then, as the plate frame's; «Копировать» stays, the livery being a whole one */
+  const atDefaults = dealer === DEFAULT_TOP && tagline === DEFAULT_TAGLINE[model] && rearTagline === undefined && url === DEFAULT_URL[model]
+    && (Object.keys(DEFAULT_ON) as (keyof typeof DEFAULT_ON)[]).every(k => on[k] === DEFAULT_ON[k]) && !dims && !large && !qrSmall
   const ok = sheets.length > 0 && sheets.every(s => s.issues.length === 0)
 
   const handleExport = async () => {
@@ -280,7 +284,7 @@ export default function Livery() {
           </div>
 
           <div className="pt-4 tracking-normal">
-            <LinkButtons onReset={reset} />
+            <LinkButtons onReset={atDefaults ? undefined : reset} />
           </div>
         </div>
 
