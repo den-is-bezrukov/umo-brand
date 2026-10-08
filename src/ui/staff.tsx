@@ -316,7 +316,7 @@ export function UploadArea<P extends object>({ staff }: { staff: Staff<P> }) {
 
 /**
  * The room the items' column takes beside them on phones (40 + 8 px), mirrored on the left so the items stand centred, kept by whatever stands in the list without one
- * («Удалено», the business card's face), so they all line up
+ * (the business card's face), so they all line up
  */
 export const BESIDE = 'px-12 md:px-0'
 
@@ -430,15 +430,13 @@ export function ItemFrame<P extends object>({ staff, item, n, children }: { staf
   )
 }
 
-/** In place of an item just removed, as tall as it was, for five seconds: «Удалено · Вернуть» */
-export function Removed<P extends object>({ staff, at, aspect, radius, width }: { staff: Staff<P>; at: number; aspect: string; radius?: string; width?: number }) {
+/** In place of an item just removed, for five seconds, 40 px tall as the buttons (it was as tall as the item): «Удалено · Вернуть» */
+export function Removed<P extends object>({ staff, at }: { staff: Staff<P>; at: number }) {
   if (staff.removed?.index !== at || staff.mode !== 'manual') return null
   return (
-    <div style={width ? { maxWidth: width } : undefined} className={`@container mx-auto w-full max-w-[480px] ${BESIDE}`}>
-      <div style={{ aspectRatio: aspect, borderRadius: radius }} className="flex w-full items-center justify-center gap-2 text-[14px] leading-5 text-[#808080]">
-        Удалено ·
-        <button type="button" onClick={e => { e.stopPropagation(); staff.restore() }} className="cursor-pointer text-black outline-none hover:text-[#808080] focus-visible:ring-2 focus-visible:ring-black/30">Вернуть</button>
-      </div>
+    <div className="flex h-10 items-center justify-center gap-2 text-[14px] leading-5 text-[#808080]">
+      Удалено ·
+      <button type="button" onClick={e => { e.stopPropagation(); staff.restore() }} className="cursor-pointer text-black outline-none hover:text-[#808080] focus-visible:ring-2 focus-visible:ring-black/30">Вернуть</button>
     </div>
   )
 }

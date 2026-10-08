@@ -119,8 +119,6 @@ const qrUrlOf = (c: Card) => isValidUrl(c.url.trim()) ? c.url.trim() : DEFAULT_U
 /** прайс-карту, прайс-карты, прайс-карт: «Скачать 3 прайс-карты» */
 const cardsWord = (n: number) => ({ '': 'прайс-карту', 'а': 'прайс-карты', 'ей': 'прайс-карт' })[plural(n)]
 
-const ASPECT = `${POSTER_W} / ${POSTER_H}`
-
 export default function App() {
   const [initial] = useState(fromLink)
   // The cards are a list as the business cards are: one selected and edited in the sidebar, each with its number and
@@ -311,7 +309,7 @@ export default function App() {
               const active = c.key === card.key
               return (
                 <Fragment key={c.key}>
-                  <Removed staff={staff} at={i} aspect={ASPECT} width={rowW} />
+                  <Removed staff={staff} at={i} />
                   <figure ref={staff.figureRef(c.key)} onClick={() => staff.pick(c.key)} className="group/row flex cursor-pointer justify-center">
                     <div className="w-full" style={{ maxWidth: rowW }}>
                       <ItemFrame staff={frame} item={c} n={i + 1}>
@@ -333,7 +331,7 @@ export default function App() {
                 </Fragment>
               )
             })}
-            <Removed staff={staff} at={items.length} aspect={ASPECT} width={rowW} />
+            <Removed staff={staff} at={items.length} />
             {/* The next card starts as the last one: most often the same model in another trim or at another price */}
             <AddTile onClick={() => staff.add(plain(items[items.length - 1]))} />
           </div>

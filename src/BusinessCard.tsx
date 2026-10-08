@@ -326,7 +326,7 @@ export default function BusinessCard() {
               : []
             return (
               <Fragment key={p.key}>
-              <Removed staff={staff} at={i} aspect={`${CARD.w} / ${CARD.h}`} />
+              <Removed staff={staff} at={i} />
               <figure ref={staff.figureRef(p.key)} onClick={() => staff.pick(p.key)} className="group/row flex cursor-pointer justify-center">
                 <div className="flex w-full max-w-[480px] flex-col gap-3">
                   <ItemFrame staff={staff} item={p} n={i + 1}>
@@ -350,7 +350,7 @@ export default function BusinessCard() {
               </Fragment>
             )
           })}
-          <Removed staff={staff} at={items.length} aspect={`${CARD.w} / ${CARD.h}`} />
+          <Removed staff={staff} at={items.length} />
           {mode === 'manual' && <AddTile onClick={() => staff.add()} />}
         </div>
         )}

@@ -174,7 +174,7 @@ export default function NameTag() {
             const dimmed = mode === 'manual' && !!current && !active
             return (
               <Fragment key={it.key}>
-              <Removed staff={staff} at={i} aspect="70 / 25" radius="5.714cqw" />
+              <Removed staff={staff} at={i} />
               {/* The whole row of the canvas is the tag's: pointing or clicking anywhere across it hovers or picks it */}
               <figure
                 key={it.key}
@@ -225,7 +225,7 @@ export default function NameTag() {
               </Fragment>
             )
           })}
-          <Removed staff={staff} at={items.length} aspect="70 / 25" radius="5.714cqw" />
+          <Removed staff={staff} at={items.length} />
           {/* «Добавить» as the next tag in the grid: a dashed plate of the tag's shape; the manual list only */}
           {mode === 'manual' && <AddTile onClick={() => staff.add()} />}
         </div>
