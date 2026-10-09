@@ -168,10 +168,18 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
     setReveal(n => n + 1)
   }
   /** The next item of `keys` after the selected one, round the list */
-  const nextOf = (keys: number[]) => {
+  const nextTarget = (keys: number[]) => {
     const at = items.findIndex(it => it.key === selected)
-    const after = keys.find(k => items.findIndex(it => it.key === k) > at)
-    goTo(after ?? keys[0])
+    return keys.find(k => items.findIndex(it => it.key === k) > at) ?? keys[0]
+  }
+  const nextOf = (keys: number[]) => goTo(nextTarget(keys))
+  /**
+   * The items in work as the note over the download says them: its first fault named, «2/4» after it for the one a
+   * click leads to among them; and that item's place in the list
+   */
+  const inWork = (keys: number[]) => {
+    const key = nextTarget(keys)
+    return { count: `${keys.indexOf(key) + 1}/${keys.length}`, index: items.findIndex(it => it.key === key) }
   }
   /** A click on an item: select it, in the manual mode */
   const pick = (key: number) => {
@@ -270,7 +278,7 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
 
   return {
     mode, setMode, people, items, file, current, selected, setSelected, tableError, dragging, dropTarget, loadFile,
-    showsMissing, form, figureRef, nextOf, pick, update, remove, add, isBlank, paste, useDeleteKey,
+    showsMissing, form, figureRef, nextOf, inWork, pick, update, remove, add, isBlank, paste, useDeleteKey,
     duplicate, clear, removed, restore, dismiss: () => setRemoved(null), accept, uploadLabel, countWord,
   }
 }
@@ -365,7 +373,9 @@ export function AddTile({ onClick }: { onClick: () => void }) {
 }
 
 /** The line over the download while items are in work: «1 из 4 в работе», or «4 в работе» when it's all of them */
-export const inWork = (failing: number, total: number) => `${failing}${failing < total ? ` из ${total}` : ''} в работе`
+/** The table mode's upload, opened from «Нужно загрузить таблицу» over the download */
+export const pickTable = () => document.querySelector<HTMLInputElement>('main input[type="file"]')?.click()
+
 
 /** The Russian ending for a count: '' (1, 21), 'а' (2–4, 22–24), 'ей' (5–20…) as in бейдж, бейджа, бейджей */
 export function plural(n: number): '' | 'а' | 'ей' {

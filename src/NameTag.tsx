@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadBar, unfilled, Segments, SegBtn, outlined } from '@/ui/form'
-import { useStaff, TableSource, UploadArea, AddTile, inWork, fullNameField, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
+import { useStaff, pickTable, TableSource, UploadArea, AddTile, fullNameField, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD } from '@/livery/geometry'
 import { TAG, buildTag, loadFonts, type Field, type FieldBox, type Fonts, type Person } from '@/nametag/tag'
@@ -22,7 +22,7 @@ const NO_NAME = 'Нет имени'
 const NO_SURNAME = 'Нет фамилии'
 const NO_POSITION = 'Нет должности'
 /** The last empty field, said by name under the download */
-const UNFILLED: Record<string, string> = { [NO_NAME]: 'Имя не указано', [NO_SURNAME]: 'Фамилия не указана', [NO_POSITION]: 'Должность не указана' }
+const UNFILLED: Record<string, string> = { [NO_NAME]: 'Нужно ввести имя', [NO_SURNAME]: 'Нужно ввести фамилию', [NO_POSITION]: 'Нужно указать должность' }
 
 export default function NameTag() {
   // Not kept in the address, unlike the other generators: a staff list isn't something to send as a link
@@ -63,6 +63,8 @@ export default function NameTag() {
     ...(!p.surname.trim() ? [NO_SURNAME] : []),
     ...(!p.position.trim() ? [NO_POSITION] : []),
   ])
+  /** A tag's first fault, as the note over the download says it: a wrong value, else its first empty field */
+  const problemOf = (i: number) => i < 0 ? undefined : tags?.[i]?.issues[0] ?? (missing[i].length ? unfilled(missing[i].map(t => UNFILLED[t])) : undefined)
   /** What's shown as errors: text over its room at once, empty fields on every tag but a fresh one being filled in */
   const problems = items.map((it, i) => [
     ...(tags?.[i]?.issues ?? []),
@@ -142,8 +144,9 @@ export default function NameTag() {
           onClick={handleExport}
           busy={exporting}
           disabled={!ok}
-          note={!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : tags?.[0]?.issues[0] ?? (missing[0].length ? unfilled(missing[0].map(t => UNFILLED[t]), 3) : undefined)}
-          onNote={items.length ? () => staff.nextOf(failing) : undefined}
+          note={!items.length ? 'Нужно загрузить таблицу' : (failing.length ? problemOf(staff.inWork(failing).index) : undefined)}
+          count={failing.length > 1 ? staff.inWork(failing).count : undefined}
+          onNote={items.length ? () => staff.nextOf(failing) : pickTable}
         />
       </aside>
 

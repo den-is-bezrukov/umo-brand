@@ -8,7 +8,7 @@ import type { Variant } from '@/posters/cardData'
 import { goal } from '@/ui/metrika'
 import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField, GeneratorHeader, LinkButtons, DownloadBar, unfilled } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
-import { useStaff, ItemFrame, AddTile, Removed, inWork, plain, ITEM_EDGE, type Row } from '@/ui/staff'
+import { useStaff, ItemFrame, AddTile, Removed, plain, ITEM_EDGE, type Row } from '@/ui/staff'
 
 const POSTER_W = 1754
 const POSTER_H = 2480
@@ -117,12 +117,12 @@ function check(c: Card) {
 /** A card's first fault in the form's order, said over «Скачать PDF», and the field it's in */
 function firstIssue(c: Card): { field: 'url' | 'full' | 'credit'; text: string } | null {
   const i = check(c)
-  // Empty fields: the first by name, the whole form as one line
+  // Empty fields: the first, as what to do there
   const empty = unfilled([
-    ...(!c.url.trim() ? ['Ссылка QR-кода не указана'] : []),
-    ...(!priceNum(c.full) ? ['Цена не указана'] : []),
-    ...(c.creditOn && !priceNum(c.credit) ? ['Цена в кредит не указана'] : []),
-  ], c.creditOn ? 3 : 2)
+    ...(!c.url.trim() ? ['Нужно указать ссылку QR-кода'] : []),
+    ...(!priceNum(c.full) ? ['Нужно указать цену'] : []),
+    ...(c.creditOn && !priceNum(c.credit) ? ['Нужно указать цену в кредит'] : []),
+  ])
   if (i.urlBad) return { field: 'url', text: c.url.trim() ? 'Проверьте ссылку QR-кода' : empty }
   if (i.fullTooLow) return { field: 'full', text: priceNum(c.full) ? 'Цена слишком низкая' : empty }
   if (i.creditTooLow) return { field: 'credit', text: priceNum(c.credit) ? 'Цена в кредит слишком низкая' : empty }
@@ -318,7 +318,8 @@ export default function App() {
           onClick={handleExport}
           busy={exporting}
           disabled={failing.length > 0}
-          note={items.length > 1 ? inWork(failing.length, items.length) : issue?.text}
+          note={items.length > 1 ? (failing.length ? firstIssue(items[staff.inWork(failing).index])?.text : undefined) : issue?.text}
+          count={items.length > 1 && failing.length > 1 ? staff.inWork(failing).count : undefined}
           onNote={items.length > 1 ? () => staff.nextOf(failing) : toIssue}
           // No «Сбросить» here: each card has its own beside it
           links={<LinkButtons incomplete={failing.length > 0} />}

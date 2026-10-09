@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadBar, unfilled, Segments, SegBtn, rowAction, isValidUrl, ALERT_LABEL, Checkbox } from '@/ui/form'
-import { useStaff, TableSource, UploadArea, AddTile, inWork, fullNameField, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
+import { useStaff, pickTable, TableSource, UploadArea, AddTile, fullNameField, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
@@ -28,8 +28,8 @@ const MISSING: Partial<Record<CardField, string>> = {
 const MAIL_DOMAINS = ['yandex.ru', 'mail.ru', 'gmail.com', 'ya.ru', 'bk.ru', 'inbox.ru', 'list.ru', 'rambler.ru']
 /** The last empty field, said by name under the download */
 const UNFILLED: Partial<Record<CardField, string>> = {
-  dealer: 'Дилер не выбран', address: 'Адрес не указан', site: 'Сайт не указан',
-  name: 'Имя не указано', surname: 'Фамилия не указана', position: 'Должность не указана', email: 'Почта не указана', phone: 'Телефон не указан',
+  dealer: 'Нужно выбрать дилера', address: 'Нужно указать адрес', site: 'Нужно указать сайт',
+  name: 'Нужно ввести имя', surname: 'Нужно ввести фамилию', position: 'Нужно указать должность', email: 'Нужно указать почту', phone: 'Нужно указать телефон',
 }
 
 const HEADERS: Record<keyof Person, RegExp> = {
@@ -185,7 +185,7 @@ export default function BusinessCard() {
     </Labelled>
   )
   /** A card's first fault: a wrong value said as it is, else its first empty field by name (the dealership's are filled) */
-  const problemOf = (i: number) => cards?.[i]?.issues.find(x => !x.field || PERSON_FIELDS.includes(x.field))?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!), 0) : undefined)
+  const problemOf = (i: number) => cards?.[i]?.issues.find(x => !x.field || PERSON_FIELDS.includes(x.field))?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!)) : undefined)
 
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
@@ -323,8 +323,9 @@ export default function BusinessCard() {
           onClick={handleExport}
           busy={exporting}
           disabled={!ok}
-          note={(dealerMissing.length ? unfilled([...dealerMissing, ...(items.length === 1 ? missing[0] : [])].map(f => UNFILLED[f]!), items.length === 1 ? 8 : 0) : dealerIssues[0]) ?? (!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : problemOf(0))}
-          onNote={dealerIssues.length ? toDealer : items.length ? () => staff.nextOf(failing) : undefined}
+          note={(dealerMissing.length ? unfilled([...dealerMissing, ...(items.length === 1 ? missing[0] : [])].map(f => UNFILLED[f]!)) : dealerIssues[0]) ?? (!items.length ? 'Нужно загрузить таблицу' : problemOf(failing.length ? staff.inWork(failing).index : 0))}
+          count={!(dealerIssues.length) && failing.length > 1 ? staff.inWork(failing).count : undefined}
+          onNote={dealerIssues.length ? toDealer : items.length ? () => staff.nextOf(failing) : pickTable}
         />
       </aside>
 

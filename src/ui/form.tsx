@@ -691,27 +691,28 @@ export function LinkButtons({ incomplete }: { incomplete?: boolean }) {
   )
 }
 
-/** Under the download while the whole form is empty */
-export const NOT_FILLED = 'Не хватает данных'
 /**
- * The empty fields said under the download, in the form's order: the first by name in its context («Дилер не выбран»,
- * then «Имя не указано» once it's picked), going on as they're filled in; the whole form empty (`of` fields) as one line
+ * The empty fields said over the download, in the form's order: the first, as what to do there («Нужно выбрать
+ * дилера», then «Нужно ввести имя» once it's picked), going on as they're filled in. A wholly empty form says its first
+ * field too: it's the first step (it said «Не хватает данных» while the fields were said as states, «Дилер не выбран»)
  */
-export const unfilled = (said: string[], of: number) => of > 1 && said.length === of ? NOT_FILLED : said[0]
+export const unfilled = (said: string[]) => said[0]
 
 /**
  * The download, at the foot of the sidebar: always there, saying only the file's format, so the page says what it's for
- * at once. Off while something's in the way, with a black line over it saying what («Дилер не выбран», «Цена слишком
- * низкая», «1 из 4 в работе»), a click there leading to it where it can (it stood under the button for a while, its
- * room kept so the button didn't move). On phones the button alone is pinned to the bottom of the screen, with
- * nothing behind it, so it covers little of the canvas, and the line stays at the foot of the form
+ * at once. Off while something's in the way, with a secondary button over it saying what and leading there («Нужно
+ * выбрать дилера», «Цена слишком низкая», «Нужно проверить 1 из 4»; it was a black line, and before that stood under
+ * the button). On phones the download alone is pinned to the bottom of the screen, with nothing behind it, so it
+ * covers little of the canvas, and what's in the way stays at the foot of the form
  */
-export function DownloadBar({ format, onClick, busy, disabled, note, onNote, links }: {
+export function DownloadBar({ format, onClick, busy, disabled, note, count, onNote, links }: {
   format: 'PDF' | 'ZIP'
   onClick: () => void
   busy: boolean
   disabled?: boolean
   note?: string
+  /** With several items in work, «2/4» after the note: which of them it's about, grey */
+  count?: string
   onNote?: () => void
   /** «Поделиться», right over the download: off with it, the line over them speaking for both */
   links?: React.ReactNode
@@ -736,14 +737,18 @@ export function DownloadBar({ format, onClick, busy, disabled, note, onNote, lin
       {said ? (
         <div className="px-6 pb-6 md:mb-2 md:p-0"><p role="status" className={line}>{said}</p></div>
       ) : disabled && note && (
-        <div className="px-6 pb-6 md:mb-2 md:p-0">
+        <div className="flex px-6 pb-6 tracking-normal md:mb-2 md:p-0">
+          {/* What's in the way as a secondary button leading there («Нужно выбрать дилера»), Regular, as a note rather
+              than a command: the one thing here to act on while the download is off (it was a black line, a link no
+              one took for one); a fault with nowhere to lead stays a line */}
           {onNote
-            ? <button type="button" onClick={onNote} className={`${line} cursor-pointer hover:text-[#808080]`}>{note}</button>
+            ? <button type="button" onClick={onNote} className={`${outlined} w-full gap-2 font-normal!`}>{note}{count && <span className="text-[#808080]">{count}</span>}</button>
             : <p className={line}>{note}</p>}
         </div>
       )}
-      {/* Wide screens: «Поделиться» over the download. Phones: pinned beside it, the two sharing the row */}
-      {links && <div className="hidden tracking-normal md:mb-2 md:flex">{links}</div>}
+      {/* Wide screens: «Поделиться» over the download, but while the button above stands in its place: off with the
+          download, it had nothing to do there. Phones: pinned beside the download, the two sharing the row */}
+      {links && !(disabled && note && onNote && !said) && <div className="hidden tracking-normal md:mb-2 md:flex">{links}</div>}
       {/* Equal columns, not flex: Safari sized the two flex halves by their content */}
       <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 grid auto-cols-fr grid-flow-col gap-2 p-6 tracking-normal md:pointer-events-auto md:static md:p-0">
         {links && <div className="pointer-events-auto flex min-w-0 md:hidden">{links}</div>}

@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, unfilled, Segments, SegBtn, ALERT_LABEL, outlined } from '@/ui/form'
-import { useStaff, TableSource, UploadArea, AddTile, inWork, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
+import { useStaff, pickTable, TableSource, UploadArea, AddTile, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
@@ -22,7 +22,7 @@ const BLANK: Item = { name: '', code: '', caption: DEFAULT_CAPTION, price: '' }
 const PLACEHOLDER: Partial<Record<TagField, string>> = { dealer: 'Название дилера', name: 'Наименование товара', caption: DEFAULT_CAPTION, price: '0 000' }
 const MISSING: Partial<Record<TagField, string>> = { dealer: 'Нет названия дилера', name: 'Нет наименования', caption: 'Нет подписи', price: 'Нет цены' }
 /** The first empty field, said by name over the download */
-const UNFILLED: Partial<Record<TagField, string>> = { dealer: 'Дилер не выбран', name: 'Наименование не указано', caption: 'Подпись не указана', price: 'Цена не указана' }
+const UNFILLED: Partial<Record<TagField, string>> = { dealer: 'Нужно выбрать дилера', name: 'Нужно ввести наименование', caption: 'Нужно указать подпись', price: 'Нужно указать цену' }
 const REQUIRED = ['name', 'caption', 'price'] as const
 
 const CAPTIONS = [DEFAULT_CAPTION, 'Цена за комплект с НДС', 'Цена за упаковку с НДС']
@@ -138,7 +138,7 @@ export default function PriceTag() {
   }
 
   /** A tag's first fault: a wrong value said as it is, else its first empty field by name */
-  const problemOf = (i: number) => ownIssues(i)[0]?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!), 0) : undefined)
+  const problemOf = (i: number) => ownIssues(i)[0]?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!)) : undefined)
 
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
@@ -206,8 +206,9 @@ export default function PriceTag() {
           onClick={handleExport}
           busy={exporting}
           disabled={!ok}
-          note={(dealerMissing ? unfilled([UNFILLED.dealer!, ...(items.length === 1 ? missing[0].map(f => UNFILLED[f]!) : [])], items.length === 1 ? 4 : 0) : dealerIssues[0]) ?? (!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : problemOf(0))}
-          onNote={dealerIssues.length ? toDealer : items.length ? () => staff.nextOf(failing) : undefined}
+          note={(dealerMissing ? unfilled([UNFILLED.dealer!, ...(items.length === 1 ? missing[0].map(f => UNFILLED[f]!) : [])]) : dealerIssues[0]) ?? (!items.length ? 'Нужно загрузить таблицу' : problemOf(failing.length ? staff.inWork(failing).index : 0))}
+          count={!(dealerIssues.length) && failing.length > 1 ? staff.inWork(failing).count : undefined}
+          onNote={dealerIssues.length ? toDealer : items.length ? () => staff.nextOf(failing) : pickTable}
           // The Word file is off for now: CoFo Sans shows only in Word for Windows, elsewhere it's swapped for Arial, and the
           // layout breaks easily there; fixing a price is done by dropping the PDF back. To bring it back, uncomment:
           // links={

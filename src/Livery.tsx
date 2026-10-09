@@ -298,7 +298,7 @@ export default function Livery() {
           onClick={handleExport}
           busy={exporting}
           disabled={!ok || (on.qr && !urlValid)}
-          note={on.qr && !urlValid ? (url.trim() ? 'Проверьте ссылку QR-кода' : 'Ссылка QR-кода не указана') : sheets.flatMap(s => s.issues)[0]}
+          note={on.qr && !urlValid ? (url.trim() ? 'Проверьте ссылку QR-кода' : 'Нужно указать ссылку QR-кода') : sheets.flatMap(s => s.issues)[0]}
           onNote={on.qr && !urlValid ? () => urlRef.current?.querySelector('input')?.focus() : undefined}
           links={<LinkButtons incomplete={!ok || (on.qr && !urlValid)} />}
         />
