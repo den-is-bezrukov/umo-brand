@@ -22,6 +22,8 @@ export function usePhone() {
 }
 
 const TURN_MS = 500
+/** The sheet's height under the picture */
+const HALF = '60dvh'
 /** How far a swipe goes before it opens or closes the form */
 const SWIPE = 40
 /** A fitted item's inset from the screen's sides: the canvas's 10 px padding and 6 more (Figma 5098:5543) */
@@ -172,7 +174,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     ? <span className="min-w-0 truncate text-[14px] leading-5 text-[#808080]">{title}</span>
     : <span className={`text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1] ${many ? '' : 'invisible'}`}>{slides[shown]?.number ?? shown + 1}</span>
   const reset = slides[shown]?.reset
-  const height = { preview: '0px', half: '60dvh', full: `calc(100dvh - ${ROW + 2 * PAD}px)` }[sheet]
+  const height = { preview: '0px', half: HALF, full: `calc(100dvh - ${ROW + 2 * PAD}px)` }[sheet]
 
   // As large as the strip allows: its height but 4 px over and under, so the items' 1 px edge outside them
   // (`ITEM_EDGE`) isn't clipped by the slide however the strip's height rounds (2 px was clipped at some heights), its
@@ -214,15 +216,20 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           for a moment */}
       {!full && (
         <div className="flex h-[30px] shrink-0 items-center justify-between">
-          {staff?.removed ? (
+          {!staff ? (
+            // A page that isn't a list (the livery, the plate frame, the sign) has only the sheet's reset, in the middle
+            <>
+              <Btn label="" hidden onClick={() => {}}>{null}</Btn>
+              <Btn label={reset?.label ?? 'Сбросить'} hidden={!reset} onClick={() => reset?.onClick()}><ResetIcon /></Btn>
+              <Btn label="" hidden onClick={() => {}}>{null}</Btn>
+            </>
+          ) : staff.removed ? (
             <div className="-my-[5px] flex-1"><Removed staff={staff} at={staff.removed.index} /></div>
           ) : (
             <>
-              {reset
-                ? <Btn label={reset.label} onClick={reset.onClick}><ResetIcon /></Btn>
-                : <Btn label="Сбросить" hidden={!staff || !current || staff.isBlank(current)} onClick={() => staff?.clear(current.key)}><ResetIcon /></Btn>}
-              <Btn label="Дублировать" hidden={!staff || !current} onClick={() => staff?.duplicate(current.key)}><DuplicateIcon /></Btn>
-              <Btn label="Удалить" hidden={!staff || !current || staff.people.length < 2} onClick={() => staff?.remove(current.key)}><CrossIcon /></Btn>
+              <Btn label="Сбросить" hidden={!current || staff.isBlank(current)} onClick={() => staff.clear(current.key)}><ResetIcon /></Btn>
+              <Btn label="Дублировать" hidden={!current} onClick={() => staff.duplicate(current.key)}><DuplicateIcon /></Btn>
+              <Btn label="Удалить" hidden={!current || staff.people.length < 2} onClick={() => staff.remove(current.key)}><CrossIcon /></Btn>
             </>
           )}
         </div>
@@ -249,7 +256,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           </div>
         )}
         <div ref={scroller} className={`min-h-0 flex-1 overflow-y-auto ${sheet === 'preview' ? 'pointer-events-none' : ''}`}>
-          <div className="pb-20"><InSheet.Provider value={true}>{sidebar}</InSheet.Provider></div>
+          <div className="pb-20"><InSheet.Provider value={height}>{sidebar}</InSheet.Provider></div>
         </div>
         {/* The download under the form, open or over the whole screen; none over the picture alone. It lies over the
             form's foot, 80 px, the form fading out under it from white at 0% (Figma 5098:5634); the form keeps that

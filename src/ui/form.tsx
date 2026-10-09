@@ -51,7 +51,7 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
   if (inSheet) return (
     <>
       <GeneratorRing current={current} turnTo={turnTo} onMenu={() => setMenu(true)} />
-      {menu && createPortal(<GeneratorMenu current={current} onClose={() => setMenu(false)} />, document.body)}
+      {menu && createPortal(<GeneratorMenu current={current} height={inSheet} onClose={() => setMenu(false)} />, document.body)}
     </>
   )
   return (
@@ -137,8 +137,8 @@ const RING_TURN_MS = 333
 /** How long the line stays turned once left, before coming back round to the current one */
 const RING_BACK_MS = 250
 
-/** The generators' menu on a phone (Figma 5099:5825): the breadcrumbs with «Свернуть» across from them, then every generator, 24 px Medium 20 px apart, the current one black */
-function GeneratorMenu({ current, onClose }: { current: string; onClose: () => void }) {
+/** The generators' menu on a phone (Figma 5099:5825), a sheet over the form's: the breadcrumbs with «Свернуть» across from them, then every generator, 24 px Medium 20 px apart, the current one black */
+function GeneratorMenu({ current, height, onClose }: { current: string; /** The form's sheet's, which it lies over */ height: string; onClose: () => void }) {
   useEffect(() => {
     const key = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', key)
@@ -146,7 +146,8 @@ function GeneratorMenu({ current, onClose }: { current: string; onClose: () => v
   }, [onClose])
   const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
   return (
-    <div role="dialog" aria-label="Конструкторы" className="fixed inset-0 z-50 overflow-y-auto bg-white p-6 font-sans text-black">
+    // A sheet of its own over the form's, as tall, its corners and shadow (it took the whole screen for a while)
+    <div role="dialog" aria-label="Конструкторы" style={{ height }} className="fixed inset-x-0 bottom-0 z-50 overflow-y-auto rounded-t-[16px] bg-white p-6 font-sans text-black shadow-[0_0_30px_-4px_rgba(0,0,0,0.1)]">
       <div className="flex flex-col gap-5">
         <div className="flex items-center justify-between">
           <nav className="flex items-center gap-2 text-[14px] font-medium leading-5 [font-feature-settings:'case'_1]">
@@ -499,7 +500,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
   const id = useId()
   // In the phone's sheet the list is a screen of its own, as a search: the field over it with «Готово», the list filling
   // the rest. Opened from the field in the same tap, so the screen's field takes the focus and the keyboard stays up
-  const inSheet = useContext(InSheet)
+  const inSheet = !!useContext(InSheet)
   const [screen, setScreen] = useState(false)
   const screenField = useRef<HTMLDivElement>(null)
   const openScreen = () => {
