@@ -269,7 +269,8 @@ export default function App() {
         <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
           <GeneratorHeader current="/price-card" />
 
-          <div ref={form} className="grid grid-cols-2 gap-x-3 gap-y-4 md:grid-cols-1 tracking-normal">
+          {/* Model and trim side by side while each is 180 px or wider, else one under the other across the row */}
+          <div ref={form} className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-x-3 gap-y-4 md:grid-cols-1 tracking-normal">
             <Field label="Модель">
               <Segments>
                 <SegBtn active={card.model === 'umo5'} onClick={() => switchModel('umo5')}>UMO 5</SegBtn>
@@ -286,7 +287,7 @@ export default function App() {
             </Field>
 
             {/* The link before the prices, as in Figma 4844:6865 */}
-            <div data-field="url" className="col-span-2 md:col-span-1">
+            <div data-field="url" className="col-span-full">
               <Field label="Ссылка QR-кода">
                 <UrlField value={card.url} onChange={url => set({ url })} />
               </Field>
@@ -294,13 +295,13 @@ export default function App() {
 
             {/* The prices one under the other on phones too, as on wide screens: the credit checkbox under the full price,
                 so turning it on only adds a field under it (beside it, it read as a label with no field) */}
-            <div className="col-span-2 md:col-span-1">
+            <div className="col-span-full">
             <Field label="Полная цена, ₽">
               <div data-field="full"><TextInput numeric value={card.full} placeholder="9 999 999" invalid={issues.fullTooLow || issues.fullLessThanCredit} onChange={changeFull} /></div>
             </Field>
             </div>
 
-            <div className="col-span-2 md:col-span-1">
+            <div className="col-span-full">
             <OptionalField label="В кредит, ₽" on={card.creditOn} onChange={creditOn => set({ creditOn })}>
               <div data-field="credit"><TextInput numeric value={card.credit} placeholder="8 999 999" invalid={issues.creditTooLow || issues.fullLessThanCredit} onChange={changeCredit} /></div>
             </OptionalField>
