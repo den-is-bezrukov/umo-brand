@@ -219,7 +219,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
 
       {/* The sheet: the sidebar scrolling, the download at its foot; folded, the download alone, over the canvas */}
       <div
-        className={`relative flex shrink-0 flex-col overflow-hidden transition-[height,border-radius,background-color] ${sheet === 'preview' ? 'bg-transparent' : 'bg-white'} ${sheet !== 'preview' ? 'rounded-t-[16px]' : ''}`}
+        className={`relative flex shrink-0 flex-col overflow-hidden transition-[height,border-radius,background-color] ${sheet === 'preview' ? 'bg-transparent' : 'bg-white'} ${sheet !== 'preview' ? 'rounded-t-[16px] shadow-[0_0_30px_-4px_rgba(0,0,0,0.1)]' : ''}`}
         style={{ height, transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: EASE }}
       >
         {/* The top edge, over the form's own 24 px padding, the grabber in it */}
@@ -236,11 +236,13 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         )}
         {/* No breadcrumbs in the sheet for now: the ring of generators opens it */}
         <div ref={scroller} className={`min-h-0 flex-1 overflow-y-auto [&_[data-crumbs]]:hidden ${sheet === 'preview' ? 'pointer-events-none' : ''}`}>
-          <InSheet.Provider value={true}>{sidebar}</InSheet.Provider>
+          <div className="pb-20"><InSheet.Provider value={true}>{sidebar}</InSheet.Provider></div>
         </div>
-        {/* The download under the form, open or over the whole screen; none over the picture alone */}
+        {/* The download under the form, open or over the whole screen; none over the picture alone. It lies over the
+            form's foot, 80 px, the form fading out under it from white at 0% (Figma 5098:5634); the form keeps that
+            much room under its last field to scroll it clear */}
         {sheet !== 'preview' && (
-          <div className="shrink-0 px-6 pt-3 pb-5 tracking-normal">
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white px-6 py-5 tracking-normal">
             <InFoot.Provider value={() => setSheet(s => (s === 'preview' ? 'half' : s))}>{download}</InFoot.Provider>
           </div>
         )}
