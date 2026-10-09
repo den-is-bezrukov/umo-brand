@@ -27,7 +27,11 @@ export const BAND = 12
 const LOGO_W = 15
 const RULE_X = 22.5
 const RULE_W = 0.15
-const DEALER = { x: 25.5, size: 4.4, width: TAG.w - SIDE - 25.5 }
+/**
+ * The name may run to 3 mm from the right edge rather than the band's 4.5: the longest dealers on umo.auto
+ * («АВТОПОЛЕ Санкт-Петербург», 61.1 mm) ran over 60 by up to 1.1 mm, and the type stays as in Figma
+ */
+const DEALER = { x: 25.5, size: 4.4, width: TAG.w - 3 - 25.5 }
 
 /** The goods' name, Medium 45 px on 45 px lines, from the body's 4 mm padding down to the code */
 const NAME = { top: BAND + 4, size: 4.5, width: TAG.w - 2 * SIDE, lines: 4 }

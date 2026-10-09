@@ -49,7 +49,8 @@ export async function tagsDocx(dealer: string, items: Item[]): Promise<Blob> {
 
   const fill = (cell: string, row: number, it: Item) => {
     switch (row) {
-      case 0: return cell.replace(SAMPLE.dealer, () => lines(dealer))
+      // The dealer runs to 3 mm from the right edge (170 twips), as in the PDF, so the longest names keep one line
+      case 0: return cell.replace('<w:vAlign ', '<w:tcMar><w:right w:w="170" w:type="dxa"/></w:tcMar><w:vAlign ').replace(SAMPLE.dealer, () => lines(dealer))
       case 1: return cell.replace(SAMPLE.name, () => lines(it.name))
       case 2: return cell.replace(SAMPLE.code, () => `>${lines(it.code)}<`)
       case 3: return cell.replace(SAMPLE.caption, () => lines(it.caption))
