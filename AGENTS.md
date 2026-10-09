@@ -68,7 +68,7 @@ Vector schemes (clear space, minimum size, co-branding, type specimens, model le
 
 On phones (below `md`) landscape photos — raster `Fig`s 2:1 and wider (`isWidePhoto`) — are cropped to 4:3 with `object-cover`; `focus` sets the crop's horizontal point in % where the subject isn't central (`umo5-kv`: 72, the car without the runner's sliver). An object on a flat background (`flat`, its colour: the livery, #f6f6f6) is fitted into the 4:3 frame whole instead, never cropped. SVG schemes stay whole; the Логотип plate and the clear-space scheme alone are 4:3 on phones (`phone43`), the scheme fitted whole on its grey (all the 2:1 and wider pictures going 4:3 was tried and dropped: the 3:1 minimum-size scheme shrank into a large grey). The Рамка номера card is 4:3 everywhere (Figma 5008:10482): the plate in its frame, 261×66, centred on the grey.
 
-Кобрендинг (Figma 4818:1328) is two columns, a scheme over its example, on 4:3 cards: the four 444×333 Figma cards exported as SVG (see the note in `scripts/split-figma-svg.py`: they export 684 wide, viewBox shifted by 120). The schemes open large on a click (`Zoom`, a lightbox: a click anywhere or Esc closes it, the page doesn't scroll under it).
+Кобрендинг (Figma 4818:1328) is two columns from 640 px (`sm`), a scheme over its example, on 4:3 cards: the four 444×333 Figma cards exported as SVG (see the note in `scripts/split-figma-svg.py`: they export 684 wide, viewBox shifted by 120). The schemes open large on a click (`Zoom`, a lightbox: a click anywhere or Esc closes it, the page doesn't scroll under it).
 
 Below `md` pictures stand 16 px apart, as the page's side gutter, across and down, and so do a picture and the download rows under it (24 from `md`, as the Figma layout); text stays as it was.
 

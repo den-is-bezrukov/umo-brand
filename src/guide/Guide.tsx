@@ -1310,8 +1310,8 @@ export default function Guide() {
                   </Text>
                 </div>
               </Head>
-              {/* Figma 4818:1328: two columns, a scheme over its example; each column stacks on phones */}
-              <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-2">
+              {/* Figma 4818:1328: two columns, a scheme over its example; the columns stack below 640 px */}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
                 <div className="group/preview flex flex-col gap-4 md:gap-6">
                   <Zoom label="Схема кобрендинга с квадратным логотипом">
                     <Fig name="cobrand-square" w={444} h={333} alt="Схема кобрендинга с квадратным логотипом" />
