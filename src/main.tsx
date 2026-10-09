@@ -15,6 +15,7 @@ const Livery = lazy(() => import('./Livery'))
 const PlateFrame = lazy(() => import('./PlateFrame'))
 const NameTag = lazy(() => import('./NameTag'))
 const BusinessCard = lazy(() => import('./BusinessCard'))
+const PriceTag = lazy(() => import('./PriceTag'))
 
 // Yandex.Metrika (index.html, umo.autos only) is set to `defer`, as Metrika asks of a single-page site: a view is
 // sent here, once per page. Only a new path counts: the generators rewrite the query with every setting changed, the
@@ -50,6 +51,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/plate-frame" element={<PlateFrame />} />
           <Route path="/name-tag" element={<NameTag />} />
           <Route path="/business-card" element={<BusinessCard />} />
+          <Route path="/price-tag" element={<PriceTag />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>
