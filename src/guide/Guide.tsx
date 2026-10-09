@@ -1206,8 +1206,8 @@ export default function Guide() {
                   <p>Единый модуль для любого контекста.</p>
                 </Text>
               </Head>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
-                <Fig name="placement-exterior" w={912} h={456} className="md:col-span-2" alt="Логотип на передней части UMO 8" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                <Fig name="placement-exterior" w={912} h={456} className="sm:col-span-2" alt="Логотип на передней части UMO 8" />
                 <Fig name="placement-interior" w={444} h={333} alt="Логотип на руле" />
                 <Fig name="placement-badge" w={444} h={333} alt="Шильдик UMO на кузове" />
               </div>
