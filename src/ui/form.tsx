@@ -867,11 +867,11 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   const foot = useContext(InFoot)
   if (foot) {
     const lead = disabled && !!note && !said
-    // «Поделиться» right of the download, as wide as its word, the download taking the rest, once the download is on:
-    // while a step is left, the button saying it stands alone (an icon left of the download, then half each, were tried)
+    // «Поделиться» right of the download, half each, once the download is on: while a step is left, the button saying it
+    // stands alone (tried: an icon left of the download, «Поделиться» left of it, as wide as its word on the right)
     const shareOn = !!links && !disabled && !said
     return (
-      <div className="flex gap-2">
+      <div className="grid auto-cols-fr grid-flow-col gap-2">
       <button
         type="button"
         onClick={lead && onNote ? () => { foot(); setTimeout(onNote, 350) } : onClick}
@@ -883,7 +883,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
           ? <>{note}{count && <span className="text-white/50">{count}</span>}</>
           : busy ? 'Генерация…' : `Скачать ${format}`)}
       </button>
-      {shareOn && <div className="flex shrink-0">{links}</div>}
+      {shareOn && <div className="flex min-w-0">{links}</div>}
       </div>
     )
   }
