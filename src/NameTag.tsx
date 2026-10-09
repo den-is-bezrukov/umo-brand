@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadBar, unfilled, Segments, SegBtn, outlined } from '@/ui/form'
+import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadBar, unfilled, stepsLeft, Segments, SegBtn, outlined } from '@/ui/form'
 import { useStaff, pickTable, TableSource, UploadArea, AddTile, fullNameField, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD } from '@/livery/geometry'
@@ -145,7 +145,7 @@ export default function NameTag() {
           busy={exporting}
           disabled={!ok}
           note={!items.length ? 'Нужно загрузить таблицу' : (failing.length ? problemOf(staff.inWork(failing).index) : undefined)}
-          count={items.length > 1 && failing.length ? staff.inWork(failing).count : undefined}
+          count={stepsLeft(items.reduce((n, _, i) => n + missing[i].length + (tags?.[i]?.issues.length ?? 0), 0))}
           onNote={items.length ? () => staff.nextOf(failing) : pickTable}
         />
       </aside>

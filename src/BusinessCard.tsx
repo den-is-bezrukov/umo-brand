@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadBar, unfilled, Segments, SegBtn, rowAction, isValidUrl, ALERT_LABEL, Checkbox } from '@/ui/form'
+import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadBar, unfilled, stepsLeft, Segments, SegBtn, rowAction, isValidUrl, ALERT_LABEL, Checkbox } from '@/ui/form'
 import { useStaff, pickTable, TableSource, UploadArea, AddTile, fullNameField, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
@@ -324,7 +324,7 @@ export default function BusinessCard() {
           busy={exporting}
           disabled={!ok}
           note={(dealerMissing.length ? unfilled([...dealerMissing, ...(items.length === 1 ? missing[0] : [])].map(f => UNFILLED[f]!)) : dealerIssues[0]) ?? (!items.length ? 'Нужно загрузить таблицу' : problemOf(failing.length ? staff.inWork(failing).index : 0))}
-          count={!dealerIssues.length && items.length > 1 && failing.length ? staff.inWork(failing).count : undefined}
+          count={stepsLeft(new Set([...dealerMissing, ...dealerWrong]).size + items.reduce((n, _, i) => n + new Set<string | null>([...missing[i], ...(cards?.[i]?.issues.filter(x => !x.field || PERSON_FIELDS.includes(x.field)).map(x => x.field) ?? [])]).size, 0))}
           onNote={dealerIssues.length ? toDealer : items.length ? () => staff.nextOf(failing) : pickTable}
         />
       </aside>

@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, unfilled, Segments, SegBtn, ALERT_LABEL, outlined } from '@/ui/form'
+import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, unfilled, stepsLeft, Segments, SegBtn, ALERT_LABEL, outlined } from '@/ui/form'
 import { useStaff, pickTable, TableSource, UploadArea, AddTile, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, type Cmd } from '@/livery/geometry'
@@ -207,7 +207,7 @@ export default function PriceTag() {
           busy={exporting}
           disabled={!ok}
           note={(dealerMissing ? unfilled([UNFILLED.dealer!, ...(items.length === 1 ? missing[0].map(f => UNFILLED[f]!) : [])]) : dealerIssues[0]) ?? (!items.length ? 'Нужно загрузить таблицу' : problemOf(failing.length ? staff.inWork(failing).index : 0))}
-          count={!dealerIssues.length && items.length > 1 && failing.length ? staff.inWork(failing).count : undefined}
+          count={stepsLeft((dealerIssues.length ? 1 : 0) + items.reduce((n, _, i) => n + new Set([...missing[i], ...ownIssues(i).map(x => x.field)]).size, 0))}
           onNote={dealerIssues.length ? toDealer : items.length ? () => staff.nextOf(failing) : pickTable}
           // The Word file is off for now: CoFo Sans shows only in Word for Windows, elsewhere it's swapped for Arial, and the
           // layout breaks easily there; fixing a price is done by dropping the PDF back. To bring it back, uncomment:

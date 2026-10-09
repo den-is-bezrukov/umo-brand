@@ -6,7 +6,7 @@ import PriceCardPdf from '@/posters/pdf/PriceCardPdf'
 import { ensurePdfFonts } from '@/posters/pdf/pdfFonts'
 import type { Variant } from '@/posters/cardData'
 import { goal } from '@/ui/metrika'
-import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField, GeneratorHeader, LinkButtons, DownloadBar, unfilled } from '@/ui/form'
+import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField, GeneratorHeader, LinkButtons, DownloadBar, unfilled, stepsLeft } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
 import { useStaff, ItemFrame, AddTile, Removed, plain, ITEM_EDGE, type Row } from '@/ui/staff'
 
@@ -319,7 +319,7 @@ export default function App() {
           busy={exporting}
           disabled={failing.length > 0}
           note={items.length > 1 ? (failing.length ? firstIssue(items[staff.inWork(failing).index])?.text : undefined) : issue?.text}
-          count={items.length > 1 && failing.length ? staff.inWork(failing).count : undefined}
+          count={stepsLeft(items.reduce((n, c) => { const i = check(c); return n + [i.urlBad, i.fullTooLow, i.creditTooLow, i.fullLessThanCredit].filter(Boolean).length }, 0))}
           onNote={items.length > 1 ? () => staff.nextOf(failing) : toIssue}
           // No «Сбросить» here: each card has its own beside it
           links={<LinkButtons incomplete={failing.length > 0} />}

@@ -699,6 +699,12 @@ export function LinkButtons({ incomplete }: { incomplete?: boolean }) {
 export const unfilled = (said: string[]) => said[0]
 
 /**
+ * How many things are left to do before the download, after the note over it: «1/5», the one it names out of all the
+ * empty and wrong fields left, over the whole list; none while it's the last
+ */
+export const stepsLeft = (n: number) => (n > 1 ? `1/${n}` : undefined)
+
+/**
  * The download, at the foot of the sidebar: always there, saying only the file's format, so the page says what it's for
  * at once. Off while something's in the way, with a secondary button over it saying what and leading there («Нужно
  * выбрать дилера», «Цена слишком низкая», «Нужно проверить 1 из 4»; it was a black line, and before that stood under
@@ -711,7 +717,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   busy: boolean
   disabled?: boolean
   note?: string
-  /** With several items in work, «2/4» after the note: which of them it's about, grey */
+  /** «1/5» after the note, grey: the one it names out of all that's left to do (`stepsLeft`) */
   count?: string
   onNote?: () => void
   /** «Поделиться», right over the download: off with it, the line over them speaking for both */
