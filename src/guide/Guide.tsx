@@ -1233,7 +1233,7 @@ export default function Guide() {
                 <Text><p>Цвет логотипа подбирается по контрасту, яркости и тону фона: белый или черный.</p></Text>
               </Head>
               <div className="flex flex-col gap-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
                   <LogoPlate w={444} h={333} logo={240} bg="#000" dark caption="Белый для тёмного фона" />
                   <LogoPlate w={444} h={333} logo={240} bg="#f5f5f5" caption="Чёрный для светлого фона" />
                 </div>
