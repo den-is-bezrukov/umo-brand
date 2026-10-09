@@ -31,6 +31,8 @@ const ORDER = ['from', 'to', 'dealer', 'address', 'phone', 'site'] as const
 /** The hours step by half an hour, from 0:00 to 24:00 */
 const STEP = 30
 const DAY = 24 * 60
+/** A day shorter than this is said under the sign */
+const SHORT_DAY = 8 * 60
 const minutesOf = (t: string) => { const [h, m] = t.split(':'); return +h * 60 + +m }
 const timeOf = (min: number) => `${Math.floor(min / 60)}:${String(min % 60).padStart(2, '0')}`
 /** A typed time made whole, taken to the nearest half hour («9:57» → «10:00») and into [min, max] */
@@ -247,6 +249,10 @@ export default function HoursSign() {
     setSite(typeof d.site === 'string' ? d.site : null)
   }
 
+  /** A day under 8 hours, the shortest any dealer on umo.auto works (10:00–18:00): likely a typo, said under the sign */
+  const short = !empty.includes('from') && !empty.includes('to') && !!timeText(values.from) && !!timeText(values.to)
+    && minutesOf(timeText(values.to)!) - minutesOf(timeText(values.from)!) < SHORT_DAY
+
   const fill = (field: SignField | 'fixed') =>
     field === 'fixed' ? '#000' : wrong.has(field) ? ALERT : field !== 'line' && empty.includes(field) ? GHOST : '#000'
   const byFill = new Map<string, string>()
@@ -331,6 +337,8 @@ export default function HoursSign() {
               {!blank && <CaptionReset onClick={reset} label="Вернуть табличку по умолчанию" />}
             </span>
           </figcaption>
+          {/* A warning, not an error: the download stays on, as a short day can be meant (a holiday) */}
+          {short && <p className="text-center text-[14px] leading-5 text-[#808080]">День короче 8&nbsp;часов&nbsp;— проверьте время</p>}
         </figure>
       </main>
 
