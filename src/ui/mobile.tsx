@@ -3,8 +3,8 @@ import { ResetIcon, DuplicateIcon, CrossIcon, Removed, type Staff } from '@/ui/s
 import { InSlide, InFoot, InSheet } from '@/ui/phone'
 
 // A trial of the generators' phone layout (Figma 5098:5806, C and D): the canvas fills the screen above a sheet, what's
-// made swiped through one at a time, the item's number between «Удалить» and «Сбросить» over it and «‹ Дублировать ›»
-// under it; the sheet holds the sidebar (header and form) with the download at its foot. A tap on the picture folds the
+// made swiped through one at a time, «‹ n ›» over it and «Сбросить», «Дублировать», «Удалить» under it (Figma
+// 5098:5449); the sheet holds the sidebar (header and form) with the download at its foot. A tap on the picture folds the
 // sheet away, the picture large with no download, and another brings it back; a swipe up on the sheet's top edge opens the form
 // over the whole screen, with only «‹ n ›» over it, a swipe down puts it back. In the link: `arrows=0` hides the arrows (swiping alone)
 
@@ -21,8 +21,6 @@ export function usePhone() {
   return phone
 }
 
-const EASE = 'cubic-bezier(0.67, 0, 0.33, 1)'
-const TURN_MS = 333
 /** How far a swipe goes before it opens or closes the form */
 const SWIPE = 40
 /** A fitted item's inset from the screen's sides: the canvas's 10 px padding and 6 more (Figma 5098:5543) */
@@ -186,22 +184,10 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#f5f5f5] font-sans text-black">
       {/* The canvas: 10 px in, rows of 30 px icons over and under the picture, 8 px off it (Figma 5098:5543) */}
       <div className={`flex min-h-0 flex-1 flex-col p-[10px] ${full ? '' : 'gap-2'}`}>
-      {/* Over the picture the item's number between its remove and reset, or «Удалено · Вернуть» for a moment; with the
-          form over the screen, the number between the arrows, all there is of the canvas then */}
+      {/* Over the picture the item's number (a sheet's name) between the arrows (Figma 5098:5449), and so with the form
+          over the screen, all there is of the canvas then */}
       <div className="flex h-[30px] shrink-0 items-center justify-between">
-        {full ? (
-          <>{back}{number}{next}</>
-        ) : staff?.removed ? (
-          <div className="-my-[5px] flex-1"><Removed staff={staff} at={staff.removed.index} /></div>
-        ) : (
-          <>
-            <Btn label="Удалить" hidden={!staff || !current || staff.people.length < 2} onClick={() => staff?.remove(current.key)}><CrossIcon /></Btn>
-            {number}
-            {reset
-              ? <Btn label={reset.label} onClick={reset.onClick}><ResetIcon /></Btn>
-              : <Btn label="Сбросить" hidden={!staff || !current || staff.isBlank(current)} onClick={() => staff?.clear(current.key)}><ResetIcon /></Btn>}
-          </>
-        )}
+        {back}{number}{next}
       </div>
 
       {/* The pictures, one to a screen */}
@@ -223,12 +209,21 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         </div>
       </InSlide.Provider>
 
-      {/* Under it the arrows with the copy between them */}
+      {/* Under it the item's actions: reset, copy, remove, the cross furthest (Figma 5098:5449); or «Удалено · Вернуть»
+          for a moment */}
       {!full && (
         <div className="flex h-[30px] shrink-0 items-center justify-between">
-          {back}
-          <Btn label="Дублировать" hidden={!staff || !current || !!staff.removed} onClick={() => staff?.duplicate(current.key)}><DuplicateIcon /></Btn>
-          {next}
+          {staff?.removed ? (
+            <div className="-my-[5px] flex-1"><Removed staff={staff} at={staff.removed.index} /></div>
+          ) : (
+            <>
+              {reset
+                ? <Btn label={reset.label} onClick={reset.onClick}><ResetIcon /></Btn>
+                : <Btn label="Сбросить" hidden={!staff || !current || staff.isBlank(current)} onClick={() => staff?.clear(current.key)}><ResetIcon /></Btn>}
+              <Btn label="Дублировать" hidden={!staff || !current} onClick={() => staff?.duplicate(current.key)}><DuplicateIcon /></Btn>
+              <Btn label="Удалить" hidden={!staff || !current || staff.people.length < 2} onClick={() => staff?.remove(current.key)}><CrossIcon /></Btn>
+            </>
+          )}
         </div>
       )}
 
@@ -236,8 +231,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
 
       {/* The sheet: the sidebar scrolling, the download at its foot; folded, the download alone, over the canvas */}
       <div
-        className={`relative flex shrink-0 flex-col overflow-hidden transition-[height,border-radius,background-color] ${sheet === 'preview' ? 'bg-transparent' : 'bg-white'} ${sheet !== 'preview' ? 'rounded-t-[16px] shadow-[0_0_30px_-4px_rgba(0,0,0,0.1)]' : ''}`}
-        style={{ height, transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: EASE }}
+        // No transition: the picture above scaled with the sheet frame by frame
+        className={`relative flex shrink-0 flex-col overflow-hidden ${sheet === 'preview' ? 'bg-transparent' : 'bg-white'} ${sheet !== 'preview' ? 'rounded-t-[16px] shadow-[0_0_30px_-4px_rgba(0,0,0,0.1)]' : ''}`}
+        style={{ height }}
       >
         {/* The top edge, over the form's own 24 px padding, the grabber in it */}
         {sheet !== 'preview' && (
