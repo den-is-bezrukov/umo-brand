@@ -122,17 +122,36 @@ function bindShortWords(text: string): string {
   return text
 }
 
-/** Lines within `width`, breaking where typed and between words */
+/**
+ * A word wider than the line, in pieces that fit: broken after its last hyphen or slash that fits («YNDX-00053/» |
+ * «графитовый»), else between letters, as goods' names carry codes and models with no spaces
+ */
+function splitWord(font: Font, word: string, size: number, width: number): string[] {
+  const pieces: string[] = []
+  let rest = word
+  while (setLine(font, rest, 0, 0, size).width > width) {
+    let fit = 1
+    while (fit < rest.length && setLine(font, rest.slice(0, fit + 1), 0, 0, size).width <= width) fit++
+    const soft = Math.max(rest.lastIndexOf('-', fit - 1), rest.lastIndexOf('/', fit - 1))
+    const at = soft > 0 ? soft + 1 : fit
+    pieces.push(rest.slice(0, at))
+    rest = rest.slice(at)
+  }
+  return [...pieces, rest]
+}
+
+/** Lines within `width`, breaking where typed, between words and inside a word too long for a line */
 function wrap(font: Font, text: string, size: number, width: number): string[] {
   const lines: string[] = []
   for (const paragraph of tidy(text)) {
     let line = ''
     for (const w of bindShortWords(paragraph).split(/ +/).filter(Boolean)) {
       const candidate = line ? `${line} ${w}` : w
-      if (line && setLine(font, candidate, 0, 0, size).width > width) {
-        lines.push(line)
-        line = w
-      } else line = candidate
+      if (setLine(font, candidate, 0, 0, size).width <= width) { line = candidate; continue }
+      if (line) lines.push(line)
+      const pieces = splitWord(font, w, size, width)
+      lines.push(...pieces.slice(0, -1))
+      line = pieces[pieces.length - 1]
     }
     if (line) lines.push(line)
   }
