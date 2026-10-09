@@ -1043,13 +1043,13 @@ export default function Guide() {
       {/* Mobile table of contents: a bar at the bottom names the heading you're reading and stands in for the
           sidebar; tapped, the full contents open between the header and the bar, which turns into «Свернуть». */}
       <div className="lg:hidden">
-        {/* A sheet from the bottom, half the screen at most (two thirds was tried), over the page dimmed: every item within a thumb's
+        {/* A sheet from the bottom, two thirds of the screen at most, over the page dimmed: every item within a thumb's
             reach, the list scrolling inside it, opened at the chapter you're reading (it took the whole screen under the
             header, its top items out of reach). A tap on the page above closes it, as «Свернуть» does */}
         {menuOpen && (
           <>
             <div aria-hidden className="fixed inset-0 z-40 bg-black/40" onClick={() => setMenuOpen(false)} />
-            <div className="fixed inset-x-0 bottom-0 z-40 flex max-h-[50dvh] flex-col bg-white">
+            <div className="fixed inset-x-0 bottom-0 z-40 flex max-h-[66dvh] flex-col bg-white">
               <div ref={sheetRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 md:px-6 md:pt-6">
                 <Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} />
               </div>
