@@ -1350,7 +1350,7 @@ export default function Guide() {
                   </div>
                   <Caption>Базовая гарнитура</Caption>
                 </figure>
-                <div className="grid grid-cols-3 gap-4 md:gap-6">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6">
                   <Fig name="font-geist" w={288} h={216} caption="Альтернатива для Google" alt="Geist" href={GEIST_ZIP} />
                   <Fig name="font-helvetica" w={288} h={216} caption="Альтернатива для MacOS" alt="Helvetica Neue" />
                   <Fig name="font-arial" w={288} h={216} caption="Альтернатива для Windows" alt="Arial" />
