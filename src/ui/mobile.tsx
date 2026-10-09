@@ -21,7 +21,7 @@ export function usePhone() {
   return phone
 }
 
-const TURN_MS = 333
+const TURN_MS = 500
 /** How far a swipe goes before it opens or closes the form */
 const SWIPE = 40
 /** A fitted item's inset from the screen's sides: the canvas's 10 px padding and 6 more (Figma 5098:5543) */
