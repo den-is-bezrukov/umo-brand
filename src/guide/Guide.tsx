@@ -1354,8 +1354,8 @@ export default function Guide() {
                 </figure>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6">
                   <Fig name="font-geist" w={288} h={216} caption="Альтернатива для Google" alt="Geist" href={GEIST_ZIP} phone21 className="col-span-2 sm:col-span-1" />
-                  <Fig name="font-helvetica" w={288} h={216} caption="Альтернатива для MacOS" alt="Helvetica Neue" />
-                  <Fig name="font-arial" w={288} h={216} caption="Альтернатива для Windows" alt="Arial" />
+                  <Fig name="font-helvetica" w={288} h={216} caption="Альтернатива для MacOS" alt="Helvetica Neue" phone21 />
+                  <Fig name="font-arial" w={288} h={216} caption="Альтернатива для Windows" alt="Arial" phone21 />
                 </div>
               </div>
             </Section>
