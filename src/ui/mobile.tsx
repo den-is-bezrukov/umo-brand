@@ -30,6 +30,8 @@ const SIDE = 16
 /** The canvas's padding and the rows' height, as Figma has them: 10 and 30, 8 between rows and picture */
 const ROW = 30
 const PAD = 10
+/** Over and under a picture as tall as the strip, for its edge */
+const EDGE_ROOM = 4
 
 const arrowsOn = () => new URLSearchParams(location.search).get('arrows') !== '0'
 
@@ -173,10 +175,11 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   const reset = slides[shown]?.reset
   const height = { preview: '0px', half: '60dvh', full: `calc(100dvh - ${ROW + 2 * PAD}px)` }[sheet]
 
-  // As large as the strip allows: its whole height but the items' 1 px edge outside them (`ITEM_EDGE`), which the
-  // slide would clip, its width but the sides
+  // As large as the strip allows: its height but 4 px over and under, so the items' 1 px edge outside them
+  // (`ITEM_EDGE`) isn't clipped by the slide however the strip's height rounds (2 px was clipped at some heights), its
+  // width but the sides
   const fit = (ratio?: number) => ratio
-    ? Math.max(0, Math.floor(Math.min(box.w - 2 * SIDE, (box.h - 2) / ratio)))
+    ? Math.max(0, Math.floor(Math.min(box.w - 2 * SIDE, (box.h - 2 * EDGE_ROOM) / ratio)))
     : Math.max(0, box.w - 2 * SIDE)
 
   return (
@@ -212,7 +215,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         >
           {slides.map(s => (
             <div key={s.key} className={`flex h-full w-full shrink-0 snap-center overflow-y-auto [scrollbar-width:none] ${s.title ? '[&_figcaption]:hidden' : ''}`}>
-              {box.w > 0 && <div className="m-auto" style={{ width: fit(s.ratio) }}>{typeof s.node === 'function' ? s.node(fit(s.ratio)) : s.node}</div>}
+              {box.w > 0 && <div className="m-auto py-1" style={{ width: fit(s.ratio) }}>{typeof s.node === 'function' ? s.node(fit(s.ratio)) : s.node}</div>}
             </div>
           ))}
         </div>
