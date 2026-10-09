@@ -40,26 +40,15 @@ const toItems = (rows: Cells[]): Item[] => byHeaders(rows, HEADERS).map(r => ({
   price: readPrice(r.price) ?? r.price,
 }))
 
-/**
- * Sample data the page opens with while the generator is being tried out, so nothing has to be typed each time.
- * Temporary: drop `SAMPLE_DEALER` and `SAMPLE_ITEMS` (and `initial`) for an empty page
- */
-const SAMPLE_DEALER = 'АВТОДОМ Алтуфьево'
-const SAMPLE_ITEMS: Item[] = [
-  { name: 'Яндекс Станция Макс с Zigbee, модель YNDX-00053 (графитовый)', code: 'YNDX-00053', caption: DEFAULT_CAPTION, price: '30 000' },
-  { name: 'Коврики в салон', code: 'UMO-8-MAT', caption: 'Цена за комплект с НДС', price: '12 500' },
-  { name: 'Зарядный кабель Type 2, 7 кВт', code: 'UMO-EVSE-7', caption: DEFAULT_CAPTION, price: '24 990' },
-]
-
 /** The dealers as the band names them: without «UMO», as the logo stands right by the name */
 const DEALER_OPTIONS = DEALER_NAMES.map(withoutUmo)
 
 export default function PriceTag() {
-  const [dealer, setDealer] = useState(SAMPLE_DEALER)
+  const [dealer, setDealer] = useState('')
   const staff = useStaff<Item>({
     blank: BLANK,
-    initial: SAMPLE_ITEMS,
-    // The tags' own PDF or Word file brings its dealer and goods back, to fix a price and download again; else a table
+    // The tags' own PDF (or Word file, while its download is off still read when dropped) brings its dealer and goods
+    // back, to fix a price and download again; else a table
     readFile: data => {
       const own = readTagsFile(data)
       if (!own) return toItems(xlsxCells(data))
@@ -67,8 +56,8 @@ export default function PriceTag() {
       return own.items
     },
     readPasted: text => toItems(pastedCells(text)),
-    accept: '.xlsx,.pdf,.docx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-    uploadLabel: 'Загрузить таблицу, PDF или Word',
+    accept: '.xlsx,.pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf',
+    uploadLabel: 'Загрузить таблицу или PDF',
     countWord: n => `${n} ценник` + ({ '': '', 'а': 'а', 'ей': 'ов' } as Record<string, string>)[plural(n)],
   })
   const { mode, setMode, current, update } = staff
@@ -216,12 +205,13 @@ export default function PriceTag() {
           disabled={!ok}
           note={(dealerMissing ? unfilled([UNFILLED.dealer!, ...(items.length === 1 ? missing[0].map(f => UNFILLED[f]!) : [])], items.length === 1 ? 4 : 0) : dealerIssues[0]) ?? (!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : problemOf(0))}
           onNote={dealerIssues.length ? toDealer : items.length ? () => staff.nextOf(failing) : undefined}
-          // The Word file where «Поделиться» stands on the other generators: over the PDF, beside it on phones
-          links={
-            <button type="button" onClick={handleWord} disabled={!ok || exportingWord} className={`${outlined} w-full bg-white`}>
-              {exportingWord ? 'Генерация…' : 'Скачать Word'}
-            </button>
-          }
+          // The Word file is off for now: CoFo Sans shows only in Word for Windows, elsewhere it's swapped for Arial, and the
+          // layout breaks easily there; fixing a price is done by dropping the PDF back. To bring it back, uncomment:
+          // links={
+          //   <button type="button" onClick={handleWord} disabled={!ok || exportingWord} className={`${outlined} w-full bg-white`}>
+          //     {exportingWord ? 'Генерация…' : 'Скачать Word'}
+          //   </button>
+          // }
         />
       </aside>
 
