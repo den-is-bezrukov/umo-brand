@@ -25,12 +25,18 @@ export function plain<P extends object>(r: Row<P>): P {
 
 export interface StaffOptions<P> {
   blank: P
-  /** Reads an .xlsx; throws with a message for the user */
-  readFile: (data: ArrayBuffer) => P[]
+  /** Reads an .xlsx (or what `accept` lets in); throws with a message for the user */
+  readFile: (data: ArrayBuffer) => P[] | Promise<P[]>
   /** Rows copied from a spreadsheet (tab-separated) */
   readPasted: (text: string) => P[]
   /** The list the page opens with (the price cards from a link); one blank item otherwise */
   initial?: P[]
+  /** The files the upload takes, an .xlsx by default (the price tags take their own PDF and Word files back too) */
+  accept?: string
+  /** What the upload says */
+  uploadLabel?: string
+  /** The loaded list's count, «3 сотрудника» by default */
+  countWord?: (n: number) => string
 }
 
 /**
@@ -51,7 +57,7 @@ export function fullNameField(person: { name: string; surname: string }, set: (p
   }
 }
 
-export function useStaff<P extends object>({ blank, readFile, readPasted, initial }: StaffOptions<P>) {
+export function useStaff<P extends object>({ blank, readFile, readPasted, initial, accept = XLSX, uploadLabel = 'Загрузить таблицу .xlsx', countWord = staffWord }: StaffOptions<P>) {
   const [mode, setMode] = useState<Mode>('manual')
   const [people, setList] = useState<Row<P>[]>(() => initial?.length ? initial.map(p => row(p)) : [row(blank)])
   /** The file the list is, while it's unedited */
@@ -97,11 +103,11 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
   const loadFile = async (f: File) => {
     setMode('table')
     try {
-      const rows = readFile(await f.arrayBuffer())
+      const rows = await readFile(await f.arrayBuffer())
       if (!rows.length) throw new Error('В таблице нет строк')
       loadRows(rows, f.name)
     } catch (err) {
-      setTableError(err instanceof Error && /xlsx|лист|строк/.test(err.message) ? err.message : 'Не получилось прочитать файл: нужен .xlsx')
+      setTableError(err instanceof Error && /xlsx|лист|строк|PDF|Word/.test(err.message) ? err.message : 'Не получилось прочитать файл: нужен .xlsx')
     }
   }
 
@@ -265,7 +271,7 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
   return {
     mode, setMode, people, items, file, current, selected, setSelected, tableError, dragging, dropTarget, loadFile,
     showsMissing, form, figureRef, nextOf, pick, update, remove, add, isBlank, paste, useDeleteKey,
-    duplicate, clear, removed, restore, dismiss: () => setRemoved(null),
+    duplicate, clear, removed, restore, dismiss: () => setRemoved(null), accept, uploadLabel, countWord,
   }
 }
 
@@ -273,7 +279,7 @@ export type Staff<P extends object> = ReturnType<typeof useStaff<P>>
 
 function FileInput({ staff }: { staff: Staff<object> }) {
   return (
-    <input type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" className="sr-only"
+    <input type="file" accept={staff.accept} className="sr-only"
       onChange={e => { const f = e.target.files?.[0]; if (f) staff.loadFile(f); e.target.value = '' }} />
   )
 }
@@ -305,7 +311,7 @@ export function TableSource<P extends object>({ staff, template }: { staff: Staf
         >
           <FileInput staff={s} />
           <span className="font-medium break-all">{s.file}</span>
-          <span className="text-[#808080]">{s.people.length} {staffWord(s.people.length)} · заменить</span>
+          <span className="text-[#808080]">{s.countWord(s.people.length)} · заменить</span>
         </label>
       )}
       {s.tableError && <p className="text-[13px] leading-5 text-[#e30]">{s.tableError}</p>}
@@ -321,7 +327,7 @@ export function UploadArea<P extends object>({ staff }: { staff: Staff<P> }) {
     <label className={`flex min-h-[240px] flex-1 cursor-pointer items-center justify-center rounded-[8px] border border-dashed text-[14px] font-medium leading-5
       ${s.dragging ? 'border-black bg-black/5' : 'border-black/20 hover:border-black/40'}`}>
       <FileInput staff={s} />
-      Загрузить таблицу .xlsx
+      {s.uploadLabel}
     </label>
   )
 }
@@ -372,8 +378,10 @@ export function plural(n: number): '' | 'а' | 'ей' {
 
 /** сотрудник, сотрудника, сотрудников */
 function staffWord(n: number): string {
-  return 'сотрудник' + ({ '': '', 'а': 'а', 'ей': 'ов' } as Record<string, string>)[plural(n)]
+  return `${n} сотрудник` + ({ '': '', 'а': 'а', 'ей': 'ов' } as Record<string, string>)[plural(n)]
 }
+
+const XLSX = '.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
 // A 1 px stroke here, finer than the sidebar's 2 px icons, as the column stands quietly beside the item (Figma 5030:11424)
 const ICON = { fill: 'none', stroke: 'currentColor', strokeWidth: 1, strokeLinecap: 'square' as const, strokeLinejoin: 'bevel' as const }

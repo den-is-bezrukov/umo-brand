@@ -7,6 +7,8 @@ import { loadFonts, type Fonts } from '@/nametag/tag'
 import { xlsxCells, pastedCells, byHeaders, type Cells } from '@/nametag/table'
 import { TAG, BAND, BAND_ART, DEFAULT_CAPTION, buildTag, formatPrice, readPrice, type Item, type TagField } from '@/pricetag/tag'
 import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
+import { readTagsFile } from '@/pricetag/read'
+import { plural } from '@/ui/staff'
 
 // Price tag generator (Figma: UMO | Evrone, node 4202:4368): price tags for the small goods at a dealership, any
 // employee printing them on an office printer and cutting them out with scissors. The dealer is set once, the goods typed
@@ -42,15 +44,24 @@ const toItems = (rows: Cells[]): Item[] => byHeaders(rows, HEADERS).map(r => ({
 const DEALER_OPTIONS = DEALER_NAMES.map(withoutUmo)
 
 export default function PriceTag() {
+  const [dealer, setDealer] = useState('')
   const staff = useStaff<Item>({
     blank: BLANK,
-    readFile: data => toItems(xlsxCells(data)),
+    // The tags' own PDF or Word file brings its dealer and goods back, to fix a price and download again; else a table
+    readFile: data => {
+      const own = readTagsFile(data)
+      if (!own) return toItems(xlsxCells(data))
+      if (own.dealer) setDealer(own.dealer)
+      return own.items
+    },
     readPasted: text => toItems(pastedCells(text)),
+    accept: '.xlsx,.pdf,.docx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    uploadLabel: 'Загрузить таблицу, PDF или Word',
+    countWord: n => `${n} ценник` + ({ '': '', 'а': 'а', 'ей': 'ов' } as Record<string, string>)[plural(n)],
   })
   const { mode, setMode, current, update } = staff
   staff.useDeleteKey(false)
 
-  const [dealer, setDealer] = useState('')
   const [fonts, setFonts] = useState<Fonts>()
   const [exporting, setExporting] = useState(false)
   useEffect(() => { loadFonts().then(setFonts) }, [])
@@ -104,7 +115,7 @@ export default function PriceTag() {
     setExporting(true)
     try {
       const { tagsPdf } = await import('@/pricetag/pdf')
-      save(await tagsPdf(tags.map(t => t.tag)), 'UMO_price-tags.pdf')
+      save(await tagsPdf(tags.map(t => t.tag), { dealer, items: items.map(({ key: _, ...it }) => it) }), 'UMO_price-tags.pdf')
       goal('download_price_tag', { count: tags.length, format: 'pdf' })
     } finally {
       setExporting(false)

@@ -1,9 +1,10 @@
 import {
   PDFDocument, PDFOperator, PDFOperatorNames,
   moveTo, lineTo, appendBezierCurve, closePath, pushGraphicsState, popGraphicsState, setFillingCmykColor,
-  setStrokingCmykColor, setLineWidth, stroke,
+  setStrokingCmykColor, setLineWidth, stroke, PDFName, PDFHexString, type PDFDict,
 } from 'pdf-lib'
 import { TAG, BAND, BAND_ART, type Tag } from './tag'
+import { DATA_KEY, type TagsData } from './read'
 import type { Cmd } from '@/livery/geometry'
 
 // Loaded only when the tags are downloaded, so the page doesn't carry pdf-lib until then.
@@ -44,9 +45,12 @@ const rect = (x: number, y: number, w: number, h: number): Cmd[] => [['M', x, y]
  * whole sheet, so scissors or a guillotine can follow them from the edge. Over the black bands the line between the
  * columns is white. All text and logos are filled outlines, black 100% K
  */
-export async function tagsPdf(tags: Tag[]): Promise<Blob> {
+export async function tagsPdf(tags: Tag[], data: TagsData): Promise<Blob> {
   const doc = await PDFDocument.create()
   doc.setTitle('UMO price tags 90×60')
+  // The dealer and the goods as typed, in the document's info, so the file dropped back on the page opens its list
+  // (`readTagsFile`); nothing of it is printed
+  ;(doc as unknown as { getInfoDict(): PDFDict }).getInfoDict().set(PDFName.of(DATA_KEY), PDFHexString.fromText(JSON.stringify(data)))
   for (let from = 0; from < tags.length; from += PER_PAGE) {
     const sheet = tags.slice(from, from + PER_PAGE)
     const p = doc.addPage([PAGE.w * PT, PAGE.h * PT])
@@ -89,6 +93,7 @@ export async function tagsPdf(tags: Tag[]): Promise<Blob> {
       popGraphicsState(),
     )
   }
-  const bytes = await doc.save()
+  // No object streams: the info stays plain in the file, read back without a PDF parser
+  const bytes = await doc.save({ useObjectStreams: false })
   return new Blob([bytes as BlobPart], { type: 'application/pdf' })
 }
