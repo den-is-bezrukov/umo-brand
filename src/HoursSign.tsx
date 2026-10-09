@@ -8,7 +8,7 @@ import { loadFont, toD } from '@/livery/geometry'
 import { maskPhone, siteFor } from '@/card/card'
 import { SIGN, LOGO, buildSign, oneLine, timeText, type SignField, type Input } from '@/hours/sign'
 import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
-import { DEFAULT_HOURS_LINE, HOURS_LINES, ADDRESSES, addressOf, hoursOf } from '@/data/hours'
+import { DEFAULT_HOURS_LINE, ADDRESSES, addressOf, hoursOf } from '@/data/hours'
 
 // The dealership's hours sign (Figma: UMO | Evrone, node 3819:4211): a 480×680 mm plate with the logo, the hours, a
 // line under them and the dealership at the bottom, as a PDF in outlines for the maker. A dealer picked from the list
@@ -125,7 +125,10 @@ export default function HoursSign() {
   const [link] = useState(linkParams)
   const [from, setFrom] = useState(() => maskTime(link.get('from') ?? ''))
   const [to, setTo] = useState(() => maskTime(link.get('to') ?? ''))
-  const [line, setLine] = useState(link.get('off') === 'line' ? '' : link.get('line') ?? DEFAULT_HOURS_LINE)
+  // The line under the hours is fixed, «Работаем без выходных», its field commented out below: nothing a dealer needs to
+  // change there, and nothing wider fits the sign's look. `line` and `off=line` in a link are ignored while it's out
+  // const [line, setLine] = useState(link.get('off') === 'line' ? '' : link.get('line') ?? DEFAULT_HOURS_LINE)
+  const line = DEFAULT_HOURS_LINE
   const [dealer, setDealer] = useState(link.get('name') ?? '')
   const [address, setAddress] = useState(() => link.get('address') ?? addressOf(link.get('name') ?? '') ?? '')
   const [phone, setPhone] = useState(link.get('phone') ?? '')
@@ -134,8 +137,8 @@ export default function HoursSign() {
   const site = ownSite ?? siteFor(dealer)
   useLinkState({
     from, to,
-    line: line === DEFAULT_HOURS_LINE ? null : line,
-    off: line.trim() ? null : 'line',
+    // line: line === DEFAULT_HOURS_LINE ? null : line,
+    // off: line.trim() ? null : 'line',
     name: dealer,
     address: address === addressOf(dealer) ? null : address,
     phone,
@@ -184,9 +187,9 @@ export default function HoursSign() {
     setDealer(v)
   }
 
-  const blank = !ORDER.some(f => f !== 'site' && oneLine(values[f])) && ownSite === null && line === DEFAULT_HOURS_LINE
+  const blank = !ORDER.some(f => f !== 'site' && oneLine(values[f])) && ownSite === null
   const reset = () => {
-    setFrom(''); setTo(''); setLine(DEFAULT_HOURS_LINE); setDealer(''); setAddress(''); setPhone(''); setSite(null)
+    setFrom(''); setTo(''); setDealer(''); setAddress(''); setPhone(''); setSite(null)
   }
 
   const handleExport = async () => {
@@ -199,9 +202,7 @@ export default function HoursSign() {
       a.href = URL.createObjectURL(blob)
       a.download = 'UMO_hours-sign.pdf'
       a.click()
-      // The line goes along only when it isn't one of the suggestions: what dealers write for themselves
-      const listed = HOURS_LINES.includes(oneLine(line))
-      goal('download_hours_sign', { from: oneLine(from), to: oneLine(to), dealer: NAMES.includes(oneLine(dealer)), ...(listed ? {} : { line: oneLine(line).slice(0, 100) }) })
+      goal('download_hours_sign', { from: oneLine(from), to: oneLine(to), dealer: NAMES.includes(oneLine(dealer)) })
       URL.revokeObjectURL(a.href)
     } finally {
       setExporting(false)
@@ -227,9 +228,10 @@ export default function HoursSign() {
                 <div data-field="to"><TimeField value={to} onChange={setTo} placeholder={PLACEHOLDER.to} label="Закрытие" invalid={wrong.has('to')} /></div>
               </div>
             </Field>
+            {/* The line under the hours, fixed for now (see `line` above)
             <Field label="Подпись">
               <div data-field="line"><ComboField value={line} onChange={setLine} options={HOURS_LINES} label="Подписи" singleLine invalid={wrong.has('line')} /></div>
-            </Field>
+            </Field> */}
             <Field label="Дилер">
               <div data-field="dealer"><ComboField value={dealer} onChange={pickDealer} options={NAMES} placeholder={PLACEHOLDER.dealer} label="Дилеры UMO" singleLine invalid={wrong.has('dealer')} /></div>
             </Field>
