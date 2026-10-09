@@ -2,6 +2,7 @@ import type { Font, Glyph } from 'opentype.js'
 import { qrOutline, type Cmd } from '@/livery/geometry'
 import { caseMap, pathCmds } from '@/plate/frame'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
+import { nameFault } from '@/ui/names'
 import type { Fonts } from '@/nametag/tag'
 
 // A dealership employee's business card (Figma: UMO | Evrone, section 4021:2849): 90×50 mm, two sides. The face
@@ -283,6 +284,10 @@ export function buildBack(fonts: Fonts, dealer: Dealer, person: Person, qr: QrDa
   if (width > PERSON_W + 0.01) for (const field of ['name', 'surname'] as const) issues.push({ field, text: `Имя и фамилия шире ${PERSON_W} мм` })
   check('name', 'Имя', name, fonts.medium)
   check('surname', 'Фамилия', surname, fonts.medium)
+  for (const [field, label, t] of [['name', 'Имя', name], ['surname', 'Фамилия', surname]] as const) {
+    const fault = nameFault(t)
+    if (fault) issues.push({ field, text: `${label}: ${fault}` })
+  }
 
   return {
     fields,
