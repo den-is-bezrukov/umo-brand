@@ -23,7 +23,7 @@ const NAMES = DEALER_NAMES.map(withoutUmo)
 const PLACEHOLDER: Record<Exclude<SignField, 'line'>, string> = {
   from: '9:00', to: '21:00', dealer: 'Название дилера', address: 'Адрес', phone: '+7 495 000 00 00', site: 'Сайт',
 }
-/** What an empty field asks for over the download, in the form's order: the first with «Нужно», for the context */
+/** What an empty field asks for in the download button, in the form's order (the first was with «Нужно» for a while) */
 const MISSING: Record<Exclude<SignField, 'line'>, string> = {
   from: 'Указать время', to: 'Указать время', dealer: 'Выбрать дилера', address: 'Указать адрес', phone: 'Указать телефон', site: 'Указать сайт',
 }
@@ -186,7 +186,7 @@ export default function HoursSign() {
   const firstWrong = ORDER.find(f => wrong.has(f)) ?? (wrong.has('line') ? 'line' : undefined)
   const firstAt = firstEmpty && (!firstWrong || ORDER.indexOf(firstEmpty) <= ORDER.indexOf(firstWrong as typeof ORDER[number])) ? firstEmpty : firstWrong
   const note = !firstAt ? undefined
-    : firstAt === firstEmpty ? (firstAt === 'from' || firstAt === 'to' ? `Нужно ${MISSING[firstAt].toLowerCase()}` : MISSING[firstAt])
+    : firstAt === firstEmpty ? MISSING[firstAt]
       : issues.find(i => i.field === firstAt)!.text
   // The two hours ask once
   const left = new Set(empty.map(f => f === 'to' ? 'from' : f)).size + issues.length

@@ -815,11 +815,10 @@ export function LinkButtons({ incomplete }: { incomplete?: boolean }) {
 }
 
 /**
- * The empty fields said over the download, in the form's order, as what to do there: the form's first field with
- * «Нужно», to say what this is about («Нужно выбрать дилера»), the next ones short, in the infinitive («Добавить
- * наименование», «Указать цену»), going on as they're filled in. A wholly empty form says its first field too: it's the
- * first step (it said «Не хватает данных» while the fields were said as states, «Дилер не выбран»; then every one
- * was «Нужно …», then imperative, «Добавьте…»)
+ * The empty fields said in the download button, in the form's order, as what to do there, in the infinitive, a
+ * button's verb («Выбрать дилера», «Указать цену»), going on as they're filled in. A wholly empty form says its first
+ * field too: it's the first step (it said «Не хватает данных» while the fields were said as states, «Дилер не выбран»;
+ * then every one was «Нужно …», then imperative, «Добавьте…», then the first with «Нужно» for the context)
  */
 export const unfilled = (said: string[]) => said[0]
 
@@ -830,11 +829,10 @@ export const unfilled = (said: string[]) => said[0]
 export const stepsLeft = (n: number) => (n > 1 ? `1/${n}` : undefined)
 
 /**
- * The download, at the foot of the sidebar: always there, saying only the file's format, so the page says what it's for
- * at once. Off while something's in the way, with a secondary button over it saying what and leading there («Нужно
- * выбрать дилера», «Цена слишком низкая», «Нужно проверить 1 из 4»; it was a black line, and before that stood under
- * the button). On phones the download alone is pinned to the bottom of the screen, with nothing behind it, so it
- * covers little of the canvas, and what's in the way stays at the foot of the form
+ * The download, at the foot of the sidebar (in the phone's sheet): one black button saying the next step while
+ * something's in the way («Выбрать дилера 1/3», «Цена слишком низкая») and leading there, «Скачать PDF» once nothing
+ * is. It was always «Скачать», greyed out, with a secondary button over it saying the step (and before that a black
+ * line, under the button for a while)
  */
 export function DownloadBar({ format, onClick, busy, disabled, note, count, onNote, links }: {
   format: 'PDF' | 'ZIP'
@@ -848,8 +846,6 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   /** «Поделиться», right over the download: off with it, the line over them speaking for both */
   links?: React.ReactNode
 }) {
-  // Black: with the buttons off around it, the next step is the one thing here to act on
-  const line = 'block w-full text-center text-[14px] leading-5 text-black'
   // What a button under the line has just done, said there for two seconds
   const [said, setSaid] = useState('')
   useEffect(() => {
@@ -862,67 +858,46 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
     const t = setTimeout(() => setSaid(''), 2000)
     return () => clearTimeout(t)
   }, [said])
-  // In the phone layout's sheet one button, as in Figma 5098:5806: while the download is off, what's in the way and
-  // how much is left, leading there (the sheet opening first); else the download
+  // One button, in the phone's sheet (Figma 5098:5806) and on wide screens alike: while the download is off, what's in
+  // the way and how much is left («Выбрать дилера 1/3»), leading there (the phone's sheet opening first); else the
+  // download, «Поделиться» with it. The bright button stays the next step, so it's pressed even unread, and the press
+  // teaches what to do (on wide screens a secondary button saying the step stood over a greyed-out download)
   const foot = useContext(InFoot)
-  if (foot) {
-    const lead = disabled && !!note && !said
-    // «Поделиться» right of the download, half each, once the download is on: while a step is left, the button saying it
-    // stands alone (tried: an icon left of the download, «Поделиться» left of it, as wide as its word on the right)
-    const shareOn = !!links && !disabled && !said
-    return (
-      <div className="grid auto-cols-fr grid-flow-col gap-2">
-      <button
-        type="button"
-        onClick={lead && onNote ? () => { foot(); setTimeout(onNote, 350) } : onClick}
-        disabled={busy || (disabled && !(lead && onNote))}
-        className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] text-[14px] leading-5 outline-none disabled:cursor-default
-          ${lead || said ? 'font-normal' : 'font-medium'} ${disabled && !(lead && onNote) && !busy ? 'text-[#999]' : 'text-white'}`}
-      >
-        {said || (lead
-          ? <>{note}{count && <span className="text-white/50">{count}</span>}</>
-          : busy ? 'Генерация…' : `Скачать ${format}`)}
-      </button>
-      {shareOn && <div className="flex min-w-0">{links}</div>}
-      </div>
-    )
-  }
-  return (
-    // 40 px off the form, as far as one field from the next
-    <div className="flex flex-col md:sticky md:bottom-0 md:z-10 md:mt-8 md:bg-white md:p-6 md:pt-0">
-      {said ? (
-        <div className="px-6 pb-6 md:mb-2 md:p-0"><p role="status" className={line}>{said}</p></div>
-      ) : disabled && note && (
-        <div className="flex px-6 pb-6 tracking-normal md:mb-2 md:p-0">
-          {/* What's in the way as a secondary button leading there («Выберите дилера»), Regular, as a note rather
-              than a command: the one thing here to act on while the download is off (it was a black line, a link no
-              one took for one); a fault with nowhere to lead stays a line */}
-          {onNote
-            ? <button type="button" onClick={onNote} className={`${outlined} w-full gap-2 font-normal!`}>{note}{count && <span className="text-[#808080]">{count}</span>}</button>
-            : <p className={line}>{note}</p>}
-        </div>
+  const lead = disabled && !!note && !said
+  const leads = lead && !!onNote
+  const shareOn = !!links && !disabled && !said
+  const main = (
+    <button
+      type="button"
+      onClick={leads ? () => { if (foot) { foot(); setTimeout(onNote!, 350) } else onNote!() } : onClick}
+      disabled={busy || (disabled && !leads)}
+      className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] text-[14px] leading-5 outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 hover:enabled:bg-[#333] disabled:cursor-default
+        ${lead || said ? 'font-normal' : 'font-medium'} ${disabled && !leads && !busy ? 'text-[#999]' : 'text-white'}`}
+    >
+      {busy && (
+        <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" aria-hidden>
+          <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+        </svg>
       )}
-      {/* Wide screens: «Поделиться» over the download, but while the button above stands in its place: off with the
-          download, it had nothing to do there. Phones: pinned beside the download, the two sharing the row */}
-      {links && !(disabled && note && onNote && !said) && <div className="hidden tracking-normal md:mb-2 md:flex">{links}</div>}
-      {/* Equal columns, not flex: Safari sized the two flex halves by their content */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 grid auto-cols-fr grid-flow-col gap-2 p-6 tracking-normal md:pointer-events-auto md:static md:p-0">
-        {links && <div className="pointer-events-auto flex min-w-0 md:hidden">{links}</div>}
-        <button
-          type="button"
-          onClick={onClick}
-          disabled={busy || disabled}
-          // Off, it stays black with its text #999, the generators' disabled text (Figma 5008:10830, 5077:7), so the page still says what it's for; busy, white
-          className={`pointer-events-auto flex min-w-0 items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] text-[14px] font-medium leading-5 ${disabled && !busy ? 'text-[#999]' : 'text-white'} cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 disabled:cursor-not-allowed hover:enabled:bg-[#333]`}
-        >
-          {busy && (
-            <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" aria-hidden>
-              <path d="M21 12a9 9 0 1 1-6.219-8.56" />
-            </svg>
-          )}
-          {busy ? 'Генерация…' : `Скачать ${format}`}
-        </button>
-      </div>
+      {said || (lead
+        ? <>{note}{count && <span className="text-white/50">{count}</span>}</>
+        : busy ? 'Генерация…' : `Скачать ${format}`)}
+    </button>
+  )
+  // Phones: «Поделиться» right of the download, half each, once the download is on (tried: an icon left of the
+  // download, «Поделиться» left of it, as wide as its word on the right)
+  if (foot) return (
+    <div className="grid auto-cols-fr grid-flow-col gap-2">
+      {main}
+      {shareOn && <div className="flex min-w-0">{links}</div>}
+    </div>
+  )
+  // Wide screens: 40 px off the form, sticking to the sidebar's foot; «Поделиться» over the download, as wide, so it
+  // has room to say the link is copied
+  return (
+    <div className="sticky bottom-0 z-10 mt-8 flex flex-col gap-2 bg-white p-6 pt-0 tracking-normal">
+      {shareOn && <div className="flex">{links}</div>}
+      <div className="flex">{main}</div>
     </div>
   )
 }

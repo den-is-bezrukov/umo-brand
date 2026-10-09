@@ -30,7 +30,7 @@ const MISSING: Partial<Record<CardField, string>> = {
 const MAIL_DOMAINS = ['yandex.ru', 'mail.ru', 'gmail.com', 'ya.ru', 'bk.ru', 'inbox.ru', 'list.ru', 'rambler.ru']
 /** The last empty field, said by name under the download */
 const UNFILLED: Partial<Record<CardField, string>> = {
-  dealer: 'Нужно выбрать дилера', address: 'Указать адрес', site: 'Указать сайт',
+  dealer: 'Выбрать дилера', address: 'Указать адрес', site: 'Указать сайт',
   name: 'Добавить имя', surname: 'Добавить фамилию', position: 'Указать должность', email: 'Указать почту', phone: 'Указать телефон',
 }
 
@@ -381,7 +381,7 @@ export default function BusinessCard() {
           onClick={handleExport}
           busy={exporting}
           disabled={!ok}
-          note={(dealerMissing.length ? unfilled([...dealerMissing, ...(items.length === 1 ? missing[0] : [])].map(f => UNFILLED[f]!)) : dealerIssues[0]) ?? (!items.length ? 'Нужно загрузить таблицу' : problemOf(failing.length ? staff.inWork(failing).index : 0))}
+          note={(dealerMissing.length ? unfilled([...dealerMissing, ...(items.length === 1 ? missing[0] : [])].map(f => UNFILLED[f]!)) : dealerIssues[0]) ?? (!items.length ? 'Загрузить таблицу' : problemOf(failing.length ? staff.inWork(failing).index : 0))}
           count={stepsLeft(new Set([...dealerMissing, ...dealerWrong]).size + items.reduce((n, _, i) => n + new Set<string | null>([...missing[i], ...(cards?.[i]?.issues.filter(x => !x.field || PERSON_FIELDS.includes(x.field)).map(x => x.field) ?? [])]).size, 0))}
           onNote={dealerIssues.length ? toDealer : items.length ? () => staff.nextOf(failing) : pickTable}
         />

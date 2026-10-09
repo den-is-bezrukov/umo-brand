@@ -24,7 +24,7 @@ const NO_NAME = 'Нет имени'
 const NO_SURNAME = 'Нет фамилии'
 const NO_POSITION = 'Нет должности'
 /** The last empty field, said by name under the download */
-const UNFILLED: Record<string, string> = { [NO_NAME]: 'Нужно добавить имя', [NO_SURNAME]: 'Добавить фамилию', [NO_POSITION]: 'Указать должность' }
+const UNFILLED: Record<string, string> = { [NO_NAME]: 'Добавить имя', [NO_SURNAME]: 'Добавить фамилию', [NO_POSITION]: 'Указать должность' }
 
 export default function NameTag() {
   // Not kept in the address, unlike the other generators: a staff list isn't something to send as a link
@@ -224,7 +224,7 @@ export default function NameTag() {
           onClick={handleExport}
           busy={exporting}
           disabled={!ok}
-          note={!items.length ? 'Нужно загрузить таблицу' : (failing.length ? problemOf(staff.inWork(failing).index) : undefined)}
+          note={!items.length ? 'Загрузить таблицу' : (failing.length ? problemOf(staff.inWork(failing).index) : undefined)}
           count={stepsLeft(items.reduce((n, _, i) => n + missing[i].length + (tags?.[i]?.issues.length ?? 0), 0))}
           onNote={items.length ? () => staff.nextOf(failing) : pickTable}
         />

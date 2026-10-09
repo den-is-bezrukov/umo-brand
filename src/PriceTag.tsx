@@ -23,7 +23,7 @@ const BLANK: Item = { name: '', code: '', caption: DEFAULT_CAPTION, price: '' }
 const PLACEHOLDER: Partial<Record<TagField, string>> = { dealer: 'Название дилера', name: 'Наименование товара', caption: DEFAULT_CAPTION, price: '0 000' }
 const MISSING: Partial<Record<TagField, string>> = { dealer: 'Нет названия дилера', name: 'Нет наименования', caption: 'Нет подписи', price: 'Нет цены' }
 /** The first empty field, said by name over the download */
-const UNFILLED: Partial<Record<TagField, string>> = { dealer: 'Нужно выбрать дилера', name: 'Добавить наименование', caption: 'Добавить подпись', price: 'Указать цену' }
+const UNFILLED: Partial<Record<TagField, string>> = { dealer: 'Выбрать дилера', name: 'Добавить наименование', caption: 'Добавить подпись', price: 'Указать цену' }
 const REQUIRED = ['name', 'caption', 'price'] as const
 
 const CAPTIONS = [DEFAULT_CAPTION, 'Цена за комплект с НДС', 'Цена за упаковку с НДС']
@@ -246,7 +246,7 @@ export default function PriceTag() {
           onClick={handleExport}
           busy={exporting}
           disabled={!ok}
-          note={(dealerMissing ? unfilled([UNFILLED.dealer!, ...(items.length === 1 ? missing[0].map(f => UNFILLED[f]!) : [])]) : dealerIssues[0]) ?? (!items.length ? 'Нужно загрузить таблицу' : problemOf(failing.length ? staff.inWork(failing).index : 0))}
+          note={(dealerMissing ? unfilled([UNFILLED.dealer!, ...(items.length === 1 ? missing[0].map(f => UNFILLED[f]!) : [])]) : dealerIssues[0]) ?? (!items.length ? 'Загрузить таблицу' : problemOf(failing.length ? staff.inWork(failing).index : 0))}
           count={stepsLeft((dealerIssues.length ? 1 : 0) + items.reduce((n, _, i) => n + new Set([...missing[i], ...ownIssues(i).map(x => x.field)]).size, 0))}
           onNote={dealerIssues.length ? toDealer : items.length ? () => staff.nextOf(failing) : pickTable}
           // The Word file is off for now: CoFo Sans shows only in Word for Windows, elsewhere it's swapped for Arial, and the
