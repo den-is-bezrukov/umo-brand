@@ -1345,12 +1345,12 @@ export default function Guide() {
               </Text>
               <div className="flex flex-col gap-4 md:gap-6">
                 <figure className="flex flex-col gap-3">
-                  <div className="flex aspect-[2/1] items-center justify-center bg-[#f5f5f5]">
+                  <div className="flex aspect-4/3 md:aspect-2/1 items-center justify-center bg-[#f5f5f5]">
                     <p className="text-[48px] sm:text-[72px] md:text-[96px] font-medium leading-none tracking-[-0.01em]">CoFo Sans</p>
                   </div>
                   <Caption>Базовая гарнитура</Caption>
                 </figure>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+                <div className="grid grid-cols-3 gap-4 md:gap-6">
                   <Fig name="font-geist" w={288} h={216} caption="Альтернатива для Google" alt="Geist" href={GEIST_ZIP} />
                   <Fig name="font-helvetica" w={288} h={216} caption="Альтернатива для MacOS" alt="Helvetica Neue" />
                   <Fig name="font-arial" w={288} h={216} caption="Альтернатива для Windows" alt="Arial" />
