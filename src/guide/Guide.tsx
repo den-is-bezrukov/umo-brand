@@ -536,20 +536,20 @@ function Caption({ children, cross, download }: { children: ReactNode; cross?: b
   )
 }
 
-/** Whether a picture is a landscape photo that goes 4:3 on phones: 2:1 and wider, raster (schemes are SVG and stay whole). */
-const isWidePhoto = (name: string, w: number, h: number) => w / h >= 2 && !img(name)?.endsWith('.svg')
 
 /**
  * One exported Figma frame. `w`/`h` are the frame's 1x size in the 1440px layout and set the aspect ratio. On phones a
- * landscape photo (`isWidePhoto`) is cropped to 4:3, as a 2:1 strip 343px wide is too thin; `focus` is the crop's
- * horizontal point in % (default the centre). An object on a flat background (`flat`, that background's colour) isn't
- * cropped — it is fitted into the 4:3 frame whole, the frame filled with its colour. `href` makes the whole figure a download link, its caption led by ↓
+ * picture 2:1 and wider (`isWide`) is 4:3, as a 2:1 strip 343px wide is too thin and the cards then stand alike: a
+ * photo is cropped, `focus` the crop's horizontal point in % (default the centre); a scheme (SVG) or an object on a
+ * flat background (`flat`, that background's colour) isn't cropped — it is fitted into the 4:3 frame whole, the frame
+ * filled with its colour (the schemes' grey; they stayed 2:1 before). `href` makes the whole figure a download link, its caption led by ↓
  * like the rows of `Assets`.
  */
 function Fig({ name, w, h, alt = '', eager, caption, cross, href, focus = 50, flat, className = '' }: {
   name: string; w: number; h: number; alt?: string; eager?: boolean; caption?: ReactNode; cross?: boolean; href?: string; focus?: number; flat?: string; className?: string
 }) {
-  const wide = isWidePhoto(name, w, h)
+  const wide = isWide({ w, h })
+  const whole = !!flat || !!img(name)?.endsWith('.svg')
   const figure = (
     <figure className={`flex flex-col gap-3 ${href ? '' : className}`}>
       <img
@@ -559,7 +559,7 @@ function Fig({ name, w, h, alt = '', eager, caption, cross, href, focus = 50, fl
         height={h * 2}
         loading={eager ? 'eager' : 'lazy'}
         decoding="async"
-        className={`block h-auto w-full bg-[#f5f5f5] ${wide ? `aspect-4/3 ${flat ? 'object-contain' : 'object-cover'} md:aspect-(--ratio)` : ''}`}
+        className={`block h-auto w-full bg-[#f5f5f5] ${wide ? `aspect-4/3 ${whole ? 'object-contain' : 'object-cover'} md:aspect-(--ratio)` : ''}`}
         style={wide ? ({ '--ratio': `${w} / ${h}`, objectPosition: `${focus}% 50%`, ...(flat && { background: flat }) } as CSSProperties) : { aspectRatio: `${w} / ${h}` }}
       />
       {caption && <Caption cross={cross} download={!!href}>{caption}</Caption>}
@@ -608,9 +608,10 @@ function LogoPlate({ w, h, logo, bg, dark, caption, className = '' }: {
 }) {
   return (
     <figure className={`flex flex-col gap-3 ${className}`}>
+      {/* 4:3 on phones when it's 2:1 or wider, as the other pictures (`isWide`); the logo keeps its share of the width */}
       <div
-        className={`flex items-center justify-center ${dark ? 'text-white' : 'text-black'}`}
-        style={{ aspectRatio: `${w} / ${h}`, background: bg }}
+        className={`flex items-center justify-center ${dark ? 'text-white' : 'text-black'} ${isWide({ w, h }) ? 'aspect-4/3 md:aspect-(--ratio)' : ''}`}
+        style={{ ...(isWide({ w, h }) ? { '--ratio': `${w} / ${h}` } : { aspectRatio: `${w} / ${h}` }), background: bg } as CSSProperties}
       >
         <div style={{ width: `${(logo / w) * 100}%` }}>
           <UmoLogo title={`Логотип UMO, ${dark ? 'белый' : 'чёрный'}`} className="w-full" />
