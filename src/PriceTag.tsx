@@ -145,15 +145,16 @@ export default function PriceTag() {
               const issues = problems[i] ?? []
               const bad = (field: TagField, label: string) => issues.some(t => t.startsWith(label) || t === MISSING[field])
               return (
-                <div ref={staff.form} onPasteCapture={e => staff.paste(it.key, e)} className="flex flex-col gap-4">
+                <div ref={staff.form} onPasteCapture={e => staff.paste(it.key, e)} className="@container flex flex-col gap-4">
                   <Labelled label="Наименование">
                     <TextArea value={it.name} onChange={v => update(it.key, { name: v })} placeholder="Наименование товара" invalid={bad('name', 'Наименование')} />
                   </Labelled>
                   <Labelled label="Артикул">
                     <TextInput value={it.code} onChange={v => update(it.key, { code: v })} placeholder="CODE-12345" invalid={bad('code', 'Артикул')} />
                   </Labelled>
-                  {/* On phones the caption and the price share a row, as the price card's model and trim, the caption cut to one line */}
-                  <div className="grid grid-cols-2 gap-x-3 gap-y-4 md:grid-cols-1">
+                  {/* The caption and the price share a row where the form is wide enough for the caption to show whole (a phone held
+                      sideways), one under the other otherwise; a longer caption is cut to one line */}
+                  <div className="grid gap-x-3 gap-y-4 @min-[400px]:grid-cols-2">
                   <Labelled label="Подпись">
                     <ComboField key={it.key} value={it.caption} onChange={v => update(it.key, { caption: v })} options={CAPTIONS} singleLine placeholder={DEFAULT_CAPTION} label="Подписи цены" truncate invalid={bad('caption', 'Подпись')} />
                   </Labelled>
