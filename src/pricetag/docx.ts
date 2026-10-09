@@ -24,8 +24,11 @@ const esc = (t: string) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replac
 /** A text with its line breaks, inside a run's <w:t> */
 const lines = (t: string) => t.trim().split('\n').map(l => esc(l.replace(/\s+/g, ' ').trim())).join('</w:t><w:br/><w:t xml:space="preserve">')
 
-/** A cell where a row of two has only one tag */
-const EMPTY_CELL = '<w:tc><w:tcPr><w:tcW w:w="5102" w:type="dxa"/></w:tcPr><w:p/></w:tc>'
+/**
+ * A cell where a row of two has only one tag: no lines on its own edges, so the table's frame doesn't run on past the
+ * tag; the line on its left is the tag's right edge
+ */
+const EMPTY_CELL = '<w:tc><w:tcPr><w:tcW w:w="5102" w:type="dxa"/><w:tcBorders><w:top w:val="nil"/><w:bottom w:val="nil"/><w:right w:val="nil"/></w:tcBorders></w:tcPr><w:p/></w:tc>'
 
 const LINE = 'w:val="single" w:sz="2" w:space="0" w:color="BFBFBF"'
 /** Lines round the table and between the columns; none between a tag's own rows (`UNDER` closes each tag) */
