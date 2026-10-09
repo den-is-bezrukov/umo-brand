@@ -53,13 +53,14 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
   const openMenu = () => { setMenu(true); goal('open_menu', { page: location.pathname }) }
   if (inSheet) return (
     <>
-      <div className="flex items-center justify-between gap-4">
+      {/* The menu icon before the name, as the guide's phone bar has it («☰ Содержание»; it stood across from the name for a while) */}
+      <div className="flex items-center gap-3">
+        <button type="button" aria-label="Конструкторы" title="Конструкторы" onClick={openMenu} className="relative flex size-5 shrink-0 cursor-pointer items-center justify-center after:absolute after:-inset-[10px] after:content-['']">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d={tocIcons.menu} stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" /></svg>
+        </button>
         <button type="button" onClick={openMenu} aria-haspopup="dialog" className="flex min-w-0 cursor-pointer items-center gap-2 outline-none">
           <h1 className="truncate text-[24px] font-medium leading-6 tracking-[-0.01em]">{GENERATORS.find(g => g.path === current)?.title}</h1>
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden className="shrink-0"><path d="M3 5L7 9L11 5" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" /></svg>
-        </button>
-        <button type="button" aria-label="Конструкторы" title="Конструкторы" onClick={openMenu} className="relative flex size-5 shrink-0 cursor-pointer items-center justify-center after:absolute after:-inset-[10px] after:content-['']">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d={tocIcons.menu} stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" /></svg>
         </button>
       </div>
       {menu && createPortal(<GeneratorMenu current={current} height={inSheet} onClose={() => setMenu(false)} />, document.body)}
