@@ -11,6 +11,9 @@ import { hasProfanity, PROFANITY } from '@/ui/profanity'
 // millimetre; the margins and the column are sevenths of the width, the logo as wide as the column. All in CoFo Sans
 // Medium. Figma's text boxes are «leading-none», so a baseline is 0.844 of the size under a box's top.
 
+/** The key of the fields as typed in the PDF's info (`writePdfData`) */
+export const SIGN_KEY = 'UMOHoursSign'
+
 /** The sign, mm */
 export const SIGN = { w: 480, h: 680 }
 

@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Font } from 'opentype.js'
 import { goal } from '@/ui/metrika'
-import { Field, TextInput, ComboField, GeneratorHeader, LinkButtons, DownloadBar, stepsLeft } from '@/ui/form'
+import { Field, TextInput, ComboField, GeneratorHeader, LinkButtons, DownloadBar, stepsLeft, flash } from '@/ui/form'
+import { isPdf, readPdfData } from '@/ui/pdfData'
 import { CaptionReset } from '@/ui/staff'
 import { linkParams, useLinkState } from '@/ui/share'
 import { loadFont, toD } from '@/livery/geometry'
 import { maskPhone, siteFor } from '@/card/card'
-import { SIGN, LOGO, buildSign, oneLine, timeText, type SignField, type Input } from '@/hours/sign'
+import { SIGN, SIGN_KEY, LOGO, buildSign, oneLine, timeText, type SignField, type Input } from '@/hours/sign'
 import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
 import { DEFAULT_HOURS_LINE, ADDRESSES, addressOf, hoursOf } from '@/data/hours'
 
@@ -197,7 +198,7 @@ export default function HoursSign() {
     setExporting(true)
     try {
       const { signPdf } = await import('@/hours/pdf')
-      const blob = await signPdf(sign)
+      const blob = await signPdf(sign, { from, to, dealer, address, phone, site: ownSite })
       const a = document.createElement('a')
       a.href = URL.createObjectURL(blob)
       a.download = 'UMO_hours-sign.pdf'
@@ -209,13 +210,28 @@ export default function HoursSign() {
     }
   }
 
+  /** Its own PDF dropped on the page opens what it was made from; any other file is said to have no sign */
+  const openFile = async (file: File) => {
+    const bytes = new Uint8Array(await file.arrayBuffer())
+    const d = isPdf(bytes) ? readPdfData(bytes, SIGN_KEY) as Partial<Record<'from' | 'to' | 'dealer' | 'address' | 'phone' | 'site', string | null>> | undefined : undefined
+    if (!d || typeof d !== 'object') { flash('В файле нет режимника'); return }
+    const text = (v: unknown) => typeof v === 'string' ? v : ''
+    setFrom(maskTime(text(d.from))); setTo(maskTime(text(d.to))); setDealer(text(d.dealer)); setAddress(text(d.address)); setPhone(text(d.phone))
+    setSite(typeof d.site === 'string' ? d.site : null)
+  }
+
   const fill = (field: SignField | 'fixed') =>
     field === 'fixed' ? '#000' : wrong.has(field) ? ALERT : field !== 'line' && empty.includes(field) ? GHOST : '#000'
   const byFill = new Map<string, string>()
   for (const p of sign?.parts ?? []) byFill.set(fill(p.field), (byFill.get(fill(p.field)) ?? '') + toD(p.cmds))
 
   return (
-    <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
+    // The whole page takes a dropped PDF, with nothing on it saying so, as the name tag's canvas
+    <div
+      onDragOver={e => e.preventDefault()}
+      onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) openFile(f) }}
+      className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row"
+    >
 
       <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
         <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">

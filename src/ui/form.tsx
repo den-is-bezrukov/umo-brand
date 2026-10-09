@@ -659,7 +659,8 @@ export const outlined = 'flex min-w-16 flex-1 items-center justify-center rounde
 
 /** A word the download bar's line says for a moment («Ссылка с настройками скопирована»), from a button under it */
 const flashes = new Set<(text: string) => void>()
-const flash = (text: string) => flashes.forEach(f => f(text))
+/** Says something for two seconds over the download, where the line saying what's in the way stands */
+export const flash = (text: string) => flashes.forEach(f => f(text))
 
 /**
  * «Поделиться» (Figma 4939:3762): sends the page address — the settings are in it — so a set-up card or livery goes as a
