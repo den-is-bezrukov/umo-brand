@@ -632,6 +632,8 @@ function LogoPlate({ w, h, logo, bg, dark, caption, phone43, className = '' }: {
  * top, each value at the bottom on one line with a short label (where it's used), as the download rows. Codes copy on a click. `dark` sets the text
  * white; a white tile gets a hairline edge, or it would vanish into the page.
  */
+const WHITE: [string, string][] = [['Экран', '#FFFFFF'], ['На светлом', 'без краски'], ['На тёмном', 'белая краска']]
+
 function Swatch({ color, name, values, dark, className = '' }: {
   color: string; name: string; values: [string, string][]; dark?: boolean; className?: string
 }) {
@@ -1419,11 +1421,12 @@ export default function Guide() {
                   <Swatch color="#000000" dark name="Чёрный" className="aspect-4/3" values={[
                     ['Экран', '#000000'], ['Плёнка, вывески', 'C60 M40 Y40 K100'], ['Текст', 'K100'],
                   ]} />
-                  <Swatch color="#ffffff" name="Белый" className="aspect-4/3" values={[
-                    ['Экран', '#FFFFFF'], ['На светлом', 'без краски'], ['На тёмном', 'белая краска'],
-                  ]} />
+                  <Swatch color="#ffffff" name="Белый" className="aspect-4/3 min-[520px]:max-sm:hidden" values={WHITE} />
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6">
+                  {/* From 520 px to sm white is one of the small tiles, two by two under the black; narrower, its rows
+                      («На тёмном белая краска») don't fit a small tile, and it stays large */}
+                  <Swatch color="#ffffff" name="Белый" className="aspect-4/3 hidden max-sm:p-4 min-[520px]:max-sm:flex" values={WHITE} />
                   <Swatch color="#f5f5f5" name="Фон" className="aspect-4/3 max-sm:p-4" values={[['Экран', '#F5F5F5'], ['Печать', 'K4']]} />
                   <Swatch color="#e6e6e6" name="Линии" className="aspect-4/3 max-sm:p-4" values={[['Экран', '#E6E6E6'], ['Печать', 'K10']]} />
                   <Swatch color="#808080" dark name="Подписи" className="aspect-4/3 max-sm:p-4" values={[['Экран', '#808080'], ['Печать', 'K50']]} />
