@@ -1254,7 +1254,7 @@ export default function Guide() {
                 <H2 id="misuse">Ограничения</H2>
                 <Text><p>Необходимо сохранять оригинальные пропорции и дизайн логотипа, чтобы избежать потери узнаваемости и искажений восприятия.</p></Text>
               </Head>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-6">
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 md:gap-6">
                 {MISUSE.map(([name, text]) => (
                   <Fig key={name} name={name} w={288} h={216} caption={text} cross alt={text} />
                 ))}
