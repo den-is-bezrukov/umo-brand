@@ -694,7 +694,8 @@ export function LinkButtons({ incomplete }: { incomplete?: boolean }) {
     // in (a trial): inside, the stroke left 38 px of white beside the solid 40 of the download, which read larger. Wide
     // screens keep the inside stroke
     <button type="button" onClick={share} title="Отправить ссылку на эти настройки" disabled={incomplete} className={`${outlined} w-full bg-white max-md:border-0 max-md:py-[10px] max-md:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)] max-md:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.4),inset_0_0_0_0.5px_rgba(0,0,0,0.4)] max-md:disabled:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)]`}>
-      {copied ? 'Ссылка с настройками скопирована' : 'Поделиться'}
+      {/* Regular, as a note rather than a button's name */}
+      {copied ? <span className="font-normal">Ссылка с настройками скопирована</span> : 'Поделиться'}
     </button>
   )
 }
