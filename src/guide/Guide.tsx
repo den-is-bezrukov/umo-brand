@@ -546,10 +546,12 @@ const isWidePhoto = (name: string, w: number, h: number) => w / h >= 2 && !img(n
  * cropped — it is fitted into the 4:3 frame whole, the frame filled with its colour. `href` makes the whole figure a download link, its caption led by ↓
  * like the rows of `Assets`.
  */
-function Fig({ name, w, h, alt = '', eager, caption, cross, href, focus = 50, flat, phone43, className = '' }: {
+function Fig({ name, w, h, alt = '', eager, caption, cross, href, focus = 50, flat, phone43, wideFromSm, className = '' }: {
   name: string; w: number; h: number; alt?: string; eager?: boolean; caption?: ReactNode; cross?: boolean; href?: string; focus?: number; flat?: string
   /** A scheme fitted whole into 4:3 on phones, on its grey, as the logo plate above it (the clear space) */
-  phone43?: boolean; className?: string
+  phone43?: boolean
+  /** A wide photo back to its own ratio from 640 px (`sm`), not from `md` (the models' key visuals in Фотография) */
+  wideFromSm?: boolean; className?: string
 }) {
   const wide = isWidePhoto(name, w, h) || !!phone43
   const figure = (
@@ -561,7 +563,7 @@ function Fig({ name, w, h, alt = '', eager, caption, cross, href, focus = 50, fl
         height={h * 2}
         loading={eager ? 'eager' : 'lazy'}
         decoding="async"
-        className={`block h-auto w-full bg-[#f5f5f5] ${wide ? `aspect-4/3 ${flat || phone43 ? 'object-contain' : 'object-cover'} md:aspect-(--ratio)` : ''}`}
+        className={`block h-auto w-full bg-[#f5f5f5] ${wide ? `aspect-4/3 ${flat || phone43 ? 'object-contain' : 'object-cover'} ${wideFromSm ? 'sm:aspect-(--ratio)' : 'md:aspect-(--ratio)'}` : ''}`}
         style={wide ? ({ '--ratio': `${w} / ${h}`, objectPosition: `${focus}% 50%`, ...(flat && { background: flat }) } as CSSProperties) : { aspectRatio: `${w} / ${h}` }}
       />
       {caption && <Caption cross={cross} download={!!href}>{caption}</Caption>}
@@ -1441,7 +1443,7 @@ export default function Guide() {
                 <Text><p>Снимки UMO Model 5 и пример их применения в рекламе</p></Text>
               </Head>
               <div className="flex flex-col gap-4 md:gap-6">
-                <Fig name="umo5-kv" focus={72} w={912} h={456} alt="UMO 5" />
+                <Fig name="umo5-kv" focus={72} w={912} h={456} wideFromSm alt="UMO 5" />
                 <div className="grid grid-cols-1 sm:grid-cols-[600fr_288fr] gap-4 md:gap-6">
                   <Poster bg="umo5-banner-bg" w={600} h={368} title="Новый UMO 5" subtitle={UMO5_SUBTITLE} alt="Горизонтальный баннер UMO 5" />
                   <Poster bg="umo5-square-bg" w={288} h={368} title="Новый UMO 5" subtitle={UMO5_SUBTITLE} center alt="Вертикальный баннер UMO 5" />
@@ -1461,7 +1463,7 @@ export default function Guide() {
                   </div>
                   <Poster bg="umo8-banner-bg" w={600} h={368} title="Новый UMO 8" subtitle={UMO8_SUBTITLE} alt="Горизонтальный баннер UMO 8" />
                 </div>
-                <Fig name="umo8-kv" w={912} h={456} alt="UMO 8" />
+                <Fig name="umo8-kv" w={912} h={456} wideFromSm alt="UMO 8" />
               </div>
             </Section>
           </Chapter>
