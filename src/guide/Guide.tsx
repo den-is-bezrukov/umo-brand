@@ -516,9 +516,10 @@ function textLength(node: ReactNode): number {
  * stand as a tall column. Texts paired side by side (Кобрендинг, Фотография) fill their grid cells instead —
  * their grid sets `*:max-w-none`.
  */
-function Text({ children }: { children: ReactNode }) {
+/** `wide`: 9 columns whatever the length (Контакты: three lines instead of four) */
+function Text({ children, wide }: { children: ReactNode; wide?: boolean }) {
   const n = textLength(children)
-  const width = n <= 150 ? 'max-w-[432px]' : n <= 300 ? 'max-w-[600px]' : 'max-w-[678px]'
+  const width = wide || n > 300 ? 'max-w-[678px]' : n <= 150 ? 'max-w-[432px]' : 'max-w-[600px]'
   return (
     <div className={`${width} flex flex-col gap-3 text-[18px] md:text-[20px] leading-[1.25] tracking-[-0.01em]`}>
       {children}
@@ -1522,7 +1523,7 @@ export default function Guide() {
           <div className="flex min-h-[calc(66.7svh+8px-68px+var(--spacing-chapter)-var(--spacing-section))] flex-col gap-section md:min-h-[calc(66.7svh+8px-92px+var(--spacing-chapter)-var(--spacing-section))] lg:min-h-[calc(66.7svh+8px-24px+var(--spacing-chapter)-var(--spacing-section))]">
             <Chapter id="contact" title="Контакты">
               <Section>
-                <Text>
+                <Text wide>
                   <p>Если ответа нет в стандартах или макет вывески, рекламы или другого носителя нужно согласовать, <a href="https://t.me/umo_support_bot" target="_blank" rel="noopener" className={TEXT_LINK}>напишите боту поддержки</a>. Приложите макет и расскажите, где он будет размещён, — разберёмся вместе.</p>
                   <p>Спасибо, что делаете UMO вместе с нами.</p>
                 </Text>
