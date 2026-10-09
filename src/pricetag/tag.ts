@@ -69,13 +69,13 @@ const tidy = (t: string) => t.replace(/[​-‍⁠﻿]/g, '').replace(/\r/g, '')
 const oneLine = (t: string) => tidy(t).join(' ')
 
 /**
- * The price field as it's typed: the roubles set in threes (up to nine digits), then the kopecks after a comma (a typed
+ * The price field as it's typed: the roubles set in threes (up to seven digits: 9 999 999,99 at most), then the kopecks after a comma (a typed
  * dot becomes one), two digits at most: «1290.5» → «1 290,5»
  */
 export function formatPrice(raw: string): string {
   const t = raw.replace(/[^\d.,]/g, '').replace(/\./g, ',')
   const [int, ...rest] = t.split(',')
-  const roubles = int.slice(0, 9).replace(/^0+(?=\d)/, '').replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+  const roubles = int.slice(0, 7).replace(/^0+(?=\d)/, '').replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
   return t.includes(',') ? `${roubles || '0'},${rest.join('').slice(0, 2)}` : roubles
 }
 
@@ -88,15 +88,19 @@ export function priceText(price: string): string {
 
 /** A price as the field holds it: roubles in threes, kopecks after a comma */
 export const PRICE_FORMAT = /^\d{1,3}( \d{3})*(,\d{0,2})?$/
+/** The largest price, in kopecks: 9 999 999,99 */
+export const MAX_KOPECKS = 999_999_999
 
 /**
  * A price however it came from a table: a number cell (30000, 1290.5) or text («30 000 ₽», «1 290,50 руб.»), rounded to
- * kopecks, which are left out when there are none; null if it isn't one
+ * kopecks, which are left out when there are none; null if it isn't one or is over 9 999 999,99 (left as it is, to be
+ * said wrong)
  */
 export function readPrice(raw: string): string | null {
   const t = raw.replace(/[\s ]/g, '').replace(/(₽|руб\.?|р\.?)$/i, '').replace(',', '.')
   if (!/^\d+(\.\d+)?$/.test(t)) return null
   const kopecks = Math.round(Number(t) * 100)
+  if (kopecks > MAX_KOPECKS) return null
   return priceText(formatPrice(`${Math.floor(kopecks / 100)},${String(kopecks % 100).padStart(2, '0')}`))
 }
 

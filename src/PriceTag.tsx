@@ -83,7 +83,10 @@ export default function PriceTag() {
       return PLACEHOLDER[field]!
     }
     const tag = buildTag(fonts, or('dealer', dealer), { name: or('name', it.name), code: it.code, caption: or('caption', it.caption), price: or('price', it.price) })
-    const wrongPrice = it.price.trim() && !PRICE_FORMAT.test(it.price.trim()) ? [{ field: 'price' as const, text: 'Цена: проверьте число' }] : []
+    const wrongPrice = it.price.trim() && !PRICE_FORMAT.test(it.price.trim())
+      // A table's price over the largest, else one that isn't a number
+      ? [{ field: 'price' as const, text: it.price.split(/[,.]/)[0].replace(/\D/g, '').length > 7 ? 'Цена больше 9 999 999,99' : 'Цена: проверьте число' }]
+      : []
     return { tag, ghost, issues: [...tag.issues.filter(i => !ghost.has(i.field)), ...wrongPrice] }
   }) : undefined, [fonts, items, dealer])
 
