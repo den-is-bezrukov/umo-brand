@@ -3,6 +3,7 @@ import { createPortal, flushSync } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import { goal } from './metrika'
 import { InFoot, InSheet } from './phone'
+import tocIcons from '@/icons/toc'
 
 // Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag, business card). Light UI per the Figma layout
 // (UMO | Evrone, nodes 4844:6865 and 4900:4588), matching the brand guide.
@@ -43,6 +44,16 @@ const crumb = 'underline decoration-transparent decoration-[0.35px] underline-of
 export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' | '/price-tag' | '/hours-sign' }) {
   // A pick in the list turns the ring as a click on it does
   const turnTo = useRef<((e: React.MouseEvent, path: string) => void) | null>(null)
+  // In the phone's sheet (Figma 5099:5952): no breadcrumbs, a menu icon at the ring's end instead, opening the
+  // breadcrumbs and every generator in a column as a screen of its own, as a combobox's suggestions
+  const inSheet = useContext(InSheet)
+  const [menu, setMenu] = useState(false)
+  if (inSheet) return (
+    <>
+      <GeneratorRing current={current} turnTo={turnTo} onMenu={() => setMenu(true)} />
+      {menu && createPortal(<GeneratorMenu current={current} onClose={() => setMenu(false)} />, document.body)}
+    </>
+  )
   return (
     <div className="flex flex-col gap-4">
       <nav className="flex items-center gap-2 text-[14px] font-medium leading-5 tracking-normal [font-feature-settings:'case'_1]">
@@ -126,7 +137,38 @@ const RING_TURN_MS = 333
 /** How long the line stays turned once left, before coming back round to the current one */
 const RING_BACK_MS = 250
 
-function GeneratorRing({ current, turnTo }: { current: string; turnTo: React.MutableRefObject<((e: React.MouseEvent, path: string) => void) | null> }) {
+/** The generators' menu on a phone (Figma 5099:5825): the breadcrumbs with «Свернуть» across from them, then every generator, 24 px Medium 20 px apart, the current one black */
+function GeneratorMenu({ current, onClose }: { current: string; onClose: () => void }) {
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', key)
+    return () => document.removeEventListener('keydown', key)
+  }, [onClose])
+  const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
+  return (
+    <div role="dialog" aria-label="Конструкторы" className="fixed inset-0 z-50 overflow-y-auto bg-white p-6 font-sans text-black">
+      <div className="flex flex-col gap-5">
+        <div className="flex items-center justify-between">
+          <nav className="flex items-center gap-2 text-[14px] font-medium leading-5 [font-feature-settings:'case'_1]">
+            <Link to="/" className={crumb}>Бренд UMO</Link>
+            <span aria-hidden>·</span>
+            <Link to="/#materials" className={crumb}>Носители</Link>
+          </nav>
+          <button type="button" aria-label="Свернуть" title="Свернуть" onClick={onClose} className="relative flex size-5 cursor-pointer items-center justify-center after:absolute after:-inset-[10px] after:content-['']">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d={tocIcons.close} stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" /></svg>
+          </button>
+        </div>
+        <nav aria-label="Конструкторы" className="flex flex-col items-start gap-5">
+          {GENERATORS.map(g => g.path === current
+            ? <span key={g.path} aria-current="page" className={name}>{g.title}</span>
+            : <Link key={g.path} to={g.path} onClick={onClose} className={`${name} text-[#bfbfbf] outline-none active:text-[#808080]`}>{g.title}</Link>)}
+        </nav>
+      </div>
+    </div>
+  )
+}
+
+function GeneratorRing({ current, turnTo, onMenu }: { current: string; turnTo: React.MutableRefObject<((e: React.MouseEvent, path: string) => void) | null>; /** The phone's menu icon at the line's end */ onMenu?: () => void }) {
   const navigate = useNavigate()
   const at = GENERATORS.findIndex(g => g.path === current)
   const ring = [...GENERATORS.slice(at), ...GENERATORS.slice(0, at)]
@@ -299,7 +341,24 @@ function GeneratorRing({ current, turnTo }: { current: string; turnTo: React.Mut
       {/* The shades over the panel's edges (Figma 5062:671, 5061:539): two layers each, as set there, the left one solid for its
           outer quarter; 8 px over and under the 24 px line, which the names' descenders (р, у) run below */}
       <div aria-hidden className="pointer-events-none absolute -inset-y-2 left-0 w-6" style={{ background: 'linear-gradient(90deg, #ffffff80 25%, #fff0), linear-gradient(90deg, #fff 25%, #fff0)' }} />
-      <div aria-hidden className="pointer-events-none absolute -inset-y-2 right-0 w-12" style={{ background: 'linear-gradient(90deg, #fff0, #ffffff80), linear-gradient(90deg, #fff0, #fff)' }} />
+      {onMenu ? (
+        <>
+          {/* With the menu icon the right shade is 68 px, solid from its middle, the icon over it 24 px from the edge (Figma 5099:5904) */}
+          <div aria-hidden className="pointer-events-none absolute -inset-y-2 right-0 w-[68px]" style={{ background: 'linear-gradient(90deg, #fff0, #ffffff80 50%), linear-gradient(90deg, #fff0, #fff 50%)' }} />
+          <button
+            type="button"
+            aria-label="Конструкторы"
+            title="Конструкторы"
+            onPointerDown={e => e.stopPropagation()}
+            onClick={onMenu}
+            className="absolute top-[2px] right-6 flex size-5 cursor-pointer items-center justify-center after:absolute after:-inset-[10px] after:content-['']"
+          >
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d={tocIcons.menu} stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" /></svg>
+          </button>
+        </>
+      ) : (
+        <div aria-hidden className="pointer-events-none absolute -inset-y-2 right-0 w-12" style={{ background: 'linear-gradient(90deg, #fff0, #ffffff80), linear-gradient(90deg, #fff0, #fff)' }} />
+      )}
     </div>
   )
 }
