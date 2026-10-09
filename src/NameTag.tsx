@@ -8,6 +8,7 @@ import { readXlsx, parsePasted } from '@/nametag/table'
 import { POSITIONS } from '@/data/positions'
 import TagArt from '@/nametag/TagArt'
 import { isPdf, pdfInZip, readPdfData } from '@/ui/pdfData'
+import { MobileEditor, usePhone } from '@/ui/mobile'
 
 // Name tag generator (Figma: UMO | Evrone, node 4021:2878): a dealership's staff list in, one zip out with the tags
 // in outlines, a page each, and the maker's requirements. Two modes: «Вручную», a list typed on the page, and «Из
@@ -51,6 +52,7 @@ export default function NameTag() {
 
   const [fonts, setFonts] = useState<Fonts>()
   const [exporting, setExporting] = useState(false)
+  const phone = usePhone()
   useEffect(() => { loadFonts().then(setFonts) }, [])
 
   useEffect(() => {
@@ -102,78 +104,7 @@ export default function NameTag() {
     }
   }
 
-  return (
-    <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
-
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
-        <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
-          <GeneratorHeader current="/name-tag" />
-
-          <Labelled label="Данные">
-            <Segments>
-              <SegBtn active={mode === 'manual'} onClick={() => setMode('manual')}>Вручную</SegBtn>
-              <SegBtn active={mode === 'table'} onClick={() => setMode('table')}>Из таблицы</SegBtn>
-            </Segments>
-          </Labelled>
-
-          {mode === 'manual' && current && (
-            <div className="flex flex-col gap-6 tracking-normal">
-              {current && (() => {
-                const p = current
-                const i = people.indexOf(p)
-                const issues = problems[i] ?? []
-                return (
-                  <div ref={staff.form} onPasteCapture={e => staff.paste(p.key, e)} className="flex flex-col gap-2">
-                    <div className="flex flex-col gap-4">
-                      <Labelled label="Имя">
-                        <TextArea value={p.name} onChange={v => update(p.key, { name: v })} {...fullNameField(p, s => update(p.key, s))} placeholder="Имя" invalid={issues.some(t => t.startsWith('Имя') || t === NO_NAME)} />
-                      </Labelled>
-                      <Labelled label="Фамилия">
-                        <TextArea value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={issues.some(t => t.startsWith('Фамилия') || t === NO_SURNAME)} />
-                      </Labelled>
-                      <Labelled label="Должность">
-                        <PositionPicker
-                          key={p.key}
-                          value={p.position}
-                          onChange={v => update(p.key, { position: v })}
-                          invalid={issues.some(t => t.startsWith('Должность') || t === NO_POSITION)}
-                        />
-                      </Labelled>
-                    </div>
-                  </div>
-                )
-              })()}
-            </div>
-          )}
-
-          {mode === 'table' && <TableSource staff={staff} template={TEMPLATE} />}
-        </div>
-
-        {/* On phones pinned to the bottom of the screen, as on every generator; 40 px off the form on wide screens */}
-        <DownloadBar
-          format="ZIP"
-          onClick={handleExport}
-          busy={exporting}
-          disabled={!ok}
-          note={!items.length ? 'Нужно загрузить таблицу' : (failing.length ? problemOf(staff.inWork(failing).index) : undefined)}
-          count={stepsLeft(items.reduce((n, _, i) => n + missing[i].length + (tags?.[i]?.issues.length ?? 0), 0))}
-          onNote={items.length ? () => staff.nextOf(failing) : pickTable}
-        />
-      </aside>
-
-      {/* The whole preview takes a dropped table in either mode, saying so only in the table mode, where until a file is
-          loaded it's all an upload */}
-      <main
-        {...staff.dropTarget}
-        onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure, [data-add]')) setSelected(null) }}
-        className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16
-          ${mode === 'table' && staff.file && staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
-      >
-        {mode === 'table' && !staff.file ? (
-          <UploadArea staff={staff} />
-        ) : (
-        <div className="m-auto grid w-full grid-cols-1 gap-8">
-          {items.map((it, i) => {
+  const renderItem = (it: typeof items[number], i: number) => {
             const tag = tags?.[i]
             const edited = editing?.key === it.key ? editing.field : null
             const bad = problems[i].length > 0
@@ -183,7 +114,7 @@ export default function NameTag() {
             // In the manual list a tag is picked for editing; in the table one, clicking a tag goes to edit it there.
             // The tags but the selected one are dimmed; with none selected (in the table always) all are clear
             const active = mode === 'manual' && key === current?.key
-            const dimmed = mode === 'manual' && !!current && !active
+            const dimmed = mode === 'manual' && !!current && !active && !phone
             return (
               <Fragment key={it.key}>
               <Removed staff={staff} at={i} />
@@ -230,13 +161,99 @@ export default function NameTag() {
                 )}
                 </ItemFrame>
                 {bad && (
-                  <p className={`text-[13px] leading-5 text-[#e30] ${BESIDE}`}>{alertLine(problems[i])}</p>
+                  <p className={`text-[13px] leading-5 text-[#e30] ${phone ? '' : BESIDE}`}>{alertLine(problems[i])}</p>
                 )}
                 </div>
               </figure>
               </Fragment>
             )
-          })}
+          }
+
+  const sidebar = (
+    <>
+        <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
+          <GeneratorHeader current="/name-tag" />
+
+          <Labelled label="Данные">
+            <Segments>
+              <SegBtn active={mode === 'manual'} onClick={() => setMode('manual')}>Вручную</SegBtn>
+              <SegBtn active={mode === 'table'} onClick={() => setMode('table')}>Из таблицы</SegBtn>
+            </Segments>
+          </Labelled>
+
+          {mode === 'manual' && current && (
+            <div className="flex flex-col gap-6 tracking-normal">
+              {current && (() => {
+                const p = current
+                const i = people.indexOf(p)
+                const issues = problems[i] ?? []
+                return (
+                  <div ref={staff.form} onPasteCapture={e => staff.paste(p.key, e)} className="flex flex-col gap-2">
+                    <div className="flex flex-col gap-4">
+                      <Labelled label="Имя">
+                        <TextArea value={p.name} onChange={v => update(p.key, { name: v })} {...fullNameField(p, s => update(p.key, s))} placeholder="Имя" invalid={issues.some(t => t.startsWith('Имя') || t === NO_NAME)} />
+                      </Labelled>
+                      <Labelled label="Фамилия">
+                        <TextArea value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={issues.some(t => t.startsWith('Фамилия') || t === NO_SURNAME)} />
+                      </Labelled>
+                      <Labelled label="Должность">
+                        <PositionPicker
+                          key={p.key}
+                          value={p.position}
+                          onChange={v => update(p.key, { position: v })}
+                          invalid={issues.some(t => t.startsWith('Должность') || t === NO_POSITION)}
+                        />
+                      </Labelled>
+                    </div>
+                  </div>
+                )
+              })()}
+            </div>
+          )}
+
+          {mode === 'table' && <TableSource staff={staff} template={TEMPLATE} />}
+        </div>
+
+        {/* On phones pinned to the bottom of the screen, as on every generator; 40 px off the form on wide screens */}
+    </>
+  )
+
+  const download = (
+        <DownloadBar
+          format="ZIP"
+          onClick={handleExport}
+          busy={exporting}
+          disabled={!ok}
+          note={!items.length ? 'Нужно загрузить таблицу' : (failing.length ? problemOf(staff.inWork(failing).index) : undefined)}
+          count={stepsLeft(items.reduce((n, _, i) => n + missing[i].length + (tags?.[i]?.issues.length ?? 0), 0))}
+          onNote={items.length ? () => staff.nextOf(failing) : pickTable}
+        />
+  )
+
+  // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
+  if (phone) return <MobileEditor slides={mode === 'table' && !staff.file ? [{ key: 'upload', node: <UploadArea staff={staff} /> }] : items.map((it, i) => ({ key: it.key, item: it.key, ratio: TAG.h / TAG.w, node: renderItem(it, i) }))} sidebar={sidebar} download={download} staff={staff} />
+
+  return (
+    <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
+
+      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+        {sidebar}
+        {download}
+      </aside>
+
+      {/* The whole preview takes a dropped table in either mode, saying so only in the table mode, where until a file is
+          loaded it's all an upload */}
+      <main
+        {...staff.dropTarget}
+        onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure, [data-add]')) setSelected(null) }}
+        className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16
+          ${mode === 'table' && staff.file && staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
+      >
+        {mode === 'table' && !staff.file ? (
+          <UploadArea staff={staff} />
+        ) : (
+        <div className="m-auto grid w-full grid-cols-1 gap-8">
+          {items.map(renderItem)}
           <Removed staff={staff} at={items.length} />
           {/* «Добавить» as the next tag in the grid: a dashed plate of the tag's shape; the manual list only */}
           {mode === 'manual' && <AddTile onClick={() => staff.add()} />}

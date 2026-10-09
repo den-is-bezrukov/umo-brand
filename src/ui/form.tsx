@@ -1,6 +1,7 @@
-import { useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { goal } from './metrika'
+import { InFoot } from './phone'
 
 // Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag, business card). Light UI per the Figma layout
 // (UMO | Evrone, nodes 4844:6865 and 4900:4588), matching the brand guide.
@@ -750,6 +751,25 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
     const t = setTimeout(() => setSaid(''), 2000)
     return () => clearTimeout(t)
   }, [said])
+  // In the phone layout's sheet one button, as in Figma 5098:5806: while the download is off, what's in the way and
+  // how much is left, leading there (the sheet opening first); else the download
+  const foot = useContext(InFoot)
+  if (foot) {
+    const lead = disabled && !!note && !said
+    return (
+      <button
+        type="button"
+        onClick={lead && onNote ? () => { foot(); setTimeout(onNote, 350) } : onClick}
+        disabled={busy || (disabled && !(lead && onNote))}
+        className={`flex w-full min-w-0 cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] text-[14px] leading-5 outline-none disabled:cursor-default
+          ${lead || said ? 'font-normal' : 'font-medium'} ${disabled && !(lead && onNote) && !busy ? 'text-[#999]' : 'text-white'}`}
+      >
+        {said || (lead
+          ? <>{note}{count && <span className="text-white/50">{count}</span>}</>
+          : busy ? 'Генерация…' : `Скачать ${format}`)}
+      </button>
+    )
+  }
   return (
     // 40 px off the form, as far as one field from the next
     <div className="flex flex-col md:sticky md:bottom-0 md:z-10 md:mt-8 md:bg-white md:p-6 md:pt-0">

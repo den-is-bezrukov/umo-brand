@@ -11,6 +11,7 @@ import { POSITIONS } from '@/data/positions'
 import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
 import dealers from '@/data/dealers.json'
 import { isPdf, readPdfData } from '@/ui/pdfData'
+import { MobileEditor, usePhone } from '@/ui/mobile'
 
 // Business card generator (Figma: UMO | Evrone, section 4021:2849): the dealership set once, its staff typed on the page
 // or loaded from the template, one PDF out with the face and a back per person. The staff list works as the name
@@ -105,6 +106,7 @@ export default function BusinessCard() {
 
   const [fonts, setFonts] = useState<Fonts>()
   const [exporting, setExporting] = useState(false)
+  const phone = usePhone()
   useEffect(() => { loadFonts().then(setFonts) }, [])
 
   useEffect(() => {
@@ -206,10 +208,43 @@ export default function BusinessCard() {
   /** A card's first fault: a wrong value said as it is, else its first empty field by name (the dealership's are filled) */
   const problemOf = (i: number) => cards?.[i]?.issues.find(x => !x.field || PERSON_FIELDS.includes(x.field))?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!)) : undefined)
 
-  return (
-    <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
+  const renderItem = (p: typeof items[number], i: number) => {
+            const card = cards?.[i]
+            const active = mode === 'manual' && p.key === current?.key
+            const dimmed = mode === 'manual' && !!current && !active && !phone
+            const wrong = new Set<CardField>([...dealerWrong, ...(card?.issues.map(x => x.field).filter((f): f is CardField => !!f) ?? [])])
+            const paths = (only: (f: CardField) => boolean) => card
+              ? (Object.entries(card.back.fields) as [CardField, Cmd[]][]).filter(([f]) => only(f)).flatMap(([, c]) => c)
+              : []
+            return (
+              <Fragment key={p.key}>
+              <Removed staff={staff} at={i} />
+              <figure ref={staff.figureRef(p.key)} onClick={() => staff.pick(p.key)} className="group/row flex cursor-pointer justify-center">
+                <div className="flex w-full max-w-[480px] flex-col gap-3">
+                  <ItemFrame staff={staff} item={p} n={i + 1}>
+                  <button
+                    type="button"
+                    aria-pressed={mode === 'manual' ? active : undefined}
+                    // Edged as every generator's items (`ITEM_EDGE`)
+                    className={`block w-full cursor-pointer ${ITEM_EDGE} transition-opacity duration-150
+                      ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
+                  >
+                    <CardArt
+                      text={card ? toD([...BACK_LOGO, ...card.back.qr, ...paths(f => !card.ghost.has(f) && !wrong.has(f))]) : undefined}
+                      alert={card ? toD(paths(f => !card.ghost.has(f) && wrong.has(f))) : undefined}
+                      ghost={card ? toD([...card.ghostQr, ...paths(f => card.ghost.has(f))]) : undefined}
+                    />
+                  </button>
+                  </ItemFrame>
+                  {problems[i].length > 0 && <p className={`text-[13px] leading-5 text-[#e30] ${phone ? '' : BESIDE}`}>{alertLine(problems[i])}</p>}
+                </div>
+              </figure>
+              </Fragment>
+            )
+          }
 
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+  const sidebar = (
+    <>
         <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
           <GeneratorHeader current="/business-card" />
 
@@ -337,6 +372,10 @@ export default function BusinessCard() {
         </div>
 
         {/* The dealership first, as every card needs it; then the cards in work, as the name tag counts them */}
+    </>
+  )
+
+  const download = (
         <DownloadBar
           format="PDF"
           onClick={handleExport}
@@ -346,6 +385,17 @@ export default function BusinessCard() {
           count={stepsLeft(new Set([...dealerMissing, ...dealerWrong]).size + items.reduce((n, _, i) => n + new Set<string | null>([...missing[i], ...(cards?.[i]?.issues.filter(x => !x.field || PERSON_FIELDS.includes(x.field)).map(x => x.field) ?? [])]).size, 0))}
           onNote={dealerIssues.length ? toDealer : items.length ? () => staff.nextOf(failing) : pickTable}
         />
+  )
+
+  // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
+  if (phone) return <MobileEditor slides={mode === 'table' && !staff.file ? [{ key: 'upload', node: <UploadArea staff={staff} /> }] : [{ key: 'face', ratio: CARD.h / CARD.w, node: <div className="outline-1 outline-black/10"><CardArt text={face} /></div> }, ...items.map((p, i) => ({ key: p.key, item: p.key, ratio: CARD.h / CARD.w, node: renderItem(p, i) }))]} sidebar={sidebar} download={download} staff={staff} />
+
+  return (
+    <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
+
+      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+        {sidebar}
+        {download}
       </aside>
 
       <main
@@ -364,40 +414,7 @@ export default function BusinessCard() {
               <div className="outline-1 outline-black/10"><CardArt text={face} /></div>
             </div>
           </div>
-          {items.map((p, i) => {
-            const card = cards?.[i]
-            const active = mode === 'manual' && p.key === current?.key
-            const dimmed = mode === 'manual' && !!current && !active
-            const wrong = new Set<CardField>([...dealerWrong, ...(card?.issues.map(x => x.field).filter((f): f is CardField => !!f) ?? [])])
-            const paths = (only: (f: CardField) => boolean) => card
-              ? (Object.entries(card.back.fields) as [CardField, Cmd[]][]).filter(([f]) => only(f)).flatMap(([, c]) => c)
-              : []
-            return (
-              <Fragment key={p.key}>
-              <Removed staff={staff} at={i} />
-              <figure ref={staff.figureRef(p.key)} onClick={() => staff.pick(p.key)} className="group/row flex cursor-pointer justify-center">
-                <div className="flex w-full max-w-[480px] flex-col gap-3">
-                  <ItemFrame staff={staff} item={p} n={i + 1}>
-                  <button
-                    type="button"
-                    aria-pressed={mode === 'manual' ? active : undefined}
-                    // Edged as every generator's items (`ITEM_EDGE`)
-                    className={`block w-full cursor-pointer ${ITEM_EDGE} transition-opacity duration-150
-                      ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
-                  >
-                    <CardArt
-                      text={card ? toD([...BACK_LOGO, ...card.back.qr, ...paths(f => !card.ghost.has(f) && !wrong.has(f))]) : undefined}
-                      alert={card ? toD(paths(f => !card.ghost.has(f) && wrong.has(f))) : undefined}
-                      ghost={card ? toD([...card.ghostQr, ...paths(f => card.ghost.has(f))]) : undefined}
-                    />
-                  </button>
-                  </ItemFrame>
-                  {problems[i].length > 0 && <p className={`text-[13px] leading-5 text-[#e30] ${BESIDE}`}>{alertLine(problems[i])}</p>}
-                </div>
-              </figure>
-              </Fragment>
-            )
-          })}
+          {items.map(renderItem)}
           <Removed staff={staff} at={items.length} />
           {mode === 'manual' && <AddTile onClick={() => staff.add()} />}
         </div>

@@ -8,6 +8,7 @@ import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
 import { DEFAULT_TAGLINE, TAGLINES } from '@/data/taglines'
 import { LIVERIES, SURFACES, withoutQr, smallQr, type Model } from '@/livery/layout'
 import { loadFont, buildSheet, specMarks, toD, mm, type Sheet, type Line } from '@/livery/geometry'
+import { MobileEditor, usePhone } from '@/ui/mobile'
 
 // Dealer livery generator: lettering for both sides and the rear window of a dealer's demo car (Figma: UMO | Evrone,
 // node 4021:2908). The preview puts the sheets on photos of the car, with the door seam and handle marked, so a
@@ -144,6 +145,7 @@ export default function Livery() {
   })
   const [font, setFont] = useState<Font>()
   const [exporting, setExporting] = useState(false)
+  const phone = usePhone()
 
   useEffect(() => { loadFont().then(setFont) }, [])
 
@@ -226,11 +228,8 @@ export default function Livery() {
     }
   }
 
-  return (
-    <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
-
-      {/* Sidebar per Figma 4900:4588, as the price card's */}
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+  const sidebar = (
+    <>
         <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
           <GeneratorHeader current="/livery" />
 
@@ -293,6 +292,10 @@ export default function Livery() {
         </div>
 
         {/* Over it while it's off, the first fault, which the preview also says under its sheet */}
+    </>
+  )
+
+  const download = (
         <DownloadBar
           format="ZIP"
           onClick={handleExport}
@@ -302,6 +305,18 @@ export default function Livery() {
           onNote={on.qr && !urlValid ? () => urlRef.current?.querySelector('input')?.focus() : undefined}
           links={<LinkButtons incomplete={!ok || (on.qr && !urlValid)} />}
         />
+  )
+
+  // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
+  if (phone) return <MobileEditor slides={sheets.map((s, i) => ({ key: s.surface.id, ratio: s.surface.photo.view[3] / s.surface.photo.view[2], node: i < 2 ? <SheetPreview sheet={s} seams={seams} dims={dims} onReset={sidesAtDefaults ? undefined : resetSides} resetLabel="Вернуть борта по умолчанию" /> : <SheetPreview sheet={s} seams={seams} dims={dims} onReset={rearAtDefaults ? undefined : resetRear} resetLabel="Вернуть стекло по умолчанию" /> }))} sidebar={sidebar} download={download} />
+
+  return (
+    <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
+
+      {/* Sidebar per Figma 4900:4588, as the price card's */}
+      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+        {sidebar}
+        {download}
       </aside>
 
       <main className="flex-1 bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">

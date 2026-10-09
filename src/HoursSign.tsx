@@ -10,6 +10,7 @@ import { maskPhone, siteFor } from '@/card/card'
 import { SIGN, SIGN_KEY, LOGO, buildSign, oneLine, timeText, type SignField, type Input } from '@/hours/sign'
 import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
 import { DEFAULT_HOURS_LINE, ADDRESSES, addressOf, hoursOf } from '@/data/hours'
+import { MobileEditor, usePhone } from '@/ui/mobile'
 
 // The dealership's hours sign (Figma: UMO | Evrone, node 3819:4211): a 480×680 mm plate with the logo, the hours, a
 // line under them and the dealership at the bottom, as a PDF in outlines for the maker. A dealer picked from the list
@@ -162,6 +163,7 @@ export default function HoursSign() {
 
   const [font, setFont] = useState<Font>()
   const [exporting, setExporting] = useState(false)
+  const onPhone = usePhone()
   useEffect(() => { loadFont().then(setFont) }, [])
 
   useEffect(() => {
@@ -258,15 +260,28 @@ export default function HoursSign() {
   const byFill = new Map<string, string>()
   for (const p of sign?.parts ?? []) byFill.set(fill(p.field), (byFill.get(fill(p.field)) ?? '') + toD(p.cmds))
 
-  return (
-    // The whole page takes a dropped PDF, with nothing on it saying so, as the name tag's canvas
-    <div
-      onDragOver={e => e.preventDefault()}
-      onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) openFile(f) }}
-      className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row"
-    >
+  const preview = (
+    <>
+        <figure className="flex w-full flex-col items-center gap-2">
+          {/* As tall as the canvas allows on wide screens, as wide as it on phones */}
+          <svg viewBox={`0 0 ${SIGN.w} ${SIGN.h}`} className="block h-auto w-full max-w-[480px] bg-white md:h-[calc(100dvh-128px-30px)] md:w-auto md:max-w-full" role="img" aria-label="Режимник">
+            <path d={toD(LOGO)} fill="#000" fillRule="evenodd" />
+            {[...byFill].map(([color, d]) => <path key={color} d={d} fill={color} />)}
+          </svg>
+          <figcaption className="mt-0.5 text-center text-[14px] leading-5 text-[#808080]">
+            <span className="relative">
+              Табличка, {SIGN.w}&nbsp;×&nbsp;{SIGN.h}&nbsp;мм
+              {!blank && <CaptionReset onClick={reset} label="Вернуть табличку по умолчанию" />}
+            </span>
+          </figcaption>
+          {/* A warning in red, as the generators' faults under their pictures, but the download stays on, as a short day can be meant (a holiday) */}
+          {short && <p className="text-center text-[14px] leading-5 text-[#e30]">День короче 8&nbsp;часов&nbsp;— проверьте время</p>}
+        </figure>
+    </>
+  )
 
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+  const sidebar = (
+    <>
         <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
           <GeneratorHeader current="/hours-sign" />
 
@@ -311,7 +326,10 @@ export default function HoursSign() {
             </Field>
           </div>
         </div>
+    </>
+  )
 
+  const download = (
         <DownloadBar
           format="PDF"
           onClick={handleExport}
@@ -322,24 +340,26 @@ export default function HoursSign() {
           onNote={toField}
           links={!blank && <LinkButtons incomplete={!ok} />}
         />
+  )
+
+  // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
+  if (onPhone) return <MobileEditor slides={[{ key: 'sign', ratio: SIGN.h / SIGN.w, node: preview }]} sidebar={sidebar} download={download} />
+
+  return (
+    // The whole page takes a dropped PDF, with nothing on it saying so, as the name tag's canvas
+    <div
+      onDragOver={e => e.preventDefault()}
+      onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) openFile(f) }}
+      className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row"
+    >
+
+      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+        {sidebar}
+        {download}
       </aside>
 
       <main className="flex flex-1 items-center justify-center bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
-        <figure className="flex w-full flex-col items-center gap-2">
-          {/* As tall as the canvas allows on wide screens, as wide as it on phones */}
-          <svg viewBox={`0 0 ${SIGN.w} ${SIGN.h}`} className="block h-auto w-full max-w-[480px] bg-white md:h-[calc(100dvh-128px-30px)] md:w-auto md:max-w-full" role="img" aria-label="Режимник">
-            <path d={toD(LOGO)} fill="#000" fillRule="evenodd" />
-            {[...byFill].map(([color, d]) => <path key={color} d={d} fill={color} />)}
-          </svg>
-          <figcaption className="mt-0.5 text-center text-[14px] leading-5 text-[#808080]">
-            <span className="relative">
-              Табличка, {SIGN.w}&nbsp;×&nbsp;{SIGN.h}&nbsp;мм
-              {!blank && <CaptionReset onClick={reset} label="Вернуть табличку по умолчанию" />}
-            </span>
-          </figcaption>
-          {/* A warning in red, as the generators' faults under their pictures, but the download stays on, as a short day can be meant (a holiday) */}
-          {short && <p className="text-center text-[14px] leading-5 text-[#e30]">День короче 8&nbsp;часов&nbsp;— проверьте время</p>}
-        </figure>
+        {preview}
       </main>
 
     </div>

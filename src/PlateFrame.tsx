@@ -8,6 +8,7 @@ import { loadFont, toD } from '@/livery/geometry'
 import { STRIP, BASELINE, SIZE, TRACKING, buildStrip, lineStart, type Align } from '@/plate/frame'
 import PlateArt from '@/plate/PlateArt'
 import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
+import { MobileEditor, usePhone } from '@/ui/mobile'
 
 // Number plate frame generator (Figma: UMO | Evrone, node 4970:2419): the dealer's line printed under the plate, as a
 // 501×21 mm PDF with the text in outlines, for the frame maker. The line is the dealer's marketing name as umo.auto
@@ -87,6 +88,7 @@ export default function PlateFrame() {
 
   const [font, setFont] = useState<Font>()
   const [exporting, setExporting] = useState(false)
+  const phone = usePhone()
   useEffect(() => { loadFont().then(setFont) }, [])
 
   useEffect(() => {
@@ -135,49 +137,8 @@ export default function PlateFrame() {
     }
   }
 
-  return (
-    <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
-
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
-        <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
-          <GeneratorHeader current="/plate-frame" />
-
-          <div ref={form} className="flex flex-col gap-4 tracking-normal">
-            {custom ? (
-              <Field label="Текст">
-                {/* Case-sensitive forms as in the print, so a bar stands with the capitals here too */}
-                <TextInput value={text} onChange={setText} placeholder={PLACEHOLDER_TEXT} invalid={wrong} className="[font-feature-settings:'case'_1]" />
-              </Field>
-            ) : (
-              <Field label="Дилер">
-                <ComboField value={name} onChange={setName} options={NAMES} placeholder={PLACEHOLDER_NAME} label="Дилеры" singleLine invalid={wrong} />
-              </Field>
-            )}
-
-            <Field label="Расположение">
-              <Segments>
-                <SegBtn active={align === 'left'} onClick={() => setAlign('left')}>Слева</SegBtn>
-                <SegBtn active={align === 'center'} onClick={() => setAlign('center')}>По центру</SegBtn>
-              </Segments>
-            </Field>
-          </div>
-
-        </div>
-
-        {/* Over it while it's off, the fault, which the preview also says under the strip */}
-        <DownloadBar
-          format="PDF"
-          onClick={handleExport}
-          busy={exporting}
-          disabled={!ok}
-          note={noName ? (custom ? 'Нужно добавить текст' : 'Нужно выбрать дилера') : strip?.issues[0]}
-          onNote={toField}
-          // Nothing to copy or reset until there's a dealer or the line is centred
-          links={!blank && <LinkButtons incomplete={!ok} />}
-        />
-      </aside>
-
-      <main className="flex flex-1 items-center bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
+  const preview = (
+    <>
         <figure className="group/sheet mx-auto flex w-full max-w-[1200px] flex-col gap-2">
           {/* A double click on the frame edits the text right on it, as the name tags do */}
           <div className="@container relative cursor-text" onDoubleClick={() => setEditing(true)}>
@@ -210,6 +171,66 @@ export default function PlateFrame() {
             </ul>
           )}
         </figure>
+    </>
+  )
+
+  const sidebar = (
+    <>
+        <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
+          <GeneratorHeader current="/plate-frame" />
+
+          <div ref={form} className="flex flex-col gap-4 tracking-normal">
+            {custom ? (
+              <Field label="Текст">
+                {/* Case-sensitive forms as in the print, so a bar stands with the capitals here too */}
+                <TextInput value={text} onChange={setText} placeholder={PLACEHOLDER_TEXT} invalid={wrong} className="[font-feature-settings:'case'_1]" />
+              </Field>
+            ) : (
+              <Field label="Дилер">
+                <ComboField value={name} onChange={setName} options={NAMES} placeholder={PLACEHOLDER_NAME} label="Дилеры" singleLine invalid={wrong} />
+              </Field>
+            )}
+
+            <Field label="Расположение">
+              <Segments>
+                <SegBtn active={align === 'left'} onClick={() => setAlign('left')}>Слева</SegBtn>
+                <SegBtn active={align === 'center'} onClick={() => setAlign('center')}>По центру</SegBtn>
+              </Segments>
+            </Field>
+          </div>
+
+        </div>
+
+        {/* Over it while it's off, the fault, which the preview also says under the strip */}
+    </>
+  )
+
+  const download = (
+        <DownloadBar
+          format="PDF"
+          onClick={handleExport}
+          busy={exporting}
+          disabled={!ok}
+          note={noName ? (custom ? 'Нужно добавить текст' : 'Нужно выбрать дилера') : strip?.issues[0]}
+          onNote={toField}
+          // Nothing to copy or reset until there's a dealer or the line is centred
+          links={!blank && <LinkButtons incomplete={!ok} />}
+        />
+  )
+
+  // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
+  if (phone) return <MobileEditor slides={[{ key: 'frame', node: preview }]} sidebar={sidebar} download={download} />
+
+  return (
+    <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
+
+      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+        {sidebar}
+        {download}
+      </aside>
+
+      <main className="flex flex-1 items-center bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
+        {preview}
       </main>
 
     </div>

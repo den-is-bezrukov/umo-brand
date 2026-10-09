@@ -9,6 +9,7 @@ import { TAG, BAND, BAND_ART, DEFAULT_CAPTION, buildTag, formatPrice, readPrice,
 import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
 import { readTagsFile } from '@/pricetag/read'
 import { plural } from '@/ui/staff'
+import { MobileEditor, usePhone } from '@/ui/mobile'
 
 // Price tag generator (Figma: UMO | Evrone, node 4202:4368): price tags for the small goods at a dealership, any
 // employee printing them on an office printer and cutting them out with scissors. The dealer is set once, the goods typed
@@ -65,6 +66,7 @@ export default function PriceTag() {
 
   const [fonts, setFonts] = useState<Fonts>()
   const [exporting, setExporting] = useState(false)
+  const phone = usePhone()
   useEffect(() => { loadFonts().then(setFonts) }, [])
 
   useEffect(() => {
@@ -140,10 +142,44 @@ export default function PriceTag() {
   /** A tag's first fault: a wrong value said as it is, else its first empty field by name */
   const problemOf = (i: number) => ownIssues(i)[0]?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!)) : undefined)
 
-  return (
-    <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
+  const renderItem = (it: typeof items[number], i: number) => {
+            const t = tags?.[i]
+            const active = mode === 'manual' && it.key === current?.key
+            const dimmed = mode === 'manual' && !!current && !active && !phone
+            const wrong = new Set<TagField>([...(dealerIssues.length && !dealerMissing ? ['dealer' as const] : []), ...(t?.issues.map(x => x.field) ?? [])])
+            const paths = (only: (f: TagField) => boolean) => t
+              ? (Object.entries(t.tag.fields) as [TagField, Cmd[]][]).filter(([f]) => only(f)).flatMap(([, c]) => c)
+              : []
+            const band = (f: TagField) => f === 'dealer'
+            return (
+              <Fragment key={it.key}>
+              <Removed staff={staff} at={i} />
+              <figure ref={staff.figureRef(it.key)} onClick={() => staff.pick(it.key)} className="group/row flex cursor-pointer justify-center">
+                <div className="flex w-full max-w-[480px] flex-col gap-3">
+                  <ItemFrame staff={staff} item={it} n={i + 1}>
+                  <button
+                    type="button"
+                    aria-pressed={mode === 'manual' ? active : undefined}
+                    className={`block w-full cursor-pointer ${ITEM_EDGE} transition-opacity duration-150
+                      ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
+                  >
+                    <TagArt
+                      white={t ? toD([...BAND_ART, ...paths(f => band(f) && !t.ghost.has(f) && !wrong.has(f))]) : toD(BAND_ART)}
+                      text={t ? toD(paths(f => !band(f) && !t.ghost.has(f) && !wrong.has(f))) : undefined}
+                      alert={t ? toD(paths(f => !t.ghost.has(f) && wrong.has(f))) : undefined}
+                      ghost={t ? toD(paths(f => t.ghost.has(f))) : undefined}
+                    />
+                  </button>
+                  </ItemFrame>
+                  {problems[i].length > 0 && <p className={`text-[13px] leading-5 text-[#e30] ${phone ? '' : BESIDE}`}>{alertLine(problems[i])}</p>}
+                </div>
+              </figure>
+              </Fragment>
+            )
+          }
 
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+  const sidebar = (
+    <>
         <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
           <GeneratorHeader current="/price-tag" />
 
@@ -201,6 +237,10 @@ export default function PriceTag() {
         </div>
 
         {/* The dealer first, as every tag needs it; then the tags in work, as the name tag counts them */}
+    </>
+  )
+
+  const download = (
         <DownloadBar
           format="PDF"
           onClick={handleExport}
@@ -217,6 +257,17 @@ export default function PriceTag() {
           //   </button>
           // }
         />
+  )
+
+  // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
+  if (phone) return <MobileEditor slides={mode === 'table' && !staff.file ? [{ key: 'upload', node: <UploadArea staff={staff} /> }] : items.map((it, i) => ({ key: it.key, item: it.key, ratio: TAG.h / TAG.w, node: renderItem(it, i) }))} sidebar={sidebar} download={download} staff={staff} />
+
+  return (
+    <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
+
+      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+        {sidebar}
+        {download}
       </aside>
 
       <main
@@ -229,41 +280,7 @@ export default function PriceTag() {
           <UploadArea staff={staff} />
         ) : (
         <div className="m-auto grid w-full grid-cols-1 gap-8">
-          {items.map((it, i) => {
-            const t = tags?.[i]
-            const active = mode === 'manual' && it.key === current?.key
-            const dimmed = mode === 'manual' && !!current && !active
-            const wrong = new Set<TagField>([...(dealerIssues.length && !dealerMissing ? ['dealer' as const] : []), ...(t?.issues.map(x => x.field) ?? [])])
-            const paths = (only: (f: TagField) => boolean) => t
-              ? (Object.entries(t.tag.fields) as [TagField, Cmd[]][]).filter(([f]) => only(f)).flatMap(([, c]) => c)
-              : []
-            const band = (f: TagField) => f === 'dealer'
-            return (
-              <Fragment key={it.key}>
-              <Removed staff={staff} at={i} />
-              <figure ref={staff.figureRef(it.key)} onClick={() => staff.pick(it.key)} className="group/row flex cursor-pointer justify-center">
-                <div className="flex w-full max-w-[480px] flex-col gap-3">
-                  <ItemFrame staff={staff} item={it} n={i + 1}>
-                  <button
-                    type="button"
-                    aria-pressed={mode === 'manual' ? active : undefined}
-                    className={`block w-full cursor-pointer ${ITEM_EDGE} transition-opacity duration-150
-                      ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
-                  >
-                    <TagArt
-                      white={t ? toD([...BAND_ART, ...paths(f => band(f) && !t.ghost.has(f) && !wrong.has(f))]) : toD(BAND_ART)}
-                      text={t ? toD(paths(f => !band(f) && !t.ghost.has(f) && !wrong.has(f))) : undefined}
-                      alert={t ? toD(paths(f => !t.ghost.has(f) && wrong.has(f))) : undefined}
-                      ghost={t ? toD(paths(f => t.ghost.has(f))) : undefined}
-                    />
-                  </button>
-                  </ItemFrame>
-                  {problems[i].length > 0 && <p className={`text-[13px] leading-5 text-[#e30] ${BESIDE}`}>{alertLine(problems[i])}</p>}
-                </div>
-              </figure>
-              </Fragment>
-            )
-          })}
+          {items.map(renderItem)}
           <Removed staff={staff} at={items.length} />
           {mode === 'manual' && <AddTile onClick={() => staff.add()} />}
         </div>

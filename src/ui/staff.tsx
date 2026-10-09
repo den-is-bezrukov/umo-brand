@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
+import { InSlide } from '@/ui/phone'
 import { outlined } from '@/ui/form'
 import { splitFullName } from '@/nametag/table'
 
@@ -450,6 +451,8 @@ function Action({ label, hidden, onClick, children }: { label: string; hidden?: 
  * there's no room beside the item, they stand in a row under it. An action not offered leaves no gap: the next moves up.
  */
 export function ItemFrame<P extends object>({ staff, item, n, children }: { staff: Staff<P>; item: Row<P>; n: number; children: React.ReactNode }) {
+  // On a phone's slide the item stands alone: its number is over the strip, its actions under it
+  if (useContext(InSlide)) return <div className="@container relative">{children}</div>
   const active = staff.mode === 'manual' && item.key === staff.selected
   const hover = '[@media(hover:hover)]:hidden [@media(hover:hover)]:group-hover/row:flex [@media(hover:hover)]:group-focus-within/row:flex'
   return (
@@ -486,6 +489,8 @@ export function ItemFrame<P extends object>({ staff, item, n, children }: { staf
  * the four seconds, as Telegram's undo, so it shows how long is left (none with reduced motion)
  */
 export function Removed<P extends object>({ staff, at }: { staff: Staff<P>; at: number }) {
+  // On a phone it stands in the actions' row, not in the strip
+  if (useContext(InSlide)) return null
   if (staff.removed?.index !== at || staff.mode !== 'manual') return null
   return (
     <div className="flex h-10 items-center justify-center gap-2 text-[14px] leading-5 text-[#808080]">

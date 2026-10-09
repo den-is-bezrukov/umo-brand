@@ -1,10 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { ResetIcon, DuplicateIcon, CrossIcon, Removed, type Staff, type Row } from '@/ui/staff'
+import { ResetIcon, DuplicateIcon, CrossIcon, Removed, type Staff } from '@/ui/staff'
+import { InSlide, InFoot } from '@/ui/phone'
 
-// A trial of the generators' phone layout (Figma 5098:5806, C and D): the canvas fills the screen above a sheet, the
-// items swiped through one at a time, «‹ n ›» over them and their actions under them; the sheet holds the header, the
-// form and the download, and swiped down it leaves only the download, the item large. Price card only for now.
-// In the link: `arrows=0` hides the arrows (swiping alone), `bare` hides the download too when the sheet is down (B)
+// A trial of the generators' phone layout (Figma 5098:5806, C and D): the canvas fills the screen above a sheet, what's
+// made swiped through one at a time, «‹ n ›» over it and an item's actions under it; the sheet holds the sidebar (header
+// and form) with the download at its foot. A tap on the picture folds the sheet to the download alone, the picture
+// large, and another brings it back; a swipe up on the sheet opens the form over the whole screen, a swipe down puts it
+// back. In the link: `arrows=0` hides the arrows (swiping alone), `bare` hides the download too while the sheet is folded
 
 /** Whether the screen is a phone's, as the generators' `md` breakpoint */
 export function usePhone() {
@@ -21,8 +23,10 @@ export function usePhone() {
 
 const EASE = 'cubic-bezier(0.67, 0, 0.33, 1)'
 const TURN_MS = 333
-/** How far a swipe goes before it opens or closes the sheet */
+/** How far a swipe goes before it opens or closes the form */
 const SWIPE = 40
+/** Under a fitted item: room for its caption or the line saying what's wrong with it */
+const UNDER = 56
 
 const arrowsOn = () => new URLSearchParams(location.search).get('arrows') !== '0'
 const bareMode = () => new URLSearchParams(location.search).has('bare')
@@ -44,25 +48,38 @@ function Btn({ label, onClick, hidden, children }: { label: string; onClick: () 
   )
 }
 
-export function MobileEditor<P extends object>({ staff, current, card, ratio, header, form, button }: {
-  staff: Staff<P>
-  current: Row<P>
-  /** An item drawn into a box of this width */
-  card: (item: Row<P>, width: number) => React.ReactNode
-  /** The item's height to its width */
-  ratio: number
-  header: React.ReactNode
-  form: React.ReactNode
-  /** The sheet's foot: the download, or what's in the way */
-  button: (openSheet: () => void) => React.ReactNode
+export interface Slide {
+  key: string | number
+  /** The picture, or a function drawing it at a width (the price card's, sized in pixels) */
+  node: React.ReactNode | ((width: number) => React.ReactNode)
+  /** The picture's height to its width, to fit it whole; without one it takes the width and scrolls if taller */
+  ratio?: number
+  /** The list item it is, for the actions and the selection */
+  item?: number
+}
+
+type Sheet = 'preview' | 'half' | 'full'
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export function MobileEditor({ slides, staff, sidebar, download }: {
+  slides: Slide[]
+  /** A list's pages: the selected item shown, a swipe selecting the next */
+  staff?: Staff<any> // eslint-disable-line @typescript-eslint/no-explicit-any
+  sidebar: React.ReactNode
+  download: React.ReactNode
 }) {
-  const { items } = staff
-  const index = Math.max(0, items.findIndex(it => it.key === current.key))
-  const [open, setOpen] = useState(true)
+  const [sheet, setSheet] = useState<Sheet>('half')
   const [arrows] = useState(arrowsOn)
   const [bare] = useState(bareMode)
 
-  // The strip's box, to fit an item into it whole
+  // The slide in view: the selected item's on a list's page
+  const selectedAt = staff ? slides.findIndex(s => s.item === staff.selected) : -1
+  const [at, setAt] = useState(Math.max(0, selectedAt))
+  const shown = Math.min(at, slides.length - 1)
+  const item = slides[shown]?.item
+  const current = staff?.items.find((it: { key: number }) => it.key === item)
+
+  // The strip's box, to fit a picture into it whole
   const strip = useRef<HTMLDivElement>(null)
   const [box, setBox] = useState({ w: 0, h: 0 })
   useEffect(() => {
@@ -72,35 +89,51 @@ export function MobileEditor<P extends object>({ staff, current, card, ratio, he
     o.observe(el)
     return () => o.disconnect()
   }, [])
-  const cardW = Math.max(0, Math.floor(Math.min(box.w - 32, (box.h - 16) / ratio)))
 
-  // Swiping through the items: the one that comes to rest is selected; a selection made elsewhere (a copy, a removal)
-  // brings its item into view
+  // Swiping: the slide that comes to rest is shown and, an item, selected; an item selected otherwise (a copy, a
+  // removal, the line over the download) comes into view
   const settle = useRef(0)
   const onScroll = () => {
     clearTimeout(settle.current)
     settle.current = window.setTimeout(() => {
       const el = strip.current
       if (!el || !el.clientWidth) return
-      const at = Math.round(el.scrollLeft / el.clientWidth)
-      const it = items[at]
-      if (it && it.key !== current.key) staff.pick(it.key)
+      const i = Math.round(el.scrollLeft / el.clientWidth)
+      setAt(i)
+      const key = slides[i]?.item
+      if (staff && key !== undefined && key !== staff.selected) staff.pick(key)
     }, 80)
   }
-  useEffect(() => {
+  const scrollTo = (i: number, smooth = true) => {
     const el = strip.current
     if (!el || !el.clientWidth) return
-    const want = index * el.clientWidth
-    if (Math.abs(el.scrollLeft - want) > 2) el.scrollTo({ left: want, behavior: 'smooth' })
-  }, [index, items.length]) // eslint-disable-line react-hooks/exhaustive-deps
-  // A turned or resized screen keeps the item in place at once
+    const want = i * el.clientWidth
+    if (Math.abs(el.scrollLeft - want) > 2) el.scrollTo({ left: want, behavior: smooth ? 'smooth' : 'auto' })
+  }
   useEffect(() => {
-    const el = strip.current
-    if (el?.clientWidth) el.scrollTo({ left: index * el.clientWidth })
-  }, [box.w]) // eslint-disable-line react-hooks/exhaustive-deps
-  const go = (d: number) => { const it = items[index + d]; if (it) staff.pick(it.key) }
+    if (selectedAt >= 0 && selectedAt !== at) { setAt(selectedAt); scrollTo(selectedAt) }
+  }, [selectedAt, slides.length]) // eslint-disable-line react-hooks/exhaustive-deps
+  // A turned or resized screen keeps the slide in place at once
+  useEffect(() => scrollTo(shown, false), [box.w]) // eslint-disable-line react-hooks/exhaustive-deps
+  const go = (d: number) => {
+    const i = Math.min(Math.max(shown + d, 0), slides.length - 1)
+    setAt(i)
+    scrollTo(i)
+    const key = slides[i]?.item
+    if (staff && key !== undefined) staff.pick(key)
+  }
 
-  // The sheet goes down with a swipe down on it (once its form is scrolled to the top) and up with a swipe up
+  // A tap on the picture folds or unfolds the sheet; a double tap is left to the picture (text edited in place), and a
+  // tap on a control in it to the control
+  const tap = useRef(0)
+  const onTap = (e: React.MouseEvent) => {
+    if ((e.target as Element).closest('button[aria-label], input, textarea, a')) return
+    clearTimeout(tap.current)
+    if (e.detail > 1) return
+    tap.current = window.setTimeout(() => setSheet(s => (s === 'preview' ? 'half' : 'preview')), 250)
+  }
+
+  // A swipe up on the sheet opens the form over the screen, a swipe down (with the form scrolled to its top) puts it back
   const touch = useRef<{ y: number; top: boolean } | null>(null)
   const scroller = useRef<HTMLDivElement>(null)
   const onTouchStart = (e: React.TouchEvent) => { touch.current = { y: e.touches[0].clientY, top: (scroller.current?.scrollTop ?? 0) <= 0 } }
@@ -109,71 +142,72 @@ export function MobileEditor<P extends object>({ staff, current, card, ratio, he
     touch.current = null
     if (!t) return
     const dy = e.changedTouches[0].clientY - t.y
-    if (open && dy > SWIPE && t.top) setOpen(false)
-    else if (!open && dy < -SWIPE) setOpen(true)
+    if (sheet === 'half' && dy < -SWIPE && t.top) setSheet('full')
+    else if (sheet === 'full' && dy > SWIPE && t.top) setSheet('half')
   }
-  const openSheet = () => setOpen(true)
 
-  const many = items.length > 1
-  const sheetH = open ? 'min(52dvh, 420px)' : bare ? '0px' : '72px'
+  const many = slides.length > 1
+  const height = { preview: bare ? '0px' : '72px', half: 'min(52dvh, 420px)', full: '100dvh' }[sheet]
+
+  const fit = (ratio?: number) => ratio
+    ? Math.max(0, Math.floor(Math.min(box.w - 32, (box.h - UNDER) / ratio)))
+    : Math.max(0, box.w - 32)
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#f5f5f5] font-sans text-black">
       {/* ‹ n › */}
       <div className="flex h-12 shrink-0 items-center justify-between px-2 pt-2">
-        <Btn label="Предыдущая" hidden={!arrows || !many || index === 0} onClick={() => go(-1)}>
+        <Btn label="Назад" hidden={!arrows || !many || shown === 0} onClick={() => go(-1)}>
           <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M10 3L5 8L10 13" /></svg>
         </Btn>
-        <span className={`text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1] ${many ? '' : 'invisible'}`}>{index + 1}</span>
-        <Btn label="Следующая" hidden={!arrows || !many || index === items.length - 1} onClick={() => go(1)}>
+        <span className={`text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1] ${many ? '' : 'invisible'}`}>{shown + 1}</span>
+        <Btn label="Вперёд" hidden={!arrows || !many || shown === slides.length - 1} onClick={() => go(1)}>
           <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M6 3L11 8L6 13" /></svg>
         </Btn>
       </div>
 
-      {/* The items, one to a screen; a tap on one opens or closes the sheet */}
-      <div
-        ref={strip}
-        onScroll={onScroll}
-        onTouchStart={!open ? onTouchStart : undefined}
-        onTouchEnd={!open ? onTouchEnd : undefined}
-        className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
-      >
-        {items.map(it => (
-          <div key={it.key} className="flex h-full w-full shrink-0 snap-center items-center justify-center">
-            {cardW > 0 && (
-              <div onClick={() => setOpen(o => !o)} className="cursor-pointer">{card(it, cardW)}</div>
-            )}
-          </div>
-        ))}
-      </div>
+      {/* The pictures, one to a screen */}
+      <InSlide.Provider value={true}>
+        <div
+          ref={strip}
+          onScroll={onScroll}
+          onClick={onTap}
+          className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+        >
+          {slides.map(s => (
+            <div key={s.key} className="flex h-full w-full shrink-0 snap-center overflow-y-auto [scrollbar-width:none]">
+              {box.w > 0 && <div className="m-auto py-2" style={{ width: fit(s.ratio) }}>{typeof s.node === 'function' ? s.node(fit(s.ratio)) : s.node}</div>}
+            </div>
+          ))}
+        </div>
+      </InSlide.Provider>
 
-      {/* The item's actions: reset, copy, remove (the cross furthest), or «Удалено · Вернуть» for a moment */}
+      {/* An item's actions: remove, copy, reset; or «Удалено · Вернуть» for a moment */}
       <div className="flex h-12 shrink-0 items-center justify-between px-2 pb-2">
-        {staff.removed ? (
+        {staff?.removed ? (
           <div className="flex-1"><Removed staff={staff} at={staff.removed.index} /></div>
-        ) : (
+        ) : staff && current ? (
           <>
-            <Btn label="Сбросить" hidden={staff.isBlank(current)} onClick={() => staff.clear(current.key)}><ResetIcon /></Btn>
+            <Btn label="Удалить" hidden={staff.people.length < 2} onClick={() => staff.remove(current.key)}><CrossIcon /></Btn>
             <Btn label="Дублировать" onClick={() => staff.duplicate(current.key)}><DuplicateIcon /></Btn>
-            <Btn label="Удалить" hidden={!many} onClick={() => staff.remove(current.key)}><CrossIcon /></Btn>
+            <Btn label="Сбросить" hidden={staff.isBlank(current)} onClick={() => staff.clear(current.key)}><ResetIcon /></Btn>
           </>
-        )}
+        ) : null}
       </div>
 
-      {/* The sheet: header and form scrolling, the download at its foot */}
+      {/* The sheet: the sidebar scrolling, the download at its foot; folded, the download alone, over the canvas */}
       <div
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
-        className="flex shrink-0 flex-col overflow-hidden rounded-t-[16px] bg-white"
-        style={{ height: sheetH, transition: `height ${TURN_MS}ms ${EASE}` }}
+        className={`flex shrink-0 flex-col overflow-hidden transition-[height,border-radius,background-color] ${sheet === 'preview' ? 'bg-transparent' : 'bg-white'} ${sheet === 'half' ? 'rounded-t-[16px]' : ''}`}
+        style={{ height, transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: EASE }}
       >
-        <div ref={scroller} className={`min-h-0 flex-1 overflow-y-auto ${open ? '' : 'pointer-events-none'}`}>
-          <div className="flex flex-col gap-6 p-6 pb-4 tracking-[-0.01em]">
-            {header}
-            {form}
-          </div>
+        <div ref={scroller} className={`min-h-0 flex-1 overflow-y-auto ${sheet === 'preview' ? 'pointer-events-none' : ''}`}>
+          {sidebar}
         </div>
-        <div className="shrink-0 px-6 pt-3 pb-5 tracking-normal">{button(openSheet)}</div>
+        <div className="shrink-0 px-6 pt-3 pb-5 tracking-normal">
+          <InFoot.Provider value={() => setSheet(s => (s === 'preview' ? 'half' : s))}>{download}</InFoot.Provider>
+        </div>
       </div>
     </div>
   )
