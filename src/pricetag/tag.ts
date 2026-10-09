@@ -35,9 +35,9 @@ const NAME = { top: BAND + 4, size: 4.5, width: TAG.w - 2 * SIDE, lines: 4 }
 const SMALL = 3
 const TRACK = 0.01 * SMALL
 const CODE_TOP = BAND + 4 + 22
-const CAPTION_TOP = BAND + 4 + 30.5
+const CAPTION_TOP = BAND + 30.5
 /** The price, Medium 90 px, its box standing on the body's bottom padding; lining tabular figures */
-const PRICE = { top: BAND + 4 + 35, size: 9 }
+const PRICE = { top: BAND + 35, size: 9 }
 
 export const DEFAULT_CAPTION = 'Цена за штуку с НДС'
 
