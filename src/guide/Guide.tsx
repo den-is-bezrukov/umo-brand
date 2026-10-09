@@ -130,7 +130,9 @@ const contains = (item: NavItem, id: string): boolean => item.id === id || !!ite
 
 /**
  * Ids of the lowest section heading that has scrolled past the upper third of the viewport — several when headings
- * stand side by side on one line (Видение / Миссия), so every one you can see next to it is lit.
+ * stand side by side on one line (Видение / Миссия), so every one you can see next to it is lit. Over the last screen
+ * of scroll the line slides down to two thirds, so the last chapters, which the page's end keeps from rising far, get
+ * lit by the time their heading is about mid-screen (Контакты reached the third only in the last 8 px on a phone).
  */
 function useActiveSection() {
   const [active, setActive] = useState<string[]>([])
@@ -138,7 +140,9 @@ function useActiveSection() {
     let frame = 0
     const update = () => {
       frame = 0
-      const line = window.innerHeight / 3
+      const h = window.innerHeight
+      const left = document.documentElement.scrollHeight - h - window.scrollY
+      const line = h / 3 + (h / 3) * (1 - Math.min(1, Math.max(0, left) / h))
       let current: string[] = []
       let currentTop = -Infinity
       for (const id of ALL_IDS) {
