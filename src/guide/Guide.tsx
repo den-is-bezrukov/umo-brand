@@ -1287,7 +1287,7 @@ export default function Guide() {
                 </div>
               </Head>
               <Previews className="flex flex-col gap-4 md:gap-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                <div className="grid grid-cols-1 min-[520px]:grid-cols-2 gap-4 md:gap-6">
                   <PreviewLink asset={{ file: 'umo-icon-white.zip' }} label="Скачать иконку, чёрный логотип на белом">
                     <Fig name="icon-userpic" w={444} h={333} caption="Юзерпик аккаунта соцсетей" />
                   </PreviewLink>
