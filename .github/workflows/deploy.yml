@@ -50,7 +50,7 @@ jobs:
       # are carried over from the live site, listed in css-archive.txt with the last time each was current
       - name: Keep the last 15 days' stylesheets for Webvisor
         run: |
-          curl -sf https://umo.autos/css-archive.txt -o old.txt || touch old.txt
+          curl -sf --max-time 10 https://umo.autos/css-archive.txt -o old.txt || touch old.txt
           now=$(date +%s)
           : > dist/css-archive.txt
           for f in dist/assets/*.css; do echo "$(basename "$f") $now" >> dist/css-archive.txt; done
@@ -58,7 +58,8 @@ jobs:
             [[ "$name" =~ ^[A-Za-z0-9_-]+\.css$ && "$ts" =~ ^[0-9]+$ ]] || continue
             [ -e "dist/assets/$name" ] && continue
             [ $((now - ts)) -gt $((15 * 86400)) ] && continue
-            curl -sf "https://umo.autos/assets/$name" -o "dist/assets/$name" && echo "$name $ts" >> dist/css-archive.txt
+            # 10 s at most per file, so a slow site never holds the deploy; a file cut off is dropped, not kept half
+            if curl -sf --max-time 10 "https://umo.autos/assets/$name" -o "dist/assets/$name"; then echo "$name $ts" >> dist/css-archive.txt; else rm -f "dist/assets/$name"; fi
           done < old.txt
           echo "Stylesheets kept: $(wc -l < dist/css-archive.txt)"
       - uses: actions/upload-pages-artifact@v3
