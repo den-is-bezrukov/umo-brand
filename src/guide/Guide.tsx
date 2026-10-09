@@ -905,7 +905,10 @@ function Examples() {
         <Bubble title="Тихий">Не создает шума<br />на дорогах</Bubble>
       </div>
       <div className="flex flex-col gap-6">
-        <Bubble title={<>Электромобиль с <span className="font-['Alice_Okniks'] [font-feature-settings:'ss02']">@</span> Алисой и сервисами Яндекса. Запас хода до 420 км, разгон до 100 км/ч за 8,7 секунды</>} />
+        {/* On phones, in one column, after the runner: so the three bubbles before it don't run into a fourth */}
+        <div className="max-md:order-1">
+          <Bubble title={<>Электромобиль с <span className="font-['Alice_Okniks'] [font-feature-settings:'ss02']">@</span> Алисой и сервисами Яндекса. Запас хода до 420 км, разгон до 100 км/ч за 8,7 секунды</>} />
+        </div>
         <PhotoCard name="voice-runner" grow focus={20} title="Практичный и инновационный UMO поможет сделать город комфортнее" />
       </div>
       <div className="flex flex-col gap-6">
