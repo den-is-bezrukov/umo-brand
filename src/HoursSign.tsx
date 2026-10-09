@@ -6,7 +6,7 @@ import { CaptionReset } from '@/ui/staff'
 import { linkParams, useLinkState } from '@/ui/share'
 import { loadFont, toD } from '@/livery/geometry'
 import { maskPhone, siteFor } from '@/card/card'
-import { SIGN, LOGO, buildSign, oneLine, type SignField, type Input } from '@/hours/sign'
+import { SIGN, LOGO, buildSign, oneLine, timeText, type SignField, type Input } from '@/hours/sign'
 import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
 import { DEFAULT_HOURS_LINE, HOURS_LINES, ADDRESSES, addressOf, hoursOf } from '@/data/hours'
 
@@ -26,6 +26,68 @@ const MISSING: Record<Exclude<SignField, 'line'>, string> = {
   from: 'Указать время', to: 'Указать время', dealer: 'Выбрать дилера', address: 'Указать адрес', phone: 'Указать телефон', site: 'Указать сайт',
 }
 const ORDER = ['from', 'to', 'dealer', 'address', 'phone', 'site'] as const
+
+/** The hours step by half an hour, from 0:00 to 24:00 */
+const STEP = 30
+const DAY = 24 * 60
+const minutesOf = (t: string) => { const [h, m] = t.split(':'); return +h * 60 + +m }
+const timeOf = (min: number) => `${Math.floor(min / 60)}:${String(min % 60).padStart(2, '0')}`
+/** A typed time to the nearest half hour, «9:57» → «10:00»; as typed if it isn't a time, to be said wrong */
+const rounded = (raw: string) => {
+  const t = timeText(raw)
+  return t ? timeOf(Math.min(DAY, Math.round(minutesOf(t) / STEP) * STEP)) : raw
+}
+
+/** A time typed as digits with a colon or a dot: two digits and two after it, four in a row without one */
+const typedTime = (v: string) => {
+  const t = v.replace(/\./g, ':').replace(/[^\d:]/g, '')
+  const [h, ...m] = t.split(':')
+  return t.includes(':') ? `${h.slice(0, 2)}:${m.join('').slice(0, 2)}` : t.slice(0, 4)
+}
+
+function StepIcon({ plus }: { plus?: boolean }) {
+  return (
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" aria-hidden>
+      <path d="M3 8h10" />
+      {plus && <path d="M8 3v10" />}
+    </svg>
+  )
+}
+
+/**
+ * A time with steppers either side, half an hour a click (or ↑ ↓), from what's there or the placeholder; typed by
+ * hand too, and rounded to the half hour when the field is left, so 9:57 can't stand on the sign
+ */
+function TimeField({ value, onChange, placeholder, invalid, label }: { value: string; onChange: (v: string) => void; placeholder: string; invalid?: boolean; label: string }) {
+  const step = (dir: 1 | -1) => {
+    const t = timeText(value) ?? placeholder
+    const min = minutesOf(t)
+    // From a time off the grid, the first step lands on it
+    const next = dir > 0 ? Math.floor(min / STEP) * STEP + STEP : Math.ceil(min / STEP) * STEP - STEP
+    onChange(timeOf(Math.max(0, Math.min(DAY, next))))
+  }
+  const button = 'flex w-9 shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] outline-none hover:text-black focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-black/40'
+  return (
+    <div className="flex h-10 rounded-[8px] bg-[#f5f5f5] focus-within:ring-1 focus-within:ring-inset focus-within:ring-black/40">
+      <button type="button" tabIndex={-1} onClick={() => step(-1)} aria-label={`${label}: на полчаса раньше`} className={button}><StepIcon /></button>
+      <input
+        value={value}
+        onChange={e => onChange(typedTime(e.target.value))}
+        onBlur={() => onChange(rounded(value))}
+        onKeyDown={e => {
+          if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); step(e.key === 'ArrowUp' ? 1 : -1) }
+          if (e.key === 'Enter') onChange(rounded(value))
+        }}
+        placeholder={placeholder}
+        inputMode="decimal"
+        aria-label={label}
+        aria-invalid={invalid || undefined}
+        className="w-full min-w-0 bg-transparent text-center text-[14px] leading-5 text-black outline-none placeholder:text-[#999]"
+      />
+      <button type="button" tabIndex={-1} onClick={() => step(1)} aria-label={`${label}: на полчаса позже`} className={button}><StepIcon plus /></button>
+    </div>
+  )
+}
 
 const GHOST = '#a6a6a6'
 const ALERT = '#e30'
@@ -98,9 +160,6 @@ export default function HoursSign() {
     setFrom(''); setTo(''); setLine(DEFAULT_HOURS_LINE); setDealer(''); setAddress(''); setPhone(''); setSite(null)
   }
 
-  /** Times are typed as digits with a colon or a dot */
-  const time = (v: string) => v.replace(/\./g, ':').replace(/[^\d:]/g, '').slice(0, 5)
-
   const handleExport = async () => {
     if (!sign || !ok) return
     setExporting(true)
@@ -135,8 +194,8 @@ export default function HoursSign() {
           <div ref={form} className="flex flex-col gap-4 tracking-normal">
             <Field label="Часы работы">
               <div className="grid grid-cols-2 gap-2 [font-variant-numeric:lining-nums_tabular-nums]">
-                <div data-field="from"><TextInput value={from} onChange={v => setFrom(time(v))} placeholder={PLACEHOLDER.from} inputMode="decimal" invalid={wrong.has('from')} /></div>
-                <div data-field="to"><TextInput value={to} onChange={v => setTo(time(v))} placeholder={PLACEHOLDER.to} inputMode="decimal" invalid={wrong.has('to')} /></div>
+                <div data-field="from"><TimeField value={from} onChange={setFrom} placeholder={PLACEHOLDER.from} label="Открытие" invalid={wrong.has('from')} /></div>
+                <div data-field="to"><TimeField value={to} onChange={setTo} placeholder={PLACEHOLDER.to} label="Закрытие" invalid={wrong.has('to')} /></div>
               </div>
             </Field>
             <Field label="Подпись">
