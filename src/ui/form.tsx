@@ -44,10 +44,10 @@ const crumb = 'underline decoration-transparent decoration-[0.35px] underline-of
 export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' | '/price-tag' | '/hours-sign' }) {
   // A pick in the list turns the ring as a click on it does
   const turnTo = useRef<((e: React.MouseEvent, path: string) => void) | null>(null)
-  // In the phone's sheet (Figma 5099:5952): no breadcrumbs and no ring, the current generator's name with a chevron and
-  // the menu icon across from it, both opening the breadcrumbs and every generator in a sheet of their own. The ring
-  // showed a name and a half there, and turned with the same sideways swipe as the pictures over the sheet; the chevron
-  // says the name switches, as the ring's grey names did (the ring was there with the icon at its end for a while)
+  // In the phone's sheet (Figma 5099:5952): no breadcrumbs and no ring, the menu icon and the current generator's name,
+  // both opening the breadcrumbs and every generator in a sheet of their own. The ring
+  // showed a name and a half there, and turned with the same sideways swipe as the pictures over the sheet; (the ring was
+  // there with the icon at its end for a while, then the name had a chevron)
   const inSheet = useContext(InSheet)
   const [menu, setMenu] = useState(false)
   const openMenu = () => { setMenu(true); goal('open_menu', { page: location.pathname }) }
@@ -58,9 +58,9 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
         <button type="button" aria-label="Конструкторы" title="Конструкторы" onClick={openMenu} className="relative flex size-5 shrink-0 cursor-pointer items-center justify-center after:absolute after:-inset-[10px] after:content-['']">
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d={tocIcons.menu} stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" /></svg>
         </button>
-        <button type="button" onClick={openMenu} aria-haspopup="dialog" className="flex min-w-0 cursor-pointer items-center gap-2 outline-none">
+        {/* The name opens the menu too, with no chevron after it (it had one for a while) */}
+        <button type="button" onClick={openMenu} aria-haspopup="dialog" className="flex min-w-0 cursor-pointer items-center outline-none">
           <h1 className="truncate text-[24px] font-medium leading-6 tracking-[-0.01em]">{GENERATORS.find(g => g.path === current)?.title}</h1>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden className="shrink-0"><path d="M3 5L7 9L11 5" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" /></svg>
         </button>
       </div>
       {menu && createPortal(<GeneratorMenu current={current} height={inSheet} onClose={() => setMenu(false)} />, document.body)}
