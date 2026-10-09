@@ -7,7 +7,7 @@ import { hasProfanity, PROFANITY } from '@/ui/profanity'
 
 // The dealership's hours sign (Figma: UMO | Evrone, node 3819:4211; the source in Yandex Disk `02 UMO/Hours Sign`,
 // UMO_hours-sign.pdf): a 480×680 mm plate, the UMO logo at the top, the hours large in the middle with a line under
-// them, and the dealership at the bottom: its name, address, phone and site. Figma's frame is 2400×3400, 5 px a
+// them, and the dealership at the bottom: its marketing name («UMO АГАТ Владимир»), address, phone and site. Figma's frame is 2400×3400, 5 px a
 // millimetre; the margins and the column are sevenths of the width, the logo as wide as the column. All in CoFo Sans
 // Medium. Figma's text boxes are «leading-none», so a baseline is 0.844 of the size under a box's top.
 
@@ -31,7 +31,8 @@ const INFO_LAST = 3104.571 / 5 - INFO.leading + (INFO.leading - INFO.size) / 2 +
 /** The address takes two lines at most, as umo.auto's longest run to twice the column */
 const ADDRESS_LINES = 2
 
-export const DEALER_PREFIX = 'Официальный дилер '
+/** The dealer's marketing name as umo.auto has it, «UMO АГАТ Владимир» (it was «Официальный дилер …», as in Figma) */
+export const DEALER_PREFIX = 'UMO '
 export const ADDRESS_PREFIX = 'Адрес: '
 export const PHONE_PREFIX = 'Телефон: '
 

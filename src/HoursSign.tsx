@@ -14,7 +14,7 @@ import { DEFAULT_HOURS_LINE, ADDRESSES, addressOf, hoursOf } from '@/data/hours'
 // line under them and the dealership at the bottom, as a PDF in outlines for the maker. A dealer picked from the list
 // puts in its address and hours from umo.auto and its site, all of them edited freely; the phone isn't on umo.auto.
 
-/** The dealers' names without «UMO», as the logo stands over them */
+/** The dealers' names without «UMO», which the sign puts before them, fixed */
 const NAMES = DEALER_NAMES.map(withoutUmo)
 
 /** Empty fields stand grey on the sign as these; never in the PDF */
