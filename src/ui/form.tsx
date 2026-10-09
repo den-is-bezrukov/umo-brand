@@ -867,23 +867,23 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   const foot = useContext(InFoot)
   if (foot) {
     const lead = disabled && !!note && !said
-    // «Поделиться» beside the download, half each, as on the site's phones before, once the download is on: while a step
-    // is left, the button saying it stands alone (an icon left of the download was tried and dropped)
+    // «Поделиться» right of the download, as wide as its word, the download taking the rest, once the download is on:
+    // while a step is left, the button saying it stands alone (an icon left of the download, then half each, were tried)
     const shareOn = !!links && !disabled && !said
     return (
-      <div className="grid auto-cols-fr grid-flow-col gap-2">
-      {shareOn && <div className="flex min-w-0">{links}</div>}
+      <div className="flex gap-2">
       <button
         type="button"
         onClick={lead && onNote ? () => { foot(); setTimeout(onNote, 350) } : onClick}
         disabled={busy || (disabled && !(lead && onNote))}
-        className={`flex w-full min-w-0 cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] text-[14px] leading-5 outline-none disabled:cursor-default
+        className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] text-[14px] leading-5 outline-none disabled:cursor-default
           ${lead || said ? 'font-normal' : 'font-medium'} ${disabled && !(lead && onNote) && !busy ? 'text-[#999]' : 'text-white'}`}
       >
         {said || (lead
           ? <>{note}{count && <span className="text-white/50">{count}</span>}</>
           : busy ? 'Генерация…' : `Скачать ${format}`)}
       </button>
+      {shareOn && <div className="flex shrink-0">{links}</div>}
       </div>
     )
   }
