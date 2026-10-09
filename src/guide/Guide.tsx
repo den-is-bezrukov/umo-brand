@@ -940,7 +940,12 @@ const MISUSE: [string, string][] = [
 ]
 
 function Dictionary() {
-  const cols = 'md:grid-cols-[1fr_1fr_2fr]'
+  // Fixed tracks: each row is a grid of its own, and with plain 1fr a long unbreakable phrase widened its column in
+  // its row only, so the columns jumped from row to row
+  const cols = 'md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)]'
+  // A list breaks after its commas: as separate text nodes, the typograph doesn't tie its last item to the one before
+  // («Инновационный, революционный» was one unbreakable line, wider than its column)
+  const list = (s: ReactNode) => (typeof s === 'string' ? s.split(/(?<=, )/) : s)
   const mark = (m: string) => <span className="w-[30px] [font-feature-settings:'case'_1]">{m}</span>
   return (
     <div className="text-[16px] leading-[1.25] tracking-[-0.01em]">
@@ -951,8 +956,8 @@ function Dictionary() {
       </div>
       {DICTIONARY.map((row, i) => (
         <div key={i} className={`grid grid-cols-1 ${cols} gap-x-6 gap-y-2 border-t border-[#e6e6e6] py-4`}>
-          <p className="font-medium"><span className="md:hidden">✓&nbsp;</span>{row.good}</p>
-          <p><span className="md:hidden">✗&nbsp;</span>{row.bad}</p>
+          <p className="font-medium"><span className="md:hidden">✓&nbsp;</span>{list(row.good)}</p>
+          <p><span className="md:hidden">✗&nbsp;</span>{list(row.bad)}</p>
           <p className="text-[#808080] md:text-black">{row.why}</p>
         </div>
       ))}
