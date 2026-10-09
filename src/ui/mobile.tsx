@@ -104,6 +104,10 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   // removal, the line over the download) comes into view
   const settle = useRef(0)
   const onScroll = () => {
+    // The number and arrows follow the swipe at once, the slide past the middle of the screen counting as shown (they
+    // waited for it to settle and lagged behind); the item is selected once it has
+    const el = strip.current
+    if (el?.clientWidth) setAt(Math.round(el.scrollLeft / el.clientWidth))
     clearTimeout(settle.current)
     settle.current = window.setTimeout(() => {
       const el = strip.current
