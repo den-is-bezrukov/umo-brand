@@ -45,7 +45,7 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
   const turnTo = useRef<((e: React.MouseEvent, path: string) => void) | null>(null)
   return (
     <div className="flex flex-col gap-4">
-      <nav data-crumbs className="flex items-center gap-2 text-[14px] font-medium leading-5 tracking-normal [font-feature-settings:'case'_1]">
+      <nav className="flex items-center gap-2 text-[14px] font-medium leading-5 tracking-normal [font-feature-settings:'case'_1]">
         <Link to="/" className={crumb}>Бренд UMO</Link>
         <span aria-hidden>·</span>
         <CrumbMenu current={current} onPick={(e, path) => turnTo.current?.(e, path)} />

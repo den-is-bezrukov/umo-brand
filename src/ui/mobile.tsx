@@ -236,8 +236,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
             <span className="h-1 w-9 rounded-full bg-black/10" />
           </div>
         )}
-        {/* No breadcrumbs in the sheet for now: the ring of generators opens it */}
-        <div ref={scroller} className={`min-h-0 flex-1 overflow-y-auto [&_[data-crumbs]]:hidden ${sheet === 'preview' ? 'pointer-events-none' : ''}`}>
+        <div ref={scroller} className={`min-h-0 flex-1 overflow-y-auto ${sheet === 'preview' ? 'pointer-events-none' : ''}`}>
           <div className="pb-20"><InSheet.Provider value={true}>{sidebar}</InSheet.Provider></div>
         </div>
         {/* The download under the form, open or over the whole screen; none over the picture alone. It lies over the
