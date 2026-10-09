@@ -880,10 +880,12 @@ function Bubble({ title, children }: { title?: ReactNode; children?: ReactNode }
   )
 }
 
-function PhotoCard({ name, title, children, grow }: { name: string; title: ReactNode; children?: ReactNode; grow?: boolean }) {
+/** `focus`: the crop's vertical point in % on phones, where the 4:3 crop would cut the subject (the runner's head) */
+function PhotoCard({ name, title, children, grow, focus }: { name: string; title: ReactNode; children?: ReactNode; grow?: boolean; focus?: number }) {
   return (
-    <div className={`relative aspect-3/4 overflow-hidden bg-[#f5f5f5] ${grow ? 'md:aspect-auto md:min-h-0 md:flex-1' : ''}`}>
-      <img src={img(name)} alt="" loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover" />
+    // 4:3 on phones, to save the one column's height; 3:4 from md, as in Figma
+    <div className={`relative aspect-4/3 overflow-hidden bg-[#f5f5f5] md:aspect-3/4 ${grow ? 'md:aspect-auto md:min-h-0 md:flex-1' : ''}`}>
+      <img src={img(name)} alt="" loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover md:object-center!" style={focus !== undefined ? { objectPosition: `50% ${focus}%` } : undefined} />
       <div className="absolute inset-x-4 top-4 flex flex-col gap-2 leading-[1.25] text-white">
         {/* A line alone over a photo is 240 wide, as in Figma, so it breaks the same way on any card */}
         <p className={`text-[20px] font-medium tracking-[-0.01em] ${children ? '' : 'max-w-[240px]'}`}>{title}</p>
@@ -904,7 +906,7 @@ function Examples() {
       </div>
       <div className="flex flex-col gap-6">
         <Bubble title={<>Электромобиль с <span className="font-['Alice_Okniks'] [font-feature-settings:'ss02']">@</span> Алисой и сервисами Яндекса. Запас хода до 420 км, разгон до 100 км/ч за 8,7 секунды</>} />
-        <PhotoCard name="voice-runner" grow title="Практичный и инновационный UMO поможет сделать город комфортнее" />
+        <PhotoCard name="voice-runner" grow focus={20} title="Практичный и инновационный UMO поможет сделать город комфортнее" />
       </div>
       <div className="flex flex-col gap-6">
         <PhotoCard name="voice-charging" grow title="Послушаем, как поют птицы в парке, пока заряжается UMO" />
