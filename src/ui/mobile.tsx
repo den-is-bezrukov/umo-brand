@@ -214,7 +214,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           className="-mx-[10px] flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {slides.map(s => (
-            <div key={s.key} className={`flex h-full w-full shrink-0 snap-center overflow-y-auto [scrollbar-width:none] ${s.title ? '[&_figcaption]:hidden' : ''}`}>
+            // A fitted picture's slide doesn't scroll at all (`clip`, not `hidden`, which still let the list's scrollIntoView
+            // move a copy 4 px down and cut its top edge); one taller than the screen's width scrolls
+            <div key={s.key} className={`flex h-full w-full shrink-0 snap-center ${s.ratio ? 'overflow-clip' : 'overflow-y-auto [scrollbar-width:none]'} ${s.title ? '[&_figcaption]:hidden' : ''}`}>
               {box.w > 0 && <div className="m-auto py-1" style={{ width: fit(s.ratio) }}>{typeof s.node === 'function' ? s.node(fit(s.ratio)) : s.node}</div>}
             </div>
           ))}
