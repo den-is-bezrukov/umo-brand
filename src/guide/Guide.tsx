@@ -1382,7 +1382,7 @@ export default function Guide() {
             <Section>
               <H2 id="lettering-models">Модели</H2>
               <div className="flex flex-col gap-4 md:gap-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                <div className="grid grid-cols-1 min-[520px]:grid-cols-2 gap-4 md:gap-6">
                   <Fig name="lettering-model8" w={444} h={333} alt="Леттеринг MODEL 8 и номерная плашка UMO 8" />
                   <Fig name="lettering-model5" w={444} h={333} alt="Леттеринг MODEL 5 и номерная плашка UMO 5" />
                   <Fig name="lettering-umo8" w={444} h={333} alt="Леттеринг на UMO 8" />
