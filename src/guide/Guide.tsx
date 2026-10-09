@@ -1503,7 +1503,7 @@ export default function Guide() {
               </Section>
             </Chapter>
 
-            <footer className="mt-auto text-[16px] leading-[1.25] tracking-[-0.01em] text-[#808080]">© 2026 ООО «ЭМ РУС». Стандарты бренда UMO. 0+</footer>
+            <footer className="mt-auto text-[16px] leading-[1.25] tracking-[-0.01em] text-[#808080]">© 2026 ООО «ЭМ РУС». Стандарты бренда UMO</footer>
           </div>
         </div>
       </main>
