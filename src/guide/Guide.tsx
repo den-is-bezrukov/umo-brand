@@ -804,9 +804,9 @@ function Constructor({ to, title, flush, children }: { to: string; title: string
 /** The Носители overview (Figma 4844:6695): each medium's picture right over its ↗ row to the constructor, carrying its anchor; in `MEDIA` order. */
 function Carriers({ items }: { items: typeof MEDIA }) {
   return (
-    <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
       {items.map(c => (
-        <div key={c.to} id={c.id} className={`scroll-mt-24 ${isWide(c) ? 'md:col-span-2' : ''}`}>
+        <div key={c.to} id={c.id} className={`scroll-mt-24 ${isWide(c) ? 'sm:col-span-2' : ''}`}>
           <Constructor to={c.to} title={c.row} flush>{c.picture}</Constructor>
         </div>
       ))}
