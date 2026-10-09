@@ -168,7 +168,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     ? <span className="min-w-0 truncate text-[14px] leading-5 text-[#808080]">{title}</span>
     : <span className={`text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1] ${many ? '' : 'invisible'}`}>{slides[shown]?.number ?? shown + 1}</span>
   const reset = slides[shown]?.reset
-  const height = { preview: '0px', half: 'min(52dvh, 420px)', full: 'calc(100dvh - 48px)' }[sheet]
+  const height = { preview: '0px', half: '60dvh', full: 'calc(100dvh - 48px)' }[sheet]
 
   const fit = (ratio?: number) => ratio
     ? Math.max(0, Math.floor(Math.min(box.w - 32, (box.h - UNDER) / ratio)))
