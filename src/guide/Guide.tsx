@@ -917,8 +917,9 @@ function Examples() {
       </div>
       <div className="flex flex-col gap-4 md:gap-6">
         <PhotoCard name="voice-charging" grow title="Послушаем, как поют птицы в парке, пока заряжается UMO" />
-        {/* A soft hyphen: in three columns at 640–767 px the word is wider than its bubble */}
-        <Bubble title={'Запоми\u00ADнающиеся фары'}>Светодиодная оптика даёт яркий ровный свет<br />и не слепит встречных водителей</Bubble>
+        {/* Separate text nodes, so the typograph doesn't tie the last word to this long one: in three columns at
+            640–767 px the pair is wider than its bubble */}
+        <Bubble title={<>Запоминающиеся{' '}фары</>}>Светодиодная оптика даёт яркий ровный свет<br />и не слепит встречных водителей</Bubble>
         <Bubble title="Удобная посадка">Угол раскрытия дверей на 90° обеспечивает лёгкую посадку даже с крупным багажом в руках</Bubble>
       </div>
     </div>
