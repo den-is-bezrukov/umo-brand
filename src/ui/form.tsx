@@ -657,18 +657,24 @@ export function SizeSwitch({ large, onChange, label }: { large: boolean; onChang
 // Edged at 10%, at 40% on hover (Figma 5015:11171)
 export const outlined = 'flex min-w-16 flex-1 items-center justify-center rounded-[8px] border border-black/10 px-3 py-[9px] text-[14px] font-medium leading-5 text-black cursor-pointer outline-none hover:border-black/40 focus-visible:ring-2 focus-visible:ring-black/30 disabled:cursor-default disabled:text-[#999] disabled:hover:border-black/10'
 
-/** A word the download bar's line says for a moment («Ссылка с настройками скопирована»), from a button under it */
+/** A word the download bar's line says for a moment («В файле нет режимника») */
 const flashes = new Set<(text: string) => void>()
 /** Says something for two seconds over the download, where the line saying what's in the way stands */
 export const flash = (text: string) => flashes.forEach(f => f(text))
 
 /**
  * «Поделиться» (Figma 4939:3762): sends the page address — the settings are in it — so a set-up card or livery goes as a
- * link: on phones through the system's share sheet, elsewhere copied, the line over it saying «Ссылка с настройками
- * скопирована» for two seconds. Off while the result isn't ready (`incomplete`, as «Скачать»): a link is sent for what
+ * link: on phones through the system's share sheet, elsewhere copied, the button itself saying «Ссылка с настройками
+ * скопирована» for two seconds, where it was clicked (it was said by the line over it). Off while the result isn't ready (`incomplete`, as «Скачать»): a link is sent for what
  * it makes, not a draft. «Сбросить» stood beside it until resets moved onto the canvas, by what they reset
  */
 export function LinkButtons({ incomplete }: { incomplete?: boolean }) {
+  const [copied, setCopied] = useState(false)
+  useEffect(() => {
+    if (!copied) return
+    const t = setTimeout(() => setCopied(false), 2000)
+    return () => clearTimeout(t)
+  }, [copied])
   const share = async () => {
     const url = window.location.href
     // On phones the system's share sheet: the chat a link goes to in a tap or two, «Скопировать» among them
@@ -680,7 +686,7 @@ export function LinkButtons({ incomplete }: { incomplete?: boolean }) {
       return
     }
     await navigator.clipboard.writeText(url)
-    flash('Ссылка с настройками скопирована')
+    setCopied(true)
     goal('copy_link', { page: location.pathname })
   }
   return (
@@ -688,7 +694,7 @@ export function LinkButtons({ incomplete }: { incomplete?: boolean }) {
     // in (a trial): inside, the stroke left 38 px of white beside the solid 40 of the download, which read larger. Wide
     // screens keep the inside stroke
     <button type="button" onClick={share} title="Отправить ссылку на эти настройки" disabled={incomplete} className={`${outlined} w-full bg-white max-md:border-0 max-md:py-[10px] max-md:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)] max-md:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.4),inset_0_0_0_0.5px_rgba(0,0,0,0.4)] max-md:disabled:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)]`}>
-      Поделиться
+      {copied ? 'Ссылка с настройками скопирована' : 'Поделиться'}
     </button>
   )
 }
