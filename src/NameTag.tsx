@@ -145,7 +145,7 @@ export default function NameTag() {
           busy={exporting}
           disabled={!ok}
           note={!items.length ? 'Нужно загрузить таблицу' : (failing.length ? problemOf(staff.inWork(failing).index) : undefined)}
-          count={failing.length > 1 ? staff.inWork(failing).count : undefined}
+          count={items.length > 1 && failing.length ? staff.inWork(failing).count : undefined}
           onNote={items.length ? () => staff.nextOf(failing) : pickTable}
         />
       </aside>

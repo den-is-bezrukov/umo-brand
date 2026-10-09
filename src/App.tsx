@@ -319,7 +319,7 @@ export default function App() {
           busy={exporting}
           disabled={failing.length > 0}
           note={items.length > 1 ? (failing.length ? firstIssue(items[staff.inWork(failing).index])?.text : undefined) : issue?.text}
-          count={items.length > 1 && failing.length > 1 ? staff.inWork(failing).count : undefined}
+          count={items.length > 1 && failing.length ? staff.inWork(failing).count : undefined}
           onNote={items.length > 1 ? () => staff.nextOf(failing) : toIssue}
           // No «Сбросить» here: each card has its own beside it
           links={<LinkButtons incomplete={failing.length > 0} />}

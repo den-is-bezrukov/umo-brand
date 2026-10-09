@@ -174,12 +174,13 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
   }
   const nextOf = (keys: number[]) => goTo(nextTarget(keys))
   /**
-   * The items in work as the note over the download says them: its first fault named, «2/4» after it for the one a
-   * click leads to among them; and that item's place in the list
+   * The item in work a click on the note over the download leads to: its place in the list, whose first fault the
+   * note names, and «2/4» after it, its number beside it on the canvas out of all (counting only those in work was tried:
+   * with one, there was no count at all)
    */
   const inWork = (keys: number[]) => {
-    const key = nextTarget(keys)
-    return { count: `${keys.indexOf(key) + 1}/${keys.length}`, index: items.findIndex(it => it.key === key) }
+    const index = items.findIndex(it => it.key === nextTarget(keys))
+    return { count: `${index + 1}/${items.length}`, index }
   }
   /** A click on an item: select it, in the manual mode */
   const pick = (key: number) => {

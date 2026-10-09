@@ -324,7 +324,7 @@ export default function BusinessCard() {
           busy={exporting}
           disabled={!ok}
           note={(dealerMissing.length ? unfilled([...dealerMissing, ...(items.length === 1 ? missing[0] : [])].map(f => UNFILLED[f]!)) : dealerIssues[0]) ?? (!items.length ? 'Нужно загрузить таблицу' : problemOf(failing.length ? staff.inWork(failing).index : 0))}
-          count={!(dealerIssues.length) && failing.length > 1 ? staff.inWork(failing).count : undefined}
+          count={!dealerIssues.length && items.length > 1 && failing.length ? staff.inWork(failing).count : undefined}
           onNote={dealerIssues.length ? toDealer : items.length ? () => staff.nextOf(failing) : pickTable}
         />
       </aside>
