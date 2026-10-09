@@ -32,18 +32,40 @@ const STEP = 30
 const DAY = 24 * 60
 const minutesOf = (t: string) => { const [h, m] = t.split(':'); return +h * 60 + +m }
 const timeOf = (min: number) => `${Math.floor(min / 60)}:${String(min % 60).padStart(2, '0')}`
-/** A typed time to the nearest half hour, «9:57» → «10:00»; as typed if it isn't a time, to be said wrong */
+/** A typed time made whole and taken to the nearest half hour, «9:57» → «10:00» */
 const rounded = (raw: string) => {
-  const t = timeText(raw)
+  const t = timeText(wholeTime(raw))
   return t ? timeOf(Math.min(DAY, Math.round(minutesOf(t) / STEP) * STEP)) : raw
 }
 
-/** A time typed as digits with a colon or a dot: two digits and two after it, four in a row without one */
-const typedTime = (v: string) => {
-  const t = v.replace(/\./g, ':').replace(/[^\d:]/g, '')
-  const [h, ...m] = t.split(':')
-  return t.includes(':') ? `${h.slice(0, 2)}:${m.join('').slice(0, 2)}` : t.slice(0, 4)
+/**
+ * The time field's mask, as it's typed: the hours, then the minutes after a colon, never a time that can't be. The
+ * hours take one digit from 3 on, two up to 24, else the next digit starts the minutes; the minutes' first digit is
+ * 0–5 (only 0 after 24), others are dropped: «666» → «6», «930» → «9:30», «25» → «2:5». The colon goes in with
+ * the minutes or when typed; until then the field shows it grey (`tail`)
+ */
+function maskTime(raw: string): string {
+  let hour = ''
+  let min = ''
+  let colon = false
+  for (const c of raw.replace(/\./g, ':')) {
+    if (c === ':') { if (hour) colon = true; continue }
+    if (!/\d/.test(c)) continue
+    const d = +c
+    if (!colon && !hour) { hour = c; continue }
+    if (!colon && hour.length === 1 && +hour < 3 && +(hour + c) <= 24) { hour += c; continue }
+    colon = true
+    if (!min && (d <= 5 && (+hour < 24 || d === 0))) min = c
+    else if (min.length === 1 && (+hour < 24 || d === 0)) min += c
+  }
+  return hour + (colon && (min || /:/.test(raw)) ? `:${min}` : '')
 }
+
+/** What's left of «9:00» after what's typed, shown grey after it: «6» → «:00», «6:3» → «0» */
+const tailOf = (v: string) => v.includes(':') ? '00'.slice(v.split(':')[1].length) : ':00'
+
+/** A masked time made whole, as the sign shows it while it's typed: «6» → «6:00», «6:3» → «6:30» */
+const wholeTime = (v: string) => v ? v + tailOf(v) : v
 
 function StepIcon({ plus }: { plus?: boolean }) {
   return (
@@ -70,20 +92,27 @@ function TimeField({ value, onChange, placeholder, invalid, label }: { value: st
   return (
     <div className="flex h-10 rounded-[8px] bg-[#f5f5f5] focus-within:ring-1 focus-within:ring-inset focus-within:ring-black/40">
       <button type="button" tabIndex={-1} onClick={() => step(-1)} aria-label={`${label}: на полчаса раньше`} className={button}><StepIcon /></button>
-      <input
+      {/* The typed time over a copy of it with the rest of «9:00» grey after it, so the colon always shows: the copy
+          sizes the box, centred, and the input lies over it */}
+      <label className="flex min-w-0 flex-1 cursor-text items-center justify-center text-[14px] leading-5 [font-variant-numeric:lining-nums_tabular-nums]">
+        <span className="relative whitespace-pre">
+          <span aria-hidden className="text-transparent">{value}</span>
+          <span aria-hidden className="text-[#999]">{value ? tailOf(value) : placeholder}</span>
+          <input
         value={value}
-        onChange={e => onChange(typedTime(e.target.value))}
+        onChange={e => onChange(maskTime(e.target.value))}
         onBlur={() => onChange(rounded(value))}
         onKeyDown={e => {
           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); step(e.key === 'ArrowUp' ? 1 : -1) }
           if (e.key === 'Enter') onChange(rounded(value))
         }}
-        placeholder={placeholder}
         inputMode="decimal"
         aria-label={label}
         aria-invalid={invalid || undefined}
-        className="w-full min-w-0 bg-transparent text-center text-[14px] leading-5 text-black outline-none placeholder:text-[#999]"
+        className="absolute inset-y-0 left-0 w-[calc(100%+2px)] bg-transparent p-0 text-black outline-none"
       />
+        </span>
+      </label>
       <button type="button" tabIndex={-1} onClick={() => step(1)} aria-label={`${label}: на полчаса позже`} className={button}><StepIcon plus /></button>
     </div>
   )
@@ -94,8 +123,8 @@ const ALERT = '#e30'
 
 export default function HoursSign() {
   const [link] = useState(linkParams)
-  const [from, setFrom] = useState(link.get('from') ?? '')
-  const [to, setTo] = useState(link.get('to') ?? '')
+  const [from, setFrom] = useState(() => maskTime(link.get('from') ?? ''))
+  const [to, setTo] = useState(() => maskTime(link.get('to') ?? ''))
   const [line, setLine] = useState(link.get('off') === 'line' ? '' : link.get('line') ?? DEFAULT_HOURS_LINE)
   const [dealer, setDealer] = useState(link.get('name') ?? '')
   const [address, setAddress] = useState(() => link.get('address') ?? addressOf(link.get('name') ?? '') ?? '')
@@ -123,7 +152,7 @@ export default function HoursSign() {
     return () => { document.title = prev }
   }, [])
 
-  const values: Record<Exclude<SignField, 'line'>, string> = { from, to, dealer, address, phone, site }
+  const values: Record<Exclude<SignField, 'line'>, string> = { from: wholeTime(from), to: wholeTime(to), dealer, address, phone, site }
   const empty = ORDER.filter(f => !oneLine(values[f]))
   const shown: Input = { line, ...Object.fromEntries(ORDER.map(f => [f, oneLine(values[f]) ? values[f] : PLACEHOLDER[f]])) as Omit<Input, 'line'> }
   const sign = useMemo(() => font ? buildSign(font, shown) : undefined, [font, JSON.stringify(shown)]) // eslint-disable-line react-hooks/exhaustive-deps
