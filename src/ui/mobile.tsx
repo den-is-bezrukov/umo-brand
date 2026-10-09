@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { ResetIcon, DuplicateIcon, CrossIcon, Removed, type Staff } from '@/ui/staff'
-import { InSlide, InFoot } from '@/ui/phone'
+import { InSlide, InFoot, InSheet } from '@/ui/phone'
 
 // A trial of the generators' phone layout (Figma 5098:5806, C and D): the canvas fills the screen above a sheet, what's
 // made swiped through one at a time, the item's number between «Удалить» and «Сбросить» over it and «‹ Дублировать ›»
@@ -225,7 +225,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       >
         {/* No breadcrumbs in the sheet for now: the ring of generators opens it */}
         <div ref={scroller} className={`min-h-0 flex-1 overflow-y-auto [&_[data-crumbs]]:hidden ${sheet === 'preview' ? 'pointer-events-none' : ''}`}>
-          {sidebar}
+          <InSheet.Provider value={true}>{sidebar}</InSheet.Provider>
         </div>
         {/* The download under the form, open or over the whole screen; none over the picture alone */}
         {sheet !== 'preview' && (

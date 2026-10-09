@@ -1,7 +1,8 @@
 import { useContext, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
+import { createPortal, flushSync } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import { goal } from './metrika'
-import { InFoot } from './phone'
+import { InFoot, InSheet } from './phone'
 
 // Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag, business card). Light UI per the Figma layout
 // (UMO | Evrone, nodes 4844:6865 and 4900:4588), matching the brand guide.
@@ -437,6 +438,19 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
   const matching = options.filter(t => oneLine(t).includes(typed))
   const shown = all || !typed || hit || !matching.length ? options : matching
   const id = useId()
+  // In the phone's sheet the list is a screen of its own, as a search: the field over it with «Готово», the list filling
+  // the rest. Opened from the field in the same tap, so the screen's field takes the focus and the keyboard stays up
+  const inSheet = useContext(InSheet)
+  const [screen, setScreen] = useState(false)
+  const screenField = useRef<HTMLDivElement>(null)
+  const openScreen = () => {
+    (document.activeElement as HTMLElement | null)?.blur()
+    flushSync(() => setScreen(true))
+    const el = screenField.current?.querySelector<HTMLTextAreaElement>('textarea')
+    el?.focus()
+    el?.setSelectionRange(el.value.length, el.value.length)
+  }
+  const closeScreen = () => { setScreen(false); setAll(false) }
   /** Each field its own anchor */
   const anchor = `--combo${id.replace(/[^a-z0-9]/gi, '')}`
 
@@ -491,9 +505,10 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
           'aria-controls': id,
           'aria-autocomplete': 'list' as const,
           'aria-activedescendant': open && active >= 0 ? `${id}-${active}` : undefined,
-          onFocus: () => setOpen(true),
+          onFocus: () => (inSheet ? openScreen() : setOpen(true)),
           onBlur: () => { setOpen(false); setAll(false) },
           onKeyDown,
+          readOnly: inSheet || undefined,
         }
         const change = (v: string) => { onChange(singleLine || truncate ? v.replace(/\s*\n\s*/g, ' ') : v); setAll(false); setOpen(true) }
         // An input, as a textarea can't end in an ellipsis
@@ -506,7 +521,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
         tabIndex={-1}
         aria-label={label}
         onMouseDown={e => e.preventDefault()}
-        onClick={() => { box.current?.querySelector<HTMLElement>('textarea, input')?.focus(); setAll(true); setOpen(o => !o || !all) }}
+        onClick={() => { if (inSheet) { setAll(true); openScreen(); return } box.current?.querySelector<HTMLElement>('textarea, input')?.focus(); setAll(true); setOpen(o => !o || !all) }}
         className="absolute top-0 right-0 flex size-10 cursor-pointer items-center justify-center"
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
@@ -547,6 +562,38 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
           </div>
         ))}
       </div>
+      {screen && createPortal(
+        <div role="dialog" aria-label={label} className="fixed inset-0 z-50 flex flex-col bg-white font-sans text-black">
+          <div ref={screenField} className="flex shrink-0 items-start gap-3 px-6 pt-4 pb-2">
+            <TextArea
+              value={value}
+              placeholder={placeholder}
+              aria-invalid={invalid || undefined}
+              enterKeyHint="done"
+              onChange={v => { onChange(singleLine || truncate ? v.replace(/\s*\n\s*/g, ' ') : v); setAll(false) }}
+              onKeyDown={e => { if ((e.key === 'Enter' && singleLine) || e.key === 'Escape') { e.preventDefault(); closeScreen() } }}
+              className="flex-1"
+            />
+            <button type="button" onClick={closeScreen} className="h-10 shrink-0 cursor-pointer text-[14px] leading-5 font-medium">Готово</button>
+          </div>
+          {/* Rows across the screen, as a native list, the picked one medium with a tick */}
+          <div role="listbox" aria-label={label} className="min-h-0 flex-1 overflow-y-auto px-3 pb-6 text-[14px] leading-5">
+            {shown.map(t => (
+              <div
+                key={t}
+                role="option"
+                aria-selected={t === hit}
+                onClick={() => { pick(t); closeScreen() }}
+                className={`flex cursor-pointer items-start gap-2 rounded-[8px] px-3 py-3 active:bg-[#f5f5f5] ${t === hit ? 'font-medium' : ''}`}
+              >
+                <span className="min-w-0 flex-1">{shownAs(t).replace('\n', ' ')}</span>
+                {t === hit && <span className="flex h-5 w-4 shrink-0 items-center justify-center"><Tick /></span>}
+              </div>
+            ))}
+          </div>
+        </div>,
+        document.body,
+      )}
     </div>
   )
 }
