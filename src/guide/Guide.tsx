@@ -971,9 +971,12 @@ export default function Guide() {
   // does there; it said «Платформа бренда» for the statement standing in for that chapter's title
   const sectionTitle = active.length && active[0] !== 'brand' ? TITLES[active[0]] : undefined
 
-  // The open mobile contents cover the page: keep the page behind still, and let Esc close it.
+  // The open mobile contents: opened at the chapter you're reading, the page behind kept still, Esc closing it.
+  const sheetRef = useRef<HTMLDivElement>(null)
   useEffect(() => {
     if (!menuOpen) return
+    const lit = sheetRef.current?.querySelectorAll('nav [aria-current]')
+    lit?.[lit.length - 1]?.scrollIntoView({ block: 'center' })
     const root = document.documentElement
     root.style.overflow = 'hidden'
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false) }
@@ -1040,15 +1043,23 @@ export default function Guide() {
       {/* Mobile table of contents: a bar at the bottom names the heading you're reading and stands in for the
           sidebar; tapped, the full contents open between the header and the bar, which turns into «Свернуть». */}
       <div className="lg:hidden">
+        {/* A sheet from the bottom, two thirds of the screen at most, over the page dimmed: every item within a thumb's
+            reach, the list scrolling inside it, opened at the chapter you're reading (it took the whole screen under the
+            header, its top items out of reach). A tap on the page above closes it, as «Свернуть» does */}
         {menuOpen && (
-          <div className="fixed inset-x-0 top-14 bottom-0 z-40 overflow-y-auto overscroll-contain bg-white px-4 pt-4 md:top-[72px] md:px-6 md:pt-6">
-            <Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} />
-            <TocToggle
-              expanded
-              onClick={() => setMenuOpen(false)}
-              className="sticky bottom-0 -mx-4 w-[calc(100%+2rem)] px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] md:-mx-6 md:w-[calc(100%+3rem)] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]"
-            />
-          </div>
+          <>
+            <div aria-hidden className="fixed inset-0 z-40 bg-black/40" onClick={() => setMenuOpen(false)} />
+            <div className="fixed inset-x-0 bottom-0 z-40 flex max-h-[66dvh] flex-col bg-white">
+              <div ref={sheetRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 md:px-6 md:pt-6">
+                <Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} />
+              </div>
+              <TocToggle
+                expanded
+                onClick={() => setMenuOpen(false)}
+                className="w-full px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]"
+              />
+            </div>
+          </>
         )}
         {!menuOpen && (
           <button
