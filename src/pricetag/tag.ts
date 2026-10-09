@@ -106,7 +106,7 @@ export function readPrice(raw: string): string | null {
 
 /** Single substitutions of a feature (`lnum`, `tnum`), glyph by glyph, as opentype.js doesn't apply them */
 const features = new WeakMap<Font, Map<string, Map<number, number>>>()
-function featureMap(font: Font, tag: string): Map<number, number> {
+export function featureMap(font: Font, tag: string): Map<number, number> {
   let byTag = features.get(font)
   if (!byTag) features.set(font, byTag = new Map())
   let map = byTag.get(tag)

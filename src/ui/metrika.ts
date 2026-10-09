@@ -10,6 +10,7 @@ export type Goal =
   | 'download_name_tag'
   | 'download_business_card'
   | 'download_price_tag'
+  | 'download_hours_sign'
   | 'copy_link'
 
 export function goal(id: Goal, params?: Record<string, string | number | boolean>) {

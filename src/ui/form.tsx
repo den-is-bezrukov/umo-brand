@@ -21,6 +21,7 @@ const GENERATORS = [
   { path: '/livery', title: 'Ливрея' },
   { path: '/price-card', title: 'Прайс-карта' },
   { path: '/plate-frame', title: 'Рамка номера' },
+  { path: '/hours-sign', title: 'Режимник' },
   { path: '/price-tag', title: 'Ценник' },
 ]
 
@@ -37,7 +38,7 @@ const GENERATORS = [
  */
 const crumb = 'underline decoration-transparent decoration-[0.35px] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 hover:decoration-black/40 hover:duration-0'
 
-export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' | '/price-tag' }) {
+export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' | '/price-tag' | '/hours-sign' }) {
   // A pick in the list turns the ring as a click on it does
   const turnTo = useRef<((e: React.MouseEvent, path: string) => void) | null>(null)
   return (
