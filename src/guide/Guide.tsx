@@ -562,7 +562,7 @@ function Fig({ name, w, h, alt = '', eager, caption, cross, href, focus = 50, fl
         height={h * 2}
         loading={eager ? 'eager' : 'lazy'}
         decoding="async"
-        className={`block h-auto w-full bg-[#f5f5f5] ${wide ? `aspect-4/3 ${flat || phone43 ? 'object-contain' : 'object-cover'} sm:aspect-(--ratio)` : ''}`}
+        className={`block h-auto w-full bg-[#f5f5f5] ${wide ? `aspect-4/3 ${flat || phone43 ? 'object-contain' : 'object-cover'} min-[520px]:aspect-(--ratio)` : ''}`}
         style={wide ? ({ '--ratio': `${w} / ${h}`, objectPosition: `${focus}% 50%`, ...(flat && { background: flat }) } as CSSProperties) : { aspectRatio: `${w} / ${h}` }}
       />
       {caption && <Caption cross={cross} download={!!href}>{caption}</Caption>}
@@ -614,7 +614,7 @@ function LogoPlate({ w, h, logo, bg, dark, caption, phone43, className = '' }: {
   return (
     <figure className={`flex flex-col gap-3 ${className}`}>
       <div
-        className={`flex items-center justify-center ${dark ? 'text-white' : 'text-black'} ${phone43 ? 'aspect-4/3 sm:aspect-(--ratio)' : ''}`}
+        className={`flex items-center justify-center ${dark ? 'text-white' : 'text-black'} ${phone43 ? 'aspect-4/3 min-[520px]:aspect-(--ratio)' : ''}`}
         style={{ ...(phone43 ? { '--ratio': `${w} / ${h}` } : { aspectRatio: `${w} / ${h}` }), background: bg } as CSSProperties}
       >
         <div style={{ width: `${(logo / w) * 100}%` }}>
@@ -1351,7 +1351,7 @@ export default function Guide() {
               </Text>
               <div className="flex flex-col gap-4 md:gap-6">
                 <figure className="flex flex-col gap-3">
-                  <div className="flex aspect-4/3 sm:aspect-2/1 items-center justify-center bg-[#f5f5f5]">
+                  <div className="flex aspect-4/3 min-[520px]:aspect-2/1 items-center justify-center bg-[#f5f5f5]">
                     <p className="text-[48px] sm:text-[72px] md:text-[96px] font-medium leading-none tracking-[-0.01em]">CoFo Sans</p>
                   </div>
                   <Caption>Базовая гарнитура</Caption>
