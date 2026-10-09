@@ -9,6 +9,7 @@ import { goal } from '@/ui/metrika'
 import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField, GeneratorHeader, LinkButtons, DownloadBar, unfilled, stepsLeft } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
 import { useStaff, ItemFrame, AddTile, Removed, plain, ITEM_EDGE, type Row } from '@/ui/staff'
+import { MobileEditor, usePhone } from '@/ui/mobile'
 
 const POSTER_W = 1754
 const POSTER_H = 2480
@@ -195,6 +196,7 @@ export default function App() {
   }, [urls.join('\n')]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const [exporting, setExporting] = useState(false)
+  const phone = usePhone()
   // The cards' width on the canvas: on wide screens each card fits its height, as the one card did; on phones its width
   const [cardW, setCardW] = useState(0)
   const [wide, setWide] = useState(true)
@@ -218,7 +220,7 @@ export default function App() {
     })
     observer.observe(el)
     return () => observer.disconnect()
-  }, [])
+  }, [phone])
   const scale = cardW / POSTER_W
   /** A row's width: the card, and on phones the room beside it for its number and actions */
   const rowW = wide ? cardW : cardW + 96
@@ -262,14 +264,7 @@ export default function App() {
   const trims5: { value: Trim; label: string }[] = [{ value: 'pro', label: 'PRO' }, { value: 'max', label: 'MAX' }]
   const trimOptions = card.model === 'umo8' ? trims8 : trims5
 
-  return (
-    <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
-
-      {/* ── Sidebar: 320px plus the 1px outside stroke from Figma (4844:6865), which shows only on the right ── */}
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
-        <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
-          <GeneratorHeader current="/price-card" />
-
+  const formFields = (
           <div ref={form} className="grid grid-cols-2 gap-x-3 gap-y-4 md:grid-cols-1 tracking-normal">
             <Field label="Модель">
               <Segments>
@@ -307,7 +302,50 @@ export default function App() {
             </OptionalField>
             </div>
           </div>
+  )
 
+  const failCount = items.reduce((n, c) => { const i = check(c); return n + [i.urlBad, i.fullTooLow, i.creditTooLow, i.fullLessThanCredit].filter(Boolean).length }, 0)
+  const note = items.length > 1 ? (failing.length ? firstIssue(items[staff.inWork(failing).index])?.text : undefined) : issue?.text
+
+  // Phones: the trial layout (Figma 5098:5806, C and D)
+  if (phone) return (
+    <MobileEditor
+      staff={frame}
+      current={card}
+      ratio={POSTER_H / POSTER_W}
+      header={<GeneratorHeader current="/price-card" />}
+      form={formFields}
+      card={(c, w) => (
+        <div className={`relative overflow-hidden bg-white ${ITEM_EDGE}`} style={{ width: w, height: Math.round(POSTER_H * w / POSTER_W) }}>
+          <div style={{ transformOrigin: 'top left', transform: `scale(${w / POSTER_W})`, position: 'absolute', top: 0, left: 0 }}>
+            <PriceCard variant={`${c.model}-${c.trim}` as Variant} fullPrice={c.full} creditPrice={c.creditOn ? c.credit : undefined} qrSvg={qrSvgs[qrUrlOf(c)]} />
+          </div>
+        </div>
+      )}
+      button={openSheet => (
+        // One button, as in Figma: while the download is off, what's in the way and how much is left, leading there
+        failing.length && note ? (
+          <button type="button" onClick={() => { openSheet(); setTimeout(items.length > 1 ? () => staff.nextOf(failing) : toIssue, 350) }} className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] text-[14px] leading-5 text-white">
+            {note}{stepsLeft(failCount) && <span className="text-white/50">{stepsLeft(failCount)}</span>}
+          </button>
+        ) : (
+          <button type="button" onClick={handleExport} disabled={exporting} className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] text-[14px] font-medium leading-5 text-white">
+            {exporting ? 'Генерация…' : 'Скачать PDF'}
+          </button>
+        )
+      )}
+    />
+  )
+
+  return (
+    <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
+
+      {/* ── Sidebar: 320px plus the 1px outside stroke from Figma (4844:6865), which shows only on the right ── */}
+      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+        <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
+          <GeneratorHeader current="/price-card" />
+
+          {formFields}
         </div>
 
         {/* Download — 8px under «Поделиться», sticking to the bottom of the sidebar when the window is shorter than

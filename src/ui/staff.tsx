@@ -390,7 +390,7 @@ const XLSX = '.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.
 // A 1 px stroke here, finer than the sidebar's 2 px icons, as the column stands quietly beside the item (Figma 5030:11424)
 const ICON = { fill: 'none', stroke: 'currentColor', strokeWidth: 1, strokeLinecap: 'square' as const, strokeLinejoin: 'bevel' as const }
 
-const ResetIcon = () => (
+export const ResetIcon = () => (
   <svg width="14" height="14" viewBox="0 0 14 14" {...ICON} aria-hidden><path d="M2.5 8.5C2.5 10.9853 4.51472 13 7 13C9.48528 13 11.5 10.9853 11.5 8.5C11.5 6.01472 9.48528 4 7 4L2.25 4M4.75 6.5L2.25 4L4.75 1.5" /></svg>
 )
 
@@ -416,6 +416,14 @@ export function CaptionReset({ onClick, label = 'Сбросить' }: { onClick:
     </button>
   )
 }
+
+export const DuplicateIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M3.5 6H2V14H10V12.5M6 2H14V10H6V2Z" /></svg>
+)
+
+export const CrossIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M12 4L8 8M8 8L4 4M8 8L12 12M8 8L4 12" /></svg>
+)
 
 /** The item's actions (Figma 5030:11424): 30 px buttons (40 on phones, for a finger), the icon #808080, black on hover, no tile, as the other quiet controls */
 function Action({ label, hidden, onClick, children }: { label: string; hidden?: boolean; onClick: () => void; children: React.ReactNode }) {
