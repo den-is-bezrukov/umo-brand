@@ -3,7 +3,7 @@ import { ResetIcon, DuplicateIcon, CrossIcon, Removed, type Staff } from '@/ui/s
 import { InSlide, InFoot } from '@/ui/phone'
 
 // A trial of the generators' phone layout (Figma 5098:5806, C and D): the canvas fills the screen above a sheet, what's
-// made swiped through one at a time, the item's number between «Удалить» and «Сбросить» over it and «‹ Дублировать ›»
+// made swiped through one at a time, «Удалить», «Дублировать», «Сбросить» over it and the item's number between the arrows
 // under it; the sheet holds the sidebar (header and form) with the download at its foot. A tap on the picture folds the
 // sheet to the download alone, the picture large, and another brings it back; a swipe up on the sheet opens the form
 // over the whole screen, with only «‹ n ›» over it and no download, a swipe down puts it back. In the link: `arrows=0` hides the arrows (swiping alone), `bare` hides the download too while the sheet is folded
@@ -175,7 +175,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#f5f5f5] font-sans text-black">
-      {/* Over the picture the item's number between its remove and reset, or «Удалено · Вернуть» for a moment; with the
+      {/* Over the picture the item's actions, remove, copy and reset, or «Удалено · Вернуть» for a moment; with the
           form over the screen, the number between the arrows, all there is of the canvas then */}
       <div className="flex h-12 shrink-0 items-center justify-between px-2 pt-2">
         {full ? (
@@ -185,7 +185,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         ) : (
           <>
             <Btn label="Удалить" hidden={!staff || !current || staff.people.length < 2} onClick={() => staff?.remove(current.key)}><CrossIcon /></Btn>
-            {number}
+            <Btn label="Дублировать" hidden={!staff || !current} onClick={() => staff?.duplicate(current.key)}><DuplicateIcon /></Btn>
             {reset
               ? <Btn label={reset.label} onClick={reset.onClick}><ResetIcon /></Btn>
               : <Btn label="Сбросить" hidden={!staff || !current || staff.isBlank(current)} onClick={() => staff?.clear(current.key)}><ResetIcon /></Btn>}
@@ -209,11 +209,11 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         </div>
       </InSlide.Provider>
 
-      {/* Under it the arrows with the copy between them */}
+      {/* Under it the item's number (a sheet's name) between the arrows */}
       {!full && (
         <div className="flex h-12 shrink-0 items-center justify-between px-2 pb-2">
           {back}
-          <Btn label="Дублировать" hidden={!staff || !current || !!staff.removed} onClick={() => staff?.duplicate(current.key)}><DuplicateIcon /></Btn>
+          {number}
           {next}
         </div>
       )}
