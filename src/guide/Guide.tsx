@@ -888,8 +888,8 @@ function Bubble({ title, children }: { title?: ReactNode; children?: ReactNode }
 function PhotoCard({ name, title, children, grow, focus }: { name: string; title: ReactNode; children?: ReactNode; grow?: boolean; focus?: number }) {
   return (
     // 4:3 on phones, to save the one column's height; 3:4 from md, as in Figma. Shaped as the bubbles, a message too
-    <div className={`relative aspect-4/3 overflow-hidden rounded-t-2xl rounded-br-2xl bg-[#f5f5f5] sm:aspect-3/4 ${grow ? 'sm:aspect-auto sm:min-h-0 sm:flex-1' : ''}`}>
-      <img src={img(name)} alt="" loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover sm:object-center!" style={focus !== undefined ? { objectPosition: `50% ${focus}%` } : undefined} />
+    <div className={`relative aspect-4/3 overflow-hidden rounded-t-2xl rounded-br-2xl bg-[#f5f5f5] md:aspect-3/4 ${grow ? 'md:aspect-auto md:min-h-0 md:flex-1' : ''}`}>
+      <img src={img(name)} alt="" loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover md:object-center!" style={focus !== undefined ? { objectPosition: `50% ${focus}%` } : undefined} />
       <div className="absolute inset-x-4 top-4 flex flex-col gap-2 leading-[1.25] text-white">
         {/* A line alone over a photo is 240 wide, as in Figma, so it breaks the same way on any card */}
         <p className={`text-[20px] font-medium tracking-[-0.01em] ${children ? '' : 'max-w-[240px]'}`}>{title}</p>
@@ -901,24 +901,25 @@ function PhotoCard({ name, title, children, grow, focus }: { name: string; title
 
 function Examples() {
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 md:gap-6">
-      <div className="flex flex-col gap-4 md:gap-6">
+    // One column on phones; two at 640–767 px, the cards flowing in their order into two balanced columns (three were
+    // too narrow there for «Запоминающиеся» in 20 px); three stacks from md, as in Figma
+    <div className="grid grid-cols-1 gap-4 sm:block sm:columns-2 sm:[&>*>*]:mb-4 sm:[&>*>*]:break-inside-avoid md:grid md:columns-auto md:grid-cols-3 md:gap-6 md:[&>*>*]:mb-0">
+      <div className="flex flex-col gap-4 sm:max-md:contents md:gap-6">
         <PhotoCard name="voice-alice" title="Проще — говоря">Управляйте голосом с помощью Алисы</PhotoCard>
         <Bubble title="Умный">Оснащён технологиями Яндекса</Bubble>
         <Bubble title="Просторный">Найдётся место для всего на свете</Bubble>
         <Bubble title="Тихий">Не создает шума<br />на дорогах</Bubble>
       </div>
-      <div className="flex flex-col gap-4 md:gap-6">
+      <div className="flex flex-col gap-4 sm:max-md:contents md:gap-6">
         {/* On phones, in one column, after the runner: so the three bubbles before it don't run into a fourth */}
         <div className="max-sm:order-1">
           <Bubble title={<>Электромобиль с <span className="font-['Alice_Okniks'] [font-feature-settings:'ss02']">@</span> Алисой и сервисами Яндекса. Запас хода до 420 км, разгон до 100 км/ч за 8,7 секунды</>} />
         </div>
         <PhotoCard name="voice-runner" grow focus={20} title="Практичный и инновационный UMO поможет сделать город комфортнее" />
       </div>
-      <div className="flex flex-col gap-4 md:gap-6">
+      <div className="flex flex-col gap-4 sm:max-md:contents md:gap-6">
         <PhotoCard name="voice-charging" grow title="Послушаем, как поют птицы в парке, пока заряжается UMO" />
-        {/* A soft hyphen: in three columns at 640–767 px the word is wider than its bubble */}
-        <Bubble title={'Запоми\u00ADнающиеся фары'}>Светодиодная оптика даёт яркий ровный свет<br />и не слепит встречных водителей</Bubble>
+        <Bubble title="Запоминающиеся фары">Светодиодная оптика даёт яркий ровный свет<br />и не слепит встречных водителей</Bubble>
         <Bubble title="Удобная посадка">Угол раскрытия дверей на 90° обеспечивает лёгкую посадку даже с крупным багажом в руках</Bubble>
       </div>
     </div>
