@@ -41,13 +41,13 @@ const UNDER = `<w:tcBorders><w:bottom ${LINE}/></w:tcBorders>`
  * The band as Figma has it: the template's logo picture (the logo, a 3 mm gap and the hairline, then 3 mm to the
  * name) was 3.08 mm tall and stood 0.1 mm above the line, the name 12 pt with 2.88 mm capitals, so they didn't line
  * up. Here the picture is 3 mm tall, sitting on the baseline, and the name 12.5 pt (4.4 mm, as in Figma), its
- * capitals 3 mm too. As in the PDF, the name stands 2.25 mm after the hairline (the picture's last 0.75 mm cropped
- * off, 0.75 of its 21) and runs to the cell's right edge, with no margin there
+ * capitals 3 mm too. As in the PDF, the name stands 2.625 mm after the hairline (the picture's last 0.375 mm cropped
+ * off, of its 21) and runs to the cell's right edge, with no margin there
  */
 const band = (cell: string) => cell
-  .replace(/cx="792000" cy="110980"/g, 'cx="729000" cy="108000"')
+  .replace(/cx="792000" cy="110980"/g, 'cx="742500" cy="108000"')
   .replace('<wp:effectExtent l="0" t="0" r="0" b="3810"/>', '<wp:effectExtent l="0" t="0" r="0" b="0"/>')
-  .replace('</a:blip><a:stretch>', '</a:blip><a:srcRect r="3571"/><a:stretch>')
+  .replace('</a:blip><a:stretch>', '</a:blip><a:srcRect r="1786"/><a:stretch>')
   .replace('<w:vAlign ', '<w:tcMar><w:right w:w="0" w:type="dxa"/></w:tcMar><w:vAlign ')
   .replace(/(<w:rFonts w:ascii="CoFo Sans Medium" w:hAnsi="CoFo Sans Medium"\/>)(<\/w:rPr><w:t>)/, '$1<w:sz w:val="25"/><w:szCs w:val="25"/>$2')
 
