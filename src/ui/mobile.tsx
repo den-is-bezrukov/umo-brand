@@ -3,10 +3,10 @@ import { ResetIcon, DuplicateIcon, CrossIcon, Removed, type Staff } from '@/ui/s
 import { InSlide, InFoot } from '@/ui/phone'
 
 // A trial of the generators' phone layout (Figma 5098:5806, C and D): the canvas fills the screen above a sheet, what's
-// made swiped through one at a time, «‹ n ›» over it and an item's actions under it; the sheet holds the sidebar (header
-// and form) with the download at its foot. A tap on the picture folds the sheet to the download alone, the picture
-// large, and another brings it back; a swipe up on the sheet opens the form over the whole screen, a swipe down puts it
-// back. In the link: `arrows=0` hides the arrows (swiping alone), `bare` hides the download too while the sheet is folded
+// made swiped through one at a time, the item's number between «Удалить» and «Сбросить» over it and «‹ Дублировать ›»
+// under it; the sheet holds the sidebar (header and form) with the download at its foot. A tap on the picture folds the
+// sheet to the download alone, the picture large, and another brings it back; a swipe up on the sheet opens the form
+// over the whole screen, with only «‹ n ›» over it and no download, a swipe down puts it back. In the link: `arrows=0` hides the arrows (swiping alone), `bare` hides the download too while the sheet is folded
 
 /** Whether the screen is a phone's, as the generators' `md` breakpoint */
 export function usePhone() {
@@ -147,7 +147,19 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   }
 
   const many = slides.length > 1
-  const height = { preview: bare ? '0px' : '72px', half: 'min(52dvh, 420px)', full: '100dvh' }[sheet]
+  const full = sheet === 'full'
+  const back = (
+    <Btn label="Назад" hidden={!arrows || !many || shown === 0} onClick={() => go(-1)}>
+      <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M10 3L5 8L10 13" /></svg>
+    </Btn>
+  )
+  const next = (
+    <Btn label="Вперёд" hidden={!arrows || !many || shown === slides.length - 1} onClick={() => go(1)}>
+      <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M6 3L11 8L6 13" /></svg>
+    </Btn>
+  )
+  const number = <span className={`text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1] ${many ? '' : 'invisible'}`}>{shown + 1}</span>
+  const height = { preview: bare ? '0px' : '72px', half: 'min(52dvh, 420px)', full: 'calc(100dvh - 48px)' }[sheet]
 
   const fit = (ratio?: number) => ratio
     ? Math.max(0, Math.floor(Math.min(box.w - 32, (box.h - UNDER) / ratio)))
@@ -155,15 +167,20 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#f5f5f5] font-sans text-black">
-      {/* ‹ n › */}
+      {/* Over the picture the item's number between its remove and reset, or «Удалено · Вернуть» for a moment; with the
+          form over the screen, the number between the arrows, all there is of the canvas then */}
       <div className="flex h-12 shrink-0 items-center justify-between px-2 pt-2">
-        <Btn label="Назад" hidden={!arrows || !many || shown === 0} onClick={() => go(-1)}>
-          <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M10 3L5 8L10 13" /></svg>
-        </Btn>
-        <span className={`text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1] ${many ? '' : 'invisible'}`}>{shown + 1}</span>
-        <Btn label="Вперёд" hidden={!arrows || !many || shown === slides.length - 1} onClick={() => go(1)}>
-          <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M6 3L11 8L6 13" /></svg>
-        </Btn>
+        {full ? (
+          <>{back}{number}{next}</>
+        ) : staff?.removed ? (
+          <div className="flex-1"><Removed staff={staff} at={staff.removed.index} /></div>
+        ) : (
+          <>
+            <Btn label="Удалить" hidden={!staff || !current || staff.people.length < 2} onClick={() => staff?.remove(current.key)}><CrossIcon /></Btn>
+            {number}
+            <Btn label="Сбросить" hidden={!staff || !current || staff.isBlank(current)} onClick={() => staff?.clear(current.key)}><ResetIcon /></Btn>
+          </>
+        )}
       </div>
 
       {/* The pictures, one to a screen */}
@@ -182,32 +199,31 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         </div>
       </InSlide.Provider>
 
-      {/* An item's actions: remove, copy, reset; or «Удалено · Вернуть» for a moment */}
-      <div className="flex h-12 shrink-0 items-center justify-between px-2 pb-2">
-        {staff?.removed ? (
-          <div className="flex-1"><Removed staff={staff} at={staff.removed.index} /></div>
-        ) : staff && current ? (
-          <>
-            <Btn label="Удалить" hidden={staff.people.length < 2} onClick={() => staff.remove(current.key)}><CrossIcon /></Btn>
-            <Btn label="Дублировать" onClick={() => staff.duplicate(current.key)}><DuplicateIcon /></Btn>
-            <Btn label="Сбросить" hidden={staff.isBlank(current)} onClick={() => staff.clear(current.key)}><ResetIcon /></Btn>
-          </>
-        ) : null}
-      </div>
+      {/* Under it the arrows with the copy between them */}
+      {!full && (
+        <div className="flex h-12 shrink-0 items-center justify-between px-2 pb-2">
+          {back}
+          <Btn label="Дублировать" hidden={!staff || !current || !!staff.removed} onClick={() => staff?.duplicate(current.key)}><DuplicateIcon /></Btn>
+          {next}
+        </div>
+      )}
 
       {/* The sheet: the sidebar scrolling, the download at its foot; folded, the download alone, over the canvas */}
       <div
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
-        className={`flex shrink-0 flex-col overflow-hidden transition-[height,border-radius,background-color] ${sheet === 'preview' ? 'bg-transparent' : 'bg-white'} ${sheet === 'half' ? 'rounded-t-[16px]' : ''}`}
+        className={`flex shrink-0 flex-col overflow-hidden transition-[height,border-radius,background-color] ${sheet === 'preview' ? 'bg-transparent' : 'bg-white'} ${sheet !== 'preview' ? 'rounded-t-[16px]' : ''}`}
         style={{ height, transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: EASE }}
       >
         <div ref={scroller} className={`min-h-0 flex-1 overflow-y-auto ${sheet === 'preview' ? 'pointer-events-none' : ''}`}>
           {sidebar}
         </div>
-        <div className="shrink-0 px-6 pt-3 pb-5 tracking-normal">
-          <InFoot.Provider value={() => setSheet(s => (s === 'preview' ? 'half' : s))}>{download}</InFoot.Provider>
-        </div>
+        {/* No download over the whole-screen form: it's for filling in */}
+        {!full && (
+          <div className="shrink-0 px-6 pt-3 pb-5 tracking-normal">
+            <InFoot.Provider value={() => setSheet(s => (s === 'preview' ? 'half' : s))}>{download}</InFoot.Provider>
+          </div>
+        )}
       </div>
     </div>
   )
