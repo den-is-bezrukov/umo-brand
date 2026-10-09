@@ -271,44 +271,21 @@ export default function PriceTag() {
 }
 
 /**
- * The price as one field of two parts, as the business card's phone and extension (Figma 5077:45): the roubles, set in
- * threes, then the kopecks after a grey comma, «00» grey until typed, so it's plain there are kopecks without typing
- * them. A comma or dot typed in the roubles goes on to the kopecks; a whole price pasted («1 290,50») splits. The value
- * stays one string, «1 290,50», kopecks left out while empty
+ * The price, one field with the kopecks it doesn't have yet shown after it in grey: «1 290» reads «1 290,00», «1 290,5»
+ * reads «1 290,50», so it's plain there are kopecks without typing them (a field of two parts, roubles and kopecks, as
+ * the business card's phone, was tried). The grey tail is a copy of the text laid under the field, transparent but for
+ * the tail, in the same type and padding
  */
 function PriceField({ value, onChange, invalid }: { value: string; onChange: (v: string) => void; invalid?: boolean }) {
-  const kopecksRef = useRef<HTMLInputElement>(null)
-  const [roubles, kopecks = ''] = value.split(',')
-  const join = (r: string, k: string) => (k ? `${r || '0'},${k}` : r)
+  const kopecks = value.split(',')[1]
+  const tail = !value ? '' : kopecks === undefined ? ',00' : '00'.slice(kopecks.length)
   return (
-    <div className="flex rounded-[8px] bg-[#f5f5f5]">
-      <TextInput
-        value={roubles}
-        onChange={v => {
-          const f = formatPrice(v)
-          if (f.includes(',')) {
-            const [r, k] = f.split(',')
-            onChange(join(r, k || kopecks))
-            kopecksRef.current?.focus()
-          } else onChange(join(f, kopecks))
-        }}
-        placeholder="0 000"
-        inputMode="decimal"
-        invalid={invalid}
-      />
-      <label className="flex h-10 w-16 shrink-0 cursor-text items-center rounded-[8px] bg-[#f5f5f5] px-3 text-[14px] leading-5 focus-within:ring-1 focus-within:ring-inset focus-within:ring-black/40">
-        <span className="text-[#999]">,</span>
-        <input
-          ref={kopecksRef}
-          value={kopecks}
-          onChange={e => onChange(join(roubles, e.target.value.replace(/\D/g, '').slice(0, 2)))}
-          onKeyDown={e => { if (e.key === 'Backspace' && !kopecks) { e.preventDefault(); e.currentTarget.closest('div')?.querySelector('input')?.focus() } }}
-          placeholder="00"
-          inputMode="numeric"
-          aria-label="Копейки"
-          className="w-full min-w-0 bg-transparent text-black outline-none placeholder:text-[#999] [font-variant-numeric:lining-nums_tabular-nums]"
-        />
-      </label>
+    <div className="relative rounded-[8px] bg-[#f5f5f5]">
+      <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center overflow-hidden px-3 text-[14px] leading-5 whitespace-pre">
+        <span className="invisible">{value}</span>
+        <span className="text-[#999]">{tail}</span>
+      </div>
+      <TextInput value={value} onChange={v => onChange(formatPrice(v))} placeholder="0 000,00" inputMode="decimal" invalid={invalid} className="relative bg-transparent!" />
     </div>
   )
 }
