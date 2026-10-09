@@ -337,8 +337,8 @@ export default function HoursSign() {
               {!blank && <CaptionReset onClick={reset} label="Вернуть табличку по умолчанию" />}
             </span>
           </figcaption>
-          {/* A warning, not an error: the download stays on, as a short day can be meant (a holiday) */}
-          {short && <p className="text-center text-[14px] leading-5 text-[#808080]">День короче 8&nbsp;часов&nbsp;— проверьте время</p>}
+          {/* A warning in red, as the generators' faults under their pictures, but the download stays on, as a short day can be meant (a holiday) */}
+          {short && <p className="text-center text-[14px] leading-5 text-[#e30]">День короче 8&nbsp;часов&nbsp;— проверьте время</p>}
         </figure>
       </main>
 
