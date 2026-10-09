@@ -152,10 +152,10 @@ export default function PriceTag() {
                   <Labelled label="Артикул">
                     <TextInput value={it.code} onChange={v => update(it.key, { code: v })} placeholder="CODE-12345" invalid={bad('code', 'Артикул')} />
                   </Labelled>
-                  {/* On phones the caption and the price share a row, as the price card's model and trim; the price narrow, so the caption keeps one line */}
-                  <div className="grid grid-cols-[minmax(0,1fr)_104px] gap-x-3 gap-y-4 md:grid-cols-1">
+                  {/* On phones the caption and the price share a row, as the price card's model and trim, the caption cut to one line */}
+                  <div className="grid grid-cols-2 gap-x-3 gap-y-4 md:grid-cols-1">
                   <Labelled label="Подпись">
-                    <ComboField key={it.key} value={it.caption} onChange={v => update(it.key, { caption: v })} options={CAPTIONS} singleLine placeholder={DEFAULT_CAPTION} label="Подписи цены" invalid={bad('caption', 'Подпись')} />
+                    <ComboField key={it.key} value={it.caption} onChange={v => update(it.key, { caption: v })} options={CAPTIONS} singleLine placeholder={DEFAULT_CAPTION} label="Подписи цены" truncate invalid={bad('caption', 'Подпись')} />
                   </Labelled>
                   <Labelled label="Цена, ₽">
                     <TextInput numeric value={it.price} onChange={v => update(it.key, { price: formatPrice(v).slice(0, 11) })} placeholder="0 000" invalid={bad('price', 'Цена')} />

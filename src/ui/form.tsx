@@ -424,7 +424,7 @@ const ANCHOR = typeof CSS !== 'undefined' && CSS.supports('anchor-name: --a')
  * through it, Enter picks, Esc or leaving the field closes it; the chevron opens the whole list. An option may carry a
  * line break, kept in the value it gives and shown as a space in the list. First made for the name tag's position
  */
-export function ComboField({ value, onChange, options, placeholder, label, invalid, singleLine, shownAs = t => t }: { value: string; onChange: (v: string) => void; options: string[]; placeholder?: string; label: string; invalid?: boolean; /** Enter doesn't break the line, pasted breaks become spaces */ singleLine?: boolean; /** How an option reads in the list, when it differs from the value it gives */ shownAs?: (t: string) => string }) {
+export function ComboField({ value, onChange, options, placeholder, label, invalid, singleLine, shownAs = t => t, truncate }: { value: string; onChange: (v: string) => void; options: string[]; placeholder?: string; label: string; invalid?: boolean; /** Enter doesn't break the line, pasted breaks become spaces */ singleLine?: boolean; /** How an option reads in the list, when it differs from the value it gives */ shownAs?: (t: string) => string; /** One line, cut off with an ellipsis, rather than growing: for a narrow field (the price tag's caption on phones) */ truncate?: boolean }) {
   const box = useRef<HTMLDivElement>(null)
   const list = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
@@ -479,27 +479,32 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
 
   return (
     <div ref={box} className="relative" style={{ anchorName: anchor } as React.CSSProperties}>
-      <TextArea
-        value={value}
-        onChange={v => { onChange(singleLine ? v.replace(/\s*\n\s*/g, ' ') : v); setAll(false); setOpen(true) }}
-        placeholder={placeholder}
-        invalid={invalid}
-        className="pr-10"
-        role="combobox"
-        aria-expanded={open}
-        aria-controls={id}
-        aria-autocomplete="list"
-        aria-activedescendant={open && active >= 0 ? `${id}-${active}` : undefined}
-        onFocus={() => setOpen(true)}
-        onBlur={() => { setOpen(false); setAll(false) }}
-        onKeyDown={onKeyDown}
-      />
+      {(() => {
+        const field = {
+          value,
+          placeholder,
+          'aria-invalid': invalid || undefined,
+          role: 'combobox',
+          'aria-expanded': open,
+          'aria-controls': id,
+          'aria-autocomplete': 'list' as const,
+          'aria-activedescendant': open && active >= 0 ? `${id}-${active}` : undefined,
+          onFocus: () => setOpen(true),
+          onBlur: () => { setOpen(false); setAll(false) },
+          onKeyDown,
+        }
+        const change = (v: string) => { onChange(singleLine || truncate ? v.replace(/\s*\n\s*/g, ' ') : v); setAll(false); setOpen(true) }
+        // An input, as a textarea can't end in an ellipsis
+        return truncate
+          ? <input {...field} onChange={e => change(e.target.value)} className={`${areaClass} h-10 truncate pr-10 focus:ring-1 focus:ring-inset focus:ring-black/40`} />
+          : <TextArea {...field} invalid={invalid} onChange={change} className="pr-10" />
+      })()}
       <button
         type="button"
         tabIndex={-1}
         aria-label={label}
         onMouseDown={e => e.preventDefault()}
-        onClick={() => { box.current?.querySelector('textarea')?.focus(); setAll(true); setOpen(o => !o || !all) }}
+        onClick={() => { box.current?.querySelector<HTMLElement>('textarea, input')?.focus(); setAll(true); setOpen(o => !o || !all) }}
         className="absolute top-0 right-0 flex size-10 cursor-pointer items-center justify-center"
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
