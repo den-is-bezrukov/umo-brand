@@ -867,22 +867,12 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   const foot = useContext(InFoot)
   if (foot) {
     const lead = disabled && !!note && !said
-    // «Поделиться» as an icon left of the download, 40 px square, edged as the secondary buttons, where the page has it
-    // and only once the download is on: while a step is left, the button saying it stands alone
+    // «Поделиться» beside the download, half each, as on the site's phones before, once the download is on: while a step
+    // is left, the button saying it stands alone (an icon left of the download was tried and dropped)
     const shareOn = !!links && !disabled && !said
     return (
-      <div className="flex gap-2">
-      {shareOn && (
-        <button
-          type="button"
-          aria-label="Поделиться"
-          title="Поделиться"
-          onClick={() => shareLink(() => flash('Ссылка с настройками скопирована'))}
-          className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-[8px] bg-white shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)] outline-none active:shadow-[0_0_0_0.5px_rgba(0,0,0,0.4),inset_0_0_0_0.5px_rgba(0,0,0,0.4)]"
-        >
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d="M8 10V1.5M4.5 5L8 1.5L11.5 5M5 7.5H2.5V14.5H13.5V7.5H11" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" /></svg>
-        </button>
-      )}
+      <div className="grid auto-cols-fr grid-flow-col gap-2">
+      {shareOn && <div className="flex min-w-0">{links}</div>}
       <button
         type="button"
         onClick={lead && onNote ? () => { foot(); setTimeout(onNote, 350) } : onClick}
