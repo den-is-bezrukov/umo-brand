@@ -21,6 +21,7 @@ export function usePhone() {
   return phone
 }
 
+const TURN_MS = 333
 /** How far a swipe goes before it opens or closes the form */
 const SWIPE = 40
 /** A fitted item's inset from the screen's sides: the canvas's 10 px padding and 6 more (Figma 5098:5543) */
@@ -231,9 +232,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
 
       {/* The sheet: the sidebar scrolling, the download at its foot; folded, the download alone, over the canvas */}
       <div
-        // No transition: the picture above scaled with the sheet frame by frame
-        className={`relative flex shrink-0 flex-col overflow-hidden ${sheet === 'preview' ? 'bg-transparent' : 'bg-white'} ${sheet !== 'preview' ? 'rounded-t-[16px] shadow-[0_0_30px_-4px_rgba(0,0,0,0.1)]' : ''}`}
-        style={{ height }}
+        // Linear: eased, the picture above scaled with the sheet unevenly
+        className={`relative flex shrink-0 flex-col overflow-hidden transition-[height,border-radius,background-color] ${sheet === 'preview' ? 'bg-transparent' : 'bg-white'} ${sheet !== 'preview' ? 'rounded-t-[16px] shadow-[0_0_30px_-4px_rgba(0,0,0,0.1)]' : ''}`}
+        style={{ height, transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: 'linear' }}
       >
         {/* The top edge, over the form's own 24 px padding, the grabber in it */}
         {sheet !== 'preview' && (
