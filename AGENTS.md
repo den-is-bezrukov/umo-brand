@@ -72,6 +72,8 @@ Below 640 px (`sm`; it was `md`, which left a phone held sideways with 4:3 strip
 
 Типографика: the CoFo Sans specimen is 4:3 below `sm` (2:1 from it); below 640 px its alternatives stand two to a row, 4:3 (three in a row were too small, one to a row too large; Geist across both columns over the other two, all 2:1, was tried and was too large), three in a row from `sm`.
 
+From 520 px (between a phone and `sm`) some pairs already stand side by side: the logo-on-icons pictures, Леттеринг → Модели (its downloads from 560, where «umo-model-8-png.zip» stops wrapping; `early` on `Assets`) and Сделано в Москве.
+
 Below `md` pictures stand 16 px apart, as the page's side gutter, across and down, and so do a picture and the download rows under it (24 from `md`, as the Figma layout); text stays as it was.
 
 Body copy (`Text`) takes its width from its length on the 12-column Figma grid: up to 150 characters 6 columns (432px), up to 300 — 8 (600px), longer — 9 (678px). Don't set widths by hand (the one exception, `wide`, gives Контакты 9 columns, three lines instead of four); texts paired side by side sit in a grid with `*:max-w-none` and fill their cells.
