@@ -25,8 +25,11 @@ const EASE = 'cubic-bezier(0.67, 0, 0.33, 1)'
 const TURN_MS = 333
 /** How far a swipe goes before it opens or closes the form */
 const SWIPE = 40
-/** Under a fitted item: room for its caption or the line saying what's wrong with it */
-const UNDER = 56
+/** A fitted item's inset from the screen's sides: the canvas's 10 px padding and 6 more (Figma 5098:5543) */
+const SIDE = 16
+/** The canvas's padding and the rows' height, as Figma has them: 10 and 30, 8 between rows and picture */
+const ROW = 30
+const PAD = 10
 
 const arrowsOn = () => new URLSearchParams(location.search).get('arrows') !== '0'
 
@@ -39,8 +42,8 @@ function Btn({ label, onClick, hidden, children }: { label: string; onClick: () 
       title={label}
       aria-label={label}
       onClick={onClick}
-      // Hidden keeps its place, so the others don't move
-      className={`flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] outline-none active:text-black ${hidden ? 'invisible' : ''}`}
+      // 30 px as in Figma, a finger's 40 round it (the ::after); hidden keeps its place, so the others don't move
+      className={`relative flex size-[30px] shrink-0 after:absolute after:-inset-[5px] after:content-[''] cursor-pointer items-center justify-center rounded-[8px] text-[#808080] outline-none active:text-black ${hidden ? 'invisible' : ''}`}
     >
       {children}
     </button>
@@ -168,21 +171,24 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     ? <span className="min-w-0 truncate text-[14px] leading-5 text-[#808080]">{title}</span>
     : <span className={`text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1] ${many ? '' : 'invisible'}`}>{slides[shown]?.number ?? shown + 1}</span>
   const reset = slides[shown]?.reset
-  const height = { preview: '0px', half: '60dvh', full: 'calc(100dvh - 48px)' }[sheet]
+  const height = { preview: '0px', half: '60dvh', full: `calc(100dvh - ${ROW + 2 * PAD}px)` }[sheet]
 
+  // As large as the strip allows: its whole height, its width but the sides
   const fit = (ratio?: number) => ratio
-    ? Math.max(0, Math.floor(Math.min(box.w - 32, (box.h - UNDER) / ratio)))
-    : Math.max(0, box.w - 32)
+    ? Math.max(0, Math.floor(Math.min(box.w - 2 * SIDE, box.h / ratio)))
+    : Math.max(0, box.w - 2 * SIDE)
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#f5f5f5] font-sans text-black">
+      {/* The canvas: 10 px in, rows of 30 px icons over and under the picture, 8 px off it (Figma 5098:5543) */}
+      <div className={`flex min-h-0 flex-1 flex-col p-[10px] ${full ? '' : 'gap-2'}`}>
       {/* Over the picture the item's number between its remove and reset, or «Удалено · Вернуть» for a moment; with the
           form over the screen, the number between the arrows, all there is of the canvas then */}
-      <div className="flex h-12 shrink-0 items-center justify-between px-2 pt-2">
+      <div className="flex h-[30px] shrink-0 items-center justify-between">
         {full ? (
           <>{back}{number}{next}</>
         ) : staff?.removed ? (
-          <div className="flex-1"><Removed staff={staff} at={staff.removed.index} /></div>
+          <div className="-my-[5px] flex-1"><Removed staff={staff} at={staff.removed.index} /></div>
         ) : (
           <>
             <Btn label="Удалить" hidden={!staff || !current || staff.people.length < 2} onClick={() => staff?.remove(current.key)}><CrossIcon /></Btn>
@@ -200,11 +206,12 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           ref={strip}
           onScroll={onScroll}
           onClick={onTap}
-          className="flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          // Across the whole screen, for the swipe, the picture inset in each slide
+          className="-mx-[10px] flex min-h-0 flex-1 snap-x snap-mandatory overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
           {slides.map(s => (
             <div key={s.key} className={`flex h-full w-full shrink-0 snap-center overflow-y-auto [scrollbar-width:none] ${s.title ? '[&_figcaption]:hidden' : ''}`}>
-              {box.w > 0 && <div className="m-auto py-2" style={{ width: fit(s.ratio) }}>{typeof s.node === 'function' ? s.node(fit(s.ratio)) : s.node}</div>}
+              {box.w > 0 && <div className="m-auto" style={{ width: fit(s.ratio) }}>{typeof s.node === 'function' ? s.node(fit(s.ratio)) : s.node}</div>}
             </div>
           ))}
         </div>
@@ -212,12 +219,14 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
 
       {/* Under it the arrows with the copy between them */}
       {!full && (
-        <div className="flex h-12 shrink-0 items-center justify-between px-2 pb-2">
+        <div className="flex h-[30px] shrink-0 items-center justify-between">
           {back}
           <Btn label="Дублировать" hidden={!staff || !current || !!staff.removed} onClick={() => staff?.duplicate(current.key)}><DuplicateIcon /></Btn>
           {next}
         </div>
       )}
+
+      </div>
 
       {/* The sheet: the sidebar scrolling, the download at its foot; folded, the download alone, over the canvas */}
       <div
