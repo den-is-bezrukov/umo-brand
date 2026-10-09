@@ -161,7 +161,12 @@ export default function HoursSign() {
   const shown: Input = { line, ...Object.fromEntries(ORDER.map(f => [f, oneLine(values[f]) ? values[f] : PLACEHOLDER[f]])) as Omit<Input, 'line'> }
   const sign = useMemo(() => font ? buildSign(font, shown) : undefined, [font, JSON.stringify(shown)]) // eslint-disable-line react-hooks/exhaustive-deps
   /** Faults of what's typed; a placeholder is never one */
-  const issues = (sign?.issues ?? []).filter(i => !empty.includes(i.field as typeof ORDER[number]))
+  const issues = [
+    ...(sign?.issues ?? []).filter(i => !empty.includes(i.field as typeof ORDER[number])),
+    // Closing after opening, once both are typed: no shop closes before it opens, nor at once
+    ...(!empty.includes('from') && !empty.includes('to') && timeText(values.from) && timeText(values.to) && minutesOf(timeText(values.to)!) <= minutesOf(timeText(values.from)!)
+      ? [{ field: 'to' as const, text: 'Закрытие раньше открытия' }] : []),
+  ]
   const wrong = new Set(issues.map(i => i.field))
   const ok = !!sign && !empty.length && !issues.length
 

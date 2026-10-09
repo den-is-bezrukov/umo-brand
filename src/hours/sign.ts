@@ -127,28 +127,32 @@ export function buildSign(font: Font, input: Input): Sign {
     if (absent.length) issues.push({ field, text: `${label}: нет в шрифте ${absent.map(c => `«${c}»`).join(', ')}` })
     if (hasProfanity(text)) issues.push({ field, text: `${label}: ${PROFANITY.toLowerCase()}` })
   }
-  /** One centred line, its type made smaller only where it would run out of the column */
-  const centred = (runs: Run[], spec: { size: number; track: number; baseline: number }, feats: string[], shrink: boolean, label: string, field: SignField) => {
+  /** One centred line, its type scaled to `fit` mm of ink when given, else checked against the column */
+  const centred = (runs: Run[], spec: { size: number; track: number; baseline: number }, feats: string[], fit: number | undefined, label: string, field: SignField) => {
     const probe = setRuns(font, runs, 0, 0, spec.size, feats, spec.track)
     const full = probe.ink.x2 - probe.ink.x1
-    const size = shrink && full > COLUMN ? spec.size * COLUMN / full : spec.size
-    if (!shrink && full > COLUMN + 0.01) issues.push({ field, text: `${label} шире ${Math.round(COLUMN)} мм` })
+    const size = fit && full > 0 ? spec.size * fit / full : spec.size
+    if (!fit && full > COLUMN + 0.01) issues.push({ field, text: `${label} шире ${Math.round(COLUMN)} мм` })
     const k = size / spec.size
     // Centred by the ink, as the source's line sits
     const x = (SIGN.w - full * k) / 2 - probe.ink.x1 * k
     parts.push(...setRuns(font, runs, x, spec.baseline, size, feats, spec.track).parts)
   }
 
-  // The hours: one line however long, the type smaller for «10:00—22:00», which runs out of the column at full size
+  // The hours: always as wide as Figma's «9:00—21:00» at its size, so that one stands exactly as there, a longer range
+  // («10:00—22:00», which would run out of the column) smaller and a shorter one («9:30—7:30») larger, on the same baseline
   const from = timeText(input.from) ?? oneLine(input.from)
   const to = timeText(input.to) ?? oneLine(input.to)
   if (!timeText(input.from)) issues.push({ field: 'from', text: 'Открытие: проверьте время' })
   if (!timeText(input.to)) issues.push({ field: 'to', text: 'Закрытие: проверьте время' })
-  centred([{ field: 'from', text: from }, { field: 'fixed', text: '—' }, { field: 'to', text: to }], TIME, ['case', 'lnum', 'tnum'], true, 'Время', 'from')
+  const timeRuns = (a: string, b: string): Run[] => [{ field: 'from', text: a }, { field: 'fixed', text: '—' }, { field: 'to', text: b }]
+  const feats = ['case', 'lnum', 'tnum']
+  const ref = setRuns(font, timeRuns('9:00', '21:00'), 0, 0, TIME.size, feats, TIME.track).ink
+  centred(timeRuns(from, to), TIME, feats, ref.x2 - ref.x1, 'Время', 'from')
 
   const line = oneLine(input.line)
   if (line) {
-    centred([{ field: 'line', text: line }], LINE, ['case'], false, 'Подпись', 'line')
+    centred([{ field: 'line', text: line }], LINE, ['case'], undefined, 'Подпись', 'line')
     check('line', 'Подпись', line)
   }
 
