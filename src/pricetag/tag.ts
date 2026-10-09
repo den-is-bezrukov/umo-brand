@@ -24,15 +24,16 @@ const DROP = 0.844
 /** The black band */
 export const BAND = 12
 /**
- * The logo, its hairline and the dealer's name within the band's 4.5 mm padding, 2.25 mm gaps (Figma has 3): the
- * longest dealers on umo.auto («АВТОПОЛЕ Санкт-Петербург», 61.1 mm) ran over the 60 left by up to 1.1 mm, and the
- * name's type stays as in Figma
+ * The logo, its hairline and the dealer's name: the logo and the hairline 3 mm apart as in Figma, the name 2.25 mm
+ * after it (Figma has 3) and running to 4 mm from the right edge (the band's padding is 4.5): the longest dealers on
+ * umo.auto («АВТОПОЛЕ Санкт-Петербург», 61.1 mm) ran over the 60 left by up to 1.1 mm, and the name's type stays as
+ * in Figma
  */
 const LOGO_W = 15
-const GAP = 2.25
 const RULE_W = 0.15
-const RULE_X = SIDE + LOGO_W + GAP
-const DEALER = { x: RULE_X + GAP, size: 4.4, width: TAG.w - SIDE - (RULE_X + GAP) }
+const RULE_X = SIDE + LOGO_W + 3
+const TEXT_GAP = 2.25
+const DEALER = { x: RULE_X + TEXT_GAP, size: 4.4, width: TAG.w - 4 - (RULE_X + TEXT_GAP) }
 
 /** The goods' name, Medium 45 px on 45 px lines, from the body's 4 mm padding down to the code */
 const NAME = { top: BAND + 4, size: 4.5, width: TAG.w - 2 * SIDE, lines: 4 }
