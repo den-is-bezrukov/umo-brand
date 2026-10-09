@@ -732,7 +732,7 @@ function Assets({ items, preview }: { items: Asset[]; preview?: string }) {
   const two = items.length > 3
   return (
     <div
-      className={two ? 'grid grid-cols-1 gap-x-6 sm:grid-flow-col sm:grid-cols-2 sm:grid-rows-[repeat(var(--rows),auto)]' : 'flex flex-col'}
+      className={two ? 'grid grid-cols-1 gap-x-4 sm:grid-flow-col md:gap-x-6 sm:grid-cols-2 sm:grid-rows-[repeat(var(--rows),auto)]' : 'flex flex-col'}
       style={two ? ({ '--rows': Math.ceil(items.length / 2) } as CSSProperties) : undefined}
     >
       {items.map(a => {
@@ -794,7 +794,7 @@ function Previews({ className, children }: { className: string; children: ReactN
 /** A constructor page's preview over its ↗ row; `flush` sets the row right under the preview, with no gap. */
 function Constructor({ to, title, flush, children }: { to: string; title: string; flush?: boolean; children: ReactNode }) {
   return (
-    <div className={`group/preview flex flex-col ${flush ? '' : 'gap-6'}`}>
+    <div className={`group/preview flex flex-col ${flush ? '' : 'gap-4 md:gap-6'}`}>
       <PreviewLink asset={{ to, title }} label={title}>{children}</PreviewLink>
       <Assets items={[{ to, title }]} preview={to} />
     </div>
@@ -804,7 +804,7 @@ function Constructor({ to, title, flush, children }: { to: string; title: string
 /** The Носители overview (Figma 4844:6695): each medium's picture right over its ↗ row to the constructor, carrying its anchor; in `MEDIA` order. */
 function Carriers({ items }: { items: typeof MEDIA }) {
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+    <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-2">
       {items.map(c => (
         <div key={c.to} id={c.id} className={`scroll-mt-24 ${isWide(c) ? 'md:col-span-2' : ''}`}>
           <Constructor to={c.to} title={c.row} flush>{c.picture}</Constructor>
@@ -901,21 +901,21 @@ function PhotoCard({ name, title, children, grow, focus }: { name: string; title
 
 function Examples() {
   return (
-    <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-      <div className="flex flex-col gap-6">
+    <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-3">
+      <div className="flex flex-col gap-4 md:gap-6">
         <PhotoCard name="voice-alice" title="Проще — говоря">Управляйте голосом с помощью Алисы</PhotoCard>
         <Bubble title="Умный">Оснащён технологиями Яндекса</Bubble>
         <Bubble title="Просторный">Найдётся место для всего на свете</Bubble>
         <Bubble title="Тихий">Не создает шума<br />на дорогах</Bubble>
       </div>
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4 md:gap-6">
         {/* On phones, in one column, after the runner: so the three bubbles before it don't run into a fourth */}
         <div className="max-md:order-1">
           <Bubble title={<>Электромобиль с <span className="font-['Alice_Okniks'] [font-feature-settings:'ss02']">@</span> Алисой и сервисами Яндекса. Запас хода до 420 км, разгон до 100 км/ч за 8,7 секунды</>} />
         </div>
         <PhotoCard name="voice-runner" grow focus={20} title="Практичный и инновационный UMO поможет сделать город комфортнее" />
       </div>
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-4 md:gap-6">
         <PhotoCard name="voice-charging" grow title="Послушаем, как поют птицы в парке, пока заряжается UMO" />
         <Bubble title="Запоминающиеся фары">Светодиодная оптика даёт яркий ровный свет<br />и не слепит встречных водителей</Bubble>
         <Bubble title="Удобная посадка">Угол раскрытия дверей на 90° обеспечивает лёгкую посадку даже с крупным багажом в руках</Bubble>
@@ -1189,7 +1189,7 @@ export default function Guide() {
                 <p>Логотип UMO не буквы, а модули.</p>
                 <p>Словесный знак собран из элементов, как из конструктора — чистая геометрия и инженерия. Это визуальный эквивалент главной идеи бренда — город как система, а автомобиль как её умный, технологичный элемент.</p>
               </Text>
-              <div className="group/preview flex flex-col gap-6">
+              <div className="group/preview flex flex-col gap-4 md:gap-6">
                 <PreviewLink asset={{ file: 'umo-logo.svg' }} label="Скачать логотип, SVG">
                   <LogoPlate w={912} h={456} logo={480} bg="#f5f5f5" phone43 />
                 </PreviewLink>
@@ -1206,7 +1206,7 @@ export default function Guide() {
                   <p>Единый модуль для любого контекста.</p>
                 </Text>
               </Head>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                 <Fig name="placement-exterior" w={912} h={456} className="md:col-span-2" alt="Логотип на передней части UMO 8" />
                 <Fig name="placement-interior" w={444} h={333} alt="Логотип на руле" />
                 <Fig name="placement-badge" w={444} h={333} alt="Шильдик UMO на кузове" />
@@ -1221,7 +1221,7 @@ export default function Guide() {
                   <p>Чтобы сохранить узнаваемость и четкость не уменьшайте размеры логотипа ниже рекомендуемых.</p>
                 </Text>
               </Head>
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-4 md:gap-6">
                 <Fig name="clearspace" w={912} h={456} phone43 alt="Схема охранного поля логотипа: U со всех сторон" />
                 <Fig name="minsize" w={912} h={304} alt="Минимальный размер: аналоговый ≥20 мм, цифровой ≥40 px" />
               </div>
@@ -1232,7 +1232,7 @@ export default function Guide() {
                 <H2 id="logo-color">Цвет логотипа</H2>
                 <Text><p>Цвет логотипа подбирается по контрасту, яркости и тону фона: белый или черный.</p></Text>
               </Head>
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-4 md:gap-6">
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
                   <LogoPlate w={444} h={333} logo={240} bg="#000" dark caption="Белый для тёмного фона" />
                   <LogoPlate w={444} h={333} logo={240} bg="#f5f5f5" caption="Чёрный для светлого фона" />
@@ -1274,8 +1274,8 @@ export default function Guide() {
                   </Text>
                 </div>
               </Head>
-              <Previews className="flex flex-col gap-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <Previews className="flex flex-col gap-4 md:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                   <PreviewLink asset={{ file: 'umo-icon-white.zip' }} label="Скачать иконку, чёрный логотип на белом">
                     <Fig name="icon-userpic" w={444} h={333} caption="Юзерпик аккаунта соцсетей" />
                   </PreviewLink>
@@ -1308,8 +1308,8 @@ export default function Guide() {
                 </div>
               </Head>
               {/* Figma 4818:1328: two columns, a scheme over its example; each column stacks on phones */}
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div className="group/preview flex flex-col gap-6">
+              <div className="grid grid-cols-1 gap-4 md:gap-6 md:grid-cols-2">
+                <div className="group/preview flex flex-col gap-4 md:gap-6">
                   <Zoom label="Схема кобрендинга с квадратным логотипом">
                     <Fig name="cobrand-square" w={444} h={333} alt="Схема кобрендинга с квадратным логотипом" />
                   </Zoom>
@@ -1318,7 +1318,7 @@ export default function Guide() {
                   </PreviewLink>
                   <Assets items={[{ file: 'umo-yandex.svg' }, { file: 'umo-yandex-png.zip' }]} preview="umo-yandex.svg" />
                 </div>
-                <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-4 md:gap-6">
                   <Zoom label="Схема кобрендинга с горизонтальным логотипом">
                     <Fig name="cobrand-horizontal" w={444} h={333} alt="Схема кобрендинга с горизонтальным логотипом" />
                   </Zoom>
@@ -1335,14 +1335,14 @@ export default function Guide() {
                 <p>Гарнитура CoFo Sans — основа визуальной идентификации и стиля бренда UMO. Функциональный и разборчивый, он имеет несколько весов для полной свободы выражения.</p>
                 <p>Когда использование CoFo Sans невозможно, допускается применение альтернатив, доступных в популярных рабочих пространствах.</p>
               </Text>
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-4 md:gap-6">
                 <figure className="flex flex-col gap-3">
                   <div className="flex aspect-[2/1] items-center justify-center bg-[#f5f5f5]">
                     <p className="text-[48px] sm:text-[72px] md:text-[96px] font-medium leading-none tracking-[-0.01em]">CoFo Sans</p>
                   </div>
                   <Caption>Базовая гарнитура</Caption>
                 </figure>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
                   <Fig name="font-geist" w={288} h={216} caption="Альтернатива для Google" alt="Geist" href={GEIST_ZIP} />
                   <Fig name="font-helvetica" w={288} h={216} caption="Альтернатива для MacOS" alt="Helvetica Neue" />
                   <Fig name="font-arial" w={288} h={216} caption="Альтернатива для Windows" alt="Arial" />
@@ -1370,8 +1370,8 @@ export default function Guide() {
           <Chapter id="lettering" title="Леттеринг" loose>
             <Section>
               <H2 id="lettering-models">Модели</H2>
-              <div className="flex flex-col gap-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="flex flex-col gap-4 md:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                   <Fig name="lettering-model8" w={444} h={333} alt="Леттеринг MODEL 8 и номерная плашка UMO 8" />
                   <Fig name="lettering-model5" w={444} h={333} alt="Леттеринг MODEL 5 и номерная плашка UMO 5" />
                   <Fig name="lettering-umo8" w={444} h={333} alt="Леттеринг на UMO 8" />
@@ -1389,7 +1389,7 @@ export default function Guide() {
 
             <Section>
               <H2 id="made-in-moscow">Сделано в Москве</H2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                 <Fig name="moscow-umo5" w={444} h={333} alt="Шильдик «Сделано в Москве» на UMO 5" />
                 <Fig name="moscow-umo8" w={444} h={333} alt="Шильдик «Сделано в Москве» на UMO 8" />
               </div>
@@ -1404,8 +1404,8 @@ export default function Guide() {
                 <p>В печати чёрный двух видов: глубокий составной для плёнки, вывесок и больших плашек, чистый K100 для текста и мелких деталей. Серые — служебные: фон, линии и подписи.</p>
                 <p>Как выбрать между чёрным и белым логотипом — в разделе <a href="#logo-color" className={TEXT_LINK}>Цвет логотипа</a>.</p>
               </Text>
-              <div className="flex flex-col gap-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <div className="flex flex-col gap-4 md:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                   <Swatch color="#000000" dark name="Чёрный" className="aspect-4/3" values={[
                     ['Экран', '#000000'], ['Плёнка, вывески', 'C60 M40 Y40 K100'], ['Текст', 'K100'],
                   ]} />
@@ -1413,7 +1413,7 @@ export default function Guide() {
                     ['Экран', '#FFFFFF'], ['На светлом', 'без краски'], ['На тёмном', 'белая краска'],
                   ]} />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
                   <Swatch color="#f5f5f5" name="Фон" className="aspect-4/3" values={[['Экран', '#F5F5F5'], ['Печать', 'K4']]} />
                   <Swatch color="#e6e6e6" name="Линии" className="aspect-4/3" values={[['Экран', '#E6E6E6'], ['Печать', 'K10']]} />
                   <Swatch color="#808080" dark name="Подписи" className="aspect-4/3" values={[['Экран', '#808080'], ['Печать', 'K50']]} />
@@ -1437,9 +1437,9 @@ export default function Guide() {
                 <H2 id="photo-umo5">UMO 5</H2>
                 <Text><p>Снимки UMO Model 5 и пример их применения в рекламе</p></Text>
               </Head>
-              <div className="flex flex-col gap-6">
+              <div className="flex flex-col gap-4 md:gap-6">
                 <Fig name="umo5-kv" focus={72} w={912} h={456} alt="UMO 5" />
-                <div className="grid grid-cols-1 sm:grid-cols-[600fr_288fr] gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-[600fr_288fr] gap-4 md:gap-6">
                   <Poster bg="umo5-banner-bg" w={600} h={368} title="Новый UMO 5" subtitle={UMO5_SUBTITLE} alt="Горизонтальный баннер UMO 5" />
                   <Poster bg="umo5-square-bg" w={288} h={368} title="Новый UMO 5" subtitle={UMO5_SUBTITLE} center alt="Вертикальный баннер UMO 5" />
                 </div>
@@ -1451,8 +1451,8 @@ export default function Guide() {
                 <H2 id="photo-umo8">UMO 8</H2>
                 <Text><p>Снимки UMO Model 8 и пример их применения в рекламе</p></Text>
               </Head>
-              <div className="flex flex-col gap-6">
-                <div className="grid grid-cols-1 sm:grid-cols-[288fr_600fr] gap-6">
+              <div className="flex flex-col gap-4 md:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-[288fr_600fr] gap-4 md:gap-6">
                   <div className="order-2 sm:order-none">
                     <Poster bg="umo8-square-bg" w={288} h={368} title="Новый UMO 8" subtitle={UMO8_SUBTITLE} center alt="Вертикальный баннер UMO 8" />
                   </div>
