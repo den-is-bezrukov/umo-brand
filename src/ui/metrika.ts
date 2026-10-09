@@ -12,6 +12,7 @@ export type Goal =
   | 'download_price_tag'
   | 'download_hours_sign'
   | 'copy_link'
+  | 'open_menu'
 
 export function goal(id: Goal, params?: Record<string, string | number | boolean>) {
   ;(window as any).ym?.(COUNTER, 'reachGoal', id, params)
