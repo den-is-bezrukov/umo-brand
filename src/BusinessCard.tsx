@@ -388,7 +388,7 @@ export default function BusinessCard() {
   )
 
   // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
-  if (phone) return <MobileEditor slides={mode === 'table' && !staff.file ? [{ key: 'upload', node: <UploadArea staff={staff} /> }] : [{ key: 'face', ratio: CARD.h / CARD.w, node: <div className="outline-1 outline-black/10"><CardArt text={face} /></div> }, ...items.map((p, i) => ({ key: p.key, item: p.key, ratio: CARD.h / CARD.w, node: renderItem(p, i) }))]} sidebar={sidebar} download={download} staff={staff} />
+  if (phone) return <MobileEditor slides={mode === 'table' && !staff.file ? [{ key: 'upload', node: <UploadArea staff={staff} /> }] : [{ key: 'face', number: 0, ratio: CARD.h / CARD.w, node: <div className="outline-1 outline-black/10"><CardArt text={face} /></div> }, ...items.map((p, i) => ({ key: p.key, item: p.key, number: i + 1, ratio: CARD.h / CARD.w, node: renderItem(p, i) }))]} sidebar={sidebar} download={download} staff={staff} />
 
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">

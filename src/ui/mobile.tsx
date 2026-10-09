@@ -55,6 +55,8 @@ export interface Slide {
   ratio?: number
   /** The list item it is, for the actions and the selection */
   item?: number
+  /** Its number, when it isn't its place in the strip (the business card's face is 0, its cards from 1) */
+  number?: number
   /** Its name, in the number's place, for a page whose pictures aren't a list (the livery's sheets, the frame, the sign); their captions under the picture go */
   title?: React.ReactNode
   /** Its reset, in «Сбросить»'s place, while there's something to reset */
@@ -164,7 +166,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   const title = slides[shown]?.title
   const number = title
     ? <span className="min-w-0 truncate text-[14px] leading-5 text-[#808080]">{title}</span>
-    : <span className={`text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1] ${many ? '' : 'invisible'}`}>{shown + 1}</span>
+    : <span className={`text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1] ${many ? '' : 'invisible'}`}>{slides[shown]?.number ?? shown + 1}</span>
   const reset = slides[shown]?.reset
   const height = { preview: '0px', half: 'min(52dvh, 420px)', full: 'calc(100dvh - 48px)' }[sheet]
 
