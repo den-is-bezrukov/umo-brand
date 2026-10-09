@@ -645,7 +645,7 @@ function Swatch({ color, name, values, dark, className = '' }: {
         {values.map(([use, value]) => /^(#|C\d|K\d)/.test(value)
           ? <CopyRow key={use} use={use} value={value} />
           : (
-            <div key={use} className="flex justify-between gap-4">
+            <div key={use} className="flex justify-between gap-1 sm:gap-4">
               <p>{use}</p>
               <p className="text-right">{value}</p>
             </div>
@@ -671,7 +671,7 @@ function CopyRow({ use, value }: { use: string; value: string }) {
     <button
       type="button"
       onClick={() => navigator.clipboard.writeText(value).then(() => setCopied(true), () => {})}
-      className="group flex cursor-pointer justify-between gap-4 text-left"
+      className="group flex cursor-pointer justify-between gap-1 sm:gap-4 text-left"
     >
       <span className={text}>{copied ? 'Скопировано' : use}</span>
       <span className={`whitespace-nowrap text-right tabular-nums ${text}`}>{value}</span>
@@ -1423,10 +1423,10 @@ export default function Guide() {
                     ['Экран', '#FFFFFF'], ['На светлом', 'без краски'], ['На тёмном', 'белая краска'],
                   ]} />
                 </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
-                  <Swatch color="#f5f5f5" name="Фон" className="aspect-4/3" values={[['Экран', '#F5F5F5'], ['Печать', 'K4']]} />
-                  <Swatch color="#e6e6e6" name="Линии" className="aspect-4/3" values={[['Экран', '#E6E6E6'], ['Печать', 'K10']]} />
-                  <Swatch color="#808080" dark name="Подписи" className="aspect-4/3" values={[['Экран', '#808080'], ['Печать', 'K50']]} />
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6">
+                  <Swatch color="#f5f5f5" name="Фон" className="aspect-4/3 max-sm:p-4" values={[['Экран', '#F5F5F5'], ['Печать', 'K4']]} />
+                  <Swatch color="#e6e6e6" name="Линии" className="aspect-4/3 max-sm:p-4" values={[['Экран', '#E6E6E6'], ['Печать', 'K10']]} />
+                  <Swatch color="#808080" dark name="Подписи" className="aspect-4/3 max-sm:p-4" values={[['Экран', '#808080'], ['Печать', 'K50']]} />
                 </div>
               </div>
             </Section>
