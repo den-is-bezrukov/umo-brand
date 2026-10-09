@@ -117,6 +117,20 @@ export default function PriceTag() {
         <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
           <GeneratorHeader current="/price-tag" />
 
+          {/* The dealer first: the whole list's, set once */}
+          <div ref={dealerField} className="group/field flex flex-col gap-2 tracking-normal">
+            <p className={`text-[14px] leading-4 text-[#808080] ${ALERT_LABEL}`}>Дилер</p>
+            <ComboField
+              value={dealer}
+              onChange={setDealer}
+              options={DEALER_OPTIONS}
+              singleLine
+              placeholder="Название дилера"
+              label="Дилеры UMO"
+              invalid={dealerIssues.length > 0 && !dealerMissing}
+            />
+          </div>
+
           <Labelled label="Данные">
             <Segments>
               <SegBtn active={mode === 'manual'} onClick={() => setMode('manual')}>Вручную</SegBtn>
@@ -125,20 +139,6 @@ export default function PriceTag() {
           </Labelled>
 
           <div className="flex flex-col gap-4 tracking-normal">
-            {/* The dealer: the whole list's */}
-            <div ref={dealerField} className="group/field flex flex-col gap-2">
-              <p className={`text-[14px] leading-4 text-[#808080] ${ALERT_LABEL}`}>Дилер</p>
-              <ComboField
-                value={dealer}
-                onChange={setDealer}
-                options={DEALER_OPTIONS}
-                singleLine
-                placeholder="Название дилера"
-                label="Дилеры UMO"
-                invalid={dealerIssues.length > 0 && !dealerMissing}
-              />
-            </div>
-
             {mode === 'manual' && current && (() => {
               const it = current
               const i = items.findIndex(x => x.key === it.key)
@@ -152,12 +152,15 @@ export default function PriceTag() {
                   <Labelled label="Артикул">
                     <TextInput value={it.code} onChange={v => update(it.key, { code: v })} placeholder="CODE-12345" invalid={bad('code', 'Артикул')} />
                   </Labelled>
+                  {/* On phones the caption and the price share a row, as the price card's model and trim; the price narrow, so the caption keeps one line */}
+                  <div className="grid grid-cols-[minmax(0,1fr)_104px] gap-x-3 gap-y-4 md:grid-cols-1">
                   <Labelled label="Подпись">
                     <ComboField key={it.key} value={it.caption} onChange={v => update(it.key, { caption: v })} options={CAPTIONS} singleLine placeholder={DEFAULT_CAPTION} label="Подписи цены" invalid={bad('caption', 'Подпись')} />
                   </Labelled>
                   <Labelled label="Цена, ₽">
                     <TextInput numeric value={it.price} onChange={v => update(it.key, { price: formatPrice(v).slice(0, 11) })} placeholder="0 000" invalid={bad('price', 'Цена')} />
                   </Labelled>
+                  </div>
                 </div>
               )
             })()}
