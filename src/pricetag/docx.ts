@@ -6,7 +6,7 @@ import type { Item } from './tag'
 // (Yandex Disk `02 UMO/Price Tag/UMO_Price-tag.docx`, CoFo Sans embedded, which Word for Windows shows) with the texts
 // put in. Its table is two tags wide, five rows a tag (band, name, code, caption, price: 60 mm together); the first
 // tag row is the pattern, its sample texts replaced cell by cell. A table per page of eight, centred, with a page break
-// between them; grey cut lines round every cell, as in the PDF. Loaded only when the Word file is downloaded.
+// between them; grey cut lines round every tag, as in the PDF, none inside it. Loaded only when the Word file is downloaded.
 
 const PER_PAGE = 8
 const ROWS_PER_TAG = 5
@@ -27,8 +27,12 @@ const lines = (t: string) => t.trim().split('\n').map(l => esc(l.replace(/\s+/g,
 /** A cell where a row of two has only one tag */
 const EMPTY_CELL = '<w:tc><w:tcPr><w:tcW w:w="5102" w:type="dxa"/></w:tcPr><w:p/></w:tc>'
 
-const BORDERS = '<w:tblBorders>' + ['top', 'left', 'bottom', 'right', 'insideH', 'insideV']
-  .map(s => `<w:${s} w:val="single" w:sz="2" w:space="0" w:color="808080"/>`).join('') + '</w:tblBorders>'
+const LINE = 'w:val="single" w:sz="2" w:space="0" w:color="808080"'
+/** Lines round the table and between the columns; none between a tag's own rows (`UNDER` closes each tag) */
+const BORDERS = '<w:tblBorders>' + ['top', 'left', 'bottom', 'right', 'insideV'].map(s => `<w:${s} ${LINE}/>`).join('') +
+  '<w:insideH w:val="none" w:sz="0" w:space="0" w:color="auto"/></w:tblBorders>'
+/** The line under a tag, on its price row's cells */
+const UNDER = `<w:tcBorders><w:bottom ${LINE}/></w:tcBorders>`
 
 export async function tagsDocx(dealer: string, items: Item[]): Promise<Blob> {
   const files = unzipSync(new Uint8Array(await (await fetch(template)).arrayBuffer()))
@@ -49,7 +53,7 @@ export async function tagsDocx(dealer: string, items: Item[]): Promise<Blob> {
       case 1: return cell.replace(SAMPLE.name, () => lines(it.name))
       case 2: return cell.replace(SAMPLE.code, () => `>${lines(it.code)}<`)
       case 3: return cell.replace(SAMPLE.caption, () => lines(it.caption))
-      default: return cell.replace(SAMPLE.price, () => `${esc(it.price.trim().replace(/ /g, '\u00a0'))} `)
+      default: return cell.replace(/(<w:tcW [^>]*\/>)/, `$1${UNDER}`).replace(SAMPLE.price, () => `${esc(it.price.trim().replace(/ /g, '\u00a0'))} `)
     }
   }
   const tagRow = (pair: Item[]) => pattern.map((tr, r) => {
