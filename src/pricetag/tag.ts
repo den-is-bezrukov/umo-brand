@@ -68,17 +68,36 @@ export const BAND_ART: Cmd[] = [
 const tidy = (t: string) => t.replace(/[​-‍⁠﻿]/g, '').replace(/\r/g, '').split('\n').map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean)
 const oneLine = (t: string) => tidy(t).join(' ')
 
-/** The price's digits, set in threes: «30000» → «30 000» */
-export const formatPrice = (raw: string) => raw.replace(/\D/g, '').replace(/^0+(?=\d)/, '').replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+/**
+ * The price field as it's typed: the roubles set in threes (up to nine digits), then the kopecks after a comma (a typed
+ * dot becomes one), two digits at most: «1290.5» → «1 290,5»
+ */
+export function formatPrice(raw: string): string {
+  const t = raw.replace(/[^\d.,]/g, '').replace(/\./g, ',')
+  const [int, ...rest] = t.split(',')
+  const roubles = int.slice(0, 9).replace(/^0+(?=\d)/, '').replace(/\B(?=(\d{3})+(?!\d))/g, ' ')
+  return t.includes(',') ? `${roubles || '0'},${rest.join('').slice(0, 2)}` : roubles
+}
+
+/** A price typed or loaded, as the tag sets it: kopecks as two digits, left out when there are none («1 290,00» → «1 290») */
+export function priceText(price: string): string {
+  const [roubles, kopecks = ''] = price.trim().split(',')
+  const k = kopecks.padEnd(2, '0').slice(0, 2)
+  return /^0*$/.test(kopecks) ? roubles : `${roubles},${k}`
+}
+
+/** A price as the field holds it: roubles in threes, kopecks after a comma */
+export const PRICE_FORMAT = /^\d{1,3}( \d{3})*(,\d{0,2})?$/
 
 /**
- * A price however it came from a table: a number cell (30000, 30000.5) or text («30 000 ₽», «30 000,00 руб.»), as
- * whole roubles; null if it isn't one
+ * A price however it came from a table: a number cell (30000, 1290.5) or text («30 000 ₽», «1 290,50 руб.»), rounded to
+ * kopecks, which are left out when there are none; null if it isn't one
  */
 export function readPrice(raw: string): string | null {
   const t = raw.replace(/[\s ]/g, '').replace(/(₽|руб\.?|р\.?)$/i, '').replace(',', '.')
   if (!/^\d+(\.\d+)?$/.test(t)) return null
-  return formatPrice(String(Math.round(Number(t))))
+  const kopecks = Math.round(Number(t) * 100)
+  return priceText(formatPrice(`${Math.floor(kopecks / 100)},${String(kopecks % 100).padStart(2, '0')}`))
 }
 
 /** Single substitutions of a feature (`lnum`, `tnum`), glyph by glyph, as opentype.js doesn't apply them */
@@ -198,7 +217,7 @@ export function buildTag(fonts: Fonts, dealer: string, item: Item): Tag {
 
   if (item.code.trim()) fields.code = line('code', 'Артикул', item.code, fonts.regular, SIDE, CODE_TOP + DROP * SMALL, SMALL, NAME.width, [], TRACK)
   fields.caption = line('caption', 'Подпись', item.caption, fonts.regular, SIDE, CAPTION_TOP + DROP * SMALL, SMALL, NAME.width, [], TRACK)
-  fields.price = line('price', 'Цена', `${oneLine(item.price)} ₽`, fonts.medium, SIDE, PRICE.top + DROP * PRICE.size, PRICE.size, NAME.width, ['lnum', 'tnum'])
+  fields.price = line('price', 'Цена', `${priceText(oneLine(item.price))} ₽`, fonts.medium, SIDE, PRICE.top + DROP * PRICE.size, PRICE.size, NAME.width, ['lnum', 'tnum'])
 
   return { fields, issues: issues.filter((v, i) => issues.findIndex(o => o.text === v.text && o.field === v.field) === i) }
 }

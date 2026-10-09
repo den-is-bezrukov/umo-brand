@@ -5,7 +5,7 @@ import { goal } from '@/ui/metrika'
 import { toD, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
 import { xlsxCells, pastedCells, byHeaders, type Cells } from '@/nametag/table'
-import { TAG, BAND, BAND_ART, DEFAULT_CAPTION, buildTag, formatPrice, readPrice, type Item, type TagField } from '@/pricetag/tag'
+import { TAG, BAND, BAND_ART, DEFAULT_CAPTION, buildTag, formatPrice, readPrice, PRICE_FORMAT, type Item, type TagField } from '@/pricetag/tag'
 import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
 import { readTagsFile } from '@/pricetag/read'
 import { plural } from '@/ui/staff'
@@ -83,7 +83,7 @@ export default function PriceTag() {
       return PLACEHOLDER[field]!
     }
     const tag = buildTag(fonts, or('dealer', dealer), { name: or('name', it.name), code: it.code, caption: or('caption', it.caption), price: or('price', it.price) })
-    const wrongPrice = it.price.trim() && !/^\d[\d ]*$/.test(it.price.trim()) ? [{ field: 'price' as const, text: 'Цена: проверьте число' }] : []
+    const wrongPrice = it.price.trim() && !PRICE_FORMAT.test(it.price.trim()) ? [{ field: 'price' as const, text: 'Цена: проверьте число' }] : []
     return { tag, ghost, issues: [...tag.issues.filter(i => !ghost.has(i.field)), ...wrongPrice] }
   }) : undefined, [fonts, items, dealer])
 
@@ -186,7 +186,7 @@ export default function PriceTag() {
                     <ComboField key={it.key} value={it.caption} onChange={v => update(it.key, { caption: v })} options={CAPTIONS} singleLine placeholder={DEFAULT_CAPTION} label="Подписи цены" truncate invalid={bad('caption', 'Подпись')} />
                   </Labelled>
                   <Labelled label="Цена, ₽">
-                    <TextInput numeric value={it.price} onChange={v => update(it.key, { price: formatPrice(v).slice(0, 11) })} placeholder="0 000" invalid={bad('price', 'Цена')} />
+                    <TextInput inputMode="decimal" value={it.price} onChange={v => update(it.key, { price: formatPrice(v) })} placeholder="0 000" invalid={bad('price', 'Цена')} />
                   </Labelled>
                   </div>
                 </div>

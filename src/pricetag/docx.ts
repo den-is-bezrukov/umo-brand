@@ -1,6 +1,6 @@
 import { unzipSync, zipSync, strFromU8, strToU8 } from 'fflate'
 import template from '@/assets/pricetag/UMO_price-tag_template.docx?url'
-import type { Item } from './tag'
+import { priceText, type Item } from './tag'
 
 // The tags as a Word document, for those who print from Word or fix a price by hand: the brand team's template
 // (Yandex Disk `02 UMO/Price Tag/UMO_Price-tag.docx`, CoFo Sans embedded, which Word for Windows shows) with the texts
@@ -70,7 +70,7 @@ export async function tagsDocx(dealer: string, items: Item[]): Promise<Blob> {
       case 1: return cell.replace(SAMPLE.name, () => lines(it.name))
       case 2: return cell.replace(SAMPLE.code, () => `>${lines(it.code)}<`)
       case 3: return cell.replace(SAMPLE.caption, () => lines(it.caption))
-      default: return cell.replace(/(<w:tcW [^>]*\/>)/, `$1${UNDER}`).replace(SAMPLE.price, () => `${esc(it.price.trim().replace(/ /g, '\u00a0'))} `)
+      default: return cell.replace(/(<w:tcW [^>]*\/>)/, `$1${UNDER}`).replace(SAMPLE.price, () => `${esc(priceText(it.price).replace(/ /g, '\u00a0'))} `)
     }
   }
   const tagRow = (pair: Item[]) => pattern.map((tr, r) => {
