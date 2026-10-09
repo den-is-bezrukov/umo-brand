@@ -695,9 +695,9 @@ export function LinkButtons({ incomplete }: { incomplete?: boolean }) {
     // in (a trial): inside, the stroke left 38 px of white beside the solid 40 of the download, which read larger. Wide
     // screens keep the inside stroke
     <button type="button" onClick={share} title="Отправить ссылку на эти настройки" disabled={incomplete} aria-disabled={copied || undefined} className={`${outlined} w-full bg-white ${copied ? 'cursor-default hover:border-black/10! max-md:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)]!' : ''} max-md:border-0 max-md:py-[10px] max-md:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)] max-md:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.4),inset_0_0_0_0.5px_rgba(0,0,0,0.4)] max-md:disabled:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)]`}>
-      {/* Regular, as a note rather than a button's name; while it shows the button is still, no hover or click, its text staying black: the hover's edge is overridden, as
+      {/* Regular, as a note rather than a button's name; while it shows the button is still, no hover or click, its text grey #808080, as quiet lines: the hover's edge is overridden, as
           pointer-events: none kept the browser's hover on until the pointer moved */}
-      {copied ? <span className="font-normal">Ссылка с настройками скопирована</span> : 'Поделиться'}
+      {copied ? <span className="font-normal text-[#808080]">Ссылка с настройками скопирована</span> : 'Поделиться'}
     </button>
   )
 }
