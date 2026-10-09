@@ -883,8 +883,8 @@ function Bubble({ title, children }: { title?: ReactNode; children?: ReactNode }
 /** `focus`: the crop's vertical point in % on phones, where the 4:3 crop would cut the subject (the runner's head) */
 function PhotoCard({ name, title, children, grow, focus }: { name: string; title: ReactNode; children?: ReactNode; grow?: boolean; focus?: number }) {
   return (
-    // 4:3 on phones, to save the one column's height; 3:4 from md, as in Figma
-    <div className={`relative aspect-4/3 overflow-hidden bg-[#f5f5f5] md:aspect-3/4 ${grow ? 'md:aspect-auto md:min-h-0 md:flex-1' : ''}`}>
+    // 4:3 on phones, to save the one column's height; 3:4 from md, as in Figma. Shaped as the bubbles, a message too
+    <div className={`relative aspect-4/3 overflow-hidden rounded-t-2xl rounded-br-2xl bg-[#f5f5f5] md:aspect-3/4 ${grow ? 'md:aspect-auto md:min-h-0 md:flex-1' : ''}`}>
       <img src={img(name)} alt="" loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover md:object-center!" style={focus !== undefined ? { objectPosition: `50% ${focus}%` } : undefined} />
       <div className="absolute inset-x-4 top-4 flex flex-col gap-2 leading-[1.25] text-white">
         {/* A line alone over a photo is 240 wide, as in Figma, so it breaks the same way on any card */}
@@ -1052,13 +1052,13 @@ export default function Guide() {
       {/* Mobile table of contents: a bar at the bottom names the heading you're reading and stands in for the
           sidebar; tapped, the full contents open between the header and the bar, which turns into «Свернуть». */}
       <div className="lg:hidden">
-        {/* A sheet from the bottom, 60% of the screen at most (two thirds and a half were tried; a 6.3" phone still needs a shifted grip for the top), its top corners 12 px round, over the page dimmed: every item within a thumb's
+        {/* A sheet from the bottom, 60% of the screen at most (two thirds and a half were tried; a 6.3" phone still needs a shifted grip for the top), its top corners 16 px round, as the voice examples' bubbles, over the page dimmed: every item within a thumb's
             reach, the list scrolling inside it, opened at the chapter you're reading (it took the whole screen under the
             header, its top items out of reach). A tap on the page above closes it, as «Свернуть» does */}
         {menuOpen && (
           <>
             <div aria-hidden className="fixed inset-0 z-40 bg-black/40" onClick={() => setMenuOpen(false)} />
-            <div className="fixed inset-x-0 bottom-0 z-40 flex max-h-[60dvh] flex-col overflow-hidden rounded-t-[12px] bg-white">
+            <div className="fixed inset-x-0 bottom-0 z-40 flex max-h-[60dvh] flex-col overflow-hidden rounded-t-2xl bg-white">
               <div ref={sheetRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 md:px-6 md:pt-6">
                 <Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} />
               </div>
