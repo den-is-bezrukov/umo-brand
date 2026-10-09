@@ -367,7 +367,7 @@ export function AddTile({ onClick }: { onClick: () => void }) {
 }
 
 /** The line over the download while items are in work: «1 из 4 в работе», or «4 в работе» when it's all of them */
-/** The table mode's upload, opened from «Нужно загрузить таблицу» over the download */
+/** The table mode's upload, opened from «Загрузите таблицу» over the download */
 export const pickTable = () => document.querySelector<HTMLInputElement>('main input[type="file"]')?.click()
 
 

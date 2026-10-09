@@ -22,7 +22,7 @@ const NO_NAME = 'Нет имени'
 const NO_SURNAME = 'Нет фамилии'
 const NO_POSITION = 'Нет должности'
 /** The last empty field, said by name under the download */
-const UNFILLED: Record<string, string> = { [NO_NAME]: 'Нужно ввести имя', [NO_SURNAME]: 'Нужно ввести фамилию', [NO_POSITION]: 'Нужно указать должность' }
+const UNFILLED: Record<string, string> = { [NO_NAME]: 'Нужно добавить имя', [NO_SURNAME]: 'Добавить фамилию', [NO_POSITION]: 'Указать должность' }
 
 export default function NameTag() {
   // Not kept in the address, unlike the other generators: a staff list isn't something to send as a link

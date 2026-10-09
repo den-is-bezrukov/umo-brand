@@ -22,7 +22,7 @@ const BLANK: Item = { name: '', code: '', caption: DEFAULT_CAPTION, price: '' }
 const PLACEHOLDER: Partial<Record<TagField, string>> = { dealer: 'Название дилера', name: 'Наименование товара', caption: DEFAULT_CAPTION, price: '0 000' }
 const MISSING: Partial<Record<TagField, string>> = { dealer: 'Нет названия дилера', name: 'Нет наименования', caption: 'Нет подписи', price: 'Нет цены' }
 /** The first empty field, said by name over the download */
-const UNFILLED: Partial<Record<TagField, string>> = { dealer: 'Нужно выбрать дилера', name: 'Нужно ввести наименование', caption: 'Нужно указать подпись', price: 'Нужно указать цену' }
+const UNFILLED: Partial<Record<TagField, string>> = { dealer: 'Нужно выбрать дилера', name: 'Добавить наименование', caption: 'Добавить подпись', price: 'Указать цену' }
 const REQUIRED = ['name', 'caption', 'price'] as const
 
 const CAPTIONS = [DEFAULT_CAPTION, 'Цена за комплект с НДС', 'Цена за упаковку с НДС']

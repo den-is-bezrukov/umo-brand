@@ -692,9 +692,11 @@ export function LinkButtons({ incomplete }: { incomplete?: boolean }) {
 }
 
 /**
- * The empty fields said over the download, in the form's order: the first, as what to do there («Нужно выбрать
- * дилера», then «Нужно ввести имя» once it's picked), going on as they're filled in. A wholly empty form says its first
- * field too: it's the first step (it said «Не хватает данных» while the fields were said as states, «Дилер не выбран»)
+ * The empty fields said over the download, in the form's order, as what to do there: the form's first field with
+ * «Нужно», to say what this is about («Нужно выбрать дилера»), the next ones short, in the infinitive («Добавить
+ * наименование», «Указать цену»), going on as they're filled in. A wholly empty form says its first field too: it's the
+ * first step (it said «Не хватает данных» while the fields were said as states, «Дилер не выбран»; then every one
+ * was «Нужно …», then imperative, «Добавьте…»)
  */
 export const unfilled = (said: string[]) => said[0]
 
@@ -744,7 +746,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
         <div className="px-6 pb-6 md:mb-2 md:p-0"><p role="status" className={line}>{said}</p></div>
       ) : disabled && note && (
         <div className="flex px-6 pb-6 tracking-normal md:mb-2 md:p-0">
-          {/* What's in the way as a secondary button leading there («Нужно выбрать дилера»), Regular, as a note rather
+          {/* What's in the way as a secondary button leading there («Выберите дилера»), Regular, as a note rather
               than a command: the one thing here to act on while the download is off (it was a black line, a link no
               one took for one); a fault with nowhere to lead stays a line */}
           {onNote

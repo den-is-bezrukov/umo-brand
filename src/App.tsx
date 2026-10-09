@@ -120,10 +120,10 @@ function firstIssue(c: Card): { field: 'url' | 'full' | 'credit'; text: string }
   // Empty fields: the first, as what to do there
   const empty = unfilled([
     ...(!c.url.trim() ? ['Нужно указать ссылку QR-кода'] : []),
-    ...(!priceNum(c.full) ? ['Нужно указать цену'] : []),
-    ...(c.creditOn && !priceNum(c.credit) ? ['Нужно указать цену в кредит'] : []),
+    ...(!priceNum(c.full) ? ['Указать цену'] : []),
+    ...(c.creditOn && !priceNum(c.credit) ? ['Указать цену в кредит'] : []),
   ])
-  if (i.urlBad) return { field: 'url', text: c.url.trim() ? 'Проверьте ссылку QR-кода' : empty }
+  if (i.urlBad) return { field: 'url', text: c.url.trim() ? 'Проверить ссылку QR-кода' : empty }
   if (i.fullTooLow) return { field: 'full', text: priceNum(c.full) ? 'Цена слишком низкая' : empty }
   if (i.creditTooLow) return { field: 'credit', text: priceNum(c.credit) ? 'Цена в кредит слишком низкая' : empty }
   if (i.fullLessThanCredit) return { field: 'full', text: 'Полная цена меньше цены в кредит' }

@@ -28,8 +28,8 @@ const MISSING: Partial<Record<CardField, string>> = {
 const MAIL_DOMAINS = ['yandex.ru', 'mail.ru', 'gmail.com', 'ya.ru', 'bk.ru', 'inbox.ru', 'list.ru', 'rambler.ru']
 /** The last empty field, said by name under the download */
 const UNFILLED: Partial<Record<CardField, string>> = {
-  dealer: 'Нужно выбрать дилера', address: 'Нужно указать адрес', site: 'Нужно указать сайт',
-  name: 'Нужно ввести имя', surname: 'Нужно ввести фамилию', position: 'Нужно указать должность', email: 'Нужно указать почту', phone: 'Нужно указать телефон',
+  dealer: 'Нужно выбрать дилера', address: 'Указать адрес', site: 'Указать сайт',
+  name: 'Добавить имя', surname: 'Добавить фамилию', position: 'Указать должность', email: 'Указать почту', phone: 'Указать телефон',
 }
 
 const HEADERS: Record<keyof Person, RegExp> = {

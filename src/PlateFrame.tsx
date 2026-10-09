@@ -170,7 +170,7 @@ export default function PlateFrame() {
           onClick={handleExport}
           busy={exporting}
           disabled={!ok}
-          note={noName ? (custom ? 'Нужно ввести текст' : 'Нужно выбрать дилера') : strip?.issues[0]}
+          note={noName ? (custom ? 'Нужно добавить текст' : 'Нужно выбрать дилера') : strip?.issues[0]}
           onNote={toField}
           // Nothing to copy or reset until there's a dealer or the line is centred
           links={!blank && <LinkButtons incomplete={!ok} />}
