@@ -211,12 +211,15 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
   }
   /**
    * A copy right after the item, selected, its first field focused: the colleague with the same position and phone. On
-   * a phone (`focus` false) the copy is only shown: the keyboard coming up over it hid what had happened
+   * a phone (`focus` false) the copy is only shown: the keyboard coming up over it hid what had happened, and errors
+   * pouring over a copy of an unfinished item said more than it did
    */
   const duplicate = (key: number, focus = true) => {
     const i = people.findIndex(p => p.key === key)
     const copy = row(plain(people[i]))
     focusNext.current = focus
+    // Not focused, it's fresh as an added one: its empty fields aren't errors until it's left, as on a new page
+    if (!focus) setFresh(f => new Set(f).add(copy.key))
     setPeople([...people.slice(0, i + 1), copy, ...people.slice(i + 1)])
     setSelected(copy.key)
   }
