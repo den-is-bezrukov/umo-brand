@@ -5,7 +5,7 @@ import { InSlide, InFoot, InSheet } from '@/ui/phone'
 // A trial of the generators' phone layout (Figma 5098:5806, C and D): the canvas fills the screen above a sheet, what's
 // made swiped through one at a time, the item's number between «Удалить» and «Сбросить» over it and «‹ Дублировать ›»
 // under it; the sheet holds the sidebar (header and form) with the download at its foot. A tap on the picture folds the
-// sheet away, the picture large with no download, and another brings it back; a swipe up on the sheet opens the form
+// sheet away, the picture large with no download, and another brings it back; a swipe up on the sheet's top edge opens the form
 // over the whole screen, with only «‹ n ›» over it, a swipe down puts it back. In the link: `arrows=0` hides the arrows (swiping alone)
 
 /** Whether the screen is a phone's, as the generators' `md` breakpoint */
@@ -135,17 +135,18 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     tap.current = window.setTimeout(() => setSheet(s => (s === 'preview' ? 'half' : 'preview')), 250)
   }
 
-  // A swipe up on the sheet opens the form over the screen, a swipe down (with the form scrolled to its top) puts it back
-  const touch = useRef<{ y: number; top: boolean } | null>(null)
+  // Only the sheet's top edge, with its grabber, opens the form over the screen and puts it back, by a swipe or a tap, as
+  // a native sheet's: anywhere on the form a swipe up opened it as soon as the form was at its top, so scrolling it did
+  const touch = useRef<number | null>(null)
   const scroller = useRef<HTMLDivElement>(null)
-  const onTouchStart = (e: React.TouchEvent) => { touch.current = { y: e.touches[0].clientY, top: (scroller.current?.scrollTop ?? 0) <= 0 } }
+  const onTouchStart = (e: React.TouchEvent) => { touch.current = e.touches[0].clientY }
   const onTouchEnd = (e: React.TouchEvent) => {
-    const t = touch.current
+    const y = touch.current
     touch.current = null
-    if (!t) return
-    const dy = e.changedTouches[0].clientY - t.y
-    if (sheet === 'half' && dy < -SWIPE && t.top) setSheet('full')
-    else if (sheet === 'full' && dy > SWIPE && t.top) setSheet('half')
+    if (y === null) return
+    const dy = e.changedTouches[0].clientY - y
+    if (sheet === 'half' && dy < -SWIPE) setSheet('full')
+    else if (sheet === 'full' && dy > SWIPE) setSheet('half')
   }
 
   const many = slides.length > 1
@@ -218,11 +219,21 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
 
       {/* The sheet: the sidebar scrolling, the download at its foot; folded, the download alone, over the canvas */}
       <div
-        onTouchStart={onTouchStart}
-        onTouchEnd={onTouchEnd}
-        className={`flex shrink-0 flex-col overflow-hidden transition-[height,border-radius,background-color] ${sheet === 'preview' ? 'bg-transparent' : 'bg-white'} ${sheet !== 'preview' ? 'rounded-t-[16px]' : ''}`}
+        className={`relative flex shrink-0 flex-col overflow-hidden transition-[height,border-radius,background-color] ${sheet === 'preview' ? 'bg-transparent' : 'bg-white'} ${sheet !== 'preview' ? 'rounded-t-[16px]' : ''}`}
         style={{ height, transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: EASE }}
       >
+        {/* The top edge, over the form's own 24 px padding, the grabber in it */}
+        {sheet !== 'preview' && (
+          <div
+            aria-hidden
+            onTouchStart={onTouchStart}
+            onTouchEnd={onTouchEnd}
+            onClick={() => setSheet(s => (s === 'full' ? 'half' : 'full'))}
+            className="absolute inset-x-0 top-0 z-10 flex h-6 cursor-pointer touch-none justify-center pt-2"
+          >
+            <span className="h-1 w-9 rounded-full bg-black/10" />
+          </div>
+        )}
         {/* No breadcrumbs in the sheet for now: the ring of generators opens it */}
         <div ref={scroller} className={`min-h-0 flex-1 overflow-y-auto [&_[data-crumbs]]:hidden ${sheet === 'preview' ? 'pointer-events-none' : ''}`}>
           <InSheet.Provider value={true}>{sidebar}</InSheet.Provider>
