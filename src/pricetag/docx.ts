@@ -37,6 +37,17 @@ const BORDERS = '<w:tblBorders>' + ['top', 'left', 'bottom', 'right', 'insideV']
 /** The line under a tag, on its price row's cells */
 const UNDER = `<w:tcBorders><w:bottom ${LINE}/></w:tcBorders>`
 
+/**
+ * The band as Figma has it: the template's logo picture (the logo, a 3 mm gap and the hairline, then 3 mm to the
+ * name) was 3.08 mm tall and stood 0.1 mm above the line, the name 12 pt with 2.88 mm capitals, so they didn't line
+ * up. Here the picture is 3 mm tall, sitting on the baseline, and the name 12.5 pt (4.4 mm, as in Figma), its
+ * capitals 3 mm too
+ */
+const band = (cell: string) => cell
+  .replace(/cx="792000" cy="110980"/g, 'cx="756000" cy="108000"')
+  .replace('<wp:effectExtent l="0" t="0" r="0" b="3810"/>', '<wp:effectExtent l="0" t="0" r="0" b="0"/>')
+  .replace(/(<w:rFonts w:ascii="CoFo Sans Medium" w:hAnsi="CoFo Sans Medium"\/>)(<\/w:rPr><w:t>)/, '$1<w:sz w:val="25"/><w:szCs w:val="25"/>$2')
+
 export async function tagsDocx(dealer: string, items: Item[]): Promise<Blob> {
   const files = unzipSync(new Uint8Array(await (await fetch(template)).arrayBuffer()))
   const doc = strFromU8(files['word/document.xml'])
@@ -52,7 +63,7 @@ export async function tagsDocx(dealer: string, items: Item[]): Promise<Blob> {
 
   const fill = (cell: string, row: number, it: Item) => {
     switch (row) {
-      case 0: return cell.replace(SAMPLE.dealer, () => lines(dealer))
+      case 0: return band(cell).replace(SAMPLE.dealer, () => lines(dealer))
       case 1: return cell.replace(SAMPLE.name, () => lines(it.name))
       case 2: return cell.replace(SAMPLE.code, () => `>${lines(it.code)}<`)
       case 3: return cell.replace(SAMPLE.caption, () => lines(it.caption))
