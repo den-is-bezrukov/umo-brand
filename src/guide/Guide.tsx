@@ -966,8 +966,10 @@ export default function Guide() {
     const top = bodyRef.current?.getBoundingClientRect().top ?? 0
     if (top > 1) window.scrollTo({ top: window.scrollY + top, behavior: 'smooth' })
   }
-  // Two headings rarely share a line on a phone; when they do (Видение / Миссия), the first one names the place.
-  const sectionTitle = active.length ? TITLES[active[0]] : undefined
+  // Two headings rarely share a line on a phone; when they do (Видение / Миссия), the first one names the place. On
+  // the first screen (the film and the statement, before any section) the bar says «Содержание», as the desktop row
+  // does there; it said «Платформа бренда» for the statement standing in for that chapter's title
+  const sectionTitle = active.length && active[0] !== 'brand' ? TITLES[active[0]] : undefined
 
   // The open mobile contents cover the page: keep the page behind still, and let Esc close it.
   useEffect(() => {
@@ -1053,11 +1055,11 @@ export default function Guide() {
             type="button"
             onClick={() => setMenuOpen(true)}
             aria-expanded={false}
-            aria-label={`Содержание: ${sectionTitle ?? TITLES.brand}`}
+            aria-label={sectionTitle ? `Содержание: ${sectionTitle}` : 'Содержание'}
             className="fixed inset-x-0 bottom-0 z-40 flex cursor-pointer items-start gap-2 bg-white px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]"
           >
             <TocIcon name="menu" />
-            <span className="min-w-0 flex-1 truncate">{sectionTitle ?? TITLES.brand}</span>
+            <span className="min-w-0 flex-1 truncate">{sectionTitle ?? 'Содержание'}</span>
           </button>
         )}
       </div>
