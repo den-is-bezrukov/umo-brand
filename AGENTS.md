@@ -70,7 +70,7 @@ Below 640 px (`sm`; it was `md`, which left a phone held sideways with 4:3 strip
 
 Кобрендинг (Figma 4818:1328) is two columns from 640 px (`sm`), a scheme over its example, on 4:3 cards: the four 444×333 Figma cards exported as SVG (see the note in `scripts/split-figma-svg.py`: they export 684 wide, viewBox shifted by 120). The schemes open large on a click (`Zoom`, a lightbox: a click anywhere or Esc closes it, the page doesn't scroll under it).
 
-Типографика: the CoFo Sans specimen is 4:3 below `sm` (2:1 from it); below 640 px Geist (the one to download) spans both columns, as tall as Helvetica Neue and Arial, 4:3 side by side under it (three in a row were too small, one to a row too large, two to a row left Arial alone, Geist 2:1 across both too large), three in a row from `sm`.
+Типографика: the CoFo Sans specimen is 4:3 below `sm` (2:1 from it); below 640 px its alternatives stand two to a row, 4:3 (three in a row were too small, one to a row too large; Geist across both columns over the other two, all 2:1, was tried and was too large), three in a row from `sm`.
 
 Below `md` pictures stand 16 px apart, as the page's side gutter, across and down, and so do a picture and the download rows under it (24 from `md`, as the Figma layout); text stays as it was.
 
