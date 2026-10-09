@@ -173,9 +173,10 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   const reset = slides[shown]?.reset
   const height = { preview: '0px', half: '60dvh', full: `calc(100dvh - ${ROW + 2 * PAD}px)` }[sheet]
 
-  // As large as the strip allows: its whole height, its width but the sides
+  // As large as the strip allows: its whole height but the items' 1 px edge outside them (`ITEM_EDGE`), which the
+  // slide would clip, its width but the sides
   const fit = (ratio?: number) => ratio
-    ? Math.max(0, Math.floor(Math.min(box.w - 2 * SIDE, box.h / ratio)))
+    ? Math.max(0, Math.floor(Math.min(box.w - 2 * SIDE, (box.h - 2) / ratio)))
     : Math.max(0, box.w - 2 * SIDE)
 
   return (
