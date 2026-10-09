@@ -547,10 +547,10 @@ const isWidePhoto = (name: string, w: number, h: number) => w / h >= 2 && !img(n
  * cropped — it is fitted into the 4:3 frame whole, the frame filled with its colour. `href` makes the whole figure a download link, its caption led by ↓
  * like the rows of `Assets`.
  */
-function Fig({ name, w, h, alt = '', eager, caption, cross, href, focus = 50, flat, phone43, className = '' }: {
+function Fig({ name, w, h, alt = '', eager, caption, cross, href, focus = 50, flat, phone43, className = '', imgClassName = '' }: {
   name: string; w: number; h: number; alt?: string; eager?: boolean; caption?: ReactNode; cross?: boolean; href?: string; focus?: number; flat?: string
   /** A scheme fitted whole into 4:3 on phones, on its grey, as the logo plate above it (the clear space) */
-  phone43?: boolean; className?: string
+  phone43?: boolean; className?: string; imgClassName?: string
 }) {
   const wide = isWidePhoto(name, w, h) || !!phone43
   const figure = (
@@ -562,7 +562,7 @@ function Fig({ name, w, h, alt = '', eager, caption, cross, href, focus = 50, fl
         height={h * 2}
         loading={eager ? 'eager' : 'lazy'}
         decoding="async"
-        className={`block h-auto w-full bg-[#f5f5f5] ${wide ? `aspect-4/3 ${flat || phone43 ? 'object-contain' : 'object-cover'} sm:aspect-(--ratio)` : ''}`}
+        className={`block h-auto w-full bg-[#f5f5f5] ${wide ? `aspect-4/3 ${flat || phone43 ? 'object-contain' : 'object-cover'} sm:aspect-(--ratio)` : ''} ${imgClassName}`}
         style={wide ? ({ '--ratio': `${w} / ${h}`, objectPosition: `${focus}% 50%`, ...(flat && { background: flat }) } as CSSProperties) : { aspectRatio: `${w} / ${h}` }}
       />
       {caption && <Caption cross={cross} download={!!href}>{caption}</Caption>}
@@ -1353,8 +1353,9 @@ export default function Guide() {
                   </div>
                   <Caption>Базовая гарнитура</Caption>
                 </figure>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6">
-                  <Fig name="font-geist" w={288} h={216} caption="Альтернатива для Google" alt="Geist" href={GEIST_ZIP} />
+                <div className="@container grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6">
+                  {/* On phones Geist (the one to download) spans both columns, as tall as the 4:3 pair under it */}
+                  <Fig name="font-geist" w={288} h={216} caption="Альтернатива для Google" alt="Geist" href={GEIST_ZIP} className="col-span-2 sm:col-span-1" imgClassName="max-sm:h-[calc((100cqw-16px)*0.375)] max-sm:object-cover" />
                   <Fig name="font-helvetica" w={288} h={216} caption="Альтернатива для MacOS" alt="Helvetica Neue" />
                   <Fig name="font-arial" w={288} h={216} caption="Альтернатива для Windows" alt="Arial" />
                 </div>
