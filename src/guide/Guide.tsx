@@ -727,7 +727,8 @@ function fileSize(bytes: number): [number, string] {
  * split into two, filled top to bottom so files of one item stay together. Sizes get one decimal in every
  * row as soon as one of them is under 10 (0,7 КБ), and none otherwise.
  */
-function Assets({ items, preview }: { items: Asset[]; preview?: string }) {
+/** `early`: two columns from 560 px, rather than from `sm` (Леттеринг → Модели, whose pictures pair up from 520; narrower «umo-model-8-png.zip» wraps) */
+function Assets({ items, preview, early }: { items: Asset[]; preview?: string; early?: boolean }) {
   const pointed = useContext(PointedPreview)?.[0]
   const sizes = items.flatMap(a => ('file' in a ? [fileSize(downloadSizes[a.file] ?? 0)] : []))
   const digits = sizes.some(([n]) => n < 10) ? 1 : 0
@@ -735,7 +736,9 @@ function Assets({ items, preview }: { items: Asset[]; preview?: string }) {
   const two = items.length > 3
   return (
     <div
-      className={two ? 'grid grid-cols-1 gap-x-4 sm:grid-flow-col md:gap-x-6 sm:grid-cols-2 sm:grid-rows-[repeat(var(--rows),auto)]' : 'flex flex-col'}
+      className={two ? (early
+        ? 'grid grid-cols-1 gap-x-4 min-[560px]:grid-flow-col md:gap-x-6 min-[560px]:grid-cols-2 min-[560px]:grid-rows-[repeat(var(--rows),auto)]'
+        : 'grid grid-cols-1 gap-x-4 sm:grid-flow-col md:gap-x-6 sm:grid-cols-2 sm:grid-rows-[repeat(var(--rows),auto)]') : 'flex flex-col'}
       style={two ? ({ '--rows': Math.ceil(items.length / 2) } as CSSProperties) : undefined}
     >
       {items.map(a => {
@@ -1390,6 +1393,7 @@ export default function Guide() {
                 </div>
                 {/* Columns follow the pictures: UMO 8 on the left, UMO 5 on the right. */}
                 <Assets
+                  early
                   items={[
                     { file: 'umo-model-8.svg' }, { file: 'umo-model-8-png.zip' }, { file: 'umo-plate-8-svg.zip' },
                     { file: 'umo-model-5.svg' }, { file: 'umo-model-5-png.zip' }, { file: 'umo-plate-5-svg.zip' },
