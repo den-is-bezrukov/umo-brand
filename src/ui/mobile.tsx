@@ -232,7 +232,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           ) : (
             <>
               <Btn label="Сбросить" hidden={!current || staff.isBlank(current)} onClick={() => staff.clear(current.key)}><ResetIcon /></Btn>
-              <Btn label="Дублировать" hidden={!current} onClick={() => staff.duplicate(current.key)}><DuplicateIcon /></Btn>
+              <Btn label="Дублировать" hidden={!current} onClick={() => staff.duplicate(current.key, false)}><DuplicateIcon /></Btn>
               <Btn label="Удалить" hidden={!current || staff.people.length < 2} onClick={() => staff.remove(current.key)}><CrossIcon /></Btn>
             </>
           )}

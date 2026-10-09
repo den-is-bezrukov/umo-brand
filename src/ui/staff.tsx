@@ -209,11 +209,14 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
     setSelected(removed.item.key)
     setRemoved(null)
   }
-  /** A copy right after the item, selected, its first field focused: the colleague with the same position and phone */
-  const duplicate = (key: number) => {
+  /**
+   * A copy right after the item, selected, its first field focused: the colleague with the same position and phone. On
+   * a phone (`focus` false) the copy is only shown: the keyboard coming up over it hid what had happened
+   */
+  const duplicate = (key: number, focus = true) => {
     const i = people.findIndex(p => p.key === key)
     const copy = row(plain(people[i]))
-    focusNext.current = true
+    focusNext.current = focus
     setPeople([...people.slice(0, i + 1), copy, ...people.slice(i + 1)])
     setSelected(copy.key)
   }
