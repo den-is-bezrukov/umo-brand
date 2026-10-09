@@ -244,7 +244,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       {/* The sheet: the sidebar scrolling, the download at its foot; folded, the download alone, over the canvas */}
       <div
         // As the generators' ring turns, the last easing that was kept (it was linear for a moment)
-        className={`relative flex shrink-0 flex-col overflow-hidden transition-[height,border-radius,background-color] ${sheet === 'preview' ? 'bg-transparent' : 'bg-white'} ${sheet !== 'preview' ? 'rounded-t-[16px] shadow-[0_0_30px_-4px_rgba(0,0,0,0.1)]' : ''}`}
+        className={`relative flex shrink-0 flex-col overflow-hidden transition-[height,border-radius,background-color] ${sheet === 'preview' ? 'bg-transparent' : 'bg-white'} ${sheet !== 'preview' ? 'rounded-t-[24px] shadow-[0_0_30px_-4px_rgba(0,0,0,0.1)]' : ''}`}
         style={{ height, transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: 'cubic-bezier(0.67, 0, 0.33, 1)' }}
       >
         {/* The top edge, over the form's own 24 px padding, the grabber in it */}

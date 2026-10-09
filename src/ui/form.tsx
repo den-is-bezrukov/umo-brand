@@ -147,7 +147,7 @@ function GeneratorMenu({ current, height, onClose }: { current: string; /** The 
   const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
   return (
     // A sheet of its own over the form's, as tall, its corners and shadow (it took the whole screen for a while)
-    <div role="dialog" aria-label="Конструкторы" style={{ height }} className="fixed inset-x-0 bottom-0 z-50 overflow-y-auto rounded-t-[16px] bg-white p-6 font-sans text-black shadow-[0_0_30px_-4px_rgba(0,0,0,0.1)]">
+    <div role="dialog" aria-label="Конструкторы" style={{ height }} className="fixed inset-x-0 bottom-0 z-50 overflow-y-auto rounded-t-[24px] bg-white p-6 font-sans text-black shadow-[0_0_30px_-4px_rgba(0,0,0,0.1)]">
       <div className="flex flex-col gap-5">
         <div className="flex items-center justify-between">
           <nav className="flex items-center gap-2 text-[14px] font-medium leading-5 [font-feature-settings:'case'_1]">
@@ -776,6 +776,24 @@ export const flash = (text: string) => flashes.forEach(f => f(text))
  * скопирована» for two seconds, where it was clicked (it was said by the line over it). Off while the result isn't ready (`incomplete`, as «Скачать»): a link is sent for what
  * it makes, not a draft. «Сбросить» stood beside it until resets moved onto the canvas, by what they reset
  */
+/**
+ * Sends the page address: on phones through the system's share sheet (the chat a link goes to in a tap or two,
+ * «Скопировать» among them), elsewhere copied, `onCopied` saying so
+ */
+async function shareLink(onCopied: () => void) {
+  const url = window.location.href
+  if (navigator.share && matchMedia('(pointer: coarse)').matches) {
+    try {
+      await navigator.share({ url })
+      goal('copy_link', { page: location.pathname, shared: true })
+    } catch { /* closed without sending */ }
+    return
+  }
+  await navigator.clipboard.writeText(url)
+  onCopied()
+  goal('copy_link', { page: location.pathname })
+}
+
 export function LinkButtons({ incomplete }: { incomplete?: boolean }) {
   const [copied, setCopied] = useState(false)
   useEffect(() => {
@@ -783,21 +801,7 @@ export function LinkButtons({ incomplete }: { incomplete?: boolean }) {
     const t = setTimeout(() => setCopied(false), 2000)
     return () => clearTimeout(t)
   }, [copied])
-  const share = async () => {
-    if (copied) return
-    const url = window.location.href
-    // On phones the system's share sheet: the chat a link goes to in a tap or two, «Скопировать» among them
-    if (navigator.share && matchMedia('(pointer: coarse)').matches) {
-      try {
-        await navigator.share({ url })
-        goal('copy_link', { page: location.pathname, shared: true })
-      } catch { /* closed without sending */ }
-      return
-    }
-    await navigator.clipboard.writeText(url)
-    setCopied(true)
-    goal('copy_link', { page: location.pathname })
-  }
+  const share = () => { if (!copied) shareLink(() => setCopied(true)) }
   return (
     // White under it: on phones it stands over the canvas, and there its stroke is centred on its edge, half out, half
     // in (a trial): inside, the stroke left 38 px of white beside the solid 40 of the download, which read larger. Wide
@@ -863,7 +867,22 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   const foot = useContext(InFoot)
   if (foot) {
     const lead = disabled && !!note && !said
+    // «Поделиться» as an icon left of the download, 40 px square, edged as the secondary buttons, where the page has it
+    // and only once the download is on: while a step is left, the button saying it stands alone
+    const shareOn = !!links && !disabled && !said
     return (
+      <div className="flex gap-2">
+      {shareOn && (
+        <button
+          type="button"
+          aria-label="Поделиться"
+          title="Поделиться"
+          onClick={() => shareLink(() => flash('Ссылка с настройками скопирована'))}
+          className="flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-[8px] bg-white shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)] outline-none active:shadow-[0_0_0_0.5px_rgba(0,0,0,0.4),inset_0_0_0_0.5px_rgba(0,0,0,0.4)]"
+        >
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d="M8 10V1.5M4.5 5L8 1.5L11.5 5M5 7.5H2.5V14.5H13.5V7.5H11" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" /></svg>
+        </button>
+      )}
       <button
         type="button"
         onClick={lead && onNote ? () => { foot(); setTimeout(onNote, 350) } : onClick}
@@ -875,6 +894,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
           ? <>{note}{count && <span className="text-white/50">{count}</span>}</>
           : busy ? 'Генерация…' : `Скачать ${format}`)}
       </button>
+      </div>
     )
   }
   return (
