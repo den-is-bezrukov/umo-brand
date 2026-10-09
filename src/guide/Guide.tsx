@@ -913,7 +913,8 @@ function Examples() {
         <div className="max-sm:order-1">
           <Bubble title={<>Электромобиль с <span className="font-['Alice_Okniks'] [font-feature-settings:'ss02']">@</span> Алисой и сервисами Яндекса. Запас хода до 420 км, разгон до 100 км/ч за 8,7 секунды</>} />
         </div>
-        <PhotoCard name="voice-runner" grow focus={20} title="Практичный и инновационный UMO поможет сделать город комфортнее" />
+        {/* As «Запоминающиеся фары»: the last word not tied to «город», so «сделать» doesn't stand alone in a narrow card */}
+        <PhotoCard name="voice-runner" grow focus={20} title={<>Практичный и инновационный UMO поможет сделать город{' '}комфортнее</>} />
       </div>
       <div className="flex flex-col gap-4 md:gap-6">
         <PhotoCard name="voice-charging" grow title="Послушаем, как поют птицы в парке, пока заряжается UMO" />
