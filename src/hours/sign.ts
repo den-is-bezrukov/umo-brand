@@ -95,6 +95,28 @@ function setRuns(font: Font, runs: Run[], x: number, baseline: number, size: num
 
 const width = (font: Font, text: string, size: number) => setRuns(font, [{ field: 'fixed', text }], 0, 0, size).ink.x2
 
+/** How far from the most balanced break a break after a comma may make the longer line, in mm */
+const COMMA_SLACK = 0.15 * COLUMN
+
+/**
+ * Two lines broken where a typesetter would: after the comma that leaves them nearest in length, as an address
+ * breaks between its parts («…, вл5с3, | торгово-промышленная зона Алтуфьево, посёлок Вешки»), unless every comma
+ * leaves the longer line much longer than it need be; then wherever the lines come nearest, `text-wrap: balance` as
+ * CSS has it. Never right after the first word, the prefix «Адрес:»
+ */
+function balanced(font: Font, words: string[], size: number): string[] | undefined {
+  let best: { k: number; long: number } | undefined
+  let comma: { k: number; long: number } | undefined
+  for (let k = 2; k < words.length; k++) {
+    const long = Math.max(width(font, words.slice(0, k).join(' '), size), width(font, words.slice(k).join(' '), size))
+    if (long > COLUMN) continue
+    if (!best || long < best.long) best = { k, long }
+    if (words[k - 1].endsWith(',') && (!comma || long < comma.long)) comma = { k, long }
+  }
+  const at = comma && best && comma.long <= best.long + COMMA_SLACK ? comma : best
+  return at && [words.slice(0, at.k).join(' '), words.slice(at.k).join(' ')]
+}
+
 /** A text after its fixed words, in lines within the column, breaking between words: the runs of each line */
 function wrapRuns(font: Font, prefix: string, field: SignField, text: string, size: number): Run[][] {
   const lines: string[] = []
@@ -105,6 +127,8 @@ function wrapRuns(font: Font, prefix: string, field: SignField, text: string, si
     else { lines.push(line); line = w }
   }
   lines.push(line)
+  const two = lines.length === 2 && balanced(font, `${prefix}${text}`.split(' '), size)
+  if (two) lines.splice(0, 2, ...two)
   // The prefix stays fixed wherever the line breaks
   let at = 0
   return lines.map(l => {
@@ -114,6 +138,10 @@ function wrapRuns(font: Font, prefix: string, field: SignField, text: string, si
     return [{ field: 'fixed' as const, text: l.slice(0, fixed) }, { field, text: l.slice(fixed) }].filter(r => r.text)
   })
 }
+
+/** The address's lines as the sign breaks them, after «Адрес: » */
+export const addressLines = (font: Font, address: string) =>
+  wrapRuns(font, ADDRESS_PREFIX, 'address', oneLine(address), INFO.size).map(l => l.map(r => r.text).join(''))
 
 /**
  * The sign. The texts come as shown: the page puts placeholders in empty fields, the same layout then holding them in
