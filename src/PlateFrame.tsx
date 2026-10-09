@@ -219,7 +219,7 @@ export default function PlateFrame() {
   )
 
   // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
-  if (phone) return <MobileEditor slides={[{ key: 'frame', node: preview }]} sidebar={sidebar} download={download} />
+  if (phone) return <MobileEditor slides={[{ key: 'frame', node: preview, title: <>Поле печати, {STRIP.w}&nbsp;×&nbsp;{STRIP.h}&nbsp;мм</>, reset: blank ? undefined : { onClick: reset, label: 'Вернуть рамку по умолчанию' } }]} sidebar={sidebar} download={download} />
 
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">

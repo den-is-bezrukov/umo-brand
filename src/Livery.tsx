@@ -308,7 +308,7 @@ export default function Livery() {
   )
 
   // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
-  if (phone) return <MobileEditor slides={sheets.map((s, i) => ({ key: s.surface.id, ratio: s.surface.photo.view[3] / s.surface.photo.view[2], node: i < 2 ? <SheetPreview sheet={s} seams={seams} dims={dims} onReset={sidesAtDefaults ? undefined : resetSides} resetLabel="Вернуть борта по умолчанию" /> : <SheetPreview sheet={s} seams={seams} dims={dims} onReset={rearAtDefaults ? undefined : resetRear} resetLabel="Вернуть стекло по умолчанию" /> }))} sidebar={sidebar} download={download} />
+  if (phone) return <MobileEditor slides={sheets.map((s, i) => ({ key: s.surface.id, ratio: s.surface.photo.view[3] / s.surface.photo.view[2], node: <SheetPreview sheet={s} seams={seams} dims={dims} />, title: <>{s.surface.title}, {mm(s.surface.w)}&nbsp;×&nbsp;{mm(s.surface.h)}&nbsp;мм</>, reset: i < 2 ? (sidesAtDefaults ? undefined : { onClick: resetSides, label: 'Вернуть борта по умолчанию' }) : (rearAtDefaults ? undefined : { onClick: resetRear, label: 'Вернуть стекло по умолчанию' }) }))} sidebar={sidebar} download={download} />
 
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
