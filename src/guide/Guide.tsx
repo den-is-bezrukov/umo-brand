@@ -217,7 +217,8 @@ function TocIcon({ name }: { name: keyof typeof tocIcons }) {
 }
 
 /** Expand-all row at the foot of the table of contents: the menu bars to spread the list, the cross to fold it. */
-function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; onClick: () => void; className?: string }) {
+function TocToggle({ expanded, onClick, iconEnd = false, className = '' }: { expanded: boolean; onClick: () => void; iconEnd?: boolean; className?: string }) {
+  const icon = <TocIcon name={expanded ? 'close' : 'menu'} />
   return (
     <button
       type="button"
@@ -226,8 +227,9 @@ function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; o
       // No width of its own: both places set it, and a `w-full` here outranked theirs in the built CSS
       className={`flex cursor-pointer items-start gap-2 bg-white ${NAV_HOVER} text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] ${className}`}
     >
-      <TocIcon name={expanded ? 'close' : 'menu'} />
-      {expanded ? 'Свернуть' : 'Содержание'}
+      {!iconEnd && icon}
+      <span className={iconEnd ? 'flex-1' : undefined}>{expanded ? 'Свернуть' : 'Содержание'}</span>
+      {iconEnd && icon}
     </button>
   )
 }
@@ -1080,8 +1082,10 @@ export default function Guide() {
               <div ref={sheetRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 md:px-6 md:pt-6">
                 <Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} />
               </div>
+              {/* The icon at the row's right end, apart from the list's text */}
               <TocToggle
                 expanded
+                iconEnd
                 onClick={() => setMenuOpen(false)}
                 className="w-full px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]"
               />
