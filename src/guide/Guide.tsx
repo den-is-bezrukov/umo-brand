@@ -1238,7 +1238,7 @@ export default function Guide() {
                   <LogoPlate w={444} h={333} logo={240} bg="#f5f5f5" caption="Чёрный для светлого фона" />
                 </div>
                 <figure className="flex flex-col gap-3">
-                  <div className="grid grid-cols-2 gap-4 md:grid-cols-4 md:gap-6">
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:gap-6">
                     <Photo name="color-photo" />
                     <LogoPlate w={210} h={280} logo={120} bg="#fc3f1d" dark />
                     <LogoPlate w={210} h={280} logo={120} bg="#ffea00" />
