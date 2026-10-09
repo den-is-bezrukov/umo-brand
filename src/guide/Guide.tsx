@@ -546,10 +546,12 @@ const isWidePhoto = (name: string, w: number, h: number) => w / h >= 2 && !img(n
  * cropped — it is fitted into the 4:3 frame whole, the frame filled with its colour. `href` makes the whole figure a download link, its caption led by ↓
  * like the rows of `Assets`.
  */
-function Fig({ name, w, h, alt = '', eager, caption, cross, href, focus = 50, flat, className = '' }: {
-  name: string; w: number; h: number; alt?: string; eager?: boolean; caption?: ReactNode; cross?: boolean; href?: string; focus?: number; flat?: string; className?: string
+function Fig({ name, w, h, alt = '', eager, caption, cross, href, focus = 50, flat, phone43, className = '' }: {
+  name: string; w: number; h: number; alt?: string; eager?: boolean; caption?: ReactNode; cross?: boolean; href?: string; focus?: number; flat?: string
+  /** A scheme fitted whole into 4:3 on phones, on its grey, as the logo plate above it (the clear space) */
+  phone43?: boolean; className?: string
 }) {
-  const wide = isWidePhoto(name, w, h)
+  const wide = isWidePhoto(name, w, h) || !!phone43
   const figure = (
     <figure className={`flex flex-col gap-3 ${href ? '' : className}`}>
       <img
@@ -559,7 +561,7 @@ function Fig({ name, w, h, alt = '', eager, caption, cross, href, focus = 50, fl
         height={h * 2}
         loading={eager ? 'eager' : 'lazy'}
         decoding="async"
-        className={`block h-auto w-full bg-[#f5f5f5] ${wide ? `aspect-4/3 ${flat ? 'object-contain' : 'object-cover'} md:aspect-(--ratio)` : ''}`}
+        className={`block h-auto w-full bg-[#f5f5f5] ${wide ? `aspect-4/3 ${flat || phone43 ? 'object-contain' : 'object-cover'} md:aspect-(--ratio)` : ''}`}
         style={wide ? ({ '--ratio': `${w} / ${h}`, objectPosition: `${focus}% 50%`, ...(flat && { background: flat }) } as CSSProperties) : { aspectRatio: `${w} / ${h}` }}
       />
       {caption && <Caption cross={cross} download={!!href}>{caption}</Caption>}
@@ -603,14 +605,16 @@ function Poster({ bg, w, h, title, subtitle, center, alt }: {
   )
 }
 
-function LogoPlate({ w, h, logo, bg, dark, caption, className = '' }: {
-  w: number; h: number; logo: number; bg: string; dark?: boolean; caption?: ReactNode; className?: string
+function LogoPlate({ w, h, logo, bg, dark, caption, phone43, className = '' }: {
+  w: number; h: number; logo: number; bg: string; dark?: boolean; caption?: ReactNode
+  /** 4:3 on phones, the logo keeping its share of the width (the Логотип figure) */
+  phone43?: boolean; className?: string
 }) {
   return (
     <figure className={`flex flex-col gap-3 ${className}`}>
       <div
-        className={`flex items-center justify-center ${dark ? 'text-white' : 'text-black'}`}
-        style={{ aspectRatio: `${w} / ${h}`, background: bg }}
+        className={`flex items-center justify-center ${dark ? 'text-white' : 'text-black'} ${phone43 ? 'aspect-4/3 md:aspect-(--ratio)' : ''}`}
+        style={{ ...(phone43 ? { '--ratio': `${w} / ${h}` } : { aspectRatio: `${w} / ${h}` }), background: bg } as CSSProperties}
       >
         <div style={{ width: `${(logo / w) * 100}%` }}>
           <UmoLogo title={`Логотип UMO, ${dark ? 'белый' : 'чёрный'}`} className="w-full" />
@@ -1187,7 +1191,7 @@ export default function Guide() {
               </Text>
               <div className="group/preview flex flex-col gap-6">
                 <PreviewLink asset={{ file: 'umo-logo.svg' }} label="Скачать логотип, SVG">
-                  <LogoPlate w={912} h={456} logo={480} bg="#f5f5f5" />
+                  <LogoPlate w={912} h={456} logo={480} bg="#f5f5f5" phone43 />
                 </PreviewLink>
                 <Assets items={[{ file: 'umo-logo.svg' }, { file: 'umo-logo-png.zip' }]} preview="umo-logo.svg" />
               </div>
@@ -1218,7 +1222,7 @@ export default function Guide() {
                 </Text>
               </Head>
               <div className="flex flex-col gap-6">
-                <Fig name="clearspace" w={912} h={456} alt="Схема охранного поля логотипа: U со всех сторон" />
+                <Fig name="clearspace" w={912} h={456} phone43 alt="Схема охранного поля логотипа: U со всех сторон" />
                 <Fig name="minsize" w={912} h={304} alt="Минимальный размер: аналоговый ≥20 мм, цифровой ≥40 px" />
               </div>
             </Section>
