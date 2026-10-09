@@ -27,7 +27,7 @@ const lines = (t: string) => t.trim().split('\n').map(l => esc(l.replace(/\s+/g,
 /** A cell where a row of two has only one tag */
 const EMPTY_CELL = '<w:tc><w:tcPr><w:tcW w:w="5102" w:type="dxa"/></w:tcPr><w:p/></w:tc>'
 
-const LINE = 'w:val="single" w:sz="2" w:space="0" w:color="E6E6E6"'
+const LINE = 'w:val="single" w:sz="2" w:space="0" w:color="CCCCCC"'
 /** Lines round the table and between the columns; none between a tag's own rows (`UNDER` closes each tag) */
 const BORDERS = '<w:tblBorders>' + ['top', 'left', 'bottom', 'right', 'insideV'].map(s => `<w:${s} ${LINE}/>`).join('') +
   '<w:insideH w:val="none" w:sz="0" w:space="0" w:color="auto"/></w:tblBorders>'
