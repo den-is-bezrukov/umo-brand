@@ -1,15 +1,16 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadBar, unfilled, stepsLeft, Segments, SegBtn, rowAction, isValidUrl, ALERT_LABEL, Checkbox } from '@/ui/form'
-import { useStaff, pickTable, TableSource, UploadArea, AddTile, fullNameField, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
+import { useStaff, plain, pickTable, TableSource, UploadArea, AddTile, fullNameField, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
 import { xlsxCells, pastedCells, byHeaders, FULL_NAME, fromFullName, type Cells } from '@/nametag/table'
-import { CARD, QR, FACE, BACK_LOGO, DEALER_FIELDS, buildBack, siteFor, siteText, splitPhone, maskPhone, type CardField, type Dealer, type Person, type QrData } from '@/card/card'
+import { CARDS_KEY, CARD, QR, FACE, BACK_LOGO, DEALER_FIELDS, buildBack, siteFor, siteText, splitPhone, maskPhone, type CardField, type Dealer, type Person, type QrData } from '@/card/card'
 import CardArt from '@/card/CardArt'
 import { POSITIONS } from '@/data/positions'
 import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
 import dealers from '@/data/dealers.json'
+import { isPdf, readPdfData } from '@/ui/pdfData'
 
 // Business card generator (Figma: UMO | Evrone, section 4021:2849): the dealership set once, its staff typed on the page
 // or loaded from the template, one PDF out with the face and a back per person. The staff list works as the name
@@ -59,17 +60,12 @@ const DEALER_OPTIONS = DEALER_NAMES.map(withoutUmo)
 /** What the grey stand-in QR holds */
 const SAMPLE_LINK = 'https://umo.auto'
 
+/** What the cards were made from, kept in their PDF (`CARDS_KEY`) */
+interface CardsData { dealer: Omit<Dealer, 'site'> & { site: string | null }; qrLink: string | null; faceEach: boolean; marks: boolean; people: Person[] }
+
 const PERSON_FIELDS: CardField[] = ['name', 'surname', 'position', 'email', 'phone']
 
 export default function BusinessCard() {
-  const staff = useStaff<Person>({
-    blank: BLANK,
-    readFile: data => toPeople(xlsxCells(data)),
-    readPasted: text => toPeople(pastedCells(text)),
-  })
-  const { mode, setMode, people, current, update } = staff
-  staff.useDeleteKey(false)
-
   // Not kept in the address, as the name tag's: a staff list isn't something to send as a link
   /** The site follows the dealer's name (`siteFor`) until it's edited: null */
   const [input, setDealer] = useState<Omit<Dealer, 'site'> & { site: string | null }>({ name: '', address: '', site: null })
@@ -84,6 +80,28 @@ export default function BusinessCard() {
   // The face before every back (else once, before all of them), and crop marks around each card
   const [faceEach, setFaceEach] = useState(false)
   const [marks, setMarks] = useState(false)
+
+  const staff = useStaff<Person>({
+    blank: BLANK,
+    // The cards' own PDF brings back the dealership, the QR link, the file's options and the staff, to change a line
+    // and download again; else a table
+    readFile: data => {
+      const bytes = new Uint8Array(data)
+      if (!isPdf(bytes)) return toPeople(xlsxCells(data))
+      const d = readPdfData(bytes, CARDS_KEY) as CardsData | undefined
+      if (!d?.people?.length) throw new Error('В этом PDF нет визиток: подходят PDF, скачанные здесь')
+      setDealer({ name: String(d.dealer?.name ?? ''), address: String(d.dealer?.address ?? ''), site: d.dealer?.site ?? null })
+      setQrLink(d.qrLink ?? null)
+      setFaceEach(!!d.faceEach)
+      setMarks(!!d.marks)
+      return d.people.map(p => ({ ...BLANK, ...p }))
+    },
+    readPasted: text => toPeople(pastedCells(text)),
+    accept: '.xlsx,.pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf',
+    uploadLabel: 'Загрузить таблицу или PDF',
+  })
+  const { mode, setMode, people, current, update } = staff
+  staff.useDeleteKey(false)
 
   const [fonts, setFonts] = useState<Fonts>()
   const [exporting, setExporting] = useState(false)
@@ -159,7 +177,8 @@ export default function BusinessCard() {
     setExporting(true)
     try {
       const { cardsPdf } = await import('@/card/pdf')
-      const blob = await cardsPdf(cards.map(c => c.back), { faceEach, marks })
+      const data: CardsData = { dealer: input, qrLink, faceEach, marks, people: items.map(plain) }
+      const blob = await cardsPdf(cards.map(c => c.back), { faceEach, marks }, data)
       const a = document.createElement('a')
       a.href = URL.createObjectURL(blob)
       a.download = 'UMO_business-cards.pdf'

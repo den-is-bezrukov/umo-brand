@@ -11,6 +11,9 @@ import { nameFault } from '@/ui/names'
 
 const PT = 25.4 / 72
 
+/** The PDF info entry holding the staff the tags were made from (`writePdfData`), read back when the PDF or ZIP is dropped */
+export const TAGS_KEY = 'UMONameTags'
+
 /** The plate, in millimetres */
 export const TAG = { w: 70, h: 25, r: 4 }
 

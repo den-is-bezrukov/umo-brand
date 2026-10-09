@@ -3,7 +3,8 @@ import {
   moveTo, lineTo, appendBezierCurve, closePath, pushGraphicsState, popGraphicsState, setFillingCmykColor, setStrokingCmykColor, stroke,
 } from 'pdf-lib'
 import { zipSync, strToU8 } from 'fflate'
-import { TAG, LOGO, type Tag } from './tag'
+import { TAG, LOGO, TAGS_KEY, type Tag } from './tag'
+import { writePdfData } from '@/ui/pdfDataWrite'
 import type { Cmd } from '@/livery/geometry'
 
 // Loaded only when the files are downloaded, so the page doesn't carry pdf-lib until then.
@@ -53,9 +54,11 @@ function pathOps(cmds: Cmd[], H: number): PDFOperator[] {
  * One page per tag at 1:1, as the source: the plate's outline as a 0.5 pt stroke (the cut line), the logo and the text
  * as filled outlines, all in the source's colour
  */
-async function tagsPdf(tags: Tag[]): Promise<Uint8Array> {
+async function tagsPdf(tags: Tag[], people: unknown): Promise<Uint8Array> {
   const doc = await PDFDocument.create()
   doc.setTitle('UMO name tags 70×25')
+  // The staff as typed, so the PDF (or the ZIP holding it) dropped back on the page opens them
+  writePdfData(doc, TAGS_KEY, { people })
   const logo = svgCmds(LOGO)
   for (const tag of tags) {
     const page = doc.addPage([TAG.w * PT, TAG.h * PT])
@@ -69,7 +72,7 @@ async function tagsPdf(tags: Tag[]): Promise<Uint8Array> {
       popGraphicsState(),
     )
   }
-  return doc.save()
+  return doc.save({ useObjectStreams: false })
 }
 
 /** The requirements of the source's `UMO_name-tag_spec_ТТ.txt`, the text now coming in outlines */
@@ -123,8 +126,8 @@ UMO_name-tag_reference.webp  — референс внешнего вида
 `
 }
 
-export async function tagsZip(tags: Tag[]): Promise<Blob> {
-  const [pdf, photo] = await Promise.all([tagsPdf(tags), fetch(REFERENCE).then(r => r.arrayBuffer())])
+export async function tagsZip(tags: Tag[], people: unknown): Promise<Blob> {
+  const [pdf, photo] = await Promise.all([tagsPdf(tags, people), fetch(REFERENCE).then(r => r.arrayBuffer())])
   const zip = zipSync({
     'UMO_name-tags.pdf': pdf,
     'UMO_name-tag_reference.webp': new Uint8Array(photo),

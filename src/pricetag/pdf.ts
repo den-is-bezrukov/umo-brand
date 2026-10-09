@@ -1,10 +1,11 @@
 import {
   PDFDocument, PDFOperator, PDFOperatorNames,
   moveTo, lineTo, appendBezierCurve, closePath, pushGraphicsState, popGraphicsState, setFillingCmykColor,
-  setStrokingCmykColor, setLineWidth, stroke, PDFName, PDFHexString, type PDFDict,
+  setStrokingCmykColor, setLineWidth, stroke,
 } from 'pdf-lib'
 import { TAG, BAND, BAND_ART, type Tag } from './tag'
 import { DATA_KEY, type TagsData } from './read'
+import { writePdfData } from '@/ui/pdfDataWrite'
 import type { Cmd } from '@/livery/geometry'
 
 // Loaded only when the tags are downloaded, so the page doesn't carry pdf-lib until then.
@@ -50,7 +51,7 @@ export async function tagsPdf(tags: Tag[], data: TagsData): Promise<Blob> {
   doc.setTitle('UMO price tags 90×60')
   // The dealer and the goods as typed, in the document's info, so the file dropped back on the page opens its list
   // (`readTagsFile`); nothing of it is printed
-  ;(doc as unknown as { getInfoDict(): PDFDict }).getInfoDict().set(PDFName.of(DATA_KEY), PDFHexString.fromText(JSON.stringify(data)))
+  writePdfData(doc, DATA_KEY, data)
   for (let from = 0; from < tags.length; from += PER_PAGE) {
     const sheet = tags.slice(from, from + PER_PAGE)
     const p = doc.addPage([PAGE.w * PT, PAGE.h * PT])

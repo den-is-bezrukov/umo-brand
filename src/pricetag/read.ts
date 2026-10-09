@@ -1,5 +1,6 @@
 import { unzipSync, strFromU8 } from 'fflate'
 import { DEFAULT_CAPTION, readPrice, type Item } from './tag'
+import { isPdf, readPdfData } from '@/ui/pdfData'
 
 // The tags' own files dropped back on the page, to fix a price and download again: the PDF carries the dealer and the
 // goods as typed in its info (`DATA_KEY`, written by `tagsPdf`), the Word file is read off its table, so what was
@@ -16,29 +17,17 @@ const NOT_OURS_WORD = 'В этом файле Word нет ценников: по
 /** A PDF's or Word file's tags; null for anything else (an .xlsx, read as a table) */
 export function readTagsFile(data: ArrayBuffer): TagsData | null {
   const bytes = new Uint8Array(data)
-  if (strFromU8(bytes.subarray(0, 5), true) === '%PDF-') return readPdf(bytes)
+  if (isPdf(bytes)) return readPdf(bytes)
   let files: Record<string, Uint8Array>
   try { files = unzipSync(bytes) } catch { return null }
   return files['word/document.xml'] ? readDocx(strFromU8(files['word/document.xml'])) : null
 }
 
 function readPdf(bytes: Uint8Array): TagsData {
-  // Latin-1, one character a byte, to find the entry in the file as written (no object streams)
-  const text = strFromU8(bytes, true)
-  const m = text.match(new RegExp(`/${DATA_KEY}\\s*<([0-9A-Fa-f\\s]*)>`))
-  if (!m) throw new Error(NOT_OURS_PDF)
-  const hex = m[1].replace(/\s/g, '')
-  const raw = new Uint8Array(hex.length / 2).map((_, i) => parseInt(hex.slice(2 * i, 2 * i + 2), 16))
-  // pdf-lib writes text as UTF-16BE after a byte-order mark
-  const json = raw[0] === 0xfe && raw[1] === 0xff ? new TextDecoder('utf-16be').decode(raw.subarray(2)) : new TextDecoder().decode(raw)
-  try {
-    const d = JSON.parse(json) as Partial<TagsData>
-    const items = (d.items ?? []).map(it => ({ name: String(it.name ?? ''), code: String(it.code ?? ''), caption: String(it.caption ?? DEFAULT_CAPTION), price: String(it.price ?? '') }))
-    if (!items.length) throw new Error()
-    return { dealer: String(d.dealer ?? ''), items }
-  } catch {
-    throw new Error(NOT_OURS_PDF)
-  }
+  const d = readPdfData(bytes, DATA_KEY) as Partial<TagsData> | undefined
+  const items = (d?.items ?? []).map(it => ({ name: String(it.name ?? ''), code: String(it.code ?? ''), caption: String(it.caption ?? DEFAULT_CAPTION), price: String(it.price ?? '') }))
+  if (!items.length) throw new Error(NOT_OURS_PDF)
+  return { dealer: String(d?.dealer ?? ''), items }
 }
 
 const W = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'

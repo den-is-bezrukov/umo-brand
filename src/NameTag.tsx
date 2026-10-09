@@ -1,12 +1,13 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadBar, unfilled, stepsLeft, Segments, SegBtn, outlined } from '@/ui/form'
-import { useStaff, pickTable, TableSource, UploadArea, AddTile, fullNameField, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
+import { useStaff, plain, pickTable, TableSource, UploadArea, AddTile, fullNameField, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD } from '@/livery/geometry'
-import { TAG, buildTag, loadFonts, type Field, type FieldBox, type Fonts, type Person } from '@/nametag/tag'
+import { TAG, TAGS_KEY, buildTag, loadFonts, type Field, type FieldBox, type Fonts, type Person } from '@/nametag/tag'
 import { readXlsx, parsePasted } from '@/nametag/table'
 import { POSITIONS } from '@/data/positions'
 import TagArt from '@/nametag/TagArt'
+import { isPdf, pdfInZip, readPdfData } from '@/ui/pdfData'
 
 // Name tag generator (Figma: UMO | Evrone, node 4021:2878): a dealership's staff list in, one zip out with the tags
 // in outlines, a page each, and the maker's requirements. Two modes: «Вручную», a list typed on the page, and «Из
@@ -30,8 +31,18 @@ export default function NameTag() {
   // list to «Вручную» to edit it, and the first edit makes it a list of its own, no longer the file
   const staff = useStaff<Person>({
     blank: BLANK,
-    readFile: data => readXlsx(data).map(r => r.person),
+    // The tags' own ZIP, or the PDF from it, brings back the staff, to change a line and download again; else a table
+    readFile: data => {
+      const bytes = new Uint8Array(data)
+      const pdf = isPdf(bytes) ? bytes : pdfInZip(bytes)
+      if (!pdf) return readXlsx(data).map(r => r.person)
+      const d = readPdfData(pdf, TAGS_KEY) as { people?: Partial<Person>[] } | undefined
+      if (!d?.people?.length) throw new Error('В этом PDF нет бейджей: подходят ZIP и PDF, скачанные здесь')
+      return d.people.map(p => ({ name: String(p.name ?? ''), surname: String(p.surname ?? ''), position: String(p.position ?? '') }))
+    },
     readPasted: text => parsePasted(text).map(r => r.person),
+    accept: '.xlsx,.zip,.pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/zip,application/pdf',
+    uploadLabel: 'Загрузить таблицу или ZIP',
   })
   const { mode, setMode, people, current, selected, setSelected, update } = staff
   /** A field being edited on the tag itself, after a double click on its text */
@@ -79,7 +90,7 @@ export default function NameTag() {
     setExporting(true)
     try {
       const { tagsZip } = await import('@/nametag/pdf')
-      const blob = await tagsZip(tags)
+      const blob = await tagsZip(tags, staff.items.map(plain))
       const a = document.createElement('a')
       a.href = URL.createObjectURL(blob)
       a.download = 'UMO_name-tags.zip'

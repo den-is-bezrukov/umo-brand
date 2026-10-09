@@ -14,6 +14,9 @@ import type { Fonts } from '@/nametag/tag'
 // margin, the person's stands on the bottom one, so a line left out or a second one closes up towards the edge.
 // Figma's text boxes are trimmed to the capitals (680 of 1000 units), so its numbers are cap tops and baselines.
 
+/** The PDF info entry holding what the cards were made from (`writePdfData`), read back when the PDF is dropped */
+export const CARDS_KEY = 'UMOBusinessCards'
+
 /** The card, mm */
 export const CARD = { w: 90, h: 50 }
 

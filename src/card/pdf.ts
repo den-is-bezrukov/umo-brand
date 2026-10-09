@@ -5,6 +5,8 @@ import {
 } from 'pdf-lib'
 import { CARD, FACE, BACK_LOGO, type Back } from './card'
 import type { Cmd } from '@/livery/geometry'
+import { writePdfData } from '@/ui/pdfDataWrite'
+import { CARDS_KEY } from './card'
 
 // Loaded only when the cards are downloaded, so the page doesn't carry pdf-lib until then.
 
@@ -39,9 +41,11 @@ function pathOps(cmds: Cmd[], H: number): PDFOperator[] {
  * The cards for the printer, a 90×50 mm page each at 1:1, no bleed (the card is white, nothing runs off its edge),
  * crop marks if asked; all text and logos as filled outlines in 100% K
  */
-export async function cardsPdf(backs: Back[], { faceEach, marks }: PageOptions): Promise<Blob> {
+export async function cardsPdf(backs: Back[], { faceEach, marks }: PageOptions, data: unknown): Promise<Blob> {
   const doc = await PDFDocument.create()
   doc.setTitle('UMO business cards 90×50')
+  // What the cards were made from, so the PDF dropped back on the page opens them
+  writePdfData(doc, CARDS_KEY, data)
   const m = marks ? MARGIN : 0
   const page = (art: Cmd[]) => {
     const p = doc.addPage([(CARD.w + 2 * m) * PT, (CARD.h + 2 * m) * PT])
@@ -77,6 +81,6 @@ export async function cardsPdf(backs: Back[], { faceEach, marks }: PageOptions):
   } else {
     backs.forEach(b => { page(FACE); page(back(b)) })
   }
-  const bytes = await doc.save()
+  const bytes = await doc.save({ useObjectStreams: false })
   return new Blob([bytes as BlobPart], { type: 'application/pdf' })
 }
