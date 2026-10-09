@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, unfilled, Segments, SegBtn, ALERT_LABEL } from '@/ui/form'
+import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, unfilled, Segments, SegBtn, ALERT_LABEL, outlined } from '@/ui/form'
 import { useStaff, TableSource, UploadArea, AddTile, inWork, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, type Cmd } from '@/livery/geometry'
@@ -90,20 +90,35 @@ export default function PriceTag() {
   const dealerField = useRef<HTMLDivElement>(null)
   const toDealer = () => dealerField.current?.querySelector<HTMLElement>('textarea, input')?.focus()
 
+  /** The PDF, or the same tags as a Word document from the brand team's template, for those who print from Word */
+  const [exportingWord, setExportingWord] = useState(false)
+  const save = (blob: Blob, name: string) => {
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = name
+    a.click()
+    URL.revokeObjectURL(a.href)
+  }
   const handleExport = async () => {
     if (!tags || !ok) return
     setExporting(true)
     try {
       const { tagsPdf } = await import('@/pricetag/pdf')
-      const blob = await tagsPdf(tags.map(t => t.tag))
-      const a = document.createElement('a')
-      a.href = URL.createObjectURL(blob)
-      a.download = 'UMO_price-tags.pdf'
-      a.click()
-      goal('download_price_tag', { count: tags.length })
-      URL.revokeObjectURL(a.href)
+      save(await tagsPdf(tags.map(t => t.tag)), 'UMO_price-tags.pdf')
+      goal('download_price_tag', { count: tags.length, format: 'pdf' })
     } finally {
       setExporting(false)
+    }
+  }
+  const handleWord = async () => {
+    if (!ok) return
+    setExportingWord(true)
+    try {
+      const { tagsDocx } = await import('@/pricetag/docx')
+      save(await tagsDocx(dealer, items.map(({ key: _, ...it }) => it)), 'UMO_price-tags.docx')
+      goal('download_price_tag', { count: items.length, format: 'docx' })
+    } finally {
+      setExportingWord(false)
     }
   }
 
@@ -178,6 +193,12 @@ export default function PriceTag() {
           disabled={!ok}
           note={(dealerMissing ? unfilled([UNFILLED.dealer!, ...(items.length === 1 ? missing[0].map(f => UNFILLED[f]!) : [])], items.length === 1 ? 4 : 0) : dealerIssues[0]) ?? (!items.length ? 'Нет таблицы' : items.length > 1 ? inWork(failing.length, items.length) : problemOf(0))}
           onNote={dealerIssues.length ? toDealer : items.length ? () => staff.nextOf(failing) : undefined}
+          // The Word file where «Поделиться» stands on the other generators: over the PDF, beside it on phones
+          links={
+            <button type="button" onClick={handleWord} disabled={!ok || exportingWord} className={`${outlined} w-full bg-white`}>
+              {exportingWord ? 'Генерация…' : 'Скачать Word'}
+            </button>
+          }
         />
       </aside>
 
