@@ -81,13 +81,25 @@ function StepIcon({ plus }: { plus?: boolean }) {
  * A time with steppers either side, half an hour a click (or ↑ ↓), from what's there or the placeholder; typed by
  * hand too, and rounded to the half hour when the field is left, so 9:57 can't stand on the sign
  */
-function TimeField({ value, onChange, placeholder, invalid, label, min = 0, max = DAY }: { value: string; onChange: (v: string) => void; placeholder: string; invalid?: boolean; label: string; /** Minutes it can't go under or over: the other time's half hour off */ min?: number; max?: number }) {
+function TimeField({ value, onChange, onCommit, placeholder, invalid, label, min, max }: {
+  value: string
+  /** Each key typed */
+  onChange: (v: string) => void
+  /** A step, or the typed time made whole when the field is left: where the other time may be pushed */
+  onCommit: (v: string) => void
+  placeholder: string
+  invalid?: boolean
+  label: string
+  /** Minutes it can't go under or over: half an hour off the day's ends, leaving room for the other time */
+  min: number
+  max: number
+}) {
   const step = (dir: 1 | -1) => {
     const t = timeText(value) ?? placeholder
     const now = minutesOf(t)
     // From a time off the grid, the first step lands on it
     const next = dir > 0 ? Math.floor(now / STEP) * STEP + STEP : Math.ceil(now / STEP) * STEP - STEP
-    onChange(timeOf(Math.max(min, Math.min(max, next))))
+    onCommit(timeOf(Math.max(min, Math.min(max, next))))
   }
   const button = 'flex w-9 shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] outline-none hover:text-black focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-black/40'
   return (
@@ -102,10 +114,10 @@ function TimeField({ value, onChange, placeholder, invalid, label, min = 0, max 
           <input
         value={value}
         onChange={e => onChange(maskTime(e.target.value))}
-        onBlur={() => onChange(rounded(value, min, max))}
+        onBlur={() => onCommit(rounded(value, min, max))}
         onKeyDown={e => {
           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); step(e.key === 'ArrowUp' ? 1 : -1) }
-          if (e.key === 'Enter') onChange(rounded(value, min, max))
+          if (e.key === 'Enter') onCommit(rounded(value, min, max))
         }}
         inputMode="decimal"
         aria-label={label}
@@ -210,6 +222,21 @@ export default function HoursSign() {
     }
   }
 
+  // Each time pushes the other along when it's stepped or typed past it, half an hour apart: 10:30—11:00 with the
+  // closing stepped down is 10:00—10:30, with the opening stepped up 11:00—11:30. Only a time filled in is pushed
+  const commitFrom = (v: string) => {
+    setFrom(v)
+    const a = timeText(v)
+    const b = timeText(wholeTime(to))
+    if (a && b && minutesOf(b) < minutesOf(a) + STEP) setTo(timeOf(minutesOf(a) + STEP))
+  }
+  const commitTo = (v: string) => {
+    setTo(v)
+    const b = timeText(v)
+    const a = timeText(wholeTime(from))
+    if (a && b && minutesOf(a) > minutesOf(b) - STEP) setFrom(timeOf(minutesOf(b) - STEP))
+  }
+
   /** Its own PDF dropped on the page opens what it was made from; any other file is said to have no sign */
   const openFile = async (file: File) => {
     const bytes = new Uint8Array(await file.arrayBuffer())
@@ -240,8 +267,8 @@ export default function HoursSign() {
           <div ref={form} className="flex flex-col gap-4 tracking-normal">
             <Field label="Часы работы">
               <div className="grid grid-cols-2 gap-2 [font-variant-numeric:lining-nums_tabular-nums]">
-                <div data-field="from"><TimeField value={from} onChange={setFrom} placeholder={PLACEHOLDER.from} label="Открытие" invalid={wrong.has('from')} max={timeText(values.to) ? minutesOf(timeText(values.to)!) - STEP : DAY} /></div>
-                <div data-field="to"><TimeField value={to} onChange={setTo} placeholder={PLACEHOLDER.to} label="Закрытие" invalid={wrong.has('to')} min={timeText(values.from) ? minutesOf(timeText(values.from)!) + STEP : 0} /></div>
+                <div data-field="from"><TimeField value={from} onChange={setFrom} onCommit={commitFrom} placeholder={PLACEHOLDER.from} label="Открытие" invalid={wrong.has('from')} min={0} max={DAY - STEP} /></div>
+                <div data-field="to"><TimeField value={to} onChange={setTo} onCommit={commitTo} placeholder={PLACEHOLDER.to} label="Закрытие" invalid={wrong.has('to')} min={STEP} max={DAY} /></div>
               </div>
             </Field>
             {/* The line under the hours, fixed for now (see `line` above)
