@@ -40,13 +40,25 @@ const toItems = (rows: Cells[]): Item[] => byHeaders(rows, HEADERS).map(r => ({
   price: readPrice(r.price) ?? r.price,
 }))
 
+/**
+ * Sample data the page opens with while the generator is being tried out, so nothing has to be typed each time.
+ * Temporary: drop `SAMPLE_DEALER` and `SAMPLE_ITEMS` (and `initial`) for an empty page
+ */
+const SAMPLE_DEALER = 'АВТОДОМ Алтуфьево'
+const SAMPLE_ITEMS: Item[] = [
+  { name: 'Яндекс Станция Макс с Zigbee, модель YNDX-00053 (графитовый)', code: 'YNDX-00053', caption: DEFAULT_CAPTION, price: '30 000' },
+  { name: 'Коврики в салон', code: 'UMO-8-MAT', caption: 'Цена за комплект с НДС', price: '12 500' },
+  { name: 'Зарядный кабель Type 2, 7 кВт', code: 'UMO-EVSE-7', caption: DEFAULT_CAPTION, price: '24 990' },
+]
+
 /** The dealers as the band names them: without «UMO», as the logo stands right by the name */
 const DEALER_OPTIONS = DEALER_NAMES.map(withoutUmo)
 
 export default function PriceTag() {
-  const [dealer, setDealer] = useState('')
+  const [dealer, setDealer] = useState(SAMPLE_DEALER)
   const staff = useStaff<Item>({
     blank: BLANK,
+    initial: SAMPLE_ITEMS,
     // The tags' own PDF or Word file brings its dealer and goods back, to fix a price and download again; else a table
     readFile: data => {
       const own = readTagsFile(data)
