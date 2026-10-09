@@ -5,8 +5,8 @@ import { InSlide, InFoot } from '@/ui/phone'
 // A trial of the generators' phone layout (Figma 5098:5806, C and D): the canvas fills the screen above a sheet, what's
 // made swiped through one at a time, the item's number between «Удалить» and «Сбросить» over it and «‹ Дублировать ›»
 // under it; the sheet holds the sidebar (header and form) with the download at its foot. A tap on the picture folds the
-// sheet to the download alone, the picture large, and another brings it back; a swipe up on the sheet opens the form
-// over the whole screen, with only «‹ n ›» over it and no download, a swipe down puts it back. In the link: `arrows=0` hides the arrows (swiping alone), `bare` hides the download too while the sheet is folded
+// sheet away, the picture large with no download, and another brings it back; a swipe up on the sheet opens the form
+// over the whole screen, with only «‹ n ›» over it, a swipe down puts it back. In the link: `arrows=0` hides the arrows (swiping alone)
 
 /** Whether the screen is a phone's, as the generators' `md` breakpoint */
 export function usePhone() {
@@ -29,7 +29,6 @@ const SWIPE = 40
 const UNDER = 56
 
 const arrowsOn = () => new URLSearchParams(location.search).get('arrows') !== '0'
-const bareMode = () => new URLSearchParams(location.search).has('bare')
 
 const ICON = { fill: 'none', stroke: 'currentColor', strokeWidth: 1, strokeLinecap: 'square' as const, strokeLinejoin: 'bevel' as const }
 
@@ -74,7 +73,6 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
 }) {
   const [sheet, setSheet] = useState<Sheet>('half')
   const [arrows] = useState(arrowsOn)
-  const [bare] = useState(bareMode)
 
   // The slide in view: the selected item's on a list's page
   const selectedAt = staff ? slides.findIndex(s => s.item === staff.selected) : -1
@@ -167,7 +165,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     ? <span className="min-w-0 truncate text-[14px] leading-5 text-[#808080]">{title}</span>
     : <span className={`text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1] ${many ? '' : 'invisible'}`}>{shown + 1}</span>
   const reset = slides[shown]?.reset
-  const height = { preview: bare ? '0px' : '72px', half: 'min(52dvh, 420px)', full: 'calc(100dvh - 48px)' }[sheet]
+  const height = { preview: '0px', half: 'min(52dvh, 420px)', full: 'calc(100dvh - 48px)' }[sheet]
 
   const fit = (ratio?: number) => ratio
     ? Math.max(0, Math.floor(Math.min(box.w - 32, (box.h - UNDER) / ratio)))
@@ -229,8 +227,8 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         <div ref={scroller} className={`min-h-0 flex-1 overflow-y-auto [&_[data-crumbs]]:hidden ${sheet === 'preview' ? 'pointer-events-none' : ''}`}>
           {sidebar}
         </div>
-        {/* No download over the whole-screen form: it's for filling in */}
-        {!full && (
+        {/* The download under the form, open or over the whole screen; none over the picture alone */}
+        {sheet !== 'preview' && (
           <div className="shrink-0 px-6 pt-3 pb-5 tracking-normal">
             <InFoot.Provider value={() => setSheet(s => (s === 'preview' ? 'half' : s))}>{download}</InFoot.Provider>
           </div>
