@@ -55,7 +55,7 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
           </span>
           <PhoneCrumbs />
           {/* Grey, as the canvas's icons; it turns inward while the form is over the whole screen */}
-          {size && <IconButton label={size.full ? 'Свернуть форму' : 'Развернуть форму'} onClick={size.toggle} grey d={size.full ? 'M12.5 7.5H8.5V3.5M3.5 8.5H7.5V12.5' : 'M8.5 3.5H12.5V7.5M7.5 12.5H3.5V8.5'} />}
+          {size && <IconButton label={size.full ? 'Свернуть форму' : 'Развернуть форму'} onClick={size.toggle} grey d={size.full ? 'M13 7H9V3M3 9H7V13' : 'M9 3H13V7M7 13H3V9'} />}
         </div>
         <GeneratorRing current={current} />
       </div>
@@ -105,7 +105,7 @@ function GeneratorMenu({ current, height, onClose }: { current: string; /** The 
     <div role="dialog" aria-label="Конструкторы" style={{ height }} className="fixed inset-x-0 bottom-0 z-50 overflow-y-auto rounded-t-[24px] bg-white p-6 font-sans text-black shadow-[0_10px_30px_rgba(0,0,0,0.1)]">
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <IconButton label="Закрыть" onClick={onClose} d="M4 3L8 7L12 3M4 13.25L8 9.25L12 13.25" />
+          <IconButton label="Закрыть" onClick={onClose} d="M4 3L8 7L12 3M4 13L8 9L12 13" />
           <PhoneCrumbs />
         </div>
         <nav aria-label="Конструкторы" className="flex flex-col items-start gap-5">
@@ -129,11 +129,11 @@ function PhoneCrumbs() {
   )
 }
 
-/** A 16 px icon with a 1 px stroke as Figma exports the sheet's (5110:9103, 5110:9091, 5103:6163), black or grey, a finger's 36 px round it */
+/** A 16 px icon with a 2 px stroke as the form's own, on whole pixels (Figma's sheet has 1 px: 5110:9103, 5110:9091, 5103:6163), black or grey, a finger's 36 px round it */
 function IconButton({ label, onClick, d, grey }: { label: string; onClick: () => void; d: string; grey?: boolean }) {
   return (
     <button type="button" aria-label={label} title={label} onClick={onClick} className={`relative flex size-4 shrink-0 cursor-pointer items-center justify-center outline-none after:absolute after:-inset-[10px] after:content-[''] ${grey ? 'text-[#808080]' : ''}`}>
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d={d} stroke="currentColor" strokeWidth="1" strokeLinecap="square" strokeLinejoin="bevel" /></svg>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d={d} stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" /></svg>
     </button>
   )
 }
