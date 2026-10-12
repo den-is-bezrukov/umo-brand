@@ -17,20 +17,20 @@ export const SIGN_KEY = 'UMOHoursSign'
 /** The sign, mm */
 export const SIGN = { w: 480, h: 680 }
 
-const MARGIN = SIGN.w / 7
+export const MARGIN = SIGN.w / 7
 const COLUMN = SIGN.w - 2 * MARGIN
-const DROP = 0.844
+export const DROP = 0.844
 
 /** The logo across the column, from the top margin */
 export const LOGO = logo(MARGIN, MARGIN, COLUMN)
 
 /** The hours, centred: 292.571 px with −0.85% tracking, lining tabular figures and the case forms (the dash raised) */
-const TIME = { size: 292.571 / 5, track: -0.0085, baseline: 1428.571 / 5 + DROP * 292.571 / 5 }
+export const TIME = { size: 292.571 / 5, track: -0.0085, baseline: 1428.571 / 5 + DROP * 292.571 / 5 }
 /** The line under them: 155.429 px, −0.8% */
-const LINE = { size: 155.429 / 5, track: -0.008, baseline: 1816 / 5 + DROP * 155.429 / 5 }
+export const LINE = { size: 155.429 / 5, track: -0.008, baseline: 1816 / 5 + DROP * 155.429 / 5 }
 /** The dealership: 45.714 px on 1.5 lines, the block standing on its last line (its box's bottom at 3104.571 px) */
-const INFO = { size: 45.714 / 5, leading: 1.5 * 45.714 / 5 }
-const INFO_LAST = 3104.571 / 5 - INFO.leading + (INFO.leading - INFO.size) / 2 + DROP * INFO.size
+export const INFO = { size: 45.714 / 5, leading: 1.5 * 45.714 / 5 }
+export const INFO_LAST = 3104.571 / 5 - INFO.leading + (INFO.leading - INFO.size) / 2 + DROP * INFO.size
 /** The address takes two lines at most, as umo.auto's longest run to twice the column */
 const ADDRESS_LINES = 2
 

@@ -16,10 +16,10 @@ import type { Fonts } from '@/nametag/tag'
 /** The tag, mm */
 export const TAG = { w: 90, h: 60 }
 
-const SIDE = 4.5
-const CAP = 0.68
+export const SIDE = 4.5
+export const CAP = 0.68
 /** From a «leading-none» box's top to its baseline, in sizes: (1 − (974 + 286) / 1000) / 2 + 0.974 */
-const DROP = 0.844
+export const DROP = 0.844
 
 /** The black band */
 export const BAND = 12
@@ -32,17 +32,17 @@ const LOGO_W = 15
 const RULE_X = 22.5
 const RULE_W = 0.15
 const DEALER_X = RULE_X + 2.625
-const DEALER = { x: DEALER_X, size: 4.4, width: TAG.w - DEALER_X }
+export const DEALER = { x: DEALER_X, size: 4.4, width: TAG.w - DEALER_X }
 
 /** The goods' name, Medium 45 px on 45 px lines, from the body's 4 mm padding down to the code */
-const NAME = { top: BAND + 4, size: 4.5, width: TAG.w - 2 * SIDE, lines: 4 }
+export const NAME = { top: BAND + 4, size: 4.5, width: TAG.w - 2 * SIDE, lines: 4 }
 /** Regular 30 px with 1% tracking: the code, the caption */
-const SMALL = 3
-const TRACK = 0.01 * SMALL
-const CODE_TOP = BAND + 4 + 22
-const CAPTION_TOP = BAND + 30.5
+export const SMALL = 3
+export const TRACK = 0.01 * SMALL
+export const CODE_TOP = BAND + 4 + 22
+export const CAPTION_TOP = BAND + 30.5
 /** The price, Medium 90 px, its box standing on the body's bottom padding; lining tabular figures */
-const PRICE = { top: BAND + 35, size: 9 }
+export const PRICE = { top: BAND + 35, size: 9 }
 
 export const DEFAULT_CAPTION = 'Цена за штуку с НДС'
 

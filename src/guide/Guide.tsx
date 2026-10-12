@@ -6,6 +6,9 @@ import UmoLogo from './UmoLogo'
 import UmoYandexLockup from './UmoYandexLockup'
 import PlateArt from '@/plate/PlateArt'
 import { BASELINE as STRIP_BASELINE } from '@/plate/frame'
+import { toD } from '@/livery/geometry'
+import { TAG, BAND, BAND_ART, DEFAULT_CAPTION, SIDE as TAG_SIDE, CAP as TAG_CAP, DROP as TAG_DROP, DEALER as TAG_DEALER, NAME as TAG_NAME, SMALL as TAG_SMALL, TRACK as TAG_TRACK, CAPTION_TOP as TAG_CAPTION_TOP, PRICE as TAG_PRICE } from '@/pricetag/tag'
+import { SIGN, LOGO as SIGN_LOGO, MARGIN as SIGN_MARGIN, TIME as SIGN_TIME, LINE as SIGN_LINE, INFO as SIGN_INFO, INFO_LAST as SIGN_INFO_LAST } from '@/hours/sign'
 import tocIcons from '@/icons/toc'
 import { useTypograf } from './typograf'
 import downloadSizes from 'virtual:download-sizes'
@@ -51,6 +54,44 @@ const MEDIA_LIST: { id: string; to: string; title: string; row: string; w: numbe
         <PlateArt className="w-[58.8%]!">
           <text y={STRIP_BASELINE} fontFamily="CoFo Sans" fontWeight={500} fontSize={18} letterSpacing={-0.18} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Центр UMO | Название дилера</text>
         </PlateArt>
+      </div>
+    ),
+  },
+  {
+    // The 90×60 tag as the constructor sets it, as wide as the plate on the 444×333 grey
+    id: 'price-tag', to: '/price-tag', title: 'Ценник', row: 'Сделать ценники', w: 444, h: 333,
+    picture: (
+      <div className="flex aspect-4/3 items-center justify-center bg-[#f5f5f5]">
+        <svg viewBox={`0 0 ${TAG.w} ${TAG.h}`} className="block h-auto w-[58.8%]" role="img" aria-label="Ценник UMO">
+          <rect width={TAG.w} height={TAG.h} fill="white" />
+          <rect width={TAG.w} height={BAND} fill="black" />
+          <path d={toD(BAND_ART)} fill="white" fillRule="evenodd" />
+          <g fontFamily="CoFo Sans" fontWeight={500}>
+            <text x={TAG_DEALER.x} y={TAG_SIDE + TAG_CAP * TAG_DEALER.size} fontSize={TAG_DEALER.size} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Название дилера</text>
+            {['Коврики в салон', 'UMO 5, комплект'].map((t, i) => <text key={t} x={TAG_SIDE} y={TAG_NAME.top + TAG_DROP * TAG_NAME.size + i * TAG_NAME.size} fontSize={TAG_NAME.size}>{t}</text>)}
+            <text x={TAG_SIDE} y={TAG_CAPTION_TOP + TAG_DROP * TAG_SMALL} fontSize={TAG_SMALL} fontWeight={400} letterSpacing={TAG_TRACK}>{DEFAULT_CAPTION}</text>
+            <text x={TAG_SIDE} y={TAG_PRICE.top + TAG_DROP * TAG_PRICE.size} fontSize={TAG_PRICE.size} style={{ fontVariantNumeric: 'lining-nums tabular-nums' }}>4 990 ₽</text>
+          </g>
+        </svg>
+      </div>
+    ),
+  },
+  {
+    // The 480×680 sign as tall as the price card on the 444×333 grey
+    id: 'hours-sign', to: '/hours-sign', title: 'Режимник', row: 'Сделать режимник', w: 444, h: 333,
+    picture: (
+      <div className="flex aspect-4/3 items-center justify-center bg-[#f5f5f5]">
+        <svg viewBox={`0 0 ${SIGN.w} ${SIGN.h}`} className="block h-auto w-[47.3%]" role="img" aria-label="Режимник UMO">
+          <rect width={SIGN.w} height={SIGN.h} fill="white" />
+          <path d={toD(SIGN_LOGO)} fill="black" fillRule="evenodd" />
+          <g fontFamily="CoFo Sans" fontWeight={500} style={{ fontFeatureSettings: "'case' 1" }}>
+            <text x={SIGN.w / 2} y={SIGN_TIME.baseline} fontSize={SIGN_TIME.size} letterSpacing={SIGN_TIME.track * SIGN_TIME.size} textAnchor="middle" style={{ fontVariantNumeric: 'lining-nums tabular-nums' }}>9:00—21:00</text>
+            <text x={SIGN.w / 2} y={SIGN_LINE.baseline} fontSize={SIGN_LINE.size} letterSpacing={SIGN_LINE.track * SIGN_LINE.size} textAnchor="middle">Работаем без выходных</text>
+            {['UMO Название дилера', 'Адрес: Москва, ул. Примерная, 1', 'Телефон: +7 495 000 00 00', 'umo.auto'].map((t, i, rows) => (
+              <text key={t} x={SIGN_MARGIN} y={SIGN_INFO_LAST - (rows.length - 1 - i) * SIGN_INFO.leading} fontSize={SIGN_INFO.size}>{t}</text>
+            ))}
+          </g>
+        </svg>
       </div>
     ),
   },
@@ -1508,7 +1549,7 @@ export default function Guide() {
             <Section>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
                 <Text>
-                  <p>Готовый дизайн, который встречает клиента у дилера UMO: <Link to="/livery" className={TEXT_LINK}>ливрея демо-автомобиля</Link>, <Link to="/business-card" className={TEXT_LINK}>визитка</Link>, <Link to="/name-tag" className={TEXT_LINK}>бейдж сотрудника</Link>, <Link to="/price-card" className={TEXT_LINK}>прайс-карта</Link> и <Link to="/plate-frame" className={TEXT_LINK}>рамка номера</Link>.</p>
+                  <p>Готовый дизайн, который встречает клиента у дилера UMO: <Link to="/livery" className={TEXT_LINK}>ливрея демо-автомобиля</Link>, <Link to="/business-card" className={TEXT_LINK}>визитка</Link>, <Link to="/name-tag" className={TEXT_LINK}>бейдж сотрудника</Link>, <Link to="/price-card" className={TEXT_LINK}>прайс-карта</Link>, <Link to="/plate-frame" className={TEXT_LINK}>рамка номера</Link>, <Link to="/price-tag" className={TEXT_LINK}>ценник</Link> и <Link to="/hours-sign" className={TEXT_LINK}>режимник</Link>.</p>
                 </Text>
                 <Text>
                   <p>Каждый собирается в редакторе: введите свои данные и получите файлы, готовые к печати или производству.</p>
