@@ -36,60 +36,46 @@ const crumb = 'underline decoration-transparent decoration-[0.35px] underline-of
 
 /**
  * The top of a generator's form, the same on every screen (Figma 5098:5487, the phone's, carried over to wide screens):
- * the menu icon and the breadcrumbs in Regular, 16 px tall, the icon opening every generator (on a phone a sheet of its
- * own, 5099:5825, elsewhere a list under it); on a phone the size icon across from them opening the form over the whole
- * screen or putting it back; the generators' line under them (`GeneratorRing`). Wide screens had the crumbs in Medium
- * with a list under «Носители ⌄» and a ring turned by script, which a finger couldn't drive
+ * the menu icon and the breadcrumbs in Medium, 16 px tall; on a phone the size icon across from them opening the form
+ * over the whole screen or putting it back; the generators' line under them (`GeneratorRing`). The menu icon turns into
+ * the guide's «Свернуть» in place and the line and everything after it in the form give way to every generator, 24 px
+ * Medium 20 px apart, the current one black (Figma 5099:5825): the same header, not a second one laid over it (a sheet
+ * over the form, repeating the crumbs, was tried, and shifted them by its own tracking). Wide screens had the crumbs in
+ * Medium with a list under «Носители ⌄» and a ring turned by script, which a finger couldn't drive
  */
 /** The guide's «Свернуть» turned out: the chevrons pointing away from the middle, opening the form over the whole screen */
 const EXPAND = 'M4 6L8 2L12 6M4 10L8 14L12 10'
 
 export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' | '/price-tag' | '/hours-sign' }) {
-  const inSheet = useContext(InSheet)
   const size = useContext(SheetSize)
   const [menu, setMenu] = useState(false)
-  const openMenu = () => { setMenu(m => !m); if (!menu) goal('open_menu', { page: location.pathname }) }
-  return (
-    <>
-      <div data-head className="flex flex-col gap-4">
-        <div className="flex items-center gap-2">
-          <IconButton label="Конструкторы" onClick={openMenu} d={tocIcons.menu} />
-          <PhoneCrumbs />
-          {/* Grey, as the canvas's icons: chevrons out, then the guide's «Свернуть» while the form is over the whole screen */}
-          {size && <IconButton label={size.full ? 'Свернуть форму' : 'Развернуть форму'} onClick={size.toggle} grey d={size.full ? tocIcons.close : EXPAND} />}
-        </div>
-        <GeneratorRing current={current} />
-      </div>
-      {menu && createPortal(<GeneratorMenu current={current} height={inSheet} onClose={() => setMenu(false)} />, document.body)}
-    </>
-  )
-}
-
-/** The generators' menu (Figma 5099:5825), on a phone a sheet over the form's, on wide screens a panel over the sidebar: the breadcrumbs with «Свернуть» across from them, then every generator, 24 px Medium 20 px apart, the current one black */
-function GeneratorMenu({ current, height, onClose }: { current: string; /** The form's sheet's, which it lies over; none on wide screens */ height: string; onClose: () => void }) {
+  const toggle = () => { if (!menu) goal('open_menu', { page: location.pathname }); setMenu(!menu) }
+  // While it's open the rest of the form and the download step aside (`html[data-menu]` in index.css)
   useEffect(() => {
-    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    if (!menu) return
+    document.documentElement.dataset.menu = ''
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenu(false) }
     document.addEventListener('keydown', key)
-    return () => document.removeEventListener('keydown', key)
-  }, [onClose])
+    return () => { delete document.documentElement.dataset.menu; document.removeEventListener('keydown', key) }
+  }, [menu])
   const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
   return (
-    // A sheet of its own over the form's, as tall and as round, 24 px in, with no shadow of its own (the form's, under
-    // it, already casts one; two doubled it); the close icon where the
-    // menu icon was, then the breadcrumbs, the generators 20 px apart under them (16 in Figma 5099:5825). On wide
-    // screens the same over the whole sidebar, so the list grows as it will (a list under the icon was tried)
-    <div role="dialog" aria-label="Конструкторы" style={height ? { height } : undefined} className={`fixed z-50 overflow-y-auto bg-white p-6 font-sans text-black ${height ? 'inset-x-0 bottom-0 rounded-t-[24px]' : 'inset-y-0 left-0 w-80'}`}>
-      <div className="flex flex-col gap-4">
-        <div className="flex items-center gap-2">
-          <IconButton label="Закрыть" onClick={onClose} d={tocIcons.close} />
-          <PhoneCrumbs />
-        </div>
+    <div data-head className="flex flex-col gap-4">
+      <div className="flex items-center gap-2">
+        <IconButton label={menu ? 'Свернуть' : 'Конструкторы'} onClick={toggle} d={menu ? tocIcons.close : tocIcons.menu} />
+        <PhoneCrumbs />
+        {/* Grey, as the canvas's icons: chevrons out, then the guide's «Свернуть» while the form is over the whole screen */}
+        {size && !menu && <IconButton label={size.full ? 'Свернуть форму' : 'Развернуть форму'} onClick={size.toggle} grey d={size.full ? tocIcons.close : EXPAND} />}
+      </div>
+      {menu ? (
         <nav aria-label="Конструкторы" className="flex flex-col items-start gap-5">
           {GENERATORS.map(g => g.path === current
-            ? <span key={g.path} aria-current="page" className={name}>{g.title}</span>
-            : <Link key={g.path} to={g.path} onClick={onClose} className={`${name} text-[#bfbfbf] outline-none hover:text-[#808080] focus-visible:text-[#808080] active:text-[#808080]`}>{g.title}</Link>)}
+            ? <button key={g.path} type="button" aria-current="page" onClick={() => setMenu(false)} className={`${name} cursor-pointer text-left`}>{g.title}</button>
+            : <Link key={g.path} to={g.path} className={`${name} text-[#bfbfbf] outline-none hover:text-[#808080] focus-visible:text-[#808080] active:text-[#808080]`}>{g.title}</Link>)}
         </nav>
-      </div>
+      ) : (
+        <GeneratorRing current={current} />
+      )}
     </div>
   )
 }
