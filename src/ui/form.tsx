@@ -738,11 +738,11 @@ export function AliceOffer({ ask, started }: { ask: string; started: boolean }) 
   return (
     <div className="flex items-center rounded-[8px] border border-black/10 bg-white text-[14px] leading-5 text-black hover:border-black/40">
       <a href={href} target="_blank" rel="noopener" onClick={() => goal('ai_open', { chat: 'alice', from: location.pathname })}
-        className="flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1 py-[9px] in-[[data-sheet]]:py-[13px]! pl-10 font-medium outline-none focus-visible:ring-2 focus-visible:ring-black/30">
-        {started ? 'Продолжить' : 'Сделать'} с<AliceMark className="text-[20px] leading-5" />Алисой AI
+        className="flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1 py-[9px] in-[[data-sheet]]:py-[13px]! pl-10 font-normal outline-none focus-visible:ring-2 focus-visible:ring-black/30">
+        {started ? 'Продолжить' : 'Сделать'} с<AliceMark className="text-[20px] leading-5 font-normal" />Алисой AI
       </a>
       <button type="button" onClick={() => setClosed(true)} aria-label="Закрыть" className="flex w-10 shrink-0 cursor-pointer items-center justify-center self-stretch text-[#808080] outline-none hover:text-black">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden><path d="M2 2l8 8M10 2l-8 8" /></svg>
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden><path d="M2 2l8 8M10 2l-8 8" /></svg>
       </button>
     </div>
   )
