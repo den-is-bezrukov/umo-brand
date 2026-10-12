@@ -105,21 +105,3 @@ html[data-menu] [data-sheet]:not(:has([data-head])) {
 .alice-pop {
   animation: alice-pop 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-/* Alice's bubble and icon morphing into each other (`morph` in form.tsx), her mark travelling on its own; the page
-   itself stays still and takes the pointer, so the hover that opened the bubble isn't lost under the transition */
-::view-transition {
-  pointer-events: none;
-}
-::view-transition-group(root) {
-  animation: none;
-}
-::view-transition-group(alice),
-::view-transition-group(alice-mark) {
-  animation-duration: 300ms;
-  animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
-}
-::view-transition-old(alice),
-::view-transition-new(alice) {
-  animation-duration: 200ms;
-  height: 100%;
-}
