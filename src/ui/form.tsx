@@ -158,9 +158,9 @@ function GeneratorMenu({ current, height, onClose }: { current: string; /** The 
   }, [onClose])
   const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
   return (
-    // A sheet of its own over the form's, as tall, as round and shadowed, 20 px in; the close icon where the
+    // A sheet of its own over the form's, as tall, as round and shadowed, 24 px in; the close icon where the
     // menu icon was, then the breadcrumbs, the generators 16 px apart under them (Figma 5099:5825)
-    <div role="dialog" aria-label="Конструкторы" style={{ height }} className="fixed inset-x-0 bottom-0 z-50 overflow-y-auto rounded-t-[20px] bg-white p-5 font-sans text-black shadow-[0_10px_30px_rgba(0,0,0,0.1)]">
+    <div role="dialog" aria-label="Конструкторы" style={{ height }} className="fixed inset-x-0 bottom-0 z-50 overflow-y-auto rounded-t-[24px] bg-white p-6 font-sans text-black shadow-[0_10px_30px_rgba(0,0,0,0.1)]">
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
           <IconButton label="Закрыть" onClick={onClose} d="M4 3L8 7L12 3M4 13.25L8 9.25L12 13.25" />
@@ -197,9 +197,9 @@ function IconButton({ label, onClick, d, grey }: { label: string; onClick: () =>
 }
 
 function GeneratorRing({ current, turnTo, onMenu }: { current: string; turnTo: React.MutableRefObject<((e: React.MouseEvent, path: string) => void) | null>; /** The phone's menu icon at the line's end */ onMenu?: () => void }) {
-  // In the phone's sheet 20 px from its edge, as its padding, the names 16 apart (Figma 5098:5496)
+  // In the phone's sheet 24 px from its edge, as on wide screens, the names 16 apart (Figma 5098:5496)
   const inSheet = !!useContext(InSheet)
-  const start = inSheet ? 20 : RING_START
+  const start = inSheet ? 24 : RING_START
   const pad = inSheet ? 8 : RING_PAD
   const navigate = useNavigate()
   const at = GENERATORS.findIndex(g => g.path === current)
@@ -340,7 +340,7 @@ function GeneratorRing({ current, turnTo, onMenu }: { current: string; turnTo: R
   return (
     <div
       ref={rowRef}
-      className={`relative h-6 cursor-default touch-pan-y select-none overflow-x-clip ${inSheet ? '-mx-5 my-1' : '-mx-6'}`}
+      className={`relative h-6 cursor-default touch-pan-y select-none overflow-x-clip ${inSheet ? '-mx-6 my-1' : '-mx-6'}`}
       onPointerEnter={e => { if (e.pointerType !== 'touch') hover.current = true }}
       onPointerLeave={e => { hover.current = false; if (e.pointerType !== 'touch') later(RING_BACK_MS) }}
       onPointerDown={down}
@@ -372,7 +372,7 @@ function GeneratorRing({ current, turnTo, onMenu }: { current: string; turnTo: R
       </nav>
       {/* The shades over the panel's edges (Figma 5062:671, 5061:539): two layers each, as set there, the left one solid for its
           outer quarter; 8 px over and under the 24 px line, which the names' descenders (р, у) run below */}
-      <div aria-hidden className={`pointer-events-none absolute -inset-y-2 left-0 ${inSheet ? 'w-5' : 'w-6'}`} style={{ background: 'linear-gradient(90deg, #ffffff80 25%, #fff0), linear-gradient(90deg, #fff 25%, #fff0)' }} />
+      <div aria-hidden className={`pointer-events-none absolute -inset-y-2 left-0 w-6`} style={{ background: 'linear-gradient(90deg, #ffffff80 25%, #fff0), linear-gradient(90deg, #fff 25%, #fff0)' }} />
       {onMenu ? (
         <>
           {/* With the menu icon the right shade is 68 px, solid from its middle, the icon over it 24 px from the edge (Figma 5099:5904) */}
