@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react'
-import { ResetIcon, DuplicateIcon, CrossIcon, Removed, type Staff } from '@/ui/staff'
-import { InSlide, InFoot, InSheet } from '@/ui/phone'
+import { ResetIcon, DuplicateIcon, Removed, type Staff } from '@/ui/staff'
+import { InSlide, InFoot, InSheet, SheetSize } from '@/ui/phone'
 
-// A trial of the generators' phone layout (Figma 5098:5806, C and D): the canvas fills the screen above a sheet, what's
-// made swiped through one at a time, «‹ n ›» over it and «Сбросить», «Дублировать», «Удалить» under it (Figma
-// 5098:5449); the sheet holds the sidebar (header and form) with the download at its foot. A tap on the picture folds the
-// sheet away, the picture large with no download, and another brings it back; a swipe up on the sheet's top edge opens the form
-// over the whole screen, with only «‹ n ›» over it, a swipe down puts it back. In the link: `arrows=0` hides the arrows (swiping alone)
+// A trial of the generators' phone layout (Figma 5098:5806, «Mobile Layout»): the canvas over a sheet holding the
+// sidebar (header and form) with the download at its foot. A list's pictures are swiped one at a time, with a row over
+// them: delete, «‹ n/Name ↺ ›», copy; one picture has its reset and copy in the canvas's top corners instead. A tap on
+// a picture that would grow by it folds the sheet away (a portrait one: a landscape one is as wide either way), a
+// shrink icon under it bringing the sheet back; the icon in the sheet's header opens the form over the whole screen.
+// In the link: `arrows=0` hides the arrows (swiping alone)
 
 /** Whether the screen is a phone's, as the generators' `md` breakpoint */
 export function usePhone() {
@@ -24,15 +25,14 @@ export function usePhone() {
 const TURN_MS = 500
 /** The sheet's height under the picture */
 const HALF = '60dvh'
-/** How far a swipe goes before it opens or closes the form */
-const SWIPE = 40
-/** A fitted item's inset from the screen's sides: the canvas's 10 px padding and 6 more (Figma 5098:5543) */
-const SIDE = 16
-/** The canvas's padding and the rows' height, as Figma has them: 10 and 30, 8 between rows and picture */
+/** A picture's inset in the canvas: 10 px of padding and 10 more beside it, over and under it (Figma 5105:8456) */
+const SIDE = 20
+const INSET = 10
+/** The canvas's padding and its rows' height (Figma 5105:8488) */
 const ROW = 30
 const PAD = 10
-/** Over and under a picture as tall as the strip, for its edge */
-const EDGE_ROOM = 4
+/** How much larger a picture must get with the sheet folded away for a tap to do it */
+const GROWS = 1.15
 
 const arrowsOn = () => new URLSearchParams(location.search).get('arrows') !== '0'
 
@@ -63,8 +63,8 @@ export interface Slide {
   item?: number
   /** Its number, when it isn't its place in the strip (the business card's face is 0, its cards from 1) */
   number?: number
-  /** Its name, in the number's place, for a page whose pictures aren't a list (the livery's sheets, the frame, the sign); their captions under the picture go */
-  title?: React.ReactNode
+  /** Its name, after its number in the row over it («2/Иван Петров», «1/Левый борт») */
+  label?: string
   /** Its reset, in «Сбросить»'s place, while there's something to reset */
   reset?: { onClick: () => void; label: string }
 }
@@ -140,29 +140,44 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   // A tap on the picture folds or unfolds the sheet; a double tap is left to the picture (text edited in place), and a
   // tap on a control in it to the control
   const tap = useRef(0)
+  const canPreviewRef = useRef(false)
   const onTap = (e: React.MouseEvent) => {
     if ((e.target as Element).closest('button[aria-label], input, textarea, a')) return
     clearTimeout(tap.current)
     if (e.detail > 1) return
+    if (!canPreviewRef.current) return
     tap.current = window.setTimeout(() => setSheet(s => (s === 'preview' ? 'half' : 'preview')), 250)
   }
 
-  // Only the sheet's top edge, with its grabber, opens the form over the screen and puts it back, by a swipe or a tap, as
-  // a native sheet's: anywhere on the form a swipe up opened it as soon as the form was at its top, so scrolling it did
-  const touch = useRef<number | null>(null)
   const scroller = useRef<HTMLDivElement>(null)
-  const onTouchStart = (e: React.TouchEvent) => { touch.current = e.touches[0].clientY }
-  const onTouchEnd = (e: React.TouchEvent) => {
-    const y = touch.current
-    touch.current = null
-    if (y === null) return
-    const dy = e.changedTouches[0].clientY - y
-    if (sheet === 'half' && dy < -SWIPE) setSheet('full')
-    else if (sheet === 'full' && dy > SWIPE) setSheet('half')
-  }
 
   const many = slides.length > 1
   const full = sheet === 'full'
+  const preview = sheet === 'preview'
+  const slide = slides[shown]
+  const reset = slide?.reset ?? (staff && current && !staff.isBlank(current) ? { onClick: () => staff.clear(current.key), label: 'Сбросить' } : undefined)
+  /** The row over the picture: a list's, or a removal's «Вернуть» right after the last but one went */
+  const row = many || !!staff?.removed
+
+  // The screen's size, to tell whether folding the sheet away would make the picture larger
+  const [screen, setScreen] = useState({ w: innerWidth, h: innerHeight })
+  useEffect(() => {
+    const on = () => setScreen({ w: innerWidth, h: innerHeight })
+    addEventListener('resize', on)
+    return () => removeEventListener('resize', on)
+  }, [])
+  const rowsH = (row ? ROW : 0) + 2 * PAD + 2 * INSET
+  const growth = (ratio?: number) => {
+    if (!ratio) return 1
+    const w = screen.w - 2 * SIDE
+    const half = Math.min(w, (screen.h * 0.4 - rowsH) / ratio)
+    const big = Math.min(w, (screen.h - rowsH - ROW) / ratio)
+    return big / Math.max(1, half)
+  }
+  const canPreview = growth(slide?.ratio) >= GROWS
+  canPreviewRef.current = canPreview
+  useEffect(() => { if (preview && !canPreview) setSheet('half') }, [preview, canPreview])
+
   const back = (
     <Btn label="Назад" hidden={!arrows || !many || shown === 0} onClick={() => go(-1)}>
       <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M10 3L5 8L10 13" /></svg>
@@ -173,31 +188,52 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M6 3L11 8L6 13" /></svg>
     </Btn>
   )
-  const title = slides[shown]?.title
-  const number = title
-    ? <span className="min-w-0 truncate text-[14px] leading-5 text-[#808080]">{title}</span>
-    : <span className={`text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1] ${many ? '' : 'invisible'}`}>{slides[shown]?.number ?? shown + 1}</span>
-  const reset = slides[shown]?.reset
-  const height = { preview: '0px', half: HALF, full: `calc(100dvh - ${ROW + 2 * PAD}px)` }[sheet]
+  const number = slide?.number ?? shown + 1
+  const resetBtn = <Btn label={reset?.label ?? 'Сбросить'} hidden={!reset} onClick={() => reset?.onClick()}><ResetIcon /></Btn>
+  const copyBtn = <Btn label="Дублировать" hidden={!staff || !current} onClick={() => staff?.duplicate(current.key, false)}><DuplicateIcon /></Btn>
+  const height = { preview: '0px', half: HALF, full: row ? `calc(100dvh - ${ROW + 2 * PAD}px)` : '100dvh' }[sheet]
 
-  // As large as the strip allows: its height but 4 px over and under, so the items' 1 px edge outside them
-  // (`ITEM_EDGE`) isn't clipped by the slide however the strip's height rounds (2 px was clipped at some heights), its
-  // width but the sides
+  // As large as the strip allows, 20 px off its sides and 10 over and under (the items' 1 px edge outside them stays
+  // in, however the strip's height rounds)
   const fit = (ratio?: number) => ratio
-    ? Math.max(0, Math.floor(Math.min(box.w - 2 * SIDE, (box.h - 2 * EDGE_ROOM) / ratio)))
+    ? Math.max(0, Math.floor(Math.min(box.w - 2 * SIDE, (box.h - 2 * INSET) / ratio)))
     : Math.max(0, box.w - 2 * SIDE)
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#f5f5f5] font-sans text-black">
-      {/* The canvas: 10 px in, rows of 30 px icons over and under the picture, 8 px off it (Figma 5098:5543) */}
-      <div className={`flex min-h-0 flex-1 flex-col p-[10px] ${full ? '' : 'gap-2'}`}>
-      {/* Over the picture the item's number (a sheet's name) between the arrows (Figma 5098:5449), and so with the form
-          over the screen, all there is of the canvas then */}
-      <div className="flex h-[30px] shrink-0 items-center justify-between">
-        {back}{number}{next}
-      </div>
+      {/* The canvas, 10 px in (Figma 5105:8488) */}
+      <div className="relative flex min-h-0 flex-1 flex-col p-[10px]">
+      {/* A list's row over the picture (Figma 5105:7604): delete on the left, copy on the right, between them the
+          number and name between the arrows, the reset right after the name; for a moment after a removal «Удалено ·
+          Вернуть» in the middle. Over the whole-screen form it's all there is of the canvas */}
+      {row && (
+        <div className="flex h-[30px] shrink-0 items-center justify-between">
+          <Btn label="Удалить" hidden={full || !staff || !current || staff.people.length < 2} onClick={() => staff?.remove(current.key)}><TrashIcon /></Btn>
+          {staff?.removed ? (
+            <div className="-my-[5px] min-w-0 flex-1"><Removed staff={staff} at={staff.removed.index} /></div>
+          ) : (
+            <div className="flex min-w-0 flex-1 items-center justify-center">
+              {back}
+              <span className="min-w-0 truncate px-1 text-[14px] leading-5 text-[#808080] [font-feature-settings:'case'_1,'lnum'_1,'tnum'_1]">
+                {number}{slide?.label ? `/${slide.label}` : ''}
+              </span>
+              {reset && !full && resetBtn}
+              {next}
+            </div>
+          )}
+          {full ? <Btn label="" hidden onClick={() => {}}>{null}</Btn> : copyBtn}
+        </div>
+      )}
 
-      {/* The pictures, one to a screen */}
+      {/* One picture: its reset and copy in the canvas's top corners, over the strip (Figma 5105:8373, 5105:8084) */}
+      {!row && !full && (
+        <div className="pointer-events-none absolute inset-x-[10px] top-[10px] z-10 flex justify-between *:pointer-events-auto">
+          {resetBtn}
+          {staff ? copyBtn : <span />}
+        </div>
+      )}
+
+      {/* The pictures, one to a screen; a tap on one that grows by it folds the sheet away */}
       <InSlide.Provider value={true}>
         <div
           ref={strip}
@@ -208,65 +244,42 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         >
           {slides.map(s => (
             // A fitted picture's slide doesn't scroll at all (`clip`, not `hidden`, which still let the list's scrollIntoView
-            // move a copy 4 px down and cut its top edge); one taller than the screen's width scrolls
-            <div key={s.key} className={`flex h-full w-full shrink-0 snap-center ${s.ratio ? 'overflow-clip' : 'overflow-y-auto [scrollbar-width:none]'} ${s.title ? '[&_figcaption]:hidden' : ''}`}>
-              {box.w > 0 && <div className="m-auto py-1" style={{ width: fit(s.ratio) }}>{typeof s.node === 'function' ? s.node(fit(s.ratio)) : s.node}</div>}
+            // move a copy 4 px down and cut its top edge); one taller than the screen's width scrolls. A sheet's caption
+            // goes while its name is in the row
+            <div key={s.key} className={`flex h-full w-full shrink-0 snap-center ${s.ratio ? 'overflow-clip' : 'overflow-y-auto [scrollbar-width:none]'} ${row && s.label ? '[&_figcaption]:hidden' : ''}`}>
+              {box.w > 0 && <div className="m-auto" style={{ width: fit(s.ratio) }}>{typeof s.node === 'function' ? s.node(fit(s.ratio)) : s.node}</div>}
             </div>
           ))}
         </div>
       </InSlide.Provider>
 
-      {/* Under it the item's actions: reset, copy, remove, the cross furthest (Figma 5098:5449); or «Удалено · Вернуть»
-          for a moment */}
-      {!full && (
-        <div className="flex h-[30px] shrink-0 items-center justify-between">
-          {!staff ? (
-            // A page that isn't a list (the livery, the plate frame, the sign) has only the sheet's reset, in the middle
-            <>
-              <Btn label="" hidden onClick={() => {}}>{null}</Btn>
-              <Btn label={reset?.label ?? 'Сбросить'} hidden={!reset} onClick={() => reset?.onClick()}><ResetIcon /></Btn>
-              <Btn label="" hidden onClick={() => {}}>{null}</Btn>
-            </>
-          ) : staff.removed ? (
-            <div className="-my-[5px] flex-1"><Removed staff={staff} at={staff.removed.index} /></div>
-          ) : (
-            <>
-              <Btn label="Сбросить" hidden={!current || staff.isBlank(current)} onClick={() => staff.clear(current.key)}><ResetIcon /></Btn>
-              <Btn label="Дублировать" hidden={!current} onClick={() => staff.duplicate(current.key, false)}><DuplicateIcon /></Btn>
-              <Btn label="Удалить" hidden={!current || staff.people.length < 2} onClick={() => staff.remove(current.key)}><CrossIcon /></Btn>
-            </>
-          )}
+      {/* The picture alone: the shrink icon under it brings the sheet back (Figma 5105:8520) */}
+      {preview && (
+        <div className="flex h-[30px] shrink-0 items-center justify-center">
+          <Btn label="Свернуть" onClick={() => setSheet('half')}>
+            <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M6 1.5V6H1.5M10 1.5V6H14.5M6 14.5V10H1.5M10 14.5V10H14.5" /></svg>
+          </Btn>
         </div>
       )}
-
       </div>
 
-      {/* The sheet: the sidebar scrolling, the download at its foot; folded, the download alone, over the canvas */}
+      {/* The sheet: the sidebar scrolling, 16 px in (the sidebar's 24 on wide screens), the download at its foot; no
+          rounded corners, a shadow over it (Figma 5098:5487) */}
       <div
+        className={`relative flex shrink-0 flex-col overflow-hidden transition-[height] ${preview ? '' : 'bg-white shadow-[0_10px_30px_rgba(0,0,0,0.1)]'}`}
         // As the generators' ring turns, the last easing that was kept (it was linear for a moment)
-        className={`relative flex shrink-0 flex-col overflow-hidden transition-[height,border-radius,background-color] ${sheet === 'preview' ? 'bg-transparent' : 'bg-white'} ${sheet !== 'preview' ? 'rounded-t-[24px] shadow-[0_0_30px_-4px_rgba(0,0,0,0.1)]' : ''}`}
         style={{ height, transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: 'cubic-bezier(0.67, 0, 0.33, 1)' }}
       >
-        {/* The top edge, over the form's own 24 px padding, the grabber in it */}
-        {sheet !== 'preview' && (
-          <div
-            aria-hidden
-            onTouchStart={onTouchStart}
-            onTouchEnd={onTouchEnd}
-            onClick={() => setSheet(s => (s === 'full' ? 'half' : 'full'))}
-            className="absolute inset-x-0 top-0 z-10 flex h-6 cursor-pointer touch-none justify-center pt-2"
-          >
-            <span className="h-1 w-9 rounded-full bg-black/10" />
+        <div ref={scroller} className={`min-h-0 flex-1 overflow-y-auto ${preview ? 'pointer-events-none' : ''}`}>
+          <div className="pb-20 *:gap-4! *:p-4!">
+            <SheetSize.Provider value={{ full, toggle: () => setSheet(s => (s === 'full' ? 'half' : 'full')) }}>
+              <InSheet.Provider value={height}>{sidebar}</InSheet.Provider>
+            </SheetSize.Provider>
           </div>
-        )}
-        <div ref={scroller} className={`min-h-0 flex-1 overflow-y-auto ${sheet === 'preview' ? 'pointer-events-none' : ''}`}>
-          <div className="pb-20"><InSheet.Provider value={height}>{sidebar}</InSheet.Provider></div>
         </div>
-        {/* The download under the form, open or over the whole screen; none over the picture alone. It lies over the
-            form's foot, 80 px, the form fading out under it from white at 0% (Figma 5098:5634); the form keeps that
-            much room under its last field to scroll it clear */}
-        {sheet !== 'preview' && (
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white px-6 py-5 tracking-normal">
+        {/* The download over the form's foot, on a white gradient the form fades under, 16 px in (Figma 5098:5539) */}
+        {!preview && (
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white p-4 tracking-normal">
             <InFoot.Provider value={() => setSheet(s => (s === 'preview' ? 'half' : s))}>{download}</InFoot.Provider>
           </div>
         )}
@@ -274,3 +287,8 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     </div>
   )
 }
+
+/** Delete, a bin (Figma 5105:8492), the canvas icons' 1 px stroke */
+const TrashIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M2 4H14M6 4V2H10V4M3.5 4L4.5 14.5H11.5L12.5 4M6.5 7V11.5M9.5 7V11.5" /></svg>
+)

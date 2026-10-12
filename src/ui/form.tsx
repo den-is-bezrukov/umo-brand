@@ -2,7 +2,7 @@ import { useContext, useEffect, useId, useLayoutEffect, useRef, useState } from 
 import { createPortal, flushSync } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import { goal } from './metrika'
-import { InFoot, InSheet } from './phone'
+import { InFoot, InSheet, SheetSize } from './phone'
 import tocIcons from '@/icons/toc'
 
 // Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag, business card). Light UI per the Figma layout
@@ -44,25 +44,23 @@ const crumb = 'underline decoration-transparent decoration-[0.35px] underline-of
 export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' | '/price-tag' | '/hours-sign' }) {
   // A pick in the list turns the ring as a click on it does
   const turnTo = useRef<((e: React.MouseEvent, path: string) => void) | null>(null)
-  // In the phone's sheet (Figma 5099:5952): no breadcrumbs and no ring, the menu icon and the current generator's name,
-  // both opening the breadcrumbs and every generator in a sheet of their own. The ring
-  // showed a name and a half there, and turned with the same sideways swipe as the pictures over the sheet; (the ring was
-  // there with the icon at its end for a while, then the name had a chevron)
+  // In the phone's sheet (Figma 5098:5487): the menu icon and the breadcrumbs in Regular, 16 px tall, the icon opening
+  // every generator in a sheet of its own (5099:5825), the size icon across from them opening the form over the whole
+  // screen or putting it back; the ring under them (it was gone for a while, the generator's name and the menu icon
+  // in its place)
   const inSheet = useContext(InSheet)
+  const size = useContext(SheetSize)
   const [menu, setMenu] = useState(false)
   const openMenu = () => { setMenu(true); goal('open_menu', { page: location.pathname }) }
   if (inSheet) return (
     <>
-      {/* The name on the left, the menu icon across from it on the right, as Figma 5099:5952 (it stood before the name,
-          as the guide's phone bar, for a while) */}
-      <div className="flex items-center justify-between gap-4">
-        {/* The name opens the menu too, with no chevron after it (it had one for a while) */}
-        <button type="button" onClick={openMenu} aria-haspopup="dialog" className="flex min-w-0 cursor-pointer items-center outline-none">
-          <h1 className="truncate text-[24px] font-medium leading-6 tracking-[-0.01em]">{GENERATORS.find(g => g.path === current)?.title}</h1>
-        </button>
-        <button type="button" aria-label="Конструкторы" title="Конструкторы" onClick={openMenu} className="relative flex size-5 shrink-0 cursor-pointer items-center justify-center after:absolute after:-inset-[10px] after:content-['']">
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d={tocIcons.menu} stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" /></svg>
-        </button>
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-2">
+          <IconButton label="Конструкторы" onClick={openMenu} d={tocIcons.menu} />
+          <PhoneCrumbs />
+          {size && <IconButton label={size.full ? 'Свернуть форму' : 'Развернуть форму'} onClick={size.toggle} d={size.full ? 'M2 9.5H6.5V14M14 6.5H9.5V2' : 'M6.5 14H2V9.5M9.5 2H14V6.5'} />}
+        </div>
+        <GeneratorRing current={current} turnTo={turnTo} />
       </div>
       {menu && createPortal(<GeneratorMenu current={current} height={inSheet} onClose={() => setMenu(false)} />, document.body)}
     </>
@@ -159,20 +157,15 @@ function GeneratorMenu({ current, height, onClose }: { current: string; /** The 
   }, [onClose])
   const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
   return (
-    // A sheet of its own over the form's, as tall, its corners and shadow (it took the whole screen for a while)
-    <div role="dialog" aria-label="Конструкторы" style={{ height }} className="fixed inset-x-0 bottom-0 z-50 overflow-y-auto rounded-t-[24px] bg-white p-6 font-sans text-black shadow-[0_0_30px_-4px_rgba(0,0,0,0.1)]">
-      <div className="flex flex-col gap-5">
-        <div className="flex items-center justify-between">
-          <nav className="flex items-center gap-2 text-[14px] font-medium leading-5 [font-feature-settings:'case'_1]">
-            <Link to="/" className={crumb}>Бренд UMO</Link>
-            <span aria-hidden>·</span>
-            <Link to="/#materials" className={crumb}>Носители</Link>
-          </nav>
-          <button type="button" aria-label="Свернуть" title="Свернуть" onClick={onClose} className="relative flex size-5 cursor-pointer items-center justify-center after:absolute after:-inset-[10px] after:content-['']">
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d={tocIcons.close} stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" /></svg>
-          </button>
+    // A sheet of its own over the form's, as tall, with its shadow and no rounded corners; the close icon where the
+    // menu icon was, then the breadcrumbs, the generators 16 px apart under them (Figma 5099:5825)
+    <div role="dialog" aria-label="Конструкторы" style={{ height }} className="fixed inset-x-0 bottom-0 z-50 overflow-y-auto bg-white p-4 font-sans text-black shadow-[0_10px_30px_rgba(0,0,0,0.1)]">
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-2">
+          <IconButton label="Закрыть" onClick={onClose} d={tocIcons.close} />
+          <PhoneCrumbs />
         </div>
-        <nav aria-label="Конструкторы" className="flex flex-col items-start gap-5">
+        <nav aria-label="Конструкторы" className="flex flex-col items-start gap-4">
           {GENERATORS.map(g => g.path === current
             ? <span key={g.path} aria-current="page" className={name}>{g.title}</span>
             : <Link key={g.path} to={g.path} onClick={onClose} className={`${name} text-[#bfbfbf] outline-none active:text-[#808080]`}>{g.title}</Link>)}
@@ -182,7 +175,31 @@ function GeneratorMenu({ current, height, onClose }: { current: string; /** The 
   )
 }
 
+/** The phone's breadcrumbs: Regular, on 16 px lines (Figma 5110:9105) */
+function PhoneCrumbs() {
+  return (
+    <nav className="flex min-w-0 flex-1 items-center gap-2 text-[14px] leading-4 [font-feature-settings:'case'_1]">
+      <Link to="/" className={crumb}>Бренд UMO</Link>
+      <span aria-hidden>·</span>
+      <Link to="/#materials" className={crumb}>Носители</Link>
+    </nav>
+  )
+}
+
+/** A 16 px icon with a 2 px stroke, a finger's 36 px round it */
+function IconButton({ label, onClick, d }: { label: string; onClick: () => void; d: string }) {
+  return (
+    <button type="button" aria-label={label} title={label} onClick={onClick} className="relative flex size-4 shrink-0 cursor-pointer items-center justify-center outline-none after:absolute after:-inset-[10px] after:content-['']">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d={d} stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" /></svg>
+    </button>
+  )
+}
+
 function GeneratorRing({ current, turnTo, onMenu }: { current: string; turnTo: React.MutableRefObject<((e: React.MouseEvent, path: string) => void) | null>; /** The phone's menu icon at the line's end */ onMenu?: () => void }) {
+  // In the phone's sheet 16 px from its edge, as its padding, the names 16 apart (Figma 5098:5496)
+  const inSheet = !!useContext(InSheet)
+  const start = inSheet ? 16 : RING_START
+  const pad = inSheet ? 8 : RING_PAD
   const navigate = useNavigate()
   const at = GENERATORS.findIndex(g => g.path === current)
   const ring = [...GENERATORS.slice(at), ...GENERATORS.slice(0, at)]
@@ -214,7 +231,7 @@ function GeneratorRing({ current, turnTo, onMenu }: { current: string; turnTo: R
     observer.observe(row)
     return () => observer.disconnect()
   }, [])
-  const fits = turn > 0 && RING_START - RING_PAD + turn <= width
+  const fits = turn > 0 && start - pad + turn <= width
   // Turned some rounds on a narrow panel, then widened: the one line left stands at its start
   useEffect(() => { if (fits && offsetRef.current) move(0, false) }, [fits]) // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -322,7 +339,7 @@ function GeneratorRing({ current, turnTo, onMenu }: { current: string; turnTo: R
   return (
     <div
       ref={rowRef}
-      className="relative -mx-6 h-6 cursor-default touch-pan-y select-none overflow-x-clip"
+      className={`relative h-6 cursor-default touch-pan-y select-none overflow-x-clip ${inSheet ? '-mx-4 my-1' : '-mx-6'}`}
       onPointerEnter={e => { if (e.pointerType !== 'touch') hover.current = true }}
       onPointerLeave={e => { hover.current = false; if (e.pointerType !== 'touch') later(RING_BACK_MS) }}
       onPointerDown={down}
@@ -333,20 +350,20 @@ function GeneratorRing({ current, turnTo, onMenu }: { current: string; turnTo: R
       <nav
         aria-label="Конструкторы"
         className="absolute inset-y-0 left-0"
-        style={{ transform: `translateX(${RING_START - RING_PAD - offset}px)`, transition: eased ? `transform ${RING_TURN_MS}ms cubic-bezier(0.67,0,0.33,1)` : undefined }}
+        style={{ transform: `translateX(${start - pad - offset}px)`, transition: eased ? `transform ${RING_TURN_MS}ms cubic-bezier(0.67,0,0.33,1)` : undefined }}
         onTransitionEnd={() => setEased(false)}
       >
         {turns.map(k => (
           <div key={k} ref={k === 0 ? copyRef : undefined} aria-hidden={k !== 0} className="absolute top-0 flex" style={{ left: k * turn }}>
             {shown.map((g, i) => g.path === current && k === 0
-              ? <h1 key={g.path} className={name} style={{ paddingInline: RING_PAD }}>{g.title}</h1>
+              ? <h1 key={g.path} className={name} style={{ paddingInline: pad }}>{g.title}</h1>
               : <Link
                   key={g.path}
                   to={g.path}
                   tabIndex={k === 0 ? undefined : -1}
                   draggable={false}
                   onClick={e => open(e, k, i, g.path)}
-                  style={{ paddingInline: RING_PAD }}
+                  style={{ paddingInline: pad }}
                   className={`${name} ${g.path === current ? 'text-black' : 'text-[#bfbfbf] hover:text-[#808080] focus-visible:text-[#808080]'} outline-none`}
                 >{g.title}</Link>)}
           </div>
@@ -354,7 +371,7 @@ function GeneratorRing({ current, turnTo, onMenu }: { current: string; turnTo: R
       </nav>
       {/* The shades over the panel's edges (Figma 5062:671, 5061:539): two layers each, as set there, the left one solid for its
           outer quarter; 8 px over and under the 24 px line, which the names' descenders (р, у) run below */}
-      <div aria-hidden className="pointer-events-none absolute -inset-y-2 left-0 w-6" style={{ background: 'linear-gradient(90deg, #ffffff80 25%, #fff0), linear-gradient(90deg, #fff 25%, #fff0)' }} />
+      <div aria-hidden className={`pointer-events-none absolute -inset-y-2 left-0 ${inSheet ? 'w-4' : 'w-6'}`} style={{ background: 'linear-gradient(90deg, #ffffff80 25%, #fff0), linear-gradient(90deg, #fff 25%, #fff0)' }} />
       {onMenu ? (
         <>
           {/* With the menu icon the right shade is 68 px, solid from its middle, the icon over it 24 px from the edge (Figma 5099:5904) */}

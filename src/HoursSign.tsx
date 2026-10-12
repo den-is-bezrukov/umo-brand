@@ -343,7 +343,7 @@ export default function HoursSign() {
   )
 
   // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
-  if (onPhone) return <MobileEditor slides={[{ key: 'sign', ratio: SIGN.h / SIGN.w, node: preview, title: <>Табличка, {SIGN.w}&nbsp;×&nbsp;{SIGN.h}&nbsp;мм</>, reset: blank ? undefined : { onClick: reset, label: 'Вернуть табличку по умолчанию' } }]} sidebar={sidebar} download={download} />
+  if (onPhone) return <MobileEditor slides={[{ key: 'sign', ratio: SIGN.h / SIGN.w, node: preview, reset: blank ? undefined : { onClick: reset, label: 'Вернуть табличку по умолчанию' } }]} sidebar={sidebar} download={download} />
 
   return (
     // The whole page takes a dropped PDF, with nothing on it saying so, as the name tag's canvas

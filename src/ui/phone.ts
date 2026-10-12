@@ -12,3 +12,5 @@ export const InSlide = createContext(false)
 export const InSheet = createContext('')
 /** The sheet's foot: the download is one button there, opening the sheet when it leads to a field */
 export const InFoot = createContext<null | (() => void)>(null)
+/** The phone's sheet over the whole screen or not, and the icon in its header that turns it (Figma 5098:5487) */
+export const SheetSize = createContext<null | { full: boolean; toggle: () => void }>(null)

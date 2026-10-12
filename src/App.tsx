@@ -340,7 +340,7 @@ export default function App() {
     </div>
   )
   // A card's reset brings back its model's defaults (`frame`)
-  if (phone) return <MobileEditor slides={items.map(c => ({ key: c.key, item: c.key, ratio: POSTER_H / POSTER_W, node: (w: number) => cardAt(c, w) }))} staff={frame} sidebar={sidebar} download={download} />
+  if (phone) return <MobileEditor slides={items.map(c => ({ key: c.key, item: c.key, label: `UMO ${c.model === 'umo8' ? 8 : 5} ${c.trim.toUpperCase()}`, ratio: POSTER_H / POSTER_W, node: (w: number) => cardAt(c, w) }))} staff={frame} sidebar={sidebar} download={download} />
 
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
