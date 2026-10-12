@@ -764,7 +764,7 @@ function useAlice(alice?: AliceAsk) {
         <a href={href} target="_blank" rel="noopener" onClick={() => open('bubble')}
           className="flex min-w-0 flex-1 cursor-pointer flex-col gap-2 py-5 pl-5 outline-none focus-visible:ring-2 focus-visible:ring-black/30">
           {/* 2 px left: her round mark looks set in from the text's straight edge under it */}
-          <span className="-ml-[2px] flex items-center gap-1 font-medium"><AliceMark className="text-[20px] leading-5 font-normal" />Алиса AI</span>
+          <span className="-ml-[2px] flex items-center gap-1 text-[16px] font-medium"><AliceMark className="text-[20px] leading-5 font-normal" />Алиса AI</span>
           <span>{!priceCard ? 'Помогу разобраться\u00a0— спросите, если что-то непонятно'
             : started ? <>Помогу закончить <span className="whitespace-nowrap">прайс-карту</span>{'\u00a0— продолжим с\u00a0того, что уже заполнено'}</>
             : <>Помогу сделать <span className="whitespace-nowrap">прайс-карту</span>{'\u00a0— ответьте на\u00a0пару вопросов'}</>}</span>
