@@ -266,7 +266,7 @@ export const ALERT_LABEL = 'group-has-[[aria-invalid=true]]/field:text-[#e30]'
 
 export function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="group/field flex flex-col gap-2">
+    <div className="group/field flex flex-col gap-3">
       <p className={`text-[14px] leading-4 text-[#808080] whitespace-nowrap ${ALERT_LABEL}`}>{label}</p>
       {children}
     </div>
@@ -557,7 +557,7 @@ export function Checkbox({ checked, onChange, children, className = '' }: { chec
     // In the phone's sheet the row takes a finger's 48 px, 16 px over and under it given back by margins, so it looks as before
     <label className={`flex cursor-pointer items-center gap-2 text-[14px] leading-4 text-black in-[[data-sheet]]:-my-4 in-[[data-sheet]]:py-4 ${className}`}>
       <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="peer sr-only" />
-      <span aria-hidden className="flex size-4 shrink-0 items-center justify-center rounded-[2px] bg-[#f5f5f5] peer-focus-visible:ring-2 peer-focus-visible:ring-black/30">
+      <span aria-hidden className="flex size-4 shrink-0 items-center justify-center rounded-[4px] bg-[#f5f5f5] peer-focus-visible:ring-2 peer-focus-visible:ring-black/30">
         {checked && <Tick />}
       </span>
       {children}
@@ -568,7 +568,7 @@ export function Checkbox({ checked, onChange, children, className = '' }: { chec
 /** A part that can be left out: its checkbox is the label, and the field shows only while it's on; `extra` sits at the end of the label row */
 export function OptionalField({ label, on, onChange, extra, children }: { label: string; on: boolean; onChange: (v: boolean) => void; extra?: React.ReactNode; children?: React.ReactNode }) {
   return (
-    <div className="group/field flex flex-col gap-2">
+    <div className="group/field flex flex-col gap-3">
       <div className="flex items-center justify-between gap-2">
         <Checkbox checked={on} onChange={onChange} className={ALERT_LABEL}>{label}</Checkbox>
         {on && extra}
