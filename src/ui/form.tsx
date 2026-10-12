@@ -686,13 +686,12 @@ export const stepsLeft = (n: number) => (n > 1 ? `1/${n}` : undefined)
  */
 /**
  * Trial: an offer over the download to make the cards with Alice instead, on a form not yet touched,
- * closed with its ×, the close remembered in this browser; gone once anything is changed. Alice reads no links,
+ * closed with its × until the page is reloaded; gone once anything is changed. Alice reads no links,
  * so she gets the instruction itself (public/llms.txt, fetched here) in her field, as umo.autos/ai sends it.
  * A secondary button as the others (`outlined`), only her mark in her colour
  */
 export function AliceOffer({ shown }: { shown: boolean }) {
-  const KEY = 'alice-offer-closed'
-  const [closed, setClosed] = useState(() => { try { return localStorage.getItem(KEY) === '1' } catch { return false } })
+  const [closed, setClosed] = useState(false)
   const [href, setHref] = useState('')
   useEffect(() => {
     if (closed || href) return
@@ -700,14 +699,13 @@ export function AliceOffer({ shown }: { shown: boolean }) {
       + encodeURIComponent('Следуй этой инструкции и помоги мне сделать материалы UMO.\n\n' + text))).catch(() => {})
   }, [closed, href])
   if (closed || !shown || !href) return null
-  const close = () => { setClosed(true); try { localStorage.setItem(KEY, '1') } catch { /* private window */ } }
   return (
     <div className="flex items-center rounded-[8px] border border-black/10 bg-white text-[14px] leading-5 text-black hover:border-black/40">
       <a href={href} target="_blank" rel="noopener" onClick={() => goal('ai_open', { chat: 'alice', from: location.pathname })}
         className="flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1 py-[9px] pl-10 font-medium outline-none focus-visible:ring-2 focus-visible:ring-black/30">
         Сделать с<span style={{ fontFamily: 'Alice Okniks', fontFeatureSettings: "'ss02'" }} className="text-[20px] leading-5 text-[#7a55ff]">@</span>Алисой AI
       </a>
-      <button type="button" onClick={close} aria-label="Закрыть" className="flex w-10 shrink-0 cursor-pointer items-center justify-center self-stretch text-[#808080] outline-none hover:text-black">
+      <button type="button" onClick={() => setClosed(true)} aria-label="Закрыть" className="flex w-10 shrink-0 cursor-pointer items-center justify-center self-stretch text-[#808080] outline-none hover:text-black">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden><path d="M2 2l8 8M10 2l-8 8" /></svg>
       </button>
     </div>
