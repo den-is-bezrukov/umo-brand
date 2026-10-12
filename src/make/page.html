@@ -115,10 +115,12 @@
       </div>
     </main>
     <script>
-      // The chats that read a link get a line pointing to llms.txt; Alice reads no links, so she gets the instruction
+      // The chats that read a link get a line pointing to llms.txt, with the instruction's own version (`?v=`, a hash of
+      // it, put in at build), as ChatGPT keeps a link it has read and gives the old text until the link changes; Alice
+      // reads no links, so she gets the instruction
       // itself in her field
       var instruction = 'Следуй этой инструкции и помоги мне сделать материалы UMO.\n\n' + document.getElementById('instruction').textContent
-      var ask = 'Прочитай https://umo.autos/llms.txt и следуй инструкции оттуда: помоги мне сделать материалы UMO.'
+      var ask = 'Прочитай https://umo.autos/llms.txt?v=<!-- ai:version --> и следуй инструкции оттуда: помоги мне сделать материалы UMO.'
       var q = encodeURIComponent
       var links = {
         // «Эксперт» (model): in «Авто» a free-form answer goes to her search, which forgets the instruction

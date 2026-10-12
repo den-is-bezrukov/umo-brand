@@ -1,6 +1,7 @@
 import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -241,8 +242,10 @@ function makePagePlugin(): Plugin {
   /** umo.autos/ai, the page's first address, already sent around: on to /make, keeping the query and hash */
   const aiRedirect = '<!doctype html><meta charset="utf-8"><link rel="canonical" href="/make"><script>location.replace(\'/make\' + location.search + location.hash)</script>'
   const escape = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const instruction = () => fs.readFileSync(path.resolve(__dirname, 'public/llms.txt'), 'utf8')
   const page = () => fs.readFileSync(path.resolve(__dirname, 'src/make/page.html'), 'utf8')
-    .replace('<!-- ai:instruction -->', escape(fs.readFileSync(path.resolve(__dirname, 'public/llms.txt'), 'utf8')))
+    .replace('<!-- ai:instruction -->', escape(instruction()))
+    .replace('<!-- ai:version -->', createHash('sha1').update(instruction()).digest('hex').slice(0, 8))
   /**
    * umo.autos/dealers.txt: every dealer (src/data/dealers.json from umo.auto and the hand-kept dealers-own.json), for the
    * chats that open links to check a name against; the page finds the dealer itself anyway (src/ui/LinkDealer.tsx), so
