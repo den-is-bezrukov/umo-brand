@@ -241,11 +241,19 @@ function aiPagePlugin(): Plugin {
   const page = () => fs.readFileSync(path.resolve(__dirname, 'src/ai/page.html'), 'utf8')
     .replace('<!-- ai:instruction -->', escape(fs.readFileSync(path.resolve(__dirname, 'public/llms.txt'), 'utf8')))
     .replace('<!-- ai:dealers -->', escape(dealersText()))
-  /** umo.autos/dealers.txt: the dealers as umo.auto lists them (src/data/dealers.json), for the agent to check against */
+  /**
+   * umo.autos/dealers.txt: the dealers as umo.auto lists them (src/data/dealers.json), for the agent to check against.
+   * Short, as Alice gets it in her link, where it was 41% of the bytes: the name, the city when the name lacks it, the
+   * hours as «9–21» (every day) or by days; no address, as the hours sign puts it in by the name itself
+   */
   const dealersText = () => {
-    const dealers: { name: string; address: string; hours: string }[] = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'src/data/dealers.json'), 'utf8'))
-    return '# UMO dealers, as umo.auto lists them\n\nName (without «UMO») — address — hours\n\n'
-      + dealers.map(d => `${d.name.replace(/^UMO\s+/, '')} — ${d.address} — ${d.hours}`).sort((a, b) => a.localeCompare(b, 'ru')).join('\n') + '\n'
+    const dealers: { name: string; city: string; hours: string }[] = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'src/data/dealers.json'), 'utf8'))
+    const hours = (h: string) => h.replace(/^ежедневно,\s*/, '').replace(/0?(\d{1,2}):00/g, '$1')
+    return '# UMO dealers, as umo.auto lists them\n\nName (without «UMO»), city — hours («9–21»: every day, 9:00–21:00)\n\n'
+      + dealers.map(d => {
+        const name = d.name.replace(/^UMO\s+/, '')
+        return `${name}${name.includes(d.city) ? '' : `, ${d.city}`} — ${hours(d.hours)}`
+      }).sort((a, b) => a.localeCompare(b, 'ru')).join('\n') + '\n'
   }
   return {
     name: 'ai-page',

@@ -94,9 +94,9 @@ https://umo.autos/price-card?cards=2&model=umo5&trim=max&full=3440000&model2=umo
 
 ## The dealer (options 2, 3, 4)
 
-Every UMO dealer is in «UMO dealers» (https://umo.autos/dealers.txt; in Alice it comes at the end of this message): name — address — hours, as umo.auto has them. Don't ask what the list says.
+Every UMO dealer is in «UMO dealers» (https://umo.autos/dealers.txt; in Alice it comes at the end of this message): name, city — hours, as umo.auto has them. The name is what stands before the comma; with no comma the city is in the name. Don't ask what the list says.
 
-Ask «Как называется ваш салон и в каком он городе?» Find it in the list, whatever the spelling («автодом алтуфьево», «агат во владимире»). One match: «Это UMO <name>, <address>? 1. Да  2. Нет», with the address from the list. Several: list them numbered. None: «Не нашёл ваш салон в списке umo.auto. Напишите название, как на вывеске.» — and for the hours sign also ask the address.
+Ask «Как называется ваш салон и в каком он городе?» Find it in the list, whatever the spelling («автодом алтуфьево», «агат во владимире»). One match: «Это UMO <name>, <city>? 1. Да  2. Нет» (no city when it's in the name). Several: list them numbered. None: «Не нашёл ваш салон в списке umo.auto. Напишите название, как на вывеске.» — and for the hours sign also ask the address.
 In links use the name exactly as in the list, without «UMO».
 
 ## Option 2: price tags
@@ -123,7 +123,7 @@ Link: https://umo.autos/price-tag?dealer=<name>&n1=<goods>&c1=<code>&p1=<price>&
 A 480×680 mm plate: UMO, the hours, «Работаем без выходных», the dealership's name, address, phone and site. One range of hours for every day.
 
 1. The dealer.
-2. Hours. Listed as one range for every day: «Часы работы <listed hours>, как на umo.auto? 1. Да  2. Нет, напишу свои». Otherwise: «Во сколько открываетесь и закрываетесь? Например: 9:00–21:00»
+2. Hours. Listed as one range for every day («9–21»): «Часы работы 9:00–21:00, как на umo.auto? 1. Да  2. Нет, напишу свои». Otherwise: «Во сколько открываетесь и закрываетесь? Например: 9:00–21:00»
 3. «Телефон салона?»
 
 Check:
@@ -131,7 +131,6 @@ Check:
 Проверьте, пожалуйста:
 — UMO АГАТ Владимир
 — 8:00–20:00, без выходных
-— Адрес: Промышленный пр., 1, Владимир
 — Телефон: +7 492 222 33 44
 Всё верно? 1. Да  2. Нет, исправить
 
@@ -139,7 +138,7 @@ Link: https://umo.autos/hours-sign?name=<name>&phone=<11 digits>&pdf=1
 - phone — digits only: 84922223344
 - from=<H:MM>&to=<H:MM> — only when the hours differ from the list
 - address — only for a dealer not in the list, or when they changed it
-The page puts in the listed address, hours and site itself.
+The page puts in the dealer's address from umo.auto, the listed hours and the site itself. For a dealer not in the list add «— Адрес: …» to the check.
 
 ## Option 4: plate frame
 
