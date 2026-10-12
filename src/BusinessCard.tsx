@@ -369,8 +369,8 @@ export default function BusinessCard() {
             })()}
 
 
-            {/* The whole file's, set apart */}
-            <div className="mt-6 flex flex-col gap-4">
+            {/* The whole file's, in the form's rhythm (24 px more, setting them apart, read as a slip) */}
+            <div className="flex flex-col gap-4">
               {/* With one card the face goes once either way */}
               {items.length > 1 && <Checkbox checked={faceEach} onChange={setFaceEach}>Обложка у всех</Checkbox>}
               <Checkbox checked={marks} onChange={setMarks}>Метки реза</Checkbox>
