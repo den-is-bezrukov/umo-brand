@@ -48,11 +48,14 @@
       /* The chats' names at 16 px, after their marks in one 20 px slot, so the names start in line */
       .chat { display: flex; align-items: center; gap: 10px; font-size: 16px; line-height: 20px; font-weight: 500; }
       .icon { display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; }
+      /* The generator, as the generators' «Скачать»: black, Medium */
+      .btn.cta { background: #000; border-color: #000; color: #fff; font-weight: 500; }
+      .btn.cta:hover { background: #333; border-color: #333; }
       .btn .icon svg { width: 18px; height: 18px; fill: #fff; stroke: none; }
       .icon.alice { font-size: 20px; line-height: 20px; }
       details { margin-top: 48px; }
       summary { display: inline-flex; align-items: center; gap: 6px; color: #808080; cursor: pointer; list-style: none; }
-      summary svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.25; transition: transform 0.2s; }
+      summary svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.25; }
       details[open] summary svg { transform: rotate(180deg); }
       summary::-webkit-details-marker { display: none; }
       summary:hover { color: #000; }
@@ -80,7 +83,7 @@
 
       <div class="label">Вручную</div>
       <div class="group">
-        <a class="btn" href="/price-card">Прайс-карта в конструкторе</a>
+        <a class="btn cta" href="/price-card">Прайс-карта в конструкторе</a>
       </div>
 
       <details>
