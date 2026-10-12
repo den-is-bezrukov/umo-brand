@@ -280,12 +280,12 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         </div>
         {/* The download over the form's foot, on a white gradient the form fades under, 24 px in (Figma 5098:5539), 20 px
             under it plus the screen's bottom safe area (`viewport-fit=cover` in index.html): over Safari's bottom tab
-            bar the page ends at the bar and the area is 0, so the button sits 20 over it (16 was tight where there's no safe area, as on Android), 16 on iOS alone
+            bar the page ends at the bar and the area is 0, so the button sits 20 over it (16 was tight where there's no safe area, as on Android); on iOS alone none but the safe area (16 was tried)
             (`-webkit-touch-callout` is iOS's only), where it's over Safari's or Chrome's bottom bar or, with the tabs on
             top, over the home indicator's 34; with the tabs on top it clears
             the home indicator. It was 24 all round, which left it high over Safari's bar */}
         {!preview && (
-          <div data-sheet className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white px-6 pt-6 pb-[calc(20px+env(safe-area-inset-bottom))] supports-[-webkit-touch-callout:none]:pb-[calc(16px+env(safe-area-inset-bottom))] tracking-normal">
+          <div data-sheet className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white px-6 pt-6 pb-[calc(20px+env(safe-area-inset-bottom))] supports-[-webkit-touch-callout:none]:pb-[env(safe-area-inset-bottom)] tracking-normal">
             <InFoot.Provider value={() => setSheet(s => (s === 'preview' ? 'half' : s))}>{download}</InFoot.Provider>
           </div>
         )}
