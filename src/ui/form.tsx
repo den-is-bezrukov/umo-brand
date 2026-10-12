@@ -61,7 +61,7 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
           {/* Grey, as the canvas's icons; it turns inward while the form is over the whole screen */}
           {size && <IconButton label={size.full ? 'Свернуть форму' : 'Развернуть форму'} onClick={size.toggle} grey d={size.full ? 'M12.5 7.5H8.5V3.5M3.5 8.5H7.5V12.5' : 'M8.5 3.5H12.5V7.5M7.5 12.5H3.5V8.5'} />}
         </div>
-        <GeneratorRing current={current} turnTo={turnTo} />
+        <PhoneRing current={current} />
       </div>
       {menu && createPortal(<GeneratorMenu current={current} height={inSheet} onClose={() => setMenu(false)} />, document.body)}
     </>
@@ -159,14 +159,14 @@ function GeneratorMenu({ current, height, onClose }: { current: string; /** The 
   const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
   return (
     // A sheet of its own over the form's, as tall, as round and shadowed, 24 px in; the close icon where the
-    // menu icon was, then the breadcrumbs, the generators 16 px apart under them (Figma 5099:5825)
+    // menu icon was, then the breadcrumbs, the generators 20 px apart under them (16 in Figma 5099:5825)
     <div role="dialog" aria-label="Конструкторы" style={{ height }} className="fixed inset-x-0 bottom-0 z-50 overflow-y-auto rounded-t-[24px] bg-white p-6 font-sans text-black shadow-[0_10px_30px_rgba(0,0,0,0.1)]">
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
           <IconButton label="Закрыть" onClick={onClose} d="M4 3L8 7L12 3M4 13.25L8 9.25L12 13.25" />
           <PhoneCrumbs />
         </div>
-        <nav aria-label="Конструкторы" className="flex flex-col items-start gap-4">
+        <nav aria-label="Конструкторы" className="flex flex-col items-start gap-5">
           {GENERATORS.map(g => g.path === current
             ? <span key={g.path} aria-current="page" className={name}>{g.title}</span>
             : <Link key={g.path} to={g.path} onClick={onClose} className={`${name} text-[#bfbfbf] outline-none active:text-[#808080]`}>{g.title}</Link>)}
@@ -196,11 +196,34 @@ function IconButton({ label, onClick, d, grey }: { label: string; onClick: () =>
   )
 }
 
+/**
+ * The ring on a phone: a plain line scrolled natively, as a phone's tabs (the turned ring, dragged by script, ran on and
+ * came back round on its own, unlike anything else under a finger). The names start from the current one, 24 px from the
+ * edge where the ring had it, the rest after it in the ring's order, 20 px apart (16 in Figma 5098:5496), stopping at
+ * each name's start; a tap opens one
+ */
+function PhoneRing({ current }: { current: string }) {
+  const at = GENERATORS.findIndex(g => g.path === current)
+  const ring = [...GENERATORS.slice(at), ...GENERATORS.slice(0, at)]
+  const name = 'shrink-0 snap-start text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
+  return (
+    <div className="relative -mx-6 my-1">
+      {/* 8 px over and under for the descenders (р, у), which the scroller would clip; the room after the last name a pseudo-element, as a flex scroller drops its end padding */}
+      <nav aria-label="Конструкторы" className="-my-2 flex snap-x snap-proximity scroll-pl-6 gap-5 overflow-x-auto overscroll-x-contain py-2 pl-6 [scrollbar-width:none] after:w-1 after:shrink-0 after:content-[''] [&::-webkit-scrollbar]:hidden">
+        {ring.map(g => g.path === current
+          ? <h1 key={g.path} className={name}>{g.title}</h1>
+          : <Link key={g.path} to={g.path} draggable={false} className={`${name} text-[#bfbfbf] outline-none active:text-[#808080]`}>{g.title}</Link>)}
+      </nav>
+      {/* The shades over the edges, as the ring's (Figma 5062:671, 5061:539) */}
+      <div aria-hidden className="pointer-events-none absolute -inset-y-2 left-0 w-6" style={{ background: 'linear-gradient(90deg, #ffffff80 25%, #fff0), linear-gradient(90deg, #fff 25%, #fff0)' }} />
+      <div aria-hidden className="pointer-events-none absolute -inset-y-2 right-0 w-12" style={{ background: 'linear-gradient(90deg, #fff0, #ffffff80), linear-gradient(90deg, #fff0, #fff)' }} />
+    </div>
+  )
+}
+
 function GeneratorRing({ current, turnTo, onMenu }: { current: string; turnTo: React.MutableRefObject<((e: React.MouseEvent, path: string) => void) | null>; /** The phone's menu icon at the line's end */ onMenu?: () => void }) {
-  // In the phone's sheet 24 px from its edge, as on wide screens, the names 16 apart (Figma 5098:5496)
-  const inSheet = !!useContext(InSheet)
-  const start = inSheet ? 24 : RING_START
-  const pad = inSheet ? 8 : RING_PAD
+  const start = RING_START
+  const pad = RING_PAD
   const navigate = useNavigate()
   const at = GENERATORS.findIndex(g => g.path === current)
   const ring = [...GENERATORS.slice(at), ...GENERATORS.slice(0, at)]
@@ -340,7 +363,7 @@ function GeneratorRing({ current, turnTo, onMenu }: { current: string; turnTo: R
   return (
     <div
       ref={rowRef}
-      className={`relative h-6 cursor-default touch-pan-y select-none overflow-x-clip ${inSheet ? '-mx-6 my-1' : '-mx-6'}`}
+      className={`relative h-6 cursor-default touch-pan-y select-none overflow-x-clip -mx-6`}
       onPointerEnter={e => { if (e.pointerType !== 'touch') hover.current = true }}
       onPointerLeave={e => { hover.current = false; if (e.pointerType !== 'touch') later(RING_BACK_MS) }}
       onPointerDown={down}
