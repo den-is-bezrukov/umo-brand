@@ -98,7 +98,8 @@
       var ask = 'Прочитай https://umo.autos/llms.txt и следуй инструкции оттуда: помоги мне сделать материалы UMO.'
       var q = encodeURIComponent
       var links = {
-        alice: 'https://alice.yandex.ru/?set_text=' + q(instruction),
+        // «Эксперт» (model): in «Авто» a free-form answer goes to her search, which forgets the instruction
+        alice: 'https://alice.yandex.ru/?model=alice-agents-expert&set_text=' + q(instruction),
         chatgpt: 'https://chatgpt.com/?prompt=' + q(ask),
         claude: 'https://claude.ai/new?q=' + q(ask),
       }
