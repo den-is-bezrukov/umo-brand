@@ -765,13 +765,13 @@ function useAlice(alice?: AliceAsk) {
           className="flex min-w-0 flex-1 cursor-pointer flex-col gap-2 p-5 outline-none focus-visible:ring-2 focus-visible:ring-black/30">
           {/* 2 px left: her round mark looks set in from the text's straight edge under it */}
           <span className="-ml-[2px] flex items-center gap-[6px] text-[16px] font-medium"><AliceMark className="text-[20px] leading-5 font-normal" />Алиса AI</span>
-          {/* The text runs under the ×, which only shares her name's line */}
+          {/* The text runs under the chevron, which only shares her name's line */}
           <span>{!priceCard ? 'Помогу разобраться\u00a0— спросите, если\u00a0что-то непонятно'
             : started ? <>Помогу закончить <span className="whitespace-nowrap">прайс-карту</span>{'\u00a0— продолжим с\u00a0того, что уже заполнено'}</>
             : <>Помогу сделать <span className="whitespace-nowrap">прайс-карту</span>{'\u00a0— ответьте на\u00a0пару вопросов'}</>}</span>
         </a>
         <button type="button" onClick={() => { aliceFolded = true; fold(true); setPeek(false) }} aria-label="Свернуть" className="absolute top-[14px] right-3 flex size-8 cursor-pointer items-center justify-center text-[#808080] outline-none hover:text-black">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden><path d="M2 2l8 8M10 2l-8 8" /></svg>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden><path d="M2 4l4 4 4-4" /></svg>
         </button>
       </div>
     ),
