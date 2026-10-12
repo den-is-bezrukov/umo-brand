@@ -787,9 +787,9 @@ function useAlice(alice?: AliceAsk) {
     ),
     icon: (
       <a href={href} target="_blank" rel="noopener" onClick={() => open('icon')} title={priceCard ? 'Продолжить с Алисой AI' : 'Спросить Алису AI'}
-        className="alice-pop flex size-12 shrink-0 items-center justify-center rounded-full bg-[#7a55ff] outline-none hover:bg-[#6a45ef] focus-visible:ring-2 focus-visible:ring-black/30">
+        className="alice-pop flex size-10 shrink-0 items-center justify-center rounded-full bg-[#7a55ff] outline-none hover:bg-[#6a45ef] focus-visible:ring-2 focus-visible:ring-black/30">
         {/* As her own app's icon: her purple, the solid drop in white, no shadow */}
-        <AliceMark solid className="text-[24px] leading-6" />
+        <AliceMark solid className="text-[26px] leading-6" />
       </a>
     ),
   }
