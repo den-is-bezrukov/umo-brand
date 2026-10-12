@@ -1,7 +1,7 @@
 import { flushSync } from 'react-dom'
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadBar, unfilled, stepsLeft, Segments, SegBtn, rowAction, isValidUrl, ALERT_LABEL, Checkbox } from '@/ui/form'
-import { useStaff, plain, pickTable, TableSource, UploadArea, AddTile, fullNameField, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
+import { useStaff, plain, pickTable, TableSource, UploadArea, AddTile, fullNameField, ItemFrame, Removed, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
@@ -238,7 +238,7 @@ export default function BusinessCard() {
                     />
                   </button>
                   </ItemFrame>
-                  {problems[i].length > 0 && <p className={`text-[13px] leading-5 text-[#e30] ${phone ? '' : BESIDE}`}>{alertLine(problems[i])}</p>}
+                  {problems[i].length > 0 && <p className={`text-[13px] leading-5 text-[#e30]`}>{alertLine(problems[i])}</p>}
                 </div>
               </figure>
               </Fragment>
@@ -412,7 +412,7 @@ export default function BusinessCard() {
         <div className="m-auto grid w-full grid-cols-1 gap-8">
           {/* The face, the same for everyone, once at the top whatever the file's page order («Обложка у всех» is the file's) */}
           <div className="flex justify-center">
-            <div className={`w-full max-w-[480px] ${BESIDE} transition-opacity duration-150 ${mode === 'manual' && current ? 'opacity-40' : ''}`}>
+            <div className={`w-full max-w-[480px] transition-opacity duration-150 ${mode === 'manual' && current ? 'opacity-40' : ''}`}>
               <div className="outline-1 outline-black/10"><CardArt text={face} /></div>
             </div>
           </div>

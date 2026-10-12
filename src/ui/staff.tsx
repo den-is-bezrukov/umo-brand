@@ -338,12 +338,6 @@ export function UploadArea<P extends object>({ staff }: { staff: Staff<P> }) {
 }
 
 /**
- * The room the items' column takes beside them on phones (40 + 8 px), mirrored on the left so the items stand centred, kept by whatever stands in the list without one
- * (the business card's face), so they all line up
- */
-export const BESIDE = 'px-12 md:px-0'
-
-/**
  * An item's edge on the canvas, the same on every generator: 1 px outside it at 10% black, 40% while the pointer is in
  * its row (the secondary buttons' edge; it was black, too loud for a poster)
  */
@@ -428,7 +422,7 @@ export const CrossIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M12 4L8 8M8 8L4 4M8 8L12 12M8 8L4 12" /></svg>
 )
 
-/** The item's actions (Figma 5030:11424): 30 px buttons (40 on phones, for a finger), the icon #808080, black on hover, no tile, as the other quiet controls */
+/** The item's actions (Figma 5030:11424): 30 px buttons (a phone's slide has its own, over the picture), the icon #808080, black on hover, no tile, as the other quiet controls */
 function Action({ label, hidden, onClick, children }: { label: string; hidden?: boolean; onClick: () => void; children: React.ReactNode }) {
   if (hidden) return null
   return (
@@ -438,7 +432,7 @@ function Action({ label, hidden, onClick, children }: { label: string; hidden?: 
       aria-label={label}
       // A click here is the action's, not the row's, which would select the item again
       onClick={e => { e.stopPropagation(); onClick() }}
-      className={`flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] md:size-[30px] outline-none hover:text-black focus-visible:ring-2 focus-visible:ring-black/30`}
+      className={`flex size-[30px] shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] outline-none hover:text-black focus-visible:ring-2 focus-visible:ring-black/30`}
     >
       {children}
     </button>
@@ -449,8 +443,8 @@ function Action({ label, hidden, onClick, children }: { label: string; hidden?: 
  * An item on the canvas with its number (from 1, as the table's rows; wide screens only) and its actions in one column
  * to its right (Figma 5030:11397; they were the number left and the actions right, 5008:10960), shown while the pointer is in its row (or the focus in it), on any item, acting on it
  * without selecting it; with no pointer to hover (touch screens), under the selected one only. The actions: «Дублировать», «Сбросить» (while there's something to
- * empty), «Удалить» (while there's another), the most used and harmless first, the cross furthest. On phones, where
- * there's no room beside the item, they stand in a row under it. An action not offered leaves no gap: the next moves up.
+ * empty), «Удалить» (while there's another), the most used and harmless first, the cross furthest. A phone's slide
+ * shows the item bare, its number and actions in the row over it. An action not offered leaves no gap: the next moves up.
  */
 export function ItemFrame<P extends object>({ staff, item, n, children }: { staff: Staff<P>; item: Row<P>; n: number; children: React.ReactNode }) {
   // On a phone's slide the item stands alone: its number is over the strip, its actions under it
@@ -458,13 +452,12 @@ export function ItemFrame<P extends object>({ staff, item, n, children }: { staf
   const active = staff.mode === 'manual' && item.key === staff.selected
   const hover = '[@media(hover:hover)]:hidden [@media(hover:hover)]:group-hover/row:flex [@media(hover:hover)]:group-focus-within/row:flex'
   return (
-    // On wide screens the column hangs outside the item; on phones it takes its room beside it, kept whether or not
-    // the actions show, so picking another item doesn't move the list (the item's own width shrinks instead)
-    <div className="relative flex items-start gap-2 pl-12 md:block md:pl-0">
+    // The column hangs outside the item
+    <div className="relative">
       {/* The item's own box, a container for what's set in its units (the name tag's corners, text edited in place) */}
-      <div className="@container relative min-w-0 flex-1">{children}</div>
+      <div className="@container relative">{children}</div>
       {/* One column right of the item, 8 px off it, from its top (Figma 5030:11397): the number, then the actions */}
-      <div className="flex w-10 shrink-0 flex-col items-center md:absolute md:top-0 md:left-full md:ml-2 md:w-[30px]">
+      <div className="absolute top-0 left-full ml-2 flex w-[30px] flex-col items-center">
       {/* A lone item has no number: a «1» there says nothing */}
       {staff.items.length > 1 && <span aria-hidden className="pointer-events-none pb-[5px] text-center text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1]">{n}</span>}
       {staff.mode === 'manual' && (

@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadBar, unfilled, stepsLeft, Segments, SegBtn, outlined } from '@/ui/form'
-import { useStaff, plain, pickTable, TableSource, UploadArea, AddTile, fullNameField, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
+import { useStaff, plain, pickTable, TableSource, UploadArea, AddTile, fullNameField, ItemFrame, Removed, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD } from '@/livery/geometry'
 import { TAG, TAGS_KEY, buildTag, loadFonts, type Field, type FieldBox, type Fonts, type Person } from '@/nametag/tag'
@@ -161,7 +161,7 @@ export default function NameTag() {
                 )}
                 </ItemFrame>
                 {bad && (
-                  <p className={`text-[13px] leading-5 text-[#e30] ${phone ? '' : BESIDE}`}>{alertLine(problems[i])}</p>
+                  <p className={`text-[13px] leading-5 text-[#e30]`}>{alertLine(problems[i])}</p>
                 )}
                 </div>
               </figure>

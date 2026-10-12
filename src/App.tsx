@@ -197,9 +197,8 @@ export default function App() {
 
   const [exporting, setExporting] = useState(false)
   const phone = usePhone()
-  // The cards' width on the canvas: on wide screens each card fits its height, as the one card did; on phones its width
+  // The cards' width on the canvas: each card fits its height, as the one card did (phones draw it at their slide's width)
   const [cardW, setCardW] = useState(0)
-  const [wide, setWide] = useState(true)
 
   useEffect(() => {
     const prev = document.title
@@ -213,17 +212,12 @@ export default function App() {
     if (!el) return
     const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect
-      // On phones the card's number and actions take 40 + 8 px beside it, mirrored on the left (`BESIDE`)
-      const md = window.matchMedia('(min-width: 768px)').matches
-      setWide(md)
-      setCardW(Math.floor(md ? Math.min(width, height * POSTER_W / POSTER_H) : width - 96))
+      setCardW(Math.floor(Math.min(width, height * POSTER_W / POSTER_H)))
     })
     observer.observe(el)
     return () => observer.disconnect()
   }, [phone])
   const scale = cardW / POSTER_W
-  /** A row's width: the card, and on phones the room beside it for its number and actions */
-  const rowW = wide ? cardW : cardW + 96
 
   const issues = check(card)
   const failing = items.filter(c => !check(c).ok).map(c => c.key)
@@ -361,7 +355,7 @@ export default function App() {
                 <Fragment key={c.key}>
                   <Removed staff={staff} at={i} />
                   <figure ref={staff.figureRef(c.key)} onClick={() => staff.pick(c.key)} className="group/row flex cursor-pointer justify-center">
-                    <div className="w-full" style={{ maxWidth: rowW }}>
+                    <div className="w-full" style={{ maxWidth: cardW }}>
                       <ItemFrame staff={frame} item={c} n={i + 1}>
                         {/* A plain box, not a button: a button's centred text shifted the card's own layout. Clipped to
                             the card, so the photo doesn't run past its edge, and edged as every generator's items
