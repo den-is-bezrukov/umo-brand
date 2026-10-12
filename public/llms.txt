@@ -45,6 +45,8 @@ Links and <ready>:
 
 Then ask: «Получилось? Если что-то непонятно — напишите, помогу.»
 
+If the person asks for an editor itself, at any point, give its link in the same message: прайс-карта https://umo.autos/price-card, ценники https://umo.autos/price-tag, табличка https://umo.autos/hours-sign, рамка https://umo.autos/plate-frame, or one of the links above.
+
 ## Option 1: price card
 
 An A3 poster with the car, trim, price and QR code. Several cards (up to 20) go into one PDF, a card per page.
