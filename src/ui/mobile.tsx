@@ -225,12 +225,17 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         </div>
       )}
 
-      {/* One picture: its reset and copy at the ends of a row over it, as a list's (in the canvas's top corners over the
-          strip, Figma 5105:8373, they covered a landscape item's edge) */}
+      {/* One picture: a row over it as a list's, its name in the middle with the reset after it, copy on the right (in
+          the canvas's top corners over the strip, Figma 5105:8373, they covered a landscape item's edge, and the name
+          stood in a caption under the picture, unlike a list's) */}
       {!row && !full && (
         <div className="flex h-[30px] shrink-0 items-center justify-between">
-          {resetBtn}
-          {staff ? copyBtn : <span />}
+          <Btn label="" hidden onClick={() => {}}>{null}</Btn>
+          <div className="flex min-w-0 flex-1 items-center justify-center">
+            {slide?.label && <span className="min-w-0 truncate px-1 text-[14px] leading-5 text-[#808080] [font-feature-settings:'case'_1,'lnum'_1,'tnum'_1]">{slide.label}</span>}
+            {resetBtn}
+          </div>
+          {staff ? copyBtn : <Btn label="" hidden onClick={() => {}}>{null}</Btn>}
         </div>
       )}
 
@@ -246,8 +251,8 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           {slides.map(s => (
             // A fitted picture's slide doesn't scroll at all (`clip`, not `hidden`, which still let the list's scrollIntoView
             // move a copy 4 px down and cut its top edge); one taller than the screen's width scrolls. A sheet's caption
-            // goes while its name is in the row
-            <div key={s.key} className={`flex h-full w-full shrink-0 snap-center ${s.ratio ? 'overflow-clip' : 'overflow-y-auto [scrollbar-width:none]'} ${row && s.label ? '[&_figcaption]:hidden' : ''}`}>
+            // goes, its name in the row
+            <div key={s.key} className={`flex h-full w-full shrink-0 snap-center ${s.ratio ? 'overflow-clip' : 'overflow-y-auto [scrollbar-width:none]'} ${s.label ? '[&_figcaption]:hidden' : ''}`}>
               {box.w > 0 && <Fitted ratio={s.ratio} box={box} node={s.node} />}
             </div>
           ))}
