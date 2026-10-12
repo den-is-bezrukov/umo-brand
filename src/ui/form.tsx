@@ -68,8 +68,9 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
         {size && !menu && <IconButton label={size.full ? 'Свернуть форму' : 'Развернуть форму'} onClick={size.toggle} grey d={size.full ? tocIcons.close : EXPAND} />}
       </div>
       {menu ? (
-        // 24 px under the crumbs (16 sat them on the first name)
-        <nav aria-label="Конструкторы" className="mt-2 flex flex-col items-start gap-5">
+        // 20 px under the crumbs, where the line stood, so the current name stays put (24 dropped it 4 px; 16 sat the
+        // crumbs on it)
+        <nav aria-label="Конструкторы" className="mt-1 flex flex-col items-start gap-5">
           {GENERATORS.map(g => g.path === current
             ? <button key={g.path} type="button" aria-current="page" onClick={() => setMenu(false)} className={`${name} cursor-pointer text-left`}>{g.title}</button>
             : <Link key={g.path} to={g.path} className={`${name} text-[#bfbfbf] outline-none hover:text-[#808080] focus-visible:text-[#808080] active:text-[#808080]`}>{g.title}</Link>)}
