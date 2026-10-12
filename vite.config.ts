@@ -21,6 +21,7 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       siteMetaPlugin(siteConfiguration),
       downloadSizesPlugin(),
+      aiPagePlugin(),
       reactRefreshBoundaryFallback(),
     ],
     resolve: {
@@ -100,7 +101,8 @@ function siteMetaPlugin(config: SiteConfiguration): Plugin {
   const headEnd = config.customScripts?.headEnd ?? ''
   const bodyStart = config.customScripts?.bodyStart ?? ''
   const bodyEnd = config.customScripts?.bodyEnd ?? ''
-  const robotsTxt = config.robots?.index === false ? 'User-agent: *\nDisallow: /\n' : ''
+  // Chat agents (ChatGPT, Claude) honour robots.txt when they open a link, so the instruction for them stays open
+  const robotsTxt = config.robots?.index === false ? 'User-agent: *\nAllow: /llms.txt\nAllow: /ai\nDisallow: /\n' : ''
 
   return {
     name: 'site-meta',
@@ -230,6 +232,31 @@ function siteMetaPlugin(config: SiteConfiguration): Plugin {
 }
 
 /** `virtual:download-sizes`: byte size of every file in public/downloads, keyed by file name. */
+/**
+ * umo.autos/ai: a plain page, no React, so a chat agent opening it reads the instruction for chat agents
+ * (public/llms.txt) that the page holds, as people pick their chat on it. Built from src/ai/page.html
+ */
+function aiPagePlugin(): Plugin {
+  const page = () => {
+    const text = fs.readFileSync(path.resolve(__dirname, 'public/llms.txt'), 'utf8')
+    const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    return fs.readFileSync(path.resolve(__dirname, 'src/ai/page.html'), 'utf8').replace('<!-- ai:instruction -->', escaped)
+  }
+  return {
+    name: 'ai-page',
+    configureServer(server) {
+      server.middlewares.use((req, res, next) => {
+        if (!['/ai', '/ai/'].includes(req.url?.split('?')[0] ?? '')) return next()
+        res.setHeader('Content-Type', 'text/html; charset=utf-8')
+        res.end(page())
+      })
+    },
+    generateBundle() {
+      this.emitFile({ type: 'asset', fileName: 'ai/index.html', source: page() })
+    },
+  }
+}
+
 function downloadSizesPlugin(): Plugin {
   const id = 'virtual:download-sizes'
   const dir = path.resolve(__dirname, 'public/downloads')

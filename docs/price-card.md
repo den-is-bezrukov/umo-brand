@@ -6,4 +6,4 @@ The page holds several cards (`useStaff` with no table mode, opened with the lin
 
 The car photos live at fixed paths so they can be swapped without touching code: `src/assets/umo5-car.jpg` and `src/assets/umo8-car.jpg`. The PDF is printed at A3 and the photo must hold up at 300dpi — don't shrink it to "web size": **3840×2160 for UMO5** and **3520×1980 for UMO8**, JPEG quality ~90 (about 1.5–2 MB). Replace the file in place, same filename.
 
-`public/llms.txt` (umo.autos/llms.txt) is the instruction for chat agents (tried with Alice): they ask the dealer the questions and answer with a link with settings, never a file. It repeats the trims, the `DEFAULTS` prices and the link's parameters, so change it with them.
+Chat agents make it as a link with `pdf=1` (see «Chat agents» in `docs/generators.md`); `public/llms.txt` repeats the trims, the `DEFAULTS` prices and the link's parameters, so change it with them.

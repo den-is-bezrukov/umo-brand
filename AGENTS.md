@@ -51,7 +51,7 @@ Start with task-relevant files below. Only follow imports or inspect other files
 - `src/icons/` - SVG path data for the UMO logo/badges and small UI icons, imported directly by component name
 - `src/index.css` - Global CSS entrypoint, Tailwind CSS v4 import, fonts
 - `index.html` - Vite HTML shell. On iOS only, a script adds `maximum-scale=1` to the viewport: iOS Safari zooms into any field under 16px on focus and doesn't zoom back, while still allowing a pinch zoom; on Android the same setting would block pinching. It also holds the Yandex.Metrika counter (113514674), loaded on umo.autos only, `defer`
-- `public/llms.txt` - The instruction for chat agents (Alice): they ask the dealer questions and answer with a generator link with settings. The price card only for now (see `docs/price-card.md`)
+- `public/llms.txt` - The instruction for chat agents: they ask the dealer questions and answer with a price card link that opens the PDF (`pdf=1`). Also shown at `umo.autos/ai` (`src/ai/page.html`, built by the `ai-page` plugin), where dealers pick their chat (see «Chat agents» in `docs/generators.md`)
 - `site.config.json` - Site title/description/favicon/OG-image/robots, applied to the built HTML by the `site-meta` Vite plugin (the icons: see `docs/guide.md`)
 - `vite.config.ts` - Vite configuration: React, Tailwind CSS v4, the `@` alias for `src`, the `site-meta` plugin and `virtual:download-sizes`
 
