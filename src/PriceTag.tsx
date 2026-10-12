@@ -183,6 +183,8 @@ export default function PriceTag() {
         <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
           <GeneratorHeader current="/price-tag" />
 
+          {/* The form under the header in one rhythm, 16 px apart as any fields (the list's «Данные» stood 24 off the person's fields) */}
+          <div className="flex flex-col gap-4">
           {/* The dealer first: the whole list's, set once */}
           <div ref={dealerField} className="group/field flex flex-col gap-2 tracking-normal">
             <p className={`text-[14px] leading-4 text-[#808080] ${ALERT_LABEL}`}>Дилер</p>
@@ -233,6 +235,7 @@ export default function PriceTag() {
             })()}
 
             {mode === 'table' && <TableSource staff={staff} template={TEMPLATE} />}
+          </div>
           </div>
         </div>
 

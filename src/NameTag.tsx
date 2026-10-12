@@ -174,6 +174,8 @@ export default function NameTag() {
         <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
           <GeneratorHeader current="/name-tag" />
 
+          {/* The form under the header in one rhythm, 16 px apart as any fields (the list's «Данные» stood 24 off the person's fields) */}
+          <div className="flex flex-col gap-4">
           <Labelled label="Данные">
             <Segments>
               <SegBtn active={mode === 'manual'} onClick={() => setMode('manual')}>Вручную</SegBtn>
@@ -212,6 +214,7 @@ export default function NameTag() {
           )}
 
           {mode === 'table' && <TableSource staff={staff} template={TEMPLATE} />}
+          </div>
         </div>
 
         {/* On phones pinned to the bottom of the screen, as on every generator; 40 px off the form on wide screens */}

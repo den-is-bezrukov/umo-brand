@@ -250,6 +250,8 @@ export default function BusinessCard() {
         <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
           <GeneratorHeader current="/business-card" />
 
+          {/* The form under the header in one rhythm, 16 px apart as any fields (the list's «Данные» stood 24 off the person's fields) */}
+          <div className="flex flex-col gap-4">
           <Labelled label="Данные">
             <Segments>
               <SegBtn active={mode === 'manual'} onClick={() => setMode('manual')}>Вручную</SegBtn>
@@ -370,6 +372,7 @@ export default function BusinessCard() {
               {items.length > 1 && <Checkbox checked={faceEach} onChange={setFaceEach}>Обложка у всех</Checkbox>}
               <Checkbox checked={marks} onChange={setMarks}>Метки реза</Checkbox>
             </div>
+          </div>
           </div>
         </div>
 
