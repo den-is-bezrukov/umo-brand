@@ -65,6 +65,8 @@
       .btn .icon svg { width: 18px; height: 18px; fill: currentColor; stroke: none; }
       .more .chat { font-weight: 400; }
       .icon.alice { font-size: 20px; line-height: 20px; }
+      /* «Сделать с @ Алисой AI»: her mark inside the phrase, a word space either side */
+      .alice-btn .chat { gap: 4px; }
       details { margin-top: 24px; text-align: center; }
       /* Two ways on the screen, Alice and the editor; the other chats, the copy and the instruction folded under them */
       /* «Другой способ», a secondary button in the stack under the two ways, opening the rest under itself */
@@ -93,7 +95,7 @@
       <div class="form">
         <h1>Материалы для дилеров</h1>
         <div class="group main">
-          <a class="btn alice-btn" data-chat="alice" target="_blank" rel="noopener"><span class="chat"><span class="icon alice">@</span>Сделать с Алисой AI</span></a>
+          <a class="btn alice-btn" data-chat="alice" target="_blank" rel="noopener"><span class="chat">Сделать с<span class="icon alice">@</span>Алисой AI</span></a>
           <a class="btn cta" href="/price-card">Собрать в редакторе</a>
         </div>
         <details class="more">
