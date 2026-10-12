@@ -55,7 +55,9 @@
       .btn .icon svg { width: 18px; height: 18px; fill: #fff; stroke: none; }
       .icon.alice { font-size: 20px; line-height: 20px; }
       details { margin-top: 48px; }
-      summary { color: #808080; cursor: pointer; list-style: none; }
+      summary { display: inline-flex; align-items: center; gap: 6px; color: #808080; cursor: pointer; list-style: none; }
+      summary svg { width: 12px; height: 12px; fill: none; stroke: currentColor; stroke-width: 1.25; transition: transform 0.2s; }
+      details[open] summary svg { transform: rotate(180deg); }
       summary::-webkit-details-marker { display: none; }
       summary:hover { color: #000; }
       pre { margin: 16px 0 0; white-space: pre-wrap; font: inherit; line-height: 20px; color: #808080; }
@@ -86,7 +88,7 @@
       </div>
 
       <details>
-        <summary>Инструкция для ИИ</summary>
+        <summary>Инструкция для ИИ<svg viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" /></svg></summary>
         <pre id="instruction"><!-- ai:instruction --></pre>
       </details>
     </main>
