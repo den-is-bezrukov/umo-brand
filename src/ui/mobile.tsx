@@ -81,6 +81,10 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
 }) {
   const [sheet, setSheet] = useState<Sheet>('half')
   const [arrows] = useState(arrowsOn)
+  // A text field in the form has the focus, so the keyboard is up: the download steps aside, as a phone's own forms do,
+  // or it covered the field the keyboard had just brought above it
+  const [typing, setTyping] = useState(false)
+  const types = (el: EventTarget | null) => el instanceof HTMLTextAreaElement ? !el.readOnly : el instanceof HTMLInputElement && !el.readOnly && !['checkbox', 'radio', 'button', 'submit', 'file'].includes(el.type)
 
   // The slide in view: the selected item's on a list's page
   const selectedAt = staff ? slides.findIndex(s => s.item === staff.selected) : -1
@@ -270,7 +274,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         // As the generators' ring turns, the last easing that was kept (it was linear for a moment)
         style={{ height, transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: 'cubic-bezier(0.67, 0, 0.33, 1)' }}
       >
-        <div ref={scroller} data-sheet className={`min-h-0 flex-1 overflow-y-auto ${preview ? 'pointer-events-none' : ''}`}>
+        <div ref={scroller} data-sheet onFocus={e => setTyping(types(e.target))} onBlur={e => setTyping(types(e.relatedTarget))} className={`min-h-0 flex-1 overflow-y-auto ${preview ? 'pointer-events-none' : ''}`}>
           {/* Groups 24 px apart, so from one 48 px control to the next is 48 (16 + 8 for a label + 24); the header keeps its 16 */}
           <div className="pb-[calc(96px+env(safe-area-inset-bottom))] [&_svg:not(.animate-spin)_path]:stroke-1 *:gap-6! *:p-6! [&_.gap-4:not([data-head])]:gap-6! [&_.gap-y-4]:gap-y-6!">
             <SheetSize.Provider value={{ full, toggle: () => setSheet(s => (s === 'full' ? 'half' : 'full')) }}>
@@ -282,7 +286,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
             plus the screen's bottom safe area under it (`viewport-fit=cover` in index.html), so it clears the home
             indicator. Tried closer to Safari's bottom tab bar: 16, then on iOS alone 16, 0, 2 and 8 — touching the edge,
             the black button turned Safari 26's bar black, and 24 all round is what the sheet's sides have */}
-        {!preview && (
+        {!preview && !typing && (
           <div data-sheet className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white px-6 pt-6 pb-[calc(24px+env(safe-area-inset-bottom))] tracking-normal">
             <InFoot.Provider value={() => setSheet(s => (s === 'preview' ? 'half' : s))}>{download}</InFoot.Provider>
           </div>
