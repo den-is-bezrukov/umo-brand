@@ -686,7 +686,7 @@ export const stepsLeft = (n: number) => (n > 1 ? `1/${n}` : undefined)
  */
 /**
  * Alice opened with the instruction (public/llms.txt, fetched once wanted) and the dealers after it (umo.autos/dealers.txt,
- * which the instruction says come at the end) in her field, as umo.autos/ai sends them: she reads no links. In «Эксперт», as there. Over it a line saying where the dealer comes from (`ask`): from the price card
+ * which the instruction says come at the end) in her field, as umo.autos/make sends them: she reads no links. In «Эксперт», as there. Over it a line saying where the dealer comes from (`ask`): from the price card
  * what's been filled in, so she asks only what's left; from the other generators which editor they're in, as she
  * can't make those herself and helps with the editor instead (the instruction's «Start» skips its list then)
  */
@@ -720,8 +720,8 @@ function AliceMark({ className = '', solid, axes }: { className?: string; /** Th
   return <span style={{ fontFamily: 'Alice Okniks', fontFeatureSettings: solid ? "'ss01'" : "'ss02'", fontVariationSettings: axes }} className={`${solid ? 'text-white' : 'text-[#7a55ff]'} ${className}`}>@</span>
 }
 
-/** Came from umo.autos/ai, where Alice was already offered beside the editor: no offer then (the referrer as index.html keeps it through the 404 redirect) */
-const fromAi = (() => { try { const r = new URL((window as any).siteReferrer ?? document.referrer); return r.origin === location.origin && /^\/ai\/?$/.test(r.pathname) } catch { return false } })()
+/** Came from umo.autos/make (or /ai, its first address), where Alice was already offered beside the editor: no offer then (the referrer as index.html keeps it through the 404 redirect) */
+const fromAi = (() => { try { const r = new URL((window as any).siteReferrer ?? document.referrer); return r.origin === location.origin && /^\/(make|ai)\/?$/.test(r.pathname) } catch { return false } })()
 
 /** What the download says to Alice: where the dealer comes from (`aliceAsk`) and whether the form has been touched */
 export type AliceAsk = { ask: string; started: boolean }

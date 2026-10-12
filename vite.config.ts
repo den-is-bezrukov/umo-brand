@@ -21,7 +21,7 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       siteMetaPlugin(siteConfiguration),
       downloadSizesPlugin(),
-      aiPagePlugin(),
+      makePagePlugin(),
       reactRefreshBoundaryFallback(),
     ],
     resolve: {
@@ -102,7 +102,7 @@ function siteMetaPlugin(config: SiteConfiguration): Plugin {
   const bodyStart = config.customScripts?.bodyStart ?? ''
   const bodyEnd = config.customScripts?.bodyEnd ?? ''
   // Chat agents (ChatGPT, Claude) honour robots.txt when they open a link, so the instruction for them stays open
-  const robotsTxt = config.robots?.index === false ? 'User-agent: *\nAllow: /llms.txt\nAllow: /dealers.txt\nAllow: /ai\nDisallow: /\n' : ''
+  const robotsTxt = config.robots?.index === false ? 'User-agent: *\nAllow: /llms.txt\nAllow: /dealers.txt\nAllow: /make\nAllow: /ai\nDisallow: /\n' : ''
 
   return {
     name: 'site-meta',
@@ -233,12 +233,14 @@ function siteMetaPlugin(config: SiteConfiguration): Plugin {
 
 /** `virtual:download-sizes`: byte size of every file in public/downloads, keyed by file name. */
 /**
- * umo.autos/ai: a plain page, no React, so a chat agent opening it reads the instruction for chat agents
- * (public/llms.txt) that the page holds, as people pick their chat on it. Built from src/ai/page.html
+ * umo.autos/make: a plain page, no React, so a chat agent opening it reads the instruction for chat agents
+ * (public/llms.txt) that the page holds, as people pick their chat on it. Built from src/make/page.html
  */
-function aiPagePlugin(): Plugin {
+function makePagePlugin(): Plugin {
+  /** umo.autos/ai, the page's first address, already sent around: on to /make, keeping the query and hash */
+  const aiRedirect = '<!doctype html><meta charset="utf-8"><link rel="canonical" href="/make"><script>location.replace(\'/make\' + location.search + location.hash)</script>'
   const escape = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  const page = () => fs.readFileSync(path.resolve(__dirname, 'src/ai/page.html'), 'utf8')
+  const page = () => fs.readFileSync(path.resolve(__dirname, 'src/make/page.html'), 'utf8')
     .replace('<!-- ai:instruction -->', escape(fs.readFileSync(path.resolve(__dirname, 'public/llms.txt'), 'utf8')))
     .replace('<!-- ai:dealers -->', escape(dealersText()))
   /**
@@ -256,10 +258,10 @@ function aiPagePlugin(): Plugin {
       }).sort((a, b) => a.localeCompare(b, 'ru')).join('\n') + '\n'
   }
   return {
-    name: 'ai-page',
+    name: 'make-page',
     configureServer(server) {
       // In dev the page reloads itself when it or the instruction changes, through Vite's client
-      const sources = ['src/ai/page.html', 'public/llms.txt', 'src/data/dealers.json'].map(f => path.resolve(__dirname, f))
+      const sources = ['src/make/page.html', 'public/llms.txt', 'src/data/dealers.json'].map(f => path.resolve(__dirname, f))
       server.watcher.add(sources)
       server.watcher.on('change', file => {
         if (sources.includes(file)) server.ws.send({ type: 'full-reload' })
@@ -269,13 +271,19 @@ function aiPagePlugin(): Plugin {
           res.setHeader('Content-Type', 'text/plain; charset=utf-8')
           return res.end(dealersText())
         }
-        if (!['/ai', '/ai/'].includes(req.url?.split('?')[0] ?? '')) return next()
+        // The page's first address, /ai, leads here, as on the site (aiRedirect)
+        if (['/ai', '/ai/'].includes(req.url?.split('?')[0] ?? '')) {
+          res.writeHead(302, { Location: '/make' + req.url!.slice(req.url!.split('?')[0].length) })
+          return res.end()
+        }
+        if (!['/make', '/make/'].includes(req.url?.split('?')[0] ?? '')) return next()
         res.setHeader('Content-Type', 'text/html; charset=utf-8')
         res.end(page().replace('</head>', '<script type="module" src="/@vite/client"></script></head>'))
       })
     },
     generateBundle() {
-      this.emitFile({ type: 'asset', fileName: 'ai/index.html', source: page() })
+      this.emitFile({ type: 'asset', fileName: 'make/index.html', source: page() })
+      this.emitFile({ type: 'asset', fileName: 'ai/index.html', source: aiRedirect })
       this.emitFile({ type: 'asset', fileName: 'dealers.txt', source: dealersText() })
     },
   }
