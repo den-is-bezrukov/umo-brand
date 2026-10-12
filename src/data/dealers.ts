@@ -97,6 +97,9 @@ export function findDealers(text: string): Dealer[] {
   return scored.filter(s => s.hits === best).map(s => s.d)
 }
 
+/** Whether every word written is some dealer's: else a word was dropped, and a single dealer found may not be the one meant («Рольф Сити») */
+export const knowsEveryWord = (text: string) => words(text).every(q => DEALERS.some(d => WORDS.get(d)!.all.some(t => same(q, t))))
+
 /** Dealer names (from `options`, with «UMO» or without) a dealer field shows for what's typed, as `findDealers` finds them */
 export const dealerFilter = (typed: string, options: string[]) => {
   const found = new Set(findDealers(typed).map(d => withoutUmo(d.name)))
