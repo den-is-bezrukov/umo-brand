@@ -118,34 +118,8 @@ html[data-menu] [data-sheet]:not(:has([data-head])) {
   animation-duration: 300ms;
   animation-timing-function: cubic-bezier(0.2, 0.8, 0.2, 1);
 }
-/* The shape is drawn on the transition's image pair, white on the bubble's shadow, its corners going from the bubble's 16/16/0/16 (square
-   where she speaks from) to the circle's 20; the bubble and icon lose their own while it runs, so their snapshots are
-   only the content, kept at its size, anchored in the corner, and cut by the shape */
-html[data-alice-morph] .alice-shape {
-  background: transparent !important;
-  box-shadow: none !important;
-}
-::view-transition-image-pair(alice) {
-  overflow: hidden;
-  background: white;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
-  animation: alice-shape 300ms cubic-bezier(0.2, 0.8, 0.2, 1) both;
-}
-html[data-alice-morph='bubble']::view-transition-image-pair(alice) {
-  animation-name: alice-unshape;
-}
-@keyframes alice-unshape {
-  from { border-radius: 20px; }
-  to { border-radius: 16px 16px 0 16px; }
-}
-@keyframes alice-shape {
-  from { border-radius: 16px 16px 0 16px; }
-  to { border-radius: 20px; }
-}
 ::view-transition-old(alice),
 ::view-transition-new(alice) {
-  animation-duration: 150ms;
-  inset: auto 0 0 auto;
-  width: auto;
-  height: auto;
+  animation-duration: 200ms;
+  height: 100%;
 }
