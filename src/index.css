@@ -89,11 +89,11 @@ html[data-menu] [data-sheet]:not(:has([data-head])) {
   display: none;
 }
 
-/* The generators' form: its groups 24 px apart on every screen, so from one control to the next is 48 (a label's 16 and 8
-   and 24; it was 16 on wide screens); the header keeps its 16 */
+/* The generators' form: from one control to the next is 48 on every screen — the groups 20 px apart, a label's 16 and
+   12 to its field (it was 24 and 8; 16 and 8 on wide screens); the header keeps its 16 */
 :is(aside:has([data-head]), [data-sheet]) .gap-4:not([data-head]) {
-  gap: 24px;
+  gap: 20px;
 }
 :is(aside:has([data-head]), [data-sheet]) .gap-y-4 {
-  row-gap: 24px;
+  row-gap: 20px;
 }
