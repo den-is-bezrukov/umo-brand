@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import { goal } from './metrika'
 import tocIcons from '@/icons/toc'
-import { InFoot, InSheet, SheetSize } from './phone'
+import { InFoot, InSheet, SheetSize, AliceSlot } from './phone'
 
 // Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag, business card). Light UI per the Figma layout
 // (UMO | Evrone, nodes 4844:6865 and 4900:4588), matching the brand guide.
@@ -728,8 +728,11 @@ function AliceMark({ className = '' }: { className?: string }) {
  * «Продолжить» once it is, as she's told what's filled in (`ask`); closed with its × until the page is reloaded.
  * A secondary button as the others (`outlined`), only her mark in her colour
  */
+let aliceClosed = false
 export function AliceOffer({ ask, started }: { ask: string; started: boolean }) {
-  const [closed, setClosed] = useState(false)
+  // Kept outside, so it holds while the phone's download steps aside for the keyboard and comes back
+  const [closed, close] = useState(aliceClosed)
+  const setClosed = (v: boolean) => { aliceClosed = v; close(v) }
   const href = useAliceHref(!closed, ask)
   if (closed || !href) return null
   return (
@@ -802,10 +805,12 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   )
   // Phones: «Поделиться» right of the download, half each, once the download is on (tried: an icon left of the
   // download, «Поделиться» left of it, as wide as its word on the right)
+  const slot = useContext(AliceSlot)
   if (foot) return (
     <div className="grid auto-cols-fr grid-flow-col gap-2">
       {main}
       {shareOn && <div className="flex min-w-0">{links}</div>}
+      {slot && createPortal(alice, slot)}
     </div>
   )
   // Wide screens: 40 px off the form, sticking to the sidebar's foot; «Поделиться» over the download, as wide, so it
