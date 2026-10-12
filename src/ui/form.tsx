@@ -702,10 +702,17 @@ function useAliceHref(wanted: boolean, ask: string) {
   return text && 'https://alice.yandex.ru/?model=alice-agents-expert&set_text=' + encodeURIComponent(ask + '\n\n' + text)
 }
 
-/** Where the dealer comes from, for a generator that doesn't say more (`useAliceHref`) */
+/** What Alice makes herself in the chat (public/llms.txt), as «сделать …» takes it; the livery she only helps with */
+const ALICE_MAKES: Record<string, string> = {
+  '/price-card': 'прайс-карту', '/price-tag': 'ценники', '/hours-sign': 'табличку',
+  '/plate-frame': 'рамку', '/business-card': 'визитку', '/name-tag': 'бейдж',
+}
+
+/** Where the dealer comes from, for a generator that doesn't say more (`useAliceHref`): what to make, else the editor */
 const aliceAsk = (path: string) => {
   const g = GENERATORS.find(g => g.path === path)
-  return g ? `Следуй этой инструкции. Я сейчас в редакторе «${g.title}» на umo.autos${path}, помоги мне с ним.` : 'Следуй этой инструкции и помоги мне сделать материалы UMO.'
+  return ALICE_MAKES[path] ? `Следуй этой инструкции. Мне нужно сделать ${ALICE_MAKES[path]}: начни сразу с вопросов.`
+    : g ? `Следуй этой инструкции. Я сейчас в редакторе «${g.title}» на umo.autos${path}, помоги мне с ним.` : 'Следуй этой инструкции и помоги мне сделать материалы UMO.'
 }
 
 /** Alice's mark, from Alice Okniks (the drop, ss02), in her colour */
@@ -753,7 +760,7 @@ function useAlice(alice?: AliceAsk) {
   const href = useAliceHref(!fromAi, alice?.ask ?? aliceAsk(location.pathname))
   const none = { bubble: null, icon: null, button: null as React.ReactNode, peek: setPeek }
   if (fromAi || !href) return none
-  const priceCard = location.pathname === '/price-card'
+  const makes = ALICE_MAKES[location.pathname]
   const open = (via: string) => goal('ai_open', { chat: 'alice', from: location.pathname, via })
   const started = alice ? alice.started : typed
   if (peek || (!folded && !started)) return {
@@ -767,9 +774,9 @@ function useAlice(alice?: AliceAsk) {
           {/* 2 px left: her round mark looks set in from the text's straight edge under it */}
           <span className="-ml-[2px] flex items-center gap-[6px] text-[16px] font-medium"><AliceMark className="text-[20px] leading-5" />Алиса AI</span>
           {/* The text runs under the chevron, which only shares her name's line */}
-          <span>{!priceCard ? 'Помогу разобраться с\u00a0редактором\u00a0— спрашивайте'
-            : started ? <>Помогу закончить <span className="whitespace-nowrap">прайс-карту</span>{'\u00a0— продолжим с\u00a0того, что уже заполнено'}</>
-            : <>Помогу сделать <span className="whitespace-nowrap">прайс-карту</span>{'\u00a0— ответьте на\u00a0пару вопросов'}</>}</span>
+          <span>{!makes ? 'Подскажу, как заполнить\u00a0— спрашивайте'
+            : started ? <>Помогу закончить <span className="whitespace-nowrap">{makes}</span>{'\u00a0— продолжим с\u00a0того, что уже заполнено'}</>
+            : <>Помогу сделать <span className="whitespace-nowrap">{makes}</span>{'\u00a0— ответьте на\u00a0пару вопросов'}</>}</span>
         </a>
         <button type="button" onClick={() => { aliceFolded = true; fold(true); setPeek(false) }} aria-label="Свернуть" className="absolute top-[14px] right-3 flex size-8 cursor-pointer items-center justify-center text-[#808080] outline-none hover:text-black">
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden><path d="M2 4l4 4 4-4" /></svg>
@@ -787,7 +794,7 @@ function useAlice(alice?: AliceAsk) {
       </a>
     ),
     icon: (
-      <a href={href} target="_blank" rel="noopener" onClick={() => open('icon')} title={priceCard ? 'Продолжить с Алисой AI' : 'Спросить Алису AI'}
+      <a href={href} target="_blank" rel="noopener" onClick={() => open('icon')} title={makes ? 'Продолжить с Алисой AI' : 'Спросить Алису AI'}
         className="alice-pop flex size-10 shrink-0 items-center justify-center rounded-full bg-white outline-none hover:bg-[#f5f5f5] focus-visible:ring-2 focus-visible:ring-black/30">
         {/* White with no edge or shadow, her outline mark in her purple, as in the bubble; 26 px, the mark 23 px, 58% of the
             circle, sized by the font size, not by its axes: Safari clips a glyph moved by them; half a pixel up by CSS */}
