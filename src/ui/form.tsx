@@ -80,8 +80,8 @@ export function GeneratorHeader({ current, alice: ask }: { current: '/price-card
           {alice && (
             <div className="mt-auto flex w-full pt-5">
               <a href={alice} target="_blank" rel="noopener" onClick={() => goal('ai_open', { chat: 'alice', from: location.pathname, via: 'menu' })}
-                className={`${outlined} gap-1 bg-white font-normal tracking-normal`}>
-                Сделать с<AliceMark className="text-[20px] leading-5 font-normal" />Алисой AI
+                className={`${outlined} gap-1 bg-white tracking-normal`}>
+                Сделать с<AliceMark className="text-[20px] leading-5" />Алисой AI
               </a>
             </div>
           )}
@@ -769,7 +769,7 @@ function useAlice(alice?: AliceAsk) {
             : <>Помогу сделать <span className="whitespace-nowrap">прайс-карту</span>{'\u00a0— ответьте на\u00a0пару вопросов'}</>}</span>
         </a>
         <button type="button" onClick={() => { aliceFolded = true; fold(true); setPeek(false) }} aria-label="Свернуть" className="flex w-12 shrink-0 cursor-pointer items-start justify-center pt-6 text-[#808080] outline-none hover:text-black">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden><path d="M2 2l8 8M10 2l-8 8" /></svg>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden><path d="M2 2l8 8M10 2l-8 8" /></svg>
         </button>
       </div>
     ),
