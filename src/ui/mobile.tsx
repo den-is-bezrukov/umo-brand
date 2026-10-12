@@ -201,6 +201,10 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#f5f5f5] font-sans text-black">
+      {/* Safari 26 tints its bottom bar from a fixed element with a fill at the page's bottom edge: a white strip there,
+          in the 2 px under the download on iOS, so the bar stays white rather than taking the black button's colour
+          (the gap alone didn't do it). Not over the picture alone, where the canvas's grey is at the edge */}
+      {!preview && <div aria-hidden className="pointer-events-none fixed inset-x-0 bottom-0 z-30 hidden h-[2px] bg-white supports-[-webkit-touch-callout:none]:block" />}
       {/* The canvas, 10 px in (Figma 5105:8488) */}
       <div className={`relative flex min-h-0 flex-1 flex-col p-[10px] ${preview ? 'pb-[calc(10px+env(safe-area-inset-bottom))]' : ''}`}>
       {/* A list's row over the picture (Figma 5105:7604): delete on the left, copy on the right, between them the
