@@ -685,9 +685,10 @@ export const stepsLeft = (n: number) => (n > 1 ? `1/${n}` : undefined)
  * line, under the button for a while)
  */
 /**
- * Trial: an offer over the download to make the cards with Alice instead, on a form not yet touched: purple text and
- * edge, closed with its ×, the close remembered in this browser; gone once anything is changed. Alice reads no links,
- * so she gets the instruction itself (public/llms.txt, fetched here) in her field, as umo.autos/ai sends it
+ * Trial: an offer over the download to make the cards with Alice instead, on a form not yet touched,
+ * closed with its ×, the close remembered in this browser; gone once anything is changed. Alice reads no links,
+ * so she gets the instruction itself (public/llms.txt, fetched here) in her field, as umo.autos/ai sends it.
+ * A secondary button as the others (`outlined`), only her mark in her colour
  */
 export function AliceOffer({ shown }: { shown: boolean }) {
   const KEY = 'alice-offer-closed'
@@ -701,12 +702,12 @@ export function AliceOffer({ shown }: { shown: boolean }) {
   if (closed || !shown || !href) return null
   const close = () => { setClosed(true); try { localStorage.setItem(KEY, '1') } catch { /* private window */ } }
   return (
-    <div className="mb-4 flex items-center rounded-[8px] border border-[#7a55ff]/40 bg-white text-[14px] leading-5 text-[#7a55ff]">
+    <div className="mb-4 flex items-center rounded-[8px] border border-black/10 bg-white text-[14px] leading-5 text-black hover:border-black/40">
       <a href={href} target="_blank" rel="noopener" onClick={() => goal('ai_open', { chat: 'alice', from: location.pathname })}
-        className="flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1 py-[9px] pl-10 font-medium outline-none hover:text-[#6a45ef] focus-visible:ring-2 focus-visible:ring-[#7a55ff]/40">
-        Сделать с<span style={{ fontFamily: 'Alice Okniks', fontFeatureSettings: "'ss02'" }} className="text-[20px] leading-5">@</span>Алисой AI
+        className="flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1 py-[9px] pl-10 font-medium outline-none focus-visible:ring-2 focus-visible:ring-black/30">
+        Сделать с<span style={{ fontFamily: 'Alice Okniks', fontFeatureSettings: "'ss02'" }} className="text-[20px] leading-5 text-[#7a55ff]">@</span>Алисой AI
       </a>
-      <button type="button" onClick={close} aria-label="Закрыть" className="flex w-10 shrink-0 cursor-pointer items-center justify-center self-stretch text-[#7a55ff]/60 outline-none hover:text-[#7a55ff]">
+      <button type="button" onClick={close} aria-label="Закрыть" className="flex w-10 shrink-0 cursor-pointer items-center justify-center self-stretch text-[#808080] outline-none hover:text-black">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden><path d="M2 2l8 8M10 2l-8 8" /></svg>
       </button>
     </div>
