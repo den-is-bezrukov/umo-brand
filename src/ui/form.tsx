@@ -987,7 +987,9 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   const main = (
     <button
       type="button"
-      onClick={leads ? () => { if (foot) { foot(); setTimeout(onNote!, 350) } else onNote!() } : onClick}
+      // The field focused in the tap itself: iOS raises the keyboard only for a focus within the gesture (it was 350 ms later,
+      // after the sheet opened, and the field only lit up)
+      onClick={leads ? () => { foot?.(); onNote!() } : onClick}
       disabled={busy || (disabled && !leads)}
       className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] in-[[data-sheet]]:py-[14px]! text-[14px] leading-5 outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 hover:enabled:bg-[#333] disabled:cursor-default
         ${lead || said ? 'font-normal' : 'font-medium'} ${disabled && !leads && !busy ? 'text-[#999]' : 'text-white'}`}
