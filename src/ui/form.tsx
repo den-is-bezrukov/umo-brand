@@ -723,32 +723,61 @@ function AliceMark({ className = '' }: { className?: string }) {
   return <span style={{ fontFamily: 'Alice Okniks', fontFeatureSettings: "'ss02'" }} className={`text-[#7a55ff] ${className}`}>@</span>
 }
 
-/**
- * Trial: an offer over the download to make the cards with Alice instead, «Сделать» on a form not yet touched,
- * «Продолжить» once it is, as she's told what's filled in (`ask`); closed with its × until the page is reloaded.
- * A secondary button as the others (`outlined`), only her mark in her colour
- */
 /** Came from umo.autos/ai, where Alice was already offered beside the editor: no offer then (the referrer as index.html keeps it through the 404 redirect) */
 const fromAi = (() => { try { const r = new URL((window as any).siteReferrer ?? document.referrer); return r.origin === location.origin && /^\/ai\/?$/.test(r.pathname) } catch { return false } })()
 
-export function AliceOffer({ ask, started }: { ask: string; started: boolean }) {
-  const [closed, setClosed] = useState(false)
-  const href = useAliceHref(!closed && !fromAi, ask)
-  if (closed || fromAi || !href) return null
-  return (
-    <div className="flex items-center rounded-[8px] border border-black/10 bg-white text-[14px] leading-5 text-black hover:border-black/40">
-      <a href={href} target="_blank" rel="noopener" onClick={() => goal('ai_open', { chat: 'alice', from: location.pathname })}
-        className="flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1 py-[9px] in-[[data-sheet]]:py-[13px]! pl-10 font-normal outline-none focus-visible:ring-2 focus-visible:ring-black/30">
-        {started ? 'Продолжить' : 'Сделать'} с<AliceMark className="text-[20px] leading-5 font-normal" />Алисой AI
+/** What the download says to Alice: where the dealer comes from (`aliceAsk`) and whether the form has been touched */
+export type AliceAsk = { ask: string; started: boolean }
+
+/** The bubble folded into the icon by its ×, kept outside so it holds while the phone's download steps aside for the keyboard */
+let aliceFolded = false
+
+/**
+ * Trial: Alice by the download. On a form not yet touched, a bubble in her voice over it, offering to make it with her;
+ * once anything is filled in (or by its ×) it folds into a square button with her mark in the download's row, which
+ * opens her with what's filled in (`ask`). Generators that don't say whether they're touched count the first typing
+ */
+function useAlice(alice?: AliceAsk) {
+  const [folded, fold] = useState(aliceFolded)
+  const [typed, setTyped] = useState(false)
+  useEffect(() => {
+    if (alice || typed) return
+    const on = () => setTyped(true)
+    document.addEventListener('input', on, { once: true })
+    return () => document.removeEventListener('input', on)
+  }, [alice, typed])
+  const href = useAliceHref(!fromAi, alice?.ask ?? aliceAsk(location.pathname))
+  if (fromAi || !href) return { bubble: null, icon: null }
+  const priceCard = location.pathname === '/price-card'
+  const open = (via: string) => goal('ai_open', { chat: 'alice', from: location.pathname, via })
+  if (!folded && !(alice ? alice.started : typed)) return {
+    icon: null,
+    bubble: (
+      // A message's bubble: round but for the corner it comes from
+      <div className="alice-pop flex items-stretch rounded-[12px] rounded-bl-[4px] border border-black/10 bg-white text-[14px] leading-5 text-black hover:border-black/40">
+        <a href={href} target="_blank" rel="noopener" onClick={() => open('bubble')}
+          className="flex min-w-0 flex-1 cursor-pointer items-start gap-2 py-[10px] in-[[data-sheet]]:py-[14px]! pl-3 outline-none focus-visible:ring-2 focus-visible:ring-black/30">
+          <AliceMark className="text-[20px] leading-5 font-normal" />
+          <span>{priceCard ? <>Помогу сделать <span className="whitespace-nowrap">прайс-карту</span>{'\u00a0— ответьте на\u00a0пару вопросов'}</> : 'Помогу разобраться\u00a0— спросите, если что-то непонятно'}</span>
+        </a>
+        <button type="button" onClick={() => { aliceFolded = true; fold(true) }} aria-label="Свернуть" className="flex w-10 shrink-0 cursor-pointer items-start justify-center pt-[14px] in-[[data-sheet]]:pt-[18px] text-[#808080] outline-none hover:text-black">
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden><path d="M2 2l8 8M10 2l-8 8" /></svg>
+        </button>
+      </div>
+    ),
+  }
+  return {
+    bubble: null,
+    icon: (
+      <a href={href} target="_blank" rel="noopener" onClick={() => open('icon')} title={priceCard ? 'Продолжить с Алисой AI' : 'Спросить Алису AI'}
+        className="alice-pop flex size-10 in-[[data-sheet]]:size-12 shrink-0 items-center justify-center rounded-[8px] border border-black/10 bg-white outline-none hover:border-black/40 focus-visible:ring-2 focus-visible:ring-black/30">
+        <AliceMark className="text-[20px] leading-5 font-normal" />
       </a>
-      <button type="button" onClick={() => setClosed(true)} aria-label="Закрыть" className="flex w-10 shrink-0 cursor-pointer items-center justify-center self-stretch text-[#808080] outline-none hover:text-black">
-        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden><path d="M2 2l8 8M10 2l-8 8" /></svg>
-      </button>
-    </div>
-  )
+    ),
+  }
 }
 
-export function DownloadBar({ format, onClick, busy, disabled, note, count, onNote, links, offer }: {
+export function DownloadBar({ format, onClick, busy, disabled, note, count, onNote, links, alice: aliceAsk_ }: {
   format: 'PDF' | 'ZIP'
   onClick: () => void
   busy: boolean
@@ -759,8 +788,8 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   onNote?: () => void
   /** «Поделиться», right over the download: off with it, the line over them speaking for both */
   links?: React.ReactNode
-  /** Right over the download, 8 px off as «Поделиться» (trial): `AliceOffer`, by default saying which editor this is */
-  offer?: React.ReactNode
+  /** Trial: what Alice is told (`useAlice`); by default which editor this is */
+  alice?: AliceAsk
 }) {
   // What a button under the line has just done, said there for two seconds
   const [said, setSaid] = useState('')
@@ -779,7 +808,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   // download, «Поделиться» with it. The bright button stays the next step, so it's pressed even unread, and the press
   // teaches what to do (on wide screens a secondary button saying the step stood over a greyed-out download)
   const foot = useContext(InFoot)
-  const alice = offer ?? <AliceOffer ask={aliceAsk(location.pathname)} started={false} />
+  const alice = useAlice(aliceAsk_)
   const lead = disabled && !!note && !said
   const leads = lead && !!onNote
   const shareOn = !!links && !disabled && !said
@@ -807,10 +836,13 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   // download, «Поделиться» left of it, as wide as its word on the right)
   if (foot) return (
     <div className="flex flex-col gap-2">
-      {alice}
-      <div className="grid auto-cols-fr grid-flow-col gap-2">
-        {main}
-        {shareOn && <div className="flex min-w-0">{links}</div>}
+      {alice.bubble}
+      <div className="flex gap-2">
+        <div className="grid min-w-0 flex-1 auto-cols-fr grid-flow-col gap-2">
+          {main}
+          {shareOn && <div className="flex min-w-0">{links}</div>}
+        </div>
+        {alice.icon}
       </div>
     </div>
   )
@@ -818,9 +850,9 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   // has room to say the link is copied
   return (
     <div className="sticky bottom-0 z-10 mt-8 flex flex-col gap-2 bg-white p-6 pt-0 tracking-normal">
+      {alice.bubble}
       {shareOn && <div className="flex">{links}</div>}
-      {alice}
-      <div className="flex">{main}</div>
+      <div className="flex gap-2">{alice.icon}{main}</div>
     </div>
   )
 }

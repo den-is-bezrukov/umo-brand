@@ -6,7 +6,7 @@ import PriceCardPdf from '@/posters/pdf/PriceCardPdf'
 import { ensurePdfFonts } from '@/posters/pdf/pdfFonts'
 import type { Variant } from '@/posters/cardData'
 import { goal } from '@/ui/metrika'
-import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField, GeneratorHeader, LinkButtons, DownloadBar, AliceOffer, unfilled, stepsLeft } from '@/ui/form'
+import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField, GeneratorHeader, LinkButtons, DownloadBar, unfilled, stepsLeft } from '@/ui/form'
 import { linkParams, useLinkState } from '@/ui/share'
 import { useStaff, ItemFrame, AddTile, Removed, plain, ITEM_EDGE, type Row } from '@/ui/staff'
 import { MobileEditor, usePhone } from '@/ui/mobile'
@@ -288,7 +288,7 @@ export default function App() {
     }
   }
 
-  // Alice (`AliceOffer`, the menu) is told it's the price card and, once anything is changed, what every card holds, so
+  // Alice (`useAlice` by the download, the menu) is told it's the price card and, once anything is changed, what every card holds, so
   // she asks only what's left (public/llms.txt, «Option 1»)
   const started = !(items.length === 1 && sameCard(items[0], defaultCard('umo5')))
   const aliceAsk = !started
@@ -365,7 +365,7 @@ export default function App() {
           onNote={items.length > 1 ? () => staff.nextOf(failing) : toIssue}
           // No «Сбросить» here: each card has its own beside it
           links={<LinkButtons incomplete={failing.length > 0} />}
-          offer={<AliceOffer ask={aliceAsk} started={started} />}
+          alice={{ ask: aliceAsk, started }}
         />
   )
 
