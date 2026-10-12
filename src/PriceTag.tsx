@@ -187,7 +187,7 @@ export default function PriceTag() {
           <div className="flex flex-col gap-4">
           {/* The dealer first: the whole list's, set once */}
           <div ref={dealerField} className="group/field flex flex-col gap-2 tracking-normal">
-            <p className={`text-[16px] leading-4 text-[#808080] ${ALERT_LABEL}`}>Дилер</p>
+            <p className={`text-[14px] leading-4 text-[#808080] ${ALERT_LABEL}`}>Дилер</p>
             <ComboField
               value={dealer}
               onChange={setDealer}
