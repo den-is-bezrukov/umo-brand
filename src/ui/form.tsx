@@ -196,44 +196,41 @@ function IconButton({ label, onClick, d, grey }: { label: string; onClick: () =>
   )
 }
 
+/** Copies of the generators in the phone's line: the middle one in view, a whole turn either side to scroll through */
+const PHONE_TURNS = 3
+
 /**
- * The ring on a phone: a plain line scrolled natively, as a phone's tabs (the turned ring, dragged by script, ran on and
- * came back round on its own, unlike anything else under a finger), and picked as a drum: the name the line comes to rest
- * on, 24 px from the edge where the ring had the current one, opens once the finger is off and the line is still; a tap
- * opens one too. The names start from the current one, the rest after it in the ring's order, 20 px apart (16 in Figma
- * 5098:5496), the one nearest the edge black as it goes. The opened page starts from it, so the line stays where it was
+ * The ring on a phone: a line scrolled natively, as a phone's tabs (the turned ring, dragged by script, ran on and came
+ * back round on its own, unlike anything else under a finger), and picked as a drum: the name the line comes to rest on,
+ * 24 px from the edge where the ring had the current one, opens the instant the finger is off and the line is still; a
+ * tap opens one too. It goes round as the ring did: the generators in their order three times over, the current one of
+ * the middle copy at the edge, so there's a whole turn to scroll either way; every page puts its own there, so the line
+ * looks the same after a pick, and a turn's worth of scrolling to the same name puts it back in the middle unseen.
+ * 20 px apart (16 in Figma 5098:5496), the one nearest the edge black as it goes
  */
 function PhoneRing({ current }: { current: string }) {
   const navigate = useNavigate()
-  const at = GENERATORS.findIndex(g => g.path === current)
-  const ring = [...GENERATORS.slice(at), ...GENERATORS.slice(0, at)]
+  const count = GENERATORS.length
+  const middle = Math.floor(PHONE_TURNS / 2) * count + GENERATORS.findIndex(g => g.path === current)
   const nav = useRef<HTMLElement>(null)
-  // Room after the last name, so it too can come to rest at the edge
-  const [end, setEnd] = useState(0)
   const [lit, setLit] = useState(current)
+  const item = (i: number) => nav.current?.children[i] as HTMLElement | undefined
+  // The current one of the middle copy at the edge, before the first paint and again once the font is in
   useLayoutEffect(() => {
-    const n = nav.current
-    if (!n) return
-    const fit = () => {
-      const last = n.children[ring.length - 1] as HTMLElement | undefined
-      if (last) setEnd(Math.max(0, n.clientWidth - 24 - last.offsetWidth - 20))
-    }
-    fit()
-    document.fonts?.ready.then(fit)
-    const observer = new ResizeObserver(fit)
-    observer.observe(n)
-    return () => observer.disconnect()
+    const home = () => { const n = nav.current, el = item(middle); if (n && el) n.scrollLeft = el.offsetLeft - 24 }
+    home()
+    document.fonts?.ready.then(home)
   }, [current]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
     const n = nav.current
     if (!n) return
     const nearest = () => {
-      let best = current
+      let best = middle
       let gap = Infinity
-      ring.forEach((g, i) => {
-        const d = Math.abs((n.children[i] as HTMLElement).offsetLeft - n.scrollLeft - 24)
-        if (d < gap) { gap = d; best = g.path }
-      })
+      for (let i = 0; i < count * PHONE_TURNS; i++) {
+        const d = Math.abs(item(i)!.offsetLeft - n.scrollLeft - 24)
+        if (d < gap) { gap = d; best = i }
+      }
       return best
     }
     // The moment the line is still: `scrollend` where the browser has it, the instant the run and the snap are over;
@@ -243,11 +240,14 @@ function PhoneRing({ current }: { current: string }) {
     let timer = 0
     const pick = () => {
       if (touching) return
-      const path = nearest()
+      const i = nearest()
+      const path = GENERATORS[i % count].path
       if (path !== current) navigate(path)
+      // The same name a turn away: back to the middle copy, unseen
+      else if (i !== middle) n.scrollLeft += item(middle)!.offsetLeft - item(i)!.offsetLeft
     }
     const settle = () => { clearTimeout(timer); if (!ends) timer = window.setTimeout(pick, 150) }
-    const scroll = () => { setLit(nearest()); settle() }
+    const scroll = () => { setLit(GENERATORS[nearest() % count].path); settle() }
     const down = () => { touching = true; clearTimeout(timer) }
     const up = () => { touching = false; settle() }
     if (ends) n.addEventListener('scrollend', pick)
@@ -270,10 +270,12 @@ function PhoneRing({ current }: { current: string }) {
     <div className="relative -mx-6 my-1">
       {/* 8 px over and under for the descenders (р, у), which the scroller would clip */}
       <nav ref={nav} aria-label="Конструкторы" className="relative -my-2 flex snap-x snap-mandatory scroll-pl-6 gap-5 overflow-x-auto overscroll-x-contain py-2 pl-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {ring.map(g => g.path === current
-          ? <h1 key={g.path} className={`${name} ${tone(g.path)}`}>{g.title}</h1>
-          : <Link key={g.path} to={g.path} draggable={false} className={`${name} ${tone(g.path)} outline-none`}>{g.title}</Link>)}
-        <div aria-hidden className="shrink-0" style={{ width: end }} />
+        {Array.from({ length: PHONE_TURNS * count }, (_, i) => {
+          const g = GENERATORS[i % count]
+          return i === middle
+            ? <h1 key={i} className={`${name} ${tone(g.path)}`}>{g.title}</h1>
+            : <Link key={i} to={g.path} draggable={false} aria-hidden={i < count || i >= 2 * count || undefined} tabIndex={i < count || i >= 2 * count ? -1 : undefined} className={`${name} ${tone(g.path)} outline-none`}>{g.title}</Link>
+        })}
       </nav>
       {/* The shades over the edges, as the ring's (Figma 5062:671, 5061:539) */}
       <div aria-hidden className="pointer-events-none absolute -inset-y-2 left-0 w-6" style={{ background: 'linear-gradient(90deg, #ffffff80 25%, #fff0), linear-gradient(90deg, #fff 25%, #fff0)' }} />
