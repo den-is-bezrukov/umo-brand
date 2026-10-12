@@ -200,10 +200,14 @@ export default function PriceTag() {
           </div>
 
           <Labelled label="Данные">
-            <Segments>
-              <SegBtn active={mode === 'manual'} onClick={() => setMode('manual')}>Вручную</SegBtn>
-              <SegBtn active={mode === 'table'} onClick={() => setMode('table')}>Из таблицы</SegBtn>
-            </Segments>
+            {/* The table mode's template (then its file) right under the switch, 8 px off it, as a pair: the mode's first step */}
+            <div className="flex flex-col gap-2">
+              <Segments>
+                <SegBtn active={mode === 'manual'} onClick={() => setMode('manual')}>Вручную</SegBtn>
+                <SegBtn active={mode === 'table'} onClick={() => setMode('table')}>Из таблицы</SegBtn>
+              </Segments>
+              {mode === 'table' && <TableSource staff={staff} template={TEMPLATE} />}
+            </div>
           </Labelled>
 
           <div className="flex flex-col gap-4 tracking-normal">
@@ -234,7 +238,6 @@ export default function PriceTag() {
               )
             })()}
 
-            {mode === 'table' && <TableSource staff={staff} template={TEMPLATE} />}
           </div>
           </div>
         </div>

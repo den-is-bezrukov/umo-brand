@@ -253,10 +253,14 @@ export default function BusinessCard() {
           {/* The form under the header in one rhythm, 16 px apart as any fields (the list's «Данные» stood 24 off the person's fields) */}
           <div className="flex flex-col gap-4">
           <Labelled label="Данные">
-            <Segments>
-              <SegBtn active={mode === 'manual'} onClick={() => setMode('manual')}>Вручную</SegBtn>
-              <SegBtn active={mode === 'table'} onClick={() => setMode('table')}>Из таблицы</SegBtn>
-            </Segments>
+            {/* The table mode's template (then its file) right under the switch, 8 px off it, as a pair: the mode's first step */}
+            <div className="flex flex-col gap-2">
+              <Segments>
+                <SegBtn active={mode === 'manual'} onClick={() => setMode('manual')}>Вручную</SegBtn>
+                <SegBtn active={mode === 'table'} onClick={() => setMode('table')}>Из таблицы</SegBtn>
+              </Segments>
+              {mode === 'table' && <TableSource staff={staff} template={TEMPLATE} />}
+            </div>
           </Labelled>
 
           {/* The dealership and the person in one column, 16 px apart as any fields; the pages, the whole file's, set apart */}
@@ -364,7 +368,6 @@ export default function BusinessCard() {
               )
             })()}
 
-            {mode === 'table' && <TableSource staff={staff} template={TEMPLATE} />}
 
             {/* The whole file's, set apart */}
             <div className="mt-6 flex flex-col gap-4">
