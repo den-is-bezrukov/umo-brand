@@ -702,7 +702,7 @@ export function AliceOffer({ shown }: { shown: boolean }) {
   if (closed || !shown || !href) return null
   const close = () => { setClosed(true); try { localStorage.setItem(KEY, '1') } catch { /* private window */ } }
   return (
-    <div className="mb-4 flex items-center rounded-[8px] border border-black/10 bg-white text-[14px] leading-5 text-black hover:border-black/40">
+    <div className="flex items-center rounded-[8px] border border-black/10 bg-white text-[14px] leading-5 text-black hover:border-black/40">
       <a href={href} target="_blank" rel="noopener" onClick={() => goal('ai_open', { chat: 'alice', from: location.pathname })}
         className="flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1 py-[9px] pl-10 font-medium outline-none focus-visible:ring-2 focus-visible:ring-black/30">
         Сделать с<span style={{ fontFamily: 'Alice Okniks', fontFeatureSettings: "'ss02'" }} className="text-[20px] leading-5 text-[#7a55ff]">@</span>Алисой AI
@@ -725,7 +725,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   onNote?: () => void
   /** «Поделиться», right over the download: off with it, the line over them speaking for both */
   links?: React.ReactNode
-  /** Over everything, a group of its own (trial: `AliceOffer`) */
+  /** Right over the download, 8 px off as «Поделиться» (trial: `AliceOffer`) */
   offer?: React.ReactNode
 }) {
   // What a button under the line has just done, said there for two seconds
@@ -771,7 +771,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   // Phones: «Поделиться» right of the download, half each, once the download is on (tried: an icon left of the
   // download, «Поделиться» left of it, as wide as its word on the right)
   if (foot) return (
-    <div>
+    <div className="flex flex-col gap-2">
       {offer}
       <div className="grid auto-cols-fr grid-flow-col gap-2">
         {main}
@@ -783,8 +783,8 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   // has room to say the link is copied
   return (
     <div className="sticky bottom-0 z-10 mt-8 flex flex-col gap-2 bg-white p-6 pt-0 tracking-normal">
-      {offer}
       {shareOn && <div className="flex">{links}</div>}
+      {offer}
       <div className="flex">{main}</div>
     </div>
   )
