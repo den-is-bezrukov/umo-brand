@@ -47,17 +47,6 @@ const MEDIA_LIST: { id: string; to: string; title: string; row: string; w: numbe
     ),
   },
   {
-    // Figma 5008:10482: the 261×66 plate in its frame centred on the 444×333 grey
-    id: 'plate-frame', to: '/plate-frame', title: 'Рамка номера', row: 'Сделать рамку номера', w: 444, h: 333,
-    picture: (
-      <div className="flex aspect-4/3 items-center justify-center bg-[#f5f5f5]">
-        <PlateArt className="w-[58.8%]!">
-          <text y={STRIP_BASELINE} fontFamily="CoFo Sans" fontWeight={500} fontSize={18} letterSpacing={-0.18} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Центр UMO | Название дилера</text>
-        </PlateArt>
-      </div>
-    ),
-  },
-  {
     // The 90×60 tag as the constructor sets it, as wide as the plate on the 444×333 grey
     id: 'price-tag', to: '/price-tag', title: 'Ценник', row: 'Проставить цены', w: 444, h: 333,
     picture: (
@@ -73,6 +62,17 @@ const MEDIA_LIST: { id: string; to: string; title: string; row: string; w: numbe
             <text x={TAG_SIDE} y={TAG_PRICE.top + TAG_DROP * TAG_PRICE.size} fontSize={TAG_PRICE.size} style={{ fontVariantNumeric: 'lining-nums tabular-nums' }}>4 990 ₽</text>
           </g>
         </svg>
+      </div>
+    ),
+  },
+  {
+    // Figma 5008:10482: the 261×66 plate in its frame centred on the 444×333 grey
+    id: 'plate-frame', to: '/plate-frame', title: 'Рамка номера', row: 'Сделать рамку номера', w: 444, h: 333,
+    picture: (
+      <div className="flex aspect-4/3 items-center justify-center bg-[#f5f5f5]">
+        <PlateArt className="w-[58.8%]!">
+          <text y={STRIP_BASELINE} fontFamily="CoFo Sans" fontWeight={500} fontSize={18} letterSpacing={-0.18} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Центр UMO | Название дилера</text>
+        </PlateArt>
       </div>
     ),
   },
