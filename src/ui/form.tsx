@@ -719,6 +719,17 @@ const fromAi = (() => { try { const r = new URL((window as any).siteReferrer ?? 
 /** What the download says to Alice: where the dealer comes from (`aliceAsk`) and whether the form has been touched */
 export type AliceAsk = { ask: string; started: boolean }
 
+/**
+ * Alice told what's been filled in (`filled`, a line per thing), so she asks only what's left and gives the link, as the
+ * price card tells her its cards; an untouched form (`false`) says only which editor it is
+ */
+export const aliceWith = (filled: string[] | false): AliceAsk => {
+  const g = GENERATORS.find(g => g.path === location.pathname)
+  return !filled || !g ? { ask: aliceAsk(location.pathname), started: !!filled }
+    : { ask: `Следуй этой инструкции. Я сейчас в редакторе «${g.title}» на umo.autos${g.path}, вот что уже заполнено:\n${filled.join('\n')}\n`
+        + 'Не спрашивай заново то, что уже есть: уточни, что поменять или чего не хватает, и дай ссылку.', started: true }
+}
+
 /** The bubble folded into the icon by its ×, kept outside so it holds while the phone's download steps aside for the keyboard */
 let aliceFolded = false
 

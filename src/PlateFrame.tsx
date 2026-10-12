@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Font } from 'opentype.js'
 import { goal } from '@/ui/metrika'
-import { Field, Segments, SegBtn, TextInput, ComboField, GeneratorHeader, LinkButtons, DownloadBar } from '@/ui/form'
+import { Field, Segments, SegBtn, TextInput, ComboField, GeneratorHeader, LinkButtons, DownloadBar, aliceWith } from '@/ui/form'
 import { CaptionReset } from '@/ui/staff'
 import { linkParams, useLinkState, saveAndOpenPdf } from '@/ui/share'
 import { loadFont, toD } from '@/livery/geometry'
@@ -223,8 +223,15 @@ export default function PlateFrame() {
     </>
   )
 
+  // Alice told what's filled in (`aliceWith`)
+  const alice = aliceWith(!blank && [
+    custom ? `Своя строка на рамке: ${text.trim() || 'не указана'}` : `Салон: ${name.trim() ? `UMO ${name.trim()}` : 'не выбран'}`,
+    ...(align === 'center' ? ['Строка по центру'] : []),
+  ])
+
   const download = (
         <DownloadBar
+          alice={alice}
           format="PDF"
           onClick={handleExport}
           busy={exporting}

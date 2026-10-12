@@ -1,5 +1,5 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, unfilled, stepsLeft, Segments, SegBtn, ALERT_LABEL, outlined } from '@/ui/form'
+import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, aliceWith, unfilled, stepsLeft, Segments, SegBtn, ALERT_LABEL, outlined } from '@/ui/form'
 import { useStaff, pickTable, TableSource, UploadArea, AddTile, ItemFrame, Removed, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, type Cmd } from '@/livery/geometry'
@@ -285,8 +285,17 @@ export default function PriceTag() {
     </>
   )
 
+  // Alice told the dealer and the goods filled in, the first 8: her link has room for about that many, with a margin (docs/generators.md)
+  const goods = items.filter(it => it.name.trim() || it.code.trim() || it.price.trim())
+  const alice = aliceWith((!!dealer.trim() || goods.length > 0) && [
+    `Салон: ${dealer.trim() ? `UMO ${dealer.trim()}` : 'не выбран'}`,
+    ...goods.slice(0, 8).map((it, i) => `${i + 1}. ${it.name.trim() || 'название не указано'}${it.code.trim() ? `, артикул ${it.code.trim()}` : ''}, ${it.price.trim() ? `${it.price.trim()} ₽` : 'цена не указана'}, ${it.caption}`),
+    ...(goods.length > 8 ? [`…и ещё ${goods.length - 8} — их видно только в редакторе`] : []),
+  ])
+
   const download = (
         <DownloadBar
+          alice={alice}
           format="PDF"
           onClick={handleExport}
           busy={exporting}

@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { Font } from 'opentype.js'
 import { goal } from '@/ui/metrika'
-import { Field, TextInput, ComboField, GeneratorHeader, LinkButtons, DownloadBar, stepsLeft, flash } from '@/ui/form'
+import { Field, TextInput, ComboField, GeneratorHeader, LinkButtons, DownloadBar, aliceWith, stepsLeft, flash } from '@/ui/form'
 import { isPdf, readPdfData } from '@/ui/pdfData'
 import { CaptionReset } from '@/ui/staff'
 import { linkParams, useLinkState, saveAndOpenPdf } from '@/ui/share'
@@ -350,8 +350,16 @@ export default function HoursSign() {
     </>
   )
 
+  // Alice told what's filled in (`aliceWith`)
+  const told = (v: string, label: string) => `${label}: ${oneLine(v) || 'не указан'}`
+  const alice = aliceWith(!blank && [
+    told(dealer && `UMO ${dealer}`, 'Салон'), told(address, 'Адрес'),
+    `Часы: ${from && to ? `${values.from}–${values.to}` : 'не указаны'}`, told(phone, 'Телефон'), told(site, 'Сайт'),
+  ])
+
   const download = (
         <DownloadBar
+          alice={alice}
           format="PDF"
           onClick={handleExport}
           busy={exporting}
