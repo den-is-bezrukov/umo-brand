@@ -63,8 +63,8 @@
       details.more { margin-top: 8px; }
       details.more .group { margin-top: 8px; }
       summary { display: inline-flex; align-items: center; gap: 6px; color: #808080; cursor: pointer; list-style: none; }
-      /* The generators' combobox chevron (src/ui/form.tsx): 14×14, 2 px, square ends, bevelled */
-      summary svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: square; stroke-linejoin: bevel; }
+      /* The generators' combobox chevron (src/ui/form.tsx): 14×14, square ends, bevelled; a 1 px stroke, as the canvas icons */
+      summary svg { width: 14px; height: 14px; fill: none; stroke: currentColor; stroke-width: 1; stroke-linecap: square; stroke-linejoin: bevel; }
       details[open] > summary svg { transform: rotate(180deg); }
       summary::-webkit-details-marker { display: none; }
       summary:hover { color: #000; }
