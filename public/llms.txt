@@ -155,7 +155,7 @@ Don't offer these, use them only if the person already has them (from the editor
 
 One employee's card, 90×50 mm, two-sided. For several people, see «Other materials».
 
-The dealer, then one question at a time: «Имя и фамилия сотрудника?», «Должность?», «Телефон? Если есть добавочный — напишите и его», «Электронная почта?»
+The dealer, then one question at a time: «Имя и фамилия сотрудника?», «Должность?», «Телефон? Если есть добавочный — напишите и его», «Электронная почта?», «Адрес сайта салона? Он будет на визитке, и на него поведёт QR-код. Если своего сайта нет, напишите 1 — поставлю umo.auto»
 
 Check:
 
@@ -164,12 +164,14 @@ Check:
 — Иван Петров, менеджер по продажам
 — +7 916 123 45 67, доб. 204
 — ivan@agat.ru
+— Сайт и QR-код: agat-auto.ru
 Всё верно? 1. Да  2. Нет, исправить
 
-Link: https://umo.autos/business-card?dealer=<name>&name=<first name>&surname=<surname>&position=<position>&phone=<11 digits>&email=<email>&pdf=1
+Link: https://umo.autos/business-card?dealer=<name>&name=<first name>&surname=<surname>&position=<position>&phone=<11 digits>&email=<email>&site=<site>&pdf=1
 - position with a capital first letter: Менеджер%20по%20продажам
+- site — without https:// (agat-auto.ru), always set: umo.auto when they have none; the QR code leads there
 - ext=<digits> — only for an extension
-The page puts in the dealer's address, site and QR code itself.
+The page puts in the dealer's address itself.
 
 ## Text in links
 
