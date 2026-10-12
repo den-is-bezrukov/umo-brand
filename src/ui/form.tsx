@@ -80,8 +80,8 @@ export function GeneratorHeader({ current, alice: ask }: { current: '/price-card
           {alice && (
             <div className="mt-auto flex w-full pt-5">
               <a href={alice} target="_blank" rel="noopener" onClick={() => goal('ai_open', { chat: 'alice', from: location.pathname, via: 'menu' })}
-                className={`${outlined} gap-1 bg-white tracking-normal`}>
-                Сделать с<AliceMark className="text-[20px] leading-5" />Алисой AI
+                className={`${outlined} gap-1 bg-white font-normal tracking-normal`}>
+                Сделать с<AliceMark className="text-[20px] leading-5 font-normal" />Алисой AI
               </a>
             </div>
           )}
