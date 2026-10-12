@@ -779,7 +779,7 @@ function useAlice(alice?: AliceAsk) {
             : <>Помогу сделать <span className="whitespace-nowrap">{makes}</span>{'\u00a0— ответьте на\u00a0пару вопросов'}</>}</span>
         </a>
         <button type="button" onClick={() => { aliceFolded = true; fold(true); setPeek(false) }} aria-label="Свернуть" className="absolute top-[14px] right-3 flex size-8 cursor-pointer items-center justify-center text-[#808080] outline-none hover:text-black">
-          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden><path d="M2 4l4 4 4-4" /></svg>
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden><path d="M2.5 2.5l7 7M9.5 2.5l-7 7" /></svg>
         </button>
       </div>
     ),
