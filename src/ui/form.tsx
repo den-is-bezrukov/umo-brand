@@ -733,8 +733,9 @@ export type AliceAsk = { ask: string; started: boolean }
 let aliceFolded = false
 
 /**
- * Trial: Alice by the download. On a form not yet touched, a bubble in her voice over it, offering to make it with her;
- * once anything is filled in (or by its ×) it folds into a square button with her mark in the download's row, which
+ * Trial: Alice, floating in the canvas's foot-right corner on wide screens, by the download on phones. On a form not
+ * yet touched, a bubble in her voice, offering to make it with her; once anything is filled in (or by its ×) it folds
+ * into a square button with her mark (in the download's row on phones), which
  * opens her with what's filled in (`ask`). Generators that don't say whether they're touched count the first typing
  */
 function useAlice(alice?: AliceAsk) {
@@ -753,14 +754,15 @@ function useAlice(alice?: AliceAsk) {
   if (!folded && !(alice ? alice.started : typed)) return {
     icon: null,
     bubble: (
-      // A message's bubble: round but for the corner it comes from
-      <div className="alice-pop flex items-stretch rounded-[12px] rounded-bl-[4px] border border-black/10 bg-white text-[14px] leading-5 text-black hover:border-black/40">
+      // A message's bubble: round but for the corner it comes from (the canvas's corner on wide screens, the download's
+      // on phones), her name over what she says
+      <div className="alice-pop flex w-[320px] max-w-full items-stretch rounded-[12px] rounded-br-[4px] border border-black/10 bg-white text-[14px] leading-5 text-black shadow-[0_4px_16px_rgba(0,0,0,0.08)] hover:border-black/40 in-[[data-sheet]]:w-auto in-[[data-sheet]]:rounded-br-[12px] in-[[data-sheet]]:rounded-bl-[4px] in-[[data-sheet]]:shadow-none">
         <a href={href} target="_blank" rel="noopener" onClick={() => open('bubble')}
-          className="flex min-w-0 flex-1 cursor-pointer items-start gap-2 py-[10px] in-[[data-sheet]]:py-[14px]! pl-3 outline-none focus-visible:ring-2 focus-visible:ring-black/30">
-          <AliceMark className="text-[20px] leading-5 font-normal" />
+          className="flex min-w-0 flex-1 cursor-pointer flex-col gap-1 py-3 in-[[data-sheet]]:py-[14px]! pl-3 outline-none focus-visible:ring-2 focus-visible:ring-black/30">
+          <span className="flex items-center gap-1 text-[#808080]"><AliceMark className="text-[20px] leading-5 font-normal" />Алиса AI</span>
           <span>{priceCard ? <>Помогу сделать <span className="whitespace-nowrap">прайс-карту</span>{'\u00a0— ответьте на\u00a0пару вопросов'}</> : 'Помогу разобраться\u00a0— спросите, если что-то непонятно'}</span>
         </a>
-        <button type="button" onClick={() => { aliceFolded = true; fold(true) }} aria-label="Свернуть" className="flex w-10 shrink-0 cursor-pointer items-start justify-center pt-[14px] in-[[data-sheet]]:pt-[18px] text-[#808080] outline-none hover:text-black">
+        <button type="button" onClick={() => { aliceFolded = true; fold(true) }} aria-label="Свернуть" className="flex w-10 shrink-0 cursor-pointer items-start justify-center pt-[16px] in-[[data-sheet]]:pt-[18px] text-[#808080] outline-none hover:text-black">
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden><path d="M2 2l8 8M10 2l-8 8" /></svg>
         </button>
       </div>
@@ -770,7 +772,7 @@ function useAlice(alice?: AliceAsk) {
     bubble: null,
     icon: (
       <a href={href} target="_blank" rel="noopener" onClick={() => open('icon')} title={priceCard ? 'Продолжить с Алисой AI' : 'Спросить Алису AI'}
-        className="alice-pop flex size-10 in-[[data-sheet]]:size-12 shrink-0 items-center justify-center rounded-[8px] border border-black/10 bg-white outline-none hover:border-black/40 focus-visible:ring-2 focus-visible:ring-black/30">
+        className="alice-pop flex size-12 shrink-0 items-center justify-center rounded-[8px] border border-black/10 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.08)] in-[[data-sheet]]:shadow-none outline-none hover:border-black/40 focus-visible:ring-2 focus-visible:ring-black/30">
         <AliceMark className="text-[20px] leading-5 font-normal" />
       </a>
     ),
@@ -850,9 +852,9 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   // has room to say the link is copied
   return (
     <div className="sticky bottom-0 z-10 mt-8 flex flex-col gap-2 bg-white p-6 pt-0 tracking-normal">
-      {alice.bubble}
       {shareOn && <div className="flex">{links}</div>}
-      <div className="flex gap-2">{alice.icon}{main}</div>
+      <div className="flex">{main}</div>
+      {(alice.bubble || alice.icon) && createPortal(<div className="fixed right-6 bottom-6 z-20 flex justify-end">{alice.bubble}{alice.icon}</div>, document.body)}
     </div>
   )
 }
