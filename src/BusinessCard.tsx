@@ -1,3 +1,4 @@
+import { flushSync } from 'react-dom'
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadBar, unfilled, stepsLeft, Segments, SegBtn, rowAction, isValidUrl, ALERT_LABEL, Checkbox } from '@/ui/form'
 import { useStaff, plain, pickTable, TableSource, UploadArea, AddTile, fullNameField, ItemFrame, Removed, BESIDE, ITEM_EDGE } from '@/ui/staff'
@@ -163,8 +164,9 @@ export default function BusinessCard() {
   /** The dealership's first field at fault takes the focus */
   const toDealer = () => {
     const at = dealerMissing[0] ?? [...dealerWrong][0] ?? 'dealer'
-    if (at !== 'dealer') setDealerOpen(true)
-    setTimeout(() => dealerForm.current?.querySelector<HTMLElement>(`[data-field="${at}"] textarea, [data-field="${at}"] input`)?.focus())
+    // Opened at once and focused in the tap itself, as iOS raises the keyboard only then
+    if (at !== 'dealer') flushSync(() => setDealerOpen(true))
+    dealerForm.current?.querySelector<HTMLElement>(`[data-field="${at}"] textarea, [data-field="${at}"] input`)?.focus()
   }
 
   const pickDealer = (v: string) => setDealer(d => ({

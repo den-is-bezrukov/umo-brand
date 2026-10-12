@@ -1,4 +1,5 @@
 import { useContext, useEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { InSlide } from '@/ui/phone'
 import { outlined } from '@/ui/form'
 import { splitFullName } from '@/nametag/table'
@@ -148,25 +149,21 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
   }, [selected])
   const figureRef = (key: number) => (el: HTMLElement | null) => { if (el) figures.current.set(key, el); else figures.current.delete(key) }
 
-  // Going to an item with an error: select it for editing and bring it into view
-  const [reveal, setReveal] = useState(0)
-  useEffect(() => {
-    if (!reveal || selected === undefined) return
-    // and its first field at fault takes the focus, once the errors show. On phones the form is above the items on the
-    // same scroll, so the page goes to the field instead
-    const wide = matchMedia('(min-width: 768px)').matches
-    if (wide) figures.current.get(selected)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
-    setTimeout(() => {
-      const field = form.current?.querySelector<HTMLElement>('[aria-invalid="true"]')
-      field?.focus({ preventScroll: true })
-      if (!wide) field?.scrollIntoView({ block: 'center', behavior: 'smooth' })
-    })
-  }, [reveal]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Going to an item with an error: select it for editing and bring it into view, its first field at fault taking the
+  // focus once the errors show. Rendered at once (flushSync) and focused in the tap itself: iOS raises the keyboard
+  // only for a focus within the gesture (it came a tick later, and the field only lit up). On phones the form is above
+  // the items on the same scroll, so the page goes to the field instead
   const goTo = (key: number) => {
-    setSelected(key)
-    setFlagged(key)
-    setMode('manual')
-    setReveal(n => n + 1)
+    flushSync(() => {
+      setSelected(key)
+      setFlagged(key)
+      setMode('manual')
+    })
+    const wide = matchMedia('(min-width: 768px)').matches
+    if (wide) figures.current.get(key)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    const field = form.current?.querySelector<HTMLElement>('[aria-invalid="true"]')
+    field?.focus({ preventScroll: true })
+    if (!wide) field?.scrollIntoView({ block: 'center', behavior: 'smooth' })
   }
   /** The next item of `keys` after the selected one, round the list */
   const nextTarget = (keys: number[]) => {
