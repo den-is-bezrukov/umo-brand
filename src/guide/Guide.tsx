@@ -59,7 +59,7 @@ const MEDIA_LIST: { id: string; to: string; title: string; row: string; w: numbe
   },
   {
     // The 90×60 tag as the constructor sets it, as wide as the plate on the 444×333 grey
-    id: 'price-tag', to: '/price-tag', title: 'Ценник', row: 'Сделать ценники', w: 444, h: 333,
+    id: 'price-tag', to: '/price-tag', title: 'Ценник', row: 'Проставить цены', w: 444, h: 333,
     picture: (
       <div className="flex aspect-4/3 items-center justify-center bg-[#f5f5f5]">
         <svg viewBox={`0 0 ${TAG.w} ${TAG.h}`} className="block h-auto w-[58.8%]" role="img" aria-label="Ценник UMO">
@@ -78,7 +78,7 @@ const MEDIA_LIST: { id: string; to: string; title: string; row: string; w: numbe
   },
   {
     // The 480×680 sign as tall as the price card on the 444×333 grey
-    id: 'hours-sign', to: '/hours-sign', title: 'Режимник', row: 'Сделать режимник', w: 444, h: 333,
+    id: 'hours-sign', to: '/hours-sign', title: 'Режимник', row: 'Указать часы работы', w: 444, h: 333,
     picture: (
       <div className="flex aspect-4/3 items-center justify-center bg-[#f5f5f5]">
         <svg viewBox={`0 0 ${SIGN.w} ${SIGN.h}`} className="block h-auto w-[47.3%]" role="img" aria-label="Режимник UMO">
