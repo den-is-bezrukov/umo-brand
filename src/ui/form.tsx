@@ -788,8 +788,8 @@ function useAlice(alice?: AliceAsk) {
     ),
     icon: (
       <a href={href} target="_blank" rel="noopener" onClick={() => open('icon')} title={priceCard ? 'Продолжить с Алисой AI' : 'Спросить Алису AI'}
-        className="alice-pop flex size-10 shrink-0 items-center justify-center rounded-full bg-white shadow-[0_4px_15px_rgba(0,0,0,0.1)] outline-none hover:bg-[#f5f5f5] focus-visible:ring-2 focus-visible:ring-black/30">
-        {/* White on the combobox list's shadow lowered less (0 4 15, 10%), her outline mark in her purple, as in the bubble; 26 px, the mark 23 px, 58% of the
+        className="alice-pop flex size-10 shrink-0 items-center justify-center rounded-full bg-white shadow-[0_4px_12px_rgba(0,0,0,0.1)] outline-none hover:bg-[#f5f5f5] focus-visible:ring-2 focus-visible:ring-black/30">
+        {/* White on the combobox list's shadow lowered less, tighter (0 4 12, 10%), her outline mark in her purple, as in the bubble; 26 px, the mark 23 px, 58% of the
             circle, sized by the font size, not by its axes: Safari clips a glyph moved by them; half a pixel up by CSS */}
         <AliceMark className="relative -top-[0.5px] text-[26px] leading-[26px]" />
       </a>
