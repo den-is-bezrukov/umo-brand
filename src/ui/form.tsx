@@ -75,11 +75,12 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
           {GENERATORS.map(g => g.path === current
             ? <button key={g.path} type="button" aria-current="page" onClick={() => setMenu(false)} className={`${name} cursor-pointer text-left`}>{g.title}</button>
             : <Link key={g.path} to={g.path} className={`${name} text-[#bfbfbf] outline-none hover:text-[#808080] focus-visible:text-[#808080] active:text-[#808080]`}>{g.title}</Link>)}
-          {/* Trial: Alice, another way to make them rather than one more of them, a group of its own 40 px under the list */}
+          {/* Trial: Alice, another way to make them rather than one more of them: the download's offer, a group of its own
+              40 px under the list */}
           {alice && (
             <a href={alice} target="_blank" rel="noopener" onClick={() => goal('ai_open', { chat: 'alice', from: location.pathname, via: 'menu' })}
-              className={`${name} mt-5 flex items-center gap-1 text-[#bfbfbf] outline-none hover:text-[#808080] focus-visible:text-[#808080] active:text-[#808080]`}>
-              Сделать с<AliceMark className="text-[30px] leading-6" />Алисой AI
+              className={`${outlined} mt-5 w-full flex-none gap-1 bg-white tracking-normal`}>
+              Сделать с<AliceMark className="text-[20px] leading-5" />Алисой AI
             </a>
           )}
         </nav>
