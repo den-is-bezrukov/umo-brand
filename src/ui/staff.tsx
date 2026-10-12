@@ -311,7 +311,7 @@ export function TableSource<P extends object>({ staff, template }: { staff: Staf
       {s.file && (
         <label
           {...s.dropTarget}
-          className={`flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-1 rounded-[8px] border border-dashed p-4 text-center text-[14px] leading-5
+          className={`flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-1 rounded-[8px] border border-dashed p-4 text-center text-[16px] leading-5
             ${s.dragging ? 'border-black bg-[#f5f5f5]' : s.tableError ? 'border-[#e30]' : 'border-black/20 hover:border-black/40'}`}
         >
           <FileInput staff={s} />

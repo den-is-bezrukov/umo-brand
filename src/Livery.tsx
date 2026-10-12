@@ -314,7 +314,7 @@ export default function Livery() {
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
 
       {/* Sidebar per Figma 4900:4588, as the price card's */}
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[361px] md:overflow-y-auto md:border-r md:border-black/10">
         {sidebar}
         {download}
       </aside>

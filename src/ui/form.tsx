@@ -86,7 +86,7 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
  * so they don't shift between the form (which tracks its type tighter) and the menu over it; 12 px after the icon (8 + 4: at 8 they stuck to it) */
 function PhoneCrumbs() {
   return (
-    <nav className="ml-1 flex min-w-0 flex-1 items-center gap-2 text-[14px] font-medium leading-4 tracking-normal [font-feature-settings:'case'_1]">
+    <nav className="ml-1 flex min-w-0 flex-1 items-center gap-2 text-[16px] font-medium leading-4 tracking-normal [font-feature-settings:'case'_1]">
       <Link to="/" className={crumb}>Бренд UMO</Link>
       <span aria-hidden>·</span>
       <Link to="/#materials" className={crumb}>Носители</Link>
@@ -267,7 +267,7 @@ export const ALERT_LABEL = 'group-has-[[aria-invalid=true]]/field:text-[#e30]'
 export function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="group/field flex flex-col gap-2">
-      <p className={`text-[14px] leading-4 text-[#808080] whitespace-nowrap ${ALERT_LABEL}`}>{label}</p>
+      <p className={`text-[16px] leading-4 text-[#808080] whitespace-nowrap ${ALERT_LABEL}`}>{label}</p>
       {children}
     </div>
   )
@@ -555,7 +555,7 @@ export function UrlField({ value, onChange }: { value: string; onChange: (v: str
 export function Checkbox({ checked, onChange, children, className = '' }: { checked: boolean; onChange: (v: boolean) => void; children: React.ReactNode; className?: string }) {
   return (
     // In the phone's sheet the row takes a finger's 48 px, 16 px over and under it given back by margins, so it looks as before
-    <label className={`flex cursor-pointer items-center gap-2 text-[14px] leading-4 text-black -my-4 py-4 ${className}`}>
+    <label className={`flex cursor-pointer items-center gap-2 text-[16px] leading-4 text-black -my-4 py-4 ${className}`}>
       <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="peer sr-only" />
       <span aria-hidden className="flex size-4 shrink-0 items-center justify-center rounded-[2px] bg-[#f5f5f5] peer-focus-visible:ring-2 peer-focus-visible:ring-black/30">
         {checked && <Tick />}
@@ -579,7 +579,7 @@ export function OptionalField({ label, on, onChange, extra, children }: { label:
 }
 
 // Grey #808080, black on hover, the icon with it (Figma 5017:11279)
-export const rowAction = 'flex shrink-0 cursor-pointer items-center gap-2 text-[14px] leading-4 text-[#808080] outline-none transition-colors hover:text-black focus-visible:ring-2 focus-visible:ring-black/30'
+export const rowAction = 'flex shrink-0 cursor-pointer items-center gap-2 text-[16px] leading-4 text-[#808080] outline-none transition-colors hover:text-black focus-visible:ring-2 focus-visible:ring-black/30'
 
 /** Corners for the size switch, on the 16 grid with the ticks' 2 px stroke and square ends: at the outer corners to grow, turned in to shrink */
 function SizeIcon({ grow }: { grow: boolean }) {

@@ -265,7 +265,7 @@ export default function BusinessCard() {
             <div ref={dealerForm} className="flex flex-col gap-4">
               <div data-field="dealer" className="group/field flex flex-col gap-2">
                 <div className="flex items-center justify-between gap-2">
-                  <p className={`text-[14px] leading-4 text-[#808080] ${ALERT_LABEL}`}>Дилер</p>
+                  <p className={`text-[16px] leading-4 text-[#808080] ${ALERT_LABEL}`}>Дилер</p>
                   <button type="button" onClick={() => setDealerOpen(o => !o)} aria-expanded={dealerOpen} className={rowAction}>
                     {dealerOpen ? 'Свернуть' : 'Редактировать'}
                   </button>
@@ -398,7 +398,7 @@ export default function BusinessCard() {
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
 
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[361px] md:overflow-y-auto md:border-r md:border-black/10">
         {sidebar}
         {download}
       </aside>

@@ -339,8 +339,8 @@ export default function App() {
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
 
-      {/* ── Sidebar: 320px plus the 1px outside stroke from Figma (4844:6865), which shows only on the right ── */}
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+      {/* ── Sidebar: 360px (320 in Figma 4844:6865, widened with the 16 px type) plus the 1px outside stroke, which shows only on the right ── */}
+      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[361px] md:overflow-y-auto md:border-r md:border-black/10">
         {sidebar}
         {download}
       </aside>
