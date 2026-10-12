@@ -733,9 +733,9 @@ export function AliceOffer({ ask, started }: { ask: string; started: boolean }) 
   const href = useAliceHref(!closed, ask)
   if (closed || !href) return null
   return (
-    <div className="flex items-center rounded-[8px] border border-black/10 bg-white text-[14px] leading-5 text-black hover:border-black/40">
+    <div className="flex items-center rounded-[8px] border border-black/10 bg-white text-[14px] leading-5 text-black shadow-[0_4px_16px_rgba(0,0,0,0.08)] hover:border-black/40">
       <a href={href} target="_blank" rel="noopener" onClick={() => goal('ai_open', { chat: 'alice', from: location.pathname })}
-        className="flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1 py-[9px] pl-10 font-medium outline-none focus-visible:ring-2 focus-visible:ring-black/30">
+        className="flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1 py-[9px] pl-4 font-medium outline-none focus-visible:ring-2 focus-visible:ring-black/30">
         {started ? 'Продолжить' : 'Сделать'} с<AliceMark className="text-[20px] leading-5" />Алисой AI
       </a>
       <button type="button" onClick={() => setClosed(true)} aria-label="Закрыть" className="flex w-10 shrink-0 cursor-pointer items-center justify-center self-stretch text-[#808080] outline-none hover:text-black">
@@ -756,7 +756,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   onNote?: () => void
   /** «Поделиться», right over the download: off with it, the line over them speaking for both */
   links?: React.ReactNode
-  /** Right over the download, 8 px off as «Поделиться» (trial): `AliceOffer`, by default saying which editor this is */
+  /** Trial: `AliceOffer`, floating at the canvas's foot-right corner, by default saying which editor this is */
   offer?: React.ReactNode
 }) {
   // What a button under the line has just done, said there for two seconds
@@ -803,12 +803,9 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   // Phones: «Поделиться» right of the download, half each, once the download is on (tried: an icon left of the
   // download, «Поделиться» left of it, as wide as its word on the right)
   if (foot) return (
-    <div className="flex flex-col gap-2">
-      {alice}
-      <div className="grid auto-cols-fr grid-flow-col gap-2">
-        {main}
-        {shareOn && <div className="flex min-w-0">{links}</div>}
-      </div>
+    <div className="grid auto-cols-fr grid-flow-col gap-2">
+      {main}
+      {shareOn && <div className="flex min-w-0">{links}</div>}
     </div>
   )
   // Wide screens: 40 px off the form, sticking to the sidebar's foot; «Поделиться» over the download, as wide, so it
@@ -816,8 +813,9 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   return (
     <div className="sticky bottom-0 z-10 mt-8 flex flex-col gap-2 bg-white p-6 pt-0 tracking-normal">
       {shareOn && <div className="flex">{links}</div>}
-      {alice}
       <div className="flex">{main}</div>
+      {/* Trial: floating at the canvas's foot-right corner, wide screens only (a phone's canvas is swiped) */}
+      {createPortal(<div className="fixed right-6 bottom-6 z-20 max-md:hidden">{alice}</div>, document.body)}
     </div>
   )
 }
