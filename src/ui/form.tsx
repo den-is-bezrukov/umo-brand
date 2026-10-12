@@ -760,7 +760,7 @@ function useAlice(alice?: AliceAsk) {
     bubble: (
       // A message's bubble, 24 px round but for the corner it comes from, with no edge, its shadow over the canvas (the canvas's corner on wide screens, the download's
       // on phones), her name over what she says
-      <div className="alice-pop flex w-[320px] max-w-full items-stretch rounded-[24px] rounded-br-[4px] bg-white text-[14px] leading-5 text-black shadow-[0_4px_16px_rgba(0,0,0,0.08)] in-[[data-sheet]]:w-auto in-[[data-sheet]]:rounded-br-[24px] in-[[data-sheet]]:rounded-bl-[4px]">
+      <div className="alice-pop flex w-[320px] max-w-full items-stretch rounded-[24px] rounded-br-[4px] bg-white text-[14px] leading-5 text-black shadow-[0_10px_30px_rgba(0,0,0,0.1)] in-[[data-sheet]]:w-auto in-[[data-sheet]]:rounded-br-[24px] in-[[data-sheet]]:rounded-bl-[4px]">
         <a href={href} target="_blank" rel="noopener" onClick={() => open('bubble')}
           className="flex min-w-0 flex-1 cursor-pointer flex-col gap-1 py-4 pl-5 outline-none focus-visible:ring-2 focus-visible:ring-black/30">
           <span className="flex items-center gap-1 font-medium"><AliceMark className="text-[20px] leading-5 font-normal" />Алиса AI</span>
@@ -778,7 +778,7 @@ function useAlice(alice?: AliceAsk) {
     ...none,
     icon: (
       <a href={href} target="_blank" rel="noopener" onClick={() => open('icon')} title={priceCard ? 'Продолжить с Алисой AI' : 'Спросить Алису AI'}
-        className="alice-pop flex size-12 shrink-0 items-center justify-center rounded-full bg-white shadow-[0_4px_16px_rgba(0,0,0,0.08)] outline-none transition-shadow hover:shadow-[0_4px_16px_rgba(0,0,0,0.16)] focus-visible:ring-2 focus-visible:ring-black/30">
+        className="alice-pop flex size-12 shrink-0 items-center justify-center rounded-full bg-white shadow-[0_10px_30px_rgba(0,0,0,0.1)] outline-none focus-visible:ring-2 focus-visible:ring-black/30">
         <AliceMark className="text-[20px] leading-5 font-normal" />
       </a>
     ),
