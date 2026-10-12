@@ -9,6 +9,8 @@ import { writePdfData } from '@/ui/pdfDataWrite'
 // Loaded only when the PDF is downloaded, so the page doesn't carry pdf-lib until then.
 
 const PT = 72 / 25.4
+/** The file's name, also its title, which Chrome shows on the tab of a PDF opened from a link */
+export const SIGN_FILE = 'UMO_hours-sign.pdf'
 /** The source's colour, C60 M40 Y40 K100, as the livery's and the name tag's */
 const INK: [number, number, number, number] = [0.6, 0.4, 0.4, 1]
 
@@ -18,7 +20,7 @@ const INK: [number, number, number, number] = [0.6, 0.4, 0.4, 1]
  */
 export async function signPdf(sign: Sign, data: unknown): Promise<Blob> {
   const doc = await PDFDocument.create()
-  doc.setTitle('UMO hours sign 480×680')
+  doc.setTitle(SIGN_FILE)
   writePdfData(doc, SIGN_KEY, data)
   const page = doc.addPage([SIGN.w * PT, SIGN.h * PT])
   const H = page.getHeight()

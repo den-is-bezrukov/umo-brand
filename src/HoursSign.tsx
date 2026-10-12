@@ -4,7 +4,7 @@ import { goal } from '@/ui/metrika'
 import { Field, TextInput, ComboField, GeneratorHeader, LinkButtons, DownloadBar, stepsLeft, flash } from '@/ui/form'
 import { isPdf, readPdfData } from '@/ui/pdfData'
 import { CaptionReset } from '@/ui/staff'
-import { linkParams, useLinkState } from '@/ui/share'
+import { linkParams, useLinkState, saveAndOpenPdf } from '@/ui/share'
 import { loadFont, toD } from '@/livery/geometry'
 import { maskPhone, siteFor } from '@/card/card'
 import { SIGN, SIGN_KEY, LOGO, buildSign, oneLine, timeText, type SignField, type Input } from '@/hours/sign'
@@ -139,15 +139,17 @@ const ALERT = '#e30'
 
 export default function HoursSign() {
   const [link] = useState(linkParams)
-  const [from, setFrom] = useState(() => maskTime(link.get('from') ?? ''))
-  const [to, setTo] = useState(() => maskTime(link.get('to') ?? ''))
+  // A listed dealer's umo.auto hours stand in for the times a link leaves out, as its address does
+  const [from, setFrom] = useState(() => maskTime(link.get('from') ?? hoursOf(link.get('name') ?? '')?.from ?? ''))
+  const [to, setTo] = useState(() => maskTime(link.get('to') ?? hoursOf(link.get('name') ?? '')?.to ?? ''))
   // The line under the hours is fixed, «Работаем без выходных», its field commented out below: nothing a dealer needs to
   // change there, and nothing wider fits the sign's look. `line` and `off=line` in a link are ignored while it's out
   // const [line, setLine] = useState(link.get('off') === 'line' ? '' : link.get('line') ?? DEFAULT_HOURS_LINE)
   const line = DEFAULT_HOURS_LINE
-  const [dealer, setDealer] = useState(link.get('name') ?? '')
+  // A name with «UMO» (from a chat agent) loses it, as the sign puts it before the name; a phone takes the field's mask
+  const [dealer, setDealer] = useState(() => withoutUmo(link.get('name') ?? ''))
   const [address, setAddress] = useState(() => link.get('address') ?? addressOf(link.get('name') ?? '') ?? '')
-  const [phone, setPhone] = useState(link.get('phone') ?? '')
+  const [phone, setPhone] = useState(() => maskPhone(link.get('phone') ?? '').text)
   /** The site follows the dealer's name (`siteFor`) until it's edited: null */
   const [ownSite, setSite] = useState<string | null>(link.get('site'))
   const site = ownSite ?? siteFor(dealer)
@@ -209,22 +211,41 @@ export default function HoursSign() {
     setFrom(''); setTo(''); setDealer(''); setAddress(''); setPhone(''); setSite(null)
   }
 
+  const pdfOf = async (s: NonNullable<typeof sign>) => {
+    const { signPdf, SIGN_FILE } = await import('@/hours/pdf')
+    return { blob: await signPdf(s, { from, to, dealer, address, phone, site: ownSite }), name: SIGN_FILE }
+  }
+  const downloadGoal = (extra?: Record<string, unknown>) =>
+    goal('download_hours_sign', { from: oneLine(from), to: oneLine(to), dealer: NAMES.includes(oneLine(dealer)), ...extra })
+
   const handleExport = async () => {
     if (!sign || !ok) return
     setExporting(true)
     try {
-      const { signPdf } = await import('@/hours/pdf')
-      const blob = await signPdf(sign, { from, to, dealer, address, phone, site: ownSite })
+      const { blob, name } = await pdfOf(sign)
       const a = document.createElement('a')
       a.href = URL.createObjectURL(blob)
-      a.download = 'UMO_hours-sign.pdf'
+      a.download = name
       a.click()
-      goal('download_hours_sign', { from: oneLine(from), to: oneLine(to), dealer: NAMES.includes(oneLine(dealer)) })
+      downloadGoal()
       URL.revokeObjectURL(a.href)
     } finally {
       setExporting(false)
     }
   }
+
+  // `pdf` in the link (from a chat agent, public/llms.txt) opens the sign's PDF itself, with no editor, once the font
+  // is in; a sign at fault opens the editor instead, showing what's wrong
+  const [pdfOnly, setPdfOnly] = useState(() => link.has('pdf'))
+  const pdfStarted = useRef(false)
+  useEffect(() => {
+    if (!pdfOnly || !sign || pdfStarted.current) return
+    pdfStarted.current = true
+    if (!ok) { setPdfOnly(false); return }
+    pdfOf(sign)
+      .then(({ blob, name }) => { downloadGoal({ via: 'link' }); saveAndOpenPdf(blob, name) })
+      .catch(() => setPdfOnly(false))
+  }, [sign]) // eslint-disable-line react-hooks/exhaustive-deps
 
   // Each time pushes the other along when it's stepped or typed past it, half an hour apart: 10:30—11:00 with the
   // closing stepped down is 10:00—10:30, with the opening stepped up 11:00—11:30. Only a time filled in is pushed
@@ -342,6 +363,7 @@ export default function HoursSign() {
         />
   )
 
+  if (pdfOnly) return null
   // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
   if (onPhone) return <MobileEditor slides={[{ key: 'sign', label: 'Табличка', ratio: SIGN.h / SIGN.w, node: preview, reset: blank ? undefined : { onClick: reset, label: 'Вернуть табличку по умолчанию' } }]} sidebar={sidebar} download={download} />
 
