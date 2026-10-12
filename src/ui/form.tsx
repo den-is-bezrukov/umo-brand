@@ -236,25 +236,28 @@ function PhoneRing({ current }: { current: string }) {
       })
       return best
     }
+    // The moment the line is still: `scrollend` where the browser has it, the instant the run and the snap are over;
+    // elsewhere 150 ms with no scrolling (0 would open a name the line only passes by)
+    const ends = 'onscrollend' in window
     let touching = false
     let timer = 0
-    const settle = () => {
-      clearTimeout(timer)
-      timer = window.setTimeout(() => {
-        if (touching) return
-        const path = nearest()
-        if (path !== current) navigate(path)
-      }, 150)
+    const pick = () => {
+      if (touching) return
+      const path = nearest()
+      if (path !== current) navigate(path)
     }
+    const settle = () => { clearTimeout(timer); if (!ends) timer = window.setTimeout(pick, 150) }
     const scroll = () => { setLit(nearest()); settle() }
     const down = () => { touching = true; clearTimeout(timer) }
     const up = () => { touching = false; settle() }
+    if (ends) n.addEventListener('scrollend', pick)
     n.addEventListener('scroll', scroll, { passive: true })
     n.addEventListener('touchstart', down, { passive: true })
     n.addEventListener('touchend', up)
     n.addEventListener('touchcancel', up)
     return () => {
       clearTimeout(timer)
+      n.removeEventListener('scrollend', pick)
       n.removeEventListener('scroll', scroll)
       n.removeEventListener('touchstart', down)
       n.removeEventListener('touchend', up)
