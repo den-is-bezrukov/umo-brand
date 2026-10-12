@@ -249,7 +249,7 @@ export function SegBtn({ active, onClick, disabled, title, children }: { active:
         focus-visible:ring-2 focus-visible:ring-black/30 disabled:cursor-not-allowed disabled:text-[#999]
         ${active ? 'border-black/10 bg-white text-black' : 'border-transparent text-[#808080]'}`}
     >
-      <span className="font-medium text-[14px] leading-5 whitespace-nowrap">{children}</span>
+      <span className="font-medium text-[16px] leading-5 whitespace-nowrap">{children}</span>
     </button>
   )
 }
@@ -290,7 +290,7 @@ export function TextInput({ value, onChange, onBlur, onPaste, placeholder, inval
       aria-invalid={invalid || undefined}
       inputMode={inputMode ?? (numeric ? 'numeric' : undefined)}
       pattern={numeric ? '[0-9 ]*' : undefined}
-      className={`h-12 w-full min-w-0 rounded-[8px] bg-[#f5f5f5] px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]
+      className={`h-12 w-full min-w-0 rounded-[8px] bg-[#f5f5f5] px-3 text-[16px] leading-5 text-black outline-none placeholder:text-[#999]
         focus:ring-1 focus:ring-inset focus:ring-black/40 ${className}`}
     />
   )
@@ -310,7 +310,7 @@ function useAutoHeight(value: string) {
   return ref
 }
 
-const areaClass = 'block min-h-12 w-full min-w-0 resize-none overflow-hidden rounded-[8px] bg-[#f5f5f5] py-[14px] px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]'
+const areaClass = 'block min-h-12 w-full min-w-0 resize-none overflow-hidden rounded-[8px] bg-[#f5f5f5] py-[14px] px-3 text-[16px] leading-5 text-black outline-none placeholder:text-[#999]'
 
 /** Multi-line text where Enter is a line break the layout keeps */
 export function TextArea({ value, onChange, placeholder, invalid, className = '', ...rest }: { value: string; onChange: (v: string) => void; placeholder?: string; invalid?: boolean; className?: string } & Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'value' | 'onChange'>) {
@@ -446,7 +446,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
         onMouseDown={e => e.preventDefault()}
         // White, 2 px inside its edge, a soft shadow and no line; rows 8 px round, the pointed one grey, the picked one
         // medium with a tick (Figma 5015:11234)
-        className="max-h-[288px] overflow-y-auto rounded-[8px] bg-white p-[2px] text-[14px] leading-5 text-black shadow-[0_10px_15px_rgba(0,0,0,0.1)]"
+        className="max-h-[288px] overflow-y-auto rounded-[8px] bg-white p-[2px] text-[16px] leading-5 text-black shadow-[0_10px_15px_rgba(0,0,0,0.1)]"
         // The popover's own styles centre it on the screen (inset 0, margin auto): undone here, then put under the field
         style={{
           position: 'fixed',
@@ -483,10 +483,10 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
               onKeyDown={e => { if ((e.key === 'Enter' && singleLine) || e.key === 'Escape') { e.preventDefault(); closeScreen() } }}
               className="flex-1"
             />
-            <button type="button" onClick={closeScreen} className="h-12 shrink-0 cursor-pointer text-[14px] leading-5 font-medium">Готово</button>
+            <button type="button" onClick={closeScreen} className="h-12 shrink-0 cursor-pointer text-[16px] leading-5 font-medium">Готово</button>
           </div>
           {/* Rows across the screen, as a native list, the picked one medium with a tick */}
-          <div role="listbox" aria-label={label} className="min-h-0 flex-1 overflow-y-auto px-3 pb-6 text-[14px] leading-5">
+          <div role="listbox" aria-label={label} className="min-h-0 flex-1 overflow-y-auto px-3 pb-6 text-[16px] leading-5">
             {shown.map(t => (
               <div
                 key={t}
@@ -613,7 +613,7 @@ export function SizeSwitch({ large, onChange, label }: { large: boolean; onChang
 }
 
 // Edged at 10%, at 40% on hover (Figma 5015:11171)
-export const outlined = 'flex min-w-16 flex-1 items-center justify-center rounded-[8px] border border-black/10 px-3 py-[13px] text-[14px] font-medium leading-5 text-black cursor-pointer outline-none hover:border-black/40 focus-visible:ring-2 focus-visible:ring-black/30 disabled:cursor-default disabled:text-[#999] disabled:hover:border-black/10'
+export const outlined = 'flex min-w-16 flex-1 items-center justify-center rounded-[8px] border border-black/10 px-3 py-[13px] text-[16px] font-medium leading-5 text-black cursor-pointer outline-none hover:border-black/40 focus-visible:ring-2 focus-visible:ring-black/30 disabled:cursor-default disabled:text-[#999] disabled:hover:border-black/10'
 
 /** A word the download bar's line says for a moment («В файле нет режимника») */
 const flashes = new Set<(text: string) => void>()
@@ -723,7 +723,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
       // after the sheet opened, and the field only lit up)
       onClick={leads ? () => { foot?.(); onNote!() } : onClick}
       disabled={busy || (disabled && !leads)}
-      className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[14px] text-[14px] leading-5 outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 hover:enabled:bg-[#333] disabled:cursor-default
+      className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[14px] text-[16px] leading-5 outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 hover:enabled:bg-[#333] disabled:cursor-default
         ${lead || said ? 'font-normal' : 'font-medium'} ${disabled && !leads && !busy ? 'text-[#999]' : 'text-white'}`}
     >
       {busy && (

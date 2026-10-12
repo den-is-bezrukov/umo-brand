@@ -110,7 +110,7 @@ function TimeField({ value, onChange, onCommit, placeholder, invalid, label, min
       <button type="button" tabIndex={-1} onClick={() => step(-1)} aria-label={`${label}: на полчаса раньше`} className={button}><StepIcon /></button>
       {/* The typed time over a copy of it with the rest of «9:00» grey after it, so the colon always shows: the copy
           sizes the box, centred, and the input lies over it */}
-      <label className="flex min-w-0 flex-1 cursor-text items-center justify-center text-[14px] leading-5 [font-variant-numeric:lining-nums_tabular-nums]">
+      <label className="flex min-w-0 flex-1 cursor-text items-center justify-center text-[16px] leading-5 [font-variant-numeric:lining-nums_tabular-nums]">
         <span className="relative whitespace-pre">
           <span aria-hidden className="text-transparent">{value}</span>
           <span aria-hidden className="text-[#999]">{value ? tailOf(value) : placeholder}</span>

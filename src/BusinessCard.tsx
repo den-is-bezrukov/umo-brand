@@ -347,7 +347,7 @@ export default function BusinessCard() {
                           inputMode="tel"
                           invalid={bad('phone', 'Телефон')}
                         />
-                        <label className="flex h-12 min-w-20 shrink-0 cursor-text items-center rounded-[8px] bg-[#f5f5f5] px-3 text-[14px] leading-5 focus-within:ring-1 focus-within:ring-inset focus-within:ring-black/40">
+                        <label className="flex h-12 min-w-20 shrink-0 cursor-text items-center rounded-[8px] bg-[#f5f5f5] px-3 text-[16px] leading-5 focus-within:ring-1 focus-within:ring-inset focus-within:ring-black/40">
                           <span className="text-[#999]">Доб.&nbsp;</span>
                           <input
                             value={p.ext}
