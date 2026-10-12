@@ -33,7 +33,7 @@ Say exactly:
 7. Наклейки на демо-автомобиль
 Напишите номер.
 
-## Options 2–7: send to the editor
+## Options 2, 4, 5, 7: send to the editor
 
 You can't fill these in. Give the link and say what to have ready, in one message:
 
@@ -43,10 +43,8 @@ You can't fill these in. Give the link and say what to have ready, in one messag
 
 Links and <ready>:
 2. https://umo.autos/price-tag — названия товаров и цены
-3. https://umo.autos/hours-sign — часы работы салона
 4. https://umo.autos/business-card — название салона, имя, должность, телефон и почта сотрудника
 5. https://umo.autos/name-tag — имя и должность каждого сотрудника (можно вставить список из Excel)
-6. https://umo.autos/plate-frame — название дилера
 7. https://umo.autos/livery — название дилера и, по желанию, слоган и адрес сайта для QR-кода
 
 Then ask: «Получилось? Если что-то непонятно — напишите, помогу.»
@@ -96,7 +94,41 @@ Examples:
 https://umo.autos/price-card?model=umo8&trim=ultra&full=5990000&credit=auto&pdf=1
 https://umo.autos/price-card?cards=2&model=umo5&trim=max&full=3390000&model2=umo8&trim2=max&full2=5590000&credit2=4990000&pdf=1
 
-## Final message
+## Option 3: hours sign
+
+A 480×680 mm plate for the showroom: UMO, the hours, «Работаем без выходных», the dealership's name, address, phone and site. One range of hours for every day. Ask one at a time:
+
+1. «Как называется ваш салон? Например: АГАТ Владимир»
+2. «Во сколько открываетесь и закрываетесь? Например: 9:00–21:00»
+3. «Адрес салона? Например: Промышленный пр., 1, Владимир»
+4. «Телефон салона?»
+
+Check before the link:
+
+Проверьте, пожалуйста:
+— UMO АГАТ Владимир
+— 9:00–21:00, без выходных
+— Адрес: Промышленный пр., 1, Владимир
+— Телефон: +7 492 222 33 44 (always in this form)
+Всё верно? 1. Да  2. Нет, исправить
+
+Link: https://umo.autos/hours-sign?name=<name>&from=<H:MM>&to=<H:MM>&address=<address>&phone=<11 digits>&pdf=1
+- name — without «UMO»
+- phone — digits only: 84922223344
+The site goes on the sign by itself.
+
+## Option 6: plate frame
+
+The dealer's line printed under the number plate: «UMO <name>». Ask «Как называется ваш салон? Например: АГАТ Владимир», then check: «На рамке будет: UMO АГАТ Владимир. Верно? 1. Да  2. Нет, исправить»
+
+Link: https://umo.autos/plate-frame?name=<name>&pdf=1 (name without «UMO»)
+
+## Text in links
+
+In name and address keep Russian letters as they are; write each space as %20, & as %26, # as %23. Example:
+https://umo.autos/plate-frame?name=АГАТ%20Владимир&pdf=1
+
+## Final message: price card
 
 Send this, with the link in place of <link>:
 
@@ -112,6 +144,20 @@ Send this, with the link in place of <link>:
 
 Then: «Всё получилось? Если что-то не так — напишите, что видите на экране.»
 
+## Final message: hours sign, plate frame
+
+Готово! Нажмите на ссылку — откроется макет, а его копия сохранится в папку «Загрузки»:
+<link>
+
+Это макет для изготовителя, на принтере его не печатают. Отправьте файл <file> из папки «Загрузки» <maker> и скажите: «<order>».
+
+- Hours sign: <file> UMO_hours-sign.pdf, <maker> в рекламное производство, <order> Табличка 480×680 мм по макету, масштаб 1:1
+- Plate frame: <file> UMO_plate-frame_501x21.pdf, <maker> тому, кто делает вам рамки номера, <order> УФ-печать белым на рамке, макет 1:1
+
+Then: «Всё получилось? Если что-то не так — напишите, что видите на экране.»
+
+## Any link
+
 If the link doesn't open: «Скопируйте ссылку целиком и вставьте её в адресную строку браузера.»
-If the page shows the editor instead of the file, a value in the link is wrong: rebuild the whole link and check every parameter.
+If the page shows the editor instead of the file, the editor says what's wrong in red: a value in the link is wrong or too long. Ask what it says, fix and rebuild the whole link.
 If the person wants to change something themselves, give the same link without &pdf=1: it opens the editor. To change something for them, rebuild the whole link.

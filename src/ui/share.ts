@@ -47,3 +47,17 @@ export function useLinkState(params: Record<string, string | null | undefined>) 
     if (next !== pathname + search + hash) window.history.replaceState(window.history.state, '', next)
   }, [query])
 }
+
+/**
+ * The file a `pdf` link opens (from a chat agent, public/llms.txt): saved to «Загрузки» under its own name first (the
+ * tab's own Ctrl+S would name it by the blob's id), then shown in the tab. The PDF's title should be the same name,
+ * as Chrome shows it on the tab
+ */
+export function saveAndOpenPdf(blob: Blob, name: string) {
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = name
+  link.click()
+  setTimeout(() => window.location.replace(url), 300)
+}

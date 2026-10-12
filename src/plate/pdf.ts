@@ -7,6 +7,8 @@ import { STRIP, type Strip } from './frame'
 // Loaded only when the PDF is downloaded, so the guide and the constructor page don't carry pdf-lib.
 
 const PT = 72 / 25.4
+/** The file's name, also its title, which Chrome shows on the tab of a PDF opened from a link */
+export const STRIP_FILE = 'UMO_plate-frame_501x21.pdf'
 
 /**
  * The strip for the printer: a 501×21 mm page, the text as filled outlines in a spot colour named White, as white ink
@@ -15,7 +17,7 @@ const PT = 72 / 25.4
  */
 export async function stripPdf(strip: Strip): Promise<Blob> {
   const doc = await PDFDocument.create()
-  doc.setTitle('UMO plate frame 501×21')
+  doc.setTitle(STRIP_FILE)
   const page = doc.addPage([STRIP.w * PT, STRIP.h * PT])
   const tint = doc.context.obj({ FunctionType: 2, Domain: [0, 1], C0: [0, 0, 0, 0], C1: [0, 0, 0, 0], N: 1 })
   const white = doc.context.register(doc.context.obj([PDFName.of('Separation'), PDFName.of('White'), PDFName.of('DeviceCMYK'), tint]))

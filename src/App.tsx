@@ -7,7 +7,7 @@ import { ensurePdfFonts } from '@/posters/pdf/pdfFonts'
 import type { Variant } from '@/posters/cardData'
 import { goal } from '@/ui/metrika'
 import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField, GeneratorHeader, LinkButtons, DownloadBar, unfilled, stepsLeft } from '@/ui/form'
-import { linkParams, useLinkState } from '@/ui/share'
+import { linkParams, useLinkState, saveAndOpenPdf } from '@/ui/share'
 import { useStaff, ItemFrame, AddTile, Removed, plain, ITEM_EDGE, type Row } from '@/ui/staff'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 
@@ -170,13 +170,7 @@ export default function App() {
     pdfOf(initial)
       .then(blob => {
         downloadGoal(initial, { via: 'link' })
-        // Saved to «Загрузки» under its own name first (the tab's own Ctrl+S names it by the blob's id), then shown
-        const url = URL.createObjectURL(blob)
-        const link = document.createElement('a')
-        link.href = url
-        link.download = pdfName(initial)
-        link.click()
-        setTimeout(() => window.location.replace(url), 300)
+        saveAndOpenPdf(blob, pdfName(initial))
       })
       .catch(() => setPdfOnly(false))
   }, [])
