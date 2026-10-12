@@ -50,7 +50,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/umo-sans" element={<SansGuide />} />
           <Route path="/golos" element={<Navigate to="/umo-sans" replace />} />
           <Route path="/price-card" element={<App />} />
-          <Route path="/livery" element={<Livery />} />
+          <Route path="/livery" element={<LinkDealer param="top" withUmo><Livery /></LinkDealer>} />
           <Route path="/plate-frame" element={<LinkDealer param="name"><PlateFrame /></LinkDealer>} />
           <Route path="/name-tag" element={<NameTag />} />
           <Route path="/business-card" element={<LinkDealer param="dealer"><BusinessCard /></LinkDealer>} />

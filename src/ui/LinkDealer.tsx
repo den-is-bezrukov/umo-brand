@@ -15,14 +15,14 @@ import { linkParams } from './share'
  * `dealer_link` says how it went: `found`, `picked` (of `choices`), `none` with the words, to add the dealers and names
  * missing
  */
-export default function LinkDealer({ param, children }: { param: string; children: React.ReactNode }) {
+export default function LinkDealer({ param, withUmo, children }: { param: string; /** The name with «UMO», as the livery puts it on the car */ withUmo?: boolean; children: React.ReactNode }) {
   const [state, setState] = useState<{ said: string; choices: Dealer[] } | null>(() => {
     const params = linkParams()
     const said = params.get(param)?.trim()
     if (!said || !params.has('pdf')) return null
     const found = findDealers(said)
     if (found.length === 1 && knowsEveryWord(said)) {
-      put(param, found[0])
+      put(param, found[0], withUmo)
       goal('dealer_link', { result: 'found' })
       return null
     }
@@ -36,7 +36,7 @@ export default function LinkDealer({ param, children }: { param: string; childre
   if (!state) return children
   const { said, choices } = state
   const pick = (d?: Dealer) => {
-    if (d) put(param, d)
+    if (d) put(param, d, withUmo)
     else toEditor()
     goal('dealer_link', d ? { result: 'picked', choices: choices.length } : { result: 'none', choices: choices.length, said: said.slice(0, 100) })
     setState(null)
@@ -67,8 +67,8 @@ function toEditor() {
 }
 
 /** The link with the dealer's name in place of what was said, for the generator to read */
-function put(param: string, d: Dealer) {
+function put(param: string, d: Dealer, withUmo?: boolean) {
   const url = new URL(location.href)
-  url.searchParams.set(param, withoutUmo(d.name))
+  url.searchParams.set(param, withUmo ? d.name : withoutUmo(d.name))
   history.replaceState(history.state, '', url)
 }
