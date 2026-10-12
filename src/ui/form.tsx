@@ -780,7 +780,7 @@ function useAlice(alice?: AliceAsk) {
     ...none,
     icon: (
       <a href={href} target="_blank" rel="noopener" onClick={() => open('icon')} title={priceCard ? 'Продолжить с Алисой AI' : 'Спросить Алису AI'}
-        className="alice-pop flex size-12 shrink-0 items-center justify-center rounded-full bg-white shadow-[0_10px_30px_rgba(0,0,0,0.1)] outline-none focus-visible:ring-2 focus-visible:ring-black/30">
+        className="alice-pop flex size-12 shrink-0 items-center justify-center rounded-full bg-white shadow-[0_10px_30px_rgba(0,0,0,0.1)] in-[[data-sheet]]:rounded-[8px] in-[[data-sheet]]:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)] in-[[data-sheet]]:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.4),inset_0_0_0_0.5px_rgba(0,0,0,0.4)] outline-none focus-visible:ring-2 focus-visible:ring-black/30">
         <AliceMark className="text-[20px] leading-5 font-normal" />
       </a>
     ),
