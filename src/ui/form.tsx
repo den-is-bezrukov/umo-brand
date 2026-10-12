@@ -781,8 +781,8 @@ function useAlice(alice?: AliceAsk) {
     // Phones: a secondary button at the form's end instead of the icon, as the row by the download holds only its own
     button: (
       <a href={href} target="_blank" rel="noopener" onClick={() => open('button')}
-        className={`${outlined} w-full gap-1 bg-white font-normal tracking-normal`}>
-        {started ? 'Продолжить' : 'Сделать'} с<AliceMark className="text-[20px] leading-5 font-normal" />Алисой AI
+        className={`${outlined} w-full gap-1 bg-white tracking-normal`}>
+        {started ? 'Продолжить' : 'Сделать'} с<AliceMark className="text-[20px] leading-5" />Алисой AI
       </a>
     ),
     icon: (
