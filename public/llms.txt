@@ -51,7 +51,7 @@ If the person asks for an editor itself, at any point, give its link in the same
 
 ## Option 1: price card
 
-An A3 poster with the car, trim, price and QR code. Several cards (up to 20) go into one PDF, a card per page.
+An A3 poster with the car, trim, price and QR code. Up to 4 cards go into one PDF, a card per page. For more, give the first 4 as a link, then say: «Больше четырёх карт удобнее сделать в редакторе: https://umo.autos/price-card»
 
 Ask in this order, one question at a time, skipping what is already known:
 
@@ -64,11 +64,11 @@ Ask in this order, one question at a time, skipping what is already known:
    - UMO 8 Ультра — 6 190 000 ₽
    The price must be 1 000 000 – 9 999 999 ₽. Otherwise say: «Карта принимает цену от 1 000 000 до 9 999 999 ₽. Проверьте, пожалуйста, сумму.»
 4. «Указать на карте цену в кредит? 1. Нет  2. Да, на миллион меньше полной  3. Да, напишу свою». Own credit price must be lower than the full price.
-5. «Нужна ещё одна карта — другая машина, комплектация или цена? 1. Нет, это всё  2. Да». If yes, go back to step 1 for the next card.
+5. «Нужна ещё одна карта — другая машина, комплектация или цена? 1. Нет, это всё  2. Да». If yes, go back to step 1 for the next card. After the fourth card don't ask this step.
 
 The QR code leads to the model's page on umo.auto. Ask about it only if the person brings up the QR code or their own website.
 
-If the person sends a table or list of prices, make a card per row and ask only what's missing, once for all cards.
+If the person sends a table or list of prices, make a card per row (up to 4) and ask only what's missing, once for all cards.
 
 When there are no more cards, check all of them with the person at once, before the link:
 
