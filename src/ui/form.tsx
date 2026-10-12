@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import { goal } from './metrika'
 import tocIcons from '@/icons/toc'
-import { InFoot, InSheet, SheetSize } from './phone'
+import { InFoot, InSheet, SheetSize, AliceSlot } from './phone'
 
 // Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag, business card). Light UI per the Figma layout
 // (UMO | Evrone, nodes 4844:6865 and 4900:4588), matching the brand guide.
@@ -750,7 +750,7 @@ function useAlice(alice?: AliceAsk) {
     return () => document.removeEventListener('input', on)
   }, [alice, typed])
   const href = useAliceHref(!fromAi, alice?.ask ?? aliceAsk(location.pathname))
-  const none = { bubble: null, icon: null, peek: setPeek }
+  const none = { bubble: null, icon: null, button: null as React.ReactNode, peek: setPeek }
   if (fromAi || !href) return none
   const priceCard = location.pathname === '/price-card'
   const open = (via: string) => goal('ai_open', { chat: 'alice', from: location.pathname, via })
@@ -778,6 +778,13 @@ function useAlice(alice?: AliceAsk) {
   }
   return {
     ...none,
+    // Phones: a secondary button at the form's end instead of the icon, as the row by the download holds only its own
+    button: (
+      <a href={href} target="_blank" rel="noopener" onClick={() => open('button')}
+        className={`${outlined} w-full gap-1 bg-white font-normal tracking-normal`}>
+        {started ? 'Продолжить' : 'Сделать'} с<AliceMark className="text-[20px] leading-5 font-normal" />Алисой AI
+      </a>
+    ),
     icon: (
       <a href={href} target="_blank" rel="noopener" onClick={() => open('icon')} title={priceCard ? 'Продолжить с Алисой AI' : 'Спросить Алису AI'}
         className="alice-pop flex size-12 shrink-0 items-center justify-center rounded-full bg-white shadow-[0_10px_30px_rgba(0,0,0,0.1)] in-[[data-sheet]]:rounded-[8px] in-[[data-sheet]]:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)] in-[[data-sheet]]:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.4),inset_0_0_0_0.5px_rgba(0,0,0,0.4)] outline-none focus-visible:ring-2 focus-visible:ring-black/30">
@@ -819,6 +826,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   // teaches what to do (on wide screens a secondary button saying the step stood over a greyed-out download)
   const foot = useContext(InFoot)
   const alice = useAlice(aliceAsk_)
+  const slot = useContext(AliceSlot)
   const lead = disabled && !!note && !said
   const leads = lead && !!onNote
   const shareOn = !!links && !disabled && !said
@@ -847,13 +855,11 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   if (foot) return (
     <div className="flex flex-col gap-2">
       {alice.bubble}
-      <div className="flex gap-2">
-        <div className="grid min-w-0 flex-1 auto-cols-fr grid-flow-col gap-2">
-          {main}
-          {shareOn && <div className="flex min-w-0">{links}</div>}
-        </div>
-        {alice.icon}
+      <div className="grid auto-cols-fr grid-flow-col gap-2">
+        {main}
+        {shareOn && <div className="flex min-w-0">{links}</div>}
       </div>
+      {slot && alice.button && createPortal(alice.button, slot)}
     </div>
   )
   // Wide screens: 40 px off the form, sticking to the sidebar's foot; «Поделиться» over the download, as wide, so it
