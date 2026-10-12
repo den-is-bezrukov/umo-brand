@@ -8,7 +8,7 @@ import { linkParams, useLinkState, saveAndOpenPdf } from '@/ui/share'
 import { loadFont, toD } from '@/livery/geometry'
 import { maskPhone, siteFor } from '@/card/card'
 import { SIGN, SIGN_KEY, LOGO, buildSign, oneLine, timeText, type SignField, type Input } from '@/hours/sign'
-import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
+import { DEALER_NAMES, dealerFilter, withoutUmo } from '@/data/dealers'
 import { DEFAULT_HOURS_LINE, ADDRESSES, addressOf, hoursOf } from '@/data/hours'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 
@@ -318,7 +318,7 @@ export default function HoursSign() {
               <div data-field="line"><ComboField value={line} onChange={setLine} options={HOURS_LINES} label="Подписи" singleLine invalid={wrong.has('line')} /></div>
             </Field> */}
             <Field label="Дилер">
-              <div data-field="dealer"><ComboField value={dealer} onChange={pickDealer} options={NAMES} placeholder={PLACEHOLDER.dealer} label="Дилеры UMO" singleLine invalid={wrong.has('dealer')} /></div>
+              <div data-field="dealer"><ComboField value={dealer} onChange={pickDealer} options={NAMES} filter={dealerFilter} placeholder={PLACEHOLDER.dealer} label="Дилеры UMO" singleLine invalid={wrong.has('dealer')} /></div>
             </Field>
             <Field label="Адрес">
               {/* The dealer's own address first, then every dealer's, narrowed as it's typed */}

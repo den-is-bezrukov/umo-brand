@@ -7,7 +7,7 @@ import { linkParams, useLinkState, saveAndOpenPdf } from '@/ui/share'
 import { loadFont, toD } from '@/livery/geometry'
 import { STRIP, BASELINE, SIZE, TRACKING, buildStrip, lineStart, type Align } from '@/plate/frame'
 import PlateArt from '@/plate/PlateArt'
-import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
+import { DEALER_NAMES, dealerFilter, withoutUmo } from '@/data/dealers'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 
 // Number plate frame generator (Figma: UMO | Evrone, node 4970:2419): the dealer's line printed under the plate, as a
@@ -205,7 +205,7 @@ export default function PlateFrame() {
               </Field>
             ) : (
               <Field label="Дилер">
-                <ComboField value={name} onChange={setName} options={NAMES} placeholder={PLACEHOLDER_NAME} label="Дилеры" singleLine invalid={wrong} />
+                <ComboField value={name} onChange={setName} options={NAMES} filter={dealerFilter} placeholder={PLACEHOLDER_NAME} label="Дилеры" singleLine invalid={wrong} />
               </Field>
             )}
 

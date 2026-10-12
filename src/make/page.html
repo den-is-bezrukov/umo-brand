@@ -111,8 +111,6 @@
           <a class="doc" href="/llms.txt" target="_blank" rel="noopener"><span aria-hidden="true">↗</span>Текст инструкции</a>
           <!-- The instruction for the buttons to send and copy, hidden: people open it as text above, agents read it here -->
           <pre id="instruction" hidden><!-- ai:instruction --></pre>
-          <!-- umo.autos/dealers.txt, given to Alice and copied along with the instruction, as she reads no links -->
-          <pre id="dealers" hidden><!-- ai:dealers --></pre>
         </details>
       </div>
     </main>
@@ -120,7 +118,6 @@
       // The chats that read a link get a line pointing to llms.txt; Alice reads no links, so she gets the instruction
       // itself in her field
       var instruction = 'Следуй этой инструкции и помоги мне сделать материалы UMO.\n\n' + document.getElementById('instruction').textContent
-        + '\n' + document.getElementById('dealers').textContent
       var ask = 'Прочитай https://umo.autos/llms.txt и следуй инструкции оттуда: помоги мне сделать материалы UMO.'
       var q = encodeURIComponent
       var links = {

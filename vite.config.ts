@@ -5,6 +5,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import siteConfiguration from './site.config.json'
+import { mergeDealers } from './src/data/dealers'
 
 // Vite config — https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -242,26 +243,24 @@ function makePagePlugin(): Plugin {
   const escape = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
   const page = () => fs.readFileSync(path.resolve(__dirname, 'src/make/page.html'), 'utf8')
     .replace('<!-- ai:instruction -->', escape(fs.readFileSync(path.resolve(__dirname, 'public/llms.txt'), 'utf8')))
-    .replace('<!-- ai:dealers -->', escape(dealersText()))
   /**
-   * umo.autos/dealers.txt: the dealers as umo.auto lists them (src/data/dealers.json), for the agent to check against.
-   * Short, as Alice gets it in her link, where it was 41% of the bytes: the name, the city when the name lacks it, the
-   * hours as «9–21» (every day) or by days; no address, as the hours sign puts it in by the name itself
+   * umo.autos/dealers.txt: every dealer (src/data/dealers.json from umo.auto and the hand-kept dealers-own.json), for the
+   * chats that open links to check a name against; the page finds the dealer itself anyway (src/ui/LinkDealer.tsx), so
+   * Alice, who reads no links, goes without. The name, city, address, hours and the names it's also called by
    */
   const dealersText = () => {
-    const dealers: { name: string; city: string; hours: string }[] = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'src/data/dealers.json'), 'utf8'))
+    const read = (f: string) => JSON.parse(fs.readFileSync(path.resolve(__dirname, f), 'utf8'))
     const hours = (h: string) => h.replace(/^ежедневно,\s*/, '').replace(/0?(\d{1,2}):00/g, '$1')
-    return '# UMO dealers, as umo.auto lists them\n\nName (without «UMO»), city — hours («9–21»: every day, 9:00–21:00)\n\n'
-      + dealers.map(d => {
-        const name = d.name.replace(/^UMO\s+/, '')
-        return `${name}${name.includes(d.city) ? '' : `, ${d.city}`} — ${hours(d.hours)}`
-      }).sort((a, b) => a.localeCompare(b, 'ru')).join('\n') + '\n'
+    return '# UMO dealers\n\nName (without «UMO») — city, address — hours («9–21»: every day, 9:00–21:00) — also called\n\n'
+      + mergeDealers(read('src/data/dealers.json'), read('src/data/dealers-own.json')).map(d =>
+        [d.name.replace(/^UMO\s+/, ''), [d.city, d.address.replace(new RegExp(`,\\s*${d.city}$`), '')].filter(Boolean).join(', '), hours(d.hours), d.aka.join(', ')]
+          .filter(Boolean).join(' — ')).join('\n') + '\n'
   }
   return {
     name: 'make-page',
     configureServer(server) {
       // In dev the page reloads itself when it or the instruction changes, through Vite's client
-      const sources = ['src/make/page.html', 'public/llms.txt', 'src/data/dealers.json'].map(f => path.resolve(__dirname, f))
+      const sources = ['src/make/page.html', 'public/llms.txt'].map(f => path.resolve(__dirname, f))
       server.watcher.add(sources)
       server.watcher.on('change', file => {
         if (sources.includes(file)) server.ws.send({ type: 'full-reload' })

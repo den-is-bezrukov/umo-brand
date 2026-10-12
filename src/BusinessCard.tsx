@@ -9,8 +9,7 @@ import { xlsxCells, pastedCells, byHeaders, FULL_NAME, fromFullName, type Cells 
 import { CARDS_KEY, CARD, QR, FACE, BACK_LOGO, DEALER_FIELDS, buildBack, siteFor, siteText, splitPhone, maskPhone, type CardField, type Dealer, type Person, type QrData } from '@/card/card'
 import CardArt from '@/card/CardArt'
 import { POSITIONS } from '@/data/positions'
-import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
-import dealers from '@/data/dealers.json'
+import { DEALER_NAMES, dealerFilter, dealerOf, withoutUmo } from '@/data/dealers'
 import { isPdf, readPdfData } from '@/ui/pdfData'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { linkParams, saveAndOpenPdf } from '@/ui/share'
@@ -51,8 +50,8 @@ const toPeople = (rows: Cells[]): Person[] => byHeaders(rows, { ...HEADERS, full
   return split ? { ...p, ...split } : p
 })
 
-/** The address umo.auto gives a dealer, put in when the dealer is picked */
-const addressOf = (name: string) => dealers.find(d => withoutUmo(d.name) === withoutUmo(name.trim()))?.address
+/** The address umo.auto (or dealers-own.json) gives a dealer, put in when the dealer is picked */
+const addressOf = (name: string) => dealerOf(name)?.address || undefined
 
 /**
  * The dealers as the card names them: without the «UMO» of their marketing names («АГАТ Владимир»), as the logo and
@@ -316,7 +315,7 @@ export default function BusinessCard() {
                   <ComboField
                     value={dealer.name}
                     onChange={pickDealer}
-                    options={DEALER_OPTIONS}
+                    options={DEALER_OPTIONS} filter={dealerFilter}
                     singleLine
                     placeholder="Название дилера"
                     label="Дилеры UMO"
