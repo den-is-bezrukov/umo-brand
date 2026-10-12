@@ -151,8 +151,7 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
 
   // Going to an item with an error: select it for editing and bring it into view, its first field at fault taking the
   // focus once the errors show. Rendered at once (flushSync) and focused in the tap itself: iOS raises the keyboard
-  // only for a focus within the gesture (it came a tick later, and the field only lit up). On phones the form is above
-  // the items on the same scroll, so the page goes to the field instead
+  // only for a focus within the gesture (it came a tick later, and the field only lit up)
   const goTo = (key: number) => {
     flushSync(() => {
       setSelected(key)
@@ -161,9 +160,9 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
     })
     const wide = matchMedia('(min-width: 768px)').matches
     if (wide) figures.current.get(key)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
-    const field = form.current?.querySelector<HTMLElement>('[aria-invalid="true"]')
-    field?.focus({ preventScroll: true })
-    if (!wide) field?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    // On phones a plain focus, so the browser brings the field above the keyboard as it does for a tap (scrolled by
+    // script to the middle before the keyboard was up, it ended under it)
+    form.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus(wide ? { preventScroll: true } : undefined)
   }
   /** The next item of `keys` after the selected one, round the list */
   const nextTarget = (keys: number[]) => {
