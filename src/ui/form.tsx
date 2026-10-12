@@ -59,7 +59,7 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
     return () => { delete document.documentElement.dataset.menu; document.removeEventListener('keydown', key) }
   }, [menu])
   const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
-  const alice = useAliceHref(menu)
+  const alice = useAliceHref(menu, current)
   return (
     <div data-head className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
@@ -697,17 +697,22 @@ export const stepsLeft = (n: number) => (n > 1 ? `1/${n}` : undefined)
  */
 /**
  * Alice opened with the instruction (public/llms.txt, fetched once wanted) in her field, as umo.autos/ai sends it: she
- * reads no links. In «Эксперт», as there
+ * reads no links. In «Эксперт», as there. From the price card she's told that's what's wanted, so she skips the list of
+ * materials and asks about the card (the instruction's «Start»); the other generators are made in their own editor,
+ * where she'd only send the dealer back, so from them she starts with the list
  */
-let aliceHref: Promise<string> | undefined
-function useAliceHref(wanted: boolean) {
+let llms: Promise<string> | undefined
+function useAliceHref(wanted: boolean, from?: string) {
   const [href, setHref] = useState('')
   useEffect(() => {
     if (!wanted || href) return
-    aliceHref ??= fetch('/llms.txt').then(r => r.text()).then(text => 'https://alice.yandex.ru/?model=alice-agents-expert&set_text='
-      + encodeURIComponent('Следуй этой инструкции и помоги мне сделать материалы UMO.\n\n' + text))
-    aliceHref.then(setHref).catch(() => { aliceHref = undefined })
-  }, [wanted, href])
+    const ask = from === '/price-card'
+      ? 'Следуй этой инструкции. Мне нужна прайс-карта: начни сразу с вопросов о ней.'
+      : 'Следуй этой инструкции и помоги мне сделать материалы UMO.'
+    llms ??= fetch('/llms.txt').then(r => r.text())
+    llms.then(text => setHref('https://alice.yandex.ru/?model=alice-agents-expert&set_text=' + encodeURIComponent(ask + '\n\n' + text)))
+      .catch(() => { llms = undefined })
+  }, [wanted, href, from])
   return href
 }
 
@@ -724,7 +729,7 @@ function AliceMark({ className = '' }: { className?: string }) {
  */
 export function AliceOffer({ shown }: { shown: boolean }) {
   const [closed, setClosed] = useState(false)
-  const href = useAliceHref(!closed)
+  const href = useAliceHref(!closed, location.pathname)
   if (closed || !shown || !href) return null
   return (
     <div className="flex items-center rounded-[8px] border border-black/10 bg-white text-[14px] leading-5 text-black hover:border-black/40">
