@@ -7,3 +7,5 @@ The page holds several cards (`useStaff` with no table mode, opened with the lin
 The car photos live at fixed paths so they can be swapped without touching code: `src/assets/umo5-car.jpg` and `src/assets/umo8-car.jpg`. The PDF is printed at A3 and the photo must hold up at 300dpi — don't shrink it to "web size": **3840×2160 for UMO5** and **3520×1980 for UMO8**, JPEG quality ~90 (about 1.5–2 MB). Replace the file in place, same filename.
 
 Chat agents make it as a link with `pdf=1` (see «Chat agents» in `docs/generators.md`); `public/llms.txt` repeats the trims, the `DEFAULTS` prices and the link's parameters, so change it with them.
+
+Trial: on an untouched form (one card, UMO 5 defaults) an offer stands over «Поделиться» and the download, 24 px off them: «Сделать с @ Алисой AI», purple (#7A55FF) text and a 40% purple edge on white, with a ×. It goes once anything changes; the × hides it for good in this browser (`localStorage` `alice-offer-closed`). It opens Alice with public/llms.txt in her field, as umo.autos/ai does, and sends `ai_open` with `chat: 'alice'` and `from` (`AliceOffer` in `src/ui/form.tsx`).

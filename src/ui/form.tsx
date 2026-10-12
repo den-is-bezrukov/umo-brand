@@ -684,7 +684,36 @@ export const stepsLeft = (n: number) => (n > 1 ? `1/${n}` : undefined)
  * is. It was always «Скачать», greyed out, with a secondary button over it saying the step (and before that a black
  * line, under the button for a while)
  */
-export function DownloadBar({ format, onClick, busy, disabled, note, count, onNote, links }: {
+/**
+ * Trial: an offer over the download to make the cards with Alice instead, on a form not yet touched: purple text and
+ * edge, closed with its ×, the close remembered in this browser; gone once anything is changed. Alice reads no links,
+ * so she gets the instruction itself (public/llms.txt, fetched here) in her field, as umo.autos/ai sends it
+ */
+export function AliceOffer({ shown }: { shown: boolean }) {
+  const KEY = 'alice-offer-closed'
+  const [closed, setClosed] = useState(() => { try { return localStorage.getItem(KEY) === '1' } catch { return false } })
+  const [href, setHref] = useState('')
+  useEffect(() => {
+    if (closed || href) return
+    fetch('/llms.txt').then(r => r.text()).then(text => setHref('https://alice.yandex.ru/?model=alice-agents-expert&set_text='
+      + encodeURIComponent('Следуй этой инструкции и помоги мне сделать материалы UMO.\n\n' + text))).catch(() => {})
+  }, [closed, href])
+  if (closed || !shown || !href) return null
+  const close = () => { setClosed(true); try { localStorage.setItem(KEY, '1') } catch { /* private window */ } }
+  return (
+    <div className="mb-4 flex items-center rounded-[8px] border border-[#7a55ff]/40 bg-white text-[14px] leading-5 text-[#7a55ff]">
+      <a href={href} target="_blank" rel="noopener" onClick={() => goal('ai_open', { chat: 'alice', from: location.pathname })}
+        className="flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1 py-[9px] pl-10 font-medium outline-none hover:text-[#6a45ef] focus-visible:ring-2 focus-visible:ring-[#7a55ff]/40">
+        Сделать с<span style={{ fontFamily: 'Alice Okniks', fontFeatureSettings: "'ss02'" }} className="text-[20px] leading-5">@</span>Алисой AI
+      </a>
+      <button type="button" onClick={close} aria-label="Закрыть" className="flex w-10 shrink-0 cursor-pointer items-center justify-center self-stretch text-[#7a55ff]/60 outline-none hover:text-[#7a55ff]">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden><path d="M2 2l8 8M10 2l-8 8" /></svg>
+      </button>
+    </div>
+  )
+}
+
+export function DownloadBar({ format, onClick, busy, disabled, note, count, onNote, links, offer }: {
   format: 'PDF' | 'ZIP'
   onClick: () => void
   busy: boolean
@@ -695,6 +724,8 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   onNote?: () => void
   /** «Поделиться», right over the download: off with it, the line over them speaking for both */
   links?: React.ReactNode
+  /** Over everything, a group of its own (trial: `AliceOffer`) */
+  offer?: React.ReactNode
 }) {
   // What a button under the line has just done, said there for two seconds
   const [said, setSaid] = useState('')
@@ -739,15 +770,19 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   // Phones: «Поделиться» right of the download, half each, once the download is on (tried: an icon left of the
   // download, «Поделиться» left of it, as wide as its word on the right)
   if (foot) return (
-    <div className="grid auto-cols-fr grid-flow-col gap-2">
-      {main}
-      {shareOn && <div className="flex min-w-0">{links}</div>}
+    <div>
+      {offer}
+      <div className="grid auto-cols-fr grid-flow-col gap-2">
+        {main}
+        {shareOn && <div className="flex min-w-0">{links}</div>}
+      </div>
     </div>
   )
   // Wide screens: 40 px off the form, sticking to the sidebar's foot; «Поделиться» over the download, as wide, so it
   // has room to say the link is copied
   return (
     <div className="sticky bottom-0 z-10 mt-8 flex flex-col gap-2 bg-white p-6 pt-0 tracking-normal">
+      {offer}
       {shareOn && <div className="flex">{links}</div>}
       <div className="flex">{main}</div>
     </div>
