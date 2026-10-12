@@ -12,19 +12,3 @@
 
 React 19, Vite 8, Tailwind CSS v4, TypeScript; `@react-pdf/renderer` и `pdf-lib` для PDF, `opentype.js` для перевода текста в кривые, `qrcode` для QR. Бэкенда нет — всё генерируется в браузере.
 
-## Разработка
-
-```bash
-pnpm install
-pnpm dev          # http://localhost:8443
-pnpm dev:follow   # то же, и каждые 10 секунд подтягивает свежие коммиты текущей ветки
-pnpm build
-```
-
-Подробнее о структуре проекта, макетах в Figma и правилах (размеры ливреи, требования к фото под печать, выравнивание первого экрана гайда) — в [AGENTS.md](AGENTS.md).
-
-## Деплой
-
-Пуш в `main` автоматически собирает и публикует сайт на GitHub Pages (`.github/workflows/deploy.yml`). CI проверяет типы и сборку и не пропустит картинку тяжелее 2,5 МБ и видео тяжелее 15 МБ.
-
-Релизы — в [GitHub Releases](https://github.com/den-is-bezrukov/umo-brand/releases), теги вида `MM-YYYY`.
