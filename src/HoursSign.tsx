@@ -106,11 +106,11 @@ function TimeField({ value, onChange, onCommit, placeholder, invalid, label, min
   }
   const button = 'flex w-9 shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] outline-none hover:text-black focus-visible:ring-1 focus-visible:ring-inset focus-visible:ring-black/40'
   return (
-    <div className="flex h-12 rounded-[8px] bg-[#f5f5f5] focus-within:ring-1 focus-within:ring-inset focus-within:ring-black/40">
+    <div className="flex h-10 in-[[data-sheet]]:h-12! rounded-[8px] bg-[#f5f5f5] focus-within:ring-1 focus-within:ring-inset focus-within:ring-black/40">
       <button type="button" tabIndex={-1} onClick={() => step(-1)} aria-label={`${label}: на полчаса раньше`} className={button}><StepIcon /></button>
       {/* The typed time over a copy of it with the rest of «9:00» grey after it, so the colon always shows: the copy
           sizes the box, centred, and the input lies over it */}
-      <label className="flex min-w-0 flex-1 cursor-text items-center justify-center text-[16px] leading-5 [font-variant-numeric:lining-nums_tabular-nums]">
+      <label className="flex min-w-0 flex-1 cursor-text items-center justify-center text-[14px] leading-5 [font-variant-numeric:lining-nums_tabular-nums]">
         <span className="relative whitespace-pre">
           <span aria-hidden className="text-transparent">{value}</span>
           <span aria-hidden className="text-[#999]">{value ? tailOf(value) : placeholder}</span>
@@ -353,7 +353,7 @@ export default function HoursSign() {
       className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row"
     >
 
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[361px] md:overflow-y-auto md:border-r md:border-black/10">
+      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
         {sidebar}
         {download}
       </aside>

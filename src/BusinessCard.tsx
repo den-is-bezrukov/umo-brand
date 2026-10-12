@@ -347,7 +347,7 @@ export default function BusinessCard() {
                           inputMode="tel"
                           invalid={bad('phone', 'Телефон')}
                         />
-                        <label className="flex h-12 min-w-20 shrink-0 cursor-text items-center rounded-[8px] bg-[#f5f5f5] px-3 text-[16px] leading-5 focus-within:ring-1 focus-within:ring-inset focus-within:ring-black/40">
+                        <label className="flex h-10 in-[[data-sheet]]:h-12! min-w-20 shrink-0 cursor-text items-center rounded-[8px] bg-[#f5f5f5] px-3 text-[14px] leading-5 focus-within:ring-1 focus-within:ring-inset focus-within:ring-black/40">
                           <span className="text-[#999]">Доб.&nbsp;</span>
                           <input
                             value={p.ext}
@@ -398,7 +398,7 @@ export default function BusinessCard() {
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
 
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[361px] md:overflow-y-auto md:border-r md:border-black/10">
+      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
         {sidebar}
         {download}
       </aside>
