@@ -719,8 +719,8 @@ const aliceAsk = (path: string) => {
 }
 
 /** Alice's mark, from Alice Okniks (the drop, ss02), in her colour */
-function AliceMark({ className = '', solid }: { className?: string; /** The solid drop (ss01), white, as on her own app's icon */ solid?: boolean }) {
-  return <span style={{ fontFamily: 'Alice Okniks', fontFeatureSettings: solid ? "'ss01'" : "'ss02'" }} className={`${solid ? 'text-white' : 'text-[#7a55ff]'} ${className}`}>@</span>
+function AliceMark({ className = '', solid, axes }: { className?: string; /** The solid drop (ss01), white, as on her own app's icon */ solid?: boolean; /** The font's own position axes: `YSHF` up/down (−36…36 units, minus is down), `ZSCL` size (−8…8%) */ axes?: string }) {
+  return <span style={{ fontFamily: 'Alice Okniks', fontFeatureSettings: solid ? "'ss01'" : "'ss02'", fontVariationSettings: axes }} className={`${solid ? 'text-white' : 'text-[#7a55ff]'} ${className}`}>@</span>
 }
 
 /** Came from umo.autos/ai, where Alice was already offered beside the editor: no offer then (the referrer as index.html keeps it through the 404 redirect) */
@@ -788,8 +788,9 @@ function useAlice(alice?: AliceAsk) {
     icon: (
       <a href={href} target="_blank" rel="noopener" onClick={() => open('icon')} title={priceCard ? 'Продолжить с Алисой AI' : 'Спросить Алису AI'}
         className="alice-pop flex size-10 shrink-0 items-center justify-center rounded-full bg-[#7a55ff] outline-none hover:bg-[#6a45ef] focus-visible:ring-2 focus-visible:ring-black/30">
-        {/* As her own app's icon: her purple, the solid drop in white, no shadow */}
-        <AliceMark solid className="text-[26px] leading-6" />
+        {/* As her own app's icon: her purple, the solid drop in white, no shadow; the drop set in the middle and grown
+            to 55% of the circle by the font's own axes */}
+        <AliceMark solid className="text-[24px] leading-6" axes="'YSHF' -32, 'ZSCL' 8" />
       </a>
     ),
   }
