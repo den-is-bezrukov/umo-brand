@@ -2,6 +2,7 @@ import { useContext, useEffect, useId, useLayoutEffect, useRef, useState } from 
 import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import { goal } from './metrika'
+import tocIcons from '@/icons/toc'
 import { InFoot, InSheet, SheetSize } from './phone'
 
 // Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag, business card). Light UI per the Figma layout
@@ -40,6 +41,9 @@ const crumb = 'underline decoration-transparent decoration-[0.35px] underline-of
  * screen or putting it back; the generators' line under them (`GeneratorRing`). Wide screens had the crumbs in Medium
  * with a list under «Носители ⌄» and a ring turned by script, which a finger couldn't drive
  */
+/** The guide's «Свернуть» turned out: the chevrons pointing away from the middle, opening the form over the whole screen */
+const EXPAND = 'M4 6L8 2L12 6M4 10L8 14L12 10'
+
 export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' | '/price-tag' | '/hours-sign' }) {
   const inSheet = useContext(InSheet)
   const size = useContext(SheetSize)
@@ -50,12 +54,12 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
       <div data-head className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
           <span data-generator-menu className="relative flex">
-            <IconButton label="Конструкторы" onClick={openMenu} d="M2 4H14M2 8H14M2 12H14" />
+            <IconButton label="Конструкторы" onClick={openMenu} d={tocIcons.menu} />
             {menu && !inSheet && <GeneratorList current={current} onClose={() => setMenu(false)} />}
           </span>
           <PhoneCrumbs />
-          {/* Grey, as the canvas's icons; it turns inward while the form is over the whole screen */}
-          {size && <IconButton label={size.full ? 'Свернуть форму' : 'Развернуть форму'} onClick={size.toggle} grey d={size.full ? 'M13 7H9V3M3 9H7V13' : 'M9 3H13V7M7 13H3V9'} />}
+          {/* Grey, as the canvas's icons: chevrons out, then the guide's «Свернуть» while the form is over the whole screen */}
+          {size && <IconButton label={size.full ? 'Свернуть форму' : 'Развернуть форму'} onClick={size.toggle} grey d={size.full ? tocIcons.close : EXPAND} />}
         </div>
         <GeneratorRing current={current} />
       </div>
@@ -105,7 +109,7 @@ function GeneratorMenu({ current, height, onClose }: { current: string; /** The 
     <div role="dialog" aria-label="Конструкторы" style={{ height }} className="fixed inset-x-0 bottom-0 z-50 overflow-y-auto rounded-t-[24px] bg-white p-6 font-sans text-black shadow-[0_10px_30px_rgba(0,0,0,0.1)]">
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <IconButton label="Закрыть" onClick={onClose} d="M4 3L8 7L12 3M4 13L8 9L12 13" />
+          <IconButton label="Закрыть" onClick={onClose} d={tocIcons.close} />
           <PhoneCrumbs />
         </div>
         <nav aria-label="Конструкторы" className="flex flex-col items-start gap-5">
