@@ -62,7 +62,6 @@
         <a class="btn" data-chat="alice" target="_blank" rel="noopener"><span><span class="alice">@</span> Алиса</span><svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
         <a class="btn" data-chat="chatgpt" target="_blank" rel="noopener">ChatGPT<svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
         <a class="btn" data-chat="claude" target="_blank" rel="noopener">Claude<svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
-        <a class="btn" data-chat="grok" target="_blank" rel="noopener">Grok<svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
         <button class="btn" data-chat="copy" type="button"><span>Скопировать инструкцию для другого ИИ</span></button>
       </div>
 
@@ -86,7 +85,6 @@
         alice: 'https://alice.yandex.ru/?set_text=' + q(instruction),
         chatgpt: 'https://chatgpt.com/?prompt=' + q(ask),
         claude: 'https://claude.ai/new?q=' + q(ask),
-        grok: 'https://grok.com/?q=' + q(ask),
       }
       function goal(chat) {
         if (window.ym) ym(113514674, 'reachGoal', 'ai_open', { chat: chat })
