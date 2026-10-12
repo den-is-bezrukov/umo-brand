@@ -768,8 +768,8 @@ function fileSize(bytes: number): [number, string] {
  * split into two, filled top to bottom so files of one item stay together. Sizes get one decimal in every
  * row as soon as one of them is under 10 (0,7 КБ), and none otherwise.
  */
-/** `early`: two columns from 560 px, rather than from `sm` (Леттеринг → Модели, whose pictures pair up from 520; narrower «umo-model-8-png.zip» wraps) */
-function Assets({ items, preview, early }: { items: Asset[]; preview?: string; early?: boolean }) {
+/** `early`: two columns from 560 px, rather than from `sm` (Леттеринг → Модели, whose pictures pair up from 520; narrower «umo-model-8-png.zip» wraps); `bare`: no hairline (Носители, the row right under its picture) */
+function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: string; early?: boolean; bare?: boolean }) {
   const pointed = useContext(PointedPreview)?.[0]
   const sizes = items.flatMap(a => ('file' in a ? [fileSize(downloadSizes[a.file] ?? 0)] : []))
   const digits = sizes.some(([n]) => n < 10) ? 1 : 0
@@ -783,7 +783,7 @@ function Assets({ items, preview, early }: { items: Asset[]; preview?: string; e
       style={two ? ({ '--rows': Math.ceil(items.length / 2) } as CSSProperties) : undefined}
     >
       {items.map(a => {
-        const row = 'group flex items-center gap-2 border-t border-[#e6e6e6] py-[14px] text-[16px] leading-none tracking-[-0.01em]'
+        const row = `group flex items-center gap-2 ${bare ? '' : 'border-t border-[#e6e6e6]'} py-[14px] text-[16px] leading-none tracking-[-0.01em]`
         // The row a preview above stands for lights up while the preview is pointed at
         const linked = preview === ('to' in a ? a.to : a.file)
         const lit = pointed !== undefined && pointed === ('to' in a ? a.to : a.file)
@@ -838,12 +838,12 @@ function Previews({ className, children }: { className: string; children: ReactN
   return <PointedPreview.Provider value={pointed}><div className={className}>{children}</div></PointedPreview.Provider>
 }
 
-/** A constructor page's preview over its ↗ row; `flush` sets the row right under the preview, with no gap. */
+/** A constructor page's preview over its ↗ row; `flush` sets the row right under the preview, with no gap and no hairline. */
 function Constructor({ to, title, flush, children }: { to: string; title: string; flush?: boolean; children: ReactNode }) {
   return (
     <div className={`group/preview flex flex-col ${flush ? '' : 'gap-4 md:gap-6'}`}>
       <PreviewLink asset={{ to, title }} label={title}>{children}</PreviewLink>
-      <Assets items={[{ to, title }]} preview={to} />
+      <Assets items={[{ to, title }]} preview={to} bare={flush} />
     </div>
   )
 }
