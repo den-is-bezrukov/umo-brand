@@ -53,50 +53,20 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
     <>
       <div data-head className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <span data-generator-menu className="relative flex">
-            <IconButton label="Конструкторы" onClick={openMenu} d={tocIcons.menu} />
-            {menu && !inSheet && <GeneratorList current={current} onClose={() => setMenu(false)} />}
-          </span>
+          <IconButton label="Конструкторы" onClick={openMenu} d={tocIcons.menu} />
           <PhoneCrumbs />
           {/* Grey, as the canvas's icons: chevrons out, then the guide's «Свернуть» while the form is over the whole screen */}
           {size && <IconButton label={size.full ? 'Свернуть форму' : 'Развернуть форму'} onClick={size.toggle} grey d={size.full ? tocIcons.close : EXPAND} />}
         </div>
         <GeneratorRing current={current} />
       </div>
-      {menu && inSheet && createPortal(<GeneratorMenu current={current} height={inSheet} onClose={() => setMenu(false)} />, document.body)}
+      {menu && createPortal(<GeneratorMenu current={current} height={inSheet} onClose={() => setMenu(false)} />, document.body)}
     </>
   )
 }
 
-/**
- * The menu icon's list on wide screens: every generator in its order, the current one medium with a tick right after
- * it, styled as the combobox's suggestions (Figma 5015:11234; it was the list under «Носители ⌄»), 8 px under the icon,
- * as wide as its longest row; Esc or a click elsewhere closes it
- */
-function GeneratorList({ current, onClose }: { current: string; onClose: () => void }) {
-  useEffect(() => {
-    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
-    const away = (e: PointerEvent) => { if (!(e.target as Element).closest('[data-generator-menu]')) onClose() }
-    document.addEventListener('keydown', key)
-    document.addEventListener('pointerdown', away)
-    return () => { document.removeEventListener('keydown', key); document.removeEventListener('pointerdown', away) }
-  }, [onClose])
-  return (
-    <nav aria-label="Конструкторы" className="absolute top-full -left-[14px] z-20 mt-2 w-max rounded-[8px] bg-white p-[2px] text-[14px] leading-5 whitespace-nowrap text-black shadow-[0_10px_15px_rgba(0,0,0,0.1)]">
-      {GENERATORS.map(g => g.path === current ? (
-        <div key={g.path} aria-current="page" className="flex items-center gap-2 rounded-[8px] px-3 py-[10px] font-medium">
-          {g.title}
-          <span className="flex h-5 w-4 shrink-0 items-center justify-center"><Tick /></span>
-        </div>
-      ) : (
-        <Link key={g.path} to={g.path} onClick={onClose} className="flex rounded-[8px] px-3 py-[10px] outline-none hover:bg-[#f5f5f5] focus-visible:bg-[#f5f5f5]">{g.title}</Link>
-      ))}
-    </nav>
-  )
-}
-
-/** The generators' menu on a phone (Figma 5099:5825), a sheet over the form's: the breadcrumbs with «Свернуть» across from them, then every generator, 24 px Medium 20 px apart, the current one black */
-function GeneratorMenu({ current, height, onClose }: { current: string; /** The form's sheet's, which it lies over */ height: string; onClose: () => void }) {
+/** The generators' menu (Figma 5099:5825), on a phone a sheet over the form's, on wide screens a panel over the sidebar: the breadcrumbs with «Свернуть» across from them, then every generator, 24 px Medium 20 px apart, the current one black */
+function GeneratorMenu({ current, height, onClose }: { current: string; /** The form's sheet's, which it lies over; none on wide screens */ height: string; onClose: () => void }) {
   useEffect(() => {
     const key = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', key)
@@ -105,8 +75,9 @@ function GeneratorMenu({ current, height, onClose }: { current: string; /** The 
   const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
   return (
     // A sheet of its own over the form's, as tall, as round and shadowed, 24 px in; the close icon where the
-    // menu icon was, then the breadcrumbs, the generators 20 px apart under them (16 in Figma 5099:5825)
-    <div role="dialog" aria-label="Конструкторы" style={{ height }} className="fixed inset-x-0 bottom-0 z-50 overflow-y-auto rounded-t-[24px] bg-white p-6 font-sans text-black shadow-[0_10px_30px_rgba(0,0,0,0.1)]">
+    // menu icon was, then the breadcrumbs, the generators 20 px apart under them (16 in Figma 5099:5825). On wide
+    // screens the same over the whole sidebar, so the list grows as it will (a list under the icon was tried)
+    <div role="dialog" aria-label="Конструкторы" style={height ? { height } : undefined} className={`fixed z-50 overflow-y-auto bg-white p-6 font-sans text-black ${height ? 'inset-x-0 bottom-0 rounded-t-[24px] shadow-[0_10px_30px_rgba(0,0,0,0.1)]' : 'inset-y-0 left-0 w-80'}`}>
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
           <IconButton label="Закрыть" onClick={onClose} d={tocIcons.close} />
@@ -115,7 +86,7 @@ function GeneratorMenu({ current, height, onClose }: { current: string; /** The 
         <nav aria-label="Конструкторы" className="flex flex-col items-start gap-5">
           {GENERATORS.map(g => g.path === current
             ? <span key={g.path} aria-current="page" className={name}>{g.title}</span>
-            : <Link key={g.path} to={g.path} onClick={onClose} className={`${name} text-[#bfbfbf] outline-none active:text-[#808080]`}>{g.title}</Link>)}
+            : <Link key={g.path} to={g.path} onClick={onClose} className={`${name} text-[#bfbfbf] outline-none hover:text-[#808080] focus-visible:text-[#808080] active:text-[#808080]`}>{g.title}</Link>)}
         </nav>
       </div>
     </div>
