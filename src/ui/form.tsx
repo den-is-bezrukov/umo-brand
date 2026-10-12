@@ -767,7 +767,7 @@ function useAlice(alice?: AliceAsk) {
           {/* 2 px left: her round mark looks set in from the text's straight edge under it */}
           <span className="-ml-[2px] flex items-center gap-[6px] text-[16px] font-medium"><AliceMark className="text-[20px] leading-5" />Алиса AI</span>
           {/* The text runs under the chevron, which only shares her name's line */}
-          <span>{!priceCard ? 'Помогу разобраться\u00a0— спросите, если\u00a0что-то непонятно'
+          <span>{!priceCard ? 'Помогу разобраться с\u00a0редактором\u00a0— спрашивайте'
             : started ? <>Помогу закончить <span className="whitespace-nowrap">прайс-карту</span>{'\u00a0— продолжим с\u00a0того, что уже заполнено'}</>
             : <>Помогу сделать <span className="whitespace-nowrap">прайс-карту</span>{'\u00a0— ответьте на\u00a0пару вопросов'}</>}</span>
         </a>
