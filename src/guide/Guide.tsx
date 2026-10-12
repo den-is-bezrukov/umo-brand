@@ -24,7 +24,7 @@ const img = (name: string) => images[`../assets/guide/${name}.svg`] ?? images[`.
 type NavItem = { id: string; title: string; children?: NavItem[] }
 
 /**
- * The media of Носители, in the Figma order (4844:6695). A wide picture (2:1 and wider) takes a whole row of
+ * The media of Носители (Figma 4844:6695, the order since rearranged on the site). A wide picture (2:1 and wider) takes a whole row of
  * the overview grid, narrow ones pair up, and a narrow one moves up next to an unpaired one before it (what CSS
  * `grid-auto-flow: dense` would do). `MEDIA` is that packed order, so the grid and the sidebar's sub-items list the
  * media as they actually stand.
@@ -33,8 +33,6 @@ type NavItem = { id: string; title: string; children?: NavItem[] }
 // the medium's name alone, as the contents list it, then «Редактор ливреи»…)
 const MEDIA_LIST: { id: string; to: string; title: string; row: string; w: number; h: number; picture: ReactNode }[] = [
   { id: 'livery', to: '/livery', title: 'Ливрея', row: 'Настроить ливрею', w: 912, h: 456, picture: <Fig name="livery-umo5" flat="#f6f6f6" w={912} h={456} alt="UMO 5 с ливреей дилера" /> },
-  { id: 'business-card', to: '/business-card', title: 'Визитка', row: 'Сделать визитки', w: 444, h: 333, picture: <Fig name="business-card-card" w={444} h={333} alt="Визитка дилера UMO, обе стороны" /> },
-  { id: 'name-tag', to: '/name-tag', title: 'Бейдж', row: 'Подписать бейджи', w: 444, h: 333, picture: <Fig name="name-tag-card" w={444} h={333} alt="Бейдж UMO на рубашке сотрудника" /> },
   {
     // Figma 4985:10019: the 210×297 card centred on the 444×333 grey
     id: 'price-card', to: '/price-card', title: 'Прайс-карта', row: 'Обновить прайс-карту', w: 444, h: 333,
@@ -65,17 +63,8 @@ const MEDIA_LIST: { id: string; to: string; title: string; row: string; w: numbe
       </div>
     ),
   },
-  {
-    // Figma 5008:10482: the 261×66 plate in its frame centred on the 444×333 grey
-    id: 'plate-frame', to: '/plate-frame', title: 'Рамка номера', row: 'Сделать рамку номера', w: 444, h: 333,
-    picture: (
-      <div className="flex aspect-4/3 items-center justify-center bg-[#f5f5f5]">
-        <PlateArt className="w-[58.8%]!">
-          <text y={STRIP_BASELINE} fontFamily="CoFo Sans" fontWeight={500} fontSize={18} letterSpacing={-0.18} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Центр UMO | Название дилера</text>
-        </PlateArt>
-      </div>
-    ),
-  },
+  { id: 'business-card', to: '/business-card', title: 'Визитка', row: 'Сделать визитки', w: 444, h: 333, picture: <Fig name="business-card-card" w={444} h={333} alt="Визитка дилера UMO, обе стороны" /> },
+  { id: 'name-tag', to: '/name-tag', title: 'Бейдж', row: 'Подписать бейджи', w: 444, h: 333, picture: <Fig name="name-tag-card" w={444} h={333} alt="Бейдж UMO на рубашке сотрудника" /> },
   {
     // The 480×680 sign as tall as the price card on the 444×333 grey
     id: 'hours-sign', to: '/hours-sign', title: 'Режимник', row: 'Указать часы работы', w: 444, h: 333,
@@ -92,6 +81,17 @@ const MEDIA_LIST: { id: string; to: string; title: string; row: string; w: numbe
             ))}
           </g>
         </svg>
+      </div>
+    ),
+  },
+  {
+    // Figma 5008:10482: the 261×66 plate in its frame centred on the 444×333 grey
+    id: 'plate-frame', to: '/plate-frame', title: 'Рамка номера', row: 'Сделать рамку номера', w: 444, h: 333,
+    picture: (
+      <div className="flex aspect-4/3 items-center justify-center bg-[#f5f5f5]">
+        <PlateArt className="w-[58.8%]!">
+          <text y={STRIP_BASELINE} fontFamily="CoFo Sans" fontWeight={500} fontSize={18} letterSpacing={-0.18} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Центр UMO | Название дилера</text>
+        </PlateArt>
       </div>
     ),
   },
