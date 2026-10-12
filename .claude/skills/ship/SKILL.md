@@ -12,7 +12,7 @@ Never push without that word. Commit finished pieces locally as you go (commits 
 ## Before committing
 
 1. `pnpm build` passes (tsc + vite). No image over 2.5 MB, no video over 15 MB under `src/` or `public/`: CI and the deploy fail on them.
-2. **AGENTS.md describes what you changed**: new behaviour, numbers, Figma node ids, why a non-obvious choice was made. It is the project's memory; every past session kept it current.
+2. **AGENTS.md describes what you changed, as it is now**: new behaviour, numbers, Figma node ids, a short why where a choice isn't obvious. Rewrite the old description in place; no history («it was…», «tried…»): that goes in the commit message.
 3. Downloads touched? The sizes come from `virtual:download-sizes` automatically. Copies such as `public/downloads/umo-favicon.*` match their sources.
 4. Stage only your files. `.claude/settings.local.json` and scratch screenshots stay out (a test screenshot was once committed by mistake).
 
