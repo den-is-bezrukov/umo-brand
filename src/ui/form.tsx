@@ -424,7 +424,7 @@ export function SegBtn({ active, onClick, disabled, title, children }: { active:
       disabled={disabled}
       title={title}
       aria-pressed={active}
-      className={`flex-1 min-w-0 flex items-center justify-center rounded-[8px] border px-3 py-[9px] cursor-pointer outline-none
+      className={`flex-1 min-w-0 flex items-center justify-center rounded-[8px] border px-3 py-[9px] in-[[data-sheet]]:py-[11px]! cursor-pointer outline-none
         focus-visible:ring-2 focus-visible:ring-black/30 disabled:cursor-not-allowed disabled:text-[#999]
         ${active ? 'border-black/10 bg-white text-black' : 'border-transparent text-[#808080]'}`}
     >
@@ -469,7 +469,7 @@ export function TextInput({ value, onChange, onBlur, onPaste, placeholder, inval
       aria-invalid={invalid || undefined}
       inputMode={inputMode ?? (numeric ? 'numeric' : undefined)}
       pattern={numeric ? '[0-9 ]*' : undefined}
-      className={`h-10 w-full min-w-0 rounded-[8px] bg-[#f5f5f5] px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]
+      className={`h-10 in-[[data-sheet]]:h-11! w-full min-w-0 rounded-[8px] bg-[#f5f5f5] px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]
         focus:ring-1 focus:ring-inset focus:ring-black/40 ${className}`}
     />
   )
@@ -489,7 +489,7 @@ function useAutoHeight(value: string) {
   return ref
 }
 
-const areaClass = 'block min-h-10 w-full min-w-0 resize-none overflow-hidden rounded-[8px] bg-[#f5f5f5] py-[10px] px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]'
+const areaClass = 'block min-h-10 in-[[data-sheet]]:min-h-11! in-[[data-sheet]]:py-3! w-full min-w-0 resize-none overflow-hidden rounded-[8px] bg-[#f5f5f5] py-[10px] px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]'
 
 /** Multi-line text where Enter is a line break the layout keeps */
 export function TextArea({ value, onChange, placeholder, invalid, className = '', ...rest }: { value: string; onChange: (v: string) => void; placeholder?: string; invalid?: boolean; className?: string } & Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'value' | 'onChange'>) {
@@ -604,7 +604,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
         const change = (v: string) => { onChange(singleLine || truncate ? v.replace(/\s*\n\s*/g, ' ') : v); setAll(false); setOpen(true) }
         // An input, as a textarea can't end in an ellipsis
         return truncate
-          ? <input {...field} onChange={e => change(e.target.value)} className={`${areaClass} h-10 truncate pr-10 focus:ring-1 focus:ring-inset focus:ring-black/40`} />
+          ? <input {...field} onChange={e => change(e.target.value)} className={`${areaClass} h-10 in-[[data-sheet]]:h-11! truncate pr-10 focus:ring-1 focus:ring-inset focus:ring-black/40`} />
           : <TextArea {...field} invalid={invalid} onChange={change} className="pr-10" />
       })()}
       <button
@@ -613,7 +613,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
         aria-label={label}
         onMouseDown={e => e.preventDefault()}
         onClick={() => { if (inSheet) { setAll(true); openScreen(); return } box.current?.querySelector<HTMLElement>('textarea, input')?.focus(); setAll(true); setOpen(o => !o || !all) }}
-        className="absolute top-0 right-0 flex size-10 cursor-pointer items-center justify-center"
+        className="absolute top-0 right-0 flex size-10 in-[[data-sheet]]:h-11! cursor-pointer items-center justify-center"
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
           <path d="M3 5L7 9L11 5" stroke="black" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" />
@@ -718,7 +718,7 @@ export function UrlField({ value, onChange }: { value: string; onChange: (v: str
         className={`${areaClass} break-all pr-9 focus:ring-1 focus:ring-inset focus:ring-black/40`}
       />
       {/* On the first line, however many lines the link takes */}
-      <div className="pointer-events-none absolute top-0 right-0 flex h-10 w-9 items-center justify-center">
+      <div className="pointer-events-none absolute top-0 right-0 flex h-10 in-[[data-sheet]]:h-11! w-9 items-center justify-center">
         {valid ? (
           <span role="img" aria-label="Ссылка в порядке"><Tick color="#00C950" /></span>
         ) : error ? (
@@ -736,7 +736,8 @@ export function UrlField({ value, onChange }: { value: string; onChange: (v: str
 /** A grey 16 px box with a black tick, 8 px from its label (Figma: UMO | Evrone, node 4900:4656), on a native checkbox for keyboard and screen readers */
 export function Checkbox({ checked, onChange, children, className = '' }: { checked: boolean; onChange: (v: boolean) => void; children: React.ReactNode; className?: string }) {
   return (
-    <label className={`flex cursor-pointer items-center gap-2 text-[14px] leading-4 text-black ${className}`}>
+    // In the phone's sheet the row takes a finger's 44 px, 14 px over and under it given back by margins, so it looks as before
+    <label className={`flex cursor-pointer items-center gap-2 text-[14px] leading-4 text-black in-[[data-sheet]]:-my-[14px] in-[[data-sheet]]:py-[14px] ${className}`}>
       <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="peer sr-only" />
       <span aria-hidden className="flex size-4 shrink-0 items-center justify-center rounded-[2px] bg-[#f5f5f5] peer-focus-visible:ring-2 peer-focus-visible:ring-black/30">
         {checked && <Tick />}
@@ -794,7 +795,7 @@ export function SizeSwitch({ large, onChange, label }: { large: boolean; onChang
 }
 
 // Edged at 10%, at 40% on hover (Figma 5015:11171)
-export const outlined = 'flex min-w-16 flex-1 items-center justify-center rounded-[8px] border border-black/10 px-3 py-[9px] text-[14px] font-medium leading-5 text-black cursor-pointer outline-none hover:border-black/40 focus-visible:ring-2 focus-visible:ring-black/30 disabled:cursor-default disabled:text-[#999] disabled:hover:border-black/10'
+export const outlined = 'flex min-w-16 flex-1 items-center justify-center rounded-[8px] border border-black/10 px-3 py-[9px] in-[[data-sheet]]:py-[11px]! text-[14px] font-medium leading-5 text-black cursor-pointer outline-none hover:border-black/40 focus-visible:ring-2 focus-visible:ring-black/30 disabled:cursor-default disabled:text-[#999] disabled:hover:border-black/10'
 
 /** A word the download bar's line says for a moment («В файле нет режимника») */
 const flashes = new Set<(text: string) => void>()
@@ -837,7 +838,7 @@ export function LinkButtons({ incomplete }: { incomplete?: boolean }) {
     // White under it: on phones it stands over the canvas, and there its stroke is centred on its edge, half out, half
     // in (a trial): inside, the stroke left 38 px of white beside the solid 40 of the download, which read larger. Wide
     // screens keep the inside stroke
-    <button type="button" onClick={share} title="Отправить ссылку на эти настройки" disabled={incomplete} aria-disabled={copied || undefined} className={`${outlined} w-full bg-white ${copied ? 'cursor-default hover:border-black/10! max-md:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)]!' : ''} max-md:border-0 max-md:py-[10px] max-md:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)] max-md:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.4),inset_0_0_0_0.5px_rgba(0,0,0,0.4)] max-md:disabled:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)]`}>
+    <button type="button" onClick={share} title="Отправить ссылку на эти настройки" disabled={incomplete} aria-disabled={copied || undefined} className={`${outlined} w-full bg-white ${copied ? 'cursor-default hover:border-black/10! max-md:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)]!' : ''} max-md:border-0 max-md:py-[10px] max-md:in-[[data-sheet]]:py-3! max-md:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)] max-md:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.4),inset_0_0_0_0.5px_rgba(0,0,0,0.4)] max-md:disabled:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)]`}>
       {/* Regular, as a note rather than a button's name; while it shows the button is still, no hover or click, its text grey #808080, as quiet lines: the hover's edge is overridden, as
           pointer-events: none kept the browser's hover on until the pointer moved */}
       {copied ? <span className="font-normal text-[#808080]">Ссылка с настройками скопирована</span> : 'Поделиться'}
@@ -902,7 +903,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
       type="button"
       onClick={leads ? () => { if (foot) { foot(); setTimeout(onNote!, 350) } else onNote!() } : onClick}
       disabled={busy || (disabled && !leads)}
-      className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] text-[14px] leading-5 outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 hover:enabled:bg-[#333] disabled:cursor-default
+      className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] in-[[data-sheet]]:py-3! text-[14px] leading-5 outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 hover:enabled:bg-[#333] disabled:cursor-default
         ${lead || said ? 'font-normal' : 'font-medium'} ${disabled && !leads && !busy ? 'text-[#999]' : 'text-white'}`}
     >
       {busy && (

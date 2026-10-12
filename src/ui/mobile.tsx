@@ -270,7 +270,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         // As the generators' ring turns, the last easing that was kept (it was linear for a moment)
         style={{ height, transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: 'cubic-bezier(0.67, 0, 0.33, 1)' }}
       >
-        <div ref={scroller} className={`min-h-0 flex-1 overflow-y-auto ${preview ? 'pointer-events-none' : ''}`}>
+        <div ref={scroller} data-sheet className={`min-h-0 flex-1 overflow-y-auto ${preview ? 'pointer-events-none' : ''}`}>
           <div className="pb-20 *:gap-4! *:p-5!">
             <SheetSize.Provider value={{ full, toggle: () => setSheet(s => (s === 'full' ? 'half' : 'full')) }}>
               <InSheet.Provider value={height}>{sidebar}</InSheet.Provider>
@@ -279,7 +279,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         </div>
         {/* The download over the form's foot, on a white gradient the form fades under, 20 px in (Figma 5098:5539) */}
         {!preview && (
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white p-5 tracking-normal">
+          <div data-sheet className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white p-5 tracking-normal">
             <InFoot.Provider value={() => setSheet(s => (s === 'preview' ? 'half' : s))}>{download}</InFoot.Provider>
           </div>
         )}
