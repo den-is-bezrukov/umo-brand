@@ -741,6 +741,8 @@ let aliceFolded = false
 function useAlice(alice?: AliceAsk) {
   const [folded, fold] = useState(aliceFolded)
   const [typed, setTyped] = useState(false)
+  // The folded icon opens back into the bubble while the pointer is on it (wide screens)
+  const [peek, setPeek] = useState(false)
   useEffect(() => {
     if (alice || typed) return
     const on = () => setTyped(true)
@@ -748,11 +750,13 @@ function useAlice(alice?: AliceAsk) {
     return () => document.removeEventListener('input', on)
   }, [alice, typed])
   const href = useAliceHref(!fromAi, alice?.ask ?? aliceAsk(location.pathname))
-  if (fromAi || !href) return { bubble: null, icon: null }
+  const none = { bubble: null, icon: null, peek: setPeek }
+  if (fromAi || !href) return none
   const priceCard = location.pathname === '/price-card'
   const open = (via: string) => goal('ai_open', { chat: 'alice', from: location.pathname, via })
-  if (!folded && !(alice ? alice.started : typed)) return {
-    icon: null,
+  const started = alice ? alice.started : typed
+  if (peek || (!folded && !started)) return {
+    ...none,
     bubble: (
       // A message's bubble, 24 px round but for the corner it comes from, with no edge, its shadow over the canvas (the canvas's corner on wide screens, the download's
       // on phones), her name over what she says
@@ -760,16 +764,18 @@ function useAlice(alice?: AliceAsk) {
         <a href={href} target="_blank" rel="noopener" onClick={() => open('bubble')}
           className="flex min-w-0 flex-1 cursor-pointer flex-col gap-1 py-4 pl-5 outline-none focus-visible:ring-2 focus-visible:ring-black/30">
           <span className="flex items-center gap-1 text-[#808080]"><AliceMark className="text-[20px] leading-5 font-normal" />Алиса AI</span>
-          <span>{priceCard ? <>Помогу сделать <span className="whitespace-nowrap">прайс-карту</span>{'\u00a0— ответьте на\u00a0пару вопросов'}</> : 'Помогу разобраться\u00a0— спросите, если что-то непонятно'}</span>
+          <span>{!priceCard ? 'Помогу разобраться\u00a0— спросите, если что-то непонятно'
+            : started ? <>Помогу закончить <span className="whitespace-nowrap">прайс-карту</span>{'\u00a0— продолжим с\u00a0того, что уже заполнено'}</>
+            : <>Помогу сделать <span className="whitespace-nowrap">прайс-карту</span>{'\u00a0— ответьте на\u00a0пару вопросов'}</>}</span>
         </a>
-        <button type="button" onClick={() => { aliceFolded = true; fold(true) }} aria-label="Свернуть" className="flex w-12 shrink-0 cursor-pointer items-start justify-center pt-5 text-[#808080] outline-none hover:text-black">
+        <button type="button" onClick={() => { aliceFolded = true; fold(true); setPeek(false) }} aria-label="Свернуть" className="flex w-12 shrink-0 cursor-pointer items-start justify-center pt-5 text-[#808080] outline-none hover:text-black">
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden><path d="M2 2l8 8M10 2l-8 8" /></svg>
         </button>
       </div>
     ),
   }
   return {
-    bubble: null,
+    ...none,
     icon: (
       <a href={href} target="_blank" rel="noopener" onClick={() => open('icon')} title={priceCard ? 'Продолжить с Алисой AI' : 'Спросить Алису AI'}
         className="alice-pop flex size-12 shrink-0 items-center justify-center rounded-[8px] border border-black/10 bg-white shadow-[0_4px_16px_rgba(0,0,0,0.08)] in-[[data-sheet]]:shadow-none outline-none hover:border-black/40 focus-visible:ring-2 focus-visible:ring-black/30">
@@ -854,7 +860,9 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
     <div className="sticky bottom-0 z-10 mt-8 flex flex-col gap-2 bg-white p-6 pt-0 tracking-normal">
       {shareOn && <div className="flex">{links}</div>}
       <div className="flex">{main}</div>
-      {(alice.bubble || alice.icon) && createPortal(<div className="fixed right-6 bottom-6 z-20 flex justify-end">{alice.bubble}{alice.icon}</div>, document.body)}
+      {(alice.bubble || alice.icon) && createPortal(
+        <div onMouseEnter={() => alice.peek(true)} onMouseLeave={() => alice.peek(false)} className="fixed right-6 bottom-6 z-20 flex justify-end [&_.alice-pop]:origin-bottom-right">{alice.bubble}{alice.icon}</div>,
+        document.body)}
     </div>
   )
 }
