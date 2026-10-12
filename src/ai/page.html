@@ -34,8 +34,7 @@
       .logo { display: block; width: 80px; height: 16px; }
       h1 { margin: 40px 0 0; font-weight: 500; font-size: 24px; line-height: 28px; letter-spacing: -0.01em; }
       .label { margin: 40px 0 12px; color: #808080; }
-      .group { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-      .group > .wide { grid-column: 1 / -1; }
+      .group { display: grid; gap: 8px; }
       .btn { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 48px; padding: 0 16px; border: 1px solid rgb(0 0 0 / 0.1); border-radius: 8px; background: #fff; color: inherit; font: inherit; text-decoration: none; text-align: left; cursor: pointer; }
       .btn:hover { border-color: rgb(0 0 0 / 0.4); }
       .btn svg { flex: none; width: 12px; height: 12px; fill: none; stroke: #808080; stroke-width: 2; stroke-linecap: square; stroke-linejoin: bevel; }
@@ -60,16 +59,16 @@
 
       <div class="label">С помощью ИИ</div>
       <div class="group">
-        <a class="btn wide" data-chat="alice" target="_blank" rel="noopener"><span><span class="alice">@</span> Алиса</span><svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
+        <a class="btn" data-chat="alice" target="_blank" rel="noopener"><span><span class="alice">@</span> Алиса</span><svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
         <a class="btn" data-chat="chatgpt" target="_blank" rel="noopener">ChatGPT<svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
         <a class="btn" data-chat="claude" target="_blank" rel="noopener">Claude<svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
-        <a class="btn wide" data-chat="grok" target="_blank" rel="noopener">Grok<svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
-        <button class="btn wide" data-chat="copy" type="button"><span>Скопировать инструкцию для другого ИИ</span></button>
+        <a class="btn" data-chat="grok" target="_blank" rel="noopener">Grok<svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
+        <button class="btn" data-chat="copy" type="button"><span>Скопировать инструкцию для другого ИИ</span></button>
       </div>
 
       <div class="label">Вручную</div>
       <div class="group">
-        <a class="btn wide" href="/price-card">Прайс-карта в конструкторе<svg viewBox="0 0 16 16"><path d="M9 3l5 5-5 5M14 8H2" /></svg></a>
+        <a class="btn" href="/price-card">Прайс-карта в конструкторе<svg viewBox="0 0 16 16"><path d="M9 3l5 5-5 5M14 8H2" /></svg></a>
       </div>
 
       <details>
