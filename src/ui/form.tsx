@@ -728,10 +728,13 @@ function AliceMark({ className = '' }: { className?: string }) {
  * «Продолжить» once it is, as she's told what's filled in (`ask`); closed with its × until the page is reloaded.
  * A secondary button as the others (`outlined`), only her mark in her colour
  */
+/** Came from umo.autos/ai, where Alice was already offered beside the editor: no offer then (the referrer as index.html keeps it through the 404 redirect) */
+const fromAi = (() => { try { const r = new URL((window as any).siteReferrer ?? document.referrer); return r.origin === location.origin && /^\/ai\/?$/.test(r.pathname) } catch { return false } })()
+
 export function AliceOffer({ ask, started }: { ask: string; started: boolean }) {
   const [closed, setClosed] = useState(false)
-  const href = useAliceHref(!closed, ask)
-  if (closed || !href) return null
+  const href = useAliceHref(!closed && !fromAi, ask)
+  if (closed || fromAi || !href) return null
   return (
     <div className="flex items-center rounded-[8px] border border-black/10 bg-white text-[14px] leading-5 text-black hover:border-black/40">
       <a href={href} target="_blank" rel="noopener" onClick={() => goal('ai_open', { chat: 'alice', from: location.pathname })}
