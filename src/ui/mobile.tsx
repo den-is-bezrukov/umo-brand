@@ -202,7 +202,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#f5f5f5] font-sans text-black">
       {/* The canvas, 10 px in (Figma 5105:8488) */}
-      <div className="relative flex min-h-0 flex-1 flex-col p-[10px]">
+      <div className={`relative flex min-h-0 flex-1 flex-col p-[10px] ${preview ? 'pb-[calc(10px+env(safe-area-inset-bottom))]' : ''}`}>
       {/* A list's row over the picture (Figma 5105:7604): delete on the left, copy on the right, between them the
           number and name between the arrows, the reset right after the name; for a moment after a removal «Удалено ·
           Вернуть» in the middle. Over the whole-screen form it's all there is of the canvas */}
@@ -272,15 +272,18 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       >
         <div ref={scroller} data-sheet className={`min-h-0 flex-1 overflow-y-auto ${preview ? 'pointer-events-none' : ''}`}>
           {/* Groups 24 px apart, so from one 48 px control to the next is 48 (16 + 8 for a label + 24); the header keeps its 16 */}
-          <div className="pb-20 *:gap-6! *:p-6! [&_.gap-4:not([data-head])]:gap-6! [&_.gap-y-4]:gap-y-6!">
+          <div className="pb-[calc(88px+env(safe-area-inset-bottom))] *:gap-6! *:p-6! [&_.gap-4:not([data-head])]:gap-6! [&_.gap-y-4]:gap-y-6!">
             <SheetSize.Provider value={{ full, toggle: () => setSheet(s => (s === 'full' ? 'half' : 'full')) }}>
               <InSheet.Provider value={height}>{sidebar}</InSheet.Provider>
             </SheetSize.Provider>
           </div>
         </div>
-        {/* The download over the form's foot, on a white gradient the form fades under, 24 px in (Figma 5098:5539) */}
+        {/* The download over the form's foot, on a white gradient the form fades under, 24 px in (Figma 5098:5539), 16 px
+            under it plus the screen's bottom safe area (`viewport-fit=cover` in index.html): over Safari's bottom tab
+            bar the page ends at the bar and the area is 0, so the button sits 16 over it; with the tabs on top it clears
+            the home indicator. It was 24 all round, which left it high over Safari's bar */}
         {!preview && (
-          <div data-sheet className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white p-6 tracking-normal">
+          <div data-sheet className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white px-6 pt-6 pb-[calc(16px+env(safe-area-inset-bottom))] tracking-normal">
             <InFoot.Provider value={() => setSheet(s => (s === 'preview' ? 'half' : s))}>{download}</InFoot.Provider>
           </div>
         )}
