@@ -225,8 +225,8 @@ export default function PlateFrame() {
 
   // Alice told what's filled in (`aliceWith`)
   const alice = aliceWith(!blank && [
-    custom ? `Своя строка на рамке: ${text.trim() || 'не указана'}` : `Салон: ${name.trim() ? `UMO ${name.trim()}` : 'не выбран'}`,
-    ...(align === 'center' ? ['Строка по центру'] : []),
+    custom ? `Своя строка на рамке (text): ${text.trim() || 'не указана'}` : `Салон: ${name.trim() ? `UMO ${name.trim()}` : 'не выбран'}`,
+    ...(align === 'center' ? ['Строка по центру (align=center)'] : []),
   ])
 
   const download = (

@@ -147,6 +147,10 @@ The dealer's line under the number plate: «UMO <name>». The dealer, then: «Н
 
 Link: https://umo.autos/plate-frame?name=<name>&pdf=1
 
+Don't offer these, use them only if the person already has them (from the editor) or asks:
+- own line instead of «UMO <name>»: text=<the whole line> in place of name; the person checks it as above
+- centred line: add &align=center
+
 ## Text in links
 
 In names, goods and address keep Russian letters as they are; write each space as %20, & as %26, # as %23. Example:
