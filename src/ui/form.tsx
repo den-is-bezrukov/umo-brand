@@ -59,6 +59,7 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
     return () => { delete document.documentElement.dataset.menu; document.removeEventListener('keydown', key) }
   }, [menu])
   const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
+  const alice = useAliceHref(menu)
   return (
     <div data-head className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
@@ -74,6 +75,13 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
           {GENERATORS.map(g => g.path === current
             ? <button key={g.path} type="button" aria-current="page" onClick={() => setMenu(false)} className={`${name} cursor-pointer text-left`}>{g.title}</button>
             : <Link key={g.path} to={g.path} className={`${name} text-[#bfbfbf] outline-none hover:text-[#808080] focus-visible:text-[#808080] active:text-[#808080]`}>{g.title}</Link>)}
+          {/* Trial: Alice, another way to make them rather than one more of them, a group of its own 40 px under the list */}
+          {alice && (
+            <a href={alice} target="_blank" rel="noopener" onClick={() => goal('ai_open', { chat: 'alice', from: location.pathname, via: 'menu' })}
+              className={`${name} mt-5 flex items-center gap-1 text-[#bfbfbf] outline-none hover:text-[#808080] focus-visible:text-[#808080] active:text-[#808080]`}>
+              Сделать с<AliceMark className="text-[30px] leading-6" />Алисой AI
+            </a>
+          )}
         </nav>
       ) : (
         <GeneratorRing current={current} />
@@ -685,6 +693,27 @@ export const stepsLeft = (n: number) => (n > 1 ? `1/${n}` : undefined)
  * line, under the button for a while)
  */
 /**
+ * Alice opened with the instruction (public/llms.txt, fetched once wanted) in her field, as umo.autos/ai sends it: she
+ * reads no links. In «Эксперт», as there
+ */
+let aliceHref: Promise<string> | undefined
+function useAliceHref(wanted: boolean) {
+  const [href, setHref] = useState('')
+  useEffect(() => {
+    if (!wanted || href) return
+    aliceHref ??= fetch('/llms.txt').then(r => r.text()).then(text => 'https://alice.yandex.ru/?model=alice-agents-expert&set_text='
+      + encodeURIComponent('Следуй этой инструкции и помоги мне сделать материалы UMO.\n\n' + text))
+    aliceHref.then(setHref).catch(() => { aliceHref = undefined })
+  }, [wanted, href])
+  return href
+}
+
+/** Alice's mark, from Alice Okniks (the drop, ss02), in her colour */
+function AliceMark({ className = '' }: { className?: string }) {
+  return <span style={{ fontFamily: 'Alice Okniks', fontFeatureSettings: "'ss02'" }} className={`text-[#7a55ff] ${className}`}>@</span>
+}
+
+/**
  * Trial: an offer over the download to make the cards with Alice instead, on a form not yet touched,
  * closed with its × until the page is reloaded; gone once anything is changed. Alice reads no links,
  * so she gets the instruction itself (public/llms.txt, fetched here) in her field, as umo.autos/ai sends it.
@@ -692,18 +721,13 @@ export const stepsLeft = (n: number) => (n > 1 ? `1/${n}` : undefined)
  */
 export function AliceOffer({ shown }: { shown: boolean }) {
   const [closed, setClosed] = useState(false)
-  const [href, setHref] = useState('')
-  useEffect(() => {
-    if (closed || href) return
-    fetch('/llms.txt').then(r => r.text()).then(text => setHref('https://alice.yandex.ru/?model=alice-agents-expert&set_text='
-      + encodeURIComponent('Следуй этой инструкции и помоги мне сделать материалы UMO.\n\n' + text))).catch(() => {})
-  }, [closed, href])
+  const href = useAliceHref(!closed)
   if (closed || !shown || !href) return null
   return (
     <div className="flex items-center rounded-[8px] border border-black/10 bg-white text-[14px] leading-5 text-black hover:border-black/40">
       <a href={href} target="_blank" rel="noopener" onClick={() => goal('ai_open', { chat: 'alice', from: location.pathname })}
         className="flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1 py-[9px] pl-10 font-medium outline-none focus-visible:ring-2 focus-visible:ring-black/30">
-        Сделать с<span style={{ fontFamily: 'Alice Okniks', fontFeatureSettings: "'ss02'" }} className="text-[20px] leading-5 text-[#7a55ff]">@</span>Алисой AI
+        Сделать с<AliceMark className="text-[20px] leading-5" />Алисой AI
       </a>
       <button type="button" onClick={() => setClosed(true)} aria-label="Закрыть" className="flex w-10 shrink-0 cursor-pointer items-center justify-center self-stretch text-[#808080] outline-none hover:text-black">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden><path d="M2 2l8 8M10 2l-8 8" /></svg>
