@@ -277,8 +277,8 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         style={{ height, transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: 'cubic-bezier(0.67, 0, 0.33, 1)' }}
       >
         <div ref={scroller} data-sheet onFocus={e => setTyping(types(e.target))} onBlur={e => setTyping(types(e.relatedTarget))} className={`min-h-0 flex-1 overflow-y-auto ${preview ? 'pointer-events-none' : ''}`}>
-          {/* Groups 24 px apart, so from one 48 px control to the next is 48 (16 + 8 for a label + 24); the header keeps its 16 */}
-          <div className="pb-[calc(96px+env(safe-area-inset-bottom))] *:gap-6! *:p-6! [&_.gap-4:not([data-head])]:gap-6! [&_.gap-y-4]:gap-y-6!">
+          {/* Groups 24 px apart (`src/index.css`, as on wide screens), so from one 48 px control to the next is 48 (16 + 8 for a label + 24) */}
+          <div className="pb-[calc(96px+env(safe-area-inset-bottom))] *:gap-6! *:p-6!">
             <SheetSize.Provider value={{ full, toggle: () => setSheet(s => (s === 'full' ? 'half' : 'full')) }}>
               <InSheet.Provider value={height}>{sidebar}</InSheet.Provider>
             </SheetSize.Provider>
