@@ -754,15 +754,15 @@ function useAlice(alice?: AliceAsk) {
   if (!folded && !(alice ? alice.started : typed)) return {
     icon: null,
     bubble: (
-      // A message's bubble: round but for the corner it comes from (the canvas's corner on wide screens, the download's
+      // A message's bubble, 24 px round but for the corner it comes from, with no edge, its shadow over the canvas (the canvas's corner on wide screens, the download's
       // on phones), her name over what she says
-      <div className="alice-pop flex w-[320px] max-w-full items-stretch rounded-[12px] rounded-br-[4px] border border-black/10 bg-white text-[14px] leading-5 text-black shadow-[0_4px_16px_rgba(0,0,0,0.08)] hover:border-black/40 in-[[data-sheet]]:w-auto in-[[data-sheet]]:rounded-br-[12px] in-[[data-sheet]]:rounded-bl-[4px] in-[[data-sheet]]:shadow-none">
+      <div className="alice-pop flex w-[320px] max-w-full items-stretch rounded-[24px] rounded-br-[4px] bg-white text-[14px] leading-5 text-black shadow-[0_4px_16px_rgba(0,0,0,0.08)] in-[[data-sheet]]:w-auto in-[[data-sheet]]:rounded-br-[24px] in-[[data-sheet]]:rounded-bl-[4px]">
         <a href={href} target="_blank" rel="noopener" onClick={() => open('bubble')}
-          className="flex min-w-0 flex-1 cursor-pointer flex-col gap-1 py-3 in-[[data-sheet]]:py-[14px]! pl-3 outline-none focus-visible:ring-2 focus-visible:ring-black/30">
+          className="flex min-w-0 flex-1 cursor-pointer flex-col gap-1 py-4 pl-5 outline-none focus-visible:ring-2 focus-visible:ring-black/30">
           <span className="flex items-center gap-1 text-[#808080]"><AliceMark className="text-[20px] leading-5 font-normal" />Алиса AI</span>
           <span>{priceCard ? <>Помогу сделать <span className="whitespace-nowrap">прайс-карту</span>{'\u00a0— ответьте на\u00a0пару вопросов'}</> : 'Помогу разобраться\u00a0— спросите, если что-то непонятно'}</span>
         </a>
-        <button type="button" onClick={() => { aliceFolded = true; fold(true) }} aria-label="Свернуть" className="flex w-10 shrink-0 cursor-pointer items-start justify-center pt-[16px] in-[[data-sheet]]:pt-[18px] text-[#808080] outline-none hover:text-black">
+        <button type="button" onClick={() => { aliceFolded = true; fold(true) }} aria-label="Свернуть" className="flex w-12 shrink-0 cursor-pointer items-start justify-center pt-5 text-[#808080] outline-none hover:text-black">
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden><path d="M2 2l8 8M10 2l-8 8" /></svg>
         </button>
       </div>
