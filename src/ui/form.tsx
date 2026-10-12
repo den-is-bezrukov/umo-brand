@@ -1,9 +1,8 @@
 import { useContext, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
-import { createPortal, flushSync } from 'react-dom'
+import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import { goal } from './metrika'
 import { InFoot, InSheet, SheetSize } from './phone'
-import tocIcons from '@/icons/toc'
 
 // Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag, business card). Light UI per the Figma layout
 // (UMO | Evrone, nodes 4844:6865 and 4900:4588), matching the brand guide.
@@ -29,125 +28,68 @@ const GENERATORS = [
 ]
 
 /**
- * The top of a generator's sidebar (Figma 4900:4589, the switch and its hover 5008:10784): breadcrumbs back to the guide and to its
- * Носители chapter, and the generators in one line, a ring: the current one black where the title always stood, 24 px
- * from the panel's edge, the others grey after it, 20 px apart in the list's order, going round and running out under the panel's
- * right edge. The line turns with the wheel (either way) or a drag, and comes back round to the current one when left;
- * a click turns the picked one into the title's place, then opens it.
- */
-/**
  * The breadcrumbs underline on hover as the guide's links do (Figma 4865:1061): black at 40%, fading out, 0.35 px (2.5%
  * of their 14 px). The generators' names don't: they are navigation, as the guide's contents, and only darken
  */
 const crumb = 'underline decoration-transparent decoration-[0.35px] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 hover:decoration-black/40 hover:duration-0'
 
+/**
+ * The top of a generator's form, the same on every screen (Figma 5098:5487, the phone's, carried over to wide screens):
+ * the menu icon and the breadcrumbs in Regular, 16 px tall, the icon opening every generator (on a phone a sheet of its
+ * own, 5099:5825, elsewhere a list under it); on a phone the size icon across from them opening the form over the whole
+ * screen or putting it back; the generators' line under them (`GeneratorRing`). Wide screens had the crumbs in Medium
+ * with a list under «Носители ⌄» and a ring turned by script, which a finger couldn't drive
+ */
 export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' | '/price-tag' | '/hours-sign' }) {
-  // A pick in the list turns the ring as a click on it does
-  const turnTo = useRef<((e: React.MouseEvent, path: string) => void) | null>(null)
-  // In the phone's sheet (Figma 5098:5487): the menu icon and the breadcrumbs in Regular, 16 px tall, the icon opening
-  // every generator in a sheet of its own (5099:5825), the size icon across from them opening the form over the whole
-  // screen or putting it back; the ring under them (it was gone for a while, the generator's name and the menu icon
-  // in its place)
   const inSheet = useContext(InSheet)
   const size = useContext(SheetSize)
   const [menu, setMenu] = useState(false)
-  const openMenu = () => { setMenu(true); goal('open_menu', { page: location.pathname }) }
-  if (inSheet) return (
+  const openMenu = () => { setMenu(m => !m); if (!menu) goal('open_menu', { page: location.pathname }) }
+  return (
     <>
       <div data-head className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
-          <IconButton label="Конструкторы" onClick={openMenu} d="M2 4H14M2 8H14M2 12H14" />
+          <span data-generator-menu className="relative flex">
+            <IconButton label="Конструкторы" onClick={openMenu} d="M2 4H14M2 8H14M2 12H14" />
+            {menu && !inSheet && <GeneratorList current={current} onClose={() => setMenu(false)} />}
+          </span>
           <PhoneCrumbs />
           {/* Grey, as the canvas's icons; it turns inward while the form is over the whole screen */}
           {size && <IconButton label={size.full ? 'Свернуть форму' : 'Развернуть форму'} onClick={size.toggle} grey d={size.full ? 'M12.5 7.5H8.5V3.5M3.5 8.5H7.5V12.5' : 'M8.5 3.5H12.5V7.5M7.5 12.5H3.5V8.5'} />}
         </div>
-        <PhoneRing current={current} />
+        <GeneratorRing current={current} />
       </div>
-      {menu && createPortal(<GeneratorMenu current={current} height={inSheet} onClose={() => setMenu(false)} />, document.body)}
+      {menu && inSheet && createPortal(<GeneratorMenu current={current} height={inSheet} onClose={() => setMenu(false)} />, document.body)}
     </>
-  )
-  return (
-    <div className="flex flex-col gap-4">
-      <nav className="flex items-center gap-2 text-[14px] font-medium leading-5 tracking-normal [font-feature-settings:'case'_1]">
-        <Link to="/" className={crumb}>Бренд UMO</Link>
-        <span aria-hidden>·</span>
-        <CrumbMenu current={current} onPick={(e, path) => turnTo.current?.(e, path)} />
-      </nav>
-      <GeneratorRing current={current} turnTo={turnTo} />
-    </div>
   )
 }
 
-/** How long the pointer may be away from «Носители» and the list before the list closes */
-const MENU_CLOSE_MS = 200
-
 /**
- * «Носители ⌄» (Figma 5008:10778): the chapter the generators belong to, with a chevron 8 px after it (8×16, a 1.2 px
- * stroke) saying it lists them. Pointing at either lists all the generators under it, in their order, the current one
- * medium with a tick, styled as the combobox's suggestions; a click on the word still leads to the guide, a tap on the
- * chevron opens the list on touch screens. The siblings under their parent, as Vercel's or GitHub's breadcrumbs switch
- * projects (tried: the list from the current name in the ring, and from the last name in view)
+ * The menu icon's list on wide screens: every generator in its order, the current one medium with a tick right after
+ * it, styled as the combobox's suggestions (Figma 5015:11234; it was the list under «Носители ⌄»), 8 px under the icon,
+ * as wide as its longest row; Esc or a click elsewhere closes it
  */
-function CrumbMenu({ current, onPick }: { current: string; onPick: (e: React.MouseEvent, path: string) => void }) {
-  const [open, setOpen] = useState(false)
-  const timer = useRef<number>(0)
-  const show = (e: React.PointerEvent) => { if (e.pointerType === 'touch') return; clearTimeout(timer.current); setOpen(true) }
-  const hide = (e: React.PointerEvent) => { if (e.pointerType === 'touch') return; clearTimeout(timer.current); timer.current = window.setTimeout(() => setOpen(false), MENU_CLOSE_MS) }
-  useEffect(() => () => clearTimeout(timer.current), [])
+function GeneratorList({ current, onClose }: { current: string; onClose: () => void }) {
   useEffect(() => {
-    if (!open) return
-    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
-    const away = (e: PointerEvent) => { if (!(e.target as Element).closest('[data-crumb-menu]')) setOpen(false) }
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const away = (e: PointerEvent) => { if (!(e.target as Element).closest('[data-generator-menu]')) onClose() }
     document.addEventListener('keydown', key)
     document.addEventListener('pointerdown', away)
     return () => { document.removeEventListener('keydown', key); document.removeEventListener('pointerdown', away) }
-  }, [open])
+  }, [onClose])
   return (
-    <span data-crumb-menu className="relative flex items-center gap-2" onPointerEnter={show} onPointerLeave={hide}>
-      <Link to="/#materials" className={crumb}>Носители</Link>
-      <button type="button" aria-label="Конструкторы" aria-expanded={open} onClick={() => setOpen(o => !o)} className="flex h-4 w-2 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-black/30">
-        <svg width="8" height="16" viewBox="0 0 8 16" fill="none" aria-hidden>
-          <path d="M1 7L4 10L7 7" stroke="currentColor" strokeWidth="1.2" strokeLinecap="square" strokeLinejoin="bevel" />
-        </svg>
-      </button>
-      {open && (
-        // 6 px under the crumbs, its rows' text under «Носители» (the rows' 12 px padding and the list's 2 px inside its
-        // edge); white, 2 px inside its edge, a soft shadow, no line, as the combobox's suggestions (Figma 5015:11234)
-        <nav
-          aria-label="Конструкторы"
-          // As wide as its longest row, unlike the suggestions, which take their field's width
-          className="absolute top-full -left-[14px] z-20 mt-1.5 w-max rounded-[8px] bg-white p-[2px] font-normal whitespace-nowrap [font-feature-settings:normal] text-black shadow-[0_10px_15px_rgba(0,0,0,0.1)]"
-        >
-          {/* The gap above is part of the list's hover area, so the pointer crosses it without closing it */}
-          <div aria-hidden className="absolute inset-x-0 -top-1.5 h-1.5" />
-          {GENERATORS.map(g => g.path === current ? (
-            // The tick right after the word, not at the row's end
-            <div key={g.path} aria-current="page" className="flex items-center gap-2 rounded-[8px] px-3 py-[10px] font-medium">
-              {g.title}
-              <span className="flex h-5 w-4 shrink-0 items-center justify-center"><Tick /></span>
-            </div>
-          ) : (
-            <Link
-              key={g.path}
-              to={g.path}
-              onClick={e => { setOpen(false); onPick(e, g.path) }}
-              className="flex rounded-[8px] px-3 py-[10px] outline-none hover:bg-[#f5f5f5] focus-visible:bg-[#f5f5f5]"
-            >{g.title}</Link>
-          ))}
-        </nav>
-      )}
-    </span>
+    <nav aria-label="Конструкторы" className="absolute top-full -left-[14px] z-20 mt-2 w-max rounded-[8px] bg-white p-[2px] text-[14px] leading-5 whitespace-nowrap text-black shadow-[0_10px_15px_rgba(0,0,0,0.1)]">
+      {GENERATORS.map(g => g.path === current ? (
+        <div key={g.path} aria-current="page" className="flex items-center gap-2 rounded-[8px] px-3 py-[10px] font-medium">
+          {g.title}
+          <span className="flex h-5 w-4 shrink-0 items-center justify-center"><Tick /></span>
+        </div>
+      ) : (
+        <Link key={g.path} to={g.path} onClick={onClose} className="flex rounded-[8px] px-3 py-[10px] outline-none hover:bg-[#f5f5f5] focus-visible:bg-[#f5f5f5]">{g.title}</Link>
+      ))}
+    </nav>
   )
 }
-
-/** Where the current generator stands, the panel's padding */
-const RING_START = 24
-/** Each name's room either side, half the gap, so the names touch and the pointer passes from one to the next with no gap between */
-const RING_PAD = 10
-/** The turn into place */
-const RING_TURN_MS = 333
-/** How long the line stays turned once left, before coming back round to the current one */
-const RING_BACK_MS = 250
 
 /** The generators' menu on a phone (Figma 5099:5825), a sheet over the form's: the breadcrumbs with «Свернуть» across from them, then every generator, 24 px Medium 20 px apart, the current one black */
 function GeneratorMenu({ current, height, onClose }: { current: string; /** The form's sheet's, which it lies over */ height: string; onClose: () => void }) {
@@ -196,19 +138,19 @@ function IconButton({ label, onClick, d, grey }: { label: string; onClick: () =>
   )
 }
 
-/** Copies of the generators in the phone's line: the middle one in view, a whole turn either side to scroll through */
+/** Copies of the generators in the line: the middle one in view, a whole turn either side to scroll through */
 const PHONE_TURNS = 3
 
 /**
- * The ring on a phone: a line scrolled natively, as a phone's tabs (the turned ring, dragged by script, ran on and came
- * back round on its own, unlike anything else under a finger), and picked as a drum: the name the line comes to rest on,
+ * The generators' line, on every screen: scrolled natively, as a phone's tabs, by a finger, a trackpad or the wheel (the
+ * ring turned by script ran on and came back round on its own, unlike anything else under a finger), and picked as a drum: the name the line comes to rest on,
  * 24 px from the edge where the ring had the current one, opens the instant the finger is off and the line is still; a
  * tap opens one too. It goes round as the ring did: the generators in their order three times over, the current one of
  * the middle copy at the edge, so there's a whole turn to scroll either way; every page puts its own there, so the line
  * looks the same after a pick, and a turn's worth of scrolling to the same name puts it back in the middle unseen.
  * 20 px apart (16 in Figma 5098:5496), the one nearest the edge black as it goes
  */
-function PhoneRing({ current }: { current: string }) {
+function GeneratorRing({ current }: { current: string }) {
   const navigate = useNavigate()
   const count = GENERATORS.length
   const middle = Math.floor(PHONE_TURNS / 2) * count + GENERATORS.findIndex(g => g.path === current)
@@ -238,19 +180,42 @@ function PhoneRing({ current }: { current: string }) {
     const ends = 'onscrollend' in window
     let touching = false
     let timer = 0
+    // Only a scroll someone made picks: the snap redoing itself as the panel resizes ended a scroll too, and opened the
+    // next generator on its own
+    let moved = false
+    // The wheel scrolls the line across (a mouse has no other way to), and a pick waits until it's been still a moment,
+    // as each notch of the wheel ends a scroll of its own
+    let wheeled = 0
+    const wheel = (e: WheelEvent) => {
+      moved = true
+      if (Math.abs(e.deltaX) >= Math.abs(e.deltaY)) { wheeled = performance.now(); return }
+      e.preventDefault()
+      wheeled = performance.now()
+      n.scrollBy({ left: e.deltaY * (e.deltaMode === 1 ? 16 : 1), behavior: 'smooth' })
+    }
     const pick = () => {
-      if (touching) return
+      if (touching || !moved) return
+      const quiet = performance.now() - wheeled
+      if (quiet < 300) { clearTimeout(timer); timer = window.setTimeout(pick, 300 - quiet); return }
       const i = nearest()
       const path = GENERATORS[i % count].path
+      moved = false
       if (path !== current) navigate(path)
       // The same name a turn away: back to the middle copy, unseen
       else if (i !== middle) n.scrollLeft += item(middle)!.offsetLeft - item(i)!.offsetLeft
     }
     const settle = () => { clearTimeout(timer); if (!ends) timer = window.setTimeout(pick, 150) }
+    // Keys move the focus along it, scrolling it too
+    const key = () => { moved = true }
+    // Resized, the current one back at the edge
+    const observer = new ResizeObserver(() => { if (!moved) n.scrollLeft = item(middle)!.offsetLeft - 24 })
+    observer.observe(n)
     const scroll = () => { setLit(GENERATORS[nearest() % count].path); settle() }
-    const down = () => { touching = true; clearTimeout(timer) }
+    const down = () => { touching = true; moved = true; clearTimeout(timer) }
     const up = () => { touching = false; settle() }
     if (ends) n.addEventListener('scrollend', pick)
+    n.addEventListener('wheel', wheel, { passive: false })
+    n.addEventListener('keydown', key)
     n.addEventListener('scroll', scroll, { passive: true })
     n.addEventListener('touchstart', down, { passive: true })
     n.addEventListener('touchend', up)
@@ -258,6 +223,9 @@ function PhoneRing({ current }: { current: string }) {
     return () => {
       clearTimeout(timer)
       n.removeEventListener('scrollend', pick)
+      n.removeEventListener('wheel', wheel)
+      n.removeEventListener('keydown', key)
+      observer.disconnect()
       n.removeEventListener('scroll', scroll)
       n.removeEventListener('touchstart', down)
       n.removeEventListener('touchend', up)
@@ -265,7 +233,7 @@ function PhoneRing({ current }: { current: string }) {
     }
   }, [current]) // eslint-disable-line react-hooks/exhaustive-deps
   const name = 'shrink-0 snap-start text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
-  const tone = (path: string) => (path === lit ? 'text-black' : 'text-[#bfbfbf]')
+  const tone = (path: string) => (path === lit ? 'text-black' : 'text-[#bfbfbf] hover:text-[#808080] active:text-[#808080]')
   return (
     <div className="relative -mx-6 my-1">
       {/* 8 px over and under for the descenders (р, у), which the scroller would clip */}
@@ -283,204 +251,6 @@ function PhoneRing({ current }: { current: string }) {
     </div>
   )
 }
-
-function GeneratorRing({ current, turnTo, onMenu }: { current: string; turnTo: React.MutableRefObject<((e: React.MouseEvent, path: string) => void) | null>; /** The phone's menu icon at the line's end */ onMenu?: () => void }) {
-  const start = RING_START
-  const pad = RING_PAD
-  const navigate = useNavigate()
-  const at = GENERATORS.findIndex(g => g.path === current)
-  const ring = [...GENERATORS.slice(at), ...GENERATORS.slice(0, at)]
-  const rowRef = useRef<HTMLDivElement>(null)
-  const copyRef = useRef<HTMLDivElement>(null)
-  // One turn of the ring in px (the names with their room either side), and how far it's turned, unbounded
-  const [turn, setTurn] = useState(0)
-  // The line's width: when the whole ring fits it, as on a wide panel, it's a plain line, not repeated and not turned
-  const [width, setWidth] = useState(Infinity)
-  const [offset, setOffset] = useState(0)
-  const [eased, setEased] = useState(false)
-  const offsetRef = useRef(0)
-  const hover = useRef(false)
-  const timer = useRef<number>(0)
-  const glide = useRef(0)
-  const drag = useRef<{ x: number; start: number; moved: boolean; t: number; v: number } | null>(null)
-  const dragged = useRef(false)
-  const still = typeof window !== 'undefined' && window.matchMedia('(prefers-reduced-motion: reduce)').matches
-
-  useLayoutEffect(() => {
-    const measure = () => copyRef.current && setTurn(copyRef.current.offsetWidth)
-    measure()
-    document.fonts?.ready.then(measure)
-    const row = rowRef.current
-    if (!row) return
-    // Measured before the first paint too, so a narrow panel doesn't flash the plain line before the ring
-    setWidth(row.offsetWidth)
-    const observer = new ResizeObserver(() => setWidth(row.offsetWidth))
-    observer.observe(row)
-    return () => observer.disconnect()
-  }, [])
-  const fits = turn > 0 && start - pad + turn <= width
-  // Turned some rounds on a narrow panel, then widened: the one line left stands at its start
-  useEffect(() => { if (fits && offsetRef.current) move(0, false) }, [fits]) // eslint-disable-line react-hooks/exhaustive-deps
-
-  const move = (to: number, ease: boolean) => {
-    offsetRef.current = to
-    setEased(ease && !still)
-    setOffset(to)
-  }
-  // Back round to the current one, the shorter way
-  const settle = () => {
-    if (!turn) return
-    cancelAnimationFrame(glide.current)
-    const home = Math.round(offsetRef.current / turn) * turn
-    if (home !== offsetRef.current) move(home, true)
-  }
-  const later = (ms: number) => {
-    clearTimeout(timer.current)
-    timer.current = window.setTimeout(() => (hover.current ? later(ms) : settle()), ms)
-  }
-  useEffect(() => () => { clearTimeout(timer.current); cancelAnimationFrame(glide.current) }, [])
-
-  // The wheel turns the line either way; a passive listener couldn't keep the page from scrolling
-  useEffect(() => {
-    const row = rowRef.current
-    if (!row) return
-    const wheel = (e: WheelEvent) => {
-      if (fits) return
-      const d = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY
-      if (!d) return
-      e.preventDefault()
-      cancelAnimationFrame(glide.current)
-      move(offsetRef.current + d * (e.deltaMode === 1 ? 16 : 1), false)
-      later(RING_BACK_MS)
-    }
-    row.addEventListener('wheel', wheel, { passive: false })
-    return () => row.removeEventListener('wheel', wheel)
-  })
-
-  const down = (e: React.PointerEvent) => {
-    if (e.button !== 0 || fits) return
-    cancelAnimationFrame(glide.current)
-    clearTimeout(timer.current)
-    drag.current = { x: e.clientX, start: offsetRef.current, moved: false, t: e.timeStamp, v: 0 }
-    dragged.current = false
-  }
-  const pointerMove = (e: React.PointerEvent) => {
-    const d = drag.current
-    if (!d) return
-    const dx = e.clientX - d.x
-    if (!d.moved && Math.abs(dx) < 5) return
-    if (!d.moved) {
-      d.moved = true
-      dragged.current = true
-      rowRef.current?.setPointerCapture(e.pointerId)
-    }
-    const to = d.start - dx
-    const dt = e.timeStamp - d.t
-    if (dt > 0) d.v = (to - offsetRef.current) / dt
-    d.t = e.timeStamp
-    move(to, false)
-  }
-  const up = () => {
-    const d = drag.current
-    drag.current = null
-    if (!d?.moved) return
-    // Let it run on a little, slowing down, then come back round after a while
-    let v = still ? 0 : d.v
-    let last = performance.now()
-    const step = (now: number) => {
-      const dt = now - last
-      last = now
-      move(offsetRef.current + v * dt, false)
-      v *= Math.pow(0.995, dt)
-      if (Math.abs(v) > 0.02) glide.current = requestAnimationFrame(step)
-      else later(RING_BACK_MS)
-    }
-    glide.current = requestAnimationFrame(step)
-  }
-
-  const open = (e: React.MouseEvent, k: number, i: number, path: string) => {
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return
-    e.preventDefault()
-    if (dragged.current && e.detail) return
-    const item = copyRef.current?.children[i] as HTMLElement | undefined
-    if (still || fits || !item) return navigate(path)
-    clearTimeout(timer.current)
-    cancelAnimationFrame(glide.current)
-    move(k * turn + item.offsetLeft, true)
-    window.setTimeout(() => navigate(path), RING_TURN_MS)
-  }
-  // The crumbs' list turns the ring to its pick, forwards from where it stands
-  turnTo.current = (e, path) => {
-    dragged.current = false
-    open(e, turn ? Math.round(offsetRef.current / turn) : 0, ring.findIndex(g => g.path === path), path)
-  }
-
-  // Enough turns of the ring around where it stands to fill the line, also while it eases between two places
-  const base = turn ? Math.floor(offset / turn) : 0
-  const turns = turn && !fits ? [base - 2, base - 1, base, base + 1, base + 2] : [0]
-  // A plain line keeps the names in their order, as tabs: a pick only turns black, nothing jumps; the ring starts at the current one
-  const shown = fits ? GENERATORS : ring
-  const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
-
-
-  return (
-    <div
-      ref={rowRef}
-      className={`relative h-6 cursor-default touch-pan-y select-none overflow-x-clip -mx-6`}
-      onPointerEnter={e => { if (e.pointerType !== 'touch') hover.current = true }}
-      onPointerLeave={e => { hover.current = false; if (e.pointerType !== 'touch') later(RING_BACK_MS) }}
-      onPointerDown={down}
-      onPointerMove={pointerMove}
-      onPointerUp={up}
-      onPointerCancel={up}
-    >
-      <nav
-        aria-label="Конструкторы"
-        className="absolute inset-y-0 left-0"
-        style={{ transform: `translateX(${start - pad - offset}px)`, transition: eased ? `transform ${RING_TURN_MS}ms cubic-bezier(0.67,0,0.33,1)` : undefined }}
-        onTransitionEnd={() => setEased(false)}
-      >
-        {turns.map(k => (
-          <div key={k} ref={k === 0 ? copyRef : undefined} aria-hidden={k !== 0} className="absolute top-0 flex" style={{ left: k * turn }}>
-            {shown.map((g, i) => g.path === current && k === 0
-              ? <h1 key={g.path} className={name} style={{ paddingInline: pad }}>{g.title}</h1>
-              : <Link
-                  key={g.path}
-                  to={g.path}
-                  tabIndex={k === 0 ? undefined : -1}
-                  draggable={false}
-                  onClick={e => open(e, k, i, g.path)}
-                  style={{ paddingInline: pad }}
-                  className={`${name} ${g.path === current ? 'text-black' : 'text-[#bfbfbf] hover:text-[#808080] focus-visible:text-[#808080]'} outline-none`}
-                >{g.title}</Link>)}
-          </div>
-        ))}
-      </nav>
-      {/* The shades over the panel's edges (Figma 5062:671, 5061:539): two layers each, as set there, the left one solid for its
-          outer quarter; 8 px over and under the 24 px line, which the names' descenders (р, у) run below */}
-      <div aria-hidden className={`pointer-events-none absolute -inset-y-2 left-0 w-6`} style={{ background: 'linear-gradient(90deg, #ffffff80 25%, #fff0), linear-gradient(90deg, #fff 25%, #fff0)' }} />
-      {onMenu ? (
-        <>
-          {/* With the menu icon the right shade is 68 px, solid from its middle, the icon over it 24 px from the edge (Figma 5099:5904) */}
-          <div aria-hidden className="pointer-events-none absolute -inset-y-2 right-0 w-[68px]" style={{ background: 'linear-gradient(90deg, #fff0, #ffffff80 50%), linear-gradient(90deg, #fff0, #fff 50%)' }} />
-          <button
-            type="button"
-            aria-label="Конструкторы"
-            title="Конструкторы"
-            onPointerDown={e => e.stopPropagation()}
-            onClick={onMenu}
-            className="absolute top-[2px] right-6 flex size-5 cursor-pointer items-center justify-center after:absolute after:-inset-[10px] after:content-['']"
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d={tocIcons.menu} stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" /></svg>
-          </button>
-        </>
-      ) : (
-        <div aria-hidden className="pointer-events-none absolute -inset-y-2 right-0 w-12" style={{ background: 'linear-gradient(90deg, #fff0, #ffffff80), linear-gradient(90deg, #fff0, #fff)' }} />
-      )}
-    </div>
-  )
-}
-
 
 export function isValidUrl(v: string): boolean {
   if (!v.trim()) return false
