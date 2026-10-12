@@ -735,10 +735,15 @@ export const aliceWith = (filled: string[] | false): AliceAsk => {
  * becomes the circle, her mark travels from her name's line into it, `alice` and `alice-mark` in index.css); at once
  * where the browser has none or motion is reduced
  */
-function morph(update: () => void) {
+function morph(update: () => void, to: 'icon' | 'bubble') {
   const start = (document as any).startViewTransition?.bind(document)
-  if (!start || matchMedia('(prefers-reduced-motion: reduce)').matches) return update()
-  start(() => flushSync(update))
+  // Wide screens only: on phones the bubble folds into a button elsewhere, at the form's end
+  if (!start || matchMedia('(prefers-reduced-motion: reduce)').matches || !matchMedia('(min-width: 768px)').matches) return update()
+  // While it runs the shape is drawn by the transition itself (its corners going 16/16/0/16 ↔ 20), the bubble and icon
+  // giving only their content, so the text keeps its size and is cut by the shape rather than stretched
+  const root = document.documentElement
+  root.dataset.aliceMorph = to
+  start(() => flushSync(update)).finished.finally(() => { delete root.dataset.aliceMorph })
 }
 
 /** The bubble folded into the icon by its ×, kept outside so it holds while the phone's download steps aside for the keyboard */
@@ -762,7 +767,7 @@ function useAlice(alice?: AliceAsk) {
   const setPeek = (on: boolean) => {
     if (on === peek) return
     if (!folded && !started) return setPeekNow(on)
-    morph(() => { setMorphed(true); setPeekNow(on) })
+    morph(() => { setMorphed(true); setPeekNow(on) }, on ? 'bubble' : 'icon')
   }
   useEffect(() => {
     if (alice || typed) return
@@ -781,7 +786,7 @@ function useAlice(alice?: AliceAsk) {
     bubble: (
       // A message's bubble, 16 px round but for the corner it comes from, square, with no edge, its shadow over the canvas (the canvas's corner on wide screens, the download's
       // on phones), her name over what she says
-      <div className={`${pop} relative flex w-[272px] max-w-full items-stretch rounded-[16px] rounded-br-none bg-white text-[14px] leading-5 text-black shadow-[0_10px_30px_rgba(0,0,0,0.1)] in-[[data-sheet]]:w-auto in-[[data-sheet]]:rounded-br-[16px] in-[[data-sheet]]:rounded-bl-none [view-transition-name:alice]`}>
+      <div className={`${pop} alice-shape relative flex w-[272px] max-w-full items-stretch rounded-[16px] rounded-br-none bg-white text-[14px] leading-5 text-black shadow-[0_10px_30px_rgba(0,0,0,0.1)] in-[[data-sheet]]:w-auto in-[[data-sheet]]:rounded-br-[16px] in-[[data-sheet]]:rounded-bl-none [view-transition-name:alice]`}>
         <a href={href} target="_blank" rel="noopener" onClick={() => open('bubble')}
           className="flex min-w-0 flex-1 cursor-pointer flex-col gap-2 p-5 outline-none focus-visible:ring-2 focus-visible:ring-black/30">
           {/* 2 px left: her round mark looks set in from the text's straight edge under it */}
@@ -791,7 +796,7 @@ function useAlice(alice?: AliceAsk) {
             : started ? <>Помогу закончить <span className="whitespace-nowrap">прайс-карту</span>{'\u00a0— продолжим с\u00a0того, что уже заполнено'}</>
             : <>Помогу сделать <span className="whitespace-nowrap">прайс-карту</span>{'\u00a0— ответьте на\u00a0пару вопросов'}</>}</span>
         </a>
-        <button type="button" onClick={() => { aliceFolded = true; morph(() => { setMorphed(true); fold(true); setPeekNow(false) }) }} aria-label="Свернуть" className="absolute top-[14px] right-3 flex size-8 cursor-pointer items-center justify-center text-[#808080] outline-none hover:text-black">
+        <button type="button" onClick={() => { aliceFolded = true; morph(() => { setMorphed(true); fold(true); setPeekNow(false) }, 'icon') }} aria-label="Свернуть" className="absolute top-[14px] right-3 flex size-8 cursor-pointer items-center justify-center text-[#808080] outline-none hover:text-black">
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden><path d="M2 4l4 4 4-4" /></svg>
         </button>
       </div>
@@ -808,7 +813,7 @@ function useAlice(alice?: AliceAsk) {
     ),
     icon: (
       <a href={href} target="_blank" rel="noopener" onClick={() => open('icon')} title={priceCard ? 'Продолжить с Алисой AI' : 'Спросить Алису AI'}
-        className={`${pop} flex size-10 shrink-0 items-center justify-center rounded-full bg-white shadow-[0_10px_30px_rgba(0,0,0,0.1)] outline-none hover:bg-[#f5f5f5] focus-visible:ring-2 focus-visible:ring-black/30 [view-transition-name:alice]`}>
+        className={`${pop} alice-shape flex size-10 shrink-0 items-center justify-center rounded-[20px] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.1)] outline-none hover:bg-[#f5f5f5] focus-visible:ring-2 focus-visible:ring-black/30 [view-transition-name:alice]`}>
         {/* White on the bubble's shadow, her outline mark in her purple, as in the bubble; 26 px, the mark 23 px, 58% of the
             circle, sized by the font size, not by its axes: Safari clips a glyph moved by them; half a pixel up by CSS */}
         <AliceMark className="relative -top-[0.5px] text-[26px] leading-[26px] [view-transition-name:alice-mark]" />
