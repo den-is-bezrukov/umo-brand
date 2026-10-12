@@ -760,7 +760,7 @@ function useAlice(alice?: AliceAsk) {
     bubble: (
       // A message's bubble, 16 px round but for the corner it comes from, square, with no edge, its shadow over the canvas (the canvas's corner on wide screens, the download's
       // on phones), her name over what she says
-      <div className="alice-pop flex w-[320px] max-w-full items-stretch rounded-[16px] rounded-br-none bg-white text-[14px] leading-5 text-black shadow-[0_10px_30px_rgba(0,0,0,0.1)] in-[[data-sheet]]:w-auto in-[[data-sheet]]:rounded-br-[16px] in-[[data-sheet]]:rounded-bl-none">
+      <div className="alice-pop flex w-[272px] max-w-full items-stretch rounded-[16px] rounded-br-none bg-white text-[14px] leading-5 text-black shadow-[0_10px_30px_rgba(0,0,0,0.1)] in-[[data-sheet]]:w-auto in-[[data-sheet]]:rounded-br-[16px] in-[[data-sheet]]:rounded-bl-none">
         <a href={href} target="_blank" rel="noopener" onClick={() => open('bubble')}
           className="flex min-w-0 flex-1 cursor-pointer flex-col gap-2 py-5 pl-5 outline-none focus-visible:ring-2 focus-visible:ring-black/30">
           {/* 2 px left: her round mark looks set in from the text's straight edge under it */}
