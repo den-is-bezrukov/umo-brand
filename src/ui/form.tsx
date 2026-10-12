@@ -685,8 +685,8 @@ export const stepsLeft = (n: number) => (n > 1 ? `1/${n}` : undefined)
  * line, under the button for a while)
  */
 /**
- * Alice opened with the instruction (public/llms.txt, fetched once wanted) in her field, as umo.autos/ai sends it: she
- * reads no links. In «Эксперт», as there. Over it a line saying where the dealer comes from (`ask`): from the price card
+ * Alice opened with the instruction (public/llms.txt, fetched once wanted) and the dealers after it (umo.autos/dealers.txt,
+ * which the instruction says come at the end) in her field, as umo.autos/ai sends them: she reads no links. In «Эксперт», as there. Over it a line saying where the dealer comes from (`ask`): from the price card
  * what's been filled in, so she asks only what's left; from the other generators which editor they're in, as she
  * can't make those herself and helps with the editor instead (the instruction's «Start» skips its list then)
  */
@@ -695,7 +695,8 @@ function useAliceHref(wanted: boolean, ask: string) {
   const [text, setText] = useState('')
   useEffect(() => {
     if (!wanted || text) return
-    llms ??= fetch('/llms.txt').then(r => r.text())
+    llms ??= Promise.all(['/llms.txt', '/dealers.txt'].map(f => fetch(f).then(r => { if (!r.ok) throw r; return r.text() })))
+      .then(([instruction, dealers]) => instruction + '\n' + dealers)
     llms.then(setText).catch(() => { llms = undefined })
   }, [wanted, text])
   return text && 'https://alice.yandex.ru/?model=alice-agents-expert&set_text=' + encodeURIComponent(ask + '\n\n' + text)
