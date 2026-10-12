@@ -282,7 +282,7 @@ export default function App() {
     }
   }
 
-  // Alice (`useAlice` by the download, the menu) is told it's the price card and, once anything is changed, what every card holds, so
+  // Alice (`useAlice` by the download) is told it's the price card and, once anything is changed, what every card holds, so
   // she asks only what's left (public/llms.txt, «Option 1»)
   const started = !(items.length === 1 && sameCard(items[0], defaultCard('umo5')))
   const aliceAsk = !started
@@ -299,7 +299,7 @@ export default function App() {
   const sidebar = (
     <>
         <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
-          <GeneratorHeader current="/price-card" alice={aliceAsk} />
+          <GeneratorHeader current="/price-card" />
 
           {/* Model and trim side by side while each is 180 px or wider, else one under the other across the row */}
           <div ref={form} className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-x-3 gap-y-4 md:grid-cols-1 tracking-normal">

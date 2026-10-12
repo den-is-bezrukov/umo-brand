@@ -46,7 +46,7 @@ const crumb = 'underline decoration-transparent decoration-[0.35px] underline-of
 /** The guide's «Свернуть» turned out: the chevrons pointing away from the middle, opening the form over the whole screen */
 const EXPAND = 'M4 6L8 2L12 6M4 10L8 14L12 10'
 
-export function GeneratorHeader({ current, alice: ask }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' | '/price-tag' | '/hours-sign'; /** What Alice is told over the instruction, if more than the editor's name (`useAliceHref`) */ alice?: string }) {
+export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' | '/price-tag' | '/hours-sign' }) {
   const size = useContext(SheetSize)
   const [menu, setMenu] = useState(false)
   const toggle = () => { if (!menu) goal('open_menu', { page: location.pathname }); setMenu(!menu) }
@@ -59,7 +59,6 @@ export function GeneratorHeader({ current, alice: ask }: { current: '/price-card
     return () => { delete document.documentElement.dataset.menu; document.removeEventListener('keydown', key) }
   }, [menu])
   const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
-  const alice = useAliceHref(menu, ask ?? aliceAsk(current))
   return (
     <div data-head className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
@@ -75,16 +74,6 @@ export function GeneratorHeader({ current, alice: ask }: { current: '/price-card
           {GENERATORS.map(g => g.path === current
             ? <button key={g.path} type="button" aria-current="page" onClick={() => setMenu(false)} className={`${name} cursor-pointer text-left`}>{g.title}</button>
             : <Link key={g.path} to={g.path} className={`${name} text-[#bfbfbf] outline-none hover:text-[#808080] focus-visible:text-[#808080] active:text-[#808080]`}>{g.title}</Link>)}
-          {/* Trial: Alice, another way to make them rather than one more of them: the download's offer, a group of its own
-              at the sidebar's foot, 24 px up as the download, at least 40 px under the list (index.css) */}
-          {alice && (
-            <div className="mt-auto flex w-full pt-5">
-              <a href={alice} target="_blank" rel="noopener" onClick={() => goal('ai_open', { chat: 'alice', from: location.pathname, via: 'menu' })}
-                className={`${outlined} gap-1 bg-white tracking-normal`}>
-                Сделать с<AliceMark className="text-[20px] leading-5" />Алисой AI
-              </a>
-            </div>
-          )}
         </nav>
       ) : (
         <GeneratorRing current={current} />

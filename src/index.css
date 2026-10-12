@@ -89,14 +89,6 @@ html[data-menu] [data-sheet]:not(:has([data-head])) {
   display: none;
 }
 
-/* Wide screens: the open menu fills the sidebar, so Alice's button under it stands at its foot, 24 px up as the download */
-html[data-menu] aside :is(:has([data-head]), [data-head], [data-head] > nav) {
-  flex-grow: 1;
-}
-html[data-menu] aside :has(> [data-head]) {
-  padding-bottom: 24px;
-}
-
 /* The generators' form: from one control to the next is 48 on every screen — the groups 20 px apart, a label's 16 and
    12 to its field (it was 24 and 8; 16 and 8 on wide screens); the header keeps its 16 */
 :is(aside:has([data-head]), [data-sheet]) .gap-4:not([data-head]) {
