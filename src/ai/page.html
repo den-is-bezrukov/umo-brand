@@ -108,6 +108,8 @@
           <details>
             <summary>Инструкция для ИИ<svg viewBox="0 0 14 14" aria-hidden="true"><path d="M3 5L7 9L11 5" /></svg></summary>
             <pre id="instruction"><!-- ai:instruction --></pre>
+            <!-- umo.autos/dealers.txt, given to Alice and copied along with the instruction, as she reads no links -->
+            <pre id="dealers" hidden><!-- ai:dealers --></pre>
           </details>
         </details>
       </div>
@@ -116,6 +118,7 @@
       // The chats that read a link get a line pointing to llms.txt; Alice reads no links, so she gets the instruction
       // itself in her field
       var instruction = 'Следуй этой инструкции и помоги мне сделать материалы UMO.\n\n' + document.getElementById('instruction').textContent
+        + '\n' + document.getElementById('dealers').textContent
       var ask = 'Прочитай https://umo.autos/llms.txt и следуй инструкции оттуда: помоги мне сделать материалы UMO.'
       var q = encodeURIComponent
       var links = {

@@ -139,8 +139,9 @@ const ALERT = '#e30'
 
 export default function HoursSign() {
   const [link] = useState(linkParams)
-  const [from, setFrom] = useState(() => maskTime(link.get('from') ?? ''))
-  const [to, setTo] = useState(() => maskTime(link.get('to') ?? ''))
+  // A listed dealer's umo.auto hours stand in for the times a link leaves out, as its address does
+  const [from, setFrom] = useState(() => maskTime(link.get('from') ?? hoursOf(link.get('name') ?? '')?.from ?? ''))
+  const [to, setTo] = useState(() => maskTime(link.get('to') ?? hoursOf(link.get('name') ?? '')?.to ?? ''))
   // The line under the hours is fixed, «Работаем без выходных», its field commented out below: nothing a dealer needs to
   // change there, and nothing wider fits the sign's look. `line` and `off=line` in a link are ignored while it's out
   // const [line, setLine] = useState(link.get('off') === 'line' ? '' : link.get('line') ?? DEFAULT_HOURS_LINE)

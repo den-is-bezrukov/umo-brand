@@ -102,7 +102,7 @@ function siteMetaPlugin(config: SiteConfiguration): Plugin {
   const bodyStart = config.customScripts?.bodyStart ?? ''
   const bodyEnd = config.customScripts?.bodyEnd ?? ''
   // Chat agents (ChatGPT, Claude) honour robots.txt when they open a link, so the instruction for them stays open
-  const robotsTxt = config.robots?.index === false ? 'User-agent: *\nAllow: /llms.txt\nAllow: /ai\nDisallow: /\n' : ''
+  const robotsTxt = config.robots?.index === false ? 'User-agent: *\nAllow: /llms.txt\nAllow: /dealers.txt\nAllow: /ai\nDisallow: /\n' : ''
 
   return {
     name: 'site-meta',
@@ -237,21 +237,30 @@ function siteMetaPlugin(config: SiteConfiguration): Plugin {
  * (public/llms.txt) that the page holds, as people pick their chat on it. Built from src/ai/page.html
  */
 function aiPagePlugin(): Plugin {
-  const page = () => {
-    const text = fs.readFileSync(path.resolve(__dirname, 'public/llms.txt'), 'utf8')
-    const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    return fs.readFileSync(path.resolve(__dirname, 'src/ai/page.html'), 'utf8').replace('<!-- ai:instruction -->', escaped)
+  const escape = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+  const page = () => fs.readFileSync(path.resolve(__dirname, 'src/ai/page.html'), 'utf8')
+    .replace('<!-- ai:instruction -->', escape(fs.readFileSync(path.resolve(__dirname, 'public/llms.txt'), 'utf8')))
+    .replace('<!-- ai:dealers -->', escape(dealersText()))
+  /** umo.autos/dealers.txt: the dealers as umo.auto lists them (src/data/dealers.json), for the agent to check against */
+  const dealersText = () => {
+    const dealers: { name: string; address: string; hours: string }[] = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'src/data/dealers.json'), 'utf8'))
+    return '# UMO dealers, as umo.auto lists them\n\nName (without «UMO») — address — hours\n\n'
+      + dealers.map(d => `${d.name.replace(/^UMO\s+/, '')} — ${d.address} — ${d.hours}`).sort((a, b) => a.localeCompare(b, 'ru')).join('\n') + '\n'
   }
   return {
     name: 'ai-page',
     configureServer(server) {
       // In dev the page reloads itself when it or the instruction changes, through Vite's client
-      const sources = ['src/ai/page.html', 'public/llms.txt'].map(f => path.resolve(__dirname, f))
+      const sources = ['src/ai/page.html', 'public/llms.txt', 'src/data/dealers.json'].map(f => path.resolve(__dirname, f))
       server.watcher.add(sources)
       server.watcher.on('change', file => {
         if (sources.includes(file)) server.ws.send({ type: 'full-reload' })
       })
       server.middlewares.use((req, res, next) => {
+        if (req.url?.split('?')[0] === '/dealers.txt') {
+          res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+          return res.end(dealersText())
+        }
         if (!['/ai', '/ai/'].includes(req.url?.split('?')[0] ?? '')) return next()
         res.setHeader('Content-Type', 'text/html; charset=utf-8')
         res.end(page().replace('</head>', '<script type="module" src="/@vite/client"></script></head>'))
@@ -259,6 +268,7 @@ function aiPagePlugin(): Plugin {
     },
     generateBundle() {
       this.emitFile({ type: 'asset', fileName: 'ai/index.html', source: page() })
+      this.emitFile({ type: 'asset', fileName: 'dealers.txt', source: dealersText() })
     },
   }
 }
