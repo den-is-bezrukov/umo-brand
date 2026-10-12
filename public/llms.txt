@@ -108,7 +108,7 @@ In links use the name exactly as in the list, without «UMO».
 1 → «Тогда быстрее в редакторе: откройте https://umo.autos/price-tag и нажмите «Загрузить таблицу». Шаблон таблицы: https://umo.autos/downloads/UMO_price-tags_template.xlsx. Или скопируйте строки из Excel и вставьте сюда — сделаю ссылку.»
 2 → the dealer, then: «Напишите товары, по одному в строке: название, артикул (если есть) и цену.»
 
-Take the goods in any form, as pasted rows too. Caption: «Цена за штуку с НДС»; «за комплект» for a set («комплект», «к-т»), «за упаковку» for a pack. Up to 40 goods. Check:
+Take the goods in any form, as pasted rows too. Caption: «Цена за штуку с НДС»; «за комплект» for a set («комплект», «к-т»), «за упаковку» for a pack. Up to 16 goods, two A4 sheets. For more, say: «Больше 16 ценников удобнее сделать в редакторе из таблицы: https://umo.autos/price-tag» Check:
 
 Проверьте, пожалуйста:
 — Коврики в салон UMO 5, UM5-MAT-01, 4 990 ₽
@@ -127,6 +127,7 @@ A 480×680 mm plate: UMO, the hours, «Работаем без выходных�
 1. The dealer.
 2. Hours. Listed as one range for every day («9–21»): «Часы работы 9:00–21:00, как на umo.auto? 1. Да  2. Нет, напишу свои». Otherwise: «Во сколько открываетесь и закрываетесь? Например: 9:00–21:00»
 3. «Телефон салона?»
+4. «Адрес сайта салона для таблички? Если своего сайта нет, напишите 1 — поставлю umo.auto»
 
 Check:
 
@@ -134,13 +135,15 @@ Check:
 — UMO АГАТ Владимир
 — 8:00–20:00, без выходных
 — Телефон: +7 492 222 33 44
+— Сайт: agat-auto.ru
 Всё верно? 1. Да  2. Нет, исправить
 
-Link: https://umo.autos/hours-sign?name=<name>&phone=<11 digits>&pdf=1
+Link: https://umo.autos/hours-sign?name=<name>&phone=<11 digits>&site=<site>&pdf=1
 - phone — digits only: 84922223344
+- site — without https:// (agat-auto.ru), always set: umo.auto when they have none
 - from=<H:MM>&to=<H:MM> — only when the hours differ from the list
 - address — only for a dealer not in the list, or when they changed it
-The page puts in the dealer's address from umo.auto, the listed hours and the site itself. For a dealer not in the list add «— Адрес: …» to the check.
+The page puts in the dealer's address from umo.auto and the listed hours itself. For a dealer not in the list add «— Адрес: …» to the check.
 
 ## Option 4: plate frame
 
@@ -172,6 +175,8 @@ Link: https://umo.autos/business-card?dealer=<name>&name=<first name>&surname=<s
 - position with a capital first letter: Менеджер%20по%20продажам
 - site — without https:// (agat-auto.ru), always set: umo.auto when they have none; the QR code leads there
 - ext=<digits> — only for an extension
+- qr=<full https:// address, with & ? # written as %26 %3F %23> — only if the person wants the QR code to lead somewhere else than the site
+- marks=1 — crop marks, only if the print shop asks for them («метки реза», «обрезные метки»)
 The page puts in the dealer's address itself.
 
 ## Option 6: name tag

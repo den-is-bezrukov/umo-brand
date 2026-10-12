@@ -70,10 +70,10 @@ const PERSON_FIELDS: CardField[] = ['name', 'surname', 'position', 'email', 'pho
 
 /**
  * One person's card a link brings (from a chat agent, public/llms.txt): `dealer` (its umo.auto address and site follow,
- * as when picked; `address`, `site` and `qr` override them), then `name`, `surname`, `position`, `phone`, `ext`,
+ * as when picked; `address`, `site` and `qr` override them; `marks` adds crop marks), then `name`, `surname`, `position`, `phone`, `ext`,
  * `email`. Read on load only, never written back: a whole staff list is made here, not sent as a link
  */
-function fromLink(): { dealer: Omit<Dealer, 'site'> & { site: string | null }; qrLink: string | null; people: Person[] } {
+function fromLink(): { dealer: Omit<Dealer, 'site'> & { site: string | null }; qrLink: string | null; marks: boolean; people: Person[] } {
   const link = linkParams()
   const get = (k: string) => link.get(k)?.trim() ?? ''
   const name = withoutUmo(get('dealer'))
@@ -81,6 +81,7 @@ function fromLink(): { dealer: Omit<Dealer, 'site'> & { site: string | null }; q
   return {
     dealer: { name, address: get('address') || addressOf(name) || '', site: get('site') || null },
     qrLink: get('qr') || null,
+    marks: link.has('marks'),
     people: Object.values(person).some(Boolean) ? [person] : [],
   }
 }
@@ -101,7 +102,7 @@ export default function BusinessCard() {
   const [qrLink, setQrLink] = useState<string | null>(initial.qrLink)
   // The face before every back (else once, before all of them), and crop marks around each card
   const [faceEach, setFaceEach] = useState(false)
-  const [marks, setMarks] = useState(false)
+  const [marks, setMarks] = useState(initial.marks)
 
   const staff = useStaff<Person>({
     blank: BLANK,
