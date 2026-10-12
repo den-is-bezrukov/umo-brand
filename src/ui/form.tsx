@@ -176,10 +176,10 @@ function GeneratorMenu({ current, height, onClose }: { current: string; /** The 
   )
 }
 
-/** The phone's breadcrumbs: Regular, on 16 px lines (Figma 5110:9105) */
+/** The phone's breadcrumbs: Regular, on 16 px lines (Figma 5110:9105), 12 px after the icon (8 + 4: at 8 they stuck to it) */
 function PhoneCrumbs() {
   return (
-    <nav className="flex min-w-0 flex-1 items-center gap-2 text-[14px] leading-4 [font-feature-settings:'case'_1]">
+    <nav className="ml-1 flex min-w-0 flex-1 items-center gap-2 text-[14px] leading-4 [font-feature-settings:'case'_1]">
       <Link to="/" className={crumb}>Бренд UMO</Link>
       <span aria-hidden>·</span>
       <Link to="/#materials" className={crumb}>Носители</Link>
