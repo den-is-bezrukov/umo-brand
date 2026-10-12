@@ -245,10 +245,16 @@ function aiPagePlugin(): Plugin {
   return {
     name: 'ai-page',
     configureServer(server) {
+      // In dev the page reloads itself when it or the instruction changes, through Vite's client
+      const sources = ['src/ai/page.html', 'public/llms.txt'].map(f => path.resolve(__dirname, f))
+      server.watcher.add(sources)
+      server.watcher.on('change', file => {
+        if (sources.includes(file)) server.ws.send({ type: 'full-reload' })
+      })
       server.middlewares.use((req, res, next) => {
         if (!['/ai', '/ai/'].includes(req.url?.split('?')[0] ?? '')) return next()
         res.setHeader('Content-Type', 'text/html; charset=utf-8')
-        res.end(page())
+        res.end(page().replace('</head>', '<script type="module" src="/@vite/client"></script></head>'))
       })
     },
     generateBundle() {
