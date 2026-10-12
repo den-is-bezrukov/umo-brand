@@ -26,7 +26,7 @@
       @font-face { font-family: 'CoFo Sans'; font-weight: 500; font-display: swap; src: url('/fonts/CoFoSans-Medium.woff2') format('woff2'); }
       * { box-sizing: border-box; }
       body { margin: 0; background: #fff; color: #000; font: 400 14px/16px 'CoFo Sans', sans-serif; -webkit-font-smoothing: antialiased; }
-      main { max-width: 448px; margin: 0 auto; padding: 24px 24px 48px; }
+      main { max-width: 368px; margin: 0 auto; padding: 24px 24px 48px; }
       a { color: inherit; }
       .logo { display: block; width: 80px; height: 16px; }
       h1 { margin: 40px 0 0; font-weight: 500; font-size: 24px; line-height: 28px; letter-spacing: -0.01em; }
@@ -58,11 +58,9 @@
       <div class="label">С помощью ИИ</div>
       <div class="group">
         <a class="btn wide" data-chat="alice" target="_blank" rel="noopener">Алиса<svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
-        <button class="btn wide" data-chat="gigachat" type="button"><span>ГигаЧат</span><svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></button>
         <a class="btn" data-chat="chatgpt" target="_blank" rel="noopener">ChatGPT<svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
         <a class="btn" data-chat="claude" target="_blank" rel="noopener">Claude<svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
-        <a class="btn" data-chat="grok" target="_blank" rel="noopener">Grok<svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
-        <a class="btn" data-chat="perplexity" target="_blank" rel="noopener">Perplexity<svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
+        <a class="btn wide" data-chat="grok" target="_blank" rel="noopener">Grok<svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
         <button class="btn wide" data-chat="copy" type="button"><span>Скопировать инструкцию для другого ИИ</span></button>
       </div>
 
@@ -78,7 +76,7 @@
     </main>
     <script>
       // The chats that read a link get a line pointing to llms.txt; Alice reads no links, so she gets the instruction
-      // itself in her field; GigaChat has no address that fills its field, so the instruction is copied and the chat opened
+      // itself in her field
       var instruction = 'Следуй этой инструкции и помоги мне сделать материалы UMO.\n\n' + document.getElementById('instruction').textContent
       var ask = 'Прочитай https://umo.autos/llms.txt и следуй инструкции оттуда: помоги мне сделать материалы UMO.'
       var q = encodeURIComponent
@@ -87,7 +85,6 @@
         chatgpt: 'https://chatgpt.com/?prompt=' + q(ask),
         claude: 'https://claude.ai/new?q=' + q(ask),
         grok: 'https://grok.com/?q=' + q(ask),
-        perplexity: 'https://www.perplexity.ai/?q=' + q(ask),
       }
       function goal(chat) {
         if (window.ym) ym(113514674, 'reachGoal', 'ai_open', { chat: chat })
@@ -103,10 +100,7 @@
         if (links[chat]) el.href = links[chat]
         el.addEventListener('click', function () {
           goal(chat)
-          if (chat === 'gigachat' || chat === 'copy') {
-            navigator.clipboard.writeText(instruction).then(function () { copied(el) })
-            if (chat === 'gigachat') window.open('https://giga.chat/', '_blank', 'noopener')
-          }
+          if (chat === 'copy') navigator.clipboard.writeText(instruction).then(function () { copied(el) })
         })
       })
     </script>
