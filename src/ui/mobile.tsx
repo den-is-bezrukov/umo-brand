@@ -201,10 +201,6 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#f5f5f5] font-sans text-black">
-      {/* Safari 26 tints its bottom bar from a fixed element with a fill at the page's bottom edge: a white strip there,
-          in the 8 px under the download on iOS, so the bar stays white rather than taking the black button's colour
-          (the gap alone didn't do it). Not over the picture alone, where the canvas's grey is at the edge */}
-      {!preview && <div aria-hidden className="pointer-events-none fixed inset-x-0 bottom-0 z-30 hidden h-[8px] bg-white supports-[-webkit-touch-callout:none]:block" />}
       {/* The canvas, 10 px in (Figma 5105:8488) */}
       <div className={`relative flex min-h-0 flex-1 flex-col p-[10px] ${preview ? 'pb-[calc(10px+env(safe-area-inset-bottom))]' : ''}`}>
       {/* A list's row over the picture (Figma 5105:7604): delete on the left, copy on the right, between them the
@@ -276,21 +272,18 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       >
         <div ref={scroller} data-sheet className={`min-h-0 flex-1 overflow-y-auto ${preview ? 'pointer-events-none' : ''}`}>
           {/* Groups 24 px apart, so from one 48 px control to the next is 48 (16 + 8 for a label + 24); the header keeps its 16 */}
-          <div className="pb-[calc(92px+env(safe-area-inset-bottom))] *:gap-6! *:p-6! [&_.gap-4:not([data-head])]:gap-6! [&_.gap-y-4]:gap-y-6!">
+          <div className="pb-[calc(96px+env(safe-area-inset-bottom))] *:gap-6! *:p-6! [&_.gap-4:not([data-head])]:gap-6! [&_.gap-y-4]:gap-y-6!">
             <SheetSize.Provider value={{ full, toggle: () => setSheet(s => (s === 'full' ? 'half' : 'full')) }}>
               <InSheet.Provider value={height}>{sidebar}</InSheet.Provider>
             </SheetSize.Provider>
           </div>
         </div>
-        {/* The download over the form's foot, on a white gradient the form fades under, 24 px in (Figma 5098:5539), 20 px
-            under it plus the screen's bottom safe area (`viewport-fit=cover` in index.html): over Safari's bottom tab
-            bar the page ends at the bar and the area is 0, so the button sits 20 over it (16 was tight where there's no safe area, as on Android); on iOS alone 8 px plus the safe area (16 and 2 were tried; with
-            none the black button touched the page's edge and Safari 26 tinted its bottom bar black from it)
-            (`-webkit-touch-callout` is iOS's only), where it's over Safari's or Chrome's bottom bar or, with the tabs on
-            top, over the home indicator's 34; with the tabs on top it clears
-            the home indicator. It was 24 all round, which left it high over Safari's bar */}
+        {/* The download over the form's foot, on a white gradient the form fades under, 24 px in all round (Figma 5098:5539),
+            plus the screen's bottom safe area under it (`viewport-fit=cover` in index.html), so it clears the home
+            indicator. Tried closer to Safari's bottom tab bar: 16, then on iOS alone 16, 0, 2 and 8 — touching the edge,
+            the black button turned Safari 26's bar black, and 24 all round is what the sheet's sides have */}
         {!preview && (
-          <div data-sheet className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white px-6 pt-6 pb-[calc(20px+env(safe-area-inset-bottom))] supports-[-webkit-touch-callout:none]:pb-[calc(8px+env(safe-area-inset-bottom))] tracking-normal">
+          <div data-sheet className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white px-6 pt-6 pb-[calc(24px+env(safe-area-inset-bottom))] tracking-normal">
             <InFoot.Provider value={() => setSheet(s => (s === 'preview' ? 'half' : s))}>{download}</InFoot.Provider>
           </div>
         )}
