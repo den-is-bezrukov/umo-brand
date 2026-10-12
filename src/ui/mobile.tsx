@@ -272,7 +272,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       >
         <div ref={scroller} data-sheet className={`min-h-0 flex-1 overflow-y-auto ${preview ? 'pointer-events-none' : ''}`}>
           {/* Groups 24 px apart, so from one 48 px control to the next is 48 (16 + 8 for a label + 24); the header keeps its 16 */}
-          <div className="pb-[calc(96px+env(safe-area-inset-bottom))] *:gap-6! *:p-6! [&_.gap-4:not([data-head])]:gap-6! [&_.gap-y-4]:gap-y-6!">
+          <div className="pb-[calc(96px+env(safe-area-inset-bottom))] [&_svg:not(.animate-spin)_path]:stroke-1 *:gap-6! *:p-6! [&_.gap-4:not([data-head])]:gap-6! [&_.gap-y-4]:gap-y-6!">
             <SheetSize.Provider value={{ full, toggle: () => setSheet(s => (s === 'full' ? 'half' : 'full')) }}>
               <InSheet.Provider value={height}>{sidebar}</InSheet.Provider>
             </SheetSize.Provider>
