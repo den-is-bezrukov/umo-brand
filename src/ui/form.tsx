@@ -787,10 +787,10 @@ function useAlice(alice?: AliceAsk) {
     ),
     icon: (
       <a href={href} target="_blank" rel="noopener" onClick={() => open('icon')} title={priceCard ? 'Продолжить с Алисой AI' : 'Спросить Алису AI'}
-        className="alice-pop flex size-10 in-[[data-sheet]]:size-12 shrink-0 items-center justify-center rounded-full bg-[#7a55ff] outline-none hover:bg-[#6a45ef] focus-visible:ring-2 focus-visible:ring-black/30">
+        className="alice-pop flex size-10 shrink-0 items-center justify-center rounded-full bg-[#7a55ff] outline-none hover:bg-[#6a45ef] focus-visible:ring-2 focus-visible:ring-black/30">
         {/* As her own app's icon: her purple, the solid drop in white, no shadow; the drop set in the optical middle (half a pixel up and a quarter right of the geometric one, where it looked low and left) and grown
             to 55% of the circle by the font's own axes */}
-        <AliceMark solid className="text-[24px] in-[[data-sheet]]:text-[28.8px] leading-6" axes="'XSHF' 10, 'YSHF' -12, 'ZSCL' 8" />
+        <AliceMark solid className="text-[24px] leading-6" axes="'XSHF' 10, 'YSHF' -12, 'ZSCL' 8" />
       </a>
     ),
   }
@@ -857,13 +857,11 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   if (foot) return (
     <div className="flex flex-col gap-2">
       {alice.bubble}
-      <div className="flex gap-2">
-        <div className="grid min-w-0 flex-1 auto-cols-fr grid-flow-col gap-2">
-          {main}
-          {shareOn && <div className="flex min-w-0">{links}</div>}
-        </div>
-        {alice.icon}
+      <div className="grid auto-cols-fr grid-flow-col gap-2">
+        {main}
+        {shareOn && <div className="flex min-w-0">{links}</div>}
       </div>
+      {slot && alice.button && createPortal(alice.button, slot)}
     </div>
   )
   // Wide screens: 40 px off the form, sticking to the sidebar's foot; «Поделиться» over the download, as wide, so it
