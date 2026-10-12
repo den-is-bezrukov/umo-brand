@@ -180,12 +180,12 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
 
   const back = (
     <Btn label="Назад" hidden={!arrows || !many || shown === 0} onClick={() => go(-1)}>
-      <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M10 3L5 8L10 13" /></svg>
+      <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M10 4L6 8L10 12" /></svg>
     </Btn>
   )
   const next = (
     <Btn label="Вперёд" hidden={!arrows || !many || shown === slides.length - 1} onClick={() => go(1)}>
-      <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M6 3L11 8L6 13" /></svg>
+      <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M6 4L10 8L6 12" /></svg>
     </Btn>
   )
   const number = slide?.number ?? shown + 1
@@ -257,29 +257,29 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       {preview && (
         <div className="flex h-[30px] shrink-0 items-center justify-center">
           <Btn label="Свернуть" onClick={() => setSheet('half')}>
-            <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M6 1.5V6H1.5M10 1.5V6H14.5M6 14.5V10H1.5M10 14.5V10H14.5" /></svg>
+            <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M13.5 6.5H9.5V2.5M2.5 9.5H6.5V13.5M2.5 6.5H6.5V2.5M13.5 9.5H9.5V13.5" /></svg>
           </Btn>
         </div>
       )}
       </div>
 
-      {/* The sheet: the sidebar scrolling, 16 px in (the sidebar's 24 on wide screens), the download at its foot; no
-          rounded corners, a shadow over it (Figma 5098:5487) */}
+      {/* The sheet: the sidebar scrolling, 20 px in (Figma has 16; the sidebar's 24 on wide screens), the download at its
+          foot; its top corners 20 px round, as its padding (Figma has none), a shadow over it (Figma 5098:5487) */}
       <div
-        className={`relative flex shrink-0 flex-col overflow-hidden transition-[height] ${preview ? '' : 'bg-white shadow-[0_10px_30px_rgba(0,0,0,0.1)]'}`}
+        className={`relative flex shrink-0 flex-col overflow-hidden transition-[height] ${preview ? '' : 'rounded-t-[20px] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.1)]'}`}
         // As the generators' ring turns, the last easing that was kept (it was linear for a moment)
         style={{ height, transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: 'cubic-bezier(0.67, 0, 0.33, 1)' }}
       >
         <div ref={scroller} className={`min-h-0 flex-1 overflow-y-auto ${preview ? 'pointer-events-none' : ''}`}>
-          <div className="pb-20 *:gap-4! *:p-4!">
+          <div className="pb-20 *:gap-4! *:p-5!">
             <SheetSize.Provider value={{ full, toggle: () => setSheet(s => (s === 'full' ? 'half' : 'full')) }}>
               <InSheet.Provider value={height}>{sidebar}</InSheet.Provider>
             </SheetSize.Provider>
           </div>
         </div>
-        {/* The download over the form's foot, on a white gradient the form fades under, 16 px in (Figma 5098:5539) */}
+        {/* The download over the form's foot, on a white gradient the form fades under, 20 px in (Figma 5098:5539) */}
         {!preview && (
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white p-4 tracking-normal">
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white p-5 tracking-normal">
             <InFoot.Provider value={() => setSheet(s => (s === 'preview' ? 'half' : s))}>{download}</InFoot.Provider>
           </div>
         )}
@@ -288,7 +288,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   )
 }
 
-/** Delete, a bin (Figma 5105:8492), the canvas icons' 1 px stroke */
+/** Delete, a bin (Figma 5105:8492, its outline as exported), the canvas icons' 1 px stroke */
 const TrashIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M2 4H14M6 4V2H10V4M3.5 4L4.5 14.5H11.5L12.5 4M6.5 7V11.5M9.5 7V11.5" /></svg>
+  <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M3.5 5.5V10.5C3.5 12.3856 3.5 13.3284 4.08579 13.9142C4.67157 14.5 5.61438 14.5 7.5 14.5H8.5C10.3856 14.5 11.3284 14.5 11.9142 13.9142C12.5 13.3284 12.5 12.3856 12.5 10.5V5.5M2.5 3.5H13.5M5.5 3V1.5H10.5V3M9.5 6.5V11.5M6.5 6.5V11.5" /></svg>
 )
