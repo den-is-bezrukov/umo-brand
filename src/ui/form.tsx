@@ -756,7 +756,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   onNote?: () => void
   /** «Поделиться», right over the download: off with it, the line over them speaking for both */
   links?: React.ReactNode
-  /** Right over the download, 8 px off as «Поделиться» (trial: `AliceOffer`) */
+  /** Right over the download, 8 px off as «Поделиться» (trial): `AliceOffer`, by default saying which editor this is */
   offer?: React.ReactNode
 }) {
   // What a button under the line has just done, said there for two seconds
@@ -776,6 +776,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   // download, «Поделиться» with it. The bright button stays the next step, so it's pressed even unread, and the press
   // teaches what to do (on wide screens a secondary button saying the step stood over a greyed-out download)
   const foot = useContext(InFoot)
+  const alice = offer ?? <AliceOffer ask={aliceAsk(location.pathname)} started={false} />
   const lead = disabled && !!note && !said
   const leads = lead && !!onNote
   const shareOn = !!links && !disabled && !said
@@ -803,7 +804,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   // download, «Поделиться» left of it, as wide as its word on the right)
   if (foot) return (
     <div className="flex flex-col gap-2">
-      {offer}
+      {alice}
       <div className="grid auto-cols-fr grid-flow-col gap-2">
         {main}
         {shareOn && <div className="flex min-w-0">{links}</div>}
@@ -815,7 +816,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   return (
     <div className="sticky bottom-0 z-10 mt-8 flex flex-col gap-2 bg-white p-6 pt-0 tracking-normal">
       {shareOn && <div className="flex">{links}</div>}
-      {offer}
+      {alice}
       <div className="flex">{main}</div>
     </div>
   )
