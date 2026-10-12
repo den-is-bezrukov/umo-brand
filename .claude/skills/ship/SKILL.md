@@ -1,6 +1,6 @@
 ---
 name: ship
-description: Commit and deploy umo-brand to production (umo.autos) the way the user expects — descriptive commits with Figma node ids, AGENTS.md kept in sync, trials as separate revertible commits; before a push gather all unpushed work across branches and worktrees, check other chats and conflicts with prod, then push to main, watch the deploy, offer cleanup. Use when the user says «пушим», «пуш», «пушь на прод», «комитим и пушим», «давай в прод», «выкатываемся», «собираем всё и пушим», «что не запушено», «проверь конфликты», «откати», «верни как было», or asks to try a variant they may roll back.
+description: Commit and deploy umo-brand to production (umo.autos) the way the user expects — descriptive commits with Figma node ids, AGENTS.md and docs/ kept in sync, trials as separate revertible commits; before a push gather all unpushed work across branches and worktrees, check other chats and conflicts with prod, then push to main, watch the deploy, offer cleanup. Use when the user says «пушим», «пуш», «пушь на прод», «комитим и пушим», «давай в прод», «выкатываемся», «собираем всё и пушим», «что не запушено», «проверь конфликты», «откати», «верни как было», or asks to try a variant they may roll back.
 ---
 
 # Ship to umo.autos
@@ -12,7 +12,7 @@ Never push without that word. Commit finished pieces locally as you go (commits 
 ## Before committing
 
 1. `pnpm build` passes (tsc + vite). No image over 2.5 MB, no video over 15 MB under `src/` or `public/`: CI and the deploy fail on them.
-2. **AGENTS.md describes what you changed, as it is now**: new behaviour, numbers, Figma node ids, a short why where a choice isn't obvious. Rewrite the old description in place; no history («it was…», «tried…»): that goes in the commit message.
+2. **The docs describe what you changed, as it is now**, in the file it belongs to: `docs/guide.md`, `docs/generators.md` for what the generators share, `docs/<generator>.md` for one of them, AGENTS.md only for what every task needs (structure, deploy, rules): new behaviour, numbers, Figma node ids, a short why where a choice isn't obvious. Rewrite the old description in place; no history («it was…», «tried…»): that goes in the commit message.
 3. Downloads touched? The sizes come from `virtual:download-sizes` automatically. Copies such as `public/downloads/umo-favicon.*` match their sources.
 4. Stage only your files. `.claude/settings.local.json` and scratch screenshots stay out (a test screenshot was once committed by mistake).
 
@@ -32,7 +32,7 @@ Several chats work in this repo at once, often in the same folder and branch, an
 1. `git fetch origin` (it sometimes fails with an SSL error: just run it again; never judge «what's on prod» from a stale `origin/main`).
 2. **Unpushed work everywhere**: `git log origin/main..HEAD`, every worktree's `git status --short` (`git worktree list`), and every local or remote branch with commits not in `origin/main` (`git rev-list --count origin/main..<branch>`). A forgotten branch with a real commit (a filter left in a worktree for a day) is asked about, not silently left behind or silently shipped; a branch whose content is already on prod (same files as `origin/main`) is just stale.
 3. **Is someone still writing?** `list_sessions` (the `ccd_session_mgmt` tool): a session with `isRunning: true` in this repo, or a commit in the last minute or two, means another chat is mid-work. Say so and ask rather than push its half-done state.
-4. **Conflicts with prod**: `git merge-tree --write-tree HEAD origin/main`. When prod has commits the branch lacks (often the same change cherry-picked under other hashes, as the Metrika commits were), merge `origin/main` in, resolve, and check the result builds; a push of a branch behind prod is rejected anyway. In a conflict keep both sides' meaning; in AGENTS.md take the current text and re-apply the other side's edits to it, since both sides usually rewrote the same long paragraph.
+4. **Conflicts with prod**: `git merge-tree --write-tree HEAD origin/main`. When prod has commits the branch lacks (often the same change cherry-picked under other hashes, as the Metrika commits were), merge `origin/main` in, resolve, and check the result builds; a push of a branch behind prod is rejected anyway. In a conflict keep both sides' meaning; in AGENTS.md or docs/ take the current text and re-apply the other side's edits to it, since both sides usually rewrote the same long paragraph.
 5. Build and file sizes as in «Before committing», on the merged result.
 6. Uncommitted files: only `.claude/launch.json` is expected (gitignored now); anything else is someone's unfinished work. Ask.
 
