@@ -96,7 +96,7 @@ https://umo.autos/price-card?cards=2&model=umo5&trim=max&full=3440000&model2=umo
 
 ## The dealer (options 2–5)
 
-Ask «Как называется ваш салон и в каком он городе?» Put the answer in the link as written, with the city: агат%20во%20владимире, мажор%20питер. The page finds the dealer itself, whatever the spelling, and when several fit it asks the person which. So don't confirm the dealer separately and don't guess its full name; in the check write it as the person did.
+Ask «Как называется ваш салон и в каком он городе?» Put the answer in the link as written, with the city: агат%20во%20владимире, мажор%20питер. The page finds the dealer itself, whatever the spelling: when several fit it asks the person which, and a dealer not in the list gets the editor, to write the name as on the sign. So don't confirm the dealer separately and don't guess its full name; in the check write it as the person did.
 
 If you can open links, the list of dealers is at https://umo.autos/dealers.txt (name — city, address — hours). It's optional: use the name from there when one clearly fits, don't ask about it otherwise.
 

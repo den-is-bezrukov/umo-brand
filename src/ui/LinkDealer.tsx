@@ -8,10 +8,12 @@ import { linkParams } from './share'
  * The dealer a chat agent's link brings (`pdf` in it, public/llms.txt) found by the page, so the agent needn't: it passes
  * the dealer's words as said («агат во владимире»), and before the generator reads the link they become the dealer's
  * name («АГАТ Владимир»): `findDealers` by any spelling, city or street. One found with every word known: put in. One
- * found with a word no dealer has («Рольф Сити»), or several: the person picks here, before the file, «Моего салона нет
- * в списке» keeping the words. None: the words stay, as a dealer not in the list. A link with no `pdf` is someone's
- * editor and is left as it is, as its name may be the dealer's own line. Metrika's `dealer_link` says how it went:
- * `found`, `picked` (of `choices`), `none` with the words, to add the dealers and names missing
+ * found with a word no dealer has («Рольф Сити»), or several: the person picks here, before the file. None, or «Моего
+ * салона нет в списке»: the editor opens instead of the file, the words in the dealer's field, for the person to write
+ * the name as on the sign: the chat can't tell the dealer wasn't found, and a card or frame goes to its maker. A link
+ * with no `pdf` is someone's editor and is left as it is, as its name may be the dealer's own line. Metrika's
+ * `dealer_link` says how it went: `found`, `picked` (of `choices`), `none` with the words, to add the dealers and names
+ * missing
  */
 export default function LinkDealer({ param, children }: { param: string; children: React.ReactNode }) {
   const [state, setState] = useState<{ said: string; choices: Dealer[] } | null>(() => {
@@ -26,6 +28,7 @@ export default function LinkDealer({ param, children }: { param: string; childre
     }
     if (!found.length) {
       goal('dealer_link', { result: 'none', said: said.slice(0, 100) })
+      toEditor()
       return null
     }
     return { said, choices: found }
@@ -34,6 +37,7 @@ export default function LinkDealer({ param, children }: { param: string; childre
   const { said, choices } = state
   const pick = (d?: Dealer) => {
     if (d) put(param, d)
+    else toEditor()
     goal('dealer_link', d ? { result: 'picked', choices: choices.length } : { result: 'none', choices: choices.length, said: said.slice(0, 100) })
     setState(null)
   }
@@ -53,6 +57,13 @@ export default function LinkDealer({ param, children }: { param: string; childre
       </button>
     </main>
   )
+}
+
+/** The link without `pdf`, so the generator opens its editor rather than the file */
+function toEditor() {
+  const url = new URL(location.href)
+  url.searchParams.delete('pdf')
+  history.replaceState(history.state, '', url)
 }
 
 /** The link with the dealer's name in place of what was said, for the generator to read */
