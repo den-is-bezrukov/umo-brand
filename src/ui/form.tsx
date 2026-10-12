@@ -112,7 +112,7 @@ const PHONE_TURNS = 3
  * tap opens one too. It goes round as the ring did: the generators in their order three times over, the current one of
  * the middle copy at the edge, so there's a whole turn to scroll either way; every page puts its own there, so the line
  * looks the same after a pick, and a turn's worth of scrolling to the same name puts it back in the middle unseen.
- * 20 px apart (16 in Figma 5098:5496), the one nearest the edge black as it goes
+ * 24 px apart (16 in Figma 5098:5496; 20 read tight), the one nearest the edge black as it goes
  */
 function GeneratorRing({ current }: { current: string }) {
   const navigate = useNavigate()
@@ -201,7 +201,7 @@ function GeneratorRing({ current }: { current: string }) {
   return (
     <div className="relative -mx-6 my-1">
       {/* 8 px over and under for the descenders (р, у), which the scroller would clip */}
-      <nav ref={nav} aria-label="Конструкторы" className="relative -my-2 flex snap-x snap-mandatory scroll-pl-6 gap-5 overflow-x-auto overscroll-x-contain py-2 pl-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <nav ref={nav} aria-label="Конструкторы" className="relative -my-2 flex snap-x snap-mandatory scroll-pl-6 gap-6 overflow-x-auto overscroll-x-contain py-2 pl-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {Array.from({ length: PHONE_TURNS * count }, (_, i) => {
           const g = GENERATORS[i % count]
           return i === middle
