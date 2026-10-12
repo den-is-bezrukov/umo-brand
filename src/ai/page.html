@@ -24,6 +24,9 @@
     <style>
       @font-face { font-family: 'CoFo Sans'; font-weight: 400; font-display: swap; src: url('/fonts/CoFoSans-Regular.woff2') format('woff2'); }
       @font-face { font-family: 'CoFo Sans'; font-weight: 500; font-display: swap; src: url('/fonts/CoFoSans-Medium.woff2') format('woff2'); }
+      /* The Alice mark on @, as in the guide (src/index.css) */
+      @font-face { font-family: 'Alice Okniks'; font-weight: 400 700; font-display: swap; src: url('/fonts/AliceOkniks.woff') format('woff'); unicode-range: U+002A, U+0040, U+005E, U+00A0; }
+      .alice { font-family: 'Alice Okniks'; font-feature-settings: 'ss02'; }
       * { box-sizing: border-box; }
       body { margin: 0; background: #fff; color: #000; font: 400 14px/16px 'CoFo Sans', sans-serif; -webkit-font-smoothing: antialiased; }
       main { max-width: 368px; margin: 0 auto; padding: 24px 24px 48px; }
@@ -35,7 +38,7 @@
       .group > .wide { grid-column: 1 / -1; }
       .btn { display: flex; align-items: center; justify-content: space-between; gap: 8px; height: 48px; padding: 0 16px; border: 1px solid rgb(0 0 0 / 0.1); border-radius: 8px; background: #fff; color: inherit; font: inherit; text-decoration: none; text-align: left; cursor: pointer; }
       .btn:hover { border-color: rgb(0 0 0 / 0.4); }
-      .btn svg { flex: none; width: 16px; height: 16px; fill: none; stroke: #808080; stroke-width: 2; stroke-linecap: square; stroke-linejoin: bevel; }
+      .btn svg { flex: none; width: 12px; height: 12px; fill: none; stroke: #808080; stroke-width: 2; stroke-linecap: square; stroke-linejoin: bevel; }
       .btn:hover svg { stroke: #000; }
       details { margin-top: 48px; }
       summary { color: #808080; cursor: pointer; list-style: none; }
@@ -57,7 +60,7 @@
 
       <div class="label">С помощью ИИ</div>
       <div class="group">
-        <a class="btn wide" data-chat="alice" target="_blank" rel="noopener">Алиса<svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
+        <a class="btn wide" data-chat="alice" target="_blank" rel="noopener"><span><span class="alice">@</span> Алиса</span><svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
         <a class="btn" data-chat="chatgpt" target="_blank" rel="noopener">ChatGPT<svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
         <a class="btn" data-chat="claude" target="_blank" rel="noopener">Claude<svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
         <a class="btn wide" data-chat="grok" target="_blank" rel="noopener">Grok<svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
