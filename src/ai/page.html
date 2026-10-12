@@ -39,6 +39,10 @@
       .btn:hover { border-color: rgb(0 0 0 / 0.4); }
       .btn svg { flex: none; width: 12px; height: 12px; fill: none; stroke: #808080; stroke-width: 2; stroke-linecap: square; stroke-linejoin: bevel; }
       .btn:hover svg { stroke: #000; }
+      /* Alice in her own colour (the «Войти» on alice.yandex.ru): the chat most dealers have */
+      .btn.alice-btn { background: #7a55ff; border-color: #7a55ff; color: #fff; }
+      .btn.alice-btn:hover { background: #6a45ef; border-color: #6a45ef; }
+      .btn.alice-btn svg, .btn.alice-btn:hover svg { stroke: #fff; }
       details { margin-top: 48px; }
       summary { color: #808080; cursor: pointer; list-style: none; }
       summary::-webkit-details-marker { display: none; }
@@ -59,7 +63,7 @@
 
       <div class="label">С помощью ИИ</div>
       <div class="group">
-        <a class="btn" data-chat="alice" target="_blank" rel="noopener"><span><span class="alice">@</span> Алиса</span><svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
+        <a class="btn alice-btn" data-chat="alice" target="_blank" rel="noopener"><span><span class="alice">@</span> Алиса</span><svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
         <a class="btn" data-chat="chatgpt" target="_blank" rel="noopener">ChatGPT<svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
         <a class="btn" data-chat="claude" target="_blank" rel="noopener">Claude<svg viewBox="0 0 16 16"><path d="M5 3h8v8M13 3 3 13" /></svg></a>
         <button class="btn" data-chat="copy" type="button"><span>Скопировать инструкцию для другого ИИ</span></button>
