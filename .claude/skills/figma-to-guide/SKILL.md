@@ -36,4 +36,4 @@ Overwrite the file with the same name; `import.meta.glob` picks it up. Keep ever
 
 ## 4. Check before showing
 
-Start `dev` from `.claude/launch.json` (port 8443). Compare with the Figma screenshot at 1440 and on a phone (375), and at the `md`/`lg` edges (768, 1024, 1280) where the sidebar and paddings switch. Measure with `javascript_tool` (getBoundingClientRect) against the Figma numbers rather than judging screenshots. Then update AGENTS.md for anything a future session would need, and hand over to `ship` when the user says «пушим».
+Start `dev` from `.claude/launch.json` (port 8443). Compare with the Figma screenshot at 1440 and on a phone (375), and at the `md`/`lg` edges (768, 1024, 1280) where the sidebar and paddings switch. Measure with `javascript_tool` (getBoundingClientRect) against the Figma numbers rather than judging screenshots. Then update `docs/guide.md` for anything a future session would need, and hand over to `ship` when the user says «пушим».
