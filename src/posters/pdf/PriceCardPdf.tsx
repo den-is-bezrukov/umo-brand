@@ -153,9 +153,10 @@ function PriceCardPage({ variant, fullPrice, creditPrice, qrUrl }: Props) {
   )
 }
 
-export default function PriceCardPdf({ pages }: { pages: Props[] }) {
+/** `title` goes in the PDF's info: Chrome shows it on the tab of a PDF opened from a link (a blob, else named by its id) */
+export default function PriceCardPdf({ pages, title }: { pages: Props[]; title?: string }) {
   return (
-    <Document>
+    <Document title={title}>
       {pages.map((c, i) => <PriceCardPage key={i} {...c} />)}
     </Document>
   )

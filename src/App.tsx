@@ -138,7 +138,7 @@ const qrUrlOf = (c: Card) => isValidUrl(c.url.trim()) ? c.url.trim() : DEFAULT_U
 function pdfOf(cards: Card[]) {
   ensurePdfFonts()
   const pages = cards.map(c => ({ variant: `${c.model}-${c.trim}` as Variant, fullPrice: c.full, creditPrice: c.creditOn ? c.credit : undefined, qrUrl: qrUrlOf(c) }))
-  return pdf(<PriceCardPdf pages={pages} />).toBlob()
+  return pdf(<PriceCardPdf pages={pages} title={pdfName(cards)} />).toBlob()
 }
 
 function downloadGoal(cards: Card[], extra?: Record<string, unknown>) {
