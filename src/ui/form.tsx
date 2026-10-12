@@ -198,21 +198,79 @@ function IconButton({ label, onClick, d, grey }: { label: string; onClick: () =>
 
 /**
  * The ring on a phone: a plain line scrolled natively, as a phone's tabs (the turned ring, dragged by script, ran on and
- * came back round on its own, unlike anything else under a finger). The names start from the current one, 24 px from the
- * edge where the ring had it, the rest after it in the ring's order, 20 px apart (16 in Figma 5098:5496), stopping at
- * each name's start; a tap opens one
+ * came back round on its own, unlike anything else under a finger), and picked as a drum: the name the line comes to rest
+ * on, 24 px from the edge where the ring had the current one, opens once the finger is off and the line is still; a tap
+ * opens one too. The names start from the current one, the rest after it in the ring's order, 20 px apart (16 in Figma
+ * 5098:5496), the one nearest the edge black as it goes. The opened page starts from it, so the line stays where it was
  */
 function PhoneRing({ current }: { current: string }) {
+  const navigate = useNavigate()
   const at = GENERATORS.findIndex(g => g.path === current)
   const ring = [...GENERATORS.slice(at), ...GENERATORS.slice(0, at)]
+  const nav = useRef<HTMLElement>(null)
+  // Room after the last name, so it too can come to rest at the edge
+  const [end, setEnd] = useState(0)
+  const [lit, setLit] = useState(current)
+  useLayoutEffect(() => {
+    const n = nav.current
+    if (!n) return
+    const fit = () => {
+      const last = n.children[ring.length - 1] as HTMLElement | undefined
+      if (last) setEnd(Math.max(0, n.clientWidth - 24 - last.offsetWidth - 20))
+    }
+    fit()
+    document.fonts?.ready.then(fit)
+    const observer = new ResizeObserver(fit)
+    observer.observe(n)
+    return () => observer.disconnect()
+  }, [current]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    const n = nav.current
+    if (!n) return
+    const nearest = () => {
+      let best = current
+      let gap = Infinity
+      ring.forEach((g, i) => {
+        const d = Math.abs((n.children[i] as HTMLElement).offsetLeft - n.scrollLeft - 24)
+        if (d < gap) { gap = d; best = g.path }
+      })
+      return best
+    }
+    let touching = false
+    let timer = 0
+    const settle = () => {
+      clearTimeout(timer)
+      timer = window.setTimeout(() => {
+        if (touching) return
+        const path = nearest()
+        if (path !== current) navigate(path)
+      }, 150)
+    }
+    const scroll = () => { setLit(nearest()); settle() }
+    const down = () => { touching = true; clearTimeout(timer) }
+    const up = () => { touching = false; settle() }
+    n.addEventListener('scroll', scroll, { passive: true })
+    n.addEventListener('touchstart', down, { passive: true })
+    n.addEventListener('touchend', up)
+    n.addEventListener('touchcancel', up)
+    return () => {
+      clearTimeout(timer)
+      n.removeEventListener('scroll', scroll)
+      n.removeEventListener('touchstart', down)
+      n.removeEventListener('touchend', up)
+      n.removeEventListener('touchcancel', up)
+    }
+  }, [current]) // eslint-disable-line react-hooks/exhaustive-deps
   const name = 'shrink-0 snap-start text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
+  const tone = (path: string) => (path === lit ? 'text-black' : 'text-[#bfbfbf]')
   return (
     <div className="relative -mx-6 my-1">
-      {/* 8 px over and under for the descenders (р, у), which the scroller would clip; the room after the last name a pseudo-element, as a flex scroller drops its end padding */}
-      <nav aria-label="Конструкторы" className="-my-2 flex snap-x snap-proximity scroll-pl-6 gap-5 overflow-x-auto overscroll-x-contain py-2 pl-6 [scrollbar-width:none] after:w-1 after:shrink-0 after:content-[''] [&::-webkit-scrollbar]:hidden">
+      {/* 8 px over and under for the descenders (р, у), which the scroller would clip */}
+      <nav ref={nav} aria-label="Конструкторы" className="relative -my-2 flex snap-x snap-mandatory scroll-pl-6 gap-5 overflow-x-auto overscroll-x-contain py-2 pl-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {ring.map(g => g.path === current
-          ? <h1 key={g.path} className={name}>{g.title}</h1>
-          : <Link key={g.path} to={g.path} draggable={false} className={`${name} text-[#bfbfbf] outline-none active:text-[#808080]`}>{g.title}</Link>)}
+          ? <h1 key={g.path} className={`${name} ${tone(g.path)}`}>{g.title}</h1>
+          : <Link key={g.path} to={g.path} draggable={false} className={`${name} ${tone(g.path)} outline-none`}>{g.title}</Link>)}
+        <div aria-hidden className="shrink-0" style={{ width: end }} />
       </nav>
       {/* The shades over the edges, as the ring's (Figma 5062:671, 5061:539) */}
       <div aria-hidden className="pointer-events-none absolute -inset-y-2 left-0 w-6" style={{ background: 'linear-gradient(90deg, #ffffff80 25%, #fff0), linear-gradient(90deg, #fff 25%, #fff0)' }} />
