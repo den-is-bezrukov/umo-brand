@@ -271,7 +271,8 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         style={{ height, transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: 'cubic-bezier(0.67, 0, 0.33, 1)' }}
       >
         <div ref={scroller} data-sheet className={`min-h-0 flex-1 overflow-y-auto ${preview ? 'pointer-events-none' : ''}`}>
-          <div className="pb-20 *:gap-4! *:p-6!">
+          {/* Groups 24 px apart, so from one 48 px control to the next is 48 (16 + 8 for a label + 24); the header keeps its 16 */}
+          <div className="pb-20 *:gap-6! *:p-6! [&_.gap-4:not([data-head])]:gap-6! [&_.gap-y-4]:gap-y-6!">
             <SheetSize.Provider value={{ full, toggle: () => setSheet(s => (s === 'full' ? 'half' : 'full')) }}>
               <InSheet.Provider value={height}>{sidebar}</InSheet.Provider>
             </SheetSize.Provider>

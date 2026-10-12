@@ -54,7 +54,7 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
   const openMenu = () => { setMenu(true); goal('open_menu', { page: location.pathname }) }
   if (inSheet) return (
     <>
-      <div className="flex flex-col gap-4">
+      <div data-head className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
           <IconButton label="Конструкторы" onClick={openMenu} d="M2 4H14M2 8H14M2 12H14" />
           <PhoneCrumbs />
