@@ -1053,12 +1053,12 @@ export default function Guide() {
       {/* Desktop sidebar. The expand row sits at the bottom of the screen, so it stays put while the open chapter
           changes the list's height, and sticks there when the list is taller than the screen, cutting the list off —
           enough of a hint that it scrolls, so the scrollbar, far from the text at this width, is hidden. */}
-      <aside ref={asideRef} className="hidden lg:flex sticky top-0 h-screen w-[320px] xl:w-[480px] shrink-0 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <aside ref={asideRef} className="hidden lg:flex sticky top-0 h-screen w-[320px] xl:w-1/3 shrink-0 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" onClick={toTop} aria-label="В начало" data-logo className="block w-[200px]"><Logo className="w-full" /></a></div>
         {/* The row is fixed to the bottom of the screen — not moved there by script, which lags the scroll a frame and
             makes it shake — so the list keeps its height free at the end. */}
         <div className="px-6 pb-[68px]"><Nav active={active} expandAll={expandAll} /></div>
-        <TocToggle expanded={expandAll && tocShown} onClick={onTocToggle} className="fixed bottom-0 left-0 z-10 w-[320px] p-6 xl:w-[480px]" />
+        <TocToggle expanded={expandAll && tocShown} onClick={onTocToggle} className="fixed bottom-0 left-0 z-10 w-[320px] p-6 xl:w-1/3" />
       </aside>
 
       {/* Mobile top bar. iOS 26 browsers draw the page under their translucent top bar and stick `top: 0` below it,
@@ -1104,7 +1104,7 @@ export default function Guide() {
 
       {/* 16px on top from lg: the statement's capitals then stand level with the top of the logo beside it. */}
       <main className="min-w-0 flex-1 p-4 pb-[calc(52px+1rem)] md:p-6 md:pb-[calc(68px+1.5rem)] lg:pt-4 lg:pb-6">
-        <div className="flex max-w-[1200px] flex-col gap-section">
+        <div className="flex flex-col gap-section">
           {/* Платформа бренда follows the hero without a title of its own — the statement stands in for it and carries
               the chapter anchor. */}
           <div>
