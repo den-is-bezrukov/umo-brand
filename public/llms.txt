@@ -27,24 +27,21 @@ Say exactly:
 1. Прайс-карта — плакат A3 с ценой у машины
 2. Ценники — 8 штук на листе A4
 3. Табличка с режимом работы
-4. Визитки
-5. Бейджи
-6. Рамка номера
-7. Наклейки на демо-автомобиль
+4. Рамка номера
 Напишите номер.
 
-## Options 4, 5, 7: send to the editor
+## Other materials: send to the editor
 
-You can't fill these in. Give the link and say what to have ready, in one message:
+Business cards, name tags and the demo car's stickers aren't in the list, as you can't fill them in. If asked for one, give the link and say what to have ready, in one message:
 
 Это делается в редакторе на сайте, займёт пару минут. Откройте ссылку:
 <link>
 Что понадобится: <ready>. Заполните поля — результат сразу видно рядом. Внизу чёрная кнопка: пока чего-то не хватает, она подскажет, чего, а когда всё готово, на ней будет «Скачать».
 
 Links and <ready>:
-4. https://umo.autos/business-card — название салона, имя, должность, телефон и почта сотрудника
-5. https://umo.autos/name-tag — имя и должность каждого сотрудника (можно вставить список из Excel)
-7. https://umo.autos/livery — название дилера и, по желанию, слоган и адрес сайта для QR-кода
+- Визитки: https://umo.autos/business-card — название салона, имя, должность, телефон и почта сотрудника
+- Бейджи: https://umo.autos/name-tag — имя и должность каждого сотрудника (можно вставить список из Excel)
+- Наклейки на демо-автомобиль: https://umo.autos/livery — название дилера и, по желанию, слоган и адрес сайта для QR-кода
 
 Then ask: «Получилось? Если что-то непонятно — напишите, помогу.»
 
@@ -93,7 +90,7 @@ Examples:
 https://umo.autos/price-card?model=umo8&trim=ultra&full=5990000&credit=auto&pdf=1
 https://umo.autos/price-card?cards=2&model=umo5&trim=max&full=3390000&model2=umo8&trim2=max&full2=5590000&credit2=4990000&pdf=1
 
-## The dealer (options 2, 3, 6)
+## The dealer (options 2, 3, 4)
 
 Every UMO dealer is in «UMO dealers» (https://umo.autos/dealers.txt; in Alice it comes at the end of this message): name — address — hours, as umo.auto has them. Don't ask what the list says.
 
@@ -142,7 +139,7 @@ Link: https://umo.autos/hours-sign?name=<name>&phone=<11 digits>&pdf=1
 - address — only for a dealer not in the list, or when they changed it
 The page puts in the listed address, hours and site itself.
 
-## Option 6: plate frame
+## Option 4: plate frame
 
 The dealer's line under the number plate: «UMO <name>». The dealer, then: «На рамке будет: UMO АГАТ Владимир. Верно? 1. Да  2. Нет, исправить»
 
