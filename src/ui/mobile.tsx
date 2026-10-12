@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ResetIcon, DuplicateIcon, Removed, type Staff } from '@/ui/staff'
-import { InSlide, InFoot, InSheet, SheetSize, AliceSlot } from '@/ui/phone'
+import { InSlide, InFoot, InSheet, SheetSize } from '@/ui/phone'
 
 // A trial of the generators' phone layout (Figma 5098:5806, «Mobile Layout»): the canvas over a sheet holding the
 // sidebar (header and form) with the download at its foot. A list's pictures are swiped one at a time, with a row over
@@ -79,7 +79,6 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   sidebar: React.ReactNode
   download: React.ReactNode
 }) {
-  const [aliceSlot, setAliceSlot] = useState<HTMLDivElement | null>(null)
   const [sheet, setSheet] = useState<Sheet>('half')
   const [arrows] = useState(arrowsOn)
   // A text field in the form has the focus, so the keyboard is up: the download steps aside, as a phone's own forms do,
@@ -283,8 +282,6 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
             <SheetSize.Provider value={{ full, toggle: () => setSheet(s => (s === 'full' ? 'half' : 'full')) }}>
               <InSheet.Provider value={height}>{sidebar}</InSheet.Provider>
             </SheetSize.Provider>
-            {/* Trial: Alice's offer at the form's end, 24 px under it, filled by the download (`AliceOffer`) */}
-            <div className="pt-0!"><div ref={setAliceSlot} /></div>
           </div>
         </div>
         {/* The download over the form's foot, on a white gradient the form fades under, 24 px in all round (Figma 5098:5539),
@@ -293,7 +290,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
             the black button turned Safari 26's bar black, and 24 all round is what the sheet's sides have */}
         {!preview && !typing && (
           <div data-sheet className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white px-6 pt-6 pb-[calc(24px+env(safe-area-inset-bottom))] tracking-normal">
-            <AliceSlot.Provider value={aliceSlot}><InFoot.Provider value={() => setSheet(s => (s === 'preview' ? 'half' : s))}>{download}</InFoot.Provider></AliceSlot.Provider>
+            <InFoot.Provider value={() => setSheet(s => (s === 'preview' ? 'half' : s))}>{download}</InFoot.Provider>
           </div>
         )}
       </div>
