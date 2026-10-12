@@ -74,10 +74,11 @@ function GeneratorMenu({ current, height, onClose }: { current: string; /** The 
   }, [onClose])
   const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
   return (
-    // A sheet of its own over the form's, as tall, as round and shadowed, 24 px in; the close icon where the
+    // A sheet of its own over the form's, as tall and as round, 24 px in, with no shadow of its own (the form's, under
+    // it, already casts one; two doubled it); the close icon where the
     // menu icon was, then the breadcrumbs, the generators 20 px apart under them (16 in Figma 5099:5825). On wide
     // screens the same over the whole sidebar, so the list grows as it will (a list under the icon was tried)
-    <div role="dialog" aria-label="Конструкторы" style={height ? { height } : undefined} className={`fixed z-50 overflow-y-auto bg-white p-6 font-sans text-black ${height ? 'inset-x-0 bottom-0 rounded-t-[24px] shadow-[0_10px_30px_rgba(0,0,0,0.1)]' : 'inset-y-0 left-0 w-80'}`}>
+    <div role="dialog" aria-label="Конструкторы" style={height ? { height } : undefined} className={`fixed z-50 overflow-y-auto bg-white p-6 font-sans text-black ${height ? 'inset-x-0 bottom-0 rounded-t-[24px]' : 'inset-y-0 left-0 w-80'}`}>
       <div className="flex flex-col gap-4">
         <div className="flex items-center gap-2">
           <IconButton label="Закрыть" onClick={onClose} d={tocIcons.close} />
@@ -93,10 +94,11 @@ function GeneratorMenu({ current, height, onClose }: { current: string; /** The 
   )
 }
 
-/** The breadcrumbs: Medium (Regular in Figma 5110:9105), on 16 px lines, 12 px after the icon (8 + 4: at 8 they stuck to it) */
+/** The breadcrumbs: Medium (Regular in Figma 5110:9105), on 16 px lines, with no tracking, as the form's labels, set here
+ * so they don't shift between the form (which tracks its type tighter) and the menu over it; 12 px after the icon (8 + 4: at 8 they stuck to it) */
 function PhoneCrumbs() {
   return (
-    <nav className="ml-1 flex min-w-0 flex-1 items-center gap-2 text-[14px] font-medium leading-4 [font-feature-settings:'case'_1]">
+    <nav className="ml-1 flex min-w-0 flex-1 items-center gap-2 text-[14px] font-medium leading-4 tracking-normal [font-feature-settings:'case'_1]">
       <Link to="/" className={crumb}>Бренд UMO</Link>
       <span aria-hidden>·</span>
       <Link to="/#materials" className={crumb}>Носители</Link>
