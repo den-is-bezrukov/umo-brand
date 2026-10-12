@@ -154,6 +154,12 @@ function downloadGoal(cards: Card[], extra?: Record<string, unknown>) {
   })
 }
 
+/** One card's file is named for it, several are «UMO_price-cards» */
+function pdfName(cards: Card[]) {
+  const one = cards.length === 1 ? cards[0] : null
+  return one ? `UMO-${one.model === 'umo8' ? '8' : '5'}-${one.trim.toUpperCase()}.pdf` : 'UMO_price-cards.pdf'
+}
+
 export default function App() {
   const [initial] = useState(fromLink)
   // `pdf` in the link (from a chat agent, public/llms.txt) opens the cards' PDF itself, with no editor; a card at fault
@@ -162,7 +168,16 @@ export default function App() {
   useEffect(() => {
     if (!pdfOnly) return
     pdfOf(initial)
-      .then(blob => { downloadGoal(initial, { via: 'link' }); window.location.replace(URL.createObjectURL(blob)) })
+      .then(blob => {
+        downloadGoal(initial, { via: 'link' })
+        // Saved to «Загрузки» under its own name first (the tab's own Ctrl+S names it by the blob's id), then shown
+        const url = URL.createObjectURL(blob)
+        const link = document.createElement('a')
+        link.href = url
+        link.download = pdfName(initial)
+        link.click()
+        setTimeout(() => window.location.replace(url), 300)
+      })
       .catch(() => setPdfOnly(false))
   }, [])
   // The cards are a list as the business cards are: one selected and edited in the sidebar, each with its number and
@@ -264,8 +279,7 @@ export default function App() {
       const blob = await pdfOf(items)
       const link = document.createElement('a')
       link.href = URL.createObjectURL(blob)
-      const one = items.length === 1 ? items[0] : null
-      link.download = one ? `UMO-${one.model === 'umo8' ? '8' : '5'}-${one.trim.toUpperCase()}.pdf` : 'UMO_price-cards.pdf'
+      link.download = pdfName(items)
       link.click()
       downloadGoal(items)
       URL.revokeObjectURL(link.href)
