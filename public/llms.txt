@@ -124,7 +124,7 @@ Link: https://umo.autos/price-tag?dealer=<name>&n1=<goods>&c1=<code>&p1=<price>&
 A 480×680 mm plate: UMO, the hours, «Работаем без выходных», the dealership's name, address, phone and site. One range of hours for every day.
 
 1. The dealer.
-2. «Часы работы — как у вас на umo.auto? 1. Да  2. Нет, напишу свои». For 2: «Во сколько открываетесь и закрываетесь? Например: 9:00–21:00»
+2. «Во сколько открываетесь и закрываетесь? Например: 9:00–21:00»
 3. «Телефон салона?»
 4. «Адрес сайта салона для таблички? Если своего сайта нет, напишите 1 — поставлю umo.auto»
 
@@ -132,17 +132,17 @@ Check:
 
 Проверьте, пожалуйста:
 — Салон: агат во владимире
-— Часы: как на umo.auto, без выходных
+— 8:00–20:00, без выходных
 — Телефон: +7 492 222 33 44
 — Сайт: agat-auto.ru
 Всё верно? 1. Да  2. Нет, исправить
 
-Link: https://umo.autos/hours-sign?name=<name>&phone=<11 digits>&site=<site>&pdf=1
+Link: https://umo.autos/hours-sign?name=<name>&from=<H:MM>&to=<H:MM>&phone=<11 digits>&site=<site>&pdf=1
 - phone — digits only: 84922223344
 - site — without https:// (agat-auto.ru), always set: umo.auto when they have none
-- from=<H:MM>&to=<H:MM> — only for their own hours (answer 2)
+- from=<H:MM>&to=<H:MM> — the hours, always: from=8:00&to=20:00
 - address — only when the person says it differs from umo.auto, or their dealer isn't there
-The page puts in the dealer's address and hours from umo.auto itself. If it opens the editor asking for the address or hours, ask them and add address= or from= and to= to the link.
+The page puts in the dealer's address from umo.auto itself. If it opens the editor asking for the address, ask it and add address= to the link.
 
 ## Option 4: plate frame
 

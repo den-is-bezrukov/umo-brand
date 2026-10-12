@@ -703,7 +703,7 @@ function useAliceHref(wanted: boolean, ask: string) {
 
 /** What Alice makes herself in the chat (public/llms.txt), as «сделать …» takes it; the livery she only helps with */
 const ALICE_MAKES: Record<string, string> = {
-  '/price-card': 'прайс-карту', '/price-tag': 'ценники', '/hours-sign': 'табличку',
+  '/price-card': 'прайс-карту', '/price-tag': 'ценники', '/hours-sign': 'табличку с режимом работы',
   '/plate-frame': 'рамку', '/business-card': 'визитку', '/name-tag': 'бейдж',
 }
 
