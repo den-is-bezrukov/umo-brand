@@ -762,13 +762,13 @@ function useAlice(alice?: AliceAsk) {
       // on phones), her name over what she says
       <div className="alice-pop flex w-[320px] max-w-full items-stretch rounded-[16px] rounded-br-none bg-white text-[14px] leading-5 text-black shadow-[0_10px_30px_rgba(0,0,0,0.1)] in-[[data-sheet]]:w-auto in-[[data-sheet]]:rounded-br-[16px] in-[[data-sheet]]:rounded-bl-none">
         <a href={href} target="_blank" rel="noopener" onClick={() => open('bubble')}
-          className="flex min-w-0 flex-1 cursor-pointer flex-col gap-1 py-4 pl-5 outline-none focus-visible:ring-2 focus-visible:ring-black/30">
+          className="flex min-w-0 flex-1 cursor-pointer flex-col gap-1 pt-5 pb-4 pl-5 outline-none focus-visible:ring-2 focus-visible:ring-black/30">
           <span className="flex items-center gap-1 font-medium"><AliceMark className="text-[20px] leading-5 font-normal" />Алиса AI</span>
           <span>{!priceCard ? 'Помогу разобраться\u00a0— спросите, если что-то непонятно'
             : started ? <>Помогу закончить <span className="whitespace-nowrap">прайс-карту</span>{'\u00a0— продолжим с\u00a0того, что уже заполнено'}</>
             : <>Помогу сделать <span className="whitespace-nowrap">прайс-карту</span>{'\u00a0— ответьте на\u00a0пару вопросов'}</>}</span>
         </a>
-        <button type="button" onClick={() => { aliceFolded = true; fold(true); setPeek(false) }} aria-label="Свернуть" className="flex w-12 shrink-0 cursor-pointer items-start justify-center pt-5 text-[#808080] outline-none hover:text-black">
+        <button type="button" onClick={() => { aliceFolded = true; fold(true); setPeek(false) }} aria-label="Свернуть" className="flex w-12 shrink-0 cursor-pointer items-start justify-center pt-6 text-[#808080] outline-none hover:text-black">
           <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1" aria-hidden><path d="M2 2l8 8M10 2l-8 8" /></svg>
         </button>
       </div>
