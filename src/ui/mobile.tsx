@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ResetIcon, DuplicateIcon, Removed, type Staff } from '@/ui/staff'
 import { InSlide, InFoot, InSheet, SheetSize } from '@/ui/phone'
 
@@ -170,7 +170,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     addEventListener('resize', on)
     return () => removeEventListener('resize', on)
   }, [])
-  const rowsH = (row ? ROW : 0) + 2 * PAD + 2 * INSET
+  // One picture's reset and copy stand in a row of their own over it too, never on it: the controls matter more than
+  // the picture's size (in the canvas's top corners they lay over a landscape item's edge)
+  const rowsH = (full ? 0 : ROW) + 2 * PAD + 2 * INSET
   const growth = (ratio?: number) => {
     if (!ratio) return 1
     const w = screen.w - 2 * SIDE
@@ -196,12 +198,6 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   const resetBtn = <Btn label={reset?.label ?? 'Сбросить'} hidden={!reset} onClick={() => reset?.onClick()}><ResetIcon /></Btn>
   const copyBtn = <Btn label="Дублировать" hidden={!staff || !current} onClick={() => staff?.duplicate(current.key, false)}><DuplicateIcon /></Btn>
   const height = { preview: '0px', half: HALF, full: row ? `calc(100dvh - ${ROW + 2 * PAD}px)` : '100dvh' }[sheet]
-
-  // As large as the strip allows, 20 px off its sides and 10 over and under (the items' 1 px edge outside them stays
-  // in, however the strip's height rounds)
-  const fit = (ratio?: number) => ratio
-    ? Math.max(0, Math.floor(Math.min(box.w - 2 * SIDE, (box.h - 2 * INSET) / ratio)))
-    : Math.max(0, box.w - 2 * SIDE)
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#f5f5f5] font-sans text-black">
@@ -229,9 +225,10 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         </div>
       )}
 
-      {/* One picture: its reset and copy in the canvas's top corners, over the strip (Figma 5105:8373, 5105:8084) */}
+      {/* One picture: its reset and copy at the ends of a row over it, as a list's (in the canvas's top corners over the
+          strip, Figma 5105:8373, they covered a landscape item's edge) */}
       {!row && !full && (
-        <div className="pointer-events-none absolute inset-x-[10px] top-[10px] z-10 flex justify-between *:pointer-events-auto">
+        <div className="flex h-[30px] shrink-0 items-center justify-between">
           {resetBtn}
           {staff ? copyBtn : <span />}
         </div>
@@ -251,7 +248,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
             // move a copy 4 px down and cut its top edge); one taller than the screen's width scrolls. A sheet's caption
             // goes while its name is in the row
             <div key={s.key} className={`flex h-full w-full shrink-0 snap-center ${s.ratio ? 'overflow-clip' : 'overflow-y-auto [scrollbar-width:none]'} ${row && s.label ? '[&_figcaption]:hidden' : ''}`}>
-              {box.w > 0 && <div className="m-auto" style={{ width: fit(s.ratio) }}>{typeof s.node === 'function' ? s.node(fit(s.ratio)) : s.node}</div>}
+              {box.w > 0 && <Fitted ratio={s.ratio} box={box} node={s.node} />}
             </div>
           ))}
         </div>
@@ -300,3 +297,30 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
 const TrashIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M3.5 5.5V10.5C3.5 12.3856 3.5 13.3284 4.08579 13.9142C4.67157 14.5 5.61438 14.5 7.5 14.5H8.5C10.3856 14.5 11.3284 14.5 11.9142 13.9142C12.5 13.3284 12.5 12.3856 12.5 10.5V5.5M2.5 3.5H13.5M5.5 3V1.5H10.5V3M9.5 6.5V11.5M6.5 6.5V11.5" /></svg>
 )
+
+/**
+ * A picture as large as the strip allows, 20 px off its sides and 10 over and under (the items' 1 px edge outside them
+ * stays in, however the strip's height rounds), along with what stands under it — an item's faults, a sheet's caption —
+ * measured, so they're never cut off by the sheet
+ */
+function Fitted({ ratio, box, node }: { ratio?: number; box: { w: number; h: number }; node: Slide['node'] }) {
+  const ref = useRef<HTMLDivElement>(null)
+  // The height beyond the picture's own
+  const [extra, setExtra] = useState(0)
+  const w = ratio
+    ? Math.max(0, Math.floor(Math.min(box.w - 2 * SIDE, (box.h - 2 * INSET - extra) / ratio)))
+    : Math.max(0, box.w - 2 * SIDE)
+  useLayoutEffect(() => {
+    const el = ref.current
+    if (!el || !ratio) return
+    const measure = () => {
+      const c = Math.max(0, Math.round(el.offsetHeight - w * ratio))
+      setExtra(e => (Math.abs(c - e) > 1 ? c : e))
+    }
+    measure()
+    const o = new ResizeObserver(measure)
+    o.observe(el)
+    return () => o.disconnect()
+  }, [w, ratio])
+  return <div ref={ref} className="m-auto" style={{ width: w }}>{typeof node === 'function' ? node(w) : node}</div>
+}
