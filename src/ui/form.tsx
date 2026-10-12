@@ -46,7 +46,7 @@ const crumb = 'underline decoration-transparent decoration-[0.35px] underline-of
 /** The guide's «Свернуть» turned out: the chevrons pointing away from the middle, opening the form over the whole screen */
 const EXPAND = 'M4 6L8 2L12 6M4 10L8 14L12 10'
 
-export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' | '/price-tag' | '/hours-sign' }) {
+export function GeneratorHeader({ current, alice: ask }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' | '/price-tag' | '/hours-sign'; /** What Alice is told over the instruction, if more than the editor's name (`useAliceHref`) */ alice?: string }) {
   const size = useContext(SheetSize)
   const [menu, setMenu] = useState(false)
   const toggle = () => { if (!menu) goal('open_menu', { page: location.pathname }); setMenu(!menu) }
@@ -59,7 +59,7 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
     return () => { delete document.documentElement.dataset.menu; document.removeEventListener('keydown', key) }
   }, [menu])
   const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
-  const alice = useAliceHref(menu, current)
+  const alice = useAliceHref(menu, ask ?? aliceAsk(current))
   return (
     <div data-head className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
@@ -697,23 +697,25 @@ export const stepsLeft = (n: number) => (n > 1 ? `1/${n}` : undefined)
  */
 /**
  * Alice opened with the instruction (public/llms.txt, fetched once wanted) in her field, as umo.autos/ai sends it: she
- * reads no links. In «Эксперт», as there. From the price card she's told that's what's wanted, so she skips the list of
- * materials and asks about the card (the instruction's «Start»); the other generators are made in their own editor,
- * where she'd only send the dealer back, so from them she starts with the list
+ * reads no links. In «Эксперт», as there. Over it a line saying where the dealer comes from (`ask`): from the price card
+ * what's been filled in, so she asks only what's left; from the other generators which editor they're in, as she
+ * can't make those herself and helps with the editor instead (the instruction's «Start» skips its list then)
  */
 let llms: Promise<string> | undefined
-function useAliceHref(wanted: boolean, from?: string) {
-  const [href, setHref] = useState('')
+function useAliceHref(wanted: boolean, ask: string) {
+  const [text, setText] = useState('')
   useEffect(() => {
-    if (!wanted || href) return
-    const ask = from === '/price-card'
-      ? 'Следуй этой инструкции. Мне нужна прайс-карта: начни сразу с вопросов о ней.'
-      : 'Следуй этой инструкции и помоги мне сделать материалы UMO.'
+    if (!wanted || text) return
     llms ??= fetch('/llms.txt').then(r => r.text())
-    llms.then(text => setHref('https://alice.yandex.ru/?model=alice-agents-expert&set_text=' + encodeURIComponent(ask + '\n\n' + text)))
-      .catch(() => { llms = undefined })
-  }, [wanted, href, from])
-  return href
+    llms.then(setText).catch(() => { llms = undefined })
+  }, [wanted, text])
+  return text && 'https://alice.yandex.ru/?model=alice-agents-expert&set_text=' + encodeURIComponent(ask + '\n\n' + text)
+}
+
+/** Where the dealer comes from, for a generator that doesn't say more (`useAliceHref`) */
+const aliceAsk = (path: string) => {
+  const g = GENERATORS.find(g => g.path === path)
+  return g ? `Следуй этой инструкции. Я сейчас в редакторе «${g.title}» на umo.autos${path}, помоги мне с ним.` : 'Следуй этой инструкции и помоги мне сделать материалы UMO.'
 }
 
 /** Alice's mark, from Alice Okniks (the drop, ss02), in her colour */
@@ -722,20 +724,19 @@ function AliceMark({ className = '' }: { className?: string }) {
 }
 
 /**
- * Trial: an offer over the download to make the cards with Alice instead, on a form not yet touched,
- * closed with its × until the page is reloaded; gone once anything is changed. Alice reads no links,
- * so she gets the instruction itself (public/llms.txt, fetched here) in her field, as umo.autos/ai sends it.
+ * Trial: an offer over the download to make the cards with Alice instead, «Сделать» on a form not yet touched,
+ * «Продолжить» once it is, as she's told what's filled in (`ask`); closed with its × until the page is reloaded.
  * A secondary button as the others (`outlined`), only her mark in her colour
  */
-export function AliceOffer({ shown }: { shown: boolean }) {
+export function AliceOffer({ ask, started }: { ask: string; started: boolean }) {
   const [closed, setClosed] = useState(false)
-  const href = useAliceHref(!closed, location.pathname)
-  if (closed || !shown || !href) return null
+  const href = useAliceHref(!closed, ask)
+  if (closed || !href) return null
   return (
     <div className="flex items-center rounded-[8px] border border-black/10 bg-white text-[14px] leading-5 text-black hover:border-black/40">
       <a href={href} target="_blank" rel="noopener" onClick={() => goal('ai_open', { chat: 'alice', from: location.pathname })}
         className="flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1 py-[9px] pl-10 font-medium outline-none focus-visible:ring-2 focus-visible:ring-black/30">
-        Сделать с<AliceMark className="text-[20px] leading-5" />Алисой AI
+        {started ? 'Продолжить' : 'Сделать'} с<AliceMark className="text-[20px] leading-5" />Алисой AI
       </a>
       <button type="button" onClick={() => setClosed(true)} aria-label="Закрыть" className="flex w-10 shrink-0 cursor-pointer items-center justify-center self-stretch text-[#808080] outline-none hover:text-black">
         <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden><path d="M2 2l8 8M10 2l-8 8" /></svg>

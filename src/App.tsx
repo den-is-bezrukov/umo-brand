@@ -288,6 +288,16 @@ export default function App() {
     }
   }
 
+  // Alice (`AliceOffer`, the menu) is told it's the price card and, once anything is changed, what every card holds, so
+  // she asks only what's left (public/llms.txt, «Option 1»)
+  const started = !(items.length === 1 && sameCard(items[0], defaultCard('umo5')))
+  const aliceAsk = !started
+    ? 'Следуй этой инструкции. Мне нужна прайс-карта: начни сразу с вопросов о ней.'
+    : 'Следуй этой инструкции. Мне нужна прайс-карта, я уже начал её в редакторе umo.autos/price-card:\n'
+      + items.map((c, i) => `${i + 1}. UMO ${c.model === 'umo8' ? 8 : 5} ${c.trim.toUpperCase()}, полная цена ${c.full ? `${c.full} ₽` : 'не указана'}, `
+        + `${c.creditOn ? `в кредит ${c.credit ? `${c.credit} ₽` : 'не указана'}` : 'без цены в кредит'}, QR-код ведёт на ${c.url.trim() || 'не указано'}`).join('\n')
+      + '\nНе спрашивай заново то, что уже есть: уточни, что поменять или чего не хватает, и дай ссылку.'
+
   const trims8: { value: Trim; label: string }[] = [{ value: 'max', label: 'MAX' }, { value: 'ultra', label: 'ULTRA' }]
   const trims5: { value: Trim; label: string }[] = [{ value: 'pro', label: 'PRO' }, { value: 'max', label: 'MAX' }]
   const trimOptions = card.model === 'umo8' ? trims8 : trims5
@@ -295,7 +305,7 @@ export default function App() {
   const sidebar = (
     <>
         <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
-          <GeneratorHeader current="/price-card" />
+          <GeneratorHeader current="/price-card" alice={aliceAsk} />
 
           {/* Model and trim side by side while each is 180 px or wider, else one under the other across the row */}
           <div ref={form} className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-x-3 gap-y-4 md:grid-cols-1 tracking-normal">
@@ -355,7 +365,7 @@ export default function App() {
           onNote={items.length > 1 ? () => staff.nextOf(failing) : toIssue}
           // No «Сбросить» here: each card has its own beside it
           links={<LinkButtons incomplete={failing.length > 0} />}
-          offer={<AliceOffer shown={items.length === 1 && sameCard(items[0], defaultCard('umo5'))} />}
+          offer={<AliceOffer ask={aliceAsk} started={started} />}
         />
   )
 
