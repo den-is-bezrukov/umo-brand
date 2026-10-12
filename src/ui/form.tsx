@@ -616,16 +616,13 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
   const shown = all || !typed || hit || !matching.length ? options : matching
   const id = useId()
   // In the phone's sheet the list is a screen of its own, as a search: the field over it with «Готово», the list filling
-  // the rest. Opened from the field in the same tap, so the screen's field takes the focus and the keyboard stays up
+  // the rest. It opens with no keyboard, the list in full view for a pick; a tap on its field brings the keyboard to type
   const inSheet = !!useContext(InSheet)
   const [screen, setScreen] = useState(false)
   const screenField = useRef<HTMLDivElement>(null)
   const openScreen = () => {
     (document.activeElement as HTMLElement | null)?.blur()
-    flushSync(() => setScreen(true))
-    const el = screenField.current?.querySelector<HTMLTextAreaElement>('textarea')
-    el?.focus()
-    el?.setSelectionRange(el.value.length, el.value.length)
+    setScreen(true)
   }
   const closeScreen = () => { setScreen(false); setAll(false) }
   /** Each field its own anchor */
