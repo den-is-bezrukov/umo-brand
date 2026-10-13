@@ -152,11 +152,14 @@ function GeneratorRing({ current }: { current: string }) {
     // Only a scroll someone made picks: the snap redoing itself as the panel resizes ended a scroll too, and opened the
     // next generator on its own
     let moved = false
+    // The name the arrows last turned it to, while they drive it
+    let target = -1
     // The wheel scrolls the line across (a mouse has no other way to), and a pick waits until it's been still a moment,
     // as each notch of the wheel ends a scroll of its own
     let wheeled = 0
     const wheel = (e: WheelEvent) => {
       moved = true
+      target = -1
       if (Math.abs(e.deltaX) >= Math.abs(e.deltaY)) { wheeled = performance.now(); return }
       e.preventDefault()
       wheeled = performance.now()
@@ -174,14 +177,20 @@ function GeneratorRing({ current }: { current: string }) {
       else if (i !== middle) n.scrollLeft += item(middle)!.offsetLeft - item(i)!.offsetLeft
     }
     const settle = () => { clearTimeout(timer); if (!ends) timer = window.setTimeout(pick, 150) }
-    // The keys turn it without opening anything (one stray arrow left a page and its unsaved list): ← → scroll it by
-    // one name, as the browser does a snapping scroller, Enter or Space opens the name at the edge, Esc turns it home,
-    // as does the focus leaving it. A finger's or the wheel's scroll still opens where it rests
-    const home = () => n.scrollTo({ left: item(middle)!.offsetLeft - 24, behavior: 'smooth' })
+    // The keys turn it without opening anything (one stray arrow left a page and its unsaved list): ← → by one name
+    // each, counted from the one the last press went to, so quick presses add up (the browser's own arrow scroll took
+    // one press while the line was still moving), Enter or Space opens that name, Esc turns it home, as does the focus
+    // leaving it. A finger's or the wheel's scroll still opens where it rests
+    const turnTo = (i: number) => { target = i; n.scrollTo({ left: item(i)!.offsetLeft - 24, behavior: 'smooth' }) }
+    const home = () => turnTo(middle)
     const key = (e: KeyboardEvent) => {
-      if (e.key === 'Enter' || e.key === ' ') {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
         e.preventDefault()
-        const path = GENERATORS[nearest() % count].path
+        const from = target >= 0 ? target : nearest()
+        turnTo(Math.max(0, Math.min(count * PHONE_TURNS - 1, from + (e.key === 'ArrowRight' ? 1 : -1))))
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        const path = GENERATORS[(target >= 0 ? target : nearest()) % count].path
         if (path !== current) navigate(path, { state: { turned: true } })
       } else if (e.key === 'Escape') home()
     }
@@ -190,7 +199,7 @@ function GeneratorRing({ current }: { current: string }) {
     const observer = new ResizeObserver(() => { if (!moved) n.scrollLeft = item(middle)!.offsetLeft - 24 })
     observer.observe(n)
     const scroll = () => { setLit(GENERATORS[nearest() % count].path); settle() }
-    const down = () => { touching = true; moved = true; clearTimeout(timer) }
+    const down = () => { touching = true; moved = true; target = -1; clearTimeout(timer) }
     const up = () => { touching = false; settle() }
     if (ends) n.addEventListener('scrollend', pick)
     n.addEventListener('wheel', wheel, { passive: false })
