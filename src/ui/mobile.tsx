@@ -220,8 +220,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       // Caught on its way, it stops where it is
       const at = sheetAt()
       sheetEl.current.getAnimations().forEach(a => a.cancel())
+      canvasEl.current?.getAnimations().forEach(a => a.cancel())
       formEl.current?.getAnimations().forEach(a => a.finish())
-      sheetEl.current.style.transform = `translateY(${at}px)`
+      place(at)
       drag.current = { base: at, at, x: e.touches[0].clientX, y }
     }
   }
@@ -238,7 +239,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     if (at < lo) at = lo - (lo - at) * SPRING
     if (at > hi) at = hi + (at - hi) * SPRING
     d.at = at
-    sheetEl.current.style.transform = `translateY(${at}px)`
+    place(at)
   }
   const onTouchEnd = () => {
     const p = pull.current
@@ -251,14 +252,14 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       const to = reach(p.long).reduce((a, b) => (Math.abs(edge[b] - aim) < Math.abs(edge[a] - aim) ? b : a))
       if (to !== sheetRef.current) move(to, d.at)
       else if (sheetEl.current) {
-        sheetEl.current.style.transform = `translateY(${edge[to]}px)`
-        sheetEl.current.animate([{ transform: `translateY(${d.at}px)` }, { transform: `translateY(${edge[to]}px)` }], LET_GO)
+        place(edge[to])
+        glide(d.at, edge[to], LET_GO)
       }
     }
   }
   const onTouchCancel = () => {
     pull.current = null
-    if (drag.current && sheetEl.current) sheetEl.current.style.transform = `translateY(${edge[sheetRef.current]}px)`
+    if (drag.current) place(edge[sheetRef.current])
     drag.current = null
   }
 
@@ -401,6 +402,20 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     if (field) liftField(field)
   })
   const sheetEl = useRef<HTMLDivElement>(null)
+  const canvasEl = useRef<HTMLDivElement>(null)
+  /** The canvas over the sheet: down to its 60% place it grows as the sheet goes, the picture with it, at the
+   * sheet's own pace under a finger or not (it grew after, in a move of its own); above it it stays (the sheet over the
+   * whole screen slides over it: it shrank under the sheet, the picture refitted as it went and jerked) */
+  const canvasH = (at: number) => screen.h - tall + Math.min(Math.max(at, edge.half), edge.preview)
+  /** The sheet at a place, and the canvas with it */
+  const place = (at: number) => {
+    if (sheetEl.current) sheetEl.current.style.transform = `translateY(${at}px)`
+    if (canvasEl.current) canvasEl.current.style.height = `${canvasH(at)}px`
+  }
+  const glide = (from: number, to: number, timing: KeyframeAnimationOptions) => {
+    sheetEl.current?.animate([{ transform: `translateY(${from}px)` }, { transform: `translateY(${to}px)` }], timing)
+    if (canvasH(from) !== canvasH(to)) canvasEl.current?.animate([{ height: `${canvasH(from)}px` }, { height: `${canvasH(to)}px` }], timing)
+  }
   const formEl = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => {
     const was = from.current
@@ -415,8 +430,8 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     // Let go by a finger, it goes on from there, slowing down
     const timing = was.at === undefined ? { duration: TURN_MS, easing: 'cubic-bezier(0.67, 0, 0.33, 1)' } : LET_GO
     const start = was.at ?? edge[was.sheet]
-    sheetEl.current.style.transform = `translateY(${edge[sheet]}px)`
-    sheetEl.current.animate([{ transform: `translateY(${start}px)` }, { transform: `translateY(${edge[sheet]}px)` }], timing)
+    place(edge[sheet])
+    glide(start, edge[sheet], timing)
     const lag = el.scrollTop - was.top
     if (lag) formEl.current.animate([{ transform: `translateY(${lag}px)` }, { transform: 'none' }], timing)
   }, [sheet]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -429,8 +444,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           sheet over the whole screen slides over it, leaving it as it is (it shrank under the sheet, the picture refitted
           as it went and jerked) */}
       <div
-        className="relative flex flex-col p-[10px] transition-[height]"
-        style={{ height: screen.h - tall + (preview ? edge.preview : edge.half), transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: 'cubic-bezier(0.67, 0, 0.33, 1)' }}
+        ref={canvasEl}
+        className="relative flex flex-col p-[10px]"
+        style={{ height: canvasH(edge[sheet]) }}
       >
       {/* A list's row over the picture (Figma 5105:7604): delete on the left, copy on the right, between them the
           number between the arrows, the reset right after it; for a moment after a removal «Удаляем ·
