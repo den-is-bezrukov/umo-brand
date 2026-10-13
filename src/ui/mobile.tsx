@@ -269,12 +269,18 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
    * so it takes the canvas's height (Figma 5105:8373); a landscape one keeps the row, the corners being over its edge */
   const corners = !row && (slide?.ratio ?? 0) > 1
 
-  // The screen's size, to tell whether folding the sheet away would make the picture larger
+  // The page's size, everything laid out by: the page's own box, not the window's (on iOS 26 the page runs on under
+  // Safari's floating bar, past `innerHeight`, so the sheet and the canvas missed each other by the bar's height)
+  const root = useRef<HTMLDivElement>(null)
   const [screen, setScreen] = useState({ w: innerWidth, h: innerHeight })
-  useEffect(() => {
-    const on = () => setScreen({ w: innerWidth, h: innerHeight })
-    addEventListener('resize', on)
-    return () => removeEventListener('resize', on)
+  useLayoutEffect(() => {
+    const el = root.current
+    if (!el) return
+    const on = () => setScreen(s => (s.w === el.clientWidth && s.h === el.clientHeight ? s : { w: el.clientWidth, h: el.clientHeight }))
+    on()
+    const o = new ResizeObserver(on)
+    o.observe(el)
+    return () => o.disconnect()
   }, [])
   // Lowered, the sheet shows its header alone: the crumbs and the generators' line, 24 px under them as over them,
   // over the screen's bottom safe area (the shrink icon under the picture went)
@@ -453,7 +459,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     // The page's background is the canvas's; over it the picture with its row, over all the sheet, and the download at
     // the screen's foot over the sheet; clipped, not hidden, so nothing scrolls it (a focused control in the sheet
     // scrolled it by 83 px, the canvas off its place)
-    <div className="fixed inset-0 overflow-clip bg-[#f5f5f5] font-sans text-black">
+    <div ref={root} className="fixed inset-0 overflow-clip bg-[#f5f5f5] font-sans text-black">
       {/* The canvas, 10 px in (Figma 5105:8488): above the sheet at 60%, the whole screen with the picture alone. The
           sheet over the whole screen slides over it, leaving it as it is (it shrank under the sheet, the picture refitted
           as it went and jerked) */}
