@@ -132,9 +132,9 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
     return () => document.removeEventListener('paste', onPaste)
   }, [mode])
 
-  // A person just added takes the focus, and their item scrolls into view; added with «Добавить», it comes to the
-  // middle of the canvas with the tile under it in view, so a long list fills in one after another without scrolling.
-  // An item selected by a click stays put, under the cursor.
+  // A person just added takes the focus. The item being edited comes to the middle of the canvas when it's selected by
+  // anything but a click (added, duplicated, brought back, picked with ↑ ↓; «Добавить» stays in view under it), so a
+  // long list fills in one after another without scrolling. An item selected by a click stays put, under the cursor.
   const focusNext = useRef(false)
   const centre = useRef(false)
   /** The selected person's form, whose first field takes the focus */
@@ -142,10 +142,9 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
   /** Each item's row on the canvas, to scroll to */
   const figures = useRef(new Map<number, HTMLElement>())
   useEffect(() => {
-    if (!focusNext.current) return
+    if (focusNext.current) form.current?.querySelector<HTMLElement>('textarea, input')?.focus()
+    if (centre.current && selected !== undefined) figures.current.get(selected)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
     focusNext.current = false
-    form.current?.querySelector<HTMLElement>('textarea, input')?.focus()
-    if (selected !== undefined) figures.current.get(selected)?.scrollIntoView({ block: centre.current ? 'center' : 'nearest', behavior: 'smooth' })
     centre.current = false
   }, [selected])
   const figureRef = (key: number) => (el: HTMLElement | null) => { if (el) figures.current.set(key, el); else figures.current.delete(key) }
@@ -203,6 +202,7 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
   const restore = () => {
     if (!removed) return
     setPeople([...people.slice(0, removed.index), removed.item, ...people.slice(removed.index)])
+    centre.current = true
     setSelected(removed.item.key)
     setRemoved(null)
   }
@@ -215,6 +215,7 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
     const i = people.findIndex(p => p.key === key)
     const copy = row(plain(people[i]))
     focusNext.current = focus
+    centre.current = focus
     // Not focused, it's fresh as an added one: its empty fields aren't errors until it's left, as on a new page
     if (!focus) setFresh(f => new Set(f).add(copy.key))
     setPeople([...people.slice(0, i + 1), copy, ...people.slice(i + 1)])
@@ -259,8 +260,8 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
         const i = people.findIndex(p => p.key === current.key)
         const next = people[i + (e.key === 'ArrowDown' ? 1 : -1)]
         if (!next) return
+        centre.current = true
         pick(next.key)
-        figures.current.get(next.key)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
       }
     }
     document.addEventListener('keydown', onKey)
