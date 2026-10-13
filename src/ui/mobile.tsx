@@ -305,11 +305,10 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
    * so it takes the canvas's height (Figma 5105:8373); a landscape one keeps the row, the corners being over its edge */
   const corners = !row && (slide?.ratio ?? 0) > 1
 
-  // The screen's size, to tell whether folding the sheet away would make the picture larger and to lay everything out:
-  // the whole screen, the keyboard or not (laid out above the keyboard, the canvas and its picture shrank). The page
-  // goes where iOS pans to for the keyboard, so it stays put (iOS moved the whole page up, the picture off the top);
-  // what's in view above the keyboard (`seen`) only keeps the field in view
-  const seen = () => ({ w: innerWidth, h: innerHeight, top: visualViewport?.offsetTop ?? 0, seen: visualViewport?.height ?? innerHeight })
+  // The screen's size, to tell whether folding the sheet away would make the picture larger: what's in view, above the
+  // keyboard while it's up. The page takes just that and goes where iOS pans to, so it stays put for the keyboard (iOS
+  // moved the whole page up, the picture off the top)
+  const seen = () => ({ w: innerWidth, h: visualViewport?.height ?? innerHeight, top: visualViewport?.offsetTop ?? 0 })
   const [screen, setScreen] = useState(seen)
   useEffect(() => {
     const on = () => setScreen(seen)
@@ -336,10 +335,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     if (!typing || !el || !(field instanceof HTMLElement) || !el.contains(field)) return
     // The form scrolled alone (`scrollIntoView` would also move the page, clipped as it is)
     const box = el.getBoundingClientRect(), f = field.getBoundingClientRect()
-    const bottom = Math.min(box.bottom, screen.top + screen.seen)
-    if (f.bottom > bottom - 24) el.scrollTop += f.bottom - bottom + 24
+    if (f.bottom > box.bottom - 24) el.scrollTop += f.bottom - box.bottom + 24
     else if (f.top < box.top + 24) el.scrollTop -= box.top + 24 - f.top
-  }, [typing, screen.seen])
+  }, [typing, screen.h])
   // Lowered, the sheet shows its header alone: the crumbs and the generators' line, 24 px under them as over them,
   // over the screen's bottom safe area (the shrink icon under the picture went)
   const [peek, setPeek] = useState(140)
