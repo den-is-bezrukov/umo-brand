@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { goal } from './metrika'
 import tocIcons from '@/icons/toc'
 import { InFoot, InSheet, SheetSize } from './phone'
-import { MOD, withMod } from './keys'
+import { MOD, withMod, otherLayout } from './keys'
 
 // Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag, business card). Light UI per the Figma layout
 // (UMO | Evrone, nodes 4844:6865 and 4900:4588), matching the brand guide.
@@ -390,7 +390,11 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
   const [active, setActive] = useState(-1)
   const typed = value.replace(/\s+/g, ' ').trim().toLowerCase()
   const hit = options.find(t => oneLine(t) === typed)
-  const matching = filter ? filter(typed, options) : options.filter(t => oneLine(t).includes(typed))
+  // Typed in the wrong layout too («fufn» finds АГАТ), after what's found as typed
+  const swapped = otherLayout(typed)
+  const find = (q: string) => (filter ? filter(q, options) : options.filter(t => oneLine(t).includes(q)))
+  const found = find(typed)
+  const matching = swapped === typed ? found : [...found, ...find(swapped).filter(t => !found.includes(t))]
   const shown = all || !typed || hit || !matching.length ? options : matching
   const id = useId()
   // In the phone's sheet the list is a screen of its own, as a search: the field over it with «Готово», the list filling
