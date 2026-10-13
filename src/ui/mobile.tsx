@@ -597,6 +597,7 @@ function Fitted({ ratio, box, node, side }: { ratio?: number; box: { w: number; 
     o.observe(el)
     return () => o.disconnect()
   }, [w, ratio])
-  // With no shape of its own, at the top of what's in view, as tall as it (set by `fitAt`), its content in the middle
-  return <div ref={ref} data-fit data-ratio={ratio ?? 0} data-side={side} className={ratio ? 'm-auto' : 'mx-auto mt-[10px] flex shrink-0 flex-col justify-center'} style={{ width: w }}>{typeof node === 'function' ? node(w) : node}</div>
+  // With no shape of its own, at the top of what's in view, as tall as it (set by `fitAt`), its content in the middle and
+  // no taller than it: the upload's least height (240) ran past it on a shorter screen, its edge under the status bar
+  return <div ref={ref} data-fit data-ratio={ratio ?? 0} data-side={side} className={ratio ? 'm-auto' : 'mx-auto mt-[10px] flex shrink-0 flex-col justify-center *:min-h-0!'} style={{ width: w }}>{typeof node === 'function' ? node(w) : node}</div>
 }
