@@ -217,6 +217,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           ) : (
             <div className="flex min-w-0 flex-1 items-center justify-center">
               {back}
+              {/* While the reset shows, an empty place as wide before the number, so the number stays centred (hung out
+                  of the flow as one picture's, the reset would cover the arrow after it) */}
+              {reset && !full && <Btn label="" hidden onClick={() => {}}>{null}</Btn>}
               <span className="min-w-0 truncate px-1 text-[14px] leading-5 text-[#808080] [font-feature-settings:'case'_1,'lnum'_1,'tnum'_1]">
                 {number}/{slide?.item !== undefined ? total : slide?.label}
               </span>
