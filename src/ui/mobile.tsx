@@ -305,39 +305,13 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
    * so it takes the canvas's height (Figma 5105:8373); a landscape one keeps the row, the corners being over its edge */
   const corners = !row && (slide?.ratio ?? 0) > 1
 
-  // The screen's size, to tell whether folding the sheet away would make the picture larger: what's in view, above the
-  // keyboard while it's up. The page takes just that and goes where iOS pans to, so it stays put for the keyboard (iOS
-  // moved the whole page up, the picture off the top)
-  const seen = () => ({ w: innerWidth, h: visualViewport?.height ?? innerHeight, top: visualViewport?.offsetTop ?? 0 })
-  const [screen, setScreen] = useState(seen)
+  // The screen's size, to tell whether folding the sheet away would make the picture larger
+  const [screen, setScreen] = useState({ w: innerWidth, h: innerHeight })
   useEffect(() => {
-    const on = () => setScreen(seen)
+    const on = () => setScreen({ w: innerWidth, h: innerHeight })
     addEventListener('resize', on)
-    visualViewport?.addEventListener('resize', on)
-    visualViewport?.addEventListener('scroll', on)
-    return () => {
-      removeEventListener('resize', on)
-      visualViewport?.removeEventListener('resize', on)
-      visualViewport?.removeEventListener('scroll', on)
-    }
+    return () => removeEventListener('resize', on)
   }, [])
-  // Typing on a phone opens the form over the screen, its edge where it stands opened, and the keyboard gone puts it
-  // back where it was; the field kept in view as the room above the keyboard changes
-  const before = useRef<Sheet | null>(null)
-  useEffect(() => {
-    if (!matchMedia('(pointer: coarse)').matches) return
-    if (typing && before.current === null) { before.current = sheetRef.current; move('full') }
-    else if (!typing && before.current !== null) { const s = before.current; before.current = null; move(s) }
-  }, [typing]) // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    const el = scroller.current
-    const field = document.activeElement
-    if (!typing || !el || !(field instanceof HTMLElement) || !el.contains(field)) return
-    // The form scrolled alone (`scrollIntoView` would also move the page, clipped as it is)
-    const box = el.getBoundingClientRect(), f = field.getBoundingClientRect()
-    if (f.bottom > box.bottom - 24) el.scrollTop += f.bottom - box.bottom + 24
-    else if (f.top < box.top + 24) el.scrollTop -= box.top + 24 - f.top
-  }, [typing, screen.h])
   // Lowered, the sheet shows its header alone: the crumbs and the generators' line, 24 px under them as over them,
   // over the screen's bottom safe area (the shrink icon under the picture went)
   const [peek, setPeek] = useState(140)
@@ -422,7 +396,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   return (
     // The page's background is the canvas's; over it the picture with its row, over all the sheet, and the download at
     // the screen's foot over the sheet
-    <div className="fixed inset-x-0 overflow-hidden bg-[#f5f5f5] font-sans text-black" style={{ top: screen.top, height: screen.h }}>
+    <div className="fixed inset-0 overflow-hidden bg-[#f5f5f5] font-sans text-black">
       {/* The canvas, 10 px in (Figma 5105:8488): above the sheet at 60%, the whole screen with the picture alone. The
           sheet over the whole screen slides over it, leaving it as it is (it shrank under the sheet, the picture refitted
           as it went and jerked) */}
