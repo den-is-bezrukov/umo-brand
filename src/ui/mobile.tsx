@@ -497,7 +497,8 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       {/* One picture: a row over it as a list's, its name in the middle with the reset after it, copy on the right (in
           the canvas's top corners over the strip, Figma 5105:8373, they covered a landscape item's edge, and the name
           stood in a caption under the picture, unlike a list's) */}
-      {!row && !corners && (
+      {/* Only with something in it: empty (a table's upload), it stood over it as a strip of the canvas */}
+      {!row && !corners && ((slide?.label && slide.item === undefined) || reset || (staff && current)) && (
         <div className="flex h-[30px] shrink-0 items-center justify-between">
           <Btn label="" hidden onClick={() => {}}>{null}</Btn>
           <div className="flex min-w-0 flex-1 items-center justify-center">
