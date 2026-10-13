@@ -621,45 +621,67 @@ const flashes = new Set<(text: string) => void>()
 export const flash = (text: string) => flashes.forEach(f => f(text))
 
 /**
- * «Поделиться» (Figma 4939:3762): sends the page address — the settings are in it — so a set-up card or livery goes as a
- * link: on phones through the system's share sheet, elsewhere copied, the button itself saying «Ссылка с настройками
- * скопирована» for two seconds, where it was clicked (it was said by the line over it). Off while the result isn't ready (`incomplete`, as «Скачать»): a link is sent for what
- * it makes, not a draft. «Сбросить» stood beside it until resets moved onto the canvas, by what they reset
+ * «Поделиться» (Figma 4939:3762): sends a link to the file, `pdf=1` added to the page address (the settings are in it),
+ * as it's mostly sent to a dealer, who wants the file, not the editor; with Alt (Option) held the address as it is, the
+ * editor with these settings, for the team, the button saying «Ссылка на редактор» while Alt is down. On phones through
+ * the system's share sheet, elsewhere copied, the button itself saying what was copied for two seconds. Off while the
+ * result isn't ready (`incomplete`, as «Скачать»): a link is sent for what it makes, not a draft. «Сбросить» stood beside
+ * it until resets moved onto the canvas, by what they reset
  */
 /**
- * Sends the page address: on phones through the system's share sheet (the chat a link goes to in a tap or two,
- * «Скопировать» among them), elsewhere copied, `onCopied` saying so
+ * Sends the link: on phones through the system's share sheet (the chat a link goes to in a tap or two, «Скопировать»
+ * among them), elsewhere copied, `onCopied` saying so; the file's link is the address with `pdf=1` added
  */
-async function shareLink(onCopied: () => void) {
-  const url = window.location.href
+async function shareLink(editor: boolean, onCopied: () => void) {
+  const here = window.location.href.replace(/#.*/, '')
+  const url = editor ? here : `${here}${here.includes('?') ? '&' : '?'}pdf=1`
   if (navigator.share && matchMedia('(pointer: coarse)').matches) {
     try {
       await navigator.share({ url })
-      goal('copy_link', { page: location.pathname, shared: true })
+      goal('copy_link', { page: location.pathname, shared: true, pdf: !editor })
     } catch { /* closed without sending */ }
     return
   }
   await navigator.clipboard.writeText(url)
   onCopied()
-  goal('copy_link', { page: location.pathname })
+  goal('copy_link', { page: location.pathname, pdf: !editor })
 }
 
 export function LinkButtons({ incomplete }: { incomplete?: boolean }) {
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState<'file' | 'editor' | null>(null)
+  const [alt, setAlt] = useState(false)
   useEffect(() => {
     if (!copied) return
-    const t = setTimeout(() => setCopied(false), 2000)
+    const t = setTimeout(() => setCopied(null), 2000)
     return () => clearTimeout(t)
   }, [copied])
-  const share = () => { if (!copied) shareLink(() => setCopied(true)) }
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => setAlt(e.altKey)
+    const off = () => setAlt(false)
+    window.addEventListener('keydown', key)
+    window.addEventListener('keyup', key)
+    window.addEventListener('blur', off)
+    return () => {
+      window.removeEventListener('keydown', key)
+      window.removeEventListener('keyup', key)
+      window.removeEventListener('blur', off)
+    }
+  }, [])
+  const share = (e: React.MouseEvent) => {
+    if (copied) return
+    const editor = e.altKey
+    shareLink(editor, () => setCopied(editor ? 'editor' : 'file'))
+  }
   return (
     // White under it: on phones it stands over the canvas, and there its stroke is centred on its edge, half out, half
     // in (a trial): inside, the stroke left 38 px of white beside the solid 40 of the download, which read larger. Wide
     // screens keep the inside stroke
-    <button type="button" onClick={share} title="Отправить ссылку на эти настройки" disabled={incomplete} aria-disabled={copied || undefined} className={`${outlined} w-full bg-white ${copied ? 'cursor-default hover:border-black/10! max-md:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)]!' : ''} max-md:border-0 max-md:py-[10px] max-md:in-[[data-sheet]]:py-[14px]! max-md:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)] max-md:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.4),inset_0_0_0_0.5px_rgba(0,0,0,0.4)] max-md:disabled:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)]`}>
+    <button type="button" onClick={share} title={alt ? 'Отправить ссылку на редактор с этими настройками' : 'Отправить ссылку на файл'} disabled={incomplete} aria-disabled={copied ? true : undefined} className={`${outlined} w-full bg-white ${copied ? 'cursor-default hover:border-black/10! max-md:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)]!' : ''} max-md:border-0 max-md:py-[10px] max-md:in-[[data-sheet]]:py-[14px]! max-md:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)] max-md:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.4),inset_0_0_0_0.5px_rgba(0,0,0,0.4)] max-md:disabled:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)]`}>
       {/* Regular, as a note rather than a button's name; while it shows the button is still, no hover or click, its text grey #808080, as quiet lines: the hover's edge is overridden, as
           pointer-events: none kept the browser's hover on until the pointer moved */}
-      {copied ? <span className="font-normal text-[#808080]">Ссылка с настройками скопирована</span> : 'Поделиться'}
+      {copied
+        ? <span className="font-normal text-[#808080]">{copied === 'editor' ? 'Ссылка на редактор скопирована' : 'Ссылка на файл скопирована'}</span>
+        : alt ? 'Ссылка на редактор' : 'Поделиться'}
     </button>
   )
 }
