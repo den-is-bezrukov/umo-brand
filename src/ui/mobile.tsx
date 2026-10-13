@@ -587,8 +587,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       <div
         ref={sheetEl}
         // Its shadow off while it's at the page's top, over the whole screen with no list row: it had nowhere to fall and
-        // read as cut off
-        className={`absolute inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-[24px] bg-white ${full && !row ? '' : 'shadow-[0_10px_30px_rgba(0,0,0,0.1)]'}`}
+        // read as cut off. Fixed to the screen of its own, its foot always at the screen's bottom, so Safari 26 carries
+        // its white under its floating bar (it carried the page's grey, the page being the fixed box there)
+        className={`fixed inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-[24px] bg-white ${full && !row ? '' : 'shadow-[0_10px_30px_rgba(0,0,0,0.1)]'}`}
         style={{ height: tall, transform: `translateY(${edge[sheet]}px)` }}
       >
         <div ref={scroller} data-sheet onFocus={onFocus} onBlur={onBlur} className={`min-h-0 flex-1 [contain:paint] ${preview ? 'overflow-y-hidden' : 'overflow-y-auto'}`}>
@@ -605,7 +606,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           indicator. Tried closer to Safari's bottom tab bar: 16, then on iOS alone 16, 0, 2 and 8 — touching the edge,
           the black button turned Safari 26's bar black, and 24 all round is what the sheet's sides have */}
       {!typing && (
-        <div ref={footEl} data-sheet style={footAt(edge[sheet])} className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white px-6 pt-6 pb-[calc(24px+env(safe-area-inset-bottom))] tracking-normal">
+        <div ref={footEl} data-sheet style={footAt(edge[sheet])} className="fixed inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white px-6 pt-6 pb-[calc(24px+env(safe-area-inset-bottom))] tracking-normal">
           <InFoot.Provider value={() => { if (sheetRef.current === 'preview') move('half') }}>{download}</InFoot.Provider>
         </div>
       )}
