@@ -240,14 +240,17 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   }, [])
   // Lowered, the sheet shows its header alone: the crumbs and the generators' line, 24 px under them as over them,
   // over the screen's bottom safe area (the shrink icon under the picture went)
-  const safe = useRef<HTMLDivElement>(null)
   const [peek, setPeek] = useState(140)
   useLayoutEffect(() => {
     const head = scroller.current?.querySelector('[data-head]') as HTMLElement | null
     if (!head) return
     const measure = () => {
       const top = scroller.current!.getBoundingClientRect().top - scroller.current!.scrollTop
-      setPeek(Math.round(head.getBoundingClientRect().bottom - top + 24 + (safe.current?.offsetHeight ?? 0)))
+      const safe = document.createElement('div')
+      safe.style.height = 'env(safe-area-inset-bottom)'
+      document.body.append(safe)
+      setPeek(Math.round(head.getBoundingClientRect().bottom - top + 24 + safe.offsetHeight))
+      safe.remove()
     }
     if (!document.documentElement.hasAttribute('data-menu')) measure()
     const o = new ResizeObserver(() => { if (!document.documentElement.hasAttribute('data-menu')) measure() })
@@ -296,35 +299,32 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   const tall = Math.max(0, screen.h - (row ? ROW + 2 * PAD : 0))
   const below = Math.max(0, Math.round(tall - screen.h * HALF_SHARE))
   const edge = { preview: tall - peek, half: below, full: 0 }
-  const sheetBg = useRef<HTMLDivElement>(null)
-  const form = useRef<HTMLDivElement>(null)
+  const sheetEl = useRef<HTMLDivElement>(null)
+  const formEl = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => {
     const was = from.current
     from.current = null
     const el = scroller.current
-    if (!was || !el || !form.current || !sheetBg.current) return
+    if (!was || !el || !sheetEl.current || !formEl.current) return
     // Lowered, the sheet shows the form's top, its header
     if (sheet === 'preview') el.scrollTop = 0
-    // The form carries on from where it stood, however much its scroll was cut short by the room under it changing
-    const fromAt = edge[was.sheet] - was.top
-    const start = fromAt + el.scrollTop
-    const to = edge[sheet]
+    // The sheet moves; the form in it starts where it stood, however its scroll was cut short by the room under it
+    // changing, and settles into the sheet (opened at the form's end the form stays put as the edge rises over it)
     const timing = { duration: TURN_MS, easing: 'cubic-bezier(0.67, 0, 0.33, 1)' }
-    sheetBg.current.animate([{ transform: `translateY(${edge[was.sheet]}px)` }, { transform: `translateY(${to}px)` }], timing)
-    const cut = (top: number) => `inset(${Math.max(0, Math.round(top))}px 0 0 0 round 24px 24px 0 0)`
-    form.current.animate([
-      { transform: `translateY(${start}px)`, clipPath: cut(edge[was.sheet] - start) },
-      { transform: `translateY(${to}px)`, clipPath: cut(0) },
-    ], timing)
+    sheetEl.current.animate([{ transform: `translateY(${edge[was.sheet]}px)` }, { transform: `translateY(${edge[sheet]}px)` }], timing)
+    const lag = el.scrollTop - was.top
+    if (lag) formEl.current.animate([{ transform: `translateY(${lag}px)` }, { transform: 'none' }], timing)
   }, [sheet]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
-    <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#f5f5f5] font-sans text-black">
+    // The page's background is the canvas's; over it the picture with its row, over all the sheet, and the download at
+    // the screen's foot over the sheet
+    <div className="fixed inset-0 overflow-hidden bg-[#f5f5f5] font-sans text-black">
       {/* The canvas, 10 px in (Figma 5105:8488): above the sheet at 60%, the whole screen with the picture alone. The
           sheet over the whole screen slides over it, leaving it as it is (it shrank under the sheet, the picture refitted
           as it went and jerked) */}
       <div
-        className="relative flex shrink-0 flex-col p-[10px] transition-[height]"
+        className="relative flex flex-col p-[10px] transition-[height]"
         style={{ height: screen.h - tall + edge[sheet], transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: 'cubic-bezier(0.67, 0, 0.33, 1)' }}
       >
       {/* A list's row over the picture (Figma 5105:7604): delete on the left, copy on the right, between them the
@@ -366,8 +366,8 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
 
       {corners && (
         <>
-          <div className="absolute top-[10px] left-[10px] z-10">{reset && resetBtn}</div>
-          <div className="absolute top-[10px] right-[10px] z-10">{staff && copyBtn}</div>
+          <div className="absolute top-[10px] left-[10px]">{reset && resetBtn}</div>
+          <div className="absolute top-[10px] right-[10px]">{staff && copyBtn}</div>
         </>
       )}
 
@@ -393,35 +393,34 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
 
       </div>
 
-      {/* The sheet: the sidebar scrolling, 24 px in, as the sidebar on wide screens (Figma has 16; 20 was tried), the
-          download at its foot; its top corners 24 px round, as its padding (Figma has none), a shadow over it (Figma 5098:5487) */}
-      <div ref={safe} aria-hidden className="pointer-events-none invisible absolute h-[env(safe-area-inset-bottom)] w-0" />
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10" style={{ height: tall }}>
-        <div
-          ref={sheetBg}
-          className="absolute inset-0 rounded-t-[24px] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.1)]"
-          style={{ transform: `translateY(${edge[sheet]}px)` }}
-        />
-        {/* Cut to the sheet's shape, and the form painted within its box: iOS drew the generators' line, a scroll of its
-            own, and its fades over the sheet's edge once the form was scrolled under it */}
-        <div ref={form} className="pointer-events-auto absolute inset-0 flex flex-col" style={{ transform: `translateY(${edge[sheet]}px)`, clipPath: 'inset(0 0 0 0 round 24px 24px 0 0)' }}>
-          <div ref={scroller} data-sheet onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchCancel} onWheel={onWheel} onFocus={e => setTyping(types(e.target))} onBlur={e => setTyping(types(e.relatedTarget))} className={`min-h-0 flex-1 [contain:paint] ${preview ? 'overflow-y-hidden' : 'overflow-y-auto'}`}>
-            {/* Groups 24 px apart (`src/index.css`, as on wide screens), so from one 48 px control to the next is 48 (16 + 8 for a label + 24) */}
-            <div className="*:gap-6! *:p-6!" style={{ paddingBottom: `calc(${96 + (full ? 0 : below)}px + env(safe-area-inset-bottom))` }}>
-              <InSheet.Provider value={sheet}>{sidebar}</InSheet.Provider>
-            </div>
+      {/* The sheet: the sidebar scrolling, 24 px in, as the sidebar on wide screens (Figma has 16; 20 was tried); its top
+          corners 24 px round, as its padding (Figma has none), a shadow over it (Figma 5098:5487). Always as tall as over
+          the whole screen and moved down out of it, never resized: a sheet changing its height froze on an iPhone, laying
+          the form out on every frame. The form painted within it: iOS drew the generators' line, a scroll of its own, and
+          its fades over the sheet's edge */}
+      <div
+        ref={sheetEl}
+        className="absolute inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-[24px] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.1)]"
+        style={{ height: tall, transform: `translateY(${edge[sheet]}px)` }}
+      >
+        <div ref={scroller} data-sheet onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchCancel} onWheel={onWheel} onFocus={e => setTyping(types(e.target))} onBlur={e => setTyping(types(e.relatedTarget))} className={`min-h-0 flex-1 [contain:paint] ${preview ? 'overflow-y-hidden' : 'overflow-y-auto'}`}>
+          {/* Groups 24 px apart (`src/index.css`, as on wide screens), so from one 48 px control to the next is 48 (16 + 8
+              for a label + 24); at 60% as much again under the form's end as is under the screen, to scroll it into view */}
+          <div ref={formEl} className="*:gap-6! *:p-6!" style={{ paddingBottom: `calc(${96 + (full ? 0 : below)}px + env(safe-area-inset-bottom))` }}>
+            <InSheet.Provider value={sheet}>{sidebar}</InSheet.Provider>
           </div>
         </div>
-        {/* The download over the form's foot, on a white gradient the form fades under, 24 px in all round (Figma 5098:5539),
-            plus the screen's bottom safe area under it (`viewport-fit=cover` in index.html), so it clears the home
-            indicator. Tried closer to Safari's bottom tab bar: 16, then on iOS alone 16, 0, 2 and 8 — touching the edge,
-            the black button turned Safari 26's bar black, and 24 all round is what the sheet's sides have */}
-        {!preview && !typing && (
-          <div data-sheet className="pointer-events-auto absolute inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white px-6 pt-6 pb-[calc(24px+env(safe-area-inset-bottom))] tracking-normal">
-            <InFoot.Provider value={() => { if (sheetRef.current === 'preview') move('half') }}>{download}</InFoot.Provider>
-          </div>
-        )}
       </div>
+
+      {/* The download over the form's foot, on a white gradient the form fades under, 24 px in all round (Figma 5098:5539),
+          plus the screen's bottom safe area under it (`viewport-fit=cover` in index.html), so it clears the home
+          indicator. Tried closer to Safari's bottom tab bar: 16, then on iOS alone 16, 0, 2 and 8 — touching the edge,
+          the black button turned Safari 26's bar black, and 24 all round is what the sheet's sides have */}
+      {!preview && !typing && (
+        <div data-sheet className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white px-6 pt-6 pb-[calc(24px+env(safe-area-inset-bottom))] tracking-normal">
+          <InFoot.Provider value={() => { if (sheetRef.current === 'preview') move('half') }}>{download}</InFoot.Provider>
+        </div>
+      )}
     </div>
   )
 }
