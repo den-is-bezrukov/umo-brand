@@ -218,15 +218,48 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     el.addEventListener('touchmove', onMove, { passive: false })
     return () => el.removeEventListener('touchmove', onMove)
   }, [])
+  // The mouse, in a narrow window, as a finger on the canvas and the header: pressed and moved up or down it takes the
+  // sheet, across it leaves it; the click that ends a drag goes nowhere (a crumb or the picture under it took it)
+  const mouse = useRef({ grab: (_x: number, _y: number) => {}, follow: (_y: number) => {}, end: () => {} })
+  useEffect(() => {
+    const el = root.current
+    if (!el) return
+    const down = (e: MouseEvent) => { if (e.button === 0) mouse.current.grab(e.clientX, e.clientY) }
+    const moved = (e: MouseEvent) => {
+      const d = drag.current
+      if (!d || !(e.buttons & 1)) return
+      if (!d.way) {
+        const dx = Math.abs(e.clientX - d.x), dy = Math.abs(e.clientY - d.y)
+        if (dx + dy < 4) return
+        d.way = dy >= dx ? 'y' : 'x'
+        if (d.way === 'x') { drag.current = null; return }
+      }
+      e.preventDefault()
+      mouse.current.follow(e.clientY)
+    }
+    const up = () => {
+      if (drag.current?.way === 'y') addEventListener('click', e => { e.stopPropagation(); e.preventDefault() }, { capture: true, once: true })
+      mouse.current.end()
+    }
+    el.addEventListener('mousedown', down)
+    addEventListener('mousemove', moved)
+    addEventListener('mouseup', up)
+    return () => {
+      el.removeEventListener('mousedown', down)
+      removeEventListener('mousemove', moved)
+      removeEventListener('mouseup', up)
+    }
+  }, [])
   const sheetAt = () => {
     const m = sheetEl.current ? new DOMMatrix(getComputedStyle(sheetEl.current).transform) : null
     return m ? m.m42 : edge[sheetRef.current]
   }
-  const onTouchStart = (e: React.TouchEvent) => {
+  const onTouchStart = (e: React.TouchEvent) => grab(e.touches[0].clientX, e.touches[0].clientY, false)
+  /** A finger or the mouse coming down: on the canvas or the header it takes the sheet, on the form at its edge maybe */
+  const grab = (x: number, y: number, mouse: boolean) => {
     // The whole canvas and the header, to 20 px under the generators' line: nothing on the canvas is scrolled up or
     // down (the header alone was too small a hold, then 50 px of the canvas over the sheet's edge)
     const head = scroller.current?.querySelector('[data-head]')?.getBoundingClientRect()
-    const y = e.touches[0].clientY
     const el = scroller.current
     pull.current = { long: !!el && el.scrollHeight - el.clientHeight > 1 }
     drag.current = null
@@ -234,15 +267,15 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     // Over the sheet's edge whatever the form's scroll (its header scrolled away, the list's row over it still holds)
     if (sheetEl.current && (y < edgeY || (head && y <= head.bottom + GRAB_UNDER))) {
       const at = take.current()
-      drag.current = { base: at, at, x: e.touches[0].clientX, y }
-    } else if (el) {
+      drag.current = { base: at, at, x, y }
+    } else if (el && !mouse) {
       // The form at its top: a pull down takes the sheet, as a phone's own sheets (its spring gave instead); at its end,
       // at 60%, a pull up opens it over the screen, with the finger (it was a pull past the end that set it going once
       // let go, on the form's spring); decided on the first move, so the sheet isn't stopped by a scroll
       const room = el.scrollHeight - el.clientHeight
       const down = el.scrollTop <= 0
       const up = sheetRef.current === 'half' && room > 1 && el.scrollTop >= room - 1
-      if (down || up) drag.current = { base: 0, at: 0, x: e.touches[0].clientX, y, down, up }
+      if (down || up) drag.current = { base: 0, at: 0, x, y, down, up }
     }
   }
   // Caught on its way, it stops where it is
@@ -257,14 +290,16 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   // Over the whole screen while it stands there, a short form's too (typing takes it there): left out, the first move
   // threw the sheet to its 60% place as past its last one
   const reach = (long: boolean): Sheet[] => [...(long || sheetRef.current === 'full' ? ['full' as const] : []), 'half', 'preview']
-  const onTouchMove = (e: React.TouchEvent) => {
+  const onTouchMove = (e: React.TouchEvent) => follow(e.touches[0].clientY)
+  /** The sheet under the finger or the mouse */
+  const follow = (y: number) => {
     const p = pull.current
     if (!p) return
     const d = drag.current
     if (!d || d.way !== 'y' || !sheetEl.current) return
     const places = reach(p.long).map(s => edge[s])
     const lo = Math.min(...places), hi = Math.max(...places)
-    let at = d.base + e.touches[0].clientY - d.y
+    let at = d.base + y - d.y
     if (at < lo) at = lo - (lo - at) * SPRING
     if (at > hi) at = hi + (at - hi) * SPRING
     d.at = at
@@ -286,6 +321,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       }
     }
   }
+  mouse.current = { grab: (x, y) => grab(x, y, true), follow, end: onTouchEnd }
   const onTouchCancel = () => {
     pull.current = null
     if (drag.current) place(edge[sheetRef.current])
