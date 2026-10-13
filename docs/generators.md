@@ -60,3 +60,7 @@ The plate frame, name tag, business card and livery refuse obscene words (`src/u
 ## Metrika goals
 
 `MetrikaHits` in `src/main.tsx` sends a view per page path (not per query or hash change: the generators rewrite the query with every setting). The generators reach Metrika goals (`goal` in `src/ui/metrika.ts`, JavaScript events set up in Metrika by the same ids): `download_<generator>` on «Скачать» with what was made (model, trim, parts on, number of tags or cards; never what was typed, except texts not from the suggestions: the plate frame's `line` when it isn't a listed dealer, the livery's `dealerText`, `taglineText`, `rearTaglineText` when they aren't a listed dealer or tagline, and the QR `link` when it isn't the model's page (price card, livery) or the site made up from the dealer's name (business card)), `copy_link` on «Поделиться», `open_menu` when the generators menu is opened.
+
+## Dealers
+
+`src/data/dealers.ts` holds every dealer (`DEALERS`): umo.auto's (`dealers.json`, parsed by `scripts/fetch-dealers.mjs`) merged with the hand-kept `dealers-own.json`, where an entry with a new name adds a dealer signed but not on umo.auto yet (name, city, short address as umo.auto writes them), and one with an existing name only adds to it, usually `aka`, the names it's also called by («Мажор» for Major). Edit that file by hand; never put the internal dealer sheet's candidates or contracts there. Their names are the dealer fields' suggestions (`DEALER_NAMES`); `dealerOf` finds one by its name, with «UMO» or without, for its address and hours.
