@@ -325,7 +325,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           as it went and jerked) */}
       <div
         className="relative flex flex-col p-[10px] transition-[height]"
-        style={{ height: screen.h - tall + edge[sheet], transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: 'cubic-bezier(0.67, 0, 0.33, 1)' }}
+        style={{ height: screen.h - tall + (preview ? edge.preview : edge.half), transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: 'cubic-bezier(0.67, 0, 0.33, 1)' }}
       >
       {/* A list's row over the picture (Figma 5105:7604): delete on the left, copy on the right, between them the
           number between the arrows, the reset right after it; for a moment after a removal «Удаляем ·
