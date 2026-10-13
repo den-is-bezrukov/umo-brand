@@ -62,7 +62,7 @@ export default function NameTag() {
   const { mode, setMode, people, current, selected, setSelected, update } = staff
   /** A field being edited on the tag itself, after a double click on its text */
   const [editing, setEditing] = useState<{ key: number; field: Field } | null>(null)
-  staff.useDeleteKey(!!editing)
+  staff.useKeys(!!editing)
 
   const [fonts, setFonts] = useState<Fonts>()
   const [exporting, setExporting] = useState(false)

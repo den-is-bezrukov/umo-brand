@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { goal } from './metrika'
 import tocIcons from '@/icons/toc'
 import { InFoot, InSheet, SheetSize } from './phone'
+import { MOD, withMod } from './keys'
 
 // Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag, business card). Light UI per the Figma layout
 // (UMO | Evrone, nodes 4844:6865 and 4900:4588), matching the brand guide.
@@ -733,12 +734,27 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   // download, «Поделиться» with it. The bright button stays the next step, so it's pressed even unread, and the press
   // teaches what to do (on wide screens a secondary button saying the step stood over a greyed-out download)
   const foot = useContext(InFoot)
+  // ⌘S presses it, as «Скачать» or the step in the way (the browser would save the page's HTML); the first bar to hear
+  // it takes it, should a page hold two
+  const button = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if (!withMod(e, 'KeyS') || e.defaultPrevented) return
+      e.preventDefault()
+      button.current?.click()
+    }
+    document.addEventListener('keydown', key)
+    return () => document.removeEventListener('keydown', key)
+  }, [])
   const lead = disabled && !!note && !said
   const leads = lead && !!onNote
   const shareOn = !!links && !disabled && !said
   const main = (
     <button
+      ref={button}
       type="button"
+      title={lead || busy || said ? undefined : `Скачать ${format} ${MOD}S`}
+      aria-keyshortcuts={MOD === '⌘' ? 'Meta+S' : 'Control+S'}
       // The field focused in the tap itself: iOS raises the keyboard only for a focus within the gesture (it was 350 ms later,
       // after the sheet opened, and the field only lit up)
       onClick={leads ? () => { foot?.(); onNote!() } : onClick}

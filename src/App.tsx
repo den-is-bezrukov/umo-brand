@@ -180,7 +180,7 @@ export default function App() {
   const { items, update } = staff
   const card: Row<Card> = staff.current ?? items[0]
   const set = (patch: Partial<Card>) => update(card.key, patch)
-  staff.useDeleteKey(false)
+  staff.useKeys(false)
   // A card's «Сбросить» brings it back to its model's defaults, as the sidebar's does; it isn't offered on one that is
   const frame = {
     ...staff,

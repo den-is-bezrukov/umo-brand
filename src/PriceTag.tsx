@@ -84,7 +84,7 @@ export default function PriceTag() {
     countWord: n => `${n} ценник` + ({ '': '', 'а': 'а', 'ей': 'ов' } as Record<string, string>)[plural(n)],
   })
   const { mode, setMode, current, update } = staff
-  staff.useDeleteKey(false)
+  staff.useKeys(false)
 
   const [fonts, setFonts] = useState<Fonts>()
   const [exporting, setExporting] = useState(false)

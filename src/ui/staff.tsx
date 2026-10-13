@@ -1,6 +1,7 @@
 import { useContext, useEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { InSlide } from '@/ui/phone'
+import { MOD, withMod } from '@/ui/keys'
 import { outlined } from '@/ui/form'
 import { splitFullName } from '@/nametag/table'
 
@@ -236,17 +237,31 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
   const isBlank = (p: P) => (Object.keys(blank) as (keyof P)[]).every(k => p[k] === blank[k])
 
   /**
-   * Delete or Backspace removes the selected item, as on any canvas, while the focus isn't in a field (where they edit
-   * the text) and there's more than one, as «Удалить» does. `busy` holds it off, e.g. while text is edited in place
+   * The list's keys, as on any canvas. Out of a field: Delete or Backspace removes the selected item (while there's more
+   * than one, as «Удалить»), ↑ ↓ select the one before or after it, ⌘Z brings back the one just removed (in a field ⌘Z
+   * undoes the typing). Anywhere: ⌘D duplicates the selected one, Esc leaves a field (unless a list in it took Esc) so
+   * the arrows pick again. `busy` holds them off, e.g. while text is edited in place
    */
-  const useDeleteKey = (busy: boolean) => useEffect(() => {
+  const useKeys = (busy: boolean) => useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Delete' && e.key !== 'Backspace') return
-      if (mode !== 'manual' || !current || people.length < 2 || busy) return
+      if (busy) return
       const t = e.target as HTMLElement
-      if (t.closest('input, textarea, select, [contenteditable]')) return
-      e.preventDefault()
-      remove(current.key)
+      const inField = !!t.closest('input, textarea, select, [contenteditable]')
+      if (e.key === 'Escape' && inField && !e.defaultPrevented) { t.blur(); return }
+      if (mode !== 'manual' || !current) return
+      if (withMod(e, 'KeyD')) { e.preventDefault(); duplicate(current.key); return }
+      if (inField) return
+      if (withMod(e, 'KeyZ') && !e.shiftKey && removed) { e.preventDefault(); restore(); return }
+      if (e.metaKey || e.ctrlKey || e.altKey) return
+      if ((e.key === 'Delete' || e.key === 'Backspace') && people.length > 1) { e.preventDefault(); remove(current.key) }
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+        e.preventDefault()
+        const i = people.findIndex(p => p.key === current.key)
+        const next = people[i + (e.key === 'ArrowDown' ? 1 : -1)]
+        if (!next) return
+        pick(next.key)
+        figures.current.get(next.key)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+      }
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
@@ -275,7 +290,7 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
 
   return {
     mode, setMode, people, items, file, current, selected, setSelected, tableError, dragging, dropTarget, loadFile,
-    showsMissing, form, figureRef, nextOf, inWork, pick, update, remove, add, isBlank, paste, useDeleteKey,
+    showsMissing, form, figureRef, nextOf, inWork, pick, update, remove, add, isBlank, paste, useKeys,
     duplicate, clear, removed, restore, dismiss: () => setRemoved(null), accept, uploadLabel, countWord,
   }
 }
@@ -423,13 +438,14 @@ export const CrossIcon = () => (
 )
 
 /** The item's actions (Figma 5030:11424): 30 px buttons (a phone's slide has its own, over the picture), the icon #808080, black on hover, no tile, as the other quiet controls */
-function Action({ label, hidden, onClick, children }: { label: string; hidden?: boolean; onClick: () => void; children: React.ReactNode }) {
+function Action({ label, keys, hidden, onClick, children }: { label: string; keys?: string; hidden?: boolean; onClick: () => void; children: React.ReactNode }) {
   if (hidden) return null
   return (
     <button
       type="button"
-      title={label}
+      title={keys ? `${label} ${keys}` : label}
       aria-label={label}
+      aria-keyshortcuts={keys?.replace('⌘', 'Meta+').replace('Ctrl+', 'Control+')}
       // A click here is the action's, not the row's, which would select the item again
       onClick={e => { e.stopPropagation(); onClick() }}
       className={`flex size-[30px] shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] outline-none hover:text-black focus-visible:ring-2 focus-visible:ring-black/30`}
@@ -462,7 +478,7 @@ export function ItemFrame<P extends object>({ staff, item, n, children }: { staf
       {staff.items.length > 1 && <span aria-hidden className="pointer-events-none pb-[5px] text-center text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1]">{n}</span>}
       {staff.mode === 'manual' && (
         <div className={`flex-col ${active ? 'flex' : 'hidden'} ${hover}`}>
-          <Action label="Дублировать" onClick={() => staff.duplicate(item.key)}>
+          <Action label="Дублировать" keys={`${MOD}D`} onClick={() => staff.duplicate(item.key)}>
             <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M3.5 6H2V14H10V12.5M6 2H14V10H6V2Z" /></svg>
           </Action>
           <Action label="Сбросить" hidden={staff.isBlank(item)} onClick={() => staff.clear(item.key)}>
@@ -490,7 +506,7 @@ export function Removed<P extends object>({ staff, at }: { staff: Staff<P>; at: 
   return (
     <div className="flex h-10 items-center justify-center gap-2 text-[14px] leading-5 text-[#808080]">
       Удалено ·
-      <button type="button" onClick={e => { e.stopPropagation(); staff.restore() }} className="cursor-pointer text-black outline-none hover:text-[#808080] focus-visible:ring-2 focus-visible:ring-black/30">Вернуть</button>
+      <button type="button" title={`${MOD}Z`} onClick={e => { e.stopPropagation(); staff.restore() }} className="cursor-pointer text-black outline-none hover:text-[#808080] focus-visible:ring-2 focus-visible:ring-black/30">Вернуть</button>
       {/* The items' own cross (1 px, #808080, black on hover), as «Удалить» beside them */}
       <button type="button" title="Закрыть" aria-label="Закрыть" onClick={e => { e.stopPropagation(); staff.dismiss() }} className="relative flex size-[30px] cursor-pointer items-center justify-center rounded-full text-[#808080] outline-none hover:text-black focus-visible:ring-2 focus-visible:ring-black/30">
         <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M12 4L8 8M8 8L4 4M8 8L12 12M8 8L4 12" /></svg>

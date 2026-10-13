@@ -124,7 +124,7 @@ export default function BusinessCard() {
     uploadLabel: 'Загрузить таблицу или PDF',
   })
   const { mode, setMode, people, current, update } = staff
-  staff.useDeleteKey(false)
+  staff.useKeys(false)
 
   const [fonts, setFonts] = useState<Fonts>()
   const [exporting, setExporting] = useState(false)
