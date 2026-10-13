@@ -155,13 +155,28 @@ export function splitPhone(raw: string): { phone: string; ext: string } | null {
  * A Russian number as the card sets it, «+7 495 000 00 00», from however it's typed (8 or +7, brackets, dashes);
  * 8 800 numbers keep their 8. Null if it isn't one
  */
+/**
+ * The codes of the cities with seven-digit numbers, set +7 495 000 00 00 as mobiles (9…) and 8 800 are: Moscow and its
+ * region, St Petersburg, the cities of a million and a few more. Every other city's code is four digits, its number
+ * six, set +7 4922 77 07 36 (Vladimir), as the code's split into 492 277 read wrong. Five-digit codes (small towns)
+ * are rare enough to read as four
+ */
+const SEVEN_DIGIT_CITIES = new Set(['495', '499', '496', '498', '812', '343', '383', '831', '843', '846', '351', '342', '347', '391', '473', '861', '862', '863', '423'])
+
+/** The ten digits after the country code in their groups, as many as are there: 3-3-2-2, or 4-2-2-2 for a four-digit code */
+function phoneGroups(rest: string): string[] {
+  const four = rest.length > 3 && !/^[89]/.test(rest) && !SEVEN_DIGIT_CITIES.has(rest.slice(0, 3))
+  const cuts = four ? [4, 6, 8, 10] : [3, 6, 8, 10]
+  return cuts.map((end, i) => rest.slice(i ? cuts[i - 1] : 0, end)).filter(Boolean)
+}
+
 export function formatPhone(raw: string): string | null {
   const t = oneLine(raw)
   if (/[^\d\s()+\-.]/.test(t)) return null
   let d = t.replace(/\D/g, '')
   if (d.length === 10) d = '7' + d
   if (d.length !== 11 || !/^[78]/.test(d)) return null
-  return `${d.startsWith('8800') ? '8' : '+7'} ${d.slice(1, 4)} ${d.slice(4, 7)} ${d.slice(7, 9)} ${d.slice(9)}`
+  return [d.startsWith('8800') ? '8' : '+7', ...phoneGroups(d.slice(1))].join(' ')
 }
 
 /**
@@ -175,9 +190,7 @@ export function maskPhone(raw: string, digits = Infinity): { text: string; caret
   let before = Math.min(digits, d.length)
   if (!/^[78]/.test(d)) { d = '7' + d; before++ }
   const prefix = d.startsWith('8800') ? '8' : '+7'
-  const rest = d.slice(1, 11)
-  const groups = [rest.slice(0, 3), rest.slice(3, 6), rest.slice(6, 8), rest.slice(8, 10)].filter(Boolean)
-  const text = [prefix, ...groups].join(' ')
+  const text = [prefix, ...phoneGroups(d.slice(1, 11))].join(' ')
   // The caret after the `before`-th digit, the country code's counting as one
   let caret = before === 0 ? 0 : text.length
   for (let i = 0, seen = 0; i < text.length && before > 0; i++) {
