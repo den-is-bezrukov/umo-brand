@@ -21,8 +21,8 @@ const DEFAULT_TOP = 'Центр UMO'
 // The parts that can be left out, as the `off` link parameter names them
 const PARTS = { qr: 'qr', dealer: 'top', tagline: 'bottom', rear: 'rear', rearDealer: 'rdealer', rearTagline: 'rslogan' } as const
 const RED = '#ff2a1a'
-/** The spec's dimensions: crimson, 21° off the red of text at fault */
-const DIMS = '#ee0044'
+/** The spec's dimensions: orange, apart from the red of text at fault */
+const DIMS = '#ee4400'
 
 function SheetPreview({ sheet, seams, dims, onReset, resetLabel }: { sheet: Sheet; seams: boolean; dims: boolean; onReset?: () => void; resetLabel?: string }) {
   const s = sheet.surface
