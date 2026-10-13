@@ -4,7 +4,7 @@ import { InSlide, InFoot, InSheet, SheetSize } from '@/ui/phone'
 
 // A trial of the generators' phone layout (Figma 5098:5806, «Mobile Layout»): the canvas over a sheet holding the
 // sidebar (header and form) with the download at its foot. A list's pictures are swiped one at a time, with a row over
-// them: delete, «‹ n/Name ↺ ›», copy; one picture has its reset and copy in the canvas's top corners instead. A tap on
+// them: delete, «‹ n/total ↺ ›» (or n/Name for slides that aren't items), copy; one picture has its reset and copy in the canvas's top corners instead. A tap on
 // a picture that would grow by it folds the sheet away (a portrait one: a landscape one is as wide either way), a
 // shrink icon under it bringing the sheet back; the icon in the sheet's header opens the form over the whole screen.
 // In the link: `arrows=0` hides the arrows (swiping alone)
@@ -63,7 +63,7 @@ export interface Slide {
   item?: number
   /** Its number, when it isn't its place in the strip (the business card's face is 0, its cards from 1) */
   number?: number
-  /** Its name, after its number in the row over it («2/Иван Петров», «1/Левый борт») */
+  /** Its name: over one picture, or after its number in a row of slides that aren't items («1/Левый борт») */
   label?: string
   /** Its reset, in «Сбросить»'s place, while there's something to reset */
   reset?: { onClick: () => void; label: string }
@@ -195,6 +195,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     </Btn>
   )
   const number = slide?.number ?? shown + 1
+  // A list's item shows its number of all («2/5»), its name being on it already; a slide that isn't an item (the
+  // livery's sides, the business card's face) its name («1/Левый борт», «0/Обложка»)
+  const total = slides.filter(s => s.item !== undefined).length
   const resetBtn = <Btn label={reset?.label ?? 'Сбросить'} hidden={!reset} onClick={() => reset?.onClick()}><ResetIcon /></Btn>
   const copyBtn = <Btn label="Дублировать" hidden={!staff || !current} onClick={() => staff?.duplicate(current.key, false)}><DuplicateIcon /></Btn>
   const height = { preview: '0px', half: HALF, full: row ? `calc(100dvh - ${ROW + 2 * PAD}px)` : '100dvh' }[sheet]
@@ -204,7 +207,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       {/* The canvas, 10 px in (Figma 5105:8488) */}
       <div className={`relative flex min-h-0 flex-1 flex-col p-[10px] ${preview ? 'pb-[calc(10px+env(safe-area-inset-bottom))]' : ''}`}>
       {/* A list's row over the picture (Figma 5105:7604): delete on the left, copy on the right, between them the
-          number and name between the arrows, the reset right after the name; for a moment after a removal «Удалено ·
+          number between the arrows, the reset right after it; for a moment after a removal «Удалено ·
           Вернуть» in the middle. Over the whole-screen form it's all there is of the canvas */}
       {row && (
         <div className="flex h-[30px] shrink-0 items-center justify-between">
@@ -215,7 +218,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
             <div className="flex min-w-0 flex-1 items-center justify-center">
               {back}
               <span className="min-w-0 truncate px-1 text-[14px] leading-5 text-[#808080] [font-feature-settings:'case'_1,'lnum'_1,'tnum'_1]">
-                {number}{slide?.label ? `/${slide.label}` : ''}
+                {number}/{slide?.item !== undefined ? total : slide?.label}
               </span>
               {reset && !full && resetBtn}
               {next}
@@ -232,8 +235,13 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         <div className="flex h-[30px] shrink-0 items-center justify-between">
           <Btn label="" hidden onClick={() => {}}>{null}</Btn>
           <div className="flex min-w-0 flex-1 items-center justify-center">
-            {slide?.label && <span className="min-w-0 truncate px-1 text-[14px] leading-5 text-[#808080] [font-feature-settings:'case'_1,'lnum'_1,'tnum'_1]">{slide.label}</span>}
-            {resetBtn}
+            {/* The reset hung after the name, out of its flow, so the name stays centred, as the canvas's captions */}
+            {slide?.label && slide.item === undefined ? (
+              <span className="relative flex min-w-0">
+                <span className="min-w-0 truncate px-1 text-[14px] leading-5 text-[#808080] [font-feature-settings:'case'_1,'lnum'_1,'tnum'_1]">{slide.label}</span>
+                <span className="absolute top-1/2 left-full -translate-y-1/2">{resetBtn}</span>
+              </span>
+            ) : resetBtn}
           </div>
           {staff ? copyBtn : <Btn label="" hidden onClick={() => {}}>{null}</Btn>}
         </div>
