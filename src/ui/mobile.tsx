@@ -93,11 +93,11 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   const sheetRef = useRef(sheet)
   sheetRef.current = sheet
   /** Where the sheet came from and how far its form was scrolled, to carry the form on from there */
-  const from = useRef<{ sheet: Sheet; top: number; at?: number } | null>(null)
-  /** To another place; `at`, where a finger left the sheet, to go on from there */
-  const move = (s: Sheet, at?: number) => {
+  const from = useRef<{ sheet: Sheet; top: number; at?: number; now?: boolean } | null>(null)
+  /** To another place; `at`, where a finger left the sheet, to go on from there; `now`, at once, not moving */
+  const move = (s: Sheet, at?: number, now?: boolean) => {
     if (s === sheetRef.current) return
-    from.current = { sheet: sheetRef.current, top: scroller.current?.scrollTop ?? 0, at }
+    from.current = { sheet: sheetRef.current, top: scroller.current?.scrollTop ?? 0, at, now }
     setSheet(s)
   }
   const [arrows] = useState(arrowsOn)
@@ -353,7 +353,8 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     if (!t || !matchMedia('(pointer: coarse)').matches) return
     if (before.current === null) before.current = sheetRef.current
     lift.current = e.target as HTMLElement
-    move('full')
+    // At once: iOS looks where the field is as the keyboard comes, and found it low, the sheet still on its way
+    move('full', undefined, true)
   }
   useEffect(() => {
     if (typing || before.current === null) return
@@ -361,15 +362,12 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     before.current = null
     move(s)
   }, [typing]) // eslint-disable-line react-hooks/exhaustive-deps
-  // Before the sheet's own move below, which then carries the form from where it stood
   useLayoutEffect(() => {
     const el = scroller.current, field = lift.current
     lift.current = null
     if (!el || !field) return
-    const was = el.scrollTop
+    // At once, as the sheet: a field still on its way read as low too
     el.scrollTop += field.getBoundingClientRect().top - el.getBoundingClientRect().top - LIFT
-    const d = el.scrollTop - was
-    if (d && !from.current) formEl.current?.animate([{ transform: `translateY(${d}px)` }, { transform: 'none' }], { duration: TURN_MS, easing: 'cubic-bezier(0.67, 0, 0.33, 1)' })
   })
   const sheetEl = useRef<HTMLDivElement>(null)
   const formEl = useRef<HTMLDivElement>(null)
@@ -377,7 +375,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     const was = from.current
     from.current = null
     const el = scroller.current
-    if (!was || !el || !sheetEl.current || !formEl.current) return
+    if (!was || !el || !sheetEl.current || !formEl.current || was.now) return
     // Lowered, the sheet shows the form's top, its header
     if (sheet === 'preview') el.scrollTop = 0
     // The sheet moves; the form in it starts where it stood, however its scroll was cut short by the room under it
