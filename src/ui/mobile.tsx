@@ -39,6 +39,8 @@ const LIFT = 52
 /** The hold that takes the sheet: this far over its edge, on the canvas, and under the generators' line */
 const GRAB_OVER = 50
 const GRAB_UNDER = 20
+/** The download's pace going down with the sheet */
+const FOOT_PACE = 0.5
 /** How much the sheet gives past its last place under a finger */
 const SPRING = 0.3
 /** A sheet let go goes on, slowing down */
@@ -422,9 +424,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   }
   const fits = () => [...(canvasEl.current?.querySelectorAll<HTMLElement>('[data-fit]') ?? [])]
   /** The sheet at a place, and the pictures with it */
-  /** The download goes down with the sheet under its 60% place, at its pace, out of sight lowered (it went at once) */
+  /** The download goes down with the sheet under its 60% place, at half its pace, out of sight lowered (it went at once) */
   const footEl = useRef<HTMLDivElement>(null)
-  const footAt = (at: number) => ({ transform: `translateY(${Math.max(0, at - edge.half)}px)` })
+  const footAt = (at: number) => ({ transform: `translateY(${Math.max(0, at - edge.half) * FOOT_PACE}px)` })
   const place = (at: number) => {
     if (sheetEl.current) sheetEl.current.style.transform = `translateY(${at}px)`
     if (footEl.current) {
