@@ -1,7 +1,6 @@
 import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
-import { createHash } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
 
@@ -245,7 +244,6 @@ function makePagePlugin(): Plugin {
   const instruction = () => fs.readFileSync(path.resolve(__dirname, 'public/llms.txt'), 'utf8')
   const page = () => fs.readFileSync(path.resolve(__dirname, 'src/make/page.html'), 'utf8')
     .replace('<!-- ai:instruction -->', escape(instruction()))
-    .replace('<!-- ai:version -->', createHash('sha1').update(instruction()).digest('hex').slice(0, 8))
   /**
    * umo.autos/dealers.txt: every dealer (src/data/dealers.json from umo.auto and the hand-kept dealers-own.json), for the
    * chats that open links to check a name against; the page finds the dealer itself anyway (src/ui/LinkDealer.tsx), so
