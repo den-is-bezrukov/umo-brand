@@ -235,13 +235,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         <div className="flex h-[30px] shrink-0 items-center justify-between">
           <Btn label="" hidden onClick={() => {}}>{null}</Btn>
           <div className="flex min-w-0 flex-1 items-center justify-center">
-            {/* The reset hung after the name, out of its flow, so the name stays centred, as the canvas's captions */}
-            {slide?.label && slide.item === undefined ? (
-              <span className="relative flex min-w-0">
-                <span className="min-w-0 truncate px-1 text-[14px] leading-5 text-[#808080] [font-feature-settings:'case'_1,'lnum'_1,'tnum'_1]">{slide.label}</span>
-                <span className="absolute top-1/2 left-full -translate-y-1/2">{resetBtn}</span>
-              </span>
-            ) : resetBtn}
+            {slide?.label && slide.item === undefined && <span className="min-w-0 truncate px-1 text-[14px] leading-5 text-[#808080] [font-feature-settings:'case'_1,'lnum'_1,'tnum'_1]">{slide.label}</span>}
+            {/* Only while there's something to reset: the name and the reset centred together, no place kept for it */}
+            {reset && resetBtn}
           </div>
           {staff ? copyBtn : <Btn label="" hidden onClick={() => {}}>{null}</Btn>}
         </div>
