@@ -81,6 +81,8 @@ export interface Slide {
 }
 
 type Sheet = 'preview' | 'half' | 'full'
+/** Where the sheet stood on the last generator, for the next one */
+let keptSheet: Sheet = 'half'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function MobileEditor({ slides, staff, sidebar, download }: {
@@ -90,7 +92,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   sidebar: React.ReactNode
   download: React.ReactNode
 }) {
-  const [sheet, setSheet] = useState<Sheet>('half')
+  // Another generator picked on the line opens with the sheet where it stood (it opened at 60% each time)
+  const [sheet, setSheet] = useState<Sheet>(() => keptSheet)
+  useEffect(() => { keptSheet = sheet }, [sheet])
   const scroller = useRef<HTMLDivElement>(null)
   const sheetRef = useRef(sheet)
   sheetRef.current = sheet
