@@ -546,7 +546,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           its fades over the sheet's edge */}
       <div
         ref={sheetEl}
-        className="absolute inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-[24px] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.1)]"
+        // Its shadow off while it's at the page's top, over the whole screen with no list row: it had nowhere to fall and
+        // read as cut off
+        className={`absolute inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-[24px] bg-white ${full && !row ? '' : 'shadow-[0_10px_30px_rgba(0,0,0,0.1)]'}`}
         style={{ height: tall, transform: `translateY(${edge[sheet]}px)` }}
       >
         <div ref={scroller} data-sheet onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchCancel} onFocus={onFocus} onBlur={onBlur} className={`min-h-0 flex-1 [contain:paint] ${preview ? 'overflow-y-hidden' : 'overflow-y-auto'}`}>
