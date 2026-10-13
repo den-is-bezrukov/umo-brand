@@ -402,8 +402,10 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           className="absolute inset-0 rounded-t-[24px] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.1)]"
           style={{ transform: `translateY(${edge[sheet]}px)` }}
         />
-        <div ref={form} className="pointer-events-auto absolute inset-0 flex flex-col" style={{ transform: `translateY(${edge[sheet]}px)` }}>
-          <div ref={scroller} data-sheet onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchCancel} onWheel={onWheel} onFocus={e => setTyping(types(e.target))} onBlur={e => setTyping(types(e.relatedTarget))} className={`min-h-0 flex-1 ${preview ? 'overflow-y-hidden' : 'overflow-y-auto'}`}>
+        {/* Cut to the sheet's shape, and the form painted within its box: iOS drew the generators' line, a scroll of its
+            own, and its fades over the sheet's edge once the form was scrolled under it */}
+        <div ref={form} className="pointer-events-auto absolute inset-0 flex flex-col" style={{ transform: `translateY(${edge[sheet]}px)`, clipPath: 'inset(0 0 0 0 round 24px 24px 0 0)' }}>
+          <div ref={scroller} data-sheet onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchCancel} onWheel={onWheel} onFocus={e => setTyping(types(e.target))} onBlur={e => setTyping(types(e.relatedTarget))} className={`min-h-0 flex-1 [contain:paint] ${preview ? 'overflow-y-hidden' : 'overflow-y-auto'}`}>
             {/* Groups 24 px apart (`src/index.css`, as on wide screens), so from one 48 px control to the next is 48 (16 + 8 for a label + 24) */}
             <div className="*:gap-6! *:p-6!" style={{ paddingBottom: `calc(${96 + (full ? 0 : below)}px + env(safe-area-inset-bottom))` }}>
               <InSheet.Provider value={sheet}>{sidebar}</InSheet.Provider>
