@@ -4,7 +4,7 @@ import { InSlide, InFoot, InSheet, SheetSize } from '@/ui/phone'
 
 // A trial of the generators' phone layout (Figma 5098:5806, «Mobile Layout»): the canvas over a sheet holding the
 // sidebar (header and form) with the download at its foot. A list's pictures are swiped one at a time, with a row over
-// them: delete, «‹ n/total ↺ ›» (a slide that isn't an item: its name), copy; one portrait picture has its reset and copy in the canvas's top corners instead, a landscape one a row with its name. A tap on
+// them: delete (its place kept empty while «Удаляем · Вернуть» has its own bin), «‹ n/total ↺ ›» (a slide that isn't an item: its name), copy; one portrait picture has its reset and copy in the canvas's top corners instead, a landscape one a row with its name. A tap on
 // a picture that would grow by it folds the sheet away (a portrait one: a landscape one is as wide either way), a
 // shrink icon under it bringing the sheet back; the icon in the sheet's header opens the form over the whole screen.
 // In the link: `arrows=0` hides the arrows (swiping alone)
@@ -93,7 +93,10 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   const [at, setAt] = useState(Math.max(0, selectedAt))
   const shown = Math.min(at, slides.length - 1)
   const item = slides[shown]?.item
-  const current = staff?.items.find((it: { key: number }) => it.key === item)
+  // A loaded table is only looked through, as on wide screens: a swipe selects nothing (selecting took the list to
+  // «Вручную»), and its items have no actions
+  const browsing = staff?.mode === 'table'
+  const current = browsing ? undefined : staff?.items.find((it: { key: number }) => it.key === item)
 
   // The strip's box, to fit a picture into it whole
   const strip = useRef<HTMLDivElement>(null)
@@ -121,7 +124,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       const i = Math.round(el.scrollLeft / el.clientWidth)
       setAt(i)
       const key = slides[i]?.item
-      if (staff && key !== undefined && key !== staff.selected) staff.pick(key)
+      if (staff && !browsing && key !== undefined && key !== staff.selected) staff.pick(key)
     }, 80)
   }
   const scrollTo = (i: number, smooth = true) => {
@@ -140,7 +143,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     setAt(i)
     scrollTo(i)
     const key = slides[i]?.item
-    if (staff && key !== undefined) staff.pick(key)
+    if (staff && !browsing && key !== undefined) staff.pick(key)
   }
 
   // A tap on the picture folds or unfolds the sheet; a double tap is left to the picture (text edited in place), and a
@@ -215,7 +218,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           Вернуть» in the middle. Over the whole-screen form it's all there is of the canvas */}
       {row && (
         <div className="flex h-[30px] shrink-0 items-center justify-between">
-          <Btn label="Удалить" hidden={full || !staff || !current || staff.people.length < 2} onClick={() => staff?.remove(current.key)}><TrashIcon /></Btn>
+          <Btn label="Удалить" hidden={full || !staff || !current || staff.people.length < 2 || !!staff.removed} onClick={() => staff?.remove(current.key)}><TrashIcon /></Btn>
           {staff?.removed ? (
             <div className="-my-[5px] min-w-0 flex-1"><Removed staff={staff} at={staff.removed.index} /></div>
           ) : (
