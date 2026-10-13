@@ -189,7 +189,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   /** Whether the form is longer than the sheet, when the finger came down */
   const pull = useRef<{ long: boolean } | null>(null)
   /** The sheet under the finger: where it started and is, where the finger started, and which way it went first */
-  const drag = useRef<{ base: number; at: number; x: number; y: number; way?: 'x' | 'y'; down?: boolean; up?: boolean } | null>(null)
+  const drag = useRef<{ base: number; at: number; x: number; y: number; way?: 'x' | 'y'; down?: boolean; up?: boolean; scroll0?: number } | null>(null)
   /** Takes the sheet where it is, caught on its way or not */
   const take = useRef<() => number>(() => 0)
   // The finger's first move says what it does: up or down it takes the sheet and the form doesn't scroll under it
@@ -213,6 +213,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           // along with the form's spring, both under the finger)
           if (!e.cancelable || !((d.down && dy > 0) || (d.up && dy < 0))) { drag.current = null; return }
           d.base = d.at = take.current()
+          // Pulled up at its end, the form stays put as the sheet's edge rises over it (it went up with the sheet, the
+          // room under its end showing, and settled back once let go)
+          if (dy < 0) d.scroll0 = scroller.current?.scrollTop
         }
       }
       if (e.cancelable) e.preventDefault()
@@ -271,6 +274,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     if (at > hi) at = hi + (at - hi) * SPRING
     d.at = at
     place(at)
+    if (d.scroll0 !== undefined && scroller.current) scroller.current.scrollTop = d.scroll0 - Math.max(0, d.base - at)
   }
   const onTouchEnd = () => {
     const p = pull.current
@@ -285,6 +289,13 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       else if (sheetEl.current) {
         place(edge[to])
         glide(d.at, edge[to], LET_GO)
+        // Back to where it was, the form still where it stands as the sheet goes
+        const el = scroller.current
+        if (d.scroll0 !== undefined && el) {
+          const now = el.scrollTop
+          el.scrollTop = d.scroll0
+          if (d.scroll0 !== now) formEl.current?.animate([{ transform: `translateY(${d.scroll0 - now}px)` }, { transform: 'none' }], LET_GO)
+        }
       }
     }
   }
