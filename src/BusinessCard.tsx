@@ -1,7 +1,7 @@
 import { flushSync } from 'react-dom'
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadBar, unfilled, stepsLeft, Segments, SegBtn, rowAction, isValidUrl, ALERT_LABEL, Checkbox } from '@/ui/form'
-import { useStaff, plain, pickTable, TableSource, UploadArea, AddTile, fullNameField, ItemFrame, Removed, ITEM_EDGE } from '@/ui/staff'
+import { useStaff, plain, pickTable, TableSource, UploadArea, AddTile, fullNameField, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
@@ -277,7 +277,7 @@ export default function BusinessCard() {
                     />
                   </button>
                   </ItemFrame>
-                  {problems[i].length > 0 && <p className={`text-[13px] leading-5 text-[#e30]`}>{alertLine(problems[i])}</p>}
+                  {problems[i].length > 0 && <ItemAlert staff={staff} item={p.key}>{alertLine(problems[i])}</ItemAlert>}
                 </div>
               </figure>
               </Fragment>

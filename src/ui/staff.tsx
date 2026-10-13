@@ -363,7 +363,7 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
 
   return {
     mode, setMode, people, items, file, current, selected, setSelected, tableError, dragging, dropTarget, loadFile,
-    showsMissing, form, figureRef, nextOf, inWork, pick, update, remove, add, isBlank, paste, useKeys,
+    showsMissing, form, figureRef, goTo, nextOf, inWork, pick, update, remove, add, isBlank, paste, useKeys,
     duplicate, clear, removed, restore, dismiss: () => setRemoved(null), accept, uploadLabel, countWord,
   }
 }
@@ -578,6 +578,18 @@ export function ItemFrame<P extends object>({ staff, item, n, children }: { staf
       )}
       </div>
     </div>
+  )
+}
+
+/**
+ * What's wrong with an item, under it, centred, as the canvas's captions: a click goes to the field at fault, selecting
+ * the item, as the download's note does (the faults are said as the form's labels turn red, so the line leads there)
+ */
+export function ItemAlert<P extends object>({ staff, item, children }: { staff: Staff<P>; item: number; children: React.ReactNode }) {
+  return (
+    <button type="button" onClick={e => { e.stopPropagation(); staff.goTo(item) }} className="cursor-pointer self-center text-center text-[13px] leading-5 text-[#e30]">
+      {children}
+    </button>
   )
 }
 

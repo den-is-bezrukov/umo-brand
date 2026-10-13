@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, unfilled, stepsLeft, Segments, SegBtn, ALERT_LABEL, outlined } from '@/ui/form'
-import { useStaff, pickTable, TableSource, UploadArea, AddTile, ItemFrame, Removed, ITEM_EDGE } from '@/ui/staff'
+import { useStaff, pickTable, TableSource, UploadArea, AddTile, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
@@ -211,7 +211,7 @@ export default function PriceTag() {
                     />
                   </button>
                   </ItemFrame>
-                  {problems[i].length > 0 && <p className={`text-[13px] leading-5 text-[#e30]`}>{alertLine(problems[i])}</p>}
+                  {problems[i].length > 0 && <ItemAlert staff={staff} item={it.key}>{alertLine(problems[i])}</ItemAlert>}
                 </div>
               </figure>
               </Fragment>
