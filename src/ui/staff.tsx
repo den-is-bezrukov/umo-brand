@@ -364,11 +364,25 @@ export const ITEM_EDGE = 'outline-1 outline-offset-0 outline-black/10 group-hove
  * centred under the items. It was a tile in the item's shape, too large, the price card's above all
  */
 export function AddTile({ onClick }: { onClick: () => void }) {
+  // ⌘↩ (Ctrl+Enter) presses it from anywhere, a field too: one card done, the next one (⌘N is the browser's own)
+  const button = useRef<HTMLButtonElement>(null)
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if (!withMod(e, 'Enter') || e.defaultPrevented) return
+      e.preventDefault()
+      button.current?.click()
+    }
+    document.addEventListener('keydown', key)
+    return () => document.removeEventListener('keydown', key)
+  }, [])
   return (
     <div className="flex justify-center">
       <button
+        ref={button}
         type="button"
         data-add
+        title={`Добавить ${MOD === '⌘' ? '⌘↩' : 'Ctrl+Enter'}`}
+        aria-keyshortcuts={MOD === '⌘' ? 'Meta+Enter' : 'Control+Enter'}
         onClick={onClick}
         className="flex cursor-pointer items-center gap-2 rounded-[8px] border border-black/10 px-3 py-[9px] text-[14px] font-medium leading-5 text-black hover:border-black/40"
       >
