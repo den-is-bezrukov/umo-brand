@@ -1,6 +1,6 @@
 import { useContext, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { goal } from './metrika'
 import tocIcons from '@/icons/toc'
 import { InFoot, InSheet, SheetSize } from './phone'
@@ -118,6 +118,8 @@ const PHONE_TURNS = 3
  */
 function GeneratorRing({ current }: { current: string }) {
   const navigate = useNavigate()
+  // Turned with the keys, the next page takes the focus back on its line, so ← → go on turning it
+  const turned = (useLocation().state as { turned?: boolean } | null)?.turned
   const count = GENERATORS.length
   const middle = Math.floor(PHONE_TURNS / 2) * count + GENERATORS.findIndex(g => g.path === current)
   const nav = useRef<HTMLElement>(null)
@@ -127,6 +129,7 @@ function GeneratorRing({ current }: { current: string }) {
   useLayoutEffect(() => {
     const home = () => { const n = nav.current, el = item(middle); if (n && el) n.scrollLeft = el.offsetLeft - 24 }
     home()
+    if (turned) nav.current?.focus({ preventScroll: true })
     document.fonts?.ready.then(home)
   }, [current]) // eslint-disable-line react-hooks/exhaustive-deps
   useEffect(() => {
@@ -149,11 +152,12 @@ function GeneratorRing({ current }: { current: string }) {
     // Only a scroll someone made picks: the snap redoing itself as the panel resizes ended a scroll too, and opened the
     // next generator on its own
     let moved = false
+    let keyed = false
     // The wheel scrolls the line across (a mouse has no other way to), and a pick waits until it's been still a moment,
     // as each notch of the wheel ends a scroll of its own
     let wheeled = 0
     const wheel = (e: WheelEvent) => {
-      moved = true
+      moved = true; keyed = false
       if (Math.abs(e.deltaX) >= Math.abs(e.deltaY)) { wheeled = performance.now(); return }
       e.preventDefault()
       wheeled = performance.now()
@@ -166,18 +170,18 @@ function GeneratorRing({ current }: { current: string }) {
       const i = nearest()
       const path = GENERATORS[i % count].path
       moved = false
-      if (path !== current) navigate(path)
+      if (path !== current) navigate(path, { state: { turned: keyed } })
       // The same name a turn away: back to the middle copy, unseen
       else if (i !== middle) n.scrollLeft += item(middle)!.offsetLeft - item(i)!.offsetLeft
     }
     const settle = () => { clearTimeout(timer); if (!ends) timer = window.setTimeout(pick, 150) }
     // Keys move the focus along it, scrolling it too
-    const key = () => { moved = true }
+    const key = () => { moved = true; keyed = true }
     // Resized, the current one back at the edge
     const observer = new ResizeObserver(() => { if (!moved) n.scrollLeft = item(middle)!.offsetLeft - 24 })
     observer.observe(n)
     const scroll = () => { setLit(GENERATORS[nearest() % count].path); settle() }
-    const down = () => { touching = true; moved = true; clearTimeout(timer) }
+    const down = () => { touching = true; moved = true; keyed = false; clearTimeout(timer) }
     const up = () => { touching = false; settle() }
     if (ends) n.addEventListener('scrollend', pick)
     n.addEventListener('wheel', wheel, { passive: false })
@@ -202,14 +206,14 @@ function GeneratorRing({ current }: { current: string }) {
   const tone = (path: string) => (path === lit ? 'text-black' : 'text-[#bfbfbf] hover:text-[#808080] active:text-[#808080]')
   return (
     <div className="relative -mx-6 my-1">
-      {/* 8 px over and under for the descenders (р, у), which the scroller would clip; the scroller itself out of the
-          Tab order (Chrome lets the keyboard into one), its names in it */}
-      <nav ref={nav} aria-label="Конструкторы" tabIndex={-1} className="relative -my-2 flex snap-x snap-mandatory scroll-pl-6 gap-5 overflow-x-auto overscroll-x-contain py-2 pl-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* 8 px over and under for the descenders (р, у), which the scroller would clip; one Tab stop, ringed whole, its
+          names turned with ← → as a drum (not one stop each) */}
+      <nav ref={nav} aria-label="Конструкторы" tabIndex={0} className="relative -my-2 flex snap-x snap-mandatory scroll-pl-6 gap-5 overflow-x-auto overscroll-x-contain py-2 pl-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {Array.from({ length: PHONE_TURNS * count }, (_, i) => {
           const g = GENERATORS[i % count]
           return i === middle
             ? <h1 key={i} className={`${name} ${tone(g.path)}`}>{g.title}</h1>
-            : <Link key={i} to={g.path} draggable={false} aria-hidden={i < count || i >= 2 * count || undefined} tabIndex={i < count || i >= 2 * count ? -1 : undefined} className={`${name} ${tone(g.path)} outline-none`}>{g.title}</Link>
+            : <Link key={i} to={g.path} draggable={false} aria-hidden={i < count || i >= 2 * count || undefined} tabIndex={-1} className={`${name} ${tone(g.path)} outline-none`}>{g.title}</Link>
         })}
       </nav>
       {/* The shades over the edges, as the ring's (Figma 5062:671, 5061:539) */}
