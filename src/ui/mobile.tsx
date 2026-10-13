@@ -40,8 +40,6 @@ const LIFT = 52
 const SPRING = 0.3
 /** A sheet let go goes on, slowing down */
 const LET_GO = { duration: 350, easing: 'cubic-bezier(0.2, 0, 0, 1)' }
-/** How much larger a picture must get with the sheet folded away for a tap to do it */
-const GROWS = 1.15
 
 const arrowsOn = () => new URLSearchParams(location.search).get('arrows') !== '0'
 
@@ -167,12 +165,10 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   // A tap on the picture folds or unfolds the sheet; a double tap is left to the picture (text edited in place), and a
   // tap on a control in it to the control
   const tap = useRef(0)
-  const canPreviewRef = useRef(false)
   const onTap = (e: React.MouseEvent) => {
     if ((e.target as Element).closest('button[aria-label], input, textarea, a')) return
     clearTimeout(tap.current)
     if (e.detail > 1) return
-    if (!canPreviewRef.current) return
     tap.current = window.setTimeout(() => move(sheetRef.current === 'preview' ? 'half' : 'preview'), 250)
   }
 
@@ -226,7 +222,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     }
   }
   /** The places a finger can take the sheet to */
-  const reach = (long: boolean): Sheet[] => [...(long ? ['full' as const] : []), 'half', ...(canPreviewRef.current ? ['preview' as const] : [])]
+  const reach = (long: boolean): Sheet[] => [...(long ? ['full' as const] : []), 'half', 'preview']
   const onTouchMove = (e: React.TouchEvent) => {
     const p = pull.current
     if (!p) return
@@ -305,18 +301,6 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     o.observe(document.documentElement, { attributes: true, attributeFilter: ['data-menu'] })
     return () => o.disconnect()
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
-  // Under the row, if there's one
-  const rowsH = (full || corners ? 0 : ROW) + 2 * PAD + 2 * INSET
-  const growth = (ratio?: number) => {
-    if (!ratio) return 1
-    const w = screen.w - 2 * SIDE
-    const half = Math.min(w, (screen.h * 0.4 - rowsH) / ratio)
-    const big = Math.min(w, (screen.h - peek - rowsH) / ratio)
-    return big / Math.max(1, half)
-  }
-  const canPreview = growth(slide?.ratio) >= GROWS
-  canPreviewRef.current = canPreview
-  useEffect(() => { if (preview && !canPreview) move('half') }, [preview, canPreview])
 
   const back = (
     <Btn label="Назад" hidden={!arrows || !many || shown === 0} onClick={() => go(-1)}>
@@ -406,16 +390,16 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
    * sheet's own pace under a finger or not (it grew after, in a move of its own); above it it stays (the sheet over the
    * whole screen slides over it: it shrank under the sheet, the picture refitted as it went and jerked) */
   const canvasH = (at: number) => screen.h - tall + Math.min(Math.max(at, edge.half), edge.preview)
-  // The canvas is laid out once, as large as the sheet ever leaves it (lowered to its header, where that grows the
-  // picture), and its pictures are scaled to their size for where the sheet is, standing or on its way: drawn anew at
+  // The canvas is laid out once, as large as the sheet ever leaves it (lowered to its header), and its pictures are scaled to their size for where the sheet is, standing or on its way: drawn anew at
   // every step they shook, and laid out for one place, scaled up past it, they were cut off at the canvas's foot
-  const laidH = canvasH(canPreview ? edge.preview : edge.half)
+  const laidH = canvasH(edge.preview)
   /** A picture's scale and shift for the sheet at `at`, from its size laid out */
   const fitAt = (el: HTMLElement, at: number) => {
     const ratio = Number(el.dataset.ratio), side = Number(el.dataset.side), w = el.offsetWidth
     const s = strip.current
-    if (!ratio || !w || !s) return 'none'
     const grow = canvasH(at) - (canvasEl.current?.offsetHeight ?? laidH)
+    // One that takes the width (the plate frame's strip) only keeps to the middle of what's in view
+    if (!ratio || !w || !s) return `translateY(${grow / 2}px)`
     const extra = el.offsetHeight - w * ratio
     const to = Math.max(0, Math.floor(Math.min(s.clientWidth - 2 * side, (s.clientHeight + grow - 2 * INSET - extra) / ratio)))
     return `translateY(${grow / 2}px) scale(${to / w})`
