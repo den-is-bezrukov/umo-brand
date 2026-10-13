@@ -60,9 +60,11 @@ function SheetPreview({ sheet, seams, dims, onReset, resetLabel }: { sheet: Shee
           {/* The spec's dimensions */}
           {dims && (
             <g>
-              {marks.lines.map(([x1, y1, x2, y2], i) => <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={RED} {...hairline} />)}
+              {/* Half a pixel on Retina screens, one device pixel; a whole one elsewhere, as half would only turn pale */}
+              {marks.lines.map(([x1, y1, x2, y2], i) => <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={RED} {...hairline} strokeWidth={devicePixelRatio >= 2 ? 0.5 : 1} />)}
+              {/* The page's CoFo Sans Medium with tabular figures (the spec PDF keeps Helvetica Bold) */}
               {marks.labels.map((l, i) => (
-                <text key={i} x={l.x} y={l.y} textAnchor={anchor[l.align]} fontSize={marks.size} fontFamily="Helvetica, Arial, sans-serif" fontWeight={700} fill={RED}>{l.text}</text>
+                <text key={i} x={l.x} y={l.y} textAnchor={anchor[l.align]} fontSize={marks.size} fontWeight={500} fill={RED} className="font-sans [font-variant-numeric:tabular-nums]">{l.text}</text>
               ))}
             </g>
           )}
