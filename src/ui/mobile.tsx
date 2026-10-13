@@ -185,7 +185,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   /** Whether the form is longer than the sheet, when the finger came down */
   const pull = useRef<{ long: boolean } | null>(null)
   /** The sheet under the finger: where it started and is, where the finger started, and which way it went first */
-  const drag = useRef<{ base: number; at: number; x: number; y: number; way?: 'x' | 'y' } | null>(null)
+  const drag = useRef<{ base: number; at: number; x: number; y: number; way?: 'x' | 'y'; down?: boolean } | null>(null)
+  /** Takes the sheet where it is, caught on its way or not */
+  const take = useRef<() => number>(() => 0)
   // The finger's first move says what it does: up or down it takes the sheet and the form doesn't scroll under it
   // (called off in the gesture itself, so not a React listener, which can't); across, it leaves the sheet to the
   // generators' line or the pictures. Not `touch-action` on the header: the line, a scroll of its own, let the form scroll
@@ -199,6 +201,11 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         const dx = Math.abs(e.touches[0].clientX - d.x), dy = Math.abs(e.touches[0].clientY - d.y)
         d.way = dy >= dx ? 'y' : 'x'
         if (d.way === 'x') { drag.current = null; return }
+        // On the form at its top only a pull down takes the sheet; up, the form scrolls as ever
+        if (d.down) {
+          if (e.touches[0].clientY <= d.y) { drag.current = null; return }
+          d.base = d.at = take.current()
+        }
       }
       if (e.cancelable) e.preventDefault()
     }
@@ -220,13 +227,21 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     const edgeY = sheetEl.current?.getBoundingClientRect().top ?? 0
     // Over the sheet's edge whatever the form's scroll (its header scrolled away, the list's row over it still holds)
     if (sheetEl.current && (y < edgeY || (head && y <= head.bottom + GRAB_UNDER))) {
-      // Caught on its way, it stops where it is
-      const at = sheetAt()
-      sheetEl.current.getAnimations().forEach(a => a.cancel())
-      formEl.current?.getAnimations().forEach(a => a.finish())
-      place(at)
+      const at = take.current()
       drag.current = { base: at, at, x: e.touches[0].clientX, y }
+    } else if (el && el.scrollTop <= 0) {
+      // The form at its top: a pull down takes the sheet, as a phone's own sheets (its spring gave instead); decided
+      // on the first move, so the sheet isn't stopped by a scroll
+      drag.current = { base: 0, at: 0, x: e.touches[0].clientX, y, down: true }
     }
+  }
+  // Caught on its way, it stops where it is
+  take.current = () => {
+    const at = sheetAt()
+    sheetEl.current?.getAnimations().forEach(a => a.cancel())
+    formEl.current?.getAnimations().forEach(a => a.finish())
+    place(at)
+    return at
   }
   /** The places a finger can take the sheet to */
   // Over the whole screen while it stands there, a short form's too (typing takes it there): left out, the first move
