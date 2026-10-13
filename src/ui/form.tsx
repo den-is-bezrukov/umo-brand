@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { goal } from './metrika'
 import tocIcons from '@/icons/toc'
-import { InFoot, InSheet, SheetSize } from './phone'
+import { InFoot, InSheet } from './phone'
 import { MOD, withMod, otherLayout } from './keys'
 
 // Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag, business card). Light UI per the Figma layout
@@ -45,7 +45,6 @@ const crumb = 'underline decoration-transparent decoration-[0.35px] underline-of
  * Medium with a list under «Носители ⌄» and a ring turned by script, which a finger couldn't drive
  */
 export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' | '/price-tag' | '/hours-sign' }) {
-  const size = useContext(SheetSize)
   const [menu, setMenu] = useState(false)
   const toggle = () => { if (!menu) goal('open_menu', { page: location.pathname }); setMenu(!menu) }
   // While it's open the rest of the form and the download step aside (`html[data-menu]` in index.css)
@@ -62,9 +61,6 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
       <div className="flex items-center gap-2">
         <IconButton label={menu ? 'Свернуть' : 'Конструкторы'} onClick={toggle} d={menu ? tocIcons.close : tocIcons.menu} />
         <PhoneCrumbs />
-        {/* On a phone a thin chevron across from them, grey as the canvas's icons: up opens the sheet a step, down puts it
-            back (the chevrons out and the guide's «Свернуть», 2 px, were taken out; the sheet is dragged too) */}
-        {size && !menu && <IconButton label={size.label} onClick={size.toggle} thin d={size.up ? 'M4 10L8 6L12 10' : 'M4 6L8 10L12 6'} />}
       </div>
       {menu ? (
         // 20 px under the crumbs, where the line stood, so the current name stays put (24 dropped it 4 px; 16 sat the
@@ -93,11 +89,11 @@ function PhoneCrumbs() {
   )
 }
 
-/** A 16 px icon with a 2 px stroke as the form's own, on whole pixels (Figma's sheet has 1 px: 5110:9103, 5110:9091, 5103:6163), black, a finger's 36 px round it; `thin`, 1 px and grey */
-function IconButton({ label, onClick, d, thin }: { label: string; onClick: () => void; d: string; thin?: boolean }) {
+/** A 16 px icon with a 2 px stroke as the form's own, on whole pixels (Figma's sheet has 1 px: 5110:9103, 5110:9091, 5103:6163), black, a finger's 36 px round it */
+function IconButton({ label, onClick, d }: { label: string; onClick: () => void; d: string }) {
   return (
-    <button type="button" aria-label={label} title={label} onClick={onClick} className={`relative flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-[4px] after:absolute after:-inset-[10px] after:content-[''] ${thin ? 'text-[#808080]' : ''}`}>
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d={d} stroke="currentColor" strokeWidth={thin ? 1 : 2} strokeLinecap="square" strokeLinejoin="bevel" /></svg>
+    <button type="button" aria-label={label} title={label} onClick={onClick} className={`relative flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-[4px] after:absolute after:-inset-[10px] after:content-['']`}>
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d={d} stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" /></svg>
     </button>
   )
 }

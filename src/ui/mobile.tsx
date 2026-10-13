@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ResetIcon, DuplicateIcon, TrashIcon, Removed, type Staff } from '@/ui/staff'
-import { InSlide, InFoot, InSheet, SheetSize } from '@/ui/phone'
+import { InSlide, InFoot, InSheet } from '@/ui/phone'
 
 // A trial of the generators' phone layout (Figma 5098:5806, «Mobile Layout»): the canvas over a sheet holding the
 // sidebar (header and form) with the download at its foot. A list's pictures are swiped one at a time, with a row over
@@ -541,13 +541,6 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     if (lag) formEl.current.animate([{ transform: `translateY(${lag}px)` }, { transform: 'none' }], timing)
   }, [sheet]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // The header's chevron: over the whole screen down to 60%, at 60% up over the screen (a form longer than the sheet
-  // only), lowered up to 60%
-  const longForm = !!scroller.current && scroller.current.scrollHeight - scroller.current.clientHeight > 1
-  const chevron = full ? { up: false, label: 'Свернуть форму', toggle: () => move('half') }
-    : preview ? { up: true, label: 'Поднять форму', toggle: () => move('half') }
-    : longForm ? { up: true, label: 'Развернуть форму', toggle: () => move('full') } : null
-
   return (
     // The page's background is the canvas's; over it the picture with its row, over all the sheet, and the download at
     // the screen's foot over the sheet; clipped, not hidden, so nothing scrolls it (a focused control in the sheet
@@ -647,9 +640,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           {/* Groups 24 px apart (`src/index.css`, as on wide screens), so from one 48 px control to the next is 48 (16 + 8
               for a label + 24); at 60% as much again under the form's end as is under the screen, to scroll it into view */}
           <div ref={formEl} className="*:gap-6! *:p-6!" style={{ paddingBottom: `calc(${96 + (typing ? screen.h : full ? 0 : below)}px + env(safe-area-inset-bottom))` }}>
-            <SheetSize.Provider value={chevron}>
-              <InSheet.Provider value={sheet}>{sidebar}</InSheet.Provider>
-            </SheetSize.Provider>
+            <InSheet.Provider value={sheet}>{sidebar}</InSheet.Provider>
           </div>
         </div>
       </div>
