@@ -36,6 +36,9 @@ const ROW = 30
 const PAD = 10
 /** A field lifted for typing stands this far under the sheet's top: its group's 24 px padding, label and 12 px to it */
 const LIFT = 52
+/** The hold that takes the sheet: this far over its edge, on the canvas, and under the generators' line */
+const GRAB_OVER = 50
+const GRAB_UNDER = 20
 /** How much the sheet gives past its last place under a finger */
 const SPRING = 0.3
 /** A sheet let go goes on, slowing down */
@@ -184,9 +187,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   const drag = useRef<{ base: number; at: number; x: number; y: number; way?: 'x' | 'y' } | null>(null)
   // The finger's first move says what it does: up or down it takes the sheet and the form doesn't scroll under it
   // (called off in the gesture itself, so not a React listener, which can't); across, it leaves the sheet to the
-  // generators' line. Not `touch-action` on the header: the line, a scroll of its own, let the form scroll
+  // generators' line or the pictures. Not `touch-action` on the header: the line, a scroll of its own, let the form scroll
   useEffect(() => {
-    const el = scroller.current
+    const el = root.current
     if (!el) return
     const onMove = (e: TouchEvent) => {
       const d = drag.current
@@ -206,13 +209,15 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     return m ? m.m42 : edge[sheetRef.current]
   }
   const onTouchStart = (e: React.TouchEvent) => {
-    // The header, or the sheet's padding over it
+    // The header and round it: from 50 px over the sheet's edge, on the canvas, to 20 under the generators' line (only
+    // the header and 12 px under it were too small a hold)
     const head = scroller.current?.querySelector('[data-head]')?.getBoundingClientRect()
+    const edgeY = sheetEl.current?.getBoundingClientRect().top
     const y = e.touches[0].clientY
     const el = scroller.current
     pull.current = { long: !!el && el.scrollHeight - el.clientHeight > 1 }
     drag.current = null
-    if (head && y <= head.bottom + 12 && sheetEl.current) {
+    if (head && edgeY !== undefined && y >= edgeY - GRAB_OVER && y <= head.bottom + GRAB_UNDER && sheetEl.current) {
       // Caught on its way, it stops where it is
       const at = sheetAt()
       sheetEl.current.getAnimations().forEach(a => a.cancel())
@@ -463,7 +468,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     // The page's background is the canvas's; over it the picture with its row, over all the sheet, and the download at
     // the screen's foot over the sheet; clipped, not hidden, so nothing scrolls it (a focused control in the sheet
     // scrolled it by 83 px, the canvas off its place)
-    <div ref={root} className="fixed inset-0 overflow-clip bg-[#f5f5f5] font-sans text-black">
+    <div ref={root} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchCancel} className="fixed inset-0 overflow-clip bg-[#f5f5f5] font-sans text-black">
       {/* The canvas, 10 px in (Figma 5105:8488): above the sheet at 60%, the whole screen with the picture alone. The
           sheet over the whole screen slides over it, leaving it as it is (it shrank under the sheet, the picture refitted
           as it went and jerked) */}
@@ -551,7 +556,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         className={`absolute inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-[24px] bg-white ${full && !row ? '' : 'shadow-[0_10px_30px_rgba(0,0,0,0.1)]'}`}
         style={{ height: tall, transform: `translateY(${edge[sheet]}px)` }}
       >
-        <div ref={scroller} data-sheet onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchCancel} onFocus={onFocus} onBlur={onBlur} className={`min-h-0 flex-1 [contain:paint] ${preview ? 'overflow-y-hidden' : 'overflow-y-auto'}`}>
+        <div ref={scroller} data-sheet onFocus={onFocus} onBlur={onBlur} className={`min-h-0 flex-1 [contain:paint] ${preview ? 'overflow-y-hidden' : 'overflow-y-auto'}`}>
           {/* Groups 24 px apart (`src/index.css`, as on wide screens), so from one 48 px control to the next is 48 (16 + 8
               for a label + 24); at 60% as much again under the form's end as is under the screen, to scroll it into view */}
           <div ref={formEl} className="*:gap-6! *:p-6!" style={{ paddingBottom: `calc(${96 + (typing ? screen.h : full ? 0 : below)}px + env(safe-area-inset-bottom))` }}>
