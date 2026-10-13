@@ -1,5 +1,5 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadBar, unfilled, stepsLeft, Segments, SegBtn, outlined } from '@/ui/form'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadBar, LinkButtons, canShareFiles, unfilled, stepsLeft, Segments, SegBtn, outlined } from '@/ui/form'
 import { useStaff, plain, pickTable, TableSource, UploadArea, AddTile, fullNameField, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD } from '@/livery/geometry'
@@ -101,6 +101,9 @@ export default function NameTag() {
   /** The tags not ready, which keep «Скачать» off; the line over it counts them and leads through them */
   const failing = items.filter((_, i) => missing[i].length || tags?.[i]?.issues.length).map(it => it.key)
   const ok = !!tags && items.length > 0 && failing.length === 0
+
+  /** The tags' PDF, photo and spec for «Поделиться» to send, made again as they change */
+  const shareFiles = useCallback(async () => (await import('@/nametag/pdf')).tagsFiles(tags!, staff.items.map(plain)), [tags]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleExport = async () => {
     if (!tags || !ok) return
@@ -265,6 +268,7 @@ export default function NameTag() {
           note={!items.length ? 'Загрузить таблицу' : (failing.length ? problemOf(staff.inWork(failing).index) : undefined)}
           count={stepsLeft(items.reduce((n, _, i) => n + missing[i].length + (tags?.[i]?.issues.length ?? 0), 0))}
           onNote={items.length ? () => staff.nextOf(failing) : pickTable}
+          links={canShareFiles && <LinkButtons incomplete={!ok} file={shareFiles} fileOnly />}
         />
   )
 

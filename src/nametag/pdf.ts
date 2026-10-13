@@ -126,12 +126,19 @@ UMO_name-tag_reference.webp  — референс внешнего вида
 `
 }
 
-export async function tagsZip(tags: Tag[], people: unknown): Promise<Blob> {
+async function tagsParts(tags: Tag[], people: unknown) {
   const [pdf, photo] = await Promise.all([tagsPdf(tags, people), fetch(REFERENCE).then(r => r.arrayBuffer())])
-  const zip = zipSync({
-    'UMO_name-tags.pdf': pdf,
-    'UMO_name-tag_reference.webp': new Uint8Array(photo),
-    '00_UMO_name-tags_spec.txt': strToU8(spec(tags.length)),
-  }, { level: 0 })
+  return { 'UMO_name-tags.pdf': pdf, 'UMO_name-tag_reference.webp': new Uint8Array(photo), '00_UMO_name-tags_spec.txt': strToU8(spec(tags.length)) }
+}
+
+export async function tagsZip(tags: Tag[], people: unknown): Promise<Blob> {
+  const zip = zipSync(await tagsParts(tags, people), { level: 0 })
   return new Blob([zip as BlobPart], { type: 'application/zip' })
+}
+
+/** What the ZIP holds as files of their own, for «Поделиться»: the share sheet doesn't take a ZIP */
+export async function tagsFiles(tags: Tag[], people: unknown): Promise<File[]> {
+  const parts = await tagsParts(tags, people)
+  const type = (name: string) => (name.endsWith('.pdf') ? 'application/pdf' : name.endsWith('.webp') ? 'image/webp' : 'text/plain')
+  return Object.entries(parts).map(([name, bytes]) => new File([bytes as BlobPart], name, { type: type(name) }))
 }

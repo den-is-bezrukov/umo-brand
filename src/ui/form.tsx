@@ -694,24 +694,42 @@ async function shareLink(editor: boolean, onCopied: () => void) {
   goal('copy_link', { page: location.pathname, pdf: !editor })
 }
 
+/** Whether the browser sends files through the share sheet (phones, Safari, Chrome; not Firefox) */
+export const canShareFiles = (() => {
+  try { return !!navigator.canShare?.({ files: [new File([''], 'x.pdf', { type: 'application/pdf' })] }) } catch { return false }
+})()
+
+/** The files the browser takes for the share sheet: all of them, else the first alone (the PDF) */
+const sendable = (files: File[]) => (navigator.canShare({ files }) ? files : navigator.canShare({ files: [files[0]] }) ? [files[0]] : null)
+
 /**
  * The file itself where the browser can send one (phones, Safari, Chrome): made ahead, a moment after the settings
  * last changed, as the share sheet opens only straight from the click (Safari refused it after the second the PDF
  * takes); none while it's being made or can't be sent (a ZIP), when the link goes as before
  */
-function useReadyFile(make: (() => Promise<File>) | undefined, off: boolean) {
-  const [file, setFile] = useState<File | null>(null)
+function useReadyFile(make: (() => Promise<File | File[]>) | undefined, off: boolean) {
+  const [files, setFiles] = useState<File[] | null>(null)
   useEffect(() => {
-    setFile(null)
-    if (!make || off || !navigator.canShare) return
+    setFiles(null)
+    if (!make || off || !canShareFiles) return
     let gone = false
-    const t = setTimeout(() => make().then(f => { if (!gone && navigator.canShare({ files: [f] })) setFile(f) }).catch(() => {}), 400)
+    const t = setTimeout(() => make().then(f => { if (!gone) setFiles(sendable([f].flat())) }).catch(() => {}), 400)
     return () => { gone = true; clearTimeout(t) }
   }, [make, off])
-  return file
+  return files
 }
 
-export function LinkButtons({ incomplete, file: make }: { incomplete?: boolean; /** The file to send instead of its link, where the browser can */ file?: () => Promise<File> }) {
+export function LinkButtons({ incomplete, file: make, fileOnly }: {
+  incomplete?: boolean
+  /** The file (or files) to send instead of its link, where the browser can */
+  file?: () => Promise<File | File[]>
+  /**
+   * The file and never a link (name tag, business card, price tag: a list in the address made a link of kilobytes);
+   * the page shows the button only where `canShareFiles`. Pressed before the file is ready, it's made then, which
+   * Chrome sends and Safari may refuse
+   */
+  fileOnly?: boolean
+}) {
   const file = useReadyFile(make, !!incomplete)
   const [copied, setCopied] = useState<'file' | 'editor' | null>(null)
   const [alt, setAlt] = useState(false)
@@ -734,10 +752,11 @@ export function LinkButtons({ incomplete, file: make }: { incomplete?: boolean; 
   }, [])
   const share = (e: React.MouseEvent) => {
     if (copied) return
-    const editor = e.altKey
-    if (!editor && file) {
-      navigator.share({ files: [file], title: file.name })
-        .then(() => goal('copy_link', { page: location.pathname, shared: true, pdf: true, file: true }))
+    const editor = e.altKey && !fileOnly
+    if (!editor && (file || fileOnly)) {
+      ;(file ? Promise.resolve(file) : make!().then(f => sendable([f].flat())))
+        .then(files => files && navigator.share({ files, title: files[0].name }))
+        .then(sent => sent !== null && goal('copy_link', { page: location.pathname, shared: true, pdf: true, file: true }))
         .catch(() => { /* closed without sending */ })
       return
     }
@@ -747,12 +766,12 @@ export function LinkButtons({ incomplete, file: make }: { incomplete?: boolean; 
     // White under it: on phones it stands over the canvas, and there its stroke is centred on its edge, half out, half
     // in (a trial): inside, the stroke left 38 px of white beside the solid 40 of the download, which read larger. Wide
     // screens keep the inside stroke
-    <button type="button" onClick={share} title={alt ? 'Отправить ссылку на редактор с этими настройками' : file ? 'Отправить файл' : 'Отправить ссылку на файл'} disabled={incomplete} aria-disabled={copied ? true : undefined} className={`${outlined} w-full bg-white ${copied ? 'cursor-default hover:border-black/10! max-md:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)]!' : ''} max-md:border-0 max-md:py-[10px] max-md:in-[[data-sheet]]:py-[14px]! max-md:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)] max-md:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.4),inset_0_0_0_0.5px_rgba(0,0,0,0.4)] max-md:disabled:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)]`}>
+    <button type="button" onClick={share} title={alt && !fileOnly ? 'Отправить ссылку на редактор с этими настройками' : file || fileOnly ? 'Отправить файл' : 'Отправить ссылку на файл'} disabled={incomplete} aria-disabled={copied ? true : undefined} className={`${outlined} w-full bg-white ${copied ? 'cursor-default hover:border-black/10! max-md:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)]!' : ''} max-md:border-0 max-md:py-[10px] max-md:in-[[data-sheet]]:py-[14px]! max-md:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)] max-md:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.4),inset_0_0_0_0.5px_rgba(0,0,0,0.4)] max-md:disabled:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)]`}>
       {/* Regular, as a note rather than a button's name; while it shows the button is still, no hover or click, its text grey #808080, as quiet lines: the hover's edge is overridden, as
           pointer-events: none kept the browser's hover on until the pointer moved */}
       {copied
         ? <span className="font-normal text-[#808080]">{copied === 'editor' ? 'Ссылка на редактор скопирована' : 'Ссылка на файл скопирована'}</span>
-        : alt ? 'Ссылка на редактор' : 'Поделиться'}
+        : alt && !fileOnly ? 'Ссылка на редактор' : 'Поделиться'}
     </button>
   )
 }

@@ -1,5 +1,5 @@
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, unfilled, stepsLeft, Segments, SegBtn, ALERT_LABEL, outlined } from '@/ui/form'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, LinkButtons, canShareFiles, unfilled, stepsLeft, Segments, SegBtn, ALERT_LABEL, outlined } from '@/ui/form'
 import { useStaff, pickTable, TableSource, UploadArea, AddTile, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, type Cmd } from '@/livery/geometry'
@@ -139,6 +139,12 @@ export default function PriceTag() {
     a.click()
     URL.revokeObjectURL(a.href)
   }
+  /** The tags' PDF for «Поделиться» to send, made again as they change */
+  const shareFile = useCallback(async () => {
+    const { tagsPdf, TAGS_FILE } = await import('@/pricetag/pdf')
+    return new File([await tagsPdf(tags!.map(t => t.tag), { dealer, items: items.map(({ key: _, ...it }) => it) })], TAGS_FILE, { type: 'application/pdf' })
+  }, [tags, dealer, items]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleExport = async () => {
     if (!tags || !ok) return
     setExporting(true)
@@ -295,9 +301,10 @@ export default function PriceTag() {
           note={(dealerMissing ? unfilled([UNFILLED.dealer!, ...(items.length === 1 ? missing[0].map(f => UNFILLED[f]!) : [])]) : dealerIssues[0]) ?? (!items.length ? 'Загрузить таблицу' : problemOf(failing.length ? staff.inWork(failing).index : 0))}
           count={stepsLeft((dealerIssues.length ? 1 : 0) + items.reduce((n, _, i) => n + new Set([...missing[i], ...ownIssues(i).map(x => x.field)]).size, 0))}
           onNote={dealerIssues.length ? toDealer : items.length ? () => staff.nextOf(failing) : pickTable}
+          links={canShareFiles && <LinkButtons incomplete={!ok} file={shareFile} fileOnly />}
           // The Word file is off for now: CoFo Sans shows only in Word for Windows, elsewhere it's swapped for Arial, and the
           // layout breaks easily there; fixing a price is done by dropping the PDF back. To bring it back, uncomment:
-          // links={
+          // links={ (with «Поделиться» above, in a fragment)
           //   <button type="button" onClick={handleWord} disabled={!ok || exportingWord} className={`${outlined} w-full bg-white`}>
           //     {exportingWord ? 'Генерация…' : 'Скачать Word'}
           //   </button>

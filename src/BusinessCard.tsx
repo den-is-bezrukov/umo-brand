@@ -1,6 +1,6 @@
 import { flushSync } from 'react-dom'
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadBar, unfilled, stepsLeft, Segments, SegBtn, rowAction, isValidUrl, ALERT_LABEL, Checkbox } from '@/ui/form'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadBar, LinkButtons, canShareFiles, unfilled, stepsLeft, Segments, SegBtn, rowAction, isValidUrl, ALERT_LABEL, Checkbox } from '@/ui/form'
 import { useStaff, plain, pickTable, TableSource, UploadArea, AddTile, fullNameField, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
@@ -207,6 +207,13 @@ export default function BusinessCard() {
     // The address follows the dealer picked while it's empty or the previous dealer's
     address: addressOf(v) && (!d.address.trim() || d.address === addressOf(d.name)) ? addressOf(v)! : d.address,
   }))
+
+  /** The cards' PDF for «Поделиться» to send, made again as they change */
+  const shareFile = useCallback(async () => {
+    const { cardsPdf } = await import('@/card/pdf')
+    const data: CardsData = { dealer: input, qrLink, faceEach, marks, people: items.map(plain) }
+    return new File([await cardsPdf(cards!.map(c => c.back), { faceEach, marks }, data)], 'UMO_business-cards.pdf', { type: 'application/pdf' })
+  }, [cards, input, qrLink, faceEach, marks, items]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleExport = async () => {
     if (!cards || !ok) return
@@ -441,6 +448,7 @@ export default function BusinessCard() {
           note={(dealerMissing.length ? unfilled([...dealerMissing, ...(items.length === 1 ? missing[0] : [])].map(f => UNFILLED[f]!)) : dealerIssues[0]) ?? (!items.length ? 'Загрузить таблицу' : problemOf(failing.length ? staff.inWork(failing).index : 0))}
           count={stepsLeft(new Set([...dealerMissing, ...dealerWrong]).size + items.reduce((n, _, i) => n + new Set<string | null>([...missing[i], ...(cards?.[i]?.issues.filter(x => !x.field || PERSON_FIELDS.includes(x.field)).map(x => x.field) ?? [])]).size, 0))}
           onNote={dealerIssues.length ? toDealer : items.length ? () => staff.nextOf(failing) : pickTable}
+          links={canShareFiles && <LinkButtons incomplete={!ok} file={shareFile} fileOnly />}
         />
   )
 
