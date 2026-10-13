@@ -209,7 +209,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         // scrolls as ever
         if (d.down || d.up) {
           const dy = e.touches[0].clientY - d.y
-          if (!((d.down && dy > 0) || (d.up && dy < 0))) { drag.current = null; return }
+          // A form still running on its momentum is iOS's scroll already, past calling off: the sheet stays (it went
+          // along with the form's spring, both under the finger)
+          if (!e.cancelable || !((d.down && dy > 0) || (d.up && dy < 0))) { drag.current = null; return }
           d.base = d.at = take.current()
         }
       }
