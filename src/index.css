@@ -109,3 +109,9 @@ html[data-menu] [data-sheet]:not(:has([data-head])) {
 a:focus-visible {
   border-radius: 2px;
 }
+
+/* On a phone the form's header is swiped up or down to turn the sheet, so a vertical swipe there doesn't scroll the
+   form (`MobileEditor`); the generators' line still scrolls across */
+[data-sheet] [data-head] {
+  touch-action: pan-x;
+}

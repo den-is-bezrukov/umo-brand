@@ -174,28 +174,33 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     tap.current = window.setTimeout(() => move(sheetRef.current === 'preview' ? 'half' : 'preview'), 250)
   }
 
-  // A pull past the form's edge, as a page's pull to refresh, turns the sheet once the finger is off, as a button
-  // would: past its end a form longer than the sheet opens over the whole screen (a short one never does), past its top
+  // A swipe up or down on the form's header (menu, crumbs, the generators' line; no grabber), or a pull past the form's
+  // edge, as a page's pull to refresh, turns the sheet once the finger is off, as a button would: past its end a form longer than the sheet opens over the whole screen (a short one never does), past its top
   // it goes back. While the finger pulls only the form's own spring gives; a long pull or a quick flick does it. Only a
   // new gesture started at the edge, never the scroll running into it. Was the sheet turning under the finger mid-pull
   // (it fought the hand), the scroll reaching the end opening it, an icon in the header, a grabber on the sheet's edge
   // before it, and a sheet following the finger, which jerked and moved the picture
-  const pull = useRef<{ y: number; t: number; top: boolean; end: boolean; dy: number } | null>(null)
+  const pull = useRef<{ y: number; t: number; top: boolean; end: boolean; long: boolean; head: boolean; dy: number } | null>(null)
   const edges = () => {
     const el = scroller.current
-    if (!el) return { top: false, end: false }
+    if (!el) return { top: false, end: false, long: false }
     const room = el.scrollHeight - el.clientHeight
-    return { top: el.scrollTop <= 0, end: room > 1 && el.scrollTop >= room - 1 }
+    return { top: el.scrollTop <= 0, end: room > 1 && el.scrollTop >= room - 1, long: room > 1 }
   }
-  const onTouchStart = (e: React.TouchEvent) => { pull.current = { y: e.touches[0].clientY, t: Date.now(), dy: 0, ...edges() } }
+  const onTouchStart = (e: React.TouchEvent) => {
+    // The header, or the sheet's padding over it; it doesn't scroll the form (`touch-action: pan-x` in index.css)
+    const head = scroller.current?.querySelector('[data-head]')?.getBoundingClientRect()
+    const y = e.touches[0].clientY
+    pull.current = { y, t: Date.now(), dy: 0, head: !!head && y <= head.bottom + 12, ...edges() }
+  }
   const onTouchMove = (e: React.TouchEvent) => { if (pull.current) pull.current.dy = e.touches[0].clientY - pull.current.y }
   const onTouchEnd = () => {
     const p = pull.current
     pull.current = null
     if (!p) return
     const far = (d: number) => d >= PULL || (d >= FLICK && d / Math.max(1, Date.now() - p.t) >= FLICK_SPEED)
-    if (p.top && far(p.dy) && sheetRef.current === 'full') move('half')
-    else if (p.end && far(-p.dy) && sheetRef.current === 'half') move('full')
+    if ((p.top || p.head) && far(p.dy) && sheetRef.current === 'full') move('half')
+    else if ((p.end || p.head) && p.long && far(-p.dy) && sheetRef.current === 'half') move('full')
   }
   const onTouchCancel = () => { pull.current = null }
   // The wheel, in a narrow window: a turn on past the edge it already stood at
