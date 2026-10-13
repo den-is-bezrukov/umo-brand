@@ -36,8 +36,7 @@ const ROW = 30
 const PAD = 10
 /** A field lifted for typing stands this far under the sheet's top: its group's 24 px padding, label and 12 px to it */
 const LIFT = 52
-/** The hold that takes the sheet: this far over its edge, on the canvas, and under the generators' line */
-const GRAB_OVER = 50
+/** The hold that takes the sheet runs this far under the generators' line, from the canvas's top */
 const GRAB_UNDER = 20
 /** The download's pace going down with the sheet */
 const FOOT_PACE = 0.5
@@ -211,15 +210,16 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     return m ? m.m42 : edge[sheetRef.current]
   }
   const onTouchStart = (e: React.TouchEvent) => {
-    // The header and round it: from 50 px over the sheet's edge, on the canvas, to 20 under the generators' line (only
-    // the header and 12 px under it were too small a hold)
+    // The whole canvas and the header, to 20 px under the generators' line: nothing on the canvas is scrolled up or
+    // down (the header alone was too small a hold, then 50 px of the canvas over the sheet's edge)
     const head = scroller.current?.querySelector('[data-head]')?.getBoundingClientRect()
-    const edgeY = sheetEl.current?.getBoundingClientRect().top
     const y = e.touches[0].clientY
     const el = scroller.current
     pull.current = { long: !!el && el.scrollHeight - el.clientHeight > 1 }
     drag.current = null
-    if (head && edgeY !== undefined && y >= edgeY - GRAB_OVER && y <= head.bottom + GRAB_UNDER && sheetEl.current) {
+    const edgeY = sheetEl.current?.getBoundingClientRect().top ?? 0
+    // Over the sheet's edge whatever the form's scroll (its header scrolled away, the list's row over it still holds)
+    if (sheetEl.current && (y < edgeY || (head && y <= head.bottom + GRAB_UNDER))) {
       // Caught on its way, it stops where it is
       const at = sheetAt()
       sheetEl.current.getAnimations().forEach(a => a.cancel())
