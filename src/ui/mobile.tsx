@@ -272,17 +272,11 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   // The page's size, everything laid out by: the page's own box, not the window's (on iOS 26 the page runs on under
   // Safari's floating bar, past `innerHeight`, so the sheet and the canvas missed each other by the bar's height)
   const root = useRef<HTMLDivElement>(null)
-  // and the screen's top safe area, which the page runs under (`viewport-fit=cover`): iOS 26 lays its status bar and
-  // a fade under it over the page there, and the canvas's top (an upload's edge, a list's row) and the shadow of the
-  // sheet over the whole screen went under it
-  const [screen, setScreen] = useState({ w: innerWidth, h: innerHeight, top: 0 })
+  const [screen, setScreen] = useState({ w: innerWidth, h: innerHeight })
   useLayoutEffect(() => {
     const el = root.current
     if (!el) return
-    const on = () => {
-      const top = envPx('top')
-      setScreen(s => (s.w === el.clientWidth && s.h === el.clientHeight && s.top === top ? s : { w: el.clientWidth, h: el.clientHeight, top }))
-    }
+    const on = () => setScreen(s => (s.w === el.clientWidth && s.h === el.clientHeight ? s : { w: el.clientWidth, h: el.clientHeight }))
     on()
     const o = new ResizeObserver(on)
     o.observe(el)
@@ -296,7 +290,11 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     if (!head) return
     const measure = () => {
       const top = scroller.current!.getBoundingClientRect().top - scroller.current!.scrollTop
-      setPeek(Math.round(head.getBoundingClientRect().bottom - top + 24 + envPx('bottom')))
+      const safe = document.createElement('div')
+      safe.style.height = 'env(safe-area-inset-bottom)'
+      document.body.append(safe)
+      setPeek(Math.round(head.getBoundingClientRect().bottom - top + 24 + safe.offsetHeight))
+      safe.remove()
     }
     if (!document.documentElement.hasAttribute('data-menu')) measure()
     const o = new ResizeObserver(() => { if (!document.documentElement.hasAttribute('data-menu')) measure() })
@@ -330,7 +328,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   // and the form each a layer moved and cut, which a phone draws without laying the form out again: a sheet changing its
   // height froze on an iPhone, the form laid out on every frame). At 60% the form has as much again under its end, so it
   // scrolls to its end in view
-  const tall = Math.max(0, screen.h - screen.top - (row ? ROW + 2 * PAD : 0))
+  const tall = Math.max(0, screen.h - (row ? ROW + 2 * PAD : 0))
   const below = Math.max(0, Math.round(tall - screen.h * HALF_SHARE))
   const edge = { preview: tall - peek, half: below, full: 0 }
   // Typing on a phone opens the form over the screen and lifts the field to its top, under its label, so the keyboard
@@ -472,7 +470,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       <div
         ref={canvasEl}
         className="relative flex flex-col p-[10px]"
-        style={{ height: laidH, paddingTop: PAD + screen.top }}
+        style={{ height: laidH }}
       >
       {/* A list's row over the picture (Figma 5105:7604): delete on the left, copy on the right, between them the
           number between the arrows, the reset right after it; for a moment after a removal «Удаляем ·
@@ -514,8 +512,8 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
 
       {corners && (
         <>
-          <div className="absolute left-[10px]" style={{ top: PAD + screen.top }}>{reset && resetBtn}</div>
-          <div className="absolute right-[10px]" style={{ top: PAD + screen.top }}>{staff && copyBtn}</div>
+          <div className="absolute top-[10px] left-[10px]">{reset && resetBtn}</div>
+          <div className="absolute top-[10px] right-[10px]">{staff && copyBtn}</div>
         </>
       )}
 
@@ -573,16 +571,6 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       )}
     </div>
   )
-}
-
-/** The screen's safe area on a side, in px (`env()` can't be read but through a box sized by it) */
-function envPx(side: 'top' | 'bottom') {
-  const probe = document.createElement('div')
-  probe.style.cssText = `position:fixed;visibility:hidden;height:env(safe-area-inset-${side})`
-  document.body.append(probe)
-  const px = probe.offsetHeight
-  probe.remove()
-  return px
 }
 
 /**
