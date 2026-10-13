@@ -817,7 +817,7 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
  * pass the row's file or path to `Assets` as `preview`.
  */
 function PreviewLink({ asset, label, children }: { asset: Asset; label: string; children: ReactNode }) {
-  const className = 'block outline-none focus-visible:ring-2 focus-visible:ring-black/30'
+  const className = 'block'
   const setPointed = useContext(PointedPreview)?.[1]
   const key = 'to' in asset ? asset.to : asset.file
   const hover = setPointed && { onPointerEnter: () => setPointed(key), onPointerLeave: () => setPointed(undefined) }
@@ -874,7 +874,7 @@ function Zoom({ label, children }: { label: string; children: ReactNode }) {
   }, [open])
   return (
     <>
-      <button type="button" aria-label={label} onClick={() => setOpen(true)} className="block w-full cursor-zoom-in outline-none focus-visible:ring-2 focus-visible:ring-black/30">
+      <button type="button" aria-label={label} onClick={() => setOpen(true)} className="block w-full cursor-zoom-in">
         {children}
       </button>
       {open && (

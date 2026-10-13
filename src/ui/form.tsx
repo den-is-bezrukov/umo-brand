@@ -74,7 +74,7 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
         <nav aria-label="Конструкторы" className="mt-1 flex flex-col items-start gap-5">
           {GENERATORS.map(g => g.path === current
             ? <button key={g.path} type="button" aria-current="page" onClick={() => setMenu(false)} className={`${name} cursor-pointer text-left`}>{g.title}</button>
-            : <Link key={g.path} to={g.path} className={`${name} text-[#bfbfbf] outline-none hover:text-[#808080] focus-visible:text-[#808080] active:text-[#808080]`}>{g.title}</Link>)}
+            : <Link key={g.path} to={g.path} className={`${name} text-[#bfbfbf] hover:text-[#808080] active:text-[#808080]`}>{g.title}</Link>)}
         </nav>
       ) : (
         <GeneratorRing current={current} />
@@ -98,7 +98,7 @@ function PhoneCrumbs() {
 /** A 16 px icon with a 2 px stroke as the form's own, on whole pixels (Figma's sheet has 1 px: 5110:9103, 5110:9091, 5103:6163), black or grey, a finger's 36 px round it */
 function IconButton({ label, onClick, d, grey }: { label: string; onClick: () => void; d: string; grey?: boolean }) {
   return (
-    <button type="button" aria-label={label} title={label} onClick={onClick} className={`relative flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-[4px] outline-none after:absolute after:-inset-[10px] after:content-[''] focus-visible:ring-2 focus-visible:ring-black/30 focus-visible:ring-offset-4 ${grey ? 'text-[#808080]' : ''}`}>
+    <button type="button" aria-label={label} title={label} onClick={onClick} className={`relative flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-[4px] after:absolute after:-inset-[10px] after:content-[''] ${grey ? 'text-[#808080]' : ''}`}>
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d={d} stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" /></svg>
     </button>
   )
@@ -199,14 +199,14 @@ function GeneratorRing({ current }: { current: string }) {
   return (
     <div className="relative -mx-6 my-1">
       {/* 8 px over and under for the descenders (р, у), which the scroller would clip */}
-      <nav ref={nav} aria-label="Конструкторы" className="relative -my-2 flex snap-x snap-mandatory scroll-pl-6 gap-5 overflow-x-auto overscroll-x-contain py-2 pl-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <nav ref={nav} aria-label="Конструкторы" tabIndex={-1} className="relative -my-2 flex snap-x snap-mandatory scroll-pl-6 gap-5 overflow-x-auto overscroll-x-contain py-2 pl-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {Array.from({ length: PHONE_TURNS * count }, (_, i) => {
           const g = GENERATORS[i % count]
           return i === middle
             ? <h1 key={i} className={`${name} ${tone(g.path)}`}>{g.title}</h1>
-            // Out of the Tab order: the focus scrolled the line and the scroll's end opened the name it came to rest on, so
+            // Out of the Tab order, as the line itself (Chrome lets the keyboard into a scroller): the focus scrolled the line and the scroll's end opened the name it came to rest on, so
             // tabbing to the form left the page; the keyboard picks a generator in the menu
-            : <Link key={i} to={g.path} draggable={false} aria-hidden={i < count || i >= 2 * count || undefined} tabIndex={-1} className={`${name} ${tone(g.path)} outline-none`}>{g.title}</Link>
+            : <Link key={i} to={g.path} draggable={false} aria-hidden={i < count || i >= 2 * count || undefined} tabIndex={-1} className={`${name} ${tone(g.path)}`}>{g.title}</Link>
         })}
       </nav>
       {/* The shades over the edges, as the ring's (Figma 5062:671, 5061:539) */}
@@ -244,8 +244,8 @@ export function SegBtn({ active, onClick, disabled, title, children }: { active:
       disabled={disabled}
       title={title}
       aria-pressed={active}
-      className={`flex-1 min-w-0 flex items-center justify-center rounded-[8px] border px-3 py-[9px] in-[[data-sheet]]:py-[13px]! cursor-pointer outline-none
-        focus-visible:ring-2 focus-visible:ring-black/30 disabled:cursor-not-allowed disabled:text-[#999]
+      className={`flex-1 min-w-0 flex items-center justify-center rounded-[8px] border px-3 py-[9px] in-[[data-sheet]]:py-[13px]! cursor-pointer
+        disabled:cursor-not-allowed disabled:text-[#999]
         ${active ? 'border-black/10 bg-white text-black' : 'border-transparent text-[#808080]'}`}
     >
       <span className="font-medium text-[14px] leading-5 whitespace-nowrap">{children}</span>
@@ -556,7 +556,7 @@ export function Checkbox({ checked, onChange, children, className = '' }: { chec
     // In the phone's sheet the row takes a finger's 48 px, 16 px over and under it given back by margins, so it looks as before
     <label className={`flex cursor-pointer items-center gap-2 text-[14px] leading-4 text-black in-[[data-sheet]]:-my-4 in-[[data-sheet]]:py-4 ${className}`}>
       <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="peer sr-only" />
-      <span aria-hidden className="flex size-4 shrink-0 items-center justify-center rounded-[4px] bg-[#f5f5f5] peer-focus-visible:ring-2 peer-focus-visible:ring-black/30">
+      <span aria-hidden className="flex size-4 shrink-0 items-center justify-center rounded-[4px] bg-[#f5f5f5] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-black/30">
         {checked && <Tick />}
       </span>
       {children}
@@ -578,7 +578,7 @@ export function OptionalField({ label, on, onChange, extra, children }: { label:
 }
 
 // Grey #808080, black on hover, the icon with it (Figma 5017:11279)
-export const rowAction = 'flex shrink-0 cursor-pointer items-center gap-2 text-[14px] leading-4 text-[#808080] outline-none transition-colors hover:text-black focus-visible:ring-2 focus-visible:ring-black/30'
+export const rowAction = 'flex shrink-0 cursor-pointer items-center gap-2 text-[14px] leading-4 text-[#808080] transition-colors hover:text-black'
 
 /** Corners for the size switch, on the 16 grid with the ticks' 2 px stroke and square ends: at the outer corners to grow, turned in to shrink */
 function SizeIcon({ grow }: { grow: boolean }) {
@@ -612,7 +612,7 @@ export function SizeSwitch({ large, onChange, label }: { large: boolean; onChang
 }
 
 // Edged at 10%, at 40% on hover (Figma 5015:11171)
-export const outlined = 'flex min-w-16 flex-1 items-center justify-center rounded-[8px] border border-black/10 px-3 py-[9px] in-[[data-sheet]]:py-[13px]! text-[14px] font-medium leading-5 text-black cursor-pointer outline-none hover:border-black/40 focus-visible:ring-2 focus-visible:ring-black/30 disabled:cursor-default disabled:text-[#999] disabled:hover:border-black/10'
+export const outlined = 'flex min-w-16 flex-1 items-center justify-center rounded-[8px] border border-black/10 px-3 py-[9px] in-[[data-sheet]]:py-[13px]! text-[14px] font-medium leading-5 text-black cursor-pointer hover:border-black/40 disabled:cursor-default disabled:text-[#999] disabled:hover:border-black/10'
 
 /** A word the download bar's line says for a moment («В файле нет режимника») */
 const flashes = new Set<(text: string) => void>()
@@ -759,7 +759,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
       // after the sheet opened, and the field only lit up)
       onClick={leads ? () => { foot?.(); onNote!() } : onClick}
       disabled={busy || (disabled && !leads)}
-      className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] in-[[data-sheet]]:py-[14px]! text-[14px] leading-5 outline-none focus-visible:ring-2 focus-visible:ring-black/40 focus-visible:ring-offset-2 hover:enabled:bg-[#333] disabled:cursor-default
+      className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] in-[[data-sheet]]:py-[14px]! text-[14px] leading-5 hover:enabled:bg-[#333] disabled:cursor-default
         ${lead || said ? 'font-normal' : 'font-medium'} ${disabled && !leads && !busy ? 'text-[#999]' : 'text-white'}`}
     >
       {busy && (

@@ -369,7 +369,7 @@ export function AddTile({ onClick }: { onClick: () => void }) {
         type="button"
         data-add
         onClick={onClick}
-        className="flex cursor-pointer items-center gap-2 rounded-[8px] border border-black/10 px-3 py-[9px] text-[14px] font-medium leading-5 text-black outline-none hover:border-black/40 focus-visible:ring-2 focus-visible:ring-black/30"
+        className="flex cursor-pointer items-center gap-2 rounded-[8px] border border-black/10 px-3 py-[9px] text-[14px] font-medium leading-5 text-black hover:border-black/40"
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden><path d="M7 1V13M1 7H13" stroke="currentColor" strokeWidth="2" /></svg>
         Добавить
@@ -422,7 +422,7 @@ export function CaptionReset({ onClick, label = 'Сбросить' }: { onClick:
       title={label}
       aria-label={label}
       onClick={onClick}
-      className="absolute top-[calc(50%-1px)] left-full ml-1 flex size-[30px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] outline-none hover:text-black focus-visible:ring-2 focus-visible:ring-black/30"
+      className="absolute top-[calc(50%-1px)] left-full ml-1 flex size-[30px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] hover:text-black"
     >
       <ResetIcon />
     </button>
@@ -448,7 +448,7 @@ function Action({ label, keys, hidden, onClick, children }: { label: string; key
       aria-keyshortcuts={keys?.replace('⌘', 'Meta+').replace('Ctrl+', 'Control+')}
       // A click here is the action's, not the row's, which would select the item again
       onClick={e => { e.stopPropagation(); onClick() }}
-      className={`flex size-[30px] shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] outline-none hover:text-black focus-visible:ring-2 focus-visible:ring-black/30`}
+      className={`flex size-[30px] shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] hover:text-black`}
     >
       {children}
     </button>
@@ -506,9 +506,9 @@ export function Removed<P extends object>({ staff, at }: { staff: Staff<P>; at: 
   return (
     <div className="flex h-10 items-center justify-center gap-2 text-[14px] leading-5 text-[#808080]">
       Удалено ·
-      <button type="button" title={`${MOD}Z`} onClick={e => { e.stopPropagation(); staff.restore() }} className="cursor-pointer text-black outline-none hover:text-[#808080] focus-visible:ring-2 focus-visible:ring-black/30">Вернуть</button>
+      <button type="button" title={`${MOD}Z`} onClick={e => { e.stopPropagation(); staff.restore() }} className="cursor-pointer text-black hover:text-[#808080]">Вернуть</button>
       {/* The items' own cross (1 px, #808080, black on hover), as «Удалить» beside them */}
-      <button type="button" title="Закрыть" aria-label="Закрыть" onClick={e => { e.stopPropagation(); staff.dismiss() }} className="relative flex size-[30px] cursor-pointer items-center justify-center rounded-full text-[#808080] outline-none hover:text-black focus-visible:ring-2 focus-visible:ring-black/30">
+      <button type="button" title="Закрыть" aria-label="Закрыть" onClick={e => { e.stopPropagation(); staff.dismiss() }} className="relative flex size-[30px] cursor-pointer items-center justify-center rounded-full text-[#808080] hover:text-black">
         <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M12 4L8 8M8 8L4 4M8 8L12 12M8 8L4 12" /></svg>
         {/* The ring, from the top clockwise, a new one for each removal */}
         <svg key={staff.removed.item.key} width="30" height="30" viewBox="0 0 30 30" aria-hidden className="pointer-events-none absolute inset-0 -rotate-90 motion-reduce:hidden">

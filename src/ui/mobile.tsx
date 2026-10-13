@@ -46,7 +46,7 @@ function Btn({ label, onClick, hidden, children }: { label: string; onClick: () 
       aria-label={label}
       onClick={onClick}
       // 30 px as in Figma, a finger's 40 round it (the ::after); hidden keeps its place, so the others don't move
-      className={`relative flex size-[30px] shrink-0 after:absolute after:-inset-[5px] after:content-[''] cursor-pointer items-center justify-center rounded-[8px] text-[#808080] outline-none active:text-black ${hidden ? 'invisible' : ''}`}
+      className={`relative flex size-[30px] shrink-0 after:absolute after:-inset-[5px] after:content-[''] cursor-pointer items-center justify-center rounded-[8px] text-[#808080] active:text-black ${hidden ? 'invisible' : ''}`}
     >
       {children}
     </button>
