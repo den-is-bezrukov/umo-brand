@@ -171,49 +171,44 @@ function GeneratorRing({ current }: { current: string }) {
       else if (i !== middle) n.scrollLeft += item(middle)!.offsetLeft - item(i)!.offsetLeft
     }
     const settle = () => { clearTimeout(timer); if (!ends) timer = window.setTimeout(pick, 150) }
+    // Keys move the focus along it, scrolling it too
+    const key = () => { moved = true }
     // Resized, the current one back at the edge
     const observer = new ResizeObserver(() => { if (!moved) n.scrollLeft = item(middle)!.offsetLeft - 24 })
     observer.observe(n)
     const scroll = () => { setLit(GENERATORS[nearest() % count].path); settle() }
     const down = () => { touching = true; moved = true; clearTimeout(timer) }
     const up = () => { touching = false; settle() }
-    // Tab walks the names, the line scrolling after the focus without picking (only a scroll someone made picks; Enter
-    // opens the focused one); the focus gone out of it, the current one goes back to the edge
-    const leave = (e: FocusEvent) => {
-      if (n.contains(e.relatedTarget as Node)) return
-      n.scrollTo({ left: item(middle)!.offsetLeft - 24, behavior: 'smooth' })
-    }
     if (ends) n.addEventListener('scrollend', pick)
     n.addEventListener('wheel', wheel, { passive: false })
+    n.addEventListener('keydown', key)
     n.addEventListener('scroll', scroll, { passive: true })
     n.addEventListener('touchstart', down, { passive: true })
     n.addEventListener('touchend', up)
     n.addEventListener('touchcancel', up)
-    n.addEventListener('focusout', leave)
     return () => {
       clearTimeout(timer)
       n.removeEventListener('scrollend', pick)
       n.removeEventListener('wheel', wheel)
+      n.removeEventListener('keydown', key)
       observer.disconnect()
       n.removeEventListener('scroll', scroll)
       n.removeEventListener('touchstart', down)
       n.removeEventListener('touchend', up)
       n.removeEventListener('touchcancel', up)
-      n.removeEventListener('focusout', leave)
     }
   }, [current]) // eslint-disable-line react-hooks/exhaustive-deps
   const name = 'shrink-0 snap-start text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
   const tone = (path: string) => (path === lit ? 'text-black' : 'text-[#bfbfbf] hover:text-[#808080] active:text-[#808080]')
   return (
     <div className="relative -mx-6 my-1">
-      {/* 8 px over and under for the descenders (р, у), which the scroller would clip; the line itself out of the Tab
-          order (Chrome lets the keyboard into a scroller), its names in it */}
-      <nav ref={nav} aria-label="Конструкторы" tabIndex={-1} className="relative -my-2 flex snap-x snap-mandatory scroll-pl-6 gap-5 overflow-x-auto overscroll-x-contain py-2 pl-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* 8 px over and under for the descenders (р, у), which the scroller would clip */}
+      <nav ref={nav} aria-label="Конструкторы" className="relative -my-2 flex snap-x snap-mandatory scroll-pl-6 gap-5 overflow-x-auto overscroll-x-contain py-2 pl-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {Array.from({ length: PHONE_TURNS * count }, (_, i) => {
           const g = GENERATORS[i % count]
           return i === middle
             ? <h1 key={i} className={`${name} ${tone(g.path)}`}>{g.title}</h1>
-            : <Link key={i} to={g.path} draggable={false} aria-hidden={i < count || i >= 2 * count || undefined} tabIndex={i < count || i >= 2 * count ? -1 : undefined} className={`${name} ${tone(g.path)}`}>{g.title}</Link>
+            : <Link key={i} to={g.path} draggable={false} aria-hidden={i < count || i >= 2 * count || undefined} tabIndex={i < count || i >= 2 * count ? -1 : undefined} className={`${name} ${tone(g.path)} outline-none`}>{g.title}</Link>
         })}
       </nav>
       {/* The shades over the edges, as the ring's (Figma 5062:671, 5061:539) */}
