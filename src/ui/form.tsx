@@ -97,7 +97,7 @@ function PhoneCrumbs() {
 /** A 16 px icon with a 2 px stroke as the form's own, on whole pixels (Figma's sheet has 1 px: 5110:9103, 5110:9091, 5103:6163), black or grey, a finger's 36 px round it */
 function IconButton({ label, onClick, d, grey }: { label: string; onClick: () => void; d: string; grey?: boolean }) {
   return (
-    <button type="button" aria-label={label} title={label} onClick={onClick} className={`relative flex size-4 shrink-0 cursor-pointer items-center justify-center outline-none after:absolute after:-inset-[10px] after:content-[''] ${grey ? 'text-[#808080]' : ''}`}>
+    <button type="button" aria-label={label} title={label} onClick={onClick} className={`relative flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-[4px] outline-none after:absolute after:-inset-[10px] after:content-[''] focus-visible:ring-2 focus-visible:ring-black/30 focus-visible:ring-offset-4 ${grey ? 'text-[#808080]' : ''}`}>
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d={d} stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" /></svg>
     </button>
   )
@@ -170,8 +170,6 @@ function GeneratorRing({ current }: { current: string }) {
       else if (i !== middle) n.scrollLeft += item(middle)!.offsetLeft - item(i)!.offsetLeft
     }
     const settle = () => { clearTimeout(timer); if (!ends) timer = window.setTimeout(pick, 150) }
-    // Keys move the focus along it, scrolling it too
-    const key = () => { moved = true }
     // Resized, the current one back at the edge
     const observer = new ResizeObserver(() => { if (!moved) n.scrollLeft = item(middle)!.offsetLeft - 24 })
     observer.observe(n)
@@ -180,7 +178,6 @@ function GeneratorRing({ current }: { current: string }) {
     const up = () => { touching = false; settle() }
     if (ends) n.addEventListener('scrollend', pick)
     n.addEventListener('wheel', wheel, { passive: false })
-    n.addEventListener('keydown', key)
     n.addEventListener('scroll', scroll, { passive: true })
     n.addEventListener('touchstart', down, { passive: true })
     n.addEventListener('touchend', up)
@@ -189,7 +186,6 @@ function GeneratorRing({ current }: { current: string }) {
       clearTimeout(timer)
       n.removeEventListener('scrollend', pick)
       n.removeEventListener('wheel', wheel)
-      n.removeEventListener('keydown', key)
       observer.disconnect()
       n.removeEventListener('scroll', scroll)
       n.removeEventListener('touchstart', down)
@@ -207,7 +203,9 @@ function GeneratorRing({ current }: { current: string }) {
           const g = GENERATORS[i % count]
           return i === middle
             ? <h1 key={i} className={`${name} ${tone(g.path)}`}>{g.title}</h1>
-            : <Link key={i} to={g.path} draggable={false} aria-hidden={i < count || i >= 2 * count || undefined} tabIndex={i < count || i >= 2 * count ? -1 : undefined} className={`${name} ${tone(g.path)} outline-none`}>{g.title}</Link>
+            // Out of the Tab order: the focus scrolled the line and the scroll's end opened the name it came to rest on, so
+            // tabbing to the form left the page; the keyboard picks a generator in the menu
+            : <Link key={i} to={g.path} draggable={false} aria-hidden={i < count || i >= 2 * count || undefined} tabIndex={-1} className={`${name} ${tone(g.path)} outline-none`}>{g.title}</Link>
         })}
       </nav>
       {/* The shades over the edges, as the ring's (Figma 5062:671, 5061:539) */}
