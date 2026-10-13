@@ -180,7 +180,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   }
 
   // The form's header (menu, crumbs, the generators' line; no grabber) takes the sheet along with the finger, as a
-  // phone's own sheets: let go, it goes on to the place nearest to where it was heading, so a flick does too; past the
+  // phone's own sheets: let go, it goes on to the place nearest to where it was let go (no flick); past the
   // last place it gives only a little, as a spring. A pull past the form's edge, as a page's pull to refresh, turns the
   // sheet once the finger is off, as a button would: past its end a form longer than the sheet opens over the whole
   // screen (a short one never does), past its top it goes back. While the finger pulls only the form's own spring gives; a long pull or a quick flick does it. Only a
@@ -194,8 +194,8 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     const room = el.scrollHeight - el.clientHeight
     return { top: el.scrollTop <= 0, end: room > 1 && el.scrollTop >= room - 1, long: room > 1 }
   }
-  /** The sheet under the finger: where it started and is, and how fast it's going (px a millisecond, down) */
-  const drag = useRef<{ base: number; at: number; y: number; t: number; v: number } | null>(null)
+  /** The sheet under the finger: where it started and is */
+  const drag = useRef<{ base: number; at: number } | null>(null)
   const sheetAt = () => {
     const m = sheetEl.current ? new DOMMatrix(getComputedStyle(sheetEl.current).transform) : null
     return m ? m.m42 : edge[sheetRef.current]
@@ -212,7 +212,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       sheetEl.current.getAnimations().forEach(a => a.cancel())
       formEl.current?.getAnimations().forEach(a => a.finish())
       sheetEl.current.style.transform = `translateY(${at}px)`
-      drag.current = { base: at, at, y, t: Date.now(), v: 0 }
+      drag.current = { base: at, at }
     }
   }
   /** The places a finger can take the sheet to */
@@ -229,10 +229,6 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     let at = d.base + p.dy
     if (at < lo) at = lo - (lo - at) * SPRING
     if (at > hi) at = hi + (at - hi) * SPRING
-    const now = Date.now()
-    d.v = (y - d.y) / Math.max(1, now - d.t)
-    d.y = y
-    d.t = now
     d.at = at
     sheetEl.current.style.transform = `translateY(${at}px)`
   }
@@ -242,8 +238,8 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     const d = drag.current
     drag.current = null
     if (d && p) {
-      // Where it was heading, as far as its speed would carry it
-      const aim = d.at + d.v * 200
+      // Where it was let go, its speed not carrying it on (a flick went on to the next place)
+      const aim = d.at
       const to = reach(p.long).reduce((a, b) => (Math.abs(edge[b] - aim) < Math.abs(edge[a] - aim) ? b : a))
       if (to !== sheetRef.current) move(to, d.at)
       else if (sheetEl.current) {
