@@ -4,7 +4,7 @@ import { InSlide, InFoot, InSheet, SheetSize } from '@/ui/phone'
 
 // A trial of the generators' phone layout (Figma 5098:5806, «Mobile Layout»): the canvas over a sheet holding the
 // sidebar (header and form) with the download at its foot. A list's pictures are swiped one at a time, with a row over
-// them: delete, «‹ n/total ↺ ›» (or n/Name for slides that aren't items), copy; one picture has its reset and copy in the canvas's top corners instead. A tap on
+// them: delete, «‹ n/total ↺ ›» (a slide that isn't an item: its name), copy; one picture has its reset and copy in the canvas's top corners instead. A tap on
 // a picture that would grow by it folds the sheet away (a portrait one: a landscape one is as wide either way), a
 // shrink icon under it bringing the sheet back; the icon in the sheet's header opens the form over the whole screen.
 // In the link: `arrows=0` hides the arrows (swiping alone)
@@ -195,8 +195,8 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     </Btn>
   )
   const number = slide?.number ?? shown + 1
-  // A list's item shows its number of all («2/5»), its name being on it already; a slide that isn't an item (the
-  // livery's sides, the business card's face) its name («1/Левый борт», «0/Обложка»)
+  // A list's item shows its number of all («2/5»), its name being on it already; a slide that isn't an item its name,
+  // after its number only when it has one of its own (the business card's face, «0/Обложка»; the livery's «Левый борт»)
   const total = slides.filter(s => s.item !== undefined).length
   const resetBtn = <Btn label={reset?.label ?? 'Сбросить'} hidden={!reset} onClick={() => reset?.onClick()}><ResetIcon /></Btn>
   const copyBtn = <Btn label="Дублировать" hidden={!staff || !current} onClick={() => staff?.duplicate(current.key, false)}><DuplicateIcon /></Btn>
@@ -218,7 +218,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
             <div className="flex min-w-0 flex-1 items-center justify-center">
               {back}
               <span className="min-w-0 truncate px-1 text-[14px] leading-5 text-[#808080] [font-feature-settings:'case'_1,'lnum'_1,'tnum'_1]">
-                {number}/{slide?.item !== undefined ? total : slide?.label}
+                {slide?.item !== undefined ? `${number}/${total}` : slide?.number !== undefined ? `${number}/${slide.label}` : slide?.label}
               </span>
               {reset && !full && resetBtn}
               {next}
