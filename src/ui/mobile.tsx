@@ -328,7 +328,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   // and the form each a layer moved and cut, which a phone draws without laying the form out again: a sheet changing its
   // height froze on an iPhone, the form laid out on every frame). At 60% the form has as much again under its end, so it
   // scrolls to its end in view
-  const tall = Math.max(0, screen.h - (row ? ROW + 2 * PAD : 0))
+  // Over the whole screen it stands 10 px under the list's row, or the page's top: touching the top, its shadow had
+  // nowhere to fall and read as cut off
+  const tall = Math.max(0, screen.h - (row ? ROW + 2 * PAD : PAD))
   const below = Math.max(0, Math.round(tall - screen.h * HALF_SHARE))
   const edge = { preview: tall - peek, half: below, full: 0 }
   // Typing on a phone opens the form over the screen and lifts the field to its top, under its label, so the keyboard
