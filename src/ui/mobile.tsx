@@ -244,8 +244,13 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#f5f5f5] font-sans text-black">
-      {/* The canvas, 10 px in (Figma 5105:8488) */}
-      <div className={`relative flex min-h-0 flex-1 flex-col p-[10px] ${preview ? 'pb-[calc(10px+env(safe-area-inset-bottom))]' : ''}`}>
+      {/* The canvas, 10 px in (Figma 5105:8488): above the sheet at 60%, the whole screen with the picture alone. The
+          sheet over the whole screen slides over it, leaving it as it is (it shrank under the sheet, the picture refitted
+          as it went and jerked) */}
+      <div
+        className={`relative flex shrink-0 flex-col p-[10px] transition-[height] ${preview ? 'pb-[calc(10px+env(safe-area-inset-bottom))]' : ''}`}
+        style={{ height: preview ? '100dvh' : `calc(100dvh - ${HALF})`, transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: 'cubic-bezier(0.67, 0, 0.33, 1)' }}
+      >
       {/* A list's row over the picture (Figma 5105:7604): delete on the left, copy on the right, between them the
           number between the arrows, the reset right after it; for a moment after a removal «Удаляем ·
           Вернуть» in the middle. Over the whole-screen form it's all there is of the canvas */}
@@ -271,7 +276,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       {/* One picture: a row over it as a list's, its name in the middle with the reset after it, copy on the right (in
           the canvas's top corners over the strip, Figma 5105:8373, they covered a landscape item's edge, and the name
           stood in a caption under the picture, unlike a list's) */}
-      {!row && !full && !corners && (
+      {!row && !corners && (
         <div className="flex h-[30px] shrink-0 items-center justify-between">
           <Btn label="" hidden onClick={() => {}}>{null}</Btn>
           <div className="flex min-w-0 flex-1 items-center justify-center">
@@ -283,7 +288,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         </div>
       )}
 
-      {corners && !full && (
+      {corners && (
         <>
           <div className="absolute top-[10px] left-[10px] z-10">{reset && resetBtn}</div>
           <div className="absolute top-[10px] right-[10px] z-10">{staff && copyBtn}</div>
@@ -323,7 +328,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       {/* The sheet: the sidebar scrolling, 24 px in, as the sidebar on wide screens (Figma has 16; 20 was tried), the
           download at its foot; its top corners 24 px round, as its padding (Figma has none), a shadow over it (Figma 5098:5487) */}
       <div
-        className={`relative flex shrink-0 flex-col overflow-hidden transition-[height] ${preview ? '' : 'rounded-t-[24px] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.1)]'}`}
+        className={`absolute inset-x-0 bottom-0 z-10 flex flex-col overflow-hidden transition-[height] ${preview ? '' : 'rounded-t-[24px] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.1)]'}`}
         // As the generators' ring turns, the last easing that was kept (it was linear for a moment)
         style={{ height, transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: 'cubic-bezier(0.67, 0, 0.33, 1)' }}
       >
