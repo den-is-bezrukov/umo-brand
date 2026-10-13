@@ -271,6 +271,12 @@ function makePagePlugin(): Plugin {
           res.setHeader('Content-Type', 'text/plain; charset=utf-8')
           return res.end(dealersText())
         }
+        // Vite serves public .txt files with no charset, and the browser reads the instruction's Cyrillic as Latin-1;
+        // GitHub Pages adds utf-8 itself
+        if (req.url?.split('?')[0] === '/llms.txt') {
+          res.setHeader('Content-Type', 'text/plain; charset=utf-8')
+          return res.end(instruction())
+        }
         // The page's first address, /ai, leads here, as on the site (aiRedirect)
         if (['/ai', '/ai/'].includes(req.url?.split('?')[0] ?? '')) {
           res.writeHead(302, { Location: '/make' + req.url!.slice(req.url!.split('?')[0].length) })
