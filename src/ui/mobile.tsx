@@ -24,8 +24,8 @@ export function usePhone() {
 }
 
 const TURN_MS = 500
-/** The sheet's height under the picture */
-const HALF = '60dvh'
+/** The sheet's share of the screen under the picture */
+const HALF_SHARE = 0.6
 /** A picture's inset in the canvas: 10 px of padding and 10 more beside it, over and under it (Figma 5105:8456) */
 const SIDE = 20
 const INSET = 10
@@ -83,6 +83,16 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   download: React.ReactNode
 }) {
   const [sheet, setSheet] = useState<Sheet>('half')
+  const scroller = useRef<HTMLDivElement>(null)
+  const sheetRef = useRef(sheet)
+  sheetRef.current = sheet
+  /** Where the sheet came from and how far its form was scrolled, to carry the form on from there */
+  const from = useRef<{ sheet: Sheet; top: number } | null>(null)
+  const move = (s: Sheet) => {
+    if (s === sheetRef.current) return
+    from.current = { sheet: sheetRef.current, top: scroller.current?.scrollTop ?? 0 }
+    setSheet(s)
+  }
   const [arrows] = useState(arrowsOn)
   // A text field in the form has the focus, so the keyboard is up: the download steps aside, as a phone's own forms do,
   // or it covered the field the keyboard had just brought above it
@@ -156,23 +166,20 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     clearTimeout(tap.current)
     if (e.detail > 1) return
     if (!canPreviewRef.current) return
-    tap.current = window.setTimeout(() => setSheet(s => (s === 'preview' ? 'half' : 'preview')), 250)
+    tap.current = window.setTimeout(() => move(sheetRef.current === 'preview' ? 'half' : 'preview'), 250)
   }
 
   // A form longer than the sheet opens over the whole screen once it's scrolled to its end (a short one never does), the
   // sheet growing from the top while its end stays put; over the screen, a swipe down from its top, a new one, not the
   // scroll running into it, puts it back. Was an icon in the header, a grabber on the sheet's edge before it, and a
   // sheet following the finger, which jerked and moved the picture
-  const scroller = useRef<HTMLDivElement>(null)
   /** When the finger last touched the form or the wheel turned it: only that opens it, not a scroll to a focused field */
   const touched = useRef(0)
   const pull = useRef<{ y: number; top: boolean } | null>(null)
-  const sheetRef = useRef(sheet)
-  sheetRef.current = sheet
   const onFormScroll = () => {
     const el = scroller.current
     if (!el || sheetRef.current !== 'half' || Date.now() - touched.current > 1500) return
-    if (el.scrollHeight > el.clientHeight + 1 && el.scrollTop >= el.scrollHeight - el.clientHeight - 1) setSheet('full')
+    if (el.scrollHeight > el.clientHeight + 1 && el.scrollTop >= el.scrollHeight - el.clientHeight - 1) move('full')
   }
   const onTouchStart = (e: React.TouchEvent) => {
     touched.current = Date.now()
@@ -181,7 +188,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   const onTouchMove = (e: React.TouchEvent) => {
     touched.current = Date.now()
     const p = pull.current
-    if (p?.top && sheetRef.current === 'full' && e.touches[0].clientY - p.y > 40) { pull.current = null; setSheet('half') }
+    if (p?.top && sheetRef.current === 'full' && e.touches[0].clientY - p.y > 40) { pull.current = null; move('half') }
   }
   const onTouchEnd = () => { touched.current = Date.now(); pull.current = null }
   // The wheel, in a narrow window: a turn up at the top puts it back, as a swipe down
@@ -189,7 +196,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   const onWheel = (e: React.WheelEvent) => {
     touched.current = Date.now()
     const top = (scroller.current?.scrollTop ?? 0) <= 0
-    if (sheetRef.current === 'full' && top && e.deltaY < -10 && wheelTop.current) setSheet('half')
+    if (sheetRef.current === 'full' && top && e.deltaY < -10 && wheelTop.current) move('half')
     wheelTop.current = top
   }
 
@@ -222,7 +229,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   }
   const canPreview = growth(slide?.ratio) >= GROWS
   canPreviewRef.current = canPreview
-  useEffect(() => { if (preview && !canPreview) setSheet('half') }, [preview, canPreview])
+  useEffect(() => { if (preview && !canPreview) move('half') }, [preview, canPreview])
 
   const back = (
     <Btn label="Назад" hidden={!arrows || !many || shown === 0} onClick={() => go(-1)}>
@@ -240,7 +247,32 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   const total = slides.filter(s => s.item !== undefined).length
   const resetBtn = <Btn label={reset?.label ?? 'Сбросить'} hidden={!reset} onClick={() => reset?.onClick()}><ResetIcon /></Btn>
   const copyBtn = <Btn label="Дублировать" hidden={!staff || !current} onClick={() => staff?.duplicate(current.key, false)}><DuplicateIcon /></Btn>
-  const height = { preview: '0px', half: HALF, full: row ? `calc(100dvh - ${ROW + 2 * PAD}px)` : '100dvh' }[sheet]
+  // The sheet is always as tall as over the whole screen and moved down out of it (its edge, the white under the form,
+  // and the form each a layer moved and cut, which a phone draws without laying the form out again: a sheet changing its
+  // height froze on an iPhone, the form laid out on every frame). At 60% the form has as much again under its end, so it
+  // scrolls to its end in view
+  const tall = Math.max(0, screen.h - (row ? ROW + 2 * PAD : 0))
+  const below = Math.max(0, Math.round(tall - screen.h * HALF_SHARE))
+  const edge = { preview: tall, half: below, full: 0 }
+  const sheetBg = useRef<HTMLDivElement>(null)
+  const form = useRef<HTMLDivElement>(null)
+  useLayoutEffect(() => {
+    const was = from.current
+    from.current = null
+    const el = scroller.current
+    if (!was || !el || !form.current || !sheetBg.current) return
+    // The form carries on from where it stood, however much its scroll was cut short by the room under it changing
+    const fromAt = edge[was.sheet] - was.top
+    const start = fromAt + el.scrollTop
+    const to = edge[sheet]
+    const timing = { duration: TURN_MS, easing: 'cubic-bezier(0.67, 0, 0.33, 1)' }
+    sheetBg.current.animate([{ transform: `translateY(${edge[was.sheet]}px)` }, { transform: `translateY(${to}px)` }], timing)
+    const cut = (top: number) => `inset(${Math.max(0, Math.round(top))}px 0 0 0 round 24px 24px 0 0)`
+    form.current.animate([
+      { transform: `translateY(${start}px)`, clipPath: cut(edge[was.sheet] - start) },
+      { transform: `translateY(${to}px)`, clipPath: cut(0) },
+    ], timing)
+  }, [sheet]) // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <div className="fixed inset-0 flex flex-col overflow-hidden bg-[#f5f5f5] font-sans text-black">
@@ -249,7 +281,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           as it went and jerked) */}
       <div
         className={`relative flex shrink-0 flex-col p-[10px] transition-[height] ${preview ? 'pb-[calc(10px+env(safe-area-inset-bottom))]' : ''}`}
-        style={{ height: preview ? '100dvh' : `calc(100dvh - ${HALF})`, transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: 'cubic-bezier(0.67, 0, 0.33, 1)' }}
+        style={{ height: preview ? screen.h : screen.h - tall + below, transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: 'cubic-bezier(0.67, 0, 0.33, 1)' }}
       >
       {/* A list's row over the picture (Figma 5105:7604): delete on the left, copy on the right, between them the
           number between the arrows, the reset right after it; for a moment after a removal «Удаляем ·
@@ -318,7 +350,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       {/* The picture alone: the shrink icon under it brings the sheet back (Figma 5105:8520) */}
       {preview && (
         <div className="flex h-[30px] shrink-0 items-center justify-center">
-          <Btn label="Свернуть" onClick={() => setSheet('half')}>
+          <Btn label="Свернуть" onClick={() => move('half')}>
             <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M13.5 6.5H9.5V2.5M2.5 9.5H6.5V13.5M2.5 6.5H6.5V2.5M13.5 9.5H9.5V13.5" /></svg>
           </Btn>
         </div>
@@ -327,15 +359,18 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
 
       {/* The sheet: the sidebar scrolling, 24 px in, as the sidebar on wide screens (Figma has 16; 20 was tried), the
           download at its foot; its top corners 24 px round, as its padding (Figma has none), a shadow over it (Figma 5098:5487) */}
-      <div
-        className={`absolute inset-x-0 bottom-0 z-10 flex flex-col overflow-hidden transition-[height] ${preview ? '' : 'rounded-t-[24px] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.1)]'}`}
-        // As the generators' ring turns, the last easing that was kept (it was linear for a moment)
-        style={{ height, transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: 'cubic-bezier(0.67, 0, 0.33, 1)' }}
-      >
-        <div ref={scroller} data-sheet onScroll={onFormScroll} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchEnd} onWheel={onWheel} onFocus={e => setTyping(types(e.target))} onBlur={e => setTyping(types(e.relatedTarget))} className={`min-h-0 flex-1 overflow-y-auto ${preview ? 'pointer-events-none' : ''}`}>
-          {/* Groups 24 px apart (`src/index.css`, as on wide screens), so from one 48 px control to the next is 48 (16 + 8 for a label + 24) */}
-          <div className="pb-[calc(96px+env(safe-area-inset-bottom))] *:gap-6! *:p-6!">
-            <InSheet.Provider value={height}>{sidebar}</InSheet.Provider>
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10" style={{ height: tall }}>
+        <div
+          ref={sheetBg}
+          className={`absolute inset-0 rounded-t-[24px] bg-white ${preview ? '' : 'shadow-[0_10px_30px_rgba(0,0,0,0.1)]'}`}
+          style={{ transform: `translateY(${edge[sheet]}px)` }}
+        />
+        <div ref={form} className={`absolute inset-0 flex flex-col ${preview ? '' : 'pointer-events-auto'}`} style={{ transform: `translateY(${edge[sheet]}px)` }}>
+          <div ref={scroller} data-sheet onScroll={onFormScroll} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchEnd} onWheel={onWheel} onFocus={e => setTyping(types(e.target))} onBlur={e => setTyping(types(e.relatedTarget))} className="min-h-0 flex-1 overflow-y-auto">
+            {/* Groups 24 px apart (`src/index.css`, as on wide screens), so from one 48 px control to the next is 48 (16 + 8 for a label + 24) */}
+            <div className="*:gap-6! *:p-6!" style={{ paddingBottom: `calc(${96 + (full ? 0 : below)}px + env(safe-area-inset-bottom))` }}>
+              <InSheet.Provider value={sheet}>{sidebar}</InSheet.Provider>
+            </div>
           </div>
         </div>
         {/* The download over the form's foot, on a white gradient the form fades under, 24 px in all round (Figma 5098:5539),
@@ -343,8 +378,8 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
             indicator. Tried closer to Safari's bottom tab bar: 16, then on iOS alone 16, 0, 2 and 8 — touching the edge,
             the black button turned Safari 26's bar black, and 24 all round is what the sheet's sides have */}
         {!preview && !typing && (
-          <div data-sheet className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white px-6 pt-6 pb-[calc(24px+env(safe-area-inset-bottom))] tracking-normal">
-            <InFoot.Provider value={() => setSheet(s => (s === 'preview' ? 'half' : s))}>{download}</InFoot.Provider>
+          <div data-sheet className="pointer-events-auto absolute inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white px-6 pt-6 pb-[calc(24px+env(safe-area-inset-bottom))] tracking-normal">
+            <InFoot.Provider value={() => { if (sheetRef.current === 'preview') move('half') }}>{download}</InFoot.Provider>
           </div>
         )}
       </div>
