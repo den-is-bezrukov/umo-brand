@@ -352,9 +352,17 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     setTyping(t)
     if (!t || !matchMedia('(pointer: coarse)').matches) return
     if (before.current === null) before.current = sheetRef.current
+    // From field to field the sheet is open already and nothing renders: lifted here, then (it stayed low, and iOS
+    // moved the page for it)
+    if (sheetRef.current === 'full' && typing) { liftField(e.target as HTMLElement); return }
     lift.current = e.target as HTMLElement
     // At once: iOS looks where the field is as the keyboard comes, and found it low, the sheet still on its way
     move('full', undefined, true)
+  }
+  const liftField = (field: HTMLElement) => {
+    const el = scroller.current
+    // At once, as the sheet: a field still on its way read as low too
+    if (el) el.scrollTop += field.getBoundingClientRect().top - el.getBoundingClientRect().top - LIFT
   }
   useEffect(() => {
     if (typing || before.current === null) return
@@ -363,11 +371,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     move(s)
   }, [typing]) // eslint-disable-line react-hooks/exhaustive-deps
   useLayoutEffect(() => {
-    const el = scroller.current, field = lift.current
+    const field = lift.current
     lift.current = null
-    if (!el || !field) return
-    // At once, as the sheet: a field still on its way read as low too
-    el.scrollTop += field.getBoundingClientRect().top - el.getBoundingClientRect().top - LIFT
+    if (field) liftField(field)
   })
   const sheetEl = useRef<HTMLDivElement>(null)
   const formEl = useRef<HTMLDivElement>(null)
