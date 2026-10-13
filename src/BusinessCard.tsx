@@ -12,6 +12,7 @@ import { POSITIONS } from '@/data/positions'
 import { DEALER_NAMES, dealerFilter, dealerOf, withoutUmo } from '@/data/dealers'
 import { isPdf, readPdfData } from '@/ui/pdfData'
 import { MobileEditor, usePhone } from '@/ui/mobile'
+import { linkParams, saveAndOpenPdf } from '@/ui/share'
 
 // Business card generator (Figma: UMO | Evrone, section 4021:2849): the dealership set once, its staff typed on the page
 // or loaded from the template, one PDF out with the face and a back per person. The staff list works as the name
@@ -66,10 +67,30 @@ interface CardsData { dealer: Omit<Dealer, 'site'> & { site: string | null }; qr
 
 const PERSON_FIELDS: CardField[] = ['name', 'surname', 'position', 'email', 'phone']
 
+/**
+ * One person's card a link brings (a link made for the dealer): `dealer` (its umo.auto address and site follow,
+ * as when picked; `address`, `site` and `qr` override them; `marks` adds crop marks), then `name`, `surname`, `position`, `phone`, `ext`,
+ * `email`. Read on load only, never written back: a whole staff list is made here, not sent as a link
+ */
+function fromLink(): { dealer: Omit<Dealer, 'site'> & { site: string | null }; qrLink: string | null; marks: boolean; people: Person[] } {
+  const link = linkParams()
+  const get = (k: string) => link.get(k)?.trim() ?? ''
+  const name = withoutUmo(get('dealer'))
+  const person = { ...BLANK, name: get('name'), surname: get('surname'), position: get('position'), email: get('email'), phone: maskPhone(get('phone')).text, ext: get('ext').replace(/\D/g, '').slice(0, 6) }
+  return {
+    dealer: { name, address: get('address') || addressOf(name) || '', site: get('site') || null },
+    qrLink: get('qr') || null,
+    marks: link.has('marks'),
+    people: Object.values(person).some(Boolean) ? [person] : [],
+  }
+}
+
 export default function BusinessCard() {
-  // Not kept in the address, as the name tag's: a staff list isn't something to send as a link
+  // Not kept in the address, as the name tag's: a staff list isn't something to send as a link; one card can come in by
+  // one (`fromLink`)
+  const [initial] = useState(fromLink)
   /** The site follows the dealer's name (`siteFor`) until it's edited: null */
-  const [input, setDealer] = useState<Omit<Dealer, 'site'> & { site: string | null }>({ name: '', address: '', site: null })
+  const [input, setDealer] = useState<Omit<Dealer, 'site'> & { site: string | null }>(initial.dealer)
   const dealer: Dealer = { ...input, site: input.site ?? siteFor(input.name) }
   /** The address and the site, under «Изменить»: a dealer picked from the list fills them in */
   const [dealerOpen, setDealerOpen] = useState(false)
@@ -77,13 +98,14 @@ export default function BusinessCard() {
   // back, restore this state, the branch in `qrFor` and the «Ссылка / Контакт» segments in `qrField`
   // const [qrMode, setQrMode] = useState<'link' | 'contact'>('link')
   /** The QR's link, following the site until it's edited */
-  const [qrLink, setQrLink] = useState<string | null>(null)
+  const [qrLink, setQrLink] = useState<string | null>(initial.qrLink)
   // The face before every back (else once, before all of them), and crop marks around each card
   const [faceEach, setFaceEach] = useState(false)
-  const [marks, setMarks] = useState(false)
+  const [marks, setMarks] = useState(initial.marks)
 
   const staff = useStaff<Person>({
     blank: BLANK,
+    initial: initial.people,
     // The cards' own PDF brings back the dealership, the QR link, the file's options and the staff, to change a line
     // and download again; else a table
     readFile: data => {
@@ -194,6 +216,23 @@ export default function BusinessCard() {
       setExporting(false)
     }
   }
+
+  // `pdf` in the link opens the cards' PDF itself, with no editor, once the fonts are in; a card at fault opens the editor
+  // instead, showing what's wrong
+  const [pdfOnly, setPdfOnly] = useState(() => linkParams().has('pdf') && initial.people.length > 0)
+  const pdfStarted = useRef(false)
+  useEffect(() => {
+    if (!pdfOnly || !cards || pdfStarted.current) return
+    pdfStarted.current = true
+    if (!ok) { setPdfOnly(false); return }
+    import('@/card/pdf')
+      .then(async ({ cardsPdf }) => {
+        const data: CardsData = { dealer: input, qrLink, faceEach, marks, people: items.map(plain) }
+        saveAndOpenPdf(await cardsPdf(cards.map(c => c.back), { faceEach, marks }, data), 'UMO_business-cards.pdf')
+        goal('download_business_card', { count: cards.length, faceEach, marks, via: 'link' })
+      })
+      .catch(() => setPdfOnly(false))
+  }, [cards]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const face = toD(FACE)
   /** The QR, the whole list's: with the dealership, under «Изменить» after the site it follows */
@@ -395,6 +434,7 @@ export default function BusinessCard() {
   )
 
   // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
+  if (pdfOnly) return null
   if (phone) return <MobileEditor slides={mode === 'table' && !staff.file ? [{ key: 'upload', node: <UploadArea staff={staff} /> }] : [{ key: 'face', number: 0, label: 'Обложка', ratio: CARD.h / CARD.w, node: <div className="outline-1 outline-black/10"><CardArt text={face} /></div> }, ...items.map((p, i) => ({ key: p.key, item: p.key, number: i + 1, label: `${p.name} ${p.surname}`.replace(/\s+/g, ' ').trim(), ratio: CARD.h / CARD.w, node: renderItem(p, i) }))]} sidebar={sidebar} download={download} staff={staff} />
 
   return (

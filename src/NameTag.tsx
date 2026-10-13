@@ -9,6 +9,7 @@ import { POSITIONS } from '@/data/positions'
 import TagArt from '@/nametag/TagArt'
 import { isPdf, pdfInZip, readPdfData } from '@/ui/pdfData'
 import { MobileEditor, usePhone } from '@/ui/mobile'
+import { linkParams } from '@/ui/share'
 
 // Name tag generator (Figma: UMO | Evrone, node 4021:2878): a dealership's staff list in, one zip out with the tags
 // in outlines, a page each, and the maker's requirements. Two modes: «Вручную», a list typed on the page, and «Из
@@ -26,12 +27,25 @@ const NO_POSITION = 'Нет должности'
 /** The last empty field, said by name under the download */
 const UNFILLED: Record<string, string> = { [NO_NAME]: 'Добавить имя', [NO_SURNAME]: 'Добавить фамилию', [NO_POSITION]: 'Указать должность' }
 
+/**
+ * One person's tag a link brings (a link made for the dealer): `name`, `surname`, `position`. Read on load only,
+ * never written back: a whole staff list is made here, not sent as a link
+ */
+function fromLink(): Person[] {
+  const link = linkParams()
+  const p = { name: link.get('name')?.trim() ?? '', surname: link.get('surname')?.trim() ?? '', position: link.get('position')?.trim() ?? '' }
+  return Object.values(p).some(Boolean) ? [p] : []
+}
+
 export default function NameTag() {
-  // Not kept in the address, unlike the other generators: a staff list isn't something to send as a link
+  // Not kept in the address, unlike the other generators: a staff list isn't something to send as a link; one tag can
+  // come in by one (`fromLink`)
+  const [initial] = useState(fromLink)
   // One list for both modes. «Из таблицы» shows a loaded file as it is, with no form; clicking a tag there takes the
   // list to «Вручную» to edit it, and the first edit makes it a list of its own, no longer the file
   const staff = useStaff<Person>({
     blank: BLANK,
+    initial,
     // The tags' own ZIP, or the PDF from it, brings back the staff, to change a line and download again; else a table
     readFile: data => {
       const bytes = new Uint8Array(data)
@@ -103,6 +117,23 @@ export default function NameTag() {
       setExporting(false)
     }
   }
+
+  // `pdf` in the link downloads the tag's ZIP once the fonts are in, the editor staying with the tag in it (a ZIP doesn't
+  // open in the browser, as the other generators' PDFs do); a tag at fault only shows what's wrong
+  const zipStarted = useRef(false)
+  useEffect(() => {
+    if (!tags || zipStarted.current || !initial.length || !linkParams().has('pdf')) return
+    zipStarted.current = true
+    if (!ok) return
+    import('@/nametag/pdf').then(async ({ tagsZip }) => {
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(await tagsZip(tags, staff.items.map(plain)))
+      a.download = 'UMO_name-tags.zip'
+      a.click()
+      goal('download_name_tag', { count: tags.length, via: 'link' })
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000)
+    })
+  }, [tags]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const renderItem = (it: typeof items[number], i: number) => {
             const tag = tags?.[i]

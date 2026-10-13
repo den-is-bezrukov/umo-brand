@@ -3,7 +3,7 @@ import type { Font } from 'opentype.js'
 import { goal } from '@/ui/metrika'
 import { Field, Segments, SegBtn, TextInput, ComboField, GeneratorHeader, LinkButtons, DownloadBar } from '@/ui/form'
 import { CaptionReset } from '@/ui/staff'
-import { linkParams, useLinkState } from '@/ui/share'
+import { linkParams, useLinkState, saveAndOpenPdf } from '@/ui/share'
 import { loadFont, toD } from '@/livery/geometry'
 import { STRIP, BASELINE, SIZE, TRACKING, buildStrip, lineStart, type Align } from '@/plate/frame'
 import PlateArt from '@/plate/PlateArt'
@@ -73,7 +73,8 @@ export default function PlateFrame() {
   // The free line: on while the link has `text`, so it stays on as the address keeps it
   const [custom] = useState(() => link.has('text'))
   // Empty at first, as the name tag's fields: «Центр» stood in as a value and read as filled in
-  const [name, setName] = useState(link.get('name') ?? '')
+  // A name with «UMO» (a link made by hand) loses it, as the prefix is fixed
+  const [name, setName] = useState(() => withoutUmo(link.get('name') ?? ''))
   const [text, setText] = useState(link.get('text') ?? '')
   const [align, setAlign] = useState<Align>(link.get('align') === 'center' ? 'center' : 'left')
   useLinkState({
@@ -118,24 +119,41 @@ export default function PlateFrame() {
     setAlign('left')
   }
 
+  const downloadGoal = (extra?: Record<string, unknown>) => {
+    // The line goes along only when it isn't a dealer from the list: what dealers type for themselves
+    const listed = !custom && NAMES.includes(name.trim())
+    goal('download_plate_frame', { free: custom, align, listed, ...(listed ? {} : { line: line.trim().slice(0, 100) }), ...extra })
+  }
+
   const handleExport = async () => {
     if (!strip) return
     setExporting(true)
     try {
-      const { stripPdf } = await import('@/plate/pdf')
+      const { stripPdf, STRIP_FILE } = await import('@/plate/pdf')
       const blob = await stripPdf(strip)
       const a = document.createElement('a')
       a.href = URL.createObjectURL(blob)
-      a.download = 'UMO_plate-frame_501x21.pdf'
+      a.download = STRIP_FILE
       a.click()
-      // The line goes along only when it isn't a dealer from the list: what dealers type for themselves
-      const listed = !custom && NAMES.includes(name.trim())
-      goal('download_plate_frame', { free: custom, align, listed, ...(listed ? {} : { line: line.trim().slice(0, 100) }) })
+      downloadGoal()
       URL.revokeObjectURL(a.href)
     } finally {
       setExporting(false)
     }
   }
+
+  // `pdf` in the link (a link made for the dealer) opens the strip's PDF itself, with no editor, once the font
+  // is in; a line at fault opens the editor instead, showing what's wrong
+  const [pdfOnly, setPdfOnly] = useState(() => link.has('pdf'))
+  const pdfStarted = useRef(false)
+  useEffect(() => {
+    if (!pdfOnly || !strip || pdfStarted.current) return
+    pdfStarted.current = true
+    if (!ok) { setPdfOnly(false); return }
+    import('@/plate/pdf')
+      .then(async ({ stripPdf, STRIP_FILE }) => { const blob = await stripPdf(strip); downloadGoal({ via: 'link' }); saveAndOpenPdf(blob, STRIP_FILE) })
+      .catch(() => setPdfOnly(false))
+  }, [strip]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const preview = (
     <>
@@ -218,6 +236,7 @@ export default function PlateFrame() {
         />
   )
 
+  if (pdfOnly) return null
   // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
   if (phone) return <MobileEditor slides={[{ key: 'frame', label: 'Поле печати', node: preview, reset: blank ? undefined : { onClick: reset, label: 'Вернуть рамку по умолчанию' } }]} sidebar={sidebar} download={download} />
 
