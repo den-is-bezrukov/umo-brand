@@ -12,7 +12,7 @@ import { splitFullName } from '@/nametag/table'
 
 export type Mode = 'manual' | 'table'
 
-/** How long «Удалено · Вернуть» stays; the ring round its cross runs out over it */
+/** How long «Удаляем · Вернуть» stays; the ring round its bin runs out over it */
 const REMOVED_MS = 4000
 
 export type Row<P> = P & { key: number }
@@ -608,8 +608,9 @@ export function ItemAlert<P extends object>({ staff, item, children }: { staff: 
 
 /**
  * In place of an item just removed, for four seconds, 40 px tall as the buttons (it was as tall as the item):
- * «Удалено · Вернуть ×», the cross closing it at once for one sure of the removal. A ring round the cross runs out over
- * the four seconds, as Telegram's undo, so it shows how long is left (none with reduced motion)
+ * «Удаляем · Вернуть» led by the bin (was «Удалено · Вернуть ×»), the bin closing it at once for one sure of the removal. A ring
+ * round the bin runs out over the four seconds, first in the line as Telegram's undo, so it shows how long is left
+ * (none with reduced motion)
  */
 export function Removed<P extends object>({ staff, at }: { staff: Staff<P>; at: number }) {
   // On a phone it stands in the actions' row, not in the strip
@@ -617,16 +618,16 @@ export function Removed<P extends object>({ staff, at }: { staff: Staff<P>; at: 
   if (staff.removed?.index !== at || staff.mode !== 'manual') return null
   return (
     <div className="flex h-10 items-center justify-center gap-2 text-[14px] leading-5 text-[#808080]">
-      Удалено ·
-      <button type="button" title={`${MOD}Z`} onClick={e => { e.stopPropagation(); staff.restore() }} className="cursor-pointer text-black hover:text-[#808080]">Вернуть</button>
-      {/* A cross (1 px, #808080, black on hover), as the items' actions beside them */}
-      <button type="button" title="Закрыть" aria-label="Закрыть" onClick={e => { e.stopPropagation(); staff.dismiss() }} className="relative flex size-[30px] cursor-pointer items-center justify-center rounded-full text-[#808080] hover:text-black">
-        <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M12 4L8 8M8 8L4 4M8 8L12 12M8 8L4 12" /></svg>
+      {/* The bin in its ring (1 px, #808080, black on hover), as «Удалить»: a click removes it for good at once */}
+      <button type="button" title="Удалить сразу" aria-label="Удалить сразу" onClick={e => { e.stopPropagation(); staff.dismiss() }} className="relative flex size-[30px] cursor-pointer items-center justify-center rounded-full text-[#808080] hover:text-black">
+        <TrashIcon />
         {/* The ring, from the top clockwise, a new one for each removal */}
         <svg key={staff.removed.item.key} width="30" height="30" viewBox="0 0 30 30" aria-hidden className="pointer-events-none absolute inset-0 -rotate-90 motion-reduce:hidden">
           <circle cx="15" cy="15" r="13" fill="none" stroke="currentColor" strokeWidth="1" pathLength={1} strokeDasharray="1" style={{ animation: `countdown ${REMOVED_MS}ms linear forwards` }} />
         </svg>
       </button>
+      Удаляем ·
+      <button type="button" title={`${MOD}Z`} onClick={e => { e.stopPropagation(); staff.restore() }} className="cursor-pointer text-black hover:text-[#808080]">Вернуть</button>
     </div>
   )
 }

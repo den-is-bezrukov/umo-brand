@@ -75,7 +75,7 @@ body {
   --spacing-chapter: clamp(9rem, 5.831rem + 13.521vw, 18rem);
 }
 
-/* The ring round «Удалено · Вернуть»'s cross running out (`Removed` in src/ui/staff.tsx) */
+/* The ring round «Удаляем · Вернуть»'s bin running out (`Removed` in src/ui/staff.tsx) */
 @keyframes countdown {
   from { stroke-dashoffset: 0; }
   to { stroke-dashoffset: 1; }

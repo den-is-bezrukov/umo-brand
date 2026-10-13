@@ -211,7 +211,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       {/* The canvas, 10 px in (Figma 5105:8488) */}
       <div className={`relative flex min-h-0 flex-1 flex-col p-[10px] ${preview ? 'pb-[calc(10px+env(safe-area-inset-bottom))]' : ''}`}>
       {/* A list's row over the picture (Figma 5105:7604): delete on the left, copy on the right, between them the
-          number between the arrows, the reset right after it; for a moment after a removal «Удалено ·
+          number between the arrows, the reset right after it; for a moment after a removal «Удаляем ·
           Вернуть» in the middle. Over the whole-screen form it's all there is of the canvas */}
       {row && (
         <div className="flex h-[30px] shrink-0 items-center justify-between">
