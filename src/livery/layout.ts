@@ -454,12 +454,11 @@ const mirror5 = (o: Obstacle): Obstacle =>
     ? { ...o, top: [SIDE5_W - o.top[0], o.top[1]], bottom: [SIDE5_W - o.bottom[0], o.bottom[1]] }
     : { ...o, x: SIDE5_W - o.x - o.w }
 
-// Under the sheet at the front door's edge, ~200 ahead of it: ~60 to the moulding and the moulding's ~75. Along it,
-// ~340 behind the sheet to the rear door's edge.
+// Under the sheet at the front door's edge, ~200 ahead of it: ~135 to the moulding's bottom edge, one number as UMO 8's
+// ~150 (it was ~60 to the moulding and the moulding's ~75). Along it, ~340 behind the sheet to the rear door's edge.
 const MOULDING_Y = 635
 const side5Bottom = (at: number, x: number): Surface['dims']['rows'] => [
-  { from: 500, to: 560, label: '~60', x, at, margin: 'bottom' },
-  { from: 560, to: 635, label: '~75', x, at },
+  { from: 500, to: MOULDING_Y, label: '~135', x, at, margin: 'bottom' },
 ]
 const side5Lettering = (x: number): Surface['dims']['rows'] => [
   { from: 140, to: 260, label: '120', x },
