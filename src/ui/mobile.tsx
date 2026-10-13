@@ -451,8 +451,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
 
   return (
     // The page's background is the canvas's; over it the picture with its row, over all the sheet, and the download at
-    // the screen's foot over the sheet
-    <div className="fixed inset-0 overflow-hidden bg-[#f5f5f5] font-sans text-black">
+    // the screen's foot over the sheet; clipped, not hidden, so nothing scrolls it (a focused control in the sheet
+    // scrolled it by 83 px, the canvas off its place)
+    <div className="fixed inset-0 overflow-clip bg-[#f5f5f5] font-sans text-black">
       {/* The canvas, 10 px in (Figma 5105:8488): above the sheet at 60%, the whole screen with the picture alone. The
           sheet over the whole screen slides over it, leaving it as it is (it shrank under the sheet, the picture refitted
           as it went and jerked) */}
