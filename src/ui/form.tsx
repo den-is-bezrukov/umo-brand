@@ -202,8 +202,9 @@ function GeneratorRing({ current }: { current: string }) {
   const tone = (path: string) => (path === lit ? 'text-black' : 'text-[#bfbfbf] hover:text-[#808080] active:text-[#808080]')
   return (
     <div className="relative -mx-6 my-1">
-      {/* 8 px over and under for the descenders (р, у), which the scroller would clip */}
-      <nav ref={nav} aria-label="Конструкторы" className="relative -my-2 flex snap-x snap-mandatory scroll-pl-6 gap-5 overflow-x-auto overscroll-x-contain py-2 pl-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      {/* 8 px over and under for the descenders (р, у), which the scroller would clip; the scroller itself out of the
+          Tab order (Chrome lets the keyboard into one), its names in it */}
+      <nav ref={nav} aria-label="Конструкторы" tabIndex={-1} className="relative -my-2 flex snap-x snap-mandatory scroll-pl-6 gap-5 overflow-x-auto overscroll-x-contain py-2 pl-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {Array.from({ length: PHONE_TURNS * count }, (_, i) => {
           const g = GENERATORS[i % count]
           return i === middle
