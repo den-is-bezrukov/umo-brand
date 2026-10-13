@@ -9,8 +9,8 @@ import type { Surface } from './layout'
 const PT = 72 / 25.4
 // The livery colour of the Illustrator sources: rich black, C60 M40 Y40 K100.
 const INK: [number, number, number, number] = [0.6, 0.4, 0.4, 1]
-// The dimensions' blue, #2f6bff, as on the page
-const DIMS: [number, number, number] = [0x2f / 255, 0x6b / 255, 1]
+// The dimensions' orange, #ff4f00, as on the page
+const DIMS: [number, number, number] = [1, 0x4f / 255, 0]
 
 /** Fills outlines given in sheet millimetres (y down), scaled by `k` and moved to (ox, oy) from the page's top left */
 function fillShapes(page: PDFPage, shapes: Cmd[][], k: number, ox: number, oy: number, color: 'ink' | 'white' | 'black' | 'dims') {
@@ -57,7 +57,7 @@ async function photoJpeg(surface: Surface): Promise<Uint8Array> {
 }
 
 /**
- * The spec: each surface on the car with its dimensions in blue, like 00_UMO8_dealer-livery_spec.pdf. One point on these
+ * The spec: each surface on the car with its dimensions in orange, like 00_UMO8_dealer-livery_spec.pdf. One point on these
  * pages is a millimetre on the car, so the numbers can be checked with a ruler in Illustrator.
  */
 async function specFile(sheets: Sheet[], title: string): Promise<Uint8Array> {
