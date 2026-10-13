@@ -6,7 +6,7 @@ import { toD, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
 import { xlsxCells, pastedCells, byHeaders, type Cells } from '@/nametag/table'
 import { TAG, BAND, BAND_ART, DEFAULT_CAPTION, buildTag, formatPrice, readPrice, PRICE_FORMAT, type Item, type TagField } from '@/pricetag/tag'
-import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
+import { DEALER_NAMES, dealerFilter, withoutUmo } from '@/data/dealers'
 import { readTagsFile } from '@/pricetag/read'
 import { plural } from '@/ui/staff'
 import { MobileEditor, usePhone } from '@/ui/mobile'
@@ -191,7 +191,7 @@ export default function PriceTag() {
             <ComboField
               value={dealer}
               onChange={setDealer}
-              options={DEALER_OPTIONS}
+              options={DEALER_OPTIONS} filter={dealerFilter}
               singleLine
               placeholder="Название дилера"
               label="Дилеры UMO"

@@ -9,7 +9,7 @@ import { xlsxCells, pastedCells, byHeaders, FULL_NAME, fromFullName, type Cells 
 import { CARDS_KEY, CARD, QR, FACE, BACK_LOGO, DEALER_FIELDS, buildBack, siteFor, siteText, splitPhone, maskPhone, type CardField, type Dealer, type Person, type QrData } from '@/card/card'
 import CardArt from '@/card/CardArt'
 import { POSITIONS } from '@/data/positions'
-import { DEALER_NAMES, dealerOf, withoutUmo } from '@/data/dealers'
+import { DEALER_NAMES, dealerFilter, dealerOf, withoutUmo } from '@/data/dealers'
 import { isPdf, readPdfData } from '@/ui/pdfData'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 
@@ -276,7 +276,7 @@ export default function BusinessCard() {
                   <ComboField
                     value={dealer.name}
                     onChange={pickDealer}
-                    options={DEALER_OPTIONS}
+                    options={DEALER_OPTIONS} filter={dealerFilter}
                     singleLine
                     placeholder="Название дилера"
                     label="Дилеры UMO"

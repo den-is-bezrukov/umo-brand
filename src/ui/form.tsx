@@ -339,7 +339,7 @@ const ANCHOR = typeof CSS !== 'undefined' && CSS.supports('anchor-name: --a')
  * through it, Enter picks, Esc or leaving the field closes it; the chevron opens the whole list. An option may carry a
  * line break, kept in the value it gives and shown as a space in the list. First made for the name tag's position
  */
-export function ComboField({ value, onChange, options, placeholder, label, invalid, singleLine, shownAs = t => t, truncate }: { value: string; onChange: (v: string) => void; options: string[]; placeholder?: string; label: string; invalid?: boolean; /** Enter doesn't break the line, pasted breaks become spaces */ singleLine?: boolean; /** How an option reads in the list, when it differs from the value it gives */ shownAs?: (t: string) => string; /** One line, cut off with an ellipsis, rather than growing: for a narrow field (the price tag's caption on phones) */ truncate?: boolean }) {
+export function ComboField({ value, onChange, options, placeholder, label, invalid, singleLine, shownAs = t => t, truncate, filter }: { value: string; onChange: (v: string) => void; options: string[]; placeholder?: string; label: string; invalid?: boolean; /** Enter doesn't break the line, pasted breaks become spaces */ singleLine?: boolean; /** How an option reads in the list, when it differs from the value it gives */ shownAs?: (t: string) => string; /** One line, cut off with an ellipsis, rather than growing: for a narrow field (the price tag's caption on phones) */ truncate?: boolean; /** The options for what's typed, when containing it isn't enough: the dealers by city, street or any spelling (`dealerFilter`) */ filter?: (typed: string, options: string[]) => string[] }) {
   const box = useRef<HTMLDivElement>(null)
   const list = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
@@ -347,7 +347,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
   const [active, setActive] = useState(-1)
   const typed = value.replace(/\s+/g, ' ').trim().toLowerCase()
   const hit = options.find(t => oneLine(t) === typed)
-  const matching = options.filter(t => oneLine(t).includes(typed))
+  const matching = filter ? filter(typed, options) : options.filter(t => oneLine(t).includes(typed))
   const shown = all || !typed || hit || !matching.length ? options : matching
   const id = useId()
   // In the phone's sheet the list is a screen of its own, as a search: the field over it with «Готово», the list filling
