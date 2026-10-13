@@ -5,7 +5,7 @@ import { Field, Segments, SegBtn, TextInput, ComboField, GeneratorHeader, LinkBu
 import { CaptionReset } from '@/ui/staff'
 import { linkParams, useLinkState, saveAndOpenPdf } from '@/ui/share'
 import { loadFont, toD } from '@/livery/geometry'
-import { STRIP, BASELINE, SIZE, TRACKING, buildStrip, lineStart, type Align } from '@/plate/frame'
+import { STRIP, buildStrip, lineStart, type Align } from '@/plate/frame'
 import PlateArt from '@/plate/PlateArt'
 import { DEALER_NAMES, dealerFilter, withoutUmo } from '@/data/dealers'
 import { MobileEditor, usePhone } from '@/ui/mobile'
@@ -24,49 +24,6 @@ const GHOST = '#808080'
 /** The dealers' names for the suggestions, without the fixed «UMO » */
 const NAMES = DEALER_NAMES.map(withoutUmo)
 const RED = '#ff2a1a'
-
-/** The frame's millimetres in container units: the container is the frame picture, 522 mm wide */
-const mm = (v: number) => `${v * 100 / 522}cqw`
-
-/**
- * The strip's text edited on the frame: a transparent input on the line, CoFo Sans Medium 18 mm with the tracking and
- * case forms of the print, its line box the strip's 21 mm round the baseline. Enter, Esc or a click elsewhere ends it
- */
-function InlineLine({ font, x, value, onChange, color, onDone }: { font: Font; x: number; value: string; onChange: (v: string) => void; color: string; onDone: () => void }) {
-  const ref = useRef<HTMLInputElement>(null)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    el.focus()
-    el.setSelectionRange(el.value.length, el.value.length)
-  }, [])
-  const ascent = font.ascender / font.unitsPerEm * SIZE
-  const descent = -font.descender / font.unitsPerEm * SIZE
-  const top = STRIP.y + BASELINE - (STRIP.h - ascent - descent) / 2 - ascent
-  return (
-    <input
-      ref={ref}
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      onBlur={onDone}
-      onKeyDown={e => { if (e.key === 'Escape' || e.key === 'Enter') onDone() }}
-      spellCheck={false}
-      aria-label="Дилер"
-      className="absolute m-0 block border-0 bg-transparent p-0 font-medium outline-none [font-feature-settings:'case'_1]"
-      style={{
-        left: mm(x),
-        top: mm(top),
-        width: mm(STRIP.x + STRIP.w - x),
-        height: mm(STRIP.h),
-        fontSize: mm(SIZE),
-        lineHeight: STRIP.h / SIZE,
-        letterSpacing: `${TRACKING}em`,
-        color,
-        caretColor: color,
-      }}
-    />
-  )
-}
 
 export default function PlateFrame() {
   const [link] = useState(linkParams)
@@ -99,9 +56,7 @@ export default function PlateFrame() {
   }, [])
 
   const strip = useMemo(() => font ? buildStrip(font, shown, align) : undefined, [font, shown, align])
-  /** The dealer's name (or the free line) edited right on the frame, after a double click on it */
-  const [editing, setEditing] = useState(false)
-  /** While editing, the fixed prefix stays drawn and the field starts where the name does */
+  /** The fixed prefix alone, drawn white over the grey placeholder */
   const start = useMemo(() => !font || !strip ? undefined : custom ? { cmds: [], end: strip.x } : lineStart(font, PREFIX, strip.x), [font, strip, custom])
   const ok = !!strip && strip.issues.length === 0 && !noName
   /** Red only for a wrong line, never an empty one */
@@ -164,23 +119,12 @@ export default function PlateFrame() {
   const preview = (
     <>
         <figure className="group/sheet mx-auto flex w-full max-w-[1200px] flex-col gap-2">
-          {/* A double click on the frame edits the text right on it, as the name tags do */}
-          <div className="@container relative cursor-text" onDoubleClick={() => setEditing(true)}>
+          <div>
             <PlateArt>
               {/* Empty, the placeholder grey, the fixed «UMO » white over it */}
-              {strip && !(editing && noName) && <path d={toD(editing && start ? start.cmds : strip.cmds)} fill={noName ? GHOST : wrong ? RED : 'white'} />}
+              {strip && <path d={toD(strip.cmds)} fill={noName ? GHOST : wrong ? RED : 'white'} />}
               {strip && noName && start && <path d={toD(start.cmds)} fill="white" />}
             </PlateArt>
-            {editing && font && start && (
-              <InlineLine
-                font={font}
-                x={STRIP.x + start.end}
-                value={custom ? text : name}
-                onChange={custom ? setText : setName}
-                color={wrong ? RED : 'white'}
-                onDone={() => setEditing(false)}
-              />
-            )}
           </div>
           <figcaption className="mt-0.5 text-center text-[14px] leading-5 text-[#808080]">
             <span className="relative">

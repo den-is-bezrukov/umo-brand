@@ -61,9 +61,7 @@ export default function NameTag() {
     uploadLabel: 'Загрузить таблицу или ZIP',
   })
   const { mode, setMode, people, current, selected, setSelected, update } = staff
-  /** A field being edited on the tag itself, after a double click on its text */
-  const [editing, setEditing] = useState<{ key: number; field: Field } | null>(null)
-  staff.useKeys(!!editing)
+  staff.useKeys(false)
 
   const [fonts, setFonts] = useState<Fonts>()
   const [exporting, setExporting] = useState(false)
@@ -141,7 +139,6 @@ export default function NameTag() {
 
   const renderItem = (it: typeof items[number], i: number) => {
             const tag = tags?.[i]
-            const edited = editing?.key === it.key ? editing.field : null
             const bad = problems[i].length > 0
             // Only the fields at fault turn red; a missing one is said under the tag, the rest stays as it is
             const wrong = faultyFields(tag?.issues ?? [])
@@ -161,39 +158,21 @@ export default function NameTag() {
                 className="group/row flex cursor-pointer justify-center"
               >
                 <div className="@container flex w-full max-w-[480px] flex-col gap-3">
-                {/* In the manual list a tag is picked for editing by clicking it; the picked one is outlined. A double click
-                    on its text edits that field right there */}
+                {/* In the manual list a tag is picked for editing by clicking it; the picked one is outlined */}
                 <ItemFrame staff={staff} item={staff.items[i]} n={i + 1}>
                 <button
                   type="button"
-                  onDoubleClick={e => {
-                    if (!tag || !ghosts?.[i]) return
-                    const r = e.currentTarget.getBoundingClientRect()
-                    const field = fieldAt(tag.fields, ghosts[i].fields, it.person, (e.clientY - r.top) / r.height * TAG.h)
-                    setSelected(key)
-                    setMode('manual')
-                    setEditing({ key, field })
-                  }}
                   aria-pressed={mode === 'manual' ? active : undefined}
                   // Edged as every generator's items (`ITEM_EDGE`)
                   className={`block w-full cursor-pointer rounded-[5.714cqw] ${ITEM_EDGE} transition-opacity duration-150
                     ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
                 >
                   <TagArt
-                    text={tag ? toD(fieldsBut(tag.fields, edited, f => !wrong.has(f))) : undefined}
-                    alert={tag && wrong.size ? toD(fieldsBut(tag.fields, edited, f => wrong.has(f))) : undefined}
-                    ghost={ghosts?.[i] ? toD(fieldsBut(ghosts[i].fields, edited)) : undefined}
+                    text={tag ? toD(fieldsOf(tag.fields, f => !wrong.has(f))) : undefined}
+                    alert={tag && wrong.size ? toD(fieldsOf(tag.fields, f => wrong.has(f))) : undefined}
+                    ghost={ghosts?.[i] ? toD(fieldsOf(ghosts[i].fields)) : undefined}
                   />
                 </button>
-                {edited && tag && (
-                  <InlineField
-                    box={(it.person[edited].trim() ? tag : ghosts![i]).fields[edited]}
-                    field={edited}
-                    value={it.person[edited]}
-                    onChange={v => update(key, { [edited]: v })}
-                    onDone={() => setEditing(null)}
-                  />
-                )}
                 </ItemFrame>
                 {bad && (
                   <ItemAlert staff={staff} item={key}>{alertLine(problems[i])}</ItemAlert>
@@ -315,9 +294,9 @@ function PositionPicker({ value, onChange, invalid }: { value: string; onChange:
   return <ComboField value={value} onChange={onChange} options={POSITIONS} placeholder="Должность" label="Типовые должности" invalid={invalid} />
 }
 
-/** The outlines of every field (of those `only` keeps) but the one being edited, which the inline field stands in for */
-function fieldsBut(fields: Record<Field, FieldBox>, except: Field | null, only: (f: Field) => boolean = () => true) {
-  return (Object.keys(fields) as Field[]).filter(f => f !== except && only(f)).flatMap(f => fields[f].cmds)
+/** The outlines of every field `only` keeps */
+function fieldsOf(fields: Record<Field, FieldBox>, only: (f: Field) => boolean = () => true) {
+  return (Object.keys(fields) as Field[]).filter(only).flatMap(f => fields[f].cmds)
 }
 
 /** The fields a tag's issues are about, by the label they start with (`buildTag`); a missing glyph could be in any */
@@ -331,57 +310,6 @@ function faultyFields(issues: string[]): Set<Field> {
     else if (t.startsWith('Нет в шрифте')) { wrong.add('name'); wrong.add('surname'); wrong.add('position') }
   }
   return wrong
-}
-
-/** The field under a double click at `y` mm: the one whose lines it hits, else the nearest; empty fields by their placeholders */
-function fieldAt(real: Record<Field, FieldBox>, ghost: Record<Field, FieldBox>, person: Person, y: number): Field {
-  const fields: Field[] = ['name', 'surname', 'position']
-  const box = (f: Field) => (person[f].trim() ? real : ghost)[f]
-  const dist = (f: Field) => {
-    const b = box(f)
-    const bottom = b.top + b.lines * b.leading
-    return y < b.top ? b.top - y : y > bottom ? y - bottom : 0
-  }
-  return fields.reduce((a, f) => dist(f) < dist(a) ? f : a)
-}
-
-/**
- * A field edited on the tag: a transparent textarea over its lines, in the same font, size and leading (the tag's
- * millimetres in container units: the figure is the container, 70 mm wide), so it reads as typing on the tag. Enter is
- * a line break, as in the sidebar; Esc or a click elsewhere ends it
- */
-function InlineField({ box, field, value, onChange, onDone }: { box: FieldBox; field: Field; value: string; onChange: (v: string) => void; onDone: () => void }) {
-  const ref = useRef<HTMLTextAreaElement>(null)
-  useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    el.focus()
-    el.setSelectionRange(el.value.length, el.value.length)
-  }, [])
-  const mm = (v: number) => `${v * 100 / TAG.w}cqw`
-  return (
-    <textarea
-      ref={ref}
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      onBlur={onDone}
-      onKeyDown={e => { if (e.key === 'Escape') onDone() }}
-      spellCheck={false}
-      aria-label={{ name: 'Имя', surname: 'Фамилия', position: 'Должность' }[field]}
-      className="absolute m-0 block resize-none overflow-hidden border-0 bg-transparent p-0 text-[#262626] outline-none"
-      style={{
-        left: mm(4),
-        top: mm(box.top),
-        width: mm(TAG.w - 8),
-        height: mm(box.lines * box.leading),
-        fontSize: mm(box.size),
-        lineHeight: box.leading / box.size,
-        fontWeight: box.medium ? 500 : 400,
-        whiteSpace: field === 'position' ? 'pre-wrap' : 'pre',
-        letterSpacing: 0,
-      }}
-    />
-  )
 }
 
 /** A tag's errors in one line: the empty fields in one phrase («Нет имени, фамилии и должности»), then the rest */
