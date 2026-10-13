@@ -422,8 +422,15 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   }
   const fits = () => [...(canvasEl.current?.querySelectorAll<HTMLElement>('[data-fit]') ?? [])]
   /** The sheet at a place, and the pictures with it */
+  /** The download goes down with the sheet under its 60% place, at its pace, out of sight lowered (it went at once) */
+  const footEl = useRef<HTMLDivElement>(null)
+  const footAt = (at: number) => ({ transform: `translateY(${Math.max(0, at - edge.half)}px)` })
   const place = (at: number) => {
     if (sheetEl.current) sheetEl.current.style.transform = `translateY(${at}px)`
+    if (footEl.current) {
+      footEl.current.getAnimations().forEach(a => a.cancel())
+      Object.assign(footEl.current.style, footAt(at))
+    }
     for (const el of fits()) {
       el.getAnimations().forEach(a => a.cancel())
       Object.assign(el.style, fitAt(el, at))
@@ -434,6 +441,11 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     sheetEl.current?.animate([{ transform: `translateY(${from}px)` }, { transform: `translateY(${to}px)` }], timing)
     // The pictures' size isn't the sheet's straight line (they stop at the screen's width): steps along the way
     const steps = Array.from({ length: 11 }, (_, i) => from + ((to - from) * i) / 10)
+    if (footEl.current) {
+      footEl.current.getAnimations().forEach(a => a.cancel())
+      footEl.current.animate(steps.map(footAt), timing)
+      Object.assign(footEl.current.style, footAt(to))
+    }
     for (const el of fits()) {
       el.getAnimations().forEach(a => a.cancel())
       const end = fitAt(el, to)
@@ -571,8 +583,8 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           plus the screen's bottom safe area under it (`viewport-fit=cover` in index.html), so it clears the home
           indicator. Tried closer to Safari's bottom tab bar: 16, then on iOS alone 16, 0, 2 and 8 — touching the edge,
           the black button turned Safari 26's bar black, and 24 all round is what the sheet's sides have */}
-      {!preview && !typing && (
-        <div data-sheet className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white px-6 pt-6 pb-[calc(24px+env(safe-area-inset-bottom))] tracking-normal">
+      {!typing && (
+        <div ref={footEl} data-sheet style={footAt(edge[sheet])} className="absolute inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white px-6 pt-6 pb-[calc(24px+env(safe-area-inset-bottom))] tracking-normal">
           <InFoot.Provider value={() => { if (sheetRef.current === 'preview') move('half') }}>{download}</InFoot.Provider>
         </div>
       )}
