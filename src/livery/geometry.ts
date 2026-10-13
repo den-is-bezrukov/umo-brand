@@ -448,7 +448,7 @@ export interface SpecMarks {
 }
 
 /**
- * The red dimensions of the spec in sheet millimetres (y down): the sheet edges, its zone grid, column widths above it
+ * The dimensions of the spec in sheet millimetres (y down): the sheet edges, its zone grid, column widths above it
  * and row heights beside it. Labels are positioned by their baseline. Drawn by the spec PDF and by the preview.
  */
 export function specMarks(surface: Surface): SpecMarks {

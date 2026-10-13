@@ -21,6 +21,8 @@ const DEFAULT_TOP = 'Центр UMO'
 // The parts that can be left out, as the `off` link parameter names them
 const PARTS = { qr: 'qr', dealer: 'top', tagline: 'bottom', rear: 'rear', rearDealer: 'rdealer', rearTagline: 'rslogan' } as const
 const RED = '#ff2a1a'
+/** The spec's dimensions: magenta, apart from the red of text at fault, even in contrast on the white body and dark glass */
+const DIMS = '#d400d4'
 
 function SheetPreview({ sheet, seams, dims, onReset, resetLabel }: { sheet: Sheet; seams: boolean; dims: boolean; onReset?: () => void; resetLabel?: string }) {
   const s = sheet.surface
@@ -61,10 +63,10 @@ function SheetPreview({ sheet, seams, dims, onReset, resetLabel }: { sheet: Shee
           {dims && (
             <g>
               {/* Half a pixel on Retina screens, one device pixel; a whole one elsewhere, as half would only turn pale */}
-              {marks.lines.map(([x1, y1, x2, y2], i) => <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={RED} {...hairline} strokeWidth={devicePixelRatio >= 2 ? 0.5 : 1} />)}
+              {marks.lines.map(([x1, y1, x2, y2], i) => <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={DIMS} {...hairline} strokeWidth={devicePixelRatio >= 2 ? 0.5 : 1} />)}
               {/* The page's CoFo Sans Medium with tabular figures (the spec PDF keeps Helvetica Bold) */}
               {marks.labels.map((l, i) => (
-                <text key={i} x={l.x} y={l.y} textAnchor={anchor[l.align]} fontSize={marks.size} fontWeight={500} fill={RED} className="font-sans [font-variant-numeric:tabular-nums]">{l.text}</text>
+                <text key={i} x={l.x} y={l.y} textAnchor={anchor[l.align]} fontSize={marks.size} fontWeight={500} fill={DIMS} className="font-sans [font-variant-numeric:tabular-nums]">{l.text}</text>
               ))}
             </g>
           )}

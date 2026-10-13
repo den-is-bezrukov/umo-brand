@@ -9,13 +9,15 @@ import type { Surface } from './layout'
 const PT = 72 / 25.4
 // The livery colour of the Illustrator sources: rich black, C60 M40 Y40 K100.
 const INK: [number, number, number, number] = [0.6, 0.4, 0.4, 1]
+// The dimensions' magenta, #d400d4, as on the page
+const DIMS: [number, number, number] = [0xd4 / 255, 0, 0xd4 / 255]
 
 /** Fills outlines given in sheet millimetres (y down), scaled by `k` and moved to (ox, oy) from the page's top left */
-function fillShapes(page: PDFPage, shapes: Cmd[][], k: number, ox: number, oy: number, color: 'ink' | 'white' | 'black' | 'red') {
+function fillShapes(page: PDFPage, shapes: Cmd[][], k: number, ox: number, oy: number, color: 'ink' | 'white' | 'black' | 'dims') {
   const H = page.getHeight()
   const X = (x: number) => ox + x * k
   const Y = (y: number) => H - (oy + y * k)
-  const ops: PDFOperator[] = [pushGraphicsState(), color === 'ink' ? setFillingCmykColor(...INK) : color === 'black' ? setFillingRgbColor(0, 0, 0) : color === 'red' ? setFillingRgbColor(1, 0, 0) : setFillingRgbColor(1, 1, 1)]
+  const ops: PDFOperator[] = [pushGraphicsState(), color === 'ink' ? setFillingCmykColor(...INK) : color === 'black' ? setFillingRgbColor(0, 0, 0) : color === 'dims' ? setFillingRgbColor(...DIMS) : setFillingRgbColor(1, 1, 1)]
   for (const c of shapes.flat()) {
     if (c[0] === 'M') ops.push(moveTo(X(c[1]), Y(c[2])))
     else if (c[0] === 'L') ops.push(lineTo(X(c[1]), Y(c[2])))
@@ -55,7 +57,7 @@ async function photoJpeg(surface: Surface): Promise<Uint8Array> {
 }
 
 /**
- * The spec: each surface on the car with its dimensions in red, like 00_UMO8_dealer-livery_spec.pdf. One point on these
+ * The spec: each surface on the car with its dimensions in magenta, like 00_UMO8_dealer-livery_spec.pdf. One point on these
  * pages is a millimetre on the car, so the numbers can be checked with a ruler in Illustrator.
  */
 async function specFile(sheets: Sheet[], title: string): Promise<Uint8Array> {
@@ -63,7 +65,6 @@ async function specFile(sheets: Sheet[], title: string): Promise<Uint8Array> {
   doc.setTitle(title)
   // The figures in CoFo Sans Medium, as on the page, in outlines
   const font = await loadFont()
-  const red = rgb(1, 0, 0)
   for (const s of sheets) {
     const { photo } = s.surface
     const [vx, vy, vw, vh] = photo.view
@@ -81,9 +82,9 @@ async function specFile(sheets: Sheet[], title: string): Promise<Uint8Array> {
     const X = (x: number) => ox + x
     const Y = (y: number) => vh - (oy + y)
     for (const [x1, y1, x2, y2] of marks.lines) {
-      page.drawLine({ start: { x: X(x1), y: Y(y1) }, end: { x: X(x2), y: Y(y2) }, thickness: marks.thickness, color: red })
+      page.drawLine({ start: { x: X(x1), y: Y(y1) }, end: { x: X(x2), y: Y(y2) }, thickness: marks.thickness, color: rgb(...DIMS) })
     }
-    fillShapes(page, marks.labels.map(l => labelCmds(font, l.text, l.x, l.y, marks.size, l.align)), 1, ox, oy, 'red')
+    fillShapes(page, marks.labels.map(l => labelCmds(font, l.text, l.x, l.y, marks.size, l.align)), 1, ox, oy, 'dims')
   }
   return doc.save()
 }
