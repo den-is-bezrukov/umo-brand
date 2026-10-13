@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { ResetIcon, DuplicateIcon, TrashIcon, Removed, type Staff } from '@/ui/staff'
 import { InSlide, InFoot, InSheet } from '@/ui/phone'
 
@@ -122,7 +123,8 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   useEffect(() => {
     const el = strip.current
     if (!el) return
-    const o = new ResizeObserver(([e]) => setBox({ w: e.contentRect.width, h: e.contentRect.height }))
+    // At once, before the frame is drawn: the canvas laid out anew, its picture refits in the same frame
+    const o = new ResizeObserver(([e]) => flushSync(() => setBox({ w: e.contentRect.width, h: e.contentRect.height })))
     o.observe(el)
     return () => o.disconnect()
   }, [])
@@ -220,7 +222,6 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       // Caught on its way, it stops where it is
       const at = sheetAt()
       sheetEl.current.getAnimations().forEach(a => a.cancel())
-      canvasEl.current?.getAnimations().forEach(a => a.cancel())
       formEl.current?.getAnimations().forEach(a => a.finish())
       place(at)
       drag.current = { base: at, at, x: e.touches[0].clientX, y }
@@ -253,7 +254,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       if (to !== sheetRef.current) move(to, d.at)
       else if (sheetEl.current) {
         place(edge[to])
-        glide(d.at, edge[to], LET_GO)
+        glide(d.at, edge[to], LET_GO, to)
       }
     }
   }
@@ -407,15 +408,47 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
    * sheet's own pace under a finger or not (it grew after, in a move of its own); above it it stays (the sheet over the
    * whole screen slides over it: it shrank under the sheet, the picture refitted as it went and jerked) */
   const canvasH = (at: number) => screen.h - tall + Math.min(Math.max(at, edge.half), edge.preview)
-  /** The sheet at a place, and the canvas with it */
+  // The canvas is laid out for one place at a time (`laid`), the sheet's once it's there: on the way the pictures are
+  // only scaled to their size, as drawing them anew at every step shook them
+  const [laid, setLaid] = useState<Sheet>(sheet)
+  const laidRef = useRef(laid)
+  laidRef.current = laid
+  /** A picture's scale and shift for the sheet at `at`, from its size laid out */
+  const fitAt = (el: HTMLElement, at: number) => {
+    const ratio = Number(el.dataset.ratio), side = Number(el.dataset.side), w = el.offsetWidth
+    const s = strip.current
+    if (!ratio || !w || !s) return 'none'
+    const grow = canvasH(at) - (canvasEl.current?.offsetHeight ?? canvasH(edge[laidRef.current]))
+    const extra = el.offsetHeight - w * ratio
+    const to = Math.max(0, Math.floor(Math.min(s.clientWidth - 2 * side, (s.clientHeight + grow - 2 * INSET - extra) / ratio)))
+    return `translateY(${grow / 2}px) scale(${to / w})`
+  }
+  const fits = () => [...(canvasEl.current?.querySelectorAll<HTMLElement>('[data-fit]') ?? [])]
+  /** The sheet at a place, and the pictures with it */
   const place = (at: number) => {
     if (sheetEl.current) sheetEl.current.style.transform = `translateY(${at}px)`
-    if (canvasEl.current) canvasEl.current.style.height = `${canvasH(at)}px`
+    for (const el of fits()) {
+      el.getAnimations().forEach(a => a.cancel())
+      el.style.transform = fitAt(el, at)
+    }
   }
-  const glide = (from: number, to: number, timing: KeyframeAnimationOptions) => {
-    sheetEl.current?.animate([{ transform: `translateY(${from}px)` }, { transform: `translateY(${to}px)` }], timing)
-    if (canvasH(from) !== canvasH(to)) canvasEl.current?.animate([{ height: `${canvasH(from)}px` }, { height: `${canvasH(to)}px` }], timing)
+  /** The sheet going from one place to another, the pictures with it; there, the canvas is laid out for it */
+  const glide = (from: number, to: number, timing: KeyframeAnimationOptions, there: Sheet) => {
+    const go = sheetEl.current?.animate([{ transform: `translateY(${from}px)` }, { transform: `translateY(${to}px)` }], timing)
+    // The pictures' size isn't the sheet's straight line (they stop at the screen's width): steps along the way
+    const steps = Array.from({ length: 11 }, (_, i) => from + ((to - from) * i) / 10)
+    for (const el of fits()) {
+      el.getAnimations().forEach(a => a.cancel())
+      el.style.transform = fitAt(el, to)
+      el.animate(steps.map(at => ({ transform: fitAt(el, at) })), timing)
+    }
+    if (go) go.onfinish = () => setLaid(there)
+    else setLaid(there)
   }
+  // Laid out anew, each picture keeps its size until it's drawn at it (then its own transform goes)
+  useLayoutEffect(() => {
+    for (const el of fits()) el.style.transform = fitAt(el, edge[laid])
+  }, [laid]) // eslint-disable-line react-hooks/exhaustive-deps
   const formEl = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => {
     const was = from.current
@@ -431,7 +464,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     const timing = was.at === undefined ? { duration: TURN_MS, easing: 'cubic-bezier(0.67, 0, 0.33, 1)' } : LET_GO
     const start = was.at ?? edge[was.sheet]
     place(edge[sheet])
-    glide(start, edge[sheet], timing)
+    glide(start, edge[sheet], timing, sheet)
     const lag = el.scrollTop - was.top
     if (lag) formEl.current.animate([{ transform: `translateY(${lag}px)` }, { transform: 'none' }], timing)
   }, [sheet]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -446,7 +479,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       <div
         ref={canvasEl}
         className="relative flex flex-col p-[10px]"
-        style={{ height: canvasH(edge[sheet]) }}
+        style={{ height: canvasH(edge[laid]) }}
       >
       {/* A list's row over the picture (Figma 5105:7604): delete on the left, copy on the right, between them the
           number between the arrows, the reset right after it; for a moment after a removal «Удаляем ·
@@ -558,6 +591,10 @@ function Fitted({ ratio, box, node, side }: { ratio?: number; box: { w: number; 
   const w = ratio
     ? Math.max(0, Math.floor(Math.min(box.w - 2 * side, (box.h - 2 * INSET - extra) / ratio)))
     : Math.max(0, box.w - 2 * side)
+  // Drawn at its size, the scale it was shown at on the way goes
+  useLayoutEffect(() => {
+    if (ref.current) ref.current.style.transform = ''
+  }, [w])
   useLayoutEffect(() => {
     const el = ref.current
     if (!el || !ratio) return
@@ -570,5 +607,5 @@ function Fitted({ ratio, box, node, side }: { ratio?: number; box: { w: number; 
     o.observe(el)
     return () => o.disconnect()
   }, [w, ratio])
-  return <div ref={ref} className="m-auto" style={{ width: w }}>{typeof node === 'function' ? node(w) : node}</div>
+  return <div ref={ref} data-fit data-ratio={ratio ?? 0} data-side={side} className="m-auto" style={{ width: w }}>{typeof node === 'function' ? node(w) : node}</div>
 }
