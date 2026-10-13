@@ -528,6 +528,11 @@ export const DuplicateIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M3.5 6H2V14H10V12.5M6 2H14V10H6V2Z" /></svg>
 )
 
+/** Delete, a bin (Figma 5105:8492, its outline as exported), the canvas icons' 1 px stroke; on wide screens and phones alike */
+export const TrashIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M3.5 5.5V10.5C3.5 12.3856 3.5 13.3284 4.08579 13.9142C4.67157 14.5 5.61438 14.5 7.5 14.5H8.5C10.3856 14.5 11.3284 14.5 11.9142 13.9142C12.5 13.3284 12.5 12.3856 12.5 10.5V5.5M2.5 3.5H13.5M5.5 3V1.5H10.5V3M9.5 6.5V11.5M6.5 6.5V11.5" /></svg>
+)
+
 export const CrossIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M12 4L8 8M8 8L4 4M8 8L12 12M8 8L4 12" /></svg>
 )
@@ -554,7 +559,7 @@ function Action({ label, keys, hidden, onClick, children }: { label: string; key
  * An item on the canvas with its number (from 1, as the table's rows; wide screens only) and its actions in one column
  * to its right (Figma 5030:11397; they were the number left and the actions right, 5008:10960), shown while the pointer is in its row (or the focus in it), on any item, acting on it
  * without selecting it; with no pointer to hover (touch screens), under the selected one only. The actions: «Дублировать», «Сбросить» (while there's something to
- * empty), «Удалить» (while there's another), the most used and harmless first, the cross furthest. A phone's slide
+ * empty), «Удалить» (while there's another), the most used and harmless first, the bin furthest. A phone's slide
  * shows the item bare, its number and actions in the row over it. An action not offered leaves no gap: the next moves up.
  */
 export function ItemFrame<P extends object>({ staff, item, n, children }: { staff: Staff<P>; item: Row<P>; n: number; children: React.ReactNode }) {
@@ -580,7 +585,7 @@ export function ItemFrame<P extends object>({ staff, item, n, children }: { staf
             <ResetIcon />
           </Action>
           <Action label="Удалить" hidden={staff.people.length < 2} onClick={() => staff.remove(item.key)}>
-            <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M12 4L8 8M8 8L4 4M8 8L12 12M8 8L4 12" /></svg>
+            <TrashIcon />
           </Action>
         </div>
       )}
@@ -614,7 +619,7 @@ export function Removed<P extends object>({ staff, at }: { staff: Staff<P>; at: 
     <div className="flex h-10 items-center justify-center gap-2 text-[14px] leading-5 text-[#808080]">
       Удалено ·
       <button type="button" title={`${MOD}Z`} onClick={e => { e.stopPropagation(); staff.restore() }} className="cursor-pointer text-black hover:text-[#808080]">Вернуть</button>
-      {/* The items' own cross (1 px, #808080, black on hover), as «Удалить» beside them */}
+      {/* A cross (1 px, #808080, black on hover), as the items' actions beside them */}
       <button type="button" title="Закрыть" aria-label="Закрыть" onClick={e => { e.stopPropagation(); staff.dismiss() }} className="relative flex size-[30px] cursor-pointer items-center justify-center rounded-full text-[#808080] hover:text-black">
         <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M12 4L8 8M8 8L4 4M8 8L12 12M8 8L4 12" /></svg>
         {/* The ring, from the top clockwise, a new one for each removal */}

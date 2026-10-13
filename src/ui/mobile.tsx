@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { ResetIcon, DuplicateIcon, Removed, type Staff } from '@/ui/staff'
+import { ResetIcon, DuplicateIcon, TrashIcon, Removed, type Staff } from '@/ui/staff'
 import { InSlide, InFoot, InSheet, SheetSize } from '@/ui/phone'
 
 // A trial of the generators' phone layout (Figma 5098:5806, «Mobile Layout»): the canvas over a sheet holding the
@@ -312,11 +312,6 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     </div>
   )
 }
-
-/** Delete, a bin (Figma 5105:8492, its outline as exported), the canvas icons' 1 px stroke */
-const TrashIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M3.5 5.5V10.5C3.5 12.3856 3.5 13.3284 4.08579 13.9142C4.67157 14.5 5.61438 14.5 7.5 14.5H8.5C10.3856 14.5 11.3284 14.5 11.9142 13.9142C12.5 13.3284 12.5 12.3856 12.5 10.5V5.5M2.5 3.5H13.5M5.5 3V1.5H10.5V3M9.5 6.5V11.5M6.5 6.5V11.5" /></svg>
-)
 
 /**
  * A picture as large as the strip allows, 20 px off its sides and 10 over and under (the items' 1 px edge outside them
