@@ -243,6 +243,13 @@ function pathCmds(commands: any[]): Cmd[] {
   return cmds
 }
 
+/** A spec label's outlines, its baseline at `y`, set from `x` to the side `align` says (the spec PDF's figures) */
+export function labelCmds(font: Font, text: string, x: number, y: number, size: number, align: 'left' | 'center' | 'right'): Cmd[] {
+  const w = font.getAdvanceWidth(text, size)
+  const left = align === 'left' ? x : align === 'center' ? x - w / 2 : x - w
+  return pathCmds(font.getPath(text, left, y, size).commands)
+}
+
 /** Dealer name, tagline and the QR link; `null` leaves that part off the sheet */
 export function buildSheet(font: Font, base: Surface, input: { dealer: string | null; tagline: string | null; url: string | null; large?: boolean }): Sheet {
   // The larger tagline where the sheet has one
@@ -461,5 +468,5 @@ export function specMarks(surface: Surface): SpecMarks {
     lines.push([x, r.from, tick, r.from], [x, r.to, tick, r.to])
     labels.push({ text: r.label, x: x + r.x * size * 0.4, y: (r.from + r.to) / 2 + size * 0.35, align: r.x < 0 ? 'right' : 'left' })
   }
-  return { size, thickness: size / 20, lines, labels }
+  return { size, thickness: size / 40, lines, labels }
 }

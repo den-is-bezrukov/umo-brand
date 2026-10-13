@@ -1,9 +1,9 @@
 import {
-  PDFDocument, PDFPage, PDFOperator, PDFOperatorNames, StandardFonts, rgb,
+  PDFDocument, PDFPage, PDFOperator, PDFOperatorNames, rgb,
   moveTo, lineTo, appendBezierCurve, closePath, pushGraphicsState, popGraphicsState, setFillingCmykColor, setFillingRgbColor,
 } from 'pdf-lib'
 import { zipSync } from 'fflate'
-import { specMarks, type Cmd, type Sheet } from './geometry'
+import { specMarks, labelCmds, loadFont, type Cmd, type Sheet } from './geometry'
 import type { Surface } from './layout'
 
 const PT = 72 / 25.4
@@ -11,11 +11,11 @@ const PT = 72 / 25.4
 const INK: [number, number, number, number] = [0.6, 0.4, 0.4, 1]
 
 /** Fills outlines given in sheet millimetres (y down), scaled by `k` and moved to (ox, oy) from the page's top left */
-function fillShapes(page: PDFPage, shapes: Cmd[][], k: number, ox: number, oy: number, color: 'ink' | 'white' | 'black') {
+function fillShapes(page: PDFPage, shapes: Cmd[][], k: number, ox: number, oy: number, color: 'ink' | 'white' | 'black' | 'red') {
   const H = page.getHeight()
   const X = (x: number) => ox + x * k
   const Y = (y: number) => H - (oy + y * k)
-  const ops: PDFOperator[] = [pushGraphicsState(), color === 'ink' ? setFillingCmykColor(...INK) : color === 'black' ? setFillingRgbColor(0, 0, 0) : setFillingRgbColor(1, 1, 1)]
+  const ops: PDFOperator[] = [pushGraphicsState(), color === 'ink' ? setFillingCmykColor(...INK) : color === 'black' ? setFillingRgbColor(0, 0, 0) : color === 'red' ? setFillingRgbColor(1, 0, 0) : setFillingRgbColor(1, 1, 1)]
   for (const c of shapes.flat()) {
     if (c[0] === 'M') ops.push(moveTo(X(c[1]), Y(c[2])))
     else if (c[0] === 'L') ops.push(lineTo(X(c[1]), Y(c[2])))
@@ -61,7 +61,8 @@ async function photoJpeg(surface: Surface): Promise<Uint8Array> {
 async function specFile(sheets: Sheet[], title: string): Promise<Uint8Array> {
   const doc = await PDFDocument.create()
   doc.setTitle(title)
-  const font = await doc.embedFont(StandardFonts.HelveticaBold)
+  // The figures in CoFo Sans Medium, as on the page, in outlines
+  const font = await loadFont()
   const red = rgb(1, 0, 0)
   for (const s of sheets) {
     const { photo } = s.surface
@@ -82,11 +83,7 @@ async function specFile(sheets: Sheet[], title: string): Promise<Uint8Array> {
     for (const [x1, y1, x2, y2] of marks.lines) {
       page.drawLine({ start: { x: X(x1), y: Y(y1) }, end: { x: X(x2), y: Y(y2) }, thickness: marks.thickness, color: red })
     }
-    for (const l of marks.labels) {
-      const tw = font.widthOfTextAtSize(l.text, marks.size)
-      const dx = l.align === 'left' ? 0 : l.align === 'center' ? -tw / 2 : -tw
-      page.drawText(l.text, { x: X(l.x) + dx, y: Y(l.y), size: marks.size, font, color: red })
-    }
+    fillShapes(page, marks.labels.map(l => labelCmds(font, l.text, l.x, l.y, marks.size, l.align)), 1, ox, oy, 'red')
   }
   return doc.save()
 }
