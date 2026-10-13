@@ -15,13 +15,7 @@ This file holds only what every task needs. The details live in `docs/`, one fil
 
 ## Development Server
 
-Nothing runs automatically — start it yourself:
-
-```bash
-pnpm dev
-```
-
-This serves the app at `http://localhost:8443` (port set in `vite.config.ts`, not the Vite default). Hot reload is on.
+One server is always running at `http://localhost:5477` (port set in `vite.config.ts`, not the Vite default), started at login by the LaunchAgent `~/Library/LaunchAgents/autos.umo.dev.plist` (`pnpm dev` in this folder; log in `~/Library/Logs/umo-dev.log`). Hot reload is on. Don't start another one: open it with `preview_start {name: "dev"}`, which only attaches to that URL. If it's down, `launchctl kickstart -k gui/$(id -u)/autos.umo.dev` restarts it.
 
 `pnpm dev:follow` (`scripts/dev-follow.mjs`) does the same and also pulls the current branch every 10 seconds (fast-forward only, reinstalling dependencies when the lockfile changes), so changes pushed to it show up in the open page.
 
