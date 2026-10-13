@@ -118,7 +118,7 @@ const PHONE_TURNS = 3
  */
 function GeneratorRing({ current }: { current: string }) {
   const navigate = useNavigate()
-  // Turned with the keys, the next page takes the focus back on its line, so ← → go on turning it
+  // Opened from the keys, the next page takes the focus back on its line, so ← → go on turning it
   const turned = (useLocation().state as { turned?: boolean } | null)?.turned
   const count = GENERATORS.length
   const middle = Math.floor(PHONE_TURNS / 2) * count + GENERATORS.findIndex(g => g.path === current)
@@ -152,12 +152,11 @@ function GeneratorRing({ current }: { current: string }) {
     // Only a scroll someone made picks: the snap redoing itself as the panel resizes ended a scroll too, and opened the
     // next generator on its own
     let moved = false
-    let keyed = false
     // The wheel scrolls the line across (a mouse has no other way to), and a pick waits until it's been still a moment,
     // as each notch of the wheel ends a scroll of its own
     let wheeled = 0
     const wheel = (e: WheelEvent) => {
-      moved = true; keyed = false
+      moved = true
       if (Math.abs(e.deltaX) >= Math.abs(e.deltaY)) { wheeled = performance.now(); return }
       e.preventDefault()
       wheeled = performance.now()
@@ -170,22 +169,33 @@ function GeneratorRing({ current }: { current: string }) {
       const i = nearest()
       const path = GENERATORS[i % count].path
       moved = false
-      if (path !== current) navigate(path, { state: { turned: keyed } })
+      if (path !== current) navigate(path)
       // The same name a turn away: back to the middle copy, unseen
       else if (i !== middle) n.scrollLeft += item(middle)!.offsetLeft - item(i)!.offsetLeft
     }
     const settle = () => { clearTimeout(timer); if (!ends) timer = window.setTimeout(pick, 150) }
-    // Keys move the focus along it, scrolling it too
-    const key = () => { moved = true; keyed = true }
+    // The keys turn it without opening anything (one stray arrow left a page and its unsaved list): ← → scroll it by
+    // one name, as the browser does a snapping scroller, Enter or Space opens the name at the edge, Esc turns it home,
+    // as does the focus leaving it. A finger's or the wheel's scroll still opens where it rests
+    const home = () => n.scrollTo({ left: item(middle)!.offsetLeft - 24, behavior: 'smooth' })
+    const key = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault()
+        const path = GENERATORS[nearest() % count].path
+        if (path !== current) navigate(path, { state: { turned: true } })
+      } else if (e.key === 'Escape') home()
+    }
+    const leave = (e: FocusEvent) => { if (!n.contains(e.relatedTarget as Node)) home() }
     // Resized, the current one back at the edge
     const observer = new ResizeObserver(() => { if (!moved) n.scrollLeft = item(middle)!.offsetLeft - 24 })
     observer.observe(n)
     const scroll = () => { setLit(GENERATORS[nearest() % count].path); settle() }
-    const down = () => { touching = true; moved = true; keyed = false; clearTimeout(timer) }
+    const down = () => { touching = true; moved = true; clearTimeout(timer) }
     const up = () => { touching = false; settle() }
     if (ends) n.addEventListener('scrollend', pick)
     n.addEventListener('wheel', wheel, { passive: false })
     n.addEventListener('keydown', key)
+    n.addEventListener('focusout', leave)
     n.addEventListener('scroll', scroll, { passive: true })
     n.addEventListener('touchstart', down, { passive: true })
     n.addEventListener('touchend', up)
@@ -195,6 +205,7 @@ function GeneratorRing({ current }: { current: string }) {
       n.removeEventListener('scrollend', pick)
       n.removeEventListener('wheel', wheel)
       n.removeEventListener('keydown', key)
+      n.removeEventListener('focusout', leave)
       observer.disconnect()
       n.removeEventListener('scroll', scroll)
       n.removeEventListener('touchstart', down)
@@ -207,7 +218,7 @@ function GeneratorRing({ current }: { current: string }) {
   return (
     <div className="relative -mx-6 my-1">
       {/* 8 px over and under for the descenders (р, у), which the scroller would clip; one Tab stop, ringed whole, its
-          names turned with ← → as a drum (not one stop each) */}
+          names turned with ← → and opened with Enter (not one stop each) */}
       <nav ref={nav} aria-label="Конструкторы" tabIndex={0} className="relative -my-2 flex snap-x snap-mandatory scroll-pl-6 gap-5 overflow-x-auto overscroll-x-contain py-2 pl-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {Array.from({ length: PHONE_TURNS * count }, (_, i) => {
           const g = GENERATORS[i % count]
