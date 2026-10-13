@@ -406,10 +406,10 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       >
       {/* A list's row over the picture (Figma 5105:7604): delete on the left, copy on the right, between them the
           number between the arrows, the reset right after it; for a moment after a removal «Удаляем ·
-          Вернуть» in the middle. Over the whole-screen form it's all there is of the canvas */}
+          Вернуть» in the middle. Over the whole-screen form it's all there is of the canvas, its actions kept */}
       {row && (
         <div className="flex h-[30px] shrink-0 items-center justify-between">
-          <Btn label="Удалить" hidden={full || !staff || !current || staff.people.length < 2 || !!staff.removed} onClick={() => staff?.remove(current.key)}><TrashIcon /></Btn>
+          <Btn label="Удалить" hidden={!staff || !current || staff.people.length < 2 || !!staff.removed} onClick={() => staff?.remove(current.key)}><TrashIcon /></Btn>
           {staff?.removed ? (
             <div className="-my-[5px] min-w-0 flex-1"><Removed staff={staff} at={staff.removed.index} /></div>
           ) : (
@@ -418,11 +418,11 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
               <span className="min-w-0 truncate px-1 text-[14px] leading-5 text-[#808080] [font-feature-settings:'case'_1,'lnum'_1,'tnum'_1]">
                 {slide?.item !== undefined ? `${number}/${total}` : slide?.number !== undefined ? `${number}/${slide.label}` : slide?.label}
               </span>
-              {reset && !full && resetBtn}
+              {reset && resetBtn}
               {next}
             </div>
           )}
-          {full ? <Btn label="" hidden onClick={() => {}}>{null}</Btn> : copyBtn}
+          {copyBtn}
         </div>
       )}
 
