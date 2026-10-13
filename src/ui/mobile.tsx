@@ -404,11 +404,14 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     const ratio = Number(el.dataset.ratio), side = Number(el.dataset.side), w = el.offsetWidth
     const s = strip.current
     const grow = canvasH(at) - (canvasEl.current?.offsetHeight ?? laidH)
-    // One that takes the width (the plate frame's strip) only keeps to the middle of what's in view
-    if (!ratio || !w || !s) return `translateY(${grow / 2}px)`
+    if (!s) return {}
+    // One with no shape of its own (the plate frame's strip, a table's upload) takes what's in view, the upload
+    // filling it, the strip in its middle: laid out large, the upload stood its least height and ran under the sheet
+    if (!ratio) return { height: `${Math.max(0, s.clientHeight + grow - 2 * INSET)}px` }
+    if (!w) return {}
     const extra = el.offsetHeight - w * ratio
     const to = Math.max(0, Math.floor(Math.min(s.clientWidth - 2 * side, (s.clientHeight + grow - 2 * INSET - extra) / ratio)))
-    return `translateY(${grow / 2}px) scale(${to / w})`
+    return { transform: `translateY(${grow / 2}px) scale(${to / w})` }
   }
   const fits = () => [...(canvasEl.current?.querySelectorAll<HTMLElement>('[data-fit]') ?? [])]
   /** The sheet at a place, and the pictures with it */
@@ -416,7 +419,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     if (sheetEl.current) sheetEl.current.style.transform = `translateY(${at}px)`
     for (const el of fits()) {
       el.getAnimations().forEach(a => a.cancel())
-      el.style.transform = fitAt(el, at)
+      Object.assign(el.style, fitAt(el, at))
     }
   }
   /** The sheet going from one place to another, the pictures with it */
@@ -426,14 +429,15 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     const steps = Array.from({ length: 11 }, (_, i) => from + ((to - from) * i) / 10)
     for (const el of fits()) {
       el.getAnimations().forEach(a => a.cancel())
-      el.style.transform = fitAt(el, to)
-      el.animate(steps.map(at => ({ transform: fitAt(el, at) })), timing)
+      const end = fitAt(el, to)
+      el.animate(steps.map(at => fitAt(el, at)), timing)
+      Object.assign(el.style, end)
     }
   }
   // Drawn anew (an edit, another slide, the screen turned), each standing picture is scaled for where the sheet is
   useLayoutEffect(() => {
     const at = drag.current?.at ?? edge[sheetRef.current]
-    for (const el of fits()) if (!el.getAnimations().length) el.style.transform = fitAt(el, at)
+    for (const el of fits()) if (!el.getAnimations().length) Object.assign(el.style, fitAt(el, at))
   })
   const formEl = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => {
@@ -590,5 +594,6 @@ function Fitted({ ratio, box, node, side }: { ratio?: number; box: { w: number; 
     o.observe(el)
     return () => o.disconnect()
   }, [w, ratio])
-  return <div ref={ref} data-fit data-ratio={ratio ?? 0} data-side={side} className="m-auto" style={{ width: w }}>{typeof node === 'function' ? node(w) : node}</div>
+  // With no shape of its own, at the top of what's in view, as tall as it (set by `fitAt`), its content in the middle
+  return <div ref={ref} data-fit data-ratio={ratio ?? 0} data-side={side} className={ratio ? 'm-auto' : 'mx-auto mt-[10px] flex shrink-0 flex-col justify-center'} style={{ width: w }}>{typeof node === 'function' ? node(w) : node}</div>
 }
