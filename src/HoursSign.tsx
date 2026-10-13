@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Font } from 'opentype.js'
 import { goal } from '@/ui/metrika'
 import { Field, TextInput, ComboField, GeneratorHeader, LinkButtons, DownloadBar, stepsLeft, flash } from '@/ui/form'
@@ -219,6 +219,11 @@ export default function HoursSign() {
     const { signPdf, SIGN_FILE } = await import('@/hours/pdf')
     return { blob: await signPdf(s, { from, to, dealer, address, phone, site: ownSite }), name: SIGN_FILE }
   }
+  /** The sign's PDF for «Поделиться» to send, made again as it changes */
+  const shareFile = useCallback(async () => {
+    const { blob, name } = await pdfOf(sign!)
+    return new File([blob], name, { type: 'application/pdf' })
+  }, [sign, from, to, dealer, address, phone, ownSite]) // eslint-disable-line react-hooks/exhaustive-deps
   const downloadGoal = (extra?: Record<string, unknown>) =>
     goal('download_hours_sign', { from: oneLine(from), to: oneLine(to), dealer: NAMES.includes(oneLine(dealer)), ...extra })
 
@@ -363,7 +368,7 @@ export default function HoursSign() {
           note={note}
           count={stepsLeft(left)}
           onNote={toField}
-          links={!blank && <LinkButtons incomplete={!ok} />}
+          links={!blank && <LinkButtons incomplete={!ok} file={shareFile} />}
         />
   )
 

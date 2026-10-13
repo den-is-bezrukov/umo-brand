@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Font } from 'opentype.js'
 import { goal } from '@/ui/metrika'
 import { Field, Segments, SegBtn, TextInput, ComboField, GeneratorHeader, LinkButtons, DownloadBar } from '@/ui/form'
@@ -125,6 +125,12 @@ export default function PlateFrame() {
     goal('download_plate_frame', { free: custom, align, listed, ...(listed ? {} : { line: line.trim().slice(0, 100) }), ...extra })
   }
 
+  /** The strip's PDF for «Поделиться» to send, made again as it changes */
+  const shareFile = useCallback(async () => {
+    const { stripPdf, STRIP_FILE } = await import('@/plate/pdf')
+    return new File([await stripPdf(strip!)], STRIP_FILE, { type: 'application/pdf' })
+  }, [strip])
+
   const handleExport = async () => {
     if (!strip) return
     setExporting(true)
@@ -232,7 +238,7 @@ export default function PlateFrame() {
           note={noName ? (custom ? 'Добавить текст' : 'Выбрать дилера') : strip?.issues[0]}
           onNote={toField}
           // Nothing to copy or reset until there's a dealer or the line is centred
-          links={!blank && <LinkButtons incomplete={!ok} />}
+          links={!blank && <LinkButtons incomplete={!ok} file={shareFile} />}
         />
   )
 

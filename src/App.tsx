@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, Fragment } from 'react'
+import { useState, useEffect, useRef, useCallback, Fragment } from 'react'
 import { pdf } from '@react-pdf/renderer'
 import QRCode from 'qrcode'
 import PriceCard from '@/posters/PriceCard'
@@ -267,6 +267,9 @@ export default function App() {
     if (issue) form.current?.querySelector<HTMLElement>(`[data-field="${issue.field}"] :is(input, textarea)`)?.focus()
   }
 
+  /** The cards' PDF for «Поделиться» to send, made again as they change */
+  const shareFile = useCallback(async () => new File([await pdfOf(items)], pdfName(items), { type: 'application/pdf' }), [items])
+
   const handleExport = async () => {
     setExporting(true)
     try {
@@ -348,7 +351,7 @@ export default function App() {
           count={stepsLeft(items.reduce((n, c) => { const i = check(c); return n + [i.urlBad, i.fullTooLow, i.creditTooLow, i.fullLessThanCredit].filter(Boolean).length }, 0))}
           onNote={items.length > 1 ? () => staff.nextOf(failing) : toIssue}
           // No «Сбросить» here: each card has its own beside it
-          links={<LinkButtons incomplete={failing.length > 0} />}
+          links={<LinkButtons incomplete={failing.length > 0} file={shareFile} />}
         />
   )
 
