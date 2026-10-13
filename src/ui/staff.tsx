@@ -2,7 +2,7 @@ import { useContext, useEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { InSlide } from '@/ui/phone'
 import { MOD, withMod } from '@/ui/keys'
-import { outlined } from '@/ui/form'
+import { outlined, flash } from '@/ui/form'
 import { splitFullName } from '@/nametag/table'
 
 // A staff list, shared by the generators that make one item per person (name tags, business cards): two modes,
@@ -18,6 +18,8 @@ const REMOVED_MS = 4000
 export type Row<P> = P & { key: number }
 
 let nextKey = 0
+/** The item ⌘C copied last, with the text it put on the clipboard: ⌘V on the same page takes it back whole while that's still there */
+let copied: { item: any; text: string; page: string } | null = null // eslint-disable-line @typescript-eslint/no-explicit-any
 export const row = <P,>(p: P): Row<P> => ({ ...p, key: nextKey++ })
 
 /** The person, without the list's key */
@@ -40,6 +42,9 @@ export interface StaffOptions<P> {
   uploadLabel?: string
   /** The loaded list's count, «3 сотрудника» by default */
   countWord?: (n: number) => string
+  /** The columns ⌘C writes an item as, title by field, a header row over its row, so a spreadsheet or another
+   * generator whose table reads those titles takes it */
+  columns?: Partial<Record<keyof P, string>>
 }
 
 /**
@@ -60,7 +65,7 @@ export function fullNameField(person: { name: string; surname: string }, set: (p
   }
 }
 
-export function useStaff<P extends object>({ blank, readFile, readPasted, initial, accept = XLSX, uploadLabel = 'Загрузить таблицу .xlsx', countWord = staffWord }: StaffOptions<P>) {
+export function useStaff<P extends object>({ blank, readFile, readPasted, initial, accept = XLSX, uploadLabel = 'Загрузить таблицу .xlsx', countWord = staffWord, columns }: StaffOptions<P>) {
   const [mode, setMode] = useState<Mode>('manual')
   const [people, setList] = useState<Row<P>[]>(() => initial?.length ? initial.map(p => row(p)) : [row(blank)])
   /** The file the list is, while it's unedited */
@@ -132,18 +137,33 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
     return () => document.removeEventListener('paste', onPaste)
   }, [mode])
 
-  // A person just added takes the focus. The item being edited comes to the middle of the canvas when it's selected by
-  // anything but a click (added, duplicated, brought back, picked with ↑ ↓; «Добавить» stays in view under it), so a
-  // long list fills in one after another without scrolling. An item selected by a click stays put, under the cursor.
+  // A person just added takes the focus. The item being edited comes to the middle of the canvas whenever it's selected
+  // (clicked, added, duplicated, pasted, brought back, picked or moved with the arrows; «Добавить» stays in view under
+  // it), so a long list fills in one after another without scrolling. A click left it under the cursor once
   const focusNext = useRef(false)
   const centre = useRef(false)
   /** The selected person's form, whose first field takes the focus */
   const form = useRef<HTMLDivElement>(null)
   /** Each item's row on the canvas, to scroll to */
   const figures = useRef(new Map<number, HTMLElement>())
+  /**
+   * The item to the middle of the canvas. The last ones had no room under them to get there, so the canvas grows at
+   * its foot by what's missing (and gives it back once a higher one is centred); its look is otherwise unchanged
+   */
+  const centreOn = (key: number) => {
+    const el = figures.current.get(key)
+    const canvas = el?.closest('main')
+    if (!el || !canvas) return
+    canvas.style.paddingBottom = ''
+    const r = el.getBoundingClientRect()
+    const under = canvas.scrollHeight - (r.bottom - canvas.getBoundingClientRect().top + canvas.scrollTop)
+    const short = canvas.clientHeight / 2 - r.height / 2 - under
+    if (short > 0 && matchMedia('(min-width: 768px)').matches) canvas.style.paddingBottom = `${parseFloat(getComputedStyle(canvas).paddingBottom) + short}px`
+    el.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }
   useEffect(() => {
     if (focusNext.current) form.current?.querySelector<HTMLElement>('textarea, input')?.focus()
-    if (centre.current && selected !== undefined) figures.current.get(selected)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    if (centre.current && selected !== undefined) centreOn(selected)
     focusNext.current = false
     centre.current = false
   }, [selected])
@@ -159,7 +179,7 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
       setMode('manual')
     })
     const wide = matchMedia('(min-width: 768px)').matches
-    if (wide) figures.current.get(key)?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    if (wide) centreOn(key)
     // On phones a plain focus, so the browser brings the field above the keyboard as it does for a tap (scrolled by
     // script to the middle before the keyboard was up, it ended under it)
     form.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus(wide ? { preventScroll: true } : undefined)
@@ -174,6 +194,7 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
   const inWork = (keys: number[]) => ({ index: items.findIndex(it => it.key === nextTarget(keys)) })
   /** A click on an item: select it, in the manual mode */
   const pick = (key: number) => {
+    centre.current = true
     setSelected(key)
     setFlagged(null)
     setMode('manual')
@@ -249,23 +270,74 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
       const t = e.target as HTMLElement
       const inField = !!t.closest('input, textarea, select, [contenteditable]')
       if (e.key === 'Escape' && inField && !e.defaultPrevented) { t.blur(); return }
-      if (mode !== 'manual' || !current) return
+      // The generators' line has its own arrows and Enter
+      if (mode !== 'manual' || !current || t.closest('nav')) return
       if (withMod(e, 'KeyD')) { e.preventDefault(); duplicate(current.key); return }
       if (inField) return
       if (withMod(e, 'KeyZ') && !e.shiftKey && removed) { e.preventDefault(); restore(); return }
+      const i = people.findIndex(p => p.key === current.key)
+      const step = e.key === 'ArrowDown' ? 1 : e.key === 'ArrowUp' ? -1 : 0
+      // ⌥↑ ⌥↓ move it in the list: the order the sheet and the tags print in
+      if (step && e.altKey && !e.metaKey && !e.ctrlKey) {
+        e.preventDefault()
+        const j = i + step
+        if (j < 0 || j >= people.length) return
+        const moved = [...people]
+        ;[moved[i], moved[j]] = [moved[j], moved[i]]
+        setPeople(moved)
+        requestAnimationFrame(() => centreOn(current.key))
+        return
+      }
       if (e.metaKey || e.ctrlKey || e.altKey) return
       if ((e.key === 'Delete' || e.key === 'Backspace') && people.length > 1) { e.preventDefault(); remove(current.key) }
-      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+      // Enter goes into the item, its first field, as into a selected frame in Figma; not from a button, which it presses
+      if (e.key === 'Enter' && (t === document.body || t.matches('main figure [aria-pressed]'))) {
         e.preventDefault()
-        const i = people.findIndex(p => p.key === current.key)
-        const next = people[i + (e.key === 'ArrowDown' ? 1 : -1)]
-        if (!next) return
-        centre.current = true
-        pick(next.key)
+        form.current?.querySelector<HTMLElement>('textarea, input')?.focus()
+      }
+      if (step) {
+        e.preventDefault()
+        const next = people[i + step]
+        if (next) pick(next.key)
       }
     }
+    // ⌘C out of a field (and with no text selected) copies the item: as rows a spreadsheet takes, under `columns`'
+    // titles, and kept as it is for ⌘V here, which puts a copy after the selected one (rows from a spreadsheet too)
+    const out = (e: ClipboardEvent) => (e.target as HTMLElement).closest?.('input, textarea, select, [contenteditable], nav')
+    const onCopy = (e: ClipboardEvent) => {
+      if (busy || mode !== 'manual' || !current || out(e) || !document.getSelection()?.isCollapsed || !e.clipboardData) return
+      const item = plain(current)
+      const keys = (Object.keys(columns ?? {}) as (keyof P)[])
+      const cell = (v: unknown) => String(v ?? '').replace(/\s*\n\s*/g, ' ')
+      const text = keys.length
+        ? `${keys.map(k => columns![k]).join('\t')}\n${keys.map(k => cell(item[k])).join('\t')}`
+        : Object.values(item).filter(v => typeof v === 'string' && v).join('\t')
+      e.preventDefault()
+      e.clipboardData.setData('text/plain', text)
+      copied = { item, text, page: location.pathname }
+      flash('Карточка скопирована')
+    }
+    const onPaste = (e: ClipboardEvent) => {
+      if (busy || mode !== 'manual' || !current || out(e) || e.defaultPrevented) return
+      const text = e.clipboardData?.getData('text/plain') ?? ''
+      // Another generator's item comes in through its rows, as a spreadsheet's
+      const rows = copied && text === copied.text && copied.page === location.pathname ? [copied.item as P] : text.includes('\t') ? readPasted(text) : []
+      if (!rows.length) return
+      e.preventDefault()
+      const added = rows.map(r => row(r))
+      const i = people.findIndex(p => p.key === current.key)
+      centre.current = true
+      setPeople([...people.slice(0, i + 1), ...added, ...people.slice(i + 1)])
+      setSelected(added[0].key)
+    }
     document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
+    document.addEventListener('copy', onCopy)
+    document.addEventListener('paste', onPaste)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.removeEventListener('copy', onCopy)
+      document.removeEventListener('paste', onPaste)
+    }
   })
 
   /** A table pasted into any field of a row replaces that row (if it's empty) and goes on after it */

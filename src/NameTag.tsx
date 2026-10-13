@@ -44,6 +44,7 @@ export default function NameTag() {
   // One list for both modes. «Из таблицы» shows a loaded file as it is, with no form; clicking a tag there takes the
   // list to «Вручную» to edit it, and the first edit makes it a list of its own, no longer the file
   const staff = useStaff<Person>({
+    columns: { name: 'Имя', surname: 'Фамилия', position: 'Должность' },
     blank: BLANK,
     initial,
     // The tags' own ZIP, or the PDF from it, brings back the staff, to change a line and download again; else a table

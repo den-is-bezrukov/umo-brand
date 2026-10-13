@@ -68,6 +68,7 @@ export default function PriceTag() {
   const [initial] = useState(fromLink)
   const [dealer, setDealer] = useState(initial.dealer)
   const staff = useStaff<Item>({
+    columns: { name: 'Наименование', code: 'Артикул', price: 'Цена', caption: 'Подпись' },
     blank: BLANK,
     initial: initial.items,
     // The tags' own PDF (or Word file, while its download is off still read when dropped) brings its dealer and goods

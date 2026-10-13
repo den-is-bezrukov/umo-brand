@@ -104,6 +104,7 @@ export default function BusinessCard() {
   const [marks, setMarks] = useState(initial.marks)
 
   const staff = useStaff<Person>({
+    columns: { name: 'Имя', surname: 'Фамилия', position: 'Должность', email: 'Почта', phone: 'Телефон', ext: 'Доб.' },
     blank: BLANK,
     initial: initial.people,
     // The cards' own PDF brings back the dealership, the QR link, the file's options and the staff, to change a line
