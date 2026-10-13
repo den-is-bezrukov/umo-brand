@@ -590,13 +590,12 @@ export function ItemFrame<P extends object>({ staff, item, n, children }: { staf
 }
 
 /**
- * What's wrong with an item, centred, under it on phones and over it on wide screens (a trial, as the form's labels over
- * their fields): a click goes to the field at fault, selecting
+ * What's wrong with an item, under it, centred, as the canvas's captions: a click goes to the field at fault, selecting
  * the item, as the download's note does (the faults are said as the form's labels turn red, so the line leads there)
  */
 export function ItemAlert<P extends object>({ staff, item, children }: { staff: Staff<P>; item: number; children: React.ReactNode }) {
   return (
-    <button type="button" onClick={e => { e.stopPropagation(); staff.goTo(item) }} className="cursor-pointer self-center text-center text-[13px] leading-5 text-[#e30] md:-order-1">
+    <button type="button" onClick={e => { e.stopPropagation(); staff.goTo(item) }} className="cursor-pointer self-center text-center text-[13px] leading-5 text-[#e30]">
       {children}
     </button>
   )
