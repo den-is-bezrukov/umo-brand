@@ -17,8 +17,6 @@ const NameTag = lazy(() => import('./NameTag'))
 const BusinessCard = lazy(() => import('./BusinessCard'))
 const PriceTag = lazy(() => import('./PriceTag'))
 const HoursSign = lazy(() => import('./HoursSign'))
-// A chat agent's link names the dealer as said; the page finds it, asking which when there are several
-const LinkDealer = lazy(() => import('./ui/LinkDealer'))
 
 // Yandex.Metrika (index.html, umo.autos only) is set to `defer`, as Metrika asks of a single-page site: a view is
 // sent here, once per page. Only a new path counts: the generators rewrite the query with every setting changed, the
@@ -50,12 +48,12 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/umo-sans" element={<SansGuide />} />
           <Route path="/golos" element={<Navigate to="/umo-sans" replace />} />
           <Route path="/price-card" element={<App />} />
-          <Route path="/livery" element={<LinkDealer param="top" withUmo><Livery /></LinkDealer>} />
-          <Route path="/plate-frame" element={<LinkDealer param="name"><PlateFrame /></LinkDealer>} />
+          <Route path="/livery" element={<Livery />} />
+          <Route path="/plate-frame" element={<PlateFrame />} />
           <Route path="/name-tag" element={<NameTag />} />
-          <Route path="/business-card" element={<LinkDealer param="dealer"><BusinessCard /></LinkDealer>} />
-          <Route path="/price-tag" element={<LinkDealer param="dealer"><PriceTag /></LinkDealer>} />
-          <Route path="/hours-sign" element={<LinkDealer param="name"><HoursSign /></LinkDealer>} />
+          <Route path="/business-card" element={<BusinessCard />} />
+          <Route path="/price-tag" element={<PriceTag />} />
+          <Route path="/hours-sign" element={<HoursSign />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

@@ -4,7 +4,7 @@ import { goal } from '@/ui/metrika'
 import { Field, OptionalField, Segments, SegBtn, ComboField, UrlField, Checkbox, SizeSwitch, GeneratorHeader, LinkButtons, DownloadBar, isValidUrl } from '@/ui/form'
 import { CaptionReset } from '@/ui/staff'
 import { linkParams, useLinkState } from '@/ui/share'
-import { DEALER_NAMES, dealerFilter, withoutUmo } from '@/data/dealers'
+import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
 import { DEFAULT_TAGLINE, TAGLINES } from '@/data/taglines'
 import { LIVERIES, SURFACES, withoutQr, smallQr, type Model } from '@/livery/layout'
 import { loadFont, buildSheet, specMarks, toD, mm, type Sheet, type Line } from '@/livery/geometry'
@@ -202,7 +202,7 @@ export default function Livery() {
   }
   const ok = sheets.length > 0 && sheets.every(s => s.issues.length === 0)
 
-  const handleExport = async (via?: 'link') => {
+  const handleExport = async () => {
     setExporting(true)
     try {
       const { liveryZip } = await import('@/livery/pdf')
@@ -221,21 +221,12 @@ export default function Livery() {
         rearTaglineText: own(ownRearOn, rearTagline ?? '', TAGLINES[model]),
         link: own(on.qr, qrUrl, Object.values(DEFAULT_URL)),
       }).filter(([, t]) => t !== undefined)) as Record<string, string>
-      goal('download_livery', { model, qr: on.qr ? (qrSmall ? 'small' : 'large') : 'off', dealer: on.dealer, tagline: on.tagline, rear: on.rear, ...texts, ...(via && { via }) })
-      setTimeout(() => URL.revokeObjectURL(link.href), 1000)
+      goal('download_livery', { model, qr: on.qr ? (qrSmall ? 'small' : 'large') : 'off', dealer: on.dealer, tagline: on.tagline, rear: on.rear, ...texts })
+      URL.revokeObjectURL(link.href)
     } finally {
       setExporting(false)
     }
   }
-
-  // `pdf` in the link (from a chat agent, public/llms.txt) downloads the ZIP once the font is in, the editor staying
-  // with the car in it, as the name tag's (a ZIP doesn't open in the browser); sheets at fault only show what's wrong
-  const zipStarted = useRef(false)
-  useEffect(() => {
-    if (!sheets.length || zipStarted.current || !link.has('pdf')) return
-    zipStarted.current = true
-    if (ok) handleExport('link')
-  }, [sheets]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const sidebar = (
     <>
@@ -260,7 +251,7 @@ export default function Livery() {
             </OptionalField>
 
             <OptionalField label="Дилер" on={on.dealer} onChange={toggle('dealer')}>
-              <ComboField value={dealer} onChange={setDealer} options={DEALER_NAMES} filter={dealerFilter} shownAs={withoutUmo} label="Дилеры" invalid={sheets.some(s => s.dealer.issues.length > 0) || !dealer.trim()} />
+              <ComboField value={dealer} onChange={setDealer} options={DEALER_NAMES} shownAs={withoutUmo} label="Дилеры" invalid={sheets.some(s => s.dealer.issues.length > 0) || !dealer.trim()} />
             </OptionalField>
 
             <OptionalField
@@ -307,7 +298,7 @@ export default function Livery() {
   const download = (
         <DownloadBar
           format="ZIP"
-          onClick={() => handleExport()}
+          onClick={handleExport}
           busy={exporting}
           disabled={!ok || (on.qr && !urlValid)}
           note={on.qr && !urlValid ? (url.trim() ? 'Проверить ссылку QR-кода' : 'Указать ссылку QR-кода') : sheets.flatMap(s => s.issues)[0]}

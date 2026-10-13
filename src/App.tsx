@@ -7,7 +7,7 @@ import { ensurePdfFonts } from '@/posters/pdf/pdfFonts'
 import type { Variant } from '@/posters/cardData'
 import { goal } from '@/ui/metrika'
 import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField, GeneratorHeader, LinkButtons, DownloadBar, unfilled, stepsLeft } from '@/ui/form'
-import { linkParams, useLinkState, saveAndOpenPdf } from '@/ui/share'
+import { linkParams, useLinkState } from '@/ui/share'
 import { useStaff, ItemFrame, AddTile, Removed, plain, ITEM_EDGE, type Row } from '@/ui/staff'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 
@@ -134,46 +134,8 @@ function firstIssue(c: Card): { field: 'url' | 'full' | 'credit'; text: string }
 /** The link the QR leads to: the card's own if it's a link, the model's page otherwise */
 const qrUrlOf = (c: Card) => isValidUrl(c.url.trim()) ? c.url.trim() : DEFAULT_URL[c.model]
 
-/** The cards' PDF, an A3 page each */
-function pdfOf(cards: Card[]) {
-  ensurePdfFonts()
-  const pages = cards.map(c => ({ variant: `${c.model}-${c.trim}` as Variant, fullPrice: c.full, creditPrice: c.creditOn ? c.credit : undefined, qrUrl: qrUrlOf(c) }))
-  return pdf(<PriceCardPdf pages={pages} title={pdfName(cards)} />).toBlob()
-}
-
-function downloadGoal(cards: Card[], extra?: Record<string, unknown>) {
-  const one = cards.length === 1 ? cards[0] : null
-  // QR links other than the model's page go along: where dealers send people
-  const ownLinks = [...new Set(cards.map(qrUrlOf).filter(u => !Object.values(DEFAULT_URL).includes(u)))].join(' ').slice(0, 300)
-  goal('download_price_card', {
-    ...(one
-      ? { model: one.model, trim: one.trim, credit: one.creditOn, ownLink: qrUrlOf(one) !== DEFAULT_URL[one.model] }
-      : { cards: cards.length, credit: cards.some(c => c.creditOn), ownLink: cards.some(c => qrUrlOf(c) !== DEFAULT_URL[c.model]) }),
-    ...(ownLinks && { link: ownLinks }),
-    ...extra,
-  })
-}
-
-/** One card's file is named for it, several are «UMO_price-cards» */
-function pdfName(cards: Card[]) {
-  const one = cards.length === 1 ? cards[0] : null
-  return one ? `UMO-${one.model === 'umo8' ? '8' : '5'}-${one.trim.toUpperCase()}.pdf` : 'UMO_price-cards.pdf'
-}
-
 export default function App() {
   const [initial] = useState(fromLink)
-  // `pdf` in the link (from a chat agent, public/llms.txt) opens the cards' PDF itself, with no editor; a card at fault
-  // opens the editor instead, showing what's wrong
-  const [pdfOnly, setPdfOnly] = useState(() => linkParams().has('pdf') && initial.every(c => check(c).ok))
-  useEffect(() => {
-    if (!pdfOnly) return
-    pdfOf(initial)
-      .then(blob => {
-        downloadGoal(initial, { via: 'link' })
-        saveAndOpenPdf(blob, pdfName(initial))
-      })
-      .catch(() => setPdfOnly(false))
-  }, [])
   // The cards are a list as the business cards are: one selected and edited in the sidebar, each with its number and
   // actions beside it, «Добавить» under them. There's no table mode, and one card is always selected
   const staff = useStaff<Card>({ blank: defaultCard('umo5'), readFile: () => [], readPasted: () => [], initial })
@@ -270,27 +232,27 @@ export default function App() {
   const handleExport = async () => {
     setExporting(true)
     try {
-      const blob = await pdfOf(items)
+      ensurePdfFonts()
+      const pages = items.map(c => ({ variant: `${c.model}-${c.trim}` as Variant, fullPrice: c.full, creditPrice: c.creditOn ? c.credit : undefined, qrUrl: qrUrlOf(c) }))
+      const blob = await pdf(<PriceCardPdf pages={pages} />).toBlob()
       const link = document.createElement('a')
       link.href = URL.createObjectURL(blob)
-      link.download = pdfName(items)
+      const one = items.length === 1 ? items[0] : null
+      link.download = one ? `UMO-${one.model === 'umo8' ? '8' : '5'}-${one.trim.toUpperCase()}.pdf` : 'UMO_price-cards.pdf'
       link.click()
-      downloadGoal(items)
+      // QR links other than the model's page go along: where dealers send people
+      const ownLinks = [...new Set(items.map(qrUrlOf).filter(u => !Object.values(DEFAULT_URL).includes(u)))].join(' ').slice(0, 300)
+      goal('download_price_card', {
+        ...(one
+          ? { model: one.model, trim: one.trim, credit: one.creditOn, ownLink: qrUrlOf(one) !== DEFAULT_URL[one.model] }
+          : { cards: items.length, credit: items.some(c => c.creditOn), ownLink: items.some(c => qrUrlOf(c) !== DEFAULT_URL[c.model]) }),
+        ...(ownLinks && { link: ownLinks }),
+      })
       URL.revokeObjectURL(link.href)
     } finally {
       setExporting(false)
     }
   }
-
-  // Alice (`useAlice` by the download) is told it's the price card and, once anything is changed, what every card holds, so
-  // she asks only what's left (public/llms.txt, «Option 1»)
-  const started = !(items.length === 1 && sameCard(items[0], defaultCard('umo5')))
-  const aliceAsk = !started
-    ? 'Следуй этой инструкции. Мне нужна прайс-карта: начни сразу с вопросов о ней.'
-    : 'Следуй этой инструкции. Мне нужна прайс-карта, я уже начал её в редакторе umo.autos/price-card:\n'
-      + items.map((c, i) => `${i + 1}. UMO ${c.model === 'umo8' ? 8 : 5} ${c.trim.toUpperCase()}, полная цена ${c.full ? `${c.full} ₽` : 'не указана'}, `
-        + `${c.creditOn ? `в кредит ${c.credit ? `${c.credit} ₽` : 'не указана'}` : 'без цены в кредит'}, QR-код ведёт на ${c.url.trim() || 'не указано'}`).join('\n')
-      + '\nНе спрашивай заново то, что уже есть: уточни, что поменять или чего не хватает, и дай ссылку.'
 
   const trims8: { value: Trim; label: string }[] = [{ value: 'max', label: 'MAX' }, { value: 'ultra', label: 'ULTRA' }]
   const trims5: { value: Trim; label: string }[] = [{ value: 'pro', label: 'PRO' }, { value: 'max', label: 'MAX' }]
@@ -359,7 +321,6 @@ export default function App() {
           onNote={items.length > 1 ? () => staff.nextOf(failing) : toIssue}
           // No «Сбросить» here: each card has its own beside it
           links={<LinkButtons incomplete={failing.length > 0} />}
-          alice={{ ask: aliceAsk, started }}
         />
   )
 
@@ -373,7 +334,6 @@ export default function App() {
     </div>
   )
   // A card's reset brings back its model's defaults (`frame`)
-  if (pdfOnly) return null
   if (phone) return <MobileEditor slides={items.map(c => ({ key: c.key, item: c.key, label: `UMO ${c.model === 'umo8' ? 8 : 5} ${c.trim.toUpperCase()}`, ratio: POSTER_H / POSTER_W, node: (w: number) => cardAt(c, w) }))} staff={frame} sidebar={sidebar} download={download} />
 
   return (

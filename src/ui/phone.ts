@@ -14,5 +14,3 @@ export const InSheet = createContext('')
 export const InFoot = createContext<null | (() => void)>(null)
 /** The phone's sheet over the whole screen or not, and the icon in its header that turns it (Figma 5098:5487) */
 export const SheetSize = createContext<null | { full: boolean; toggle: () => void }>(null)
-/** Trial: the place for Alice's button at the form's end in the phone's sheet, which the download fills (`useAlice`) */
-export const AliceSlot = createContext<HTMLElement | null>(null)

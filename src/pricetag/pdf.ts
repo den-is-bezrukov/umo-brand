@@ -46,12 +46,9 @@ const rect = (x: number, y: number, w: number, h: number): Cmd[] => [['M', x, y]
  * whole sheet, so scissors or a guillotine can follow them from the edge. Over the black bands the line between the
  * columns is white. All text and logos are filled outlines, black 100% K
  */
-/** The file's name, also its title, which Chrome shows on the tab of a PDF opened from a link */
-export const TAGS_FILE = 'UMO_price-tags.pdf'
-
 export async function tagsPdf(tags: Tag[], data: TagsData): Promise<Blob> {
   const doc = await PDFDocument.create()
-  doc.setTitle(TAGS_FILE)
+  doc.setTitle('UMO price tags 90×60')
   // The dealer and the goods as typed, in the document's info, so the file dropped back on the page opens its list
   // (`readTagsFile`); nothing of it is printed
   writePdfData(doc, DATA_KEY, data)

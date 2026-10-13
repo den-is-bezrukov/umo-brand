@@ -5,7 +5,6 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import siteConfiguration from './site.config.json'
-import { mergeDealers } from './src/data/dealers'
 
 // Vite config — https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -22,7 +21,6 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       siteMetaPlugin(siteConfiguration),
       downloadSizesPlugin(),
-      makePagePlugin(),
       reactRefreshBoundaryFallback(),
     ],
     resolve: {
@@ -102,8 +100,7 @@ function siteMetaPlugin(config: SiteConfiguration): Plugin {
   const headEnd = config.customScripts?.headEnd ?? ''
   const bodyStart = config.customScripts?.bodyStart ?? ''
   const bodyEnd = config.customScripts?.bodyEnd ?? ''
-  // Chat agents (ChatGPT, Claude) honour robots.txt when they open a link, so the instruction for them stays open
-  const robotsTxt = config.robots?.index === false ? 'User-agent: *\nAllow: /llms.txt\nAllow: /dealers.txt\nAllow: /make\nAllow: /ai\nDisallow: /\n' : ''
+  const robotsTxt = config.robots?.index === false ? 'User-agent: *\nDisallow: /\n' : ''
 
   return {
     name: 'site-meta',
@@ -233,68 +230,6 @@ function siteMetaPlugin(config: SiteConfiguration): Plugin {
 }
 
 /** `virtual:download-sizes`: byte size of every file in public/downloads, keyed by file name. */
-/**
- * umo.autos/make: a plain page, no React, so a chat agent opening it reads the instruction for chat agents
- * (public/llms.txt) that the page holds, as people pick their chat on it. Built from src/make/page.html
- */
-function makePagePlugin(): Plugin {
-  /** umo.autos/ai, the page's first address, already sent around: on to /make, keeping the query and hash */
-  const aiRedirect = '<!doctype html><meta charset="utf-8"><link rel="canonical" href="/make"><script>location.replace(\'/make\' + location.search + location.hash)</script>'
-  const escape = (text: string) => text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-  const instruction = () => fs.readFileSync(path.resolve(__dirname, 'public/llms.txt'), 'utf8')
-  const page = () => fs.readFileSync(path.resolve(__dirname, 'src/make/page.html'), 'utf8')
-    .replace('<!-- ai:instruction -->', escape(instruction()))
-  /**
-   * umo.autos/dealers.txt: every dealer (src/data/dealers.json from umo.auto and the hand-kept dealers-own.json), for the
-   * chats that open links to check a name against; the page finds the dealer itself anyway (src/ui/LinkDealer.tsx), so
-   * Alice, who reads no links, goes without. The name, city, address, hours and the names it's also called by
-   */
-  const dealersText = () => {
-    const read = (f: string) => JSON.parse(fs.readFileSync(path.resolve(__dirname, f), 'utf8'))
-    const hours = (h: string) => h.replace(/^ежедневно,\s*/, '').replace(/0?(\d{1,2}):00/g, '$1')
-    return '# UMO dealers\n\nName (without «UMO») — city, address — hours («9–21»: every day, 9:00–21:00) — also called\n\n'
-      + mergeDealers(read('src/data/dealers.json'), read('src/data/dealers-own.json')).map(d =>
-        [d.name.replace(/^UMO\s+/, ''), [d.city, d.address.replace(new RegExp(`,\\s*${d.city}$`), '')].filter(Boolean).join(', '), hours(d.hours), d.aka.join(', ')]
-          .filter(Boolean).join(' — ')).join('\n') + '\n'
-  }
-  return {
-    name: 'make-page',
-    configureServer(server) {
-      // In dev the page reloads itself when it or the instruction changes, through Vite's client
-      const sources = ['src/make/page.html', 'public/llms.txt'].map(f => path.resolve(__dirname, f))
-      server.watcher.add(sources)
-      server.watcher.on('change', file => {
-        if (sources.includes(file)) server.ws.send({ type: 'full-reload' })
-      })
-      server.middlewares.use((req, res, next) => {
-        if (req.url?.split('?')[0] === '/dealers.txt') {
-          res.setHeader('Content-Type', 'text/plain; charset=utf-8')
-          return res.end(dealersText())
-        }
-        // Vite serves public .txt files with no charset, and the browser reads the instruction's Cyrillic as Latin-1;
-        // GitHub Pages adds utf-8 itself
-        if (req.url?.split('?')[0] === '/llms.txt') {
-          res.setHeader('Content-Type', 'text/plain; charset=utf-8')
-          return res.end(instruction())
-        }
-        // The page's first address, /ai, leads here, as on the site (aiRedirect)
-        if (['/ai', '/ai/'].includes(req.url?.split('?')[0] ?? '')) {
-          res.writeHead(302, { Location: '/make' + req.url!.slice(req.url!.split('?')[0].length) })
-          return res.end()
-        }
-        if (!['/make', '/make/'].includes(req.url?.split('?')[0] ?? '')) return next()
-        res.setHeader('Content-Type', 'text/html; charset=utf-8')
-        res.end(page().replace('</head>', '<script type="module" src="/@vite/client"></script></head>'))
-      })
-    },
-    generateBundle() {
-      this.emitFile({ type: 'asset', fileName: 'make/index.html', source: page() })
-      this.emitFile({ type: 'asset', fileName: 'ai/index.html', source: aiRedirect })
-      this.emitFile({ type: 'asset', fileName: 'dealers.txt', source: dealersText() })
-    },
-  }
-}
-
 function downloadSizesPlugin(): Plugin {
   const id = 'virtual:download-sizes'
   const dir = path.resolve(__dirname, 'public/downloads')

@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { Link, useNavigate } from 'react-router-dom'
 import { goal } from './metrika'
 import tocIcons from '@/icons/toc'
-import { InFoot, InSheet, SheetSize, AliceSlot } from './phone'
+import { InFoot, InSheet, SheetSize } from './phone'
 
 // Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag, business card). Light UI per the Figma layout
 // (UMO | Evrone, nodes 4844:6865 and 4900:4588), matching the brand guide.
@@ -339,7 +339,7 @@ const ANCHOR = typeof CSS !== 'undefined' && CSS.supports('anchor-name: --a')
  * through it, Enter picks, Esc or leaving the field closes it; the chevron opens the whole list. An option may carry a
  * line break, kept in the value it gives and shown as a space in the list. First made for the name tag's position
  */
-export function ComboField({ value, onChange, options, placeholder, label, invalid, singleLine, shownAs = t => t, truncate, filter }: { value: string; onChange: (v: string) => void; options: string[]; placeholder?: string; label: string; invalid?: boolean; /** Enter doesn't break the line, pasted breaks become spaces */ singleLine?: boolean; /** How an option reads in the list, when it differs from the value it gives */ shownAs?: (t: string) => string; /** One line, cut off with an ellipsis, rather than growing: for a narrow field (the price tag's caption on phones) */ truncate?: boolean; /** The options for what's typed, when containing it isn't enough: the dealers by city, street or any spelling (`dealerFilter`) */ filter?: (typed: string, options: string[]) => string[] }) {
+export function ComboField({ value, onChange, options, placeholder, label, invalid, singleLine, shownAs = t => t, truncate }: { value: string; onChange: (v: string) => void; options: string[]; placeholder?: string; label: string; invalid?: boolean; /** Enter doesn't break the line, pasted breaks become spaces */ singleLine?: boolean; /** How an option reads in the list, when it differs from the value it gives */ shownAs?: (t: string) => string; /** One line, cut off with an ellipsis, rather than growing: for a narrow field (the price tag's caption on phones) */ truncate?: boolean }) {
   const box = useRef<HTMLDivElement>(null)
   const list = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
@@ -347,7 +347,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
   const [active, setActive] = useState(-1)
   const typed = value.replace(/\s+/g, ' ').trim().toLowerCase()
   const hit = options.find(t => oneLine(t) === typed)
-  const matching = filter ? filter(typed, options) : options.filter(t => oneLine(t).includes(typed))
+  const matching = options.filter(t => oneLine(t).includes(typed))
   const shown = all || !typed || hit || !matching.length ? options : matching
   const id = useId()
   // In the phone's sheet the list is a screen of its own, as a search: the field over it with «Готово», the list filling
@@ -684,127 +684,7 @@ export const stepsLeft = (n: number) => (n > 1 ? `1/${n}` : undefined)
  * is. It was always «Скачать», greyed out, with a secondary button over it saying the step (and before that a black
  * line, under the button for a while)
  */
-/**
- * Alice opened with the instruction (public/llms.txt, fetched once wanted) in her field, as umo.autos/make sends it: she
- * reads no links. No dealers: she passes the dealer as said, and the page finds it (`LinkDealer`). In «Эксперт», as there. Over it a line saying where the dealer comes from (`ask`): from the price card
- * what's been filled in, so she asks only what's left; from the other generators which editor they're in, as she
- * can't make those herself and helps with the editor instead (the instruction's «Start» skips its list then)
- */
-let llms: Promise<string> | undefined
-function useAliceHref(wanted: boolean, ask: string) {
-  const [text, setText] = useState('')
-  useEffect(() => {
-    if (!wanted || text) return
-    llms ??= fetch('/llms.txt').then(r => { if (!r.ok) throw r; return r.text() })
-    llms.then(setText).catch(() => { llms = undefined })
-  }, [wanted, text])
-  return text && 'https://alice.yandex.ru/?model=alice-agents-expert&set_text=' + encodeURIComponent(ask + '\n\n' + text)
-}
-
-/** What Alice makes herself in the chat (public/llms.txt), as «сделать …» takes it */
-const ALICE_MAKES: Record<string, string> = {
-  '/price-card': 'прайс-карту', '/price-tag': 'ценники', '/hours-sign': 'табличку с режимом работы',
-  '/plate-frame': 'рамку номера', '/business-card': 'визитку', '/name-tag': 'бейдж', '/livery': 'наклейки на демо-автомобиль',
-}
-
-/** Where the dealer comes from, for a generator that doesn't say more (`useAliceHref`): what to make, else the editor */
-const aliceAsk = (path: string) => {
-  const g = GENERATORS.find(g => g.path === path)
-  return ALICE_MAKES[path] ? `Следуй этой инструкции. Мне нужно сделать ${ALICE_MAKES[path]}: начни сразу с вопросов.`
-    : g ? `Следуй этой инструкции. Я сейчас в редакторе «${g.title}» на umo.autos${path}, помоги мне с ним.` : 'Следуй этой инструкции и помоги мне сделать материалы UMO.'
-}
-
-/** Alice's mark, from Alice Okniks (the drop, ss02), in her colour */
-function AliceMark({ className = '', solid, axes }: { className?: string; /** The solid drop (ss01), white, as on her own app's icon */ solid?: boolean; /** The font's own position axes: `YSHF` up/down (−36…36 units, minus is down), `ZSCL` size (−8…8%) */ axes?: string }) {
-  return <span style={{ fontFamily: 'Alice Okniks', fontFeatureSettings: solid ? "'ss01'" : "'ss02'", fontVariationSettings: axes }} className={`${solid ? 'text-white' : 'text-[#7a55ff]'} ${className}`}>@</span>
-}
-
-/** Came from umo.autos/make (or /ai, its first address), where Alice was already offered beside the editor: no offer then (the referrer as index.html keeps it through the 404 redirect) */
-const fromAi = (() => { try { const r = new URL((window as any).siteReferrer ?? document.referrer); return r.origin === location.origin && /^\/(make|ai)\/?$/.test(r.pathname) } catch { return false } })()
-
-/** What the download says to Alice: where the dealer comes from (`aliceAsk`) and whether the form has been touched */
-export type AliceAsk = { ask: string; started: boolean }
-
-/**
- * Alice told what's been filled in (`filled`, a line per thing), so she asks only what's left and gives the link, as the
- * price card tells her its cards; an untouched form (`false`) says only which editor it is
- */
-export const aliceWith = (filled: string[] | false): AliceAsk => {
-  const g = GENERATORS.find(g => g.path === location.pathname)
-  return !filled || !g ? { ask: aliceAsk(location.pathname), started: !!filled }
-    : { ask: `Следуй этой инструкции. Я сейчас в редакторе «${g.title}» на umo.autos${g.path}, вот что уже заполнено:\n${filled.join('\n')}\n`
-        + 'Не спрашивай заново то, что уже есть: уточни, что поменять или чего не хватает, и дай ссылку.', started: true }
-}
-
-/** The bubble folded into the icon by its ×, kept outside so it holds while the phone's download steps aside for the keyboard */
-let aliceFolded = false
-
-/**
- * Trial: Alice, floating in the canvas's foot-right corner on wide screens, by the download on phones. On a form not
- * yet touched, a bubble in her voice, offering to make it with her; once anything is filled in (or by its ×) it folds
- * into a square button with her mark (in the download's row on phones), which
- * opens her with what's filled in (`ask`). Generators that don't say whether they're touched count the first typing
- */
-function useAlice(alice?: AliceAsk) {
-  const [folded, fold] = useState(aliceFolded)
-  const [typed, setTyped] = useState(false)
-  // The folded icon opens back into the bubble while the pointer is on it (wide screens)
-  const [peek, setPeek] = useState(false)
-  useEffect(() => {
-    if (alice || typed) return
-    const on = () => setTyped(true)
-    document.addEventListener('input', on, { once: true })
-    return () => document.removeEventListener('input', on)
-  }, [alice, typed])
-  const href = useAliceHref(!fromAi, alice?.ask ?? aliceAsk(location.pathname))
-  const none = { bubble: null, icon: null, button: null as React.ReactNode, peek: setPeek }
-  if (fromAi || !href) return none
-  const makes = ALICE_MAKES[location.pathname]
-  const open = (via: string) => goal('ai_open', { chat: 'alice', from: location.pathname, via })
-  const started = alice ? alice.started : typed
-  if (peek || (!folded && !started)) return {
-    ...none,
-    bubble: (
-      // A message's bubble, 16 px round but for the corner it comes from, square, with no edge, its shadow over the canvas (the canvas's corner on wide screens, the download's
-      // on phones), her name over what she says
-      <div className="alice-pop relative flex w-[272px] max-w-full items-stretch rounded-[16px] rounded-br-none bg-white text-[14px] leading-5 text-black shadow-[0_10px_30px_rgba(0,0,0,0.1)] in-[[data-sheet]]:w-auto in-[[data-sheet]]:rounded-br-[16px] in-[[data-sheet]]:rounded-bl-none">
-        <a href={href} target="_blank" rel="noopener" onClick={() => open('bubble')}
-          className="flex min-w-0 flex-1 cursor-pointer flex-col gap-2 p-5 outline-none focus-visible:ring-2 focus-visible:ring-black/30">
-          {/* 2 px left: her round mark looks set in from the text's straight edge under it */}
-          <span className="-ml-[2px] flex items-center gap-[6px] text-[16px] font-medium"><AliceMark className="text-[20px] leading-5" />Алиса AI</span>
-          {/* The text runs under the ×, which only shares her name's line */}
-          <span>{!makes ? 'Подскажу, как заполнить\u00a0— спрашивайте'
-            : started ? <>Помогу закончить <span className="whitespace-nowrap">{makes}</span>{'\u00a0— продолжим с\u00a0того, что уже заполнено'}</>
-            : <>Помогу сделать <span className="whitespace-nowrap">{makes}</span>{'\u00a0— ответьте на\u00a0пару вопросов'}</>}</span>
-        </a>
-        <button type="button" onClick={() => { aliceFolded = true; fold(true); setPeek(false) }} aria-label="Свернуть" className="absolute top-[14px] right-3 flex size-8 cursor-pointer items-center justify-center text-[#808080] outline-none hover:text-black">
-          {/* The lists' own cross (staff.tsx, the removed item's): 16 px, 1 px square-ended lines */}
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="square" strokeLinejoin="bevel" aria-hidden><path d="M12 4L8 8M8 8L4 4M8 8L12 12M8 8L4 12" /></svg>
-        </button>
-      </div>
-    ),
-  }
-  return {
-    ...none,
-    // Phones: a secondary button at the form's end instead of the icon, as the row by the download holds only its own
-    button: (
-      <a href={href} target="_blank" rel="noopener" onClick={() => open('button')}
-        className={`${outlined} w-full gap-1 bg-white tracking-normal`}>
-        {started ? 'Продолжить' : 'Сделать'} с<AliceMark className="text-[20px] leading-5" />Алисой AI
-      </a>
-    ),
-    icon: (
-      <a href={href} target="_blank" rel="noopener" onClick={() => open('icon')} title={makes ? 'Продолжить с Алисой AI' : 'Спросить Алису AI'}
-        className="alice-pop flex size-10 shrink-0 items-center justify-center rounded-full bg-white outline-none hover:bg-[#f5f5f5] focus-visible:ring-2 focus-visible:ring-black/30">
-        {/* White with no edge or shadow, her outline mark in her purple, as in the bubble; 26 px, the mark 23 px, 58% of the
-            circle, sized by the font size, not by its axes: Safari clips a glyph moved by them; half a pixel up by CSS */}
-        <AliceMark className="relative -top-[0.5px] text-[26px] leading-[26px]" />
-      </a>
-    ),
-  }
-}
-
-export function DownloadBar({ format, onClick, busy, disabled, note, count, onNote, links, alice: aliceAsk_ }: {
+export function DownloadBar({ format, onClick, busy, disabled, note, count, onNote, links }: {
   format: 'PDF' | 'ZIP'
   onClick: () => void
   busy: boolean
@@ -815,8 +695,6 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   onNote?: () => void
   /** «Поделиться», right over the download: off with it, the line over them speaking for both */
   links?: React.ReactNode
-  /** Trial: what Alice is told (`useAlice`); by default which editor this is */
-  alice?: AliceAsk
 }) {
   // What a button under the line has just done, said there for two seconds
   const [said, setSaid] = useState('')
@@ -835,8 +713,6 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   // download, «Поделиться» with it. The bright button stays the next step, so it's pressed even unread, and the press
   // teaches what to do (on wide screens a secondary button saying the step stood over a greyed-out download)
   const foot = useContext(InFoot)
-  const alice = useAlice(aliceAsk_)
-  const slot = useContext(AliceSlot)
   const lead = disabled && !!note && !said
   const leads = lead && !!onNote
   const shareOn = !!links && !disabled && !said
@@ -863,13 +739,9 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   // Phones: «Поделиться» right of the download, half each, once the download is on (tried: an icon left of the
   // download, «Поделиться» left of it, as wide as its word on the right)
   if (foot) return (
-    <div className="flex flex-col gap-2">
-      {alice.bubble}
-      <div className="grid auto-cols-fr grid-flow-col gap-2">
-        {main}
-        {shareOn && <div className="flex min-w-0">{links}</div>}
-      </div>
-      {slot && alice.button && createPortal(alice.button, slot)}
+    <div className="grid auto-cols-fr grid-flow-col gap-2">
+      {main}
+      {shareOn && <div className="flex min-w-0">{links}</div>}
     </div>
   )
   // Wide screens: 40 px off the form, sticking to the sidebar's foot; «Поделиться» over the download, as wide, so it
@@ -878,9 +750,6 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
     <div className="sticky bottom-0 z-10 mt-8 flex flex-col gap-2 bg-white p-6 pt-0 tracking-normal">
       {shareOn && <div className="flex">{links}</div>}
       <div className="flex">{main}</div>
-      {(alice.bubble || alice.icon) && createPortal(
-        <div onMouseEnter={() => alice.peek(true)} onMouseLeave={() => alice.peek(false)} className="fixed right-6 bottom-6 z-20 flex justify-end [&_.alice-pop]:origin-bottom-right">{alice.bubble}{alice.icon}</div>,
-        document.body)}
     </div>
   )
 }

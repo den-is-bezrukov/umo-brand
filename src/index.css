@@ -97,11 +97,3 @@ html[data-menu] [data-sheet]:not(:has([data-head])) {
 :is(aside:has([data-head]), [data-sheet]) .gap-y-4 {
   row-gap: 20px;
 }
-
-/* Trial: Alice's bubble by the download and the icon it folds into (`useAlice`) come in grown from a little smaller */
-@keyframes alice-pop {
-  from { opacity: 0; transform: scale(0.8); }
-}
-.alice-pop {
-  animation: alice-pop 300ms cubic-bezier(0.2, 0.8, 0.2, 1);
-}

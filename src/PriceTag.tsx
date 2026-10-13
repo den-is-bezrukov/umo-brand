@@ -1,16 +1,15 @@
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, aliceWith, unfilled, stepsLeft, Segments, SegBtn, ALERT_LABEL, outlined } from '@/ui/form'
+import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, unfilled, stepsLeft, Segments, SegBtn, ALERT_LABEL, outlined } from '@/ui/form'
 import { useStaff, pickTable, TableSource, UploadArea, AddTile, ItemFrame, Removed, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
 import { xlsxCells, pastedCells, byHeaders, type Cells } from '@/nametag/table'
 import { TAG, BAND, BAND_ART, DEFAULT_CAPTION, buildTag, formatPrice, readPrice, PRICE_FORMAT, type Item, type TagField } from '@/pricetag/tag'
-import { DEALER_NAMES, dealerFilter, withoutUmo } from '@/data/dealers'
+import { DEALER_NAMES, withoutUmo } from '@/data/dealers'
 import { readTagsFile } from '@/pricetag/read'
 import { plural } from '@/ui/staff'
 import { MobileEditor, usePhone } from '@/ui/mobile'
-import { linkParams, saveAndOpenPdf } from '@/ui/share'
 
 // Price tag generator (Figma: UMO | Evrone, node 4202:4368): price tags for the small goods at a dealership, any
 // employee printing them on an office printer and cutting them out with scissors. The dealer is set once, the goods typed
@@ -42,34 +41,13 @@ const toItems = (rows: Cells[]): Item[] => byHeaders(rows, HEADERS).map(r => ({
   price: readPrice(r.price) ?? r.price,
 }))
 
-/** A link's caption: `set` and `pack` for the suggestions, else as written */
-const LINK_CAPTIONS: Record<string, string> = { set: CAPTIONS[1], pack: CAPTIONS[2] }
-
-/**
- * The dealer and goods a link brings (from a chat agent, public/llms.txt): `dealer`, then `n1`, `c1`, `p1`, `s1` (the
- * name, code, price, caption), `n2`… while there's a name. Read on load only, never written back: the list would make
- * the address huge
- */
-function fromLink(): { dealer: string; items: Item[] } {
-  const link = linkParams()
-  const items: Item[] = []
-  for (let i = 1; link.has(`n${i}`); i++) {
-    const s = link.get(`s${i}`)?.trim() ?? ''
-    const p = link.get(`p${i}`) ?? ''
-    items.push({ name: link.get(`n${i}`) ?? '', code: link.get(`c${i}`) ?? '', caption: LINK_CAPTIONS[s] ?? (s || DEFAULT_CAPTION), price: readPrice(p) ?? p })
-  }
-  return { dealer: withoutUmo(link.get('dealer')?.trim() ?? ''), items }
-}
-
 /** The dealers as the band names them: without «UMO», as the logo stands right by the name */
 const DEALER_OPTIONS = DEALER_NAMES.map(withoutUmo)
 
 export default function PriceTag() {
-  const [initial] = useState(fromLink)
-  const [dealer, setDealer] = useState(initial.dealer)
+  const [dealer, setDealer] = useState('')
   const staff = useStaff<Item>({
     blank: BLANK,
-    initial: initial.items,
     // The tags' own PDF (or Word file, while its download is off still read when dropped) brings its dealer and goods
     // back, to fix a price and download again; else a table
     readFile: data => {
@@ -142,30 +120,13 @@ export default function PriceTag() {
     if (!tags || !ok) return
     setExporting(true)
     try {
-      const { tagsPdf, TAGS_FILE } = await import('@/pricetag/pdf')
-      save(await tagsPdf(tags.map(t => t.tag), { dealer, items: items.map(({ key: _, ...it }) => it) }), TAGS_FILE)
+      const { tagsPdf } = await import('@/pricetag/pdf')
+      save(await tagsPdf(tags.map(t => t.tag), { dealer, items: items.map(({ key: _, ...it }) => it) }), 'UMO_price-tags.pdf')
       goal('download_price_tag', { count: tags.length, format: 'pdf' })
     } finally {
       setExporting(false)
     }
   }
-
-  // `pdf` in the link opens the tags' PDF itself, with no editor, once the fonts are in; a tag at fault opens the editor
-  // instead, showing what's wrong
-  const [pdfOnly, setPdfOnly] = useState(() => linkParams().has('pdf') && initial.items.length > 0)
-  const pdfStarted = useRef(false)
-  useEffect(() => {
-    if (!pdfOnly || !tags || pdfStarted.current) return
-    pdfStarted.current = true
-    if (!ok) { setPdfOnly(false); return }
-    import('@/pricetag/pdf')
-      .then(async ({ tagsPdf, TAGS_FILE }) => {
-        const blob = await tagsPdf(tags.map(t => t.tag), { dealer, items: items.map(({ key: _, ...it }) => it) })
-        goal('download_price_tag', { count: tags.length, format: 'pdf', via: 'link' })
-        saveAndOpenPdf(blob, TAGS_FILE)
-      })
-      .catch(() => setPdfOnly(false))
-  }, [tags]) // eslint-disable-line react-hooks/exhaustive-deps
   const handleWord = async () => {
     if (!ok) return
     setExportingWord(true)
@@ -230,7 +191,7 @@ export default function PriceTag() {
             <ComboField
               value={dealer}
               onChange={setDealer}
-              options={DEALER_OPTIONS} filter={dealerFilter}
+              options={DEALER_OPTIONS}
               singleLine
               placeholder="Название дилера"
               label="Дилеры UMO"
@@ -285,17 +246,8 @@ export default function PriceTag() {
     </>
   )
 
-  // Alice told the dealer and the goods filled in, the first 8: her link has room for about that many, with a margin (docs/generators.md)
-  const goods = items.filter(it => it.name.trim() || it.code.trim() || it.price.trim())
-  const alice = aliceWith((!!dealer.trim() || goods.length > 0) && [
-    `Салон: ${dealer.trim() ? `UMO ${dealer.trim()}` : 'не выбран'}`,
-    ...goods.slice(0, 8).map((it, i) => `${i + 1}. ${it.name.trim() || 'название не указано'}${it.code.trim() ? `, артикул ${it.code.trim()}` : ''}, ${it.price.trim() ? `${it.price.trim()} ₽` : 'цена не указана'}, ${it.caption}`),
-    ...(goods.length > 8 ? [`…и ещё ${goods.length - 8} — их видно только в редакторе`] : []),
-  ])
-
   const download = (
         <DownloadBar
-          alice={alice}
           format="PDF"
           onClick={handleExport}
           busy={exporting}
@@ -314,7 +266,6 @@ export default function PriceTag() {
   )
 
   // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
-  if (pdfOnly) return null
   if (phone) return <MobileEditor slides={mode === 'table' && !staff.file ? [{ key: 'upload', node: <UploadArea staff={staff} /> }] : items.map((it, i) => ({ key: it.key, item: it.key, label: it.name.replace(/\s+/g, ' ').trim(), ratio: TAG.h / TAG.w, node: renderItem(it, i) }))} sidebar={sidebar} download={download} staff={staff} />
 
   return (
