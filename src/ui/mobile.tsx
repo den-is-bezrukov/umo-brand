@@ -5,9 +5,9 @@ import { InSlide, InFoot, InSheet } from '@/ui/phone'
 // A trial of the generators' phone layout (Figma 5098:5806, «Mobile Layout»): the canvas over a sheet holding the
 // sidebar (header and form) with the download at its foot. A list's pictures are swiped one at a time, with a row over
 // them: delete (its place kept empty while «Удаляем · Вернуть» has its own bin), «‹ n/total ↺ ›» (a slide that isn't an item: its name), copy; one portrait picture has its reset and copy in the canvas's top corners instead, a landscape one a row with its name. A tap on
-// a picture that would grow by it folds the sheet away (a portrait one: a landscape one is as wide either way), a
-// shrink icon under it bringing the sheet back; a form longer than the sheet, scrolled to its end, opens over the whole
-// screen, and a swipe down at its top puts it back.
+// a picture that would grow by it, or a swipe down, lowers the sheet to its header (a portrait one: a landscape one is
+// as wide either way); a swipe on the header or a pull past the form's edge opens the form over the whole screen or
+// puts it back.
 // In the link: `arrows=0` hides the arrows (swiping alone)
 
 /** Whether the screen is a phone's, as the generators' `md` breakpoint */
@@ -199,8 +199,15 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     pull.current = null
     if (!p) return
     const far = (d: number) => d >= PULL || (d >= FLICK && d / Math.max(1, Date.now() - p.t) >= FLICK_SPEED)
-    if ((p.top || p.head) && far(p.dy) && sheetRef.current === 'full') move('half')
-    else if ((p.end || p.head) && p.long && far(-p.dy) && sheetRef.current === 'half') move('full')
+    const now = sheetRef.current
+    if (far(p.dy) && (p.top || p.head)) {
+      if (now === 'full') move('half')
+      else if (now === 'half' && canPreviewRef.current) move('preview')
+    } else if (far(-p.dy)) {
+      // Lowered, the header is all there is of the sheet
+      if (now === 'preview') move('half')
+      else if (now === 'half' && (p.end || p.head) && p.long) move('full')
+    }
   }
   const onTouchCancel = () => { pull.current = null }
   // The wheel, in a narrow window: a turn on past the edge it already stood at
@@ -231,13 +238,35 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     addEventListener('resize', on)
     return () => removeEventListener('resize', on)
   }, [])
+  // Lowered, the sheet shows its header alone: the crumbs and the generators' line, 24 px under them as over them,
+  // over the screen's bottom safe area (the shrink icon under the picture went)
+  const safe = useRef<HTMLDivElement>(null)
+  const [peek, setPeek] = useState(140)
+  useLayoutEffect(() => {
+    const head = scroller.current?.querySelector('[data-head]') as HTMLElement | null
+    if (!head) return
+    const measure = () => {
+      const top = scroller.current!.getBoundingClientRect().top - scroller.current!.scrollTop
+      setPeek(Math.round(head.getBoundingClientRect().bottom - top + 24 + (safe.current?.offsetHeight ?? 0)))
+    }
+    if (!document.documentElement.hasAttribute('data-menu')) measure()
+    const o = new ResizeObserver(() => { if (!document.documentElement.hasAttribute('data-menu')) measure() })
+    o.observe(head)
+    return () => o.disconnect()
+  }, [])
+  // The generators' menu opened from the lowered sheet raises it, to list them all
+  useEffect(() => {
+    const o = new MutationObserver(() => { if (document.documentElement.hasAttribute('data-menu') && sheetRef.current === 'preview') move('half') })
+    o.observe(document.documentElement, { attributes: true, attributeFilter: ['data-menu'] })
+    return () => o.disconnect()
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
   // Under the row, if there's one
   const rowsH = (full || corners ? 0 : ROW) + 2 * PAD + 2 * INSET
   const growth = (ratio?: number) => {
     if (!ratio) return 1
     const w = screen.w - 2 * SIDE
     const half = Math.min(w, (screen.h * 0.4 - rowsH) / ratio)
-    const big = Math.min(w, (screen.h - rowsH - ROW) / ratio)
+    const big = Math.min(w, (screen.h - peek - rowsH) / ratio)
     return big / Math.max(1, half)
   }
   const canPreview = growth(slide?.ratio) >= GROWS
@@ -266,7 +295,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   // scrolls to its end in view
   const tall = Math.max(0, screen.h - (row ? ROW + 2 * PAD : 0))
   const below = Math.max(0, Math.round(tall - screen.h * HALF_SHARE))
-  const edge = { preview: tall, half: below, full: 0 }
+  const edge = { preview: tall - peek, half: below, full: 0 }
   const sheetBg = useRef<HTMLDivElement>(null)
   const form = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => {
@@ -274,6 +303,8 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     from.current = null
     const el = scroller.current
     if (!was || !el || !form.current || !sheetBg.current) return
+    // Lowered, the sheet shows the form's top, its header
+    if (sheet === 'preview') el.scrollTop = 0
     // The form carries on from where it stood, however much its scroll was cut short by the room under it changing
     const fromAt = edge[was.sheet] - was.top
     const start = fromAt + el.scrollTop
@@ -293,8 +324,8 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           sheet over the whole screen slides over it, leaving it as it is (it shrank under the sheet, the picture refitted
           as it went and jerked) */}
       <div
-        className={`relative flex shrink-0 flex-col p-[10px] transition-[height] ${preview ? 'pb-[calc(10px+env(safe-area-inset-bottom))]' : ''}`}
-        style={{ height: preview ? screen.h : screen.h - tall + below, transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: 'cubic-bezier(0.67, 0, 0.33, 1)' }}
+        className="relative flex shrink-0 flex-col p-[10px] transition-[height]"
+        style={{ height: screen.h - tall + edge[sheet], transitionDuration: `${TURN_MS}ms`, transitionTimingFunction: 'cubic-bezier(0.67, 0, 0.33, 1)' }}
       >
       {/* A list's row over the picture (Figma 5105:7604): delete on the left, copy on the right, between them the
           number between the arrows, the reset right after it; for a moment after a removal «Удаляем ·
@@ -360,26 +391,19 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         </div>
       </InSlide.Provider>
 
-      {/* The picture alone: the shrink icon under it brings the sheet back (Figma 5105:8520) */}
-      {preview && (
-        <div className="flex h-[30px] shrink-0 items-center justify-center">
-          <Btn label="Свернуть" onClick={() => move('half')}>
-            <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M13.5 6.5H9.5V2.5M2.5 9.5H6.5V13.5M2.5 6.5H6.5V2.5M13.5 9.5H9.5V13.5" /></svg>
-          </Btn>
-        </div>
-      )}
       </div>
 
       {/* The sheet: the sidebar scrolling, 24 px in, as the sidebar on wide screens (Figma has 16; 20 was tried), the
           download at its foot; its top corners 24 px round, as its padding (Figma has none), a shadow over it (Figma 5098:5487) */}
+      <div ref={safe} aria-hidden className="pointer-events-none invisible absolute h-[env(safe-area-inset-bottom)] w-0" />
       <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10" style={{ height: tall }}>
         <div
           ref={sheetBg}
-          className={`absolute inset-0 rounded-t-[24px] bg-white ${preview ? '' : 'shadow-[0_10px_30px_rgba(0,0,0,0.1)]'}`}
+          className="absolute inset-0 rounded-t-[24px] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.1)]"
           style={{ transform: `translateY(${edge[sheet]}px)` }}
         />
-        <div ref={form} className={`absolute inset-0 flex flex-col ${preview ? '' : 'pointer-events-auto'}`} style={{ transform: `translateY(${edge[sheet]}px)` }}>
-          <div ref={scroller} data-sheet onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchCancel} onWheel={onWheel} onFocus={e => setTyping(types(e.target))} onBlur={e => setTyping(types(e.relatedTarget))} className="min-h-0 flex-1 overflow-y-auto">
+        <div ref={form} className="pointer-events-auto absolute inset-0 flex flex-col" style={{ transform: `translateY(${edge[sheet]}px)` }}>
+          <div ref={scroller} data-sheet onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchCancel} onWheel={onWheel} onFocus={e => setTyping(types(e.target))} onBlur={e => setTyping(types(e.relatedTarget))} className={`min-h-0 flex-1 ${preview ? 'overflow-y-hidden' : 'overflow-y-auto'}`}>
             {/* Groups 24 px apart (`src/index.css`, as on wide screens), so from one 48 px control to the next is 48 (16 + 8 for a label + 24) */}
             <div className="*:gap-6! *:p-6!" style={{ paddingBottom: `calc(${96 + (full ? 0 : below)}px + env(safe-area-inset-bottom))` }}>
               <InSheet.Provider value={sheet}>{sidebar}</InSheet.Provider>
