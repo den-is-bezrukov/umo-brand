@@ -224,6 +224,8 @@ export function siteFor(dealer: string): string {
 }
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
+/** A part of the address (before the @, a domain label) with Latin and Cyrillic letters both: «ivanоv» with a Russian о */
+const mixedScripts = (email: string) => email.split(/[@.]/).some(part => /[a-z]/i.test(part) && /[а-яё]/i.test(part))
 
 /**
  * The back for one person. The texts come as shown: the page puts placeholders in empty fields, the same layout then
@@ -278,6 +280,7 @@ export function buildBack(fonts: Fonts, dealer: Dealer, person: Person, qr: QrDa
   if (email) {
     lines('email', 'Почта', email, y, SMALL, PERSON_W, 1, false)
     if (!EMAIL.test(email.replace(/ /g, ''))) issues.push({ field: 'email', text: 'Почта: проверьте адрес' })
+    else if (mixedScripts(email)) issues.push({ field: 'email', text: 'Почта: смешаны русские и латинские буквы' })
     y -= PITCH
   }
   // The position may take two lines, breaking where typed or picked from the list
