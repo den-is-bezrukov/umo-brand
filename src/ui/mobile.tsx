@@ -347,10 +347,15 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   // sheet goes back where it was. Room enough under the form while typing to lift its last field
   const before = useRef<Sheet | null>(null)
   const lift = useRef<HTMLElement | null>(null)
+  /** A field to bring to the sheet's top once it's back in its place */
+  const settleOn = useRef<HTMLElement | null>(null)
+  /** The field typed in last, and the form's scroll as the keyboard went */
+  const typed = useRef<{ field: HTMLElement; top: number } | null>(null)
   const onFocus = (e: React.FocusEvent) => {
     const t = types(e.target)
     setTyping(t)
     if (!t || !matchMedia('(pointer: coarse)').matches) return
+    typed.current = { field: e.target as HTMLElement, top: 0 }
     if (before.current === null) before.current = sheetRef.current
     // From field to field the sheet is open already and nothing renders: lifted here, then (it stayed low, and iOS
     // moved the page for it)
@@ -364,11 +369,31 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     // At once, as the sheet: a field still on its way read as low too
     if (el) el.scrollTop += field.getBoundingClientRect().top - el.getBoundingClientRect().top - LIFT
   }
-  useEffect(() => {
+  const onBlur = (e: React.FocusEvent) => {
+    const t = types(e.relatedTarget)
+    if (!t && typed.current) typed.current.top = scroller.current?.scrollTop ?? 0
+    setTyping(t)
+  }
+  // The keyboard gone, the sheet goes back where it was with the field still at its top, under its label (the room
+  // under the form going with the keyboard left it anywhere, the field out of sight); the last ones, short of room,
+  // at the form's end. The form moves on from where it stood, not from where its scroll was cut short
+  useLayoutEffect(() => {
     if (typing || before.current === null) return
     const s = before.current
     before.current = null
-    move(s)
+    const t = typed.current
+    typed.current = null
+    const el = scroller.current
+    if (!t || !el) { move(s); return }
+    if (s !== sheetRef.current) {
+      settleOn.current = t.field
+      move(s)
+      if (from.current) from.current.top = t.top
+      return
+    }
+    liftField(t.field)
+    const d = el.scrollTop - t.top
+    if (d) formEl.current?.animate([{ transform: `translateY(${d}px)` }, { transform: 'none' }], { duration: TURN_MS, easing: 'cubic-bezier(0.67, 0, 0.33, 1)' })
   }, [typing]) // eslint-disable-line react-hooks/exhaustive-deps
   useLayoutEffect(() => {
     const field = lift.current
@@ -384,6 +409,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     if (!was || !el || !sheetEl.current || !formEl.current || was.now) return
     // Lowered, the sheet shows the form's top, its header
     if (sheet === 'preview') el.scrollTop = 0
+    if (settleOn.current) { liftField(settleOn.current); settleOn.current = null }
     // The sheet moves; the form in it starts where it stood, however its scroll was cut short by the room under it
     // changing, and settles into the sheet (opened at the form's end the form stays put as the edge rises over it)
     // Let go by a finger, it goes on from there, slowing down
@@ -482,7 +508,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         className="absolute inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-[24px] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.1)]"
         style={{ height: tall, transform: `translateY(${edge[sheet]}px)` }}
       >
-        <div ref={scroller} data-sheet onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchCancel} onFocus={onFocus} onBlur={e => setTyping(types(e.relatedTarget))} className={`min-h-0 flex-1 [contain:paint] ${preview ? 'overflow-y-hidden' : 'overflow-y-auto'}`}>
+        <div ref={scroller} data-sheet onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchCancel} onFocus={onFocus} onBlur={onBlur} className={`min-h-0 flex-1 [contain:paint] ${preview ? 'overflow-y-hidden' : 'overflow-y-auto'}`}>
           {/* Groups 24 px apart (`src/index.css`, as on wide screens), so from one 48 px control to the next is 48 (16 + 8
               for a label + 24); at 60% as much again under the form's end as is under the screen, to scroll it into view */}
           <div ref={formEl} className="*:gap-6! *:p-6!" style={{ paddingBottom: `calc(${96 + (typing ? screen.h : full ? 0 : below)}px + env(safe-area-inset-bottom))` }}>
