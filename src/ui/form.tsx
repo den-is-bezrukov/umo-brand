@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { goal } from './metrika'
 import tocIcons from '@/icons/toc'
-import { InFoot, InSheet, SheetSize } from './phone'
+import { InFoot, InSheet } from './phone'
 import { MOD, withMod, otherLayout } from './keys'
 
 // Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag, business card). Light UI per the Figma layout
@@ -37,18 +37,14 @@ const crumb = 'underline decoration-transparent decoration-[0.35px] underline-of
 
 /**
  * The top of a generator's form, the same on every screen (Figma 5098:5487, the phone's, carried over to wide screens):
- * the menu icon and the breadcrumbs in Medium, 16 px tall; on a phone the size icon across from them opening the form
- * over the whole screen or putting it back; the generators' line under them (`GeneratorRing`). The menu icon turns into
+ * the menu icon and the breadcrumbs in Medium, 16 px tall (a size icon across from them on phones went: the sheet is
+ * swiped); the generators' line under them (`GeneratorRing`). The menu icon turns into
  * the guide's «Свернуть» in place and the line and everything after it in the form give way to every generator, 24 px
  * Medium 20 px apart, the current one black (Figma 5099:5825): the same header, not a second one laid over it (a sheet
  * over the form, repeating the crumbs, was tried, and shifted them by its own tracking). Wide screens had the crumbs in
  * Medium with a list under «Носители ⌄» and a ring turned by script, which a finger couldn't drive
  */
-/** The guide's «Свернуть» turned out: the chevrons pointing away from the middle, opening the form over the whole screen */
-const EXPAND = 'M4 6L8 2L12 6M4 10L8 14L12 10'
-
 export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' | '/price-tag' | '/hours-sign' }) {
-  const size = useContext(SheetSize)
   const [menu, setMenu] = useState(false)
   const toggle = () => { if (!menu) goal('open_menu', { page: location.pathname }); setMenu(!menu) }
   // While it's open the rest of the form and the download step aside (`html[data-menu]` in index.css)
@@ -65,8 +61,6 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
       <div className="flex items-center gap-2">
         <IconButton label={menu ? 'Свернуть' : 'Конструкторы'} onClick={toggle} d={menu ? tocIcons.close : tocIcons.menu} />
         <PhoneCrumbs />
-        {/* Grey, as the canvas's icons: chevrons out, then the guide's «Свернуть» while the form is over the whole screen */}
-        {size && !menu && <IconButton label={size.full ? 'Свернуть форму' : 'Развернуть форму'} onClick={size.toggle} grey d={size.full ? tocIcons.close : EXPAND} />}
       </div>
       {menu ? (
         // 20 px under the crumbs, where the line stood, so the current name stays put (24 dropped it 4 px; 16 sat the
@@ -95,10 +89,10 @@ function PhoneCrumbs() {
   )
 }
 
-/** A 16 px icon with a 2 px stroke as the form's own, on whole pixels (Figma's sheet has 1 px: 5110:9103, 5110:9091, 5103:6163), black or grey, a finger's 36 px round it */
-function IconButton({ label, onClick, d, grey }: { label: string; onClick: () => void; d: string; grey?: boolean }) {
+/** A 16 px icon with a 2 px stroke as the form's own, on whole pixels (Figma's sheet has 1 px: 5110:9103, 5110:9091, 5103:6163), black, a finger's 36 px round it */
+function IconButton({ label, onClick, d }: { label: string; onClick: () => void; d: string }) {
   return (
-    <button type="button" aria-label={label} title={label} onClick={onClick} className={`relative flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-[4px] after:absolute after:-inset-[10px] after:content-[''] ${grey ? 'text-[#808080]' : ''}`}>
+    <button type="button" aria-label={label} title={label} onClick={onClick} className={`relative flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-[4px] after:absolute after:-inset-[10px] after:content-['']`}>
       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d={d} stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" /></svg>
     </button>
   )
