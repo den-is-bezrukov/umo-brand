@@ -34,6 +34,8 @@ const CORNER = 50
 /** The canvas's padding and its rows' height (Figma 5105:8488) */
 const ROW = 30
 const PAD = 10
+/** How far a finger pulls past the form's edge to turn the sheet, as a pull to refresh */
+const PULL = 70
 /** How much larger a picture must get with the sheet folded away for a tap to do it */
 const GROWS = 1.15
 
@@ -169,35 +171,34 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     tap.current = window.setTimeout(() => move(sheetRef.current === 'preview' ? 'half' : 'preview'), 250)
   }
 
-  // A form longer than the sheet opens over the whole screen once it's scrolled to its end (a short one never does), the
-  // sheet growing from the top while its end stays put; over the screen, a swipe down from its top, a new one, not the
-  // scroll running into it, puts it back. Was an icon in the header, a grabber on the sheet's edge before it, and a
-  // sheet following the finger, which jerked and moved the picture
-  /** When the finger last touched the form or the wheel turned it: only that opens it, not a scroll to a focused field */
-  const touched = useRef(0)
-  const pull = useRef<{ y: number; top: boolean } | null>(null)
-  const onFormScroll = () => {
+  // A hard pull past the form's edge, as a page's pull to refresh, turns the sheet: past its end a form longer than the
+  // sheet opens over the whole screen (a short one never does), past its top it goes back. Only a new gesture started
+  // at the edge does it, never the scroll running into it. Was the scroll reaching the end opening it, an icon in the
+  // header, a grabber on the sheet's edge before it, and a sheet following the finger, which jerked and moved the picture
+  const pull = useRef<{ y: number; top: boolean; end: boolean } | null>(null)
+  const edges = () => {
     const el = scroller.current
-    if (!el || sheetRef.current !== 'half' || Date.now() - touched.current > 1500) return
-    if (el.scrollHeight > el.clientHeight + 1 && el.scrollTop >= el.scrollHeight - el.clientHeight - 1) move('full')
+    if (!el) return { top: false, end: false }
+    const room = el.scrollHeight - el.clientHeight
+    return { top: el.scrollTop <= 0, end: room > 1 && el.scrollTop >= room - 1 }
   }
-  const onTouchStart = (e: React.TouchEvent) => {
-    touched.current = Date.now()
-    pull.current = { y: e.touches[0].clientY, top: (scroller.current?.scrollTop ?? 0) <= 0 }
-  }
+  const onTouchStart = (e: React.TouchEvent) => { pull.current = { y: e.touches[0].clientY, ...edges() } }
   const onTouchMove = (e: React.TouchEvent) => {
-    touched.current = Date.now()
     const p = pull.current
-    if (p?.top && sheetRef.current === 'full' && e.touches[0].clientY - p.y > 40) { pull.current = null; move('half') }
+    if (!p) return
+    const dy = e.touches[0].clientY - p.y
+    if (p.top && dy > PULL && sheetRef.current === 'full') { pull.current = null; move('half') }
+    else if (p.end && dy < -PULL && sheetRef.current === 'half') { pull.current = null; move('full') }
   }
-  const onTouchEnd = () => { touched.current = Date.now(); pull.current = null }
-  // The wheel, in a narrow window: a turn up at the top puts it back, as a swipe down
-  const wheelTop = useRef(false)
+  const onTouchEnd = () => { pull.current = null }
+  // The wheel, in a narrow window: a turn on past the edge it already stood at
+  const wheelAt = useRef({ top: false, end: false })
   const onWheel = (e: React.WheelEvent) => {
-    touched.current = Date.now()
-    const top = (scroller.current?.scrollTop ?? 0) <= 0
-    if (sheetRef.current === 'full' && top && e.deltaY < -10 && wheelTop.current) move('half')
-    wheelTop.current = top
+    const now = edges()
+    const was = wheelAt.current
+    wheelAt.current = now
+    if (sheetRef.current === 'full' && now.top && was.top && e.deltaY < -10) move('half')
+    else if (sheetRef.current === 'half' && now.end && was.end && e.deltaY > 10) move('full')
   }
 
   const many = slides.length > 1
@@ -366,7 +367,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           style={{ transform: `translateY(${edge[sheet]}px)` }}
         />
         <div ref={form} className={`absolute inset-0 flex flex-col ${preview ? '' : 'pointer-events-auto'}`} style={{ transform: `translateY(${edge[sheet]}px)` }}>
-          <div ref={scroller} data-sheet onScroll={onFormScroll} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchEnd} onWheel={onWheel} onFocus={e => setTyping(types(e.target))} onBlur={e => setTyping(types(e.relatedTarget))} className="min-h-0 flex-1 overflow-y-auto">
+          <div ref={scroller} data-sheet onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchEnd} onWheel={onWheel} onFocus={e => setTyping(types(e.target))} onBlur={e => setTyping(types(e.relatedTarget))} className="min-h-0 flex-1 overflow-y-auto">
             {/* Groups 24 px apart (`src/index.css`, as on wide screens), so from one 48 px control to the next is 48 (16 + 8 for a label + 24) */}
             <div className="*:gap-6! *:p-6!" style={{ paddingBottom: `calc(${96 + (full ? 0 : below)}px + env(safe-area-inset-bottom))` }}>
               <InSheet.Provider value={sheet}>{sidebar}</InSheet.Provider>
