@@ -194,8 +194,27 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     const room = el.scrollHeight - el.clientHeight
     return { top: el.scrollTop <= 0, end: room > 1 && el.scrollTop >= room - 1, long: room > 1 }
   }
-  /** The sheet under the finger: where it started and is */
-  const drag = useRef<{ base: number; at: number } | null>(null)
+  /** The sheet under the finger: where it started and is, where the finger started, and which way it went first */
+  const drag = useRef<{ base: number; at: number; x: number; y: number; way?: 'x' | 'y' } | null>(null)
+  // The finger's first move says what it does: up or down it takes the sheet and the form doesn't scroll under it
+  // (called off in the gesture itself, so not a React listener, which can't); across, it leaves the sheet to the
+  // generators' line. `touch-action` on the header didn't do: the line, a scroll of its own, let the form scroll
+  useEffect(() => {
+    const el = scroller.current
+    if (!el) return
+    const onMove = (e: TouchEvent) => {
+      const d = drag.current
+      if (!d) return
+      if (!d.way) {
+        const dx = Math.abs(e.touches[0].clientX - d.x), dy = Math.abs(e.touches[0].clientY - d.y)
+        d.way = dy >= dx ? 'y' : 'x'
+        if (d.way === 'x') { drag.current = null; return }
+      }
+      if (e.cancelable) e.preventDefault()
+    }
+    el.addEventListener('touchmove', onMove, { passive: false })
+    return () => el.removeEventListener('touchmove', onMove)
+  }, [])
   const sheetAt = () => {
     const m = sheetEl.current ? new DOMMatrix(getComputedStyle(sheetEl.current).transform) : null
     return m ? m.m42 : edge[sheetRef.current]
@@ -212,7 +231,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       sheetEl.current.getAnimations().forEach(a => a.cancel())
       formEl.current?.getAnimations().forEach(a => a.finish())
       sheetEl.current.style.transform = `translateY(${at}px)`
-      drag.current = { base: at, at }
+      drag.current = { base: at, at, x: e.touches[0].clientX, y }
     }
   }
   /** The places a finger can take the sheet to */
@@ -223,7 +242,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     const y = e.touches[0].clientY
     p.dy = y - p.y
     const d = drag.current
-    if (!d || !sheetEl.current) return
+    if (!d || d.way !== 'y' || !sheetEl.current) return
     const places = reach(p.long).map(s => edge[s])
     const lo = Math.min(...places), hi = Math.max(...places)
     let at = d.base + p.dy
@@ -237,7 +256,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     pull.current = null
     const d = drag.current
     drag.current = null
-    if (d && p) {
+    if (d?.way === 'y' && p) {
       // Where it was let go, its speed not carrying it on (a flick went on to the next place)
       const aim = d.at
       const to = reach(p.long).reduce((a, b) => (Math.abs(edge[b] - aim) < Math.abs(edge[a] - aim) ? b : a))
