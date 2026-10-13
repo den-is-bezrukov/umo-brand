@@ -304,10 +304,27 @@ export function Segments({ children }: { children: React.ReactNode }) {
   return <div className="flex rounded-[8px] bg-[#f5f5f5]">{children}</div>
 }
 
-export function TextInput({ value, onChange, onBlur, onPaste, placeholder, invalid, numeric, inputMode, list, className = '' }: { value: string; onChange: (v: string) => void; onBlur?: () => void; onPaste?: (e: React.ClipboardEvent) => void; placeholder?: string; invalid?: boolean; numeric?: boolean; inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode']; list?: string; className?: string }) {
+/**
+ * A number one step up or down with ↑ ↓, as the hours sign's times go by half an hour: from a number off the steps the
+ * first lands on one; an empty field takes its placeholder's
+ */
+function stepped(value: string, placeholder: string, dir: 1 | -1, step: number, max: number) {
+  const digits = (t: string) => parseInt(t.split(',')[0].replace(/\D/g, ''), 10)
+  const n = digits(value)
+  if (Number.isNaN(n)) return String(digits(placeholder) || 0)
+  const next = dir > 0 ? Math.floor(n / step) * step + step : Math.ceil(n / step) * step - step
+  return String(Math.max(0, Math.min(max, next)))
+}
+
+export function TextInput({ value, onChange, onBlur, onPaste, placeholder, invalid, numeric, step, max = Infinity, inputMode, list, className = '' }: { value: string; onChange: (v: string) => void; onBlur?: () => void; onPaste?: (e: React.ClipboardEvent) => void; placeholder?: string; invalid?: boolean; numeric?: boolean; /** ↑ ↓ change the number by this */ step?: number; max?: number; inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode']; list?: string; className?: string }) {
   return (
     <input
       value={value}
+      onKeyDown={step ? e => {
+        if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
+        e.preventDefault()
+        onChange(stepped(value, placeholder ?? '', e.key === 'ArrowUp' ? 1 : -1, step, max))
+      } : undefined}
       list={list}
       onChange={e => onChange(e.target.value)}
       onBlur={() => onBlur?.()}
