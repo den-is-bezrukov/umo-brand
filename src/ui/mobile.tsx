@@ -631,15 +631,16 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         // Its shadow off while it's at the page's top, over the whole screen with no list row: it had nowhere to fall and
         // read as cut off. Fixed to the screen of its own, its foot always at the screen's bottom, so Safari 26 carries
         // its white under its floating bar (it carried the page's grey, the page being the fixed box there)
-        className={`fixed inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-[24px] bg-white ${full && !row ? '' : 'shadow-[0_10px_30px_rgba(0,0,0,0.1)]'}`}
+        className={`fixed inset-x-0 bottom-0 flex flex-col rounded-t-[24px] bg-white ${full && !row ? '' : 'shadow-[0_10px_30px_rgba(0,0,0,0.1)]'}`}
         style={{ height: tall, transform: `translateY(${edge[sheet]}px)` }}
       >
         {/* The grabber, the sign a phone's sheets carry that they're dragged (the hold is the whole canvas and the header,
-            not it): 40 × 4, 8 px under the edge, in the sheet's padding; none over the whole screen */}
-        {!full && <span aria-hidden className="pointer-events-none absolute top-2 left-1/2 z-10 h-1 w-10 -translate-x-1/2 rounded-full bg-black/20" />}
+            not it): 40 × 4, 8 px over the edge, on the canvas, going with the sheet (it was in it, under the edge); none
+            over the whole screen */}
+        {!full && <span aria-hidden className="pointer-events-none absolute -top-3 left-1/2 h-1 w-10 -translate-x-1/2 rounded-full bg-black/20" />}
         <div ref={scroller} data-sheet onFocus={onFocus} onBlur={onBlur} // Always a scroll: switched off lowered, iOS laid the form's layers anew as the finger let go, and the generators'
           // line's fades went for a frame (lowered, a finger on the header takes the sheet anyway)
-          className="min-h-0 flex-1 overflow-y-auto [contain:paint]">
+          className="min-h-0 flex-1 overflow-y-auto rounded-t-[24px] [contain:paint]">
           {/* Groups 24 px apart (`src/index.css`, as on wide screens), so from one 48 px control to the next is 48 (16 + 8
               for a label + 24); at 60% as much again under the form's end as is under the screen, to scroll it into view */}
           <div ref={formEl} className="*:gap-6! *:p-6!" style={{ paddingBottom: `calc(${96 + (typing ? screen.h : full ? 0 : below)}px + env(safe-area-inset-bottom))` }}>
