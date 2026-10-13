@@ -918,13 +918,13 @@ const DICTIONARY: { good: ReactNode; bad: ReactNode; why: string }[] = [
 
 /**
  * Голос → Примеры (Figma 5030:11343): the voice as it reads in the brand's own messages — chat-like grey bubbles
- * (round but the bottom-left corner), photos with a line over them. Three columns from `md`, each a stack; in the
+ * (round but the top-left corner), photos with a line over them. Three columns from `md`, each a stack; in the
  * middle and right ones the photo takes what's left, so the columns end level. On phones they stack in one column,
  * the photos 3:4.
  */
 function Bubble({ title, children }: { title?: ReactNode; children?: ReactNode }) {
   return (
-    <div className="flex flex-col gap-2 rounded-t-2xl rounded-br-2xl bg-[#f5f5f5] p-4 leading-[1.25]">
+    <div className="flex flex-col gap-2 rounded-tr-2xl rounded-b-2xl bg-[#f5f5f5] p-4 leading-[1.25]">
       {title && <p className="text-[20px] font-medium tracking-[-0.01em]">{title}</p>}
       {children && <p className="text-[16px]">{children}</p>}
     </div>
@@ -935,7 +935,7 @@ function Bubble({ title, children }: { title?: ReactNode; children?: ReactNode }
 function PhotoCard({ name, title, children, grow, focus }: { name: string; title: ReactNode; children?: ReactNode; grow?: boolean; focus?: number }) {
   return (
     // 4:3 on phones, to save the one column's height; 3:4 from md, as in Figma. Shaped as the bubbles, a message too
-    <div className={`relative aspect-4/3 overflow-hidden rounded-t-2xl rounded-br-2xl bg-[#f5f5f5] sm:aspect-3/4 ${grow ? 'sm:aspect-auto sm:min-h-0 sm:flex-1' : ''}`}>
+    <div className={`relative aspect-4/3 overflow-hidden rounded-tr-2xl rounded-b-2xl bg-[#f5f5f5] sm:aspect-3/4 ${grow ? 'sm:aspect-auto sm:min-h-0 sm:flex-1' : ''}`}>
       <img src={img(name)} alt="" loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover sm:object-center!" style={focus !== undefined ? { objectPosition: `50% ${focus}%` } : undefined} />
       <div className="absolute inset-x-4 top-4 flex flex-col gap-2 leading-[1.25] text-white">
         {/* A line alone over a photo is 240 wide, as in Figma, so it breaks the same way on any card */}
@@ -1111,7 +1111,7 @@ export default function Guide() {
       {/* Mobile table of contents: a bar at the bottom names the heading you're reading and stands in for the
           sidebar; tapped, the full contents open between the header and the bar, which turns into «Свернуть». */}
       <div className="lg:hidden">
-        {/* A sheet from the bottom, 60% of the screen at most (two thirds and a half were tried; a 6.3" phone still needs a shifted grip for the top), its top corners 16 px round, as the voice examples' bubbles, over the page dimmed: every item within a thumb's
+        {/* A sheet from the bottom, 60% of the screen at most (two thirds and a half were tried; a 6.3" phone still needs a shifted grip for the top), its top corners 16 px round, as the voice examples' bubbles' corners, over the page dimmed: every item within a thumb's
             reach, the list scrolling inside it, opened at the chapter you're reading (it took the whole screen under the
             header, its top items out of reach). A tap on the page above closes it, as «Свернуть» does */}
         {menuOpen && (
