@@ -4,7 +4,7 @@ import { InSlide, InFoot, InSheet, SheetSize } from '@/ui/phone'
 
 // A trial of the generators' phone layout (Figma 5098:5806, «Mobile Layout»): the canvas over a sheet holding the
 // sidebar (header and form) with the download at its foot. A list's pictures are swiped one at a time, with a row over
-// them: delete, «‹ n/total ↺ ›» (a slide that isn't an item: its name), copy; one picture has its reset and copy in the canvas's top corners instead. A tap on
+// them: delete, «‹ n/total ↺ ›» (a slide that isn't an item: its name), copy; one portrait picture has its reset and copy in the canvas's top corners instead, a landscape one a row with its name. A tap on
 // a picture that would grow by it folds the sheet away (a portrait one: a landscape one is as wide either way), a
 // shrink icon under it bringing the sheet back; the icon in the sheet's header opens the form over the whole screen.
 // In the link: `arrows=0` hides the arrows (swiping alone)
@@ -28,6 +28,8 @@ const HALF = '60dvh'
 /** A picture's inset in the canvas: 10 px of padding and 10 more beside it, over and under it (Figma 5105:8456) */
 const SIDE = 20
 const INSET = 10
+/** Off the sides with the controls in the canvas's top corners: past them (10 + 30) and 10 more */
+const CORNER = 50
 /** The canvas's padding and its rows' height (Figma 5105:8488) */
 const ROW = 30
 const PAD = 10
@@ -162,6 +164,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   const reset = slide?.reset ?? (staff && current && !staff.isBlank(current) ? { onClick: () => staff.clear(current.key), label: 'Сбросить' } : undefined)
   /** The row over the picture: a list's, or a removal's «Вернуть» right after the last but one went */
   const row = many || !!staff?.removed
+  /** One portrait picture (the price card, the sign) has its reset and copy in the canvas's top corners, no row over it,
+   * so it takes the canvas's height (Figma 5105:8373); a landscape one keeps the row, the corners being over its edge */
+  const corners = !row && (slide?.ratio ?? 0) > 1
 
   // The screen's size, to tell whether folding the sheet away would make the picture larger
   const [screen, setScreen] = useState({ w: innerWidth, h: innerHeight })
@@ -170,9 +175,8 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     addEventListener('resize', on)
     return () => removeEventListener('resize', on)
   }, [])
-  // One picture's reset and copy stand in a row of their own over it too, never on it: the controls matter more than
-  // the picture's size (in the canvas's top corners they lay over a landscape item's edge)
-  const rowsH = (full ? 0 : ROW) + 2 * PAD + 2 * INSET
+  // Under the row, if there's one
+  const rowsH = (full || corners ? 0 : ROW) + 2 * PAD + 2 * INSET
   const growth = (ratio?: number) => {
     if (!ratio) return 1
     const w = screen.w - 2 * SIDE
@@ -231,7 +235,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       {/* One picture: a row over it as a list's, its name in the middle with the reset after it, copy on the right (in
           the canvas's top corners over the strip, Figma 5105:8373, they covered a landscape item's edge, and the name
           stood in a caption under the picture, unlike a list's) */}
-      {!row && !full && (
+      {!row && !full && !corners && (
         <div className="flex h-[30px] shrink-0 items-center justify-between">
           <Btn label="" hidden onClick={() => {}}>{null}</Btn>
           <div className="flex min-w-0 flex-1 items-center justify-center">
@@ -241,6 +245,13 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           </div>
           {staff ? copyBtn : <Btn label="" hidden onClick={() => {}}>{null}</Btn>}
         </div>
+      )}
+
+      {corners && !full && (
+        <>
+          <div className="absolute top-[10px] left-[10px] z-10">{reset && resetBtn}</div>
+          <div className="absolute top-[10px] right-[10px] z-10">{staff && copyBtn}</div>
+        </>
       )}
 
       {/* The pictures, one to a screen; a tap on one that grows by it folds the sheet away */}
@@ -257,7 +268,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
             // move a copy 4 px down and cut its top edge); one taller than the screen's width scrolls. A sheet's caption
             // goes, its name in the row
             <div key={s.key} className={`flex h-full w-full shrink-0 snap-center ${s.ratio ? 'overflow-clip' : 'overflow-y-auto [scrollbar-width:none]'} ${s.label ? '[&_figcaption]:hidden' : ''}`}>
-              {box.w > 0 && <Fitted ratio={s.ratio} box={box} node={s.node} />}
+              {box.w > 0 && <Fitted ratio={s.ratio} box={box} node={s.node} side={corners ? CORNER : SIDE} />}
             </div>
           ))}
         </div>
@@ -312,13 +323,13 @@ const TrashIcon = () => (
  * stays in, however the strip's height rounds), along with what stands under it — an item's faults, a sheet's caption —
  * measured, so they're never cut off by the sheet
  */
-function Fitted({ ratio, box, node }: { ratio?: number; box: { w: number; h: number }; node: Slide['node'] }) {
+function Fitted({ ratio, box, node, side }: { ratio?: number; box: { w: number; h: number }; node: Slide['node']; side: number }) {
   const ref = useRef<HTMLDivElement>(null)
   // The height beyond the picture's own
   const [extra, setExtra] = useState(0)
   const w = ratio
-    ? Math.max(0, Math.floor(Math.min(box.w - 2 * SIDE, (box.h - 2 * INSET - extra) / ratio)))
-    : Math.max(0, box.w - 2 * SIDE)
+    ? Math.max(0, Math.floor(Math.min(box.w - 2 * side, (box.h - 2 * INSET - extra) / ratio)))
+    : Math.max(0, box.w - 2 * side)
   useLayoutEffect(() => {
     const el = ref.current
     if (!el || !ratio) return
