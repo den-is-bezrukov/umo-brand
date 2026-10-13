@@ -34,6 +34,8 @@ const CORNER = 50
 /** The canvas's padding and its rows' height (Figma 5105:8488) */
 const ROW = 30
 const PAD = 10
+/** A field lifted for typing stands this far under the sheet's top: its group's 24 px padding, label and 12 px to it */
+const LIFT = 52
 /** How much the sheet gives past its last place under a finger */
 const SPRING = 0.3
 /** A sheet let go goes on, slowing down */
@@ -339,6 +341,36 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   const tall = Math.max(0, screen.h - (row ? ROW + 2 * PAD : 0))
   const below = Math.max(0, Math.round(tall - screen.h * HALF_SHARE))
   const edge = { preview: tall - peek, half: below, full: 0 }
+  // Typing on a phone opens the form over the screen and lifts the field to its top, under its label, so the keyboard
+  // coming up finds it in view and iOS leaves the page where it is (it moved the whole page up, the picture and the
+  // sheet's top off the screen; following iOS's pan with the page, tried, shrank the picture); the keyboard gone, the
+  // sheet goes back where it was. Room enough under the form while typing to lift its last field
+  const before = useRef<Sheet | null>(null)
+  const lift = useRef<HTMLElement | null>(null)
+  const onFocus = (e: React.FocusEvent) => {
+    const t = types(e.target)
+    setTyping(t)
+    if (!t || !matchMedia('(pointer: coarse)').matches) return
+    if (before.current === null) before.current = sheetRef.current
+    lift.current = e.target as HTMLElement
+    move('full')
+  }
+  useEffect(() => {
+    if (typing || before.current === null) return
+    const s = before.current
+    before.current = null
+    move(s)
+  }, [typing]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Before the sheet's own move below, which then carries the form from where it stood
+  useLayoutEffect(() => {
+    const el = scroller.current, field = lift.current
+    lift.current = null
+    if (!el || !field) return
+    const was = el.scrollTop
+    el.scrollTop += field.getBoundingClientRect().top - el.getBoundingClientRect().top - LIFT
+    const d = el.scrollTop - was
+    if (d && !from.current) formEl.current?.animate([{ transform: `translateY(${d}px)` }, { transform: 'none' }], { duration: TURN_MS, easing: 'cubic-bezier(0.67, 0, 0.33, 1)' })
+  })
   const sheetEl = useRef<HTMLDivElement>(null)
   const formEl = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => {
@@ -446,10 +478,10 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         className="absolute inset-x-0 bottom-0 flex flex-col overflow-hidden rounded-t-[24px] bg-white shadow-[0_10px_30px_rgba(0,0,0,0.1)]"
         style={{ height: tall, transform: `translateY(${edge[sheet]}px)` }}
       >
-        <div ref={scroller} data-sheet onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchCancel} onFocus={e => setTyping(types(e.target))} onBlur={e => setTyping(types(e.relatedTarget))} className={`min-h-0 flex-1 [contain:paint] ${preview ? 'overflow-y-hidden' : 'overflow-y-auto'}`}>
+        <div ref={scroller} data-sheet onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchCancel} onFocus={onFocus} onBlur={e => setTyping(types(e.relatedTarget))} className={`min-h-0 flex-1 [contain:paint] ${preview ? 'overflow-y-hidden' : 'overflow-y-auto'}`}>
           {/* Groups 24 px apart (`src/index.css`, as on wide screens), so from one 48 px control to the next is 48 (16 + 8
               for a label + 24); at 60% as much again under the form's end as is under the screen, to scroll it into view */}
-          <div ref={formEl} className="*:gap-6! *:p-6!" style={{ paddingBottom: `calc(${96 + (full ? 0 : below)}px + env(safe-area-inset-bottom))` }}>
+          <div ref={formEl} className="*:gap-6! *:p-6!" style={{ paddingBottom: `calc(${96 + (typing ? screen.h : full ? 0 : below)}px + env(safe-area-inset-bottom))` }}>
             <InSheet.Provider value={sheet}>{sidebar}</InSheet.Provider>
           </div>
         </div>
