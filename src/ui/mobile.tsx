@@ -227,7 +227,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     }
   }
   /** The places a finger can take the sheet to */
-  const reach = (long: boolean): Sheet[] => [...(long ? ['full' as const] : []), 'half', 'preview']
+  // Over the whole screen while it stands there, a short form's too (typing takes it there): left out, the first move
+  // threw the sheet to its 60% place as past its last one
+  const reach = (long: boolean): Sheet[] => [...(long || sheetRef.current === 'full' ? ['full' as const] : []), 'half', 'preview']
   const onTouchMove = (e: React.TouchEvent) => {
     const p = pull.current
     if (!p) return
