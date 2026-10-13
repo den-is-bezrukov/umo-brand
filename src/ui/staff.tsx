@@ -247,15 +247,23 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
     setFresh(f => new Set(f).add(key))
     update(key, blank)
   }
-  /** A new item at the end: empty, or a copy of `from` (the price card's next card starts as the last one) */
-  const add = (from?: P) => {
+  /**
+   * A new item at the end: empty, or a copy of `from` (the price card's next card starts as the last one), fresh unless
+   * said otherwise (a business card's new person starts with the salon's phone, still fresh)
+   */
+  const add = (from?: P, fresh = !from) => {
     const r = row(from ?? blank)
-    if (!from) setFresh(f => new Set(f).add(r.key))
+    if (fresh) setFresh(f => new Set(f).add(r.key))
     focusNext.current = true
     centre.current = true
     setPeople([...people, r])
     setSelected(r.key)
   }
+  /**
+   * Every item changed by `patch` where it returns something (a dealer's phone into the people who had none). Not an
+   * edit: a loaded file stays the file
+   */
+  const fill = (patch: (p: Row<P>) => Partial<P> | null) => setList(list => list.map(p => { const c = patch(p); return c ? { ...p, ...c } : p }))
   const isBlank = (p: P) => (Object.keys(blank) as (keyof P)[]).every(k => p[k] === blank[k])
 
   /**
@@ -363,7 +371,7 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
 
   return {
     mode, setMode, people, items, file, current, selected, setSelected, tableError, dragging, dropTarget, loadFile,
-    showsMissing, form, figureRef, goTo, nextOf, inWork, pick, update, remove, add, isBlank, paste, useKeys,
+    showsMissing, form, figureRef, goTo, nextOf, inWork, pick, update, fill, remove, add, isBlank, paste, useKeys,
     duplicate, clear, removed, restore, dismiss: () => setRemoved(null), accept, uploadLabel, countWord,
   }
 }

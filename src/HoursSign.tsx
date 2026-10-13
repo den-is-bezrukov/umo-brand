@@ -8,13 +8,13 @@ import { linkParams, useLinkState, saveAndOpenPdf } from '@/ui/share'
 import { loadFont, toD } from '@/livery/geometry'
 import { maskPhone, siteFor } from '@/card/card'
 import { SIGN, SIGN_KEY, LOGO, buildSign, oneLine, timeText, type SignField, type Input } from '@/hours/sign'
-import { DEALER_NAMES, dealerFilter, withoutUmo } from '@/data/dealers'
+import { DEALER_NAMES, dealerFilter, withoutUmo, phoneOf } from '@/data/dealers'
 import { DEFAULT_HOURS_LINE, ADDRESSES, addressOf, hoursOf } from '@/data/hours'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 
 // The dealership's hours sign (Figma: UMO | Evrone, node 3819:4211): a 480×680 mm plate with the logo, the hours, a
 // line under them and the dealership at the bottom, as a PDF in outlines for the maker. A dealer picked from the list
-// puts in its address and hours from umo.auto and its site, all of them edited freely; the phone isn't on umo.auto.
+// puts in its address and hours from umo.auto and its site, all of them edited freely; the phone from the hand-kept list.
 
 /** The dealers' names without «UMO», which the sign puts before them, fixed */
 const NAMES = DEALER_NAMES.map(withoutUmo)
@@ -149,7 +149,9 @@ export default function HoursSign() {
   // A name with «UMO» (a link made by hand) loses it, as the sign puts it before the name; a phone takes the field's mask
   const [dealer, setDealer] = useState(() => withoutUmo(link.get('name') ?? ''))
   const [address, setAddress] = useState(() => link.get('address') ?? addressOf(link.get('name') ?? '') ?? '')
-  const [phone, setPhone] = useState(() => maskPhone(link.get('phone') ?? '').text)
+  const [phone, setPhone] = useState(() => maskPhone(link.get('phone') ?? phoneOf(link.get('name') ?? '') ?? '').text)
+  /** A dealer's phone as the field writes it */
+  const dealerPhone = (name: string) => { const p = phoneOf(name); return p ? maskPhone(p).text : undefined }
   /** The site follows the dealer's name (`siteFor`) until it's edited: null */
   const [ownSite, setSite] = useState<string | null>(link.get('site'))
   const site = ownSite ?? siteFor(dealer)
@@ -159,7 +161,7 @@ export default function HoursSign() {
     // off: line.trim() ? null : 'line',
     name: dealer,
     address: address === addressOf(dealer) ? null : address,
-    phone,
+    phone: phone === dealerPhone(dealer) ? null : phone,
     site: ownSite,
   })
 
@@ -197,9 +199,11 @@ export default function HoursSign() {
   const toField = () => form.current?.querySelector<HTMLElement>(`[data-field="${firstAt}"] input, [data-field="${firstAt}"] textarea`)?.focus()
 
   const pickDealer = (v: string) => {
-    // The address and hours follow the dealer picked while they're empty or the previous dealer's
+    // The address, phone and hours follow the dealer picked while they're empty or the previous dealer's
     const a = addressOf(v)
     if (a && (!address.trim() || address === addressOf(dealer))) setAddress(a)
+    const p = dealerPhone(v)
+    if (p && (!phone.trim() || phone === dealerPhone(dealer))) setPhone(p)
     const h = hoursOf(v)
     const was = hoursOf(dealer)
     if (h && ((!from.trim() && !to.trim()) || (was && from === was.from && to === was.to))) { setFrom(h.from); setTo(h.to) }

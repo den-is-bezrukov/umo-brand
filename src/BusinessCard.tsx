@@ -9,7 +9,7 @@ import { xlsxCells, pastedCells, byHeaders, FULL_NAME, fromFullName, type Cells 
 import { CARDS_KEY, CARD, QR, FACE, BACK_LOGO, DEALER_FIELDS, buildBack, siteFor, siteText, splitPhone, maskPhone, type CardField, type Dealer, type Person, type QrData } from '@/card/card'
 import CardArt from '@/card/CardArt'
 import { POSITIONS } from '@/data/positions'
-import { DEALER_NAMES, dealerFilter, dealerOf, withoutUmo } from '@/data/dealers'
+import { DEALER_NAMES, dealerFilter, dealerOf, withoutUmo, phoneOf } from '@/data/dealers'
 import { isPdf, readPdfData } from '@/ui/pdfData'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { linkParams, saveAndOpenPdf } from '@/ui/share'
@@ -77,6 +77,8 @@ function fromLink(): { dealer: Omit<Dealer, 'site'> & { site: string | null }; q
   const get = (k: string) => link.get(k)?.trim() ?? ''
   const name = withoutUmo(get('dealer'))
   const person = { ...BLANK, name: get('name'), surname: get('surname'), position: get('position'), email: get('email'), phone: maskPhone(get('phone')).text, ext: get('ext').replace(/\D/g, '').slice(0, 6) }
+  // A person with no phone takes the salon's, as when the dealer is picked
+  if (!person.phone && Object.values(person).some(Boolean)) person.phone = maskPhone(phoneOf(name) ?? '').text
   return {
     dealer: { name, address: get('address') || addressOf(name) || '', site: get('site') || null },
     qrLink: get('qr') || null,
@@ -191,7 +193,15 @@ export default function BusinessCard() {
     dealerForm.current?.querySelector<HTMLElement>(`[data-field="${at}"] textarea, [data-field="${at}"] input`)?.focus()
   }
 
-  const pickDealer = (v: string) => setDealer(d => ({
+  /** The salon's phone as the field writes it: a person's phone and their extension make the salesman's line */
+  const salonPhone = (name: string) => { const p = phoneOf(name); return p ? maskPhone(p).text : undefined }
+  const pickDealer = (v: string) => {
+    // People's phones follow the dealer picked while they're empty or the previous dealer's
+    const was = salonPhone(dealer.name), now = salonPhone(v)
+    if (now) staff.fill(p => (!p.phone.trim() || p.phone === was ? { phone: now } : null))
+    setDealerOnly(v)
+  }
+  const setDealerOnly = (v: string) => setDealer(d => ({
     ...d,
     name: v,
     // The address follows the dealer picked while it's empty or the previous dealer's
@@ -464,7 +474,7 @@ export default function BusinessCard() {
           </div>
           {items.map(renderItem)}
           <Removed staff={staff} at={items.length} />
-          {mode === 'manual' && <AddTile onClick={() => staff.add()} />}
+          {mode === 'manual' && <AddTile onClick={() => { const p = salonPhone(dealer.name); if (p) staff.add({ ...BLANK, phone: p }, true); else staff.add() }} />}
         </div>
         )}
       </main>

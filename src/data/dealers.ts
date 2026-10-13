@@ -1,8 +1,11 @@
 import site from './dealers.json'
 import own from './dealers-own.json'
 
-/** A dealer as the generators know it: umo.auto's data, and the hand-kept names it's also called by (`aka`) */
-export interface Dealer { name: string; city: string; address: string; hours: string; aka: string[] }
+/**
+ * A dealer as the generators know it: umo.auto's data, the hand-kept names it's also called by (`aka`), and its UMO
+ * showroom's phone (hand-kept: umo.auto has none)
+ */
+export interface Dealer { name: string; city: string; address: string; hours: string; phone: string; aka: string[] }
 
 /**
  * Every dealer: umo.auto's (dealers.json, parsed by scripts/fetch-dealers.mjs) and the hand-kept ones (dealers-own.json):
@@ -14,7 +17,7 @@ export function mergeDealers(fromSite: Partial<Dealer>[], fromHand: Partial<Deal
   for (const d of [...fromSite, ...fromHand]) {
     if (!d.name) continue
     const was = all.get(d.name)
-    all.set(d.name, { name: d.name, city: d.city ?? was?.city ?? '', address: d.address ?? was?.address ?? '', hours: d.hours ?? was?.hours ?? '', aka: [...(was?.aka ?? []), ...(d.aka ?? [])] })
+    all.set(d.name, { name: d.name, city: d.city ?? was?.city ?? '', address: d.address ?? was?.address ?? '', hours: d.hours ?? was?.hours ?? '', phone: d.phone ?? was?.phone ?? '', aka: [...(was?.aka ?? []), ...(d.aka ?? [])] })
   }
   return [...all.values()].sort((a, b) => a.name.localeCompare(b.name, 'ru'))
 }
@@ -105,3 +108,6 @@ export const dealerFilter = (typed: string, options: string[]) => {
   const found = new Set(findDealers(typed).map(d => withoutUmo(d.name)))
   return options.filter(o => found.has(withoutUmo(o)))
 }
+
+/** The UMO showroom's phone of a dealer, as written (the fields put it through their mask) */
+export const phoneOf = (name: string) => dealerOf(name)?.phone || undefined
