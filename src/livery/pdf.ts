@@ -9,8 +9,8 @@ import type { Surface } from './layout'
 const PT = 72 / 25.4
 // The livery colour of the Illustrator sources: rich black, C60 M40 Y40 K100.
 const INK: [number, number, number, number] = [0.6, 0.4, 0.4, 1]
-// The dimensions' orange, #ff4000, as on the page
-const DIMS: [number, number, number] = [1, 0x40 / 255, 0]
+// The dimensions' orange, #de3800, as on the page
+const DIMS: [number, number, number] = [0xde / 255, 0x38 / 255, 0]
 
 /** Fills outlines given in sheet millimetres (y down), scaled by `k` and moved to (ox, oy) from the page's top left */
 function fillShapes(page: PDFPage, shapes: Cmd[][], k: number, ox: number, oy: number, color: 'ink' | 'white' | 'black' | 'dims') {
