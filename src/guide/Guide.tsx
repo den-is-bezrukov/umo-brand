@@ -654,8 +654,8 @@ function BarLinks() {
 
 /**
  * The mobile contents sheet's moves, as the generators' sheet (docs/generators.md): it follows a finger — the bottom
- * bar pulled up brings it out, and pulled down it goes, from anywhere on it while its list is scrolled to the top
- * (else the list scrolls) — and let go it goes on in 350 ms, slowing down, to the nearer of open and closed, its speed
+ * bar pulled up brings it out from behind the bar, and pulled down it goes, by the bar or from anywhere on it while its
+ * list is scrolled to the top (else the list scrolls) — and let go it goes on in 350 ms, slowing down, to the nearer of open and closed, its speed
  * not carrying it on; past open it gives at 30%. A tap, Esc or a link moves it the same way. It stays in the page, out
  * of sight closed, so it's measured and slides from the first touch; only transforms move.
  */
@@ -703,9 +703,9 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, list: RefO
     const barEl = bar.current
     const sheetEl = sheet.current
     if (!barEl || !sheetEl) return
-    let start: { x: number, y: number, from: number, mode: 'open' | 'close' | 'none' | null } | null = null
+    let start: { x: number, y: number, from: number, onBar: boolean, mode: 'open' | 'close' | 'none' | null } | null = null
     const down = (from: number) => (e: TouchEvent) => {
-      start = { x: e.touches[0].clientX, y: e.touches[0].clientY, from, mode: null }
+      start = { x: e.touches[0].clientX, y: e.touches[0].clientY, from, onBar: barEl.contains(e.target as Node), mode: null }
     }
     const move = (e: TouchEvent) => {
       if (!start) return
@@ -715,7 +715,7 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, list: RefO
         if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return
         const vertical = Math.abs(dy) > Math.abs(dx)
         if (start.from === 0) start.mode = vertical && dy < 0 ? 'open' : 'none'
-        else start.mode = vertical && dy > 0 && (list.current?.scrollTop ?? 0) <= 0 ? 'close' : 'none'
+        else start.mode = vertical && dy > 0 && (start.onBar || (list.current?.scrollTop ?? 0) <= 0) ? 'close' : 'none'
         if (start.mode === 'none') return
         dragging.current = true
         if (start.mode === 'open') api.reveal()
@@ -736,7 +736,7 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, list: RefO
       setOpen(target)
     }
     const opts = { passive: false }
-    const fromBar = down(0)
+    const fromBar = (e: TouchEvent) => down(pos.current >= 0.5 ? 1 : 0)(e)
     const fromSheet = down(1)
     barEl.addEventListener('touchstart', fromBar, { passive: true })
     sheetEl.addEventListener('touchstart', fromSheet, { passive: true })
@@ -1396,34 +1396,31 @@ export default function Guide() {
         {/* A sheet from the bottom, 60% of the screen at most (two thirds and a half were tried; a 6.3" phone still needs a shifted grip for the top), its top corners 16 px round, as the voice examples' bubbles' corners, over the page dimmed: every item within a thumb's
             reach, the list scrolling inside it, opened at the chapter you're reading (it took the whole screen under the
             header, its top items out of reach). A tap on the page above closes it, as «Свернуть» does */}
-        {/* The bar stays under the sheet, which slides over it; pulled up, it brings the sheet with the finger. */}
-        {/* The whole bar opens the contents (the button's ::before covers it), save the quick links standing in it. As
-            with the header, the white runs a screen on past its bottom: iOS 26 Safari draws the page under its floating
-            toolbar, and while that slides the bar's bottom edge lets the page show through. It overlaps the bar by 2px,
-            so no seam opens between them on a fractional pixel. */}
-        <div ref={toc.bar} aria-hidden={menuOpen || undefined} className="fixed inset-x-0 bottom-0 z-40 flex items-start gap-4 bg-white after:pointer-events-none after:absolute after:inset-x-0 after:top-[calc(100%-2px)] after:h-screen after:bg-white after:content-[''] md:gap-6 px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]">
-          <button
-            type="button"
-            onClick={() => setMenuOpen(true)}
-            aria-expanded={menuOpen}
-            aria-label={sectionTitle ? `Содержание: ${sectionTitle}` : 'Содержание'}
-            className="flex min-w-0 cursor-pointer items-start gap-2 text-left before:absolute before:inset-0 before:content-['']"
-          >
-            <TocIcon name="menu" />
-            <span className="min-w-0 truncate">{sectionTitle ?? 'Содержание'}</span>
-          </button>
-          <BarLinks />
-        </div>
         <div ref={toc.dim} aria-hidden className="invisible fixed inset-0 z-40 bg-black/40 opacity-0" onClick={() => setMenuOpen(false)} />
-        <div ref={toc.sheet} inert={!menuOpen || undefined} className="invisible fixed inset-x-0 bottom-0 z-40 flex max-h-[60dvh] flex-col overflow-hidden rounded-t-2xl bg-white">
-          <div ref={sheetRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 md:px-6 md:pt-6">
-            <Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} />
+        {/* One bar at the foot, the sheet's own when it's open: the list comes out from behind it and goes back there,
+            and the bar says «Свернуть». The whole bar toggles the contents (the button's ::before covers it), save the
+            quick links standing in it on the first screen. As with the header, the bar's white runs a screen on past
+            its bottom: iOS 26 Safari draws the page under its floating toolbar, and while that slides the bar's bottom
+            edge lets the page show through; it overlaps the bar by 2px, so no seam opens on a fractional pixel. */}
+        <div className="fixed inset-x-0 bottom-0 z-40">
+          <div ref={toc.sheet} inert={!menuOpen || undefined} className="invisible absolute inset-x-0 bottom-full flex max-h-[calc(60dvh-52px)] flex-col overflow-hidden rounded-t-2xl bg-white md:max-h-[calc(60dvh-68px)]">
+            <div ref={sheetRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 md:px-6 md:pt-6">
+              <Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} />
+            </div>
           </div>
-          <TocToggle
-            expanded
-            onClick={() => setMenuOpen(false)}
-            className="w-full px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]"
-          />
+          <div ref={toc.bar} className="relative z-10 flex items-start gap-4 bg-white after:pointer-events-none after:absolute after:inset-x-0 after:top-[calc(100%-2px)] after:h-screen after:bg-white after:content-[''] md:gap-6 px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]">
+            <button
+              type="button"
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-expanded={menuOpen}
+              aria-label={menuOpen ? 'Свернуть' : sectionTitle ? `Содержание: ${sectionTitle}` : 'Содержание'}
+              className="flex min-w-0 cursor-pointer items-start gap-2 text-left before:absolute before:inset-0 before:content-['']"
+            >
+              <TocIcon name={menuOpen ? 'close' : 'menu'} />
+              <span className="min-w-0 truncate">{menuOpen ? 'Свернуть' : sectionTitle ?? 'Содержание'}</span>
+            </button>
+            {!menuOpen && <BarLinks />}
+          </div>
         </div>
       </div>
 
