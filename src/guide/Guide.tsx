@@ -344,6 +344,9 @@ function useActiveInView(asideRef: RefObject<HTMLElement | null>, active: string
   }, [asideRef, active, expandAll])
 }
 
+/** Trial: the sidebar wordmark's height in px, with the Y cobrand on the first screen and alone once folded. */
+const UMO_Y_HEIGHT = { open: 40, folded: 24 }
+
 /**
  * While the page slides up over the hero, the sidebar's toggle row stays fixed at the bottom of the screen, while the
  * sidebar runs off it, so the contents unroll between the logo and the row as the page rises. They fade in over the
@@ -364,12 +367,15 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
       const lift = Math.max(0, body.getBoundingClientRect().top)
       const logo = aside.querySelector<HTMLElement>('[data-logo]')
       // The page starts at its own offset from the top (a strip above the bottom of the screen) — that's how far it rises.
-      // Trial: the UMO × Y lockup folds into UMO as the page rises; the wordmark stays 200 wide, or less where the
-      // unfolded lockup (5/3 of it) wouldn't fit the sidebar.
+      // Trial: the UMO × Y lockup folds into UMO as the page rises, the wordmark going from UMO_Y_HEIGHT.open high to
+      // .folded (5 times as wide), held lower where the unfolded lockup wouldn't fit the sidebar.
       const umoY = logo?.querySelector<SVGSVGElement>('[data-umo-y]')
       if (logo && umoY) {
-        const word = Math.min(200, ((logo.parentElement?.clientWidth ?? 248) - 48) * 0.6)
-        logo.style.width = `${word * setUmoY(umoY, 1 - Math.min(1, lift / Math.max(1, body.offsetTop)))}px`
+        const t = 1 - Math.min(1, lift / Math.max(1, body.offsetTop))
+        const lockup = setUmoY(umoY, t)
+        const room = (logo.parentElement?.clientWidth ?? 248) - 48
+        const word = Math.min(5 * (UMO_Y_HEIGHT.open + (UMO_Y_HEIGHT.folded - UMO_Y_HEIGHT.open) * t), room / lockup)
+        logo.style.width = `${word * lockup}px`
       }
       const nav = aside.querySelector('nav')
       if (nav) {
