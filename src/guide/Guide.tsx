@@ -368,13 +368,14 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
       const logo = aside.querySelector<HTMLElement>('[data-logo]')
       // The page starts at its own offset from the top (a strip above the bottom of the screen) — that's how far it rises.
       // Trial: the UMO × Y lockup folds into UMO as the page rises, the wordmark going from UMO_Y_HEIGHT.open high to
-      // .folded (5 times as wide), held lower where the unfolded lockup wouldn't fit the sidebar.
+      // .folded (5 times as wide); where the unfolded lockup wouldn't fit the sidebar, it starts lower.
       const umoY = logo?.querySelector<SVGSVGElement>('[data-umo-y]')
       if (logo && umoY) {
         const t = 1 - Math.min(1, lift / Math.max(1, body.offsetTop))
         const lockup = setUmoY(umoY, t)
-        const room = (logo.parentElement?.clientWidth ?? 248) - 48
-        const word = Math.min(5 * (UMO_Y_HEIGHT.open + (UMO_Y_HEIGHT.folded - UMO_Y_HEIGHT.open) * t), room / lockup)
+        // The unfolded lockup is 5/3 of the wordmark and 5 times its height wide.
+        const open = Math.min(UMO_Y_HEIGHT.open, ((logo.parentElement?.clientWidth ?? 248) - 48) * 0.6 / 5)
+        const word = 5 * (open + (UMO_Y_HEIGHT.folded - open) * t)
         logo.style.width = `${word * lockup}px`
       }
       const nav = aside.querySelector('nav')
