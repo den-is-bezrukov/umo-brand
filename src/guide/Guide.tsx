@@ -344,8 +344,12 @@ function useActiveInView(asideRef: RefObject<HTMLElement | null>, active: string
   }, [asideRef, active, expandAll])
 }
 
-/** Trial: the sidebar wordmark's height in px, with the Y cobrand on the first screen and alone once folded. */
-const UMO_Y_HEIGHT = { open: 40, folded: 24 }
+/**
+ * Trial: the sidebar wordmark's height with the Y cobrand on the first screen, in the statement's em (CoFo Sans's
+ * capitals are 0.68 em, so UMO stands as high as them as the statement's size follows the screen), and in px alone
+ * once folded.
+ */
+const UMO_Y_HEIGHT = { open: 0.68, folded: 24 }
 
 /**
  * While the page slides up over the hero, the sidebar's toggle row stays fixed at the bottom of the screen, while the
@@ -367,14 +371,16 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
       const lift = Math.max(0, body.getBoundingClientRect().top)
       const logo = aside.querySelector<HTMLElement>('[data-logo]')
       // The page starts at its own offset from the top (a strip above the bottom of the screen) — that's how far it rises.
-      // Trial: the UMO × Y lockup folds into UMO as the page rises, the wordmark going from UMO_Y_HEIGHT.open high to
-      // .folded (5 times as wide); where the unfolded lockup wouldn't fit the sidebar, it starts lower.
+      // Trial: the UMO × Y lockup folds into UMO as the page rises, the wordmark going from the statement's capitals
+      // high to UMO_Y_HEIGHT.folded (5 times as wide); where the unfolded lockup wouldn't fit the sidebar, it starts lower.
       const umoY = logo?.querySelector<SVGSVGElement>('[data-umo-y]')
       if (logo && umoY) {
         const t = 1 - Math.min(1, lift / Math.max(1, body.offsetTop))
         const lockup = setUmoY(umoY, t)
         // The unfolded lockup is 5/3 of the wordmark and 5 times its height wide.
-        const open = Math.min(UMO_Y_HEIGHT.open, ((logo.parentElement?.clientWidth ?? 248) - 48) * 0.6 / 5)
+        const statement = document.getElementById('brand')
+        const caps = UMO_Y_HEIGHT.open * (statement ? parseFloat(getComputedStyle(statement).fontSize) : 60)
+        const open = Math.min(caps, ((logo.parentElement?.clientWidth ?? 248) - 48) * 0.6 / 5)
         const word = 5 * (open + (UMO_Y_HEIGHT.folded - open) * t)
         logo.style.width = `${word * lockup}px`
       }
