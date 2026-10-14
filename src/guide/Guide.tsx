@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import PriceCard from '@/posters/PriceCard'
 import type { Variant } from '@/posters/cardData'
 import UmoLogo from './UmoLogo'
+import UmoYLogo, { setUmoY } from './UmoYLogo'
 import UmoYandexLockup from './UmoYandexLockup'
 import PlateArt from '@/plate/PlateArt'
 import { BASELINE as STRIP_BASELINE } from '@/plate/frame'
@@ -363,7 +364,11 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
       const lift = Math.max(0, body.getBoundingClientRect().top)
       const logo = aside.querySelector<HTMLElement>('[data-logo]')
       // The page starts at its own offset from the top (a strip above the bottom of the screen) — that's how far it rises.
-      if (logo) logo.style.width = `${120 + 80 * Math.min(1, lift / Math.max(1, body.offsetTop))}px`
+      const rise = Math.min(1, lift / Math.max(1, body.offsetTop))
+      if (logo) logo.style.width = `${120 + 80 * rise}px`
+      // Trial: the UMO × Y lockup folds into UMO as the page rises, the wordmark staying 120 wide.
+      const umoY = logo?.querySelector<SVGSVGElement>('[data-umo-y]')
+      if (umoY) setUmoY(umoY, 1 - rise)
       const nav = aside.querySelector('nav')
       if (nav) {
         const opacity = Math.min(1, window.scrollY / 160)
@@ -1095,7 +1100,7 @@ export default function Guide() {
           changes the list's height, and sticks there when the list is taller than the screen, cutting the list off —
           enough of a hint that it scrolls, so the scrollbar, far from the text at this width, is hidden. */}
       <aside ref={asideRef} className="hidden lg:flex sticky top-0 h-screen w-[320px] xl:w-1/3 shrink-0 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" onClick={toTop} aria-label="В начало" data-logo className="block w-[200px]"><Logo className="w-full" /></a></div>
+        <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" onClick={toTop} aria-label="В начало" data-logo className="block w-[200px]"><UmoYLogo title="UMO" className="w-full" /></a></div>
         {/* The row is fixed to the bottom of the screen — not moved there by script, which lags the scroll a frame and
             makes it shake — so the list keeps its height free at the end. */}
         <div className="px-6 pb-[68px]"><Nav active={active} expandAll={expandAll} /></div>
