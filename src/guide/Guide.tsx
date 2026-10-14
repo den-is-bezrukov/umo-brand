@@ -423,13 +423,13 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
 const HERO_SNAP_MIN = 0
 
 /**
- * Trial, from lg: a scroll that stops between the photo and the page risen over it is carried on, smoothly, to the end
- * it was heading for (HERO_SNAP_MIN or more), or back where it started, so the lockup never rests half folded. It waits
- * for the scroll to end, inertia included; not with reduced motion.
+ * Trial: a scroll that stops between the photo and the page risen over it (below lg, scrolled up to the header) is
+ * carried on, smoothly, to the end it was heading for (HERO_SNAP_MIN or more), or back where it started, so the lockup
+ * never rests half folded. It waits for the scroll to end, inertia included, and for a finger on the screen to let go;
+ * not with reduced motion.
  */
 function useHeroSnap(bodyRef: RefObject<HTMLElement | null>) {
   useEffect(() => {
-    const wide = window.matchMedia('(min-width: 64rem)')
     const still = window.matchMedia('(prefers-reduced-motion: reduce)')
     let start: number | null = null
     let timer = 0
@@ -437,7 +437,7 @@ function useHeroSnap(bodyRef: RefObject<HTMLElement | null>) {
       const body = bodyRef.current
       const from = start
       start = null
-      if (!body || from === null || !wide.matches || still.matches) return
+      if (!body || from === null || touching || still.matches) return
       const end = body.offsetTop
       const y = window.scrollY
       if (y <= 0 || y >= end) return
@@ -452,8 +452,24 @@ function useHeroSnap(bodyRef: RefObject<HTMLElement | null>) {
       timer = window.setTimeout(settle, 150)
     }
     let lastY = window.scrollY
+    let touching = false
+    const onTouchStart = () => { touching = true }
+    const onTouchEnd = () => {
+      touching = false
+      clearTimeout(timer)
+      timer = window.setTimeout(settle, 150)
+    }
     window.addEventListener('scroll', onScroll, { passive: true })
-    return () => { window.removeEventListener('scroll', onScroll); clearTimeout(timer) }
+    window.addEventListener('touchstart', onTouchStart, { passive: true })
+    window.addEventListener('touchend', onTouchEnd, { passive: true })
+    window.addEventListener('touchcancel', onTouchEnd, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('touchstart', onTouchStart)
+      window.removeEventListener('touchend', onTouchEnd)
+      window.removeEventListener('touchcancel', onTouchEnd)
+      clearTimeout(timer)
+    }
   }, [bodyRef])
 }
 
