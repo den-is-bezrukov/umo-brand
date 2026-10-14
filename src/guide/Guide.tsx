@@ -586,7 +586,7 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
 }
 
 /**
- * Below lg, from 480px, where they fit beside «Содержание»: the quick links stand in the bottom bar, 32px after it, in
+ * Below lg, from 480px, where they fit beside «Содержание»: the quick links stand in the bottom bar, spaced as its edges (16px, from md 24), in
  * place of their own line under the statement, which leaves the film more of the first screen. They're there for the
  * first screen only and fade out over the first 160px of scroll, as the sidebar's contents fade in from lg, so further
  * down the bar is the contents' alone again.
@@ -610,7 +610,7 @@ function BarLinks() {
     return () => { window.removeEventListener('scroll', onScroll); cancelAnimationFrame(frame) }
   }, [])
   return (
-    <nav ref={ref} aria-label="Быстрые ссылки" className="relative hidden shrink-0 gap-x-6 min-[480px]:flex">
+    <nav ref={ref} aria-label="Быстрые ссылки" className="relative hidden shrink-0 gap-x-4 min-[480px]:flex md:gap-x-6">
       <a href="#positioning" className={LINK_HOVER}>Платформа</a>
       <a href="#materials" className={LINK_HOVER}>Материалы для дилеров</a>
     </nav>
@@ -1266,7 +1266,7 @@ export default function Guide() {
         )}
         {!menuOpen && (
           // The whole bar opens the contents (the button's ::before covers it), save the quick links standing in it.
-          <div className="fixed inset-x-0 bottom-0 z-40 flex items-start gap-8 bg-white px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]">
+          <div className="fixed inset-x-0 bottom-0 z-40 flex items-start gap-4 bg-white md:gap-6 px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]">
             <button
               type="button"
               onClick={() => setMenuOpen(true)}
