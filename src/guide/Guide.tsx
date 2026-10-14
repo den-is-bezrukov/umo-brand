@@ -679,6 +679,7 @@ function BarLinks() {
  */
 function useTocSheet(open: boolean, setOpen: (open: boolean) => void, current: string | undefined) {
   const box = useRef<HTMLDivElement>(null)
+  const inner = useRef<HTMLDivElement>(null)
   const list = useRef<HTMLDivElement>(null)
   const fold = useRef<HTMLButtonElement>(null)
   const here = useRef<HTMLDivElement>(null)
@@ -690,6 +691,8 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, current: s
   const [api] = useState(() => {
     const EASE = 'cubic-bezier(0.33, 1, 0.68, 1)'
     let shift = 0
+    // Measured once per move, not every frame: the bar's and the list's heights and the indented lists.
+    let dims = { barH: 48, listH: 300, indents: [] as HTMLElement[] }
     const offsetY = (node: HTMLElement, within: HTMLElement) => {
       let y = 0
       // A stuck chapter title reports where it's stuck; its chapter's box starts where it stands in the list.
@@ -709,6 +712,7 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, current: s
       if (!b || !l || !f || !items) return
       const barH = f.offsetHeight
       const listH = b.offsetHeight - barH
+      dims = { barH, listH, indents: [...l.querySelectorAll<HTMLElement>('[data-toc-indent]')] }
       const id = currentRef.current
       const item = id ? items.querySelector<HTMLElement>(`a[href="#${id}"]`) : null
       if (!item) { shift = listH; return }
@@ -719,37 +723,36 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, current: s
     }
     const place = (p: number, animate: boolean) => {
       const b = box.current
+      const n = inner.current
       const l = list.current
       const f = fold.current
-      if (!b || !l || !f) return
+      if (!b || !n || !l || !f) return
       clearTimeout(timer.current)
       pos.current = p
       const k = Math.min(1, Math.max(0, p))
       const t = animate ? `350ms ${EASE}` : '0s'
-      const barH = f.offsetHeight
-      const listH = b.offsetHeight - barH
-      const r = 16 * k
-      // The window: its top from the bar's to the sheet's; it runs on below the screen, where the bar's white does.
-      b.style.transition = `clip-path ${t}, transform ${t}`
-      b.style.clipPath = `inset(${listH * (1 - k)}px 0 -100vh 0 round ${r}px ${r}px 0 0)`
-      b.style.transform = p > 1 ? `translateY(${-(p - 1) * listH * 0.3}px)` : ''
-      l.style.transition = `transform ${t}`
-      l.style.transform = `translateY(${shift * (1 - k)}px)`
-      for (const indent of l.querySelectorAll<HTMLElement>('[data-toc-indent]')) {
-        indent.style.transition = `transform ${t}`
-        indent.style.transform = `translateX(${-16 * (1 - k)}px)`
+      const { barH, listH, indents } = dims
+      // The window is the box, clipping what's outside it: it goes down by what's still closed while what's inside goes
+      // up as much and stays put, so only transforms move (a moving clip-path was redrawn every frame and lagged).
+      // Past open the whole sheet gives.
+      const down = listH * (1 - k)
+      const give = p > 1 ? -(p - 1) * listH * 0.3 : 0
+      const move = (el: HTMLElement, transform: string) => {
+        el.style.transition = `transform ${t}`
+        el.style.transform = transform
       }
-      f.style.transition = `transform ${t}`
-      f.style.transform = `translateY(${(barH + 2) * (1 - k)}px)`
-      const h = here.current
-      if (h) {
-        h.style.transition = `transform ${t}`
-        h.style.transform = `translateY(${(barH + 2) * k}px)`
-      }
+      move(b, `translateY(${down + give}px)`)
+      move(n, `translateY(${-down}px)`)
+      b.style.transition += `, border-radius ${t}`
+      b.style.borderTopLeftRadius = b.style.borderTopRightRadius = `${16 * k}px`
+      move(l, `translateY(${shift * (1 - k)}px)`)
+      for (const indent of indents) move(indent, `translateX(${-16 * (1 - k)}px)`)
+      move(f, `translateY(${(barH + 2) * (1 - k)}px)`)
+      if (here.current) move(here.current, `translateY(${(barH + 2) * k}px)`)
       // Closed again, the list is put back under the place you're reading (scrolled anew for the next opening).
       if (animate && p <= 0) timer.current = window.setTimeout(() => { if (pos.current === p) { measure(); place(0, false) } }, 360)
     }
-    return { box, list, fold, here, place, measure }
+    return { box, inner, list, fold, here, place, measure, dims: () => dims }
   })
 
   // Closed, the bar follows the list's layout too: fonts coming in, the screen turning.
@@ -776,7 +779,7 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, current: s
     if (!el) return
     let start: { x: number, y: number, from: number, onBar: boolean, mode: 'open' | 'close' | 'none' | null } | null = null
     const down = (e: TouchEvent) => {
-      const barTop = el.getBoundingClientRect().bottom - (api.fold.current?.offsetHeight ?? 48)
+      const barTop = window.innerHeight - api.dims().barH
       start = { x: e.touches[0].clientX, y: e.touches[0].clientY, from: pos.current >= 0.5 ? 1 : 0, onBar: e.touches[0].clientY >= barTop, mode: null }
     }
     const move = (e: TouchEvent) => {
@@ -790,12 +793,11 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, current: s
         else start.mode = vertical && dy > 0 && (start.onBar || (api.list.current?.scrollTop ?? 0) <= 0) ? 'close' : 'none'
         if (start.mode === 'none') return
         dragging.current = true
-        if (start.from === 0) api.measure()
+        api.measure()
       }
       if (start.mode === 'none') return
       e.preventDefault()
-      const listH = el.offsetHeight - (api.fold.current?.offsetHeight ?? 48)
-      api.place(start.from - dy / listH, false)
+      api.place(start.from - dy / api.dims().listH, false)
     }
     const up = (e: TouchEvent) => {
       const mode = start?.mode
@@ -1459,8 +1461,10 @@ export default function Guide() {
         {/* The sheet, 60% of the screen (two thirds and a half were tried; a 6.3" phone still needs a shifted grip for
             the top), seen through its window; the bar is its last 48px. The bar's white runs a screen on past the
             screen's bottom (iOS 26 Safari draws the page under its floating toolbar, and while that slid the page
-            showed through). */}
-        <div ref={toc.box} className="fixed inset-x-0 bottom-0 z-40 h-[60dvh] after:absolute after:inset-x-0 after:top-full after:h-screen after:bg-white after:content-['']">
+            showed through): a white strip stands there, under the screen's edge. */}
+        <div aria-hidden className="pointer-events-none fixed inset-x-0 top-full z-40 h-screen bg-white" />
+        <div ref={toc.box} className="fixed inset-x-0 bottom-0 z-40 h-[60dvh] overflow-hidden will-change-transform">
+          <div ref={toc.inner} className="absolute inset-0 will-change-transform">
           <div ref={toc.list} inert={!menuOpen || undefined} className="absolute inset-x-0 top-0 bottom-[calc(48px+env(safe-area-inset-bottom))] overflow-y-auto overscroll-contain bg-white px-4 text-[16px] tracking-[-0.01em] md:px-6">
             {/* The list's top padding is inside it, so a stuck title is measured from the sheet's edge in every browser. */}
             <div className="relative pt-4 pb-6"><Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} stickyChapters sheet /></div>
@@ -1492,6 +1496,7 @@ export default function Guide() {
           >
             Свернуть
           </button>
+          </div>
         </div>
       </div>
 
