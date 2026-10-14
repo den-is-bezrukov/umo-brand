@@ -586,7 +586,7 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
 }
 
 /**
- * Below lg, from 480px, where they fit beside «Содержание»: the quick links stand in the bottom bar, spaced as its edges (16px, from md 24; the icon from «Содержание» too), in
+ * Below lg, from 480px, where they fit beside «Содержание»: the quick links stand in the bottom bar, spaced as its edges (16px, from md 24), in
  * place of their own line under the statement, which leaves the film more of the first screen. They're there for the
  * first screen only and fade out over the first 160px of scroll, as the sidebar's contents fade in from lg, so further
  * down the bar is the contents' alone again.
@@ -1272,7 +1272,7 @@ export default function Guide() {
               onClick={() => setMenuOpen(true)}
               aria-expanded={false}
               aria-label={sectionTitle ? `Содержание: ${sectionTitle}` : 'Содержание'}
-              className="flex min-w-0 cursor-pointer items-start gap-4 text-left md:gap-6 before:absolute before:inset-0 before:content-['']"
+              className="flex min-w-0 cursor-pointer items-start gap-2 text-left before:absolute before:inset-0 before:content-['']"
             >
               <TocIcon name="menu" />
               <span className="min-w-0 truncate">{sectionTitle ?? 'Содержание'}</span>
