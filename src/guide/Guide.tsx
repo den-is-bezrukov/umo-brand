@@ -1057,6 +1057,11 @@ export default function Guide() {
   useActiveInView(asideRef, active, expandAll)
   const quickRef = useRef<HTMLElement>(null)
   useHeroStrip(pageRef, quickRef, bodyRef)
+  // Trial: the browser's own soft snap between the photo and the risen page (see index.css).
+  useEffect(() => {
+    document.documentElement.setAttribute('data-guide-snap', '')
+    return () => document.documentElement.removeAttribute('data-guide-snap')
+  }, [])
   const tocShown = useHeroReveal(bodyRef, asideRef)
   // The contents row does what it says; on the first screen, where the contents are out of view and it says
   // «Содержание» whatever the list's state, it takes the page up over the photo and opens the list (an expanded one
@@ -1115,6 +1120,8 @@ export default function Guide() {
 
   return (
     <div ref={pageRef} id="top" className="min-h-screen bg-white font-sans text-black">
+      {/* Trial: the photo's snap point (see index.css); the page itself is too tall to be one. */}
+      <div aria-hidden className="absolute top-0 hidden h-px w-px lg:block lg:snap-start" />
       {/* The hero is the top of the page: the logo leads here, and it isn't in the contents. On a phone it's the first
           picture, above the header, and covers the header's upward white (z-30). From lg it's fixed behind the page,
           which starts a strip above the bottom of the screen (`--strip`, see useHeroStrip; 252px for a three-line
@@ -1122,7 +1129,7 @@ export default function Guide() {
           (Figma 4893:3846, prototype 4921:2352). */}
       <Hero bodyRef={bodyRef} />
 
-      <div ref={bodyRef} className="bg-white lg:relative lg:z-10 lg:mt-[calc(100vh-var(--strip,286px))] lg:flex lg:items-start">
+      <div ref={bodyRef} className="bg-white lg:snap-start lg:relative lg:z-10 lg:mt-[calc(100vh-var(--strip,286px))] lg:flex lg:items-start">
       {/* Desktop sidebar. The expand row sits at the bottom of the screen, so it stays put while the open chapter
           changes the list's height, and sticks there when the list is taller than the screen, cutting the list off —
           enough of a hint that it scrolls, so the scrollbar, far from the text at this width, is hidden. */}
