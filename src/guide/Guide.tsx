@@ -372,6 +372,10 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
       const aside = asideRef.current
       if (!body || !aside) return
       const lift = Math.max(0, body.getBoundingClientRect().top)
+      // Below lg the header's lockup folds as the film scrolls away, the wordmark staying 24 high.
+      const mlogo = document.querySelector<HTMLElement>('[data-mlogo]')
+      const mUmoY = mlogo?.querySelector<SVGSVGElement>('[data-umo-y]')
+      if (mlogo && mUmoY) mlogo.style.width = `${5 * UMO_Y_HEIGHT.folded * setUmoY(mUmoY, 1 - Math.min(1, lift / Math.max(1, body.offsetTop)))}px`
       const logo = aside.querySelector<HTMLElement>('[data-logo]')
       // The page starts at its own offset from the top (a strip above the bottom of the screen) — that's how far it rises.
       // Trial: the UMO × Y lockup folds into UMO as the page rises, the wordmark going from the statement's capitals
@@ -471,7 +475,13 @@ function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObjec
       frame = 0
       // Below lg: how far the statement and the quick links under it (where they aren't in the bottom bar) end under the
       // top of the page, header included, for the film to take the rest of the first screen (see Hero).
-      page.style.setProperty('--mstrip', `${Math.round(block.getBoundingClientRect().bottom - body.getBoundingClientRect().top)}px`)
+      const mstrip = Math.round(block.getBoundingClientRect().bottom - body.getBoundingClientRect().top)
+      page.style.setProperty('--mstrip', `${mstrip}px`)
+      // Where that would leave the film less than half the width or 40% of the height (a phone held sideways, a short
+      // window), the film takes the whole first screen down to the bar instead, so the bar doesn't cut the statement.
+      const md = window.matchMedia('(min-width: 48rem)').matches
+      const film = window.innerHeight - mstrip - (md ? 92 : 68)
+      page.toggleAttribute('data-hero-full', !window.matchMedia('(min-width: 64rem)').matches && film < Math.min(window.innerWidth / 2, window.innerHeight * 0.4))
       // The toggle row's bottom padding grows by the Y's overhang on the first screen (see useHeroReveal), lifting its line.
       const overhang = parseFloat(body.style.getPropertyValue('--umo-y-overhang')) || 0
       const strip = `${Math.round(16 + quick.offsetTop - block.offsetTop + 68 - 24 + overhang)}px`
@@ -481,9 +491,11 @@ function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObjec
       window.dispatchEvent(new Event('resize'))
     }
     // A frame later, out of the observer's own pass, so moving the page doesn't loop it.
-    const observer = new ResizeObserver(() => { if (!frame) frame = requestAnimationFrame(update) })
+    const schedule = () => { if (!frame) frame = requestAnimationFrame(update) }
+    const observer = new ResizeObserver(schedule)
     observer.observe(block)
-    return () => { observer.disconnect(); cancelAnimationFrame(frame) }
+    window.addEventListener('resize', schedule)
+    return () => { observer.disconnect(); window.removeEventListener('resize', schedule); cancelAnimationFrame(frame) }
   }, [pageRef, quickRef, bodyRef])
 }
 
@@ -547,7 +559,7 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
   }, [bodyRef])
   const fill = 'block size-full bg-black object-cover'
   return (
-    <div ref={ref} className="relative z-30 h-[max(50vw,calc(100svh-var(--mstrip,260px)-68px))] md:h-[max(50vw,calc(100svh-var(--mstrip,360px)-92px))] lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:h-[calc(100vh-var(--strip,286px))]">
+    <div ref={ref} className="relative z-30 h-[calc(100svh-var(--mstrip,260px)-68px)] md:h-[calc(100svh-var(--mstrip,360px)-92px)] max-lg:[[data-hero-full]_&]:h-[calc(100svh-52px)] md:max-lg:[[data-hero-full]_&]:h-[calc(100svh-68px)] lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:h-[calc(100vh-var(--strip,286px))]">
       {still ? (
         <img src={img('hero')} alt="Женщина у UMO 8 на горной дороге" width={1824} height={912} fetchPriority="high" decoding="async" className={`${fill} object-[50%_40%]`} />
       ) : (
@@ -558,7 +570,7 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
 }
 
 /**
- * Below lg, from 480px, where they fit beside «Содержание»: the quick links stand in the bottom bar, on its right, in
+ * Below lg, from 480px, where they fit beside «Содержание»: the quick links stand in the bottom bar, 32px after it, in
  * place of their own line under the statement, which leaves the film more of the first screen. They're there for the
  * first screen only and fade out over the first 160px of scroll, as the sidebar's contents fade in from lg, so further
  * down the bar is the contents' alone again.
@@ -573,7 +585,8 @@ function BarLinks() {
       if (!nav) return
       const opacity = Math.max(0, 1 - window.scrollY / 160)
       nav.style.opacity = String(opacity)
-      nav.style.visibility = opacity ? '' : 'hidden'
+      // Gone, it leaves the bar to the section's name.
+      nav.style.display = opacity ? '' : 'none'
     }
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }
     update()
@@ -581,7 +594,7 @@ function BarLinks() {
     return () => { window.removeEventListener('scroll', onScroll); cancelAnimationFrame(frame) }
   }, [])
   return (
-    <nav ref={ref} aria-label="Быстрые ссылки" className="fixed right-4 bottom-[max(16px,env(safe-area-inset-bottom))] z-40 hidden gap-x-6 text-[16px] font-medium leading-[1.25] tracking-[-0.01em] min-[480px]:flex md:right-6 md:bottom-[max(24px,env(safe-area-inset-bottom))]">
+    <nav ref={ref} aria-label="Быстрые ссылки" className="relative hidden shrink-0 gap-x-6 min-[480px]:flex">
       <a href="#positioning" className={LINK_HOVER}>Платформа</a>
       <a href="#materials" className={LINK_HOVER}>Материалы для дилеров</a>
     </nav>
@@ -600,10 +613,6 @@ function useExpandAll() {
     return !v
   })
   return [expandAll, toggle] as const
-}
-
-function Logo({ className = 'w-[120px]' }: { className?: string }) {
-  return <UmoLogo title="UMO" className={className} />
 }
 
 /**
@@ -1215,7 +1224,7 @@ export default function Guide() {
       {/* Mobile top bar. iOS 26 browsers draw the page under their translucent top bar and stick `top: 0` below it,
           so the white is extended a screen upwards to hide content scrolling above the header. */}
       <header className="lg:hidden sticky top-0 z-20 bg-white p-4 md:p-6 before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-screen before:bg-white before:content-['']">
-        <a href="#top" onClick={toTop} aria-label="В начало" className="block w-fit"><Logo /></a>
+        <a href="#top" onClick={toTop} aria-label="В начало" data-mlogo className="block w-[200px]"><UmoYLogo title="UMO" className="w-full" /></a>
       </header>
 
       {/* Mobile table of contents: a bar at the bottom names the heading you're reading and stands in for the
@@ -1240,18 +1249,21 @@ export default function Guide() {
           </>
         )}
         {!menuOpen && (
-          <button
-            type="button"
-            onClick={() => setMenuOpen(true)}
-            aria-expanded={false}
-            aria-label={sectionTitle ? `Содержание: ${sectionTitle}` : 'Содержание'}
-            className="fixed inset-x-0 bottom-0 z-40 flex cursor-pointer items-start gap-2 bg-white px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]"
-          >
-            <TocIcon name="menu" />
-            <span className="min-w-0 flex-1 truncate">{sectionTitle ?? 'Содержание'}</span>
-          </button>
+          // The whole bar opens the contents (the button's ::before covers it), save the quick links standing in it.
+          <div className="fixed inset-x-0 bottom-0 z-40 flex items-start gap-8 bg-white px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]">
+            <button
+              type="button"
+              onClick={() => setMenuOpen(true)}
+              aria-expanded={false}
+              aria-label={sectionTitle ? `Содержание: ${sectionTitle}` : 'Содержание'}
+              className="flex min-w-0 cursor-pointer items-start gap-2 text-left before:absolute before:inset-0 before:content-['']"
+            >
+              <TocIcon name="menu" />
+              <span className="min-w-0 truncate">{sectionTitle ?? 'Содержание'}</span>
+            </button>
+            <BarLinks />
+          </div>
         )}
-        {!menuOpen && <BarLinks />}
       </div>
 
       {/* 16px on top from lg: the statement's capitals then stand level with the top of the logo beside it. */}
