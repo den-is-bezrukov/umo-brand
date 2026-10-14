@@ -383,6 +383,12 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
         const open = Math.min(caps, ((logo.parentElement?.clientWidth ?? 248) - 48) * 0.6 / 5)
         const word = 5 * (open + (UMO_Y_HEIGHT.folded - open) * t)
         logo.style.width = `${word * lockup}px`
+        // The Y's circle overhangs the wordmark by a third of its height. On the first screen the space above is
+        // measured from the circle: the statement goes down by the overhang to keep its capitals level with UMO, and
+        // the logo's top padding gives it back as the Y folds, so the folded logo sits 24 from the corner again.
+        const overhang = `${Math.round(open / 3 * 10) / 10}px`
+        if (body.style.getPropertyValue('--umo-y-overhang') !== overhang) body.style.setProperty('--umo-y-overhang', overhang)
+        if (logo.parentElement) logo.parentElement.style.paddingTop = `${24 + open / 3 * (1 - t)}px`
       }
       const nav = aside.querySelector('nav')
       if (nav) {
@@ -1174,7 +1180,7 @@ export default function Guide() {
                   (6.58cqw), so it wraps the same three lines at any width. Its capitals stand level with the top of
                   the logo: the body's 16px on top, plus 8px less CoFo Sans's 0.164em above the caps. */}
               <div className="flex flex-col gap-8 md:gap-12 lg:[container-type:inline-size]">
-                <p id="brand" className="scroll-mt-24 text-[32px] font-medium leading-none tracking-[-0.01em] md:text-[48px] lg:mt-[calc(8px-0.164em)] lg:max-w-[912px] lg:scroll-mt-[calc(24px-0.164em)] lg:text-[min(60px,6.58cqw)]">
+                <p id="brand" className="scroll-mt-24 text-[32px] font-medium leading-none tracking-[-0.01em] md:text-[48px] lg:mt-[calc(8px-0.164em+var(--umo-y-overhang,0px))] lg:max-w-[912px] lg:scroll-mt-[calc(24px-0.164em)] lg:text-[min(60px,6.58cqw)]">
                   Автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
                 </p>
                 {/* Quick links: into the brand platform, from its first section, and to Носители with their constructors,
