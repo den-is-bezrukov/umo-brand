@@ -385,10 +385,11 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
         logo.style.width = `${word * lockup}px`
         // The Y's circle overhangs the wordmark by a third of its height. On the first screen the space above is
         // measured from the circle: the statement goes down by the overhang to keep its capitals level with UMO, and
-        // the logo's top padding gives it back as the Y folds, so the folded logo sits 24 from the corner again.
+        // the sidebar's top and left padding (the logo, the contents and their toggle row) give it back as the Y folds,
+        // so the folded logo sits 24/24 in the corner again.
         const overhang = `${Math.round(open / 3 * 10) / 10}px`
         if (body.style.getPropertyValue('--umo-y-overhang') !== overhang) body.style.setProperty('--umo-y-overhang', overhang)
-        if (logo.parentElement) logo.parentElement.style.paddingTop = `${24 + open / 3 * (1 - t)}px`
+        aside.style.setProperty('--umo-y-pad', `${open / 3 * (1 - t)}px`)
       }
       const nav = aside.querySelector('nav')
       if (nav) {
@@ -1121,11 +1122,11 @@ export default function Guide() {
           changes the list's height, and sticks there when the list is taller than the screen, cutting the list off —
           enough of a hint that it scrolls, so the scrollbar, far from the text at this width, is hidden. */}
       <aside ref={asideRef} className="hidden lg:flex sticky top-0 h-screen w-[320px] xl:w-1/3 shrink-0 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" onClick={toTop} aria-label="В начало" data-logo className="block w-[200px]"><UmoYLogo title="UMO" className="w-full" /></a></div>
+        <div className="sticky top-0 z-10 bg-white p-6 pt-[calc(24px+var(--umo-y-pad,0px))] pl-[calc(24px+var(--umo-y-pad,0px))]"><a href="#top" onClick={toTop} aria-label="В начало" data-logo className="block w-[200px]"><UmoYLogo title="UMO" className="w-full" /></a></div>
         {/* The row is fixed to the bottom of the screen — not moved there by script, which lags the scroll a frame and
             makes it shake — so the list keeps its height free at the end. */}
-        <div className="px-6 pb-[68px]"><Nav active={active} expandAll={expandAll} /></div>
-        <TocToggle expanded={expandAll && tocShown} onClick={onTocToggle} className="fixed bottom-0 left-0 z-10 w-[320px] p-6 xl:w-1/3" />
+        <div className="px-6 pl-[calc(24px+var(--umo-y-pad,0px))] pb-[68px]"><Nav active={active} expandAll={expandAll} /></div>
+        <TocToggle expanded={expandAll && tocShown} onClick={onTocToggle} className="fixed bottom-0 left-0 z-10 w-[320px] p-6 pl-[calc(24px+var(--umo-y-pad,0px))] xl:w-1/3" />
       </aside>
 
       {/* Mobile top bar. iOS 26 browsers draw the page under their translucent top bar and stick `top: 0` below it,
