@@ -232,11 +232,11 @@ const TEXT_LINK = 'underline decoration-black/40 decoration-[2.5%] underline-off
  * The space between items is the links' own padding (`pad`), not gaps, so the whole list is clickable (Figma 4865:1031).
  */
 /**
- * A chapter title stuck at the top of the sheet's list where it stands unscrolled (the list's 16px top padding, 24 from
- * md, less the title's own 8 over its text), its white running up to the sheet's top (the list's edge cuts the rest) so
- * items scroll away under it.
+ * A chapter title stuck at the top of the sheet's list, 8px under its edge where its text stands as on the first line.
+ * Only its own 8px over the text is covered upwards (a white shadow): there's nothing there but the gap after the last
+ * item, so a title in its place hides nothing.
  */
-const STICKY_CHAPTER = "py-2 sticky top-2 z-10 bg-white before:absolute before:inset-x-0 before:bottom-full before:h-12 before:bg-white before:content-[''] md:top-4"
+const STICKY_CHAPTER = 'py-2 sticky top-2 z-10 bg-white shadow-[0_-8px_0_white]'
 
 function NavLink({ id, title, active, current, onNavigate, pad }: { id: string; title: string; active: boolean; current: boolean; onNavigate?: () => void; pad: string }) {
   return (
@@ -1415,8 +1415,9 @@ export default function Guide() {
             under iOS 26 Safari's floating toolbar as it slid. */}
         <div className="fixed inset-x-0 -bottom-[52px] z-40 border-b-[52px] border-white md:-bottom-[68px] md:border-b-[68px]">
           <div ref={toc.sheet} inert={!menuOpen || undefined} className="invisible absolute inset-x-0 bottom-[calc(100%-2px)] flex max-h-[calc(60dvh-52px)] flex-col overflow-hidden rounded-t-2xl bg-white md:max-h-[calc(60dvh-68px)]">
-            <div ref={sheetRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 md:px-6 md:pt-6">
-              <Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} stickyChapters />
+            {/* The list's top padding is inside it, so a stuck title is measured from the sheet's edge in every browser. */}
+            <div ref={sheetRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 md:px-6">
+              <div className="pt-4 md:pt-6"><Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} stickyChapters /></div>
             </div>
           </div>
           <div ref={toc.bar} className="relative z-10 flex items-start gap-4 bg-white after:pointer-events-none after:absolute after:inset-x-0 after:top-[calc(100%-2px)] after:h-screen after:bg-white after:content-[''] md:gap-6 px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]">
