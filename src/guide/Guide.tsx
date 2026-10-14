@@ -692,31 +692,45 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, list: RefO
         items: (list.current?.firstElementChild as HTMLElement | null) ?? null,
       }
     }
+    // Everything from the page's own layout (offsets within the list and the bar), not the screen's: on iOS the
+    // screen positions of the bar and the list drifted apart while Safari's toolbar moved.
+    const offset = (node: HTMLElement, within: HTMLElement) => {
+      let x = 0
+      let y = 0
+      // A stuck chapter title reports where it's stuck; its chapter's box starts where it stands in the list.
+      let n: HTMLElement | null = getComputedStyle(node).position === 'sticky' ? node.parentElement : node
+      while (n && n !== within) {
+        x += n.offsetLeft
+        y += n.offsetTop
+        n = n.offsetParent as HTMLElement | null
+      }
+      return { x, y }
+    }
     const measure = (from: number) => {
       const el = sheet.current
       const l = list.current
+      const b = bar.current
       const { here, items } = parts()
-      if (!el || !l || !here || !items) return null
+      if (!el || !l || !b || !here || !items) return null
       items.style.transition = 'none'
       items.style.transform = ''
+      const listH = l.offsetHeight
+      // The bar's line in the sheet's box: the sheet's list ends where the bar starts, and the bar is as tall as the
+      // room under the list.
+      const label = offset(here, b)
+      const line = listH + label.y
+      const lineH = here.offsetHeight
       const id = here.dataset.id
       const item = id && !quiet ? l.querySelector<HTMLElement>(`a[href="#${id}"]`) : null
       // Opening, the list is scrolled so the place (or the place you're reading, with none named) stands in its middle.
-      const lit = l.querySelectorAll('nav [aria-current]')
+      const lit = l.querySelectorAll<HTMLElement>('nav [aria-current]')
       const centre = item ?? lit[lit.length - 1]
-      if (from === 0 && centre) {
-        const r = centre.getBoundingClientRect()
-        l.scrollTop += r.top - l.getBoundingClientRect().top - (l.clientHeight - r.height) / 2
-      }
-      const box = el.getBoundingClientRect()
-      const label = here.getBoundingClientRect()
-      const line = label.top - box.top
-      if (!item) return { listH: l.offsetHeight, sheetH: el.offsetHeight, line, lineH: label.height, dx: 0, dy: 0, item: false }
-      const r = item.getBoundingClientRect()
-      return {
-        listH: l.offsetHeight, sheetH: el.offsetHeight, line, lineH: label.height, item: true,
-        dx: label.left - r.left, dy: line - (r.top + parseFloat(getComputedStyle(item).paddingTop) - box.top),
-      }
+      if (from === 0 && centre) l.scrollTop = offset(centre, items).y + items.offsetTop - (l.clientHeight - centre.offsetHeight) / 2
+      if (!item) return { listH, sheetH: el.offsetHeight, line, lineH, dx: 0, dy: 0, item: false }
+      const at = offset(item, items)
+      const top = items.offsetTop + at.y - l.scrollTop + parseFloat(getComputedStyle(item).paddingTop)
+      const left = l.offsetLeft + items.offsetLeft + at.x
+      return { listH, sheetH: el.offsetHeight, line, lineH, item: true, dx: label.x - left, dy: line - top }
     }
     // While it moves the bar's label is the list's own line, seen through the window.
     const swap = (moving: boolean) => {
@@ -1506,13 +1520,15 @@ export default function Guide() {
             under iOS 26 Safari's floating toolbar as it slid. */}
         <div className="fixed inset-x-0 -bottom-[52px] z-40 border-b-[52px] border-white md:-bottom-[68px] md:border-b-[68px]">
           {/* The sheet stands over the bar too, its list ending at the bar's top, seen through a window that grows from the
-              bar's line (useTocSheet); the bar's own icon stays over it. */}
+              bar's line (useTocSheet). */}
           <div ref={toc.sheet} inert={!menuOpen || undefined} className="invisible absolute inset-x-0 bottom-0 z-20 flex flex-col bg-white">
             {/* The list's top padding is inside it, so a stuck title is measured from the sheet's edge in every browser. */}
             <div ref={sheetRef} className="max-h-[calc(60dvh-52px)] overflow-y-auto overscroll-contain px-4 md:max-h-[calc(60dvh-68px)] md:px-6">
-              <div className="pt-4 md:pt-6"><Nav active={active} expandAll onNavigate={() => { toc.quiet(); setMenuOpen(false) }} stickyChapters /></div>
+              <div className="relative pt-4 md:pt-6"><Nav active={active} expandAll onNavigate={() => { toc.quiet(); setMenuOpen(false) }} stickyChapters /></div>
             </div>
-            <div aria-hidden className="pt-4 pb-[max(16px,env(safe-area-inset-bottom))] leading-[1.25] md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]">&nbsp;</div>
+            {/* As tall as the bar, under the list; its menu icon stands where the bar's does, seen through the window
+                with the place while the window is the bar's line. */}
+            <div aria-hidden className="flex px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] leading-[1.25] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]"><TocIcon name="menu" />&nbsp;</div>
           </div>
           <div ref={toc.bar} className="relative flex items-start gap-4 bg-white after:pointer-events-none after:absolute after:inset-x-0 after:top-[calc(100%-2px)] after:h-screen after:bg-white after:content-[''] md:gap-6 px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]">
             <button
@@ -1522,7 +1538,7 @@ export default function Guide() {
               aria-label={sectionTitle ? `Содержание: ${sectionTitle}` : 'Содержание'}
               className="flex min-w-0 cursor-pointer items-start gap-2 text-left before:absolute before:inset-0 before:content-['']"
             >
-              <span className="relative z-30 bg-white"><TocIcon name="menu" /></span>
+              <TocIcon name="menu" />
               <span data-toc-label="here" data-id={sectionTitle ? active[0] : ''} className="min-w-0 truncate">{sectionTitle ?? 'Содержание'}</span>
             </button>
             {!menuOpen && <BarLinks />}
