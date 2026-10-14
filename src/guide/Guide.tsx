@@ -671,14 +671,16 @@ function BarLinks() {
  * items' 16px indent taken away; on the first screen, with no place yet, the bar says «Содержание» over the list.
  * Opening, the window grows up to 53% of the screen (Figma's 341 of 640), its top corners rounding to 16px, while the list carries the place
  * to where it stands in the open list (scrolled so it's in its middle), the items move out to their indent, and
- * «Свернуть» comes up from under the screen's edge into the bar's line; closing is the same backwards. No dimming, no
- * fades. It follows a finger as the generators' sheet: the bar pulled up opens it, pulled down closes it, as does the
+ * «Свернуть» comes up from under the screen's edge into the bar's line; closing is the same backwards. No
+ * fades but the dimmed page. It follows a finger as the generators' sheet: the bar pulled up opens it, pulled down closes it, as does the
  * list pulled down while at its top (else it scrolls); let go, it goes on in 350 ms, slowing down, to the nearer of
- * open and closed, giving at 30% past open. Taps, Esc and links move it the same way. Every position comes from the
+ * open and closed, giving at 30% past open; the page under it dims to 40% as it opens. Taps, Esc and links move it the same
+ * way. Every position comes from the
  * page's layout (offsets in the list), not the screen's, which drifted on iOS as Safari's toolbar moved; only the
  * window (a clip) and transforms move.
  */
 function useTocSheet(open: boolean, setOpen: (open: boolean) => void, current: string | undefined) {
+  const dim = useRef<HTMLDivElement>(null)
   const box = useRef<HTMLDivElement>(null)
   const inner = useRef<HTMLDivElement>(null)
   const list = useRef<HTMLDivElement>(null)
@@ -749,11 +751,17 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, current: s
       move(l, `translateY(${shift * (1 - k)}px)`)
       for (const indent of indents) move(indent, `translateX(${-16 * (1 - k)}px)`)
       move(f, `translateY(${(barH + 2) * (1 - k)}px)`)
+      const d = dim.current
+      if (d) {
+        d.style.transition = `opacity ${t}`
+        d.style.opacity = String(k)
+        d.style.visibility = k > 0 || animate ? 'visible' : ''
+      }
       if (here.current) move(here.current, `translateY(${(barH + 2) * k}px)`)
       // Closed again, the list is put back under the place you're reading (scrolled anew for the next opening).
       if (animate && p <= 0) timer.current = window.setTimeout(() => { if (pos.current === p) { measure(); place(0, false) } }, 360)
     }
-    return { box, inner, list, fold, here, place, measure, dims: () => dims }
+    return { dim, box, inner, list, fold, here, place, measure, dims: () => dims }
   })
 
   // Closed, the bar follows the list's layout too: fonts coming in, the screen turning.
@@ -787,11 +795,13 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, current: s
       if (!start) return
       const dx = e.touches[0].clientX - start.x
       const dy = e.touches[0].clientY - start.y
+      // Decided on the first move: iOS gives the gesture to its own scrolling unless that very move is called off.
       if (!start.mode) {
-        if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return
-        const vertical = Math.abs(dy) > Math.abs(dx)
+        if (dx === 0 && dy === 0) return
+        const vertical = Math.abs(dy) >= Math.abs(dx)
         if (start.from === 0) start.mode = vertical && dy < 0 ? 'open' : 'none'
         else start.mode = vertical && dy > 0 && (start.onBar || (api.list.current?.scrollTop ?? 0) <= 0) ? 'close' : 'none'
+        if (start.mode === 'none' && start.onBar) e.preventDefault()
         if (start.mode === 'none') return
         dragging.current = true
         api.measure()
@@ -1457,18 +1467,20 @@ export default function Guide() {
       {/* Mobile table of contents: a bar at the bottom shows the place you're reading as its line in the contents and
           stands in for the sidebar; it opens into the contents as a sheet (useTocSheet). */}
       <div className="lg:hidden">
-        {/* A tap off the open sheet closes it; nothing is dimmed. */}
-        {menuOpen && <div aria-hidden className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />}
+        {/* The page dimmed at 40% under the sheet, with it; a tap on it closes it. */}
+        <div ref={toc.dim} aria-hidden className="invisible fixed inset-0 z-40 bg-black/40 opacity-0" onClick={() => setMenuOpen(false)} />
         {/* The sheet, 341 of 640 of the screen as Figma 5165:1260, seen through its window; the bar is its last 48px. The bar's white runs a screen on past the
             screen's bottom (iOS 26 Safari draws the page under its floating toolbar, and while that slid the page
             showed through): a white strip stands there, under the screen's edge. */}
         <div aria-hidden className="pointer-events-none fixed inset-x-0 top-full z-40 h-screen bg-white" />
         <div ref={toc.box} className="fixed inset-x-0 bottom-0 z-40 h-[53.3dvh] overflow-hidden will-change-transform">
-          <div ref={toc.inner} className="absolute inset-0 will-change-transform">
-          <div ref={toc.list} inert={!menuOpen || undefined} className="absolute inset-x-0 top-0 bottom-[calc(48px+env(safe-area-inset-bottom))] overflow-y-auto overscroll-contain bg-white px-4 text-[16px] tracking-[-0.01em] md:px-6">
+          <div ref={toc.inner} className="absolute inset-0 flex flex-col bg-white will-change-transform">
+          <div ref={toc.list} inert={!menuOpen || undefined} className="min-h-0 flex-1 overflow-y-auto overscroll-contain bg-white px-4 text-[16px] tracking-[-0.01em] md:px-6">
             {/* The list's top padding is inside it, so a stuck title is measured from the sheet's edge in every browser. */}
             <div className="relative pt-4 pb-6"><Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} stickyChapters sheet /></div>
           </div>
+          {/* Room for the bar under the list, as tall as it, so the list ends where the bar starts on any phone. */}
+          <div aria-hidden className="h-[calc(48px+env(safe-area-inset-bottom))] shrink-0" />
           {/* Closed and the list right under it: the bar takes a tap or a pull up to open. */}
           {!menuOpen && (
             <button
@@ -1476,7 +1488,7 @@ export default function Guide() {
               onClick={() => setMenuOpen(true)}
               aria-expanded={false}
               aria-label={sectionTitle ? `Содержание: ${sectionTitle}` : 'Содержание'}
-              className="absolute inset-x-0 bottom-0 z-10 h-[calc(48px+env(safe-area-inset-bottom))] cursor-pointer"
+              className="absolute inset-x-0 bottom-0 z-10 h-[calc(48px+env(safe-area-inset-bottom))] cursor-pointer touch-none"
             />
           )}
           {/* The first screen, with no place yet: «Содержание» and the quick links over the list, going down as it opens. */}
@@ -1492,7 +1504,7 @@ export default function Guide() {
             tabIndex={menuOpen ? undefined : -1}
             aria-hidden={!menuOpen || undefined}
             onClick={() => setMenuOpen(false)}
-            className="absolute inset-x-0 bottom-0 z-30 h-[calc(48px+env(safe-area-inset-bottom))] cursor-pointer bg-white px-4 pt-[14px] text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6"
+            className="absolute inset-x-0 bottom-0 z-30 h-[calc(48px+env(safe-area-inset-bottom))] cursor-pointer touch-none bg-white px-4 pt-[14px] text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6"
           >
             Свернуть
           </button>
