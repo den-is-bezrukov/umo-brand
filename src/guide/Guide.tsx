@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import PriceCard from '@/posters/PriceCard'
 import type { Variant } from '@/posters/cardData'
 import UmoLogo from './UmoLogo'
-import UmoYLogo, { setUmoY, setUmoYLayers, UmoYLayers } from './UmoYLogo'
+import UmoYLayers, { setUmoY } from './UmoYLogo'
 import UmoYandexLockup from './UmoYandexLockup'
 import PlateArt from '@/plate/PlateArt'
 import { BASELINE as STRIP_BASELINE } from '@/plate/frame'
@@ -366,61 +366,80 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
   const [shown, setShown] = useState(false)
   useEffect(() => {
     let frame = 0
+    let open = 40
+    // The fold's moves that depend on the screen, as keyframes (index.css has them for a 60px statement until then).
+    const keyframes = document.createElement('style')
+    document.head.appendChild(keyframes)
+    // What changes with the screen, not the scroll: how far the page rises (the fold's length), the statement's
+    // capitals, the sidebar's width.
+    const layout = () => {
+      const body = bodyRef.current
+      const aside = asideRef.current
+      if (!body || !aside) return
+      const fold = `${body.offsetTop}px`
+      if (body.style.getPropertyValue('--umo-y-fold') !== fold) body.style.setProperty('--umo-y-fold', fold)
+      const overhang = `${UMO_Y_PAD}px`
+      if (body.style.getPropertyValue('--umo-y-overhang') !== overhang) body.style.setProperty('--umo-y-overhang', overhang)
+      // From lg the sidebar's wordmark starts as high as the statement's capitals, or lower where the unfolded lockup
+      // (5/3 of it, 5 times its height wide) wouldn't fit the sidebar, and folds to 24. It's drawn at that starting
+      // size (the unit `--u`) and scaled down, so it stays sharp.
+      const statement = document.getElementById('brand')
+      const caps = UMO_Y_HEIGHT.open * (statement ? parseFloat(getComputedStyle(statement).fontSize) : 60)
+      open = Math.round(Math.min(caps, (aside.clientWidth - 48) * 0.6 / 5) * 100) / 100
+      aside.style.setProperty('--u', `${open / 60}px`)
+      const css = umoYKeyframes(open)
+      if (keyframes.textContent !== css) keyframes.textContent = css
+    }
     const update = () => {
       frame = 0
       const body = bodyRef.current
       const aside = asideRef.current
       if (!body || !aside) return
-      const lift = Math.max(0, body.getBoundingClientRect().top)
-      // Below lg the header's lockup folds as the film scrolls away, the wordmark staying 24 high. Where the browser
-      // runs animations on the scroll itself (Safari from 26, Chrome), the CSS does it (see index.css), in step with a
-      // finger dragging the page, which a script lags; it only needs to know how far the film is (`--umo-y-fold`).
-      const fold = `${body.offsetTop}px`
-      if (body.style.getPropertyValue('--umo-y-fold') !== fold) body.style.setProperty('--umo-y-fold', fold)
-      const mlogo = document.querySelector<HTMLElement>('[data-mlogo]')
-      const mUmoY = mlogo?.querySelector<HTMLElement>('[data-umo-y-layers]')
-      if (mUmoY && !SCROLL_TIMELINE) setUmoYLayers(mUmoY, 1 - Math.min(1, lift / Math.max(1, body.offsetTop)))
-      const logo = aside.querySelector<HTMLElement>('[data-logo]')
-      // The page starts at its own offset from the top (a strip above the bottom of the screen) — that's how far it rises.
-      // Trial: the UMO × Y lockup folds into UMO as the page rises, the wordmark going from the statement's capitals
-      // high to UMO_Y_HEIGHT.folded (5 times as wide); where the unfolded lockup wouldn't fit the sidebar, it starts lower.
-      const umoY = logo?.querySelector<SVGSVGElement>('[data-umo-y]')
-      if (logo && umoY) {
-        const t = 1 - Math.min(1, lift / Math.max(1, body.offsetTop))
-        const lockup = setUmoY(umoY, t)
-        // The unfolded lockup is 5/3 of the wordmark and 5 times its height wide.
-        const statement = document.getElementById('brand')
-        const caps = UMO_Y_HEIGHT.open * (statement ? parseFloat(getComputedStyle(statement).fontSize) : 60)
-        const open = Math.min(caps, ((logo.parentElement?.clientWidth ?? 248) - 48) * 0.6 / 5)
-        const word = 5 * (open + (UMO_Y_HEIGHT.folded - open) * t)
-        logo.style.width = `${word * lockup}px`
-        // The Y's circle overhangs the wordmark, so the first screen gives the lockup UMO_Y_PAD more room: the statement
-        // goes down by it to keep its capitals level with UMO, and
-        // the sidebar's top, left and bottom padding (the logo, the contents and their toggle row, the quick links rising
-        // with the row's line) give it back as the Y folds, so the folded logo sits 24/24 in the corner again.
-        const overhang = `${UMO_Y_PAD}px`
-        if (body.style.getPropertyValue('--umo-y-overhang') !== overhang) body.style.setProperty('--umo-y-overhang', overhang)
-        aside.style.setProperty('--umo-y-pad', `${UMO_Y_PAD * (1 - t)}px`)
+      const opacity = Math.min(1, window.scrollY / 160)
+      const nav = aside.querySelector<HTMLElement>('nav')
+      if (nav) nav.style.visibility = opacity ? '' : 'hidden'
+      setShown(opacity >= 0.5)
+      if (SCROLL_TIMELINE) return
+      // Without scroll timelines the script makes the moves of index.css frame by frame.
+      const t = 1 - Math.min(1, Math.max(0, body.getBoundingClientRect().top) / Math.max(1, body.offsetTop))
+      document.querySelectorAll<HTMLElement>('[data-umo-y-layers]').forEach(el => setUmoY(el, t))
+      const pad = UMO_Y_PAD * (1 - t)
+      const move = (selector: string, transform: string) => {
+        const el = aside.querySelector<HTMLElement>(selector)
+        if (el) el.style.transform = transform
       }
-      const nav = aside.querySelector('nav')
-      if (nav) {
-        const opacity = Math.min(1, window.scrollY / 160)
-        nav.style.opacity = String(opacity)
-        nav.style.visibility = opacity ? '' : 'hidden'
-        setShown(opacity >= 0.5)
-      }
+      move('[data-umo-y-desk]', `translate(${pad}px, ${pad}px) scale(${1 + (UMO_Y_HEIGHT.folded / open - 1) * t})`)
+      move('[data-umo-y-nav]', `translate(${pad}px, ${(open - UMO_Y_PAD) * (1 - t)}px)`)
+      move('[data-umo-y-toggle]', `translate(${pad}px, ${-pad}px)`)
+      if (nav) nav.style.opacity = String(opacity)
     }
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }
-    update()
+    const onResize = () => { layout(); onScroll() }
+    onResize()
     window.addEventListener('scroll', onScroll, { passive: true })
-    window.addEventListener('resize', onScroll)
+    window.addEventListener('resize', onResize)
     return () => {
       window.removeEventListener('scroll', onScroll)
-      window.removeEventListener('resize', onScroll)
+      window.removeEventListener('resize', onResize)
       cancelAnimationFrame(frame)
+      keyframes.remove()
     }
   }, [bodyRef, asideRef])
   return shown
+}
+
+/**
+ * The sidebar's fold from lg, for a wordmark starting `open` px high: it scales down to 24, and the logo, the contents
+ * and their toggle row come in from the first screen's extra UMO_Y_PAD to the usual 24 — the contents also rising by
+ * what the logo loses in height. All moves, no layout, so the browser runs them on the scroll (see index.css).
+ */
+function umoYKeyframes(open: number) {
+  const p = UMO_Y_PAD
+  return [
+    `@keyframes umo-y-desk { from { transform: translate(${p}px, ${p}px) scale(1) } to { transform: translate(0px, 0px) scale(${UMO_Y_HEIGHT.folded / open}) } }`,
+    `@keyframes umo-y-nav { from { transform: translate(${p}px, ${open - p}px) } to { transform: translate(0px, 0px) } }`,
+    `@keyframes umo-y-toggle { from { transform: translate(${p}px, ${-p}px) } to { transform: translate(0px, 0px) } }`,
+  ].join('\n')
 }
 
 /** Whether the browser runs CSS animations on the page's scroll (index.css folds the header's lockup with it). */
@@ -1237,17 +1256,22 @@ export default function Guide() {
           changes the list's height, and sticks there when the list is taller than the screen, cutting the list off —
           enough of a hint that it scrolls, so the scrollbar, far from the text at this width, is hidden. */}
       <aside ref={asideRef} className="hidden lg:flex sticky top-0 h-screen w-[320px] xl:w-1/3 shrink-0 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        <div className="sticky top-0 z-10 bg-white p-6 pt-[calc(24px+var(--umo-y-pad,0px))] pl-[calc(24px+var(--umo-y-pad,0px))]"><a href="#top" onClick={toTop} aria-label="В начало" data-logo className="block w-[200px]"><UmoYLogo title="UMO" className="w-full" /></a></div>
+        {/* The logo's box is the folded UMO, 120 by 24; the lockup is drawn larger over it and scaled (useHeroReveal). */}
+        <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" onClick={toTop} aria-label="В начало" data-logo className="block h-6 w-[120px]"><div data-umo-y-desk className="origin-top-left will-change-transform"><UmoYLayers title="UMO" /></div></a></div>
         {/* The row is fixed to the bottom of the screen — not moved there by script, which lags the scroll a frame and
             makes it shake — so the list keeps its height free at the end. */}
-        <div className="px-6 pl-[calc(24px+var(--umo-y-pad,0px))] pb-[calc(68px+var(--umo-y-pad,0px))]"><Nav active={active} expandAll={expandAll} /></div>
-        <TocToggle expanded={expandAll && tocShown} onClick={onTocToggle} className="fixed bottom-0 left-0 z-10 w-[320px] p-6 pl-[calc(24px+var(--umo-y-pad,0px))] pb-[calc(24px+var(--umo-y-pad,0px))] xl:w-1/3" />
+        <div data-umo-y-nav className="px-6 pb-[68px] will-change-transform"><Nav active={active} expandAll={expandAll} /></div>
+        <div className="fixed bottom-0 left-0 z-10 w-[320px] bg-white xl:w-1/3">
+          <div data-umo-y-toggle className="will-change-transform">
+            <TocToggle expanded={expandAll && tocShown} onClick={onTocToggle} className="w-full p-6" />
+          </div>
+        </div>
       </aside>
 
       {/* Mobile top bar. iOS 26 browsers draw the page under their translucent top bar and stick `top: 0` below it,
           so the white is extended a screen upwards to hide content scrolling above the header. */}
       <header className="lg:hidden sticky top-0 z-20 bg-white p-4 md:p-6 before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-screen before:bg-white before:content-['']">
-        <a href="#top" onClick={toTop} aria-label="В начало" data-mlogo className="block w-fit"><UmoYLayers title="UMO" /></a>
+        <a href="#top" onClick={toTop} aria-label="В начало" className="block w-fit"><UmoYLayers title="UMO" /></a>
       </header>
 
       {/* Mobile table of contents: a bar at the bottom names the heading you're reading and stands in for the
