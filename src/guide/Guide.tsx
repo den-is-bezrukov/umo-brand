@@ -575,10 +575,18 @@ function Logo({ className = 'w-[120px]' }: { className?: string }) {
   return <UmoLogo title="UMO" className={className} />
 }
 
-/** The logo takes you to the very top, the hero photo included, and leaves no #top in the address. */
+/**
+ * The logo takes you to the very top, the hero photo included, and leaves no #top in the address. From further than two
+ * screens down it first jumps to where the page has just risen over the photo (from lg; a screen down below it), and
+ * glides only the rest, the photo coming down and, from lg, the Y unfolding: the whole guide flying by in half a second
+ * blurred.
+ */
 function toTop(e: MouseEvent<HTMLAnchorElement>) {
   e.preventDefault()
   history.replaceState(null, '', window.location.pathname + window.location.search)
+  const body = document.querySelector<HTMLElement>('[data-guide-body]')
+  const near = body && window.matchMedia('(min-width: 64rem)').matches ? body.offsetTop : window.innerHeight
+  if (window.scrollY > 2 * window.innerHeight) window.scrollTo({ top: near, behavior: 'instant' })
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
@@ -1161,7 +1169,7 @@ export default function Guide() {
           (Figma 4893:3846, prototype 4921:2352). */}
       <Hero bodyRef={bodyRef} />
 
-      <div ref={bodyRef} className="bg-white lg:relative lg:z-10 lg:mt-[calc(100vh-var(--strip,286px))] lg:flex lg:items-start">
+      <div ref={bodyRef} data-guide-body className="bg-white lg:relative lg:z-10 lg:mt-[calc(100vh-var(--strip,286px))] lg:flex lg:items-start">
       {/* Desktop sidebar. The expand row sits at the bottom of the screen, so it stays put while the open chapter
           changes the list's height, and sticks there when the list is taller than the screen, cutting the list off —
           enough of a hint that it scrolls, so the scrollbar, far from the text at this width, is hidden. */}
