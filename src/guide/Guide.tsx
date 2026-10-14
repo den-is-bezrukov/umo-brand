@@ -385,8 +385,8 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
         logo.style.width = `${word * lockup}px`
         // The Y's circle overhangs the wordmark by a third of its height. On the first screen the space above is
         // measured from the circle: the statement goes down by the overhang to keep its capitals level with UMO, and
-        // the sidebar's top and left padding (the logo, the contents and their toggle row) give it back as the Y folds,
-        // so the folded logo sits 24/24 in the corner again.
+        // the sidebar's top, left and bottom padding (the logo, the contents and their toggle row, the quick links rising
+        // with the row's line) give it back as the Y folds, so the folded logo sits 24/24 in the corner again.
         const overhang = `${Math.round(open / 3 * 10) / 10}px`
         if (body.style.getPropertyValue('--umo-y-overhang') !== overhang) body.style.setProperty('--umo-y-overhang', overhang)
         aside.style.setProperty('--umo-y-pad', `${open / 3 * (1 - t)}px`)
@@ -431,7 +431,9 @@ function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObjec
       // Below lg: how far the quick links end under the top of the page (header and statement included), for the film
       // to take the rest of the first screen (see Hero).
       page.style.setProperty('--mstrip', `${Math.round(quick.getBoundingClientRect().bottom - body.getBoundingClientRect().top)}px`)
-      const strip = `${Math.round(16 + quick.offsetTop - block.offsetTop + 68 - 24)}px`
+      // The toggle row's bottom padding grows by the Y's overhang on the first screen (see useHeroReveal), lifting its line.
+      const overhang = parseFloat(body.style.getPropertyValue('--umo-y-overhang')) || 0
+      const strip = `${Math.round(16 + quick.offsetTop - block.offsetTop + 68 - 24 + overhang)}px`
       if (page.style.getPropertyValue('--strip') === strip) return
       page.style.setProperty('--strip', strip)
       // The page now starts elsewhere: let useHeroReveal place the toggle row and size the logo anew.
@@ -1125,8 +1127,8 @@ export default function Guide() {
         <div className="sticky top-0 z-10 bg-white p-6 pt-[calc(24px+var(--umo-y-pad,0px))] pl-[calc(24px+var(--umo-y-pad,0px))]"><a href="#top" onClick={toTop} aria-label="В начало" data-logo className="block w-[200px]"><UmoYLogo title="UMO" className="w-full" /></a></div>
         {/* The row is fixed to the bottom of the screen — not moved there by script, which lags the scroll a frame and
             makes it shake — so the list keeps its height free at the end. */}
-        <div className="px-6 pl-[calc(24px+var(--umo-y-pad,0px))] pb-[68px]"><Nav active={active} expandAll={expandAll} /></div>
-        <TocToggle expanded={expandAll && tocShown} onClick={onTocToggle} className="fixed bottom-0 left-0 z-10 w-[320px] p-6 pl-[calc(24px+var(--umo-y-pad,0px))] xl:w-1/3" />
+        <div className="px-6 pl-[calc(24px+var(--umo-y-pad,0px))] pb-[calc(68px+var(--umo-y-pad,0px))]"><Nav active={active} expandAll={expandAll} /></div>
+        <TocToggle expanded={expandAll && tocShown} onClick={onTocToggle} className="fixed bottom-0 left-0 z-10 w-[320px] p-6 pl-[calc(24px+var(--umo-y-pad,0px))] pb-[calc(24px+var(--umo-y-pad,0px))] xl:w-1/3" />
       </aside>
 
       {/* Mobile top bar. iOS 26 browsers draw the page under their translucent top bar and stick `top: 0` below it,
