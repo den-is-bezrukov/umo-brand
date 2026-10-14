@@ -31,22 +31,11 @@ export default function UmoYLogo({ className = '', title }: { className?: string
   )
 }
 
-/** Figma's ease, cubic-bezier(0.75, 0, 0.25, 1); symmetric, so solving x by bisection is plenty. */
-function ease(x: number) {
-  if (x <= 0 || x >= 1) return Math.min(1, Math.max(0, x))
-  let lo = 0, hi = 1, s = x
-  for (let i = 0; i < 20; i++) {
-    s = (lo + hi) / 2
-    const bx = 3 * s * (1 - s) * (1 - s) * 0.75 + 3 * s * s * (1 - s) * 0.25 + s * s * s
-    if (bx < x) lo = s; else hi = s
-  }
-  return 3 * s * s * (1 - s) + s * s * s
-}
-
 /** Returns the lockup's width in wordmark widths, 5/3 unfolded to 1 folded, to size the box so the wordmark holds still. */
 export function setUmoY(svg: SVGSVGElement, t: number) {
-  const k = ease(t)
-  const d = ease((t - 0.3) / 0.4)
+  // Linear, unlike Figma's eased 2-second loop: the scroll sets the pace.
+  const k = Math.min(1, Math.max(0, t))
+  const d = Math.min(1, Math.max(0, (t - 0.3) / 0.4))
   svg.setAttribute('viewBox', `0 ${20 * k} ${500 - 200 * k} ${100 - 40 * k}`)
   svg.querySelector('[data-part="cobrand"]')?.setAttribute('transform', `translate(${349 - 70 * k} 0)`)
   svg.querySelector('[data-part="divider"]')?.setAttribute('transform', `translate(${1 - 2 * d} 20)`)
