@@ -2,7 +2,7 @@
  * UMO with the Y cobrand (Figma 5156:543), in Figma's units: the wordmark 300×60, the lockup 500×100. `setUmoY`
  * folds it by `t` from 0 (UMO | Y) to 1 (UMO alone): the cobrand slides 70 left into the O's right wall, the Y turns
  * a quarter and shrinks to 0.46 behind the cobrand's clip, the divider steps 2 left between 0.3 and 0.7, and the
- * viewBox closes from the lockup onto the wordmark, keeping 5:1 so the wordmark stays the same size on screen.
+ * viewBox closes from the lockup onto the wordmark, keeping 5:1.
  */
 export default function UmoYLogo({ className = '', title }: { className?: string; title?: string }) {
   return (
@@ -43,6 +43,7 @@ function ease(x: number) {
   return 3 * s * s * (1 - s) + s * s * s
 }
 
+/** Returns the lockup's width in wordmark widths, 5/3 unfolded to 1 folded, to size the box so the wordmark holds still. */
 export function setUmoY(svg: SVGSVGElement, t: number) {
   const k = ease(t)
   const d = ease((t - 0.3) / 0.4)
@@ -51,4 +52,5 @@ export function setUmoY(svg: SVGSVGElement, t: number) {
   svg.querySelector('[data-part="divider"]')?.setAttribute('transform', `translate(${1 - 2 * d} 20)`)
   const s = 1 - 0.54 * k
   svg.querySelector('[data-part="y"]')?.setAttribute('transform', `translate(${51 - 111 * k} 0) translate(50 50) rotate(${-90 * k}) scale(${s}) translate(-50 -50)`)
+  return (500 - 200 * k) / 300
 }
