@@ -1307,8 +1307,9 @@ export default function Guide() {
         {!menuOpen && (
           // The whole bar opens the contents (the button's ::before covers it), save the quick links standing in it. As
           // with the header, the white runs a screen on past its bottom: iOS 26 Safari draws the page under its floating
-          // toolbar, and while that slides the bar's bottom edge lets the page show through.
-          <div className="fixed inset-x-0 bottom-0 z-40 flex items-start gap-4 bg-white after:pointer-events-none after:absolute after:inset-x-0 after:top-full after:h-screen after:bg-white after:content-[''] md:gap-6 px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]">
+          // toolbar, and while that slides the bar's bottom edge lets the page show through. It overlaps the bar by 2px, so no
+          // seam opens between them on a fractional pixel.
+          <div className="fixed inset-x-0 bottom-0 z-40 flex items-start gap-4 bg-white after:pointer-events-none after:absolute after:inset-x-0 after:top-[calc(100%-2px)] after:h-screen after:bg-white after:content-[''] md:gap-6 px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]">
             <button
               type="button"
               onClick={() => setMenuOpen(true)}
