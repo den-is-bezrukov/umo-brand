@@ -351,6 +351,9 @@ function useActiveInView(asideRef: RefObject<HTMLElement | null>, active: string
  */
 const UMO_Y_HEIGHT = { open: 0.68, folded: 24 }
 
+/** Trial: what the first screen adds to the sidebar's 24 px on top, left and bottom for the Y's circle, which overhangs UMO by a third of its height (10–14 px). */
+const UMO_Y_PAD = 12
+
 /**
  * While the page slides up over the hero, the sidebar's toggle row stays fixed at the bottom of the screen, while the
  * sidebar runs off it, so the contents unroll between the logo and the row as the page rises. They fade in over the
@@ -383,13 +386,13 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
         const open = Math.min(caps, ((logo.parentElement?.clientWidth ?? 248) - 48) * 0.6 / 5)
         const word = 5 * (open + (UMO_Y_HEIGHT.folded - open) * t)
         logo.style.width = `${word * lockup}px`
-        // The Y's circle overhangs the wordmark by a third of its height. On the first screen the space above is
-        // measured from the circle: the statement goes down by the overhang to keep its capitals level with UMO, and
+        // The Y's circle overhangs the wordmark, so the first screen gives the lockup UMO_Y_PAD more room: the statement
+        // goes down by it to keep its capitals level with UMO, and
         // the sidebar's top, left and bottom padding (the logo, the contents and their toggle row, the quick links rising
         // with the row's line) give it back as the Y folds, so the folded logo sits 24/24 in the corner again.
-        const overhang = `${Math.round(open / 3 * 10) / 10}px`
+        const overhang = `${UMO_Y_PAD}px`
         if (body.style.getPropertyValue('--umo-y-overhang') !== overhang) body.style.setProperty('--umo-y-overhang', overhang)
-        aside.style.setProperty('--umo-y-pad', `${open / 3 * (1 - t)}px`)
+        aside.style.setProperty('--umo-y-pad', `${UMO_Y_PAD * (1 - t)}px`)
       }
       const nav = aside.querySelector('nav')
       if (nav) {
