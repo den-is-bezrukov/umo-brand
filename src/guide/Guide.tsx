@@ -358,6 +358,12 @@ const UMO_Y_HEIGHT = { open: 0.68, folded: 24 }
 const UMO_Y_PAD = COBRAND ? 12 : 0
 
 /**
+ * Trial: below lg, white between the film and the header for the Y's circle, which overhangs UMO by 8 px there, so it
+ * stands as far from the film as the header's padding; it scrolls away with the film, the stuck header keeps its own.
+ */
+const UMO_Y_GAP = COBRAND ? 8 : 0
+
+/**
  * While the page slides up over the hero, the sidebar's toggle row stays fixed at the bottom of the screen, while the
  * sidebar runs off it, so the contents unroll between the logo and the row as the page rises. They fade in over the
  * first 160px of scroll: on the first screen there's only the logo and the row. The logo, 200px wide on the first
@@ -525,7 +531,7 @@ function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObjec
       // Where that would leave the film less than half the width or 40% of the height (a phone held sideways, a short
       // window), the film takes the whole first screen down to the bar instead, so the bar doesn't cut the statement.
       const md = window.matchMedia('(min-width: 48rem)').matches
-      const film = window.innerHeight - mstrip - (md ? 92 : 68)
+      const film = window.innerHeight - mstrip - (md ? 92 : 68) - UMO_Y_GAP
       page.toggleAttribute('data-hero-full', !window.matchMedia('(min-width: 64rem)').matches && film < Math.min(window.innerWidth / 2, window.innerHeight * 0.4))
       // The toggle row's bottom padding grows by the Y's overhang on the first screen (see useHeroReveal), lifting its line.
       const overhang = parseFloat(body.style.getPropertyValue('--umo-y-overhang')) || 0
@@ -604,7 +610,7 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
   }, [bodyRef])
   const fill = 'block size-full bg-black object-cover'
   return (
-    <div ref={ref} className="relative z-30 h-[calc(100svh-var(--mstrip,260px)-68px)] md:h-[calc(100svh-var(--mstrip,360px)-92px)] max-lg:[[data-hero-full]_&]:h-[calc(100svh-52px)] md:max-lg:[[data-hero-full]_&]:h-[calc(100svh-68px)] lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:h-[calc(100vh-var(--strip,286px))]">
+    <div ref={ref} style={{ '--umo-y-gap': `${UMO_Y_GAP}px` } as CSSProperties} className="relative z-30 h-[calc(100svh-var(--mstrip,260px)-68px-var(--umo-y-gap))] max-lg:mb-[var(--umo-y-gap)] md:h-[calc(100svh-var(--mstrip,360px)-92px-var(--umo-y-gap))] max-lg:[[data-hero-full]_&]:h-[calc(100svh-52px)] md:max-lg:[[data-hero-full]_&]:h-[calc(100svh-68px)] lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:h-[calc(100vh-var(--strip,286px))]">
       {still ? (
         <img src={img('hero')} alt="Женщина у UMO 8 на горной дороге" width={1824} height={912} fetchPriority="high" decoding="async" className={`${fill} object-[50%_40%]`} />
       ) : (
