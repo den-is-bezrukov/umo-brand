@@ -469,9 +469,9 @@ function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObjec
     let frame = 0
     const update = () => {
       frame = 0
-      // Below lg: how far the quick links end under the top of the page (header and statement included), for the film
-      // to take the rest of the first screen (see Hero).
-      page.style.setProperty('--mstrip', `${Math.round(quick.getBoundingClientRect().bottom - body.getBoundingClientRect().top)}px`)
+      // Below lg: how far the statement and the quick links under it (where they aren't in the bottom bar) end under the
+      // top of the page, header included, for the film to take the rest of the first screen (see Hero).
+      page.style.setProperty('--mstrip', `${Math.round(block.getBoundingClientRect().bottom - body.getBoundingClientRect().top)}px`)
       // The toggle row's bottom padding grows by the Y's overhang on the first screen (see useHeroReveal), lifting its line.
       const overhang = parseFloat(body.style.getPropertyValue('--umo-y-overhang')) || 0
       const strip = `${Math.round(16 + quick.offsetTop - block.offsetTop + 68 - 24 + overhang)}px`
@@ -554,6 +554,37 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
         <video ref={videoRef} src={src} poster={img('hero-poster')} autoPlay muted loop playsInline preload="auto" aria-hidden className={fill} />
       )}
     </div>
+  )
+}
+
+/**
+ * Below lg, from 480px, where they fit beside «Содержание»: the quick links stand in the bottom bar, on its right, in
+ * place of their own line under the statement, which leaves the film more of the first screen. They're there for the
+ * first screen only and fade out over the first 160px of scroll, as the sidebar's contents fade in from lg, so further
+ * down the bar is the contents' alone again.
+ */
+function BarLinks() {
+  const ref = useRef<HTMLElement>(null)
+  useEffect(() => {
+    let frame = 0
+    const update = () => {
+      frame = 0
+      const nav = ref.current
+      if (!nav) return
+      const opacity = Math.max(0, 1 - window.scrollY / 160)
+      nav.style.opacity = String(opacity)
+      nav.style.visibility = opacity ? '' : 'hidden'
+    }
+    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }
+    update()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => { window.removeEventListener('scroll', onScroll); cancelAnimationFrame(frame) }
+  }, [])
+  return (
+    <nav ref={ref} aria-label="Быстрые ссылки" className="fixed right-4 bottom-[max(16px,env(safe-area-inset-bottom))] z-40 hidden gap-x-6 text-[16px] font-medium leading-[1.25] tracking-[-0.01em] min-[480px]:flex md:right-6 md:bottom-[max(24px,env(safe-area-inset-bottom))]">
+      <a href="#positioning" className={LINK_HOVER}>Платформа</a>
+      <a href="#materials" className={LINK_HOVER}>Материалы для дилеров</a>
+    </nav>
   )
 }
 
@@ -1220,6 +1251,7 @@ export default function Guide() {
             <span className="min-w-0 flex-1 truncate">{sectionTitle ?? 'Содержание'}</span>
           </button>
         )}
+        {!menuOpen && <BarLinks />}
       </div>
 
       {/* 16px on top from lg: the statement's capitals then stand level with the top of the logo beside it. */}
@@ -1238,7 +1270,7 @@ export default function Guide() {
                 </p>
                 {/* Quick links: into the brand platform, from its first section, and to Носители with their constructors,
                     named for whom they're for (they were «Стандарты» and «Носители») */}
-                <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
+                <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex max-lg:min-[480px]:hidden flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
                   <a href="#positioning" className={LINK_HOVER}>Платформа</a>
                   <a href="#materials" className={LINK_HOVER}>Материалы для дилеров</a>
                 </nav>
