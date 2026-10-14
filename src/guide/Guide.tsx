@@ -1401,9 +1401,10 @@ export default function Guide() {
             and the bar says «Свернуть». The whole bar toggles the contents (the button's ::before covers it), save the
             quick links standing in it on the first screen. As with the header, the bar's white runs a screen on past
             its bottom: iOS 26 Safari draws the page under its floating toolbar, and while that slides the bar's bottom
-            edge lets the page show through; it overlaps the bar by 2px, so no seam opens on a fractional pixel. */}
+            edge lets the page show through. The white below and the list above both overlap the bar by 2px, so no seam
+            opens on a fractional pixel. */}
         <div className="fixed inset-x-0 bottom-0 z-40">
-          <div ref={toc.sheet} inert={!menuOpen || undefined} className="invisible absolute inset-x-0 bottom-full flex max-h-[calc(60dvh-52px)] flex-col overflow-hidden rounded-t-2xl bg-white md:max-h-[calc(60dvh-68px)]">
+          <div ref={toc.sheet} inert={!menuOpen || undefined} className="invisible absolute inset-x-0 bottom-[calc(100%-2px)] flex max-h-[calc(60dvh-52px)] flex-col overflow-hidden rounded-t-2xl bg-white md:max-h-[calc(60dvh-68px)]">
             <div ref={sheetRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 md:px-6 md:pt-6">
               <Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} />
             </div>
