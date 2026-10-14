@@ -661,16 +661,11 @@ function BarLinks() {
 }
 
 /**
- * The mobile contents sheet's moves (Figma 5157:659): one list seen through a window. Closed, the window is the bottom
- * bar's line, and the list stands so the place the bar names (its own line in the list) is that line; opening, the
- * window grows up to the sheet's height while the list carries that line up to the middle of the sheet (the list
- * scrolled so), and the bar's line, uncovered, says «Свернуть»; closing is the same backwards. Nothing fades but the
- * dimmed page. With no place named («Содержание» on the first screen), or closed by a link (the bar is about to name
- * another), the window opens from the bar up over a still list. As the generators' sheet (docs/generators.md), it
- * follows a finger: the bar pulled up opens it, pulled down closes it, and so does the list pulled down while scrolled
- * to its top (else the list scrolls); let go, it goes on in 350 ms, slowing down, to the nearer of open and closed,
- * its speed not carrying it on; past open it gives at 30%. A tap, Esc or a link moves it the same way. Only the
- * window (a clip) and transforms move.
+ * The mobile contents sheet's moves, as the generators' sheet (docs/generators.md): it follows a finger — the bottom
+ * bar pulled up brings it out from behind the bar, and pulled down it goes, by the bar or from anywhere on it while its
+ * list is scrolled to the top (else the list scrolls) — and let go it goes on in 350 ms, slowing down, to the nearer of open and closed, its speed
+ * not carrying it on; past open it gives at 30%. A tap, Esc or a link moves it the same way. It stays in the page, out
+ * of sight closed, so it's measured and slides from the first touch; only transforms move.
  */
 function useTocSheet(open: boolean, setOpen: (open: boolean) => void, list: RefObject<HTMLDivElement | null>) {
   const bar = useRef<HTMLDivElement>(null)
@@ -680,138 +675,35 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, list: RefO
   const dragging = useRef(false)
   const timer = useRef(0)
   const [api] = useState(() => {
-    const EASE = 'cubic-bezier(0.33, 1, 0.68, 1)'
-    // Measured as a move starts, in the sheet's own box: the list's height, the bar's line, the shift that puts the
-    // named place on that line (none to open over a still list).
-    let way: { listH: number, sheetH: number, line: number, lineH: number, dx: number, dy: number, item: boolean } | null = null
-    let quiet = false
-    const parts = () => {
-      const q = (s: string) => bar.current?.querySelector<HTMLElement>(s) ?? null
-      return {
-        here: q('[data-toc-label="here"]'), fold: q('[data-toc-fold]'),
-        items: (list.current?.firstElementChild as HTMLElement | null) ?? null,
-      }
-    }
-    // Everything from the page's own layout (offsets within the list and the bar), not the screen's: on iOS the
-    // screen positions of the bar and the list drifted apart while Safari's toolbar moved.
-    const offset = (node: HTMLElement, within: HTMLElement) => {
-      let x = 0
-      let y = 0
-      // A stuck chapter title reports where it's stuck; its chapter's box starts where it stands in the list.
-      let n: HTMLElement | null = getComputedStyle(node).position === 'sticky' ? node.parentElement : node
-      while (n && n !== within) {
-        x += n.offsetLeft
-        y += n.offsetTop
-        n = n.offsetParent as HTMLElement | null
-      }
-      return { x, y }
-    }
-    const measure = (from: number) => {
-      const el = sheet.current
-      const l = list.current
-      const b = bar.current
-      const { here, items } = parts()
-      if (!el || !l || !b || !here || !items) return null
-      items.style.transition = 'none'
-      items.style.transform = ''
-      const listH = l.offsetHeight
-      // The bar's line in the sheet's box: the sheet's list ends where the bar starts, and the bar is as tall as the
-      // room under the list.
-      const label = offset(here, b)
-      const line = listH + label.y
-      const lineH = here.offsetHeight
-      const id = here.dataset.id
-      const item = id && !quiet ? l.querySelector<HTMLElement>(`a[href="#${id}"]`) : null
-      // Opening, the list is scrolled so the place (or the place you're reading, with none named) stands in its middle.
-      const lit = l.querySelectorAll<HTMLElement>('nav [aria-current]')
-      const centre = item ?? lit[lit.length - 1]
-      if (from === 0 && centre) l.scrollTop = offset(centre, items).y + items.offsetTop - (l.clientHeight - centre.offsetHeight) / 2
-      if (!item) return { listH, sheetH: el.offsetHeight, line, lineH, dx: 0, dy: 0, item: false }
-      const at = offset(item, items)
-      const top = items.offsetTop + at.y - l.scrollTop + parseFloat(getComputedStyle(item).paddingTop)
-      const left = l.offsetLeft + items.offsetLeft + at.x
-      return { listH, sheetH: el.offsetHeight, line, lineH, item: true, dx: label.x - left, dy: line - top }
-    }
-    // While it moves the bar's label is the list's own line, seen through the window.
-    const swap = (moving: boolean) => {
-      const { here } = parts()
-      if (here) here.style.visibility = moving ? 'hidden' : ''
-    }
-    // «Свернуть» comes up from under the screen's edge with the finger, one to one, as the window starts opening, and
-    // goes back down so as it ends closing (the generators' download does so with their sheet): its way is its height.
-    const foldAt = (k: number, listH: number, rowH: number) => Math.max(0, rowH - k * listH)
     const place = (p: number, animate: boolean) => {
       const el = sheet.current
       const shade = dim.current
       if (!el || !shade) return
       clearTimeout(timer.current)
       pos.current = p
-      const k = Math.min(1, Math.max(0, p))
-      const t = animate ? `350ms ${EASE}` : '0s'
-      shade.style.transition = `opacity ${t}`
-      shade.style.opacity = String(k)
-      if (way) {
-        const { listH, sheetH, line, lineH, dx, dy, item } = way
-        const top = item ? line + (0 - line) * k : listH * (1 - k)
-        const bottom = item ? line + lineH + (listH - line - lineH) * k : listH
-        el.style.transition = `clip-path ${t}, transform ${t}`
-        el.style.clipPath = `inset(${top}px 0 ${sheetH - bottom}px 0 round 16px 16px 0 0)`
-        el.style.transform = p > 1 ? `translateY(${-(p - 1) * listH * 0.3}px)` : ''
-        const items = parts().items
-        if (items) {
-          items.style.transition = `transform ${t}`
-          items.style.transform = `translate(${dx * (1 - k)}px, ${dy * (1 - k)}px)`
-        }
-      }
-      const fold = parts().fold
-      if (fold && way) {
-        const rowH = fold.offsetHeight
-        const from = parseFloat(fold.dataset.at ?? String(rowH))
-        const to = foldAt(k, way.listH, rowH)
-        // A tap's move eases out over 350 ms; «Свернуть» covers its way while the window covers as much, so it starts
-        // and ends when the window's way reaches its height (from the closed end).
-        const f = Math.min(1, rowH / way.listH)
-        let timing = '0s'
-        if (animate && to < from) timing = `${Math.round(350 * (1 - Math.cbrt(1 - f)))}ms ${EASE}`
-        if (animate && to > from) timing = `${Math.round(350 * Math.cbrt(f))}ms ${EASE} ${Math.round(350 * (1 - Math.cbrt(f)))}ms`
-        fold.style.transition = `transform ${timing}`
-        fold.style.transform = `translateY(${to}px)`
-        fold.dataset.at = String(to)
-        fold.style.visibility = 'visible'
-      }
-      el.style.visibility = k > 0 ? 'visible' : el.style.visibility
-      shade.style.visibility = 'visible'
-      if (k > 0) swap(true)
-      const settle = () => {
-        if (pos.current !== p) return
-        if (p <= 0) {
-          el.style.visibility = shade.style.visibility = ''
-          const fold = parts().fold
-          if (fold) fold.style.visibility = ''
-          swap(false)
-          way = null
-        }
-        if (p >= 1) way = null
-        quiet = false
-      }
-      if (animate) timer.current = window.setTimeout(settle, 360)
-      else if (p <= 0) settle()
+      const h = el.offsetHeight
+      const move = animate ? 'transform 350ms cubic-bezier(0.33, 1, 0.68, 1)' : 'none'
+      el.style.transition = move
+      shade.style.transition = animate ? 'opacity 350ms cubic-bezier(0.33, 1, 0.68, 1)' : 'none'
+      el.style.transform = `translateY(${p > 1 ? -(p - 1) * h * 0.3 : (1 - p) * h}px)`
+      shade.style.opacity = String(Math.min(1, Math.max(0, p)))
+      el.style.visibility = shade.style.visibility = 'visible'
+      if (p <= 0) timer.current = window.setTimeout(() => { el.style.visibility = shade.style.visibility = '' }, animate ? 360 : 0)
     }
     return {
       bar, dim, sheet, place,
-      // A move starting: measured anew from where the sheet stands.
-      start: () => { way = measure(pos.current >= 0.5 ? 1 : 0) },
-      quiet: () => { quiet = true },
+      // The list scrolled to the chapter you're reading, as the sheet comes into view.
+      reveal: () => {
+        const lit = list.current?.querySelectorAll('nav [aria-current]')
+        lit?.[lit.length - 1]?.scrollIntoView({ block: 'center' })
+      },
     }
   })
 
   const placed = useRef(false)
   useEffect(() => {
-    // Put out of sight at once on the page's first render; moved from then on.
-    if (!dragging.current) {
-      if (placed.current) api.start()
-      api.place(open ? 1 : 0, placed.current)
-    }
+    // Put out of sight at once on the page's first render; slid from then on.
+    if (!dragging.current) api.place(open ? 1 : 0, placed.current)
     placed.current = true
   }, [open, api])
 
@@ -820,8 +712,8 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, list: RefO
     const sheetEl = sheet.current
     if (!barEl || !sheetEl) return
     let start: { x: number, y: number, from: number, onBar: boolean, mode: 'open' | 'close' | 'none' | null } | null = null
-    const down = (e: TouchEvent) => {
-      start = { x: e.touches[0].clientX, y: e.touches[0].clientY, from: pos.current >= 0.5 ? 1 : 0, onBar: barEl.contains(e.target as Node), mode: null }
+    const down = (from: number) => (e: TouchEvent) => {
+      start = { x: e.touches[0].clientX, y: e.touches[0].clientY, from, onBar: barEl.contains(e.target as Node), mode: null }
     }
     const move = (e: TouchEvent) => {
       if (!start) return
@@ -834,12 +726,11 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, list: RefO
         else start.mode = vertical && dy > 0 && (start.onBar || (list.current?.scrollTop ?? 0) <= 0) ? 'close' : 'none'
         if (start.mode === 'none') return
         dragging.current = true
-        api.start()
+        if (start.mode === 'open') api.reveal()
       }
       if (start.mode === 'none') return
       e.preventDefault()
-      // The finger's way is the window's: from the bar's line to the sheet's top.
-      const h = (list.current?.offsetHeight || 1)
+      const h = sheetEl.offsetHeight || 1
       api.place(start.from - dy / h, false)
     }
     const up = (e: TouchEvent) => {
@@ -853,16 +744,19 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, list: RefO
       setOpen(target)
     }
     const opts = { passive: false }
-    barEl.addEventListener('touchstart', down, { passive: true })
-    sheetEl.addEventListener('touchstart', down, { passive: true })
+    const fromBar = (e: TouchEvent) => down(pos.current >= 0.5 ? 1 : 0)(e)
+    const fromSheet = down(1)
+    barEl.addEventListener('touchstart', fromBar, { passive: true })
+    sheetEl.addEventListener('touchstart', fromSheet, { passive: true })
     for (const el of [barEl, sheetEl]) {
       el.addEventListener('touchmove', move, opts)
       el.addEventListener('touchend', up, opts)
       el.addEventListener('touchcancel', up, opts)
     }
     return () => {
+      barEl.removeEventListener('touchstart', fromBar)
+      sheetEl.removeEventListener('touchstart', fromSheet)
       for (const el of [barEl, sheetEl]) {
-        el.removeEventListener('touchstart', down)
         el.removeEventListener('touchmove', move)
         el.removeEventListener('touchend', up)
         el.removeEventListener('touchcancel', up)
@@ -1435,6 +1329,7 @@ export default function Guide() {
   const toc = useTocSheet(menuOpen, setMenuOpen, sheetRef)
   useEffect(() => {
     if (!menuOpen) return
+    toc.reveal()
     const root = document.documentElement
     root.style.overflow = 'hidden'
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false) }
@@ -1519,41 +1414,24 @@ export default function Guide() {
         {/* A white border as tall as the bar runs on under it, past the screen's bottom, where the page showed through
             under iOS 26 Safari's floating toolbar as it slid. */}
         <div className="fixed inset-x-0 -bottom-[52px] z-40 border-b-[52px] border-white md:-bottom-[68px] md:border-b-[68px]">
-          {/* The sheet stands over the bar too, its list ending at the bar's top, seen through a window that grows from the
-              bar's line (useTocSheet). */}
-          <div ref={toc.sheet} inert={!menuOpen || undefined} className="invisible absolute inset-x-0 bottom-0 z-20 flex flex-col bg-white">
+          <div ref={toc.sheet} inert={!menuOpen || undefined} className="invisible absolute inset-x-0 bottom-[calc(100%-2px)] flex max-h-[calc(60dvh-52px)] flex-col overflow-hidden rounded-t-2xl bg-white md:max-h-[calc(60dvh-68px)]">
             {/* The list's top padding is inside it, so a stuck title is measured from the sheet's edge in every browser. */}
-            <div ref={sheetRef} className="max-h-[calc(60dvh-52px)] overflow-y-auto overscroll-contain px-4 md:max-h-[calc(60dvh-68px)] md:px-6">
-              <div className="relative pt-4 md:pt-6"><Nav active={active} expandAll onNavigate={() => { toc.quiet(); setMenuOpen(false) }} stickyChapters /></div>
+            <div ref={sheetRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 md:px-6">
+              <div className="pt-4 md:pt-6"><Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} stickyChapters /></div>
             </div>
-            {/* As tall as the bar, under the list; its menu icon stands where the bar's does, seen through the window
-                with the place while the window is the bar's line. */}
-            <div aria-hidden className="flex px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] leading-[1.25] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]"><TocIcon name="menu" />&nbsp;</div>
           </div>
-          <div ref={toc.bar} className="relative flex items-start gap-4 bg-white after:pointer-events-none after:absolute after:inset-x-0 after:top-[calc(100%-2px)] after:h-screen after:bg-white after:content-[''] md:gap-6 px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]">
+          <div ref={toc.bar} className="relative z-10 flex items-start gap-4 bg-white after:pointer-events-none after:absolute after:inset-x-0 after:top-[calc(100%-2px)] after:h-screen after:bg-white after:content-[''] md:gap-6 px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]">
             <button
               type="button"
-              onClick={() => setMenuOpen(true)}
+              onClick={() => setMenuOpen(!menuOpen)}
               aria-expanded={menuOpen}
-              aria-label={sectionTitle ? `Содержание: ${sectionTitle}` : 'Содержание'}
+              aria-label={menuOpen ? 'Свернуть' : sectionTitle ? `Содержание: ${sectionTitle}` : 'Содержание'}
               className="flex min-w-0 cursor-pointer items-start gap-2 text-left before:absolute before:inset-0 before:content-['']"
             >
-              <TocIcon name="menu" />
-              <span data-toc-label="here" data-id={sectionTitle ? active[0] : ''} className="min-w-0 truncate">{sectionTitle ?? 'Содержание'}</span>
+              <TocIcon name={menuOpen ? 'close' : 'menu'} />
+              <span className="min-w-0 truncate">{menuOpen ? 'Свернуть' : sectionTitle ?? 'Содержание'}</span>
             </button>
             {!menuOpen && <BarLinks />}
-            {/* «Свернуть», the open sheet's foot, over the whole bar; out of sight under the screen's edge while closed. */}
-            <button
-              type="button"
-              data-toc-fold
-              tabIndex={menuOpen ? undefined : -1}
-              aria-hidden={!menuOpen || undefined}
-              onClick={() => setMenuOpen(false)}
-              className="invisible absolute inset-0 z-40 flex cursor-pointer items-start gap-2 bg-white px-4 pt-4 text-left md:px-6 md:pt-6"
-            >
-              <TocIcon name="close" />
-              Свернуть
-            </button>
           </div>
         </div>
       </div>
