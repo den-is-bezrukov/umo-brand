@@ -2,17 +2,19 @@
  * UMO with the Y cobrand (Figma 5156:543), in Figma's units: the wordmark 300×60, the lockup 500×100. `setUmoY`
  * folds it by `t` from 0 (UMO | Y) to 1 (UMO alone): the cobrand slides 70 left into the O's right wall, the Y turns
  * a quarter and shrinks to 0.46 behind the cobrand's clip, the divider steps 2 left between 0.3 and 0.7, and the
- * viewBox closes from the lockup onto the wordmark, keeping 5:1.
+ * viewBox closes from the lockup onto the wordmark. The box is the wordmark's height, so its top stands where the plain
+ * logo's does; the Y's circle overhangs it 20 above and below.
  */
 export default function UmoYLogo({ className = '', title }: { className?: string; title?: string }) {
   return (
     <svg
-      viewBox="0 0 500 100"
+      viewBox="0 20 500 60"
+      overflow="visible"
       fill="currentColor"
       role={title ? 'img' : undefined}
       aria-label={title}
       aria-hidden={title ? undefined : true}
-      className={`block aspect-[5/1] ${className}`}
+      className={`block ${className}`}
       data-umo-y
     >
       <defs>
@@ -36,7 +38,7 @@ export function setUmoY(svg: SVGSVGElement, t: number) {
   // Linear, unlike Figma's eased 2-second loop: the scroll sets the pace.
   const k = Math.min(1, Math.max(0, t))
   const d = Math.min(1, Math.max(0, (t - 0.3) / 0.4))
-  svg.setAttribute('viewBox', `0 ${20 * k} ${500 - 200 * k} ${100 - 40 * k}`)
+  svg.setAttribute('viewBox', `0 20 ${500 - 200 * k} 60`)
   svg.querySelector('[data-part="cobrand"]')?.setAttribute('transform', `translate(${349 - 70 * k} 0)`)
   svg.querySelector('[data-part="divider"]')?.setAttribute('transform', `translate(${1 - 2 * d} 20)`)
   const s = 1 - 0.54 * k
