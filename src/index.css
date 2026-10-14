@@ -66,14 +66,6 @@ body {
   overscroll-behavior-y: none;
 }
 
-/* Trial: from lg the guide's first screen snaps, softly, to the photo or to the page risen over it (the snap points are
-   the page's top and the body's, see Guide). */
-@media (min-width: 64rem) {
-  html[data-guide-snap] {
-    scroll-snap-type: y proximity;
-  }
-}
-
 @theme {
   --font-sans: 'CoFo Sans', sans-serif;
   --breakpoint-xs: 360px;

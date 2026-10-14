@@ -415,6 +415,44 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
   return shown
 }
 
+/** Trial: how far, in px, a scroll has to go before useHeroSnap carries it on; 0 carries any. */
+const HERO_SNAP_MIN = 0
+
+/**
+ * Trial, from lg: a scroll that stops between the photo and the page risen over it is carried on, smoothly, to the end
+ * it was heading for (HERO_SNAP_MIN or more), or back where it started, so the lockup never rests half folded. It waits
+ * for the scroll to end, inertia included; not with reduced motion.
+ */
+function useHeroSnap(bodyRef: RefObject<HTMLElement | null>) {
+  useEffect(() => {
+    const wide = window.matchMedia('(min-width: 64rem)')
+    const still = window.matchMedia('(prefers-reduced-motion: reduce)')
+    let start: number | null = null
+    let timer = 0
+    const settle = () => {
+      const body = bodyRef.current
+      const from = start
+      start = null
+      if (!body || from === null || !wide.matches || still.matches) return
+      const end = body.offsetTop
+      const y = window.scrollY
+      if (y <= 0 || y >= end) return
+      const by = y - from
+      const to = by > HERO_SNAP_MIN ? end : by < -HERO_SNAP_MIN ? 0 : from <= end / 2 ? 0 : end
+      window.scrollTo({ top: to, behavior: 'smooth' })
+    }
+    const onScroll = () => {
+      if (start === null) start = lastY
+      lastY = window.scrollY
+      clearTimeout(timer)
+      timer = window.setTimeout(settle, 150)
+    }
+    let lastY = window.scrollY
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => { window.removeEventListener('scroll', onScroll); clearTimeout(timer) }
+  }, [bodyRef])
+}
+
 /**
  * Height of the first screen's white strip (`--strip` on the page), from lg. The statement's capitals stand level with
  * the top of the logo (the body's 16px on top plus CoFo Sans's 0.164em above the caps at leading 1 make the logo's 24),
@@ -1057,11 +1095,7 @@ export default function Guide() {
   useActiveInView(asideRef, active, expandAll)
   const quickRef = useRef<HTMLElement>(null)
   useHeroStrip(pageRef, quickRef, bodyRef)
-  // Trial: the browser's own soft snap between the photo and the risen page (see index.css).
-  useEffect(() => {
-    document.documentElement.setAttribute('data-guide-snap', '')
-    return () => document.documentElement.removeAttribute('data-guide-snap')
-  }, [])
+  useHeroSnap(bodyRef)
   const tocShown = useHeroReveal(bodyRef, asideRef)
   // The contents row does what it says; on the first screen, where the contents are out of view and it says
   // «Содержание» whatever the list's state, it takes the page up over the photo and opens the list (an expanded one
@@ -1120,8 +1154,6 @@ export default function Guide() {
 
   return (
     <div ref={pageRef} id="top" className="min-h-screen bg-white font-sans text-black">
-      {/* Trial: the photo's snap point (see index.css); the page itself is too tall to be one. */}
-      <div aria-hidden className="absolute top-0 hidden h-px w-px lg:block lg:snap-start" />
       {/* The hero is the top of the page: the logo leads here, and it isn't in the contents. On a phone it's the first
           picture, above the header, and covers the header's upward white (z-30). From lg it's fixed behind the page,
           which starts a strip above the bottom of the screen (`--strip`, see useHeroStrip; 252px for a three-line
@@ -1129,7 +1161,7 @@ export default function Guide() {
           (Figma 4893:3846, prototype 4921:2352). */}
       <Hero bodyRef={bodyRef} />
 
-      <div ref={bodyRef} className="bg-white lg:snap-start lg:relative lg:z-10 lg:mt-[calc(100vh-var(--strip,286px))] lg:flex lg:items-start">
+      <div ref={bodyRef} className="bg-white lg:relative lg:z-10 lg:mt-[calc(100vh-var(--strip,286px))] lg:flex lg:items-start">
       {/* Desktop sidebar. The expand row sits at the bottom of the screen, so it stays put while the open chapter
           changes the list's height, and sticks there when the list is taller than the screen, cutting the list off —
           enough of a hint that it scrolls, so the scrollbar, far from the text at this width, is hidden. */}
