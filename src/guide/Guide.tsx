@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import PriceCard from '@/posters/PriceCard'
 import type { Variant } from '@/posters/cardData'
 import UmoLogo from './UmoLogo'
-import UmoYLogo, { setUmoY } from './UmoYLogo'
+import UmoYLogo, { setUmoY, setUmoYLayers, UmoYLayers } from './UmoYLogo'
 import UmoYandexLockup from './UmoYandexLockup'
 import PlateArt from '@/plate/PlateArt'
 import { BASELINE as STRIP_BASELINE } from '@/plate/frame'
@@ -378,8 +378,8 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
       const fold = `${body.offsetTop}px`
       if (body.style.getPropertyValue('--umo-y-fold') !== fold) body.style.setProperty('--umo-y-fold', fold)
       const mlogo = document.querySelector<HTMLElement>('[data-mlogo]')
-      const mUmoY = mlogo?.querySelector<SVGSVGElement>('[data-umo-y]')
-      if (mlogo && mUmoY && !SCROLL_TIMELINE) mlogo.style.width = `${5 * UMO_Y_HEIGHT.folded * setUmoY(mUmoY, 1 - Math.min(1, lift / Math.max(1, body.offsetTop)))}px`
+      const mUmoY = mlogo?.querySelector<HTMLElement>('[data-umo-y-layers]')
+      if (mUmoY && !SCROLL_TIMELINE) setUmoYLayers(mUmoY, 1 - Math.min(1, lift / Math.max(1, body.offsetTop)))
       const logo = aside.querySelector<HTMLElement>('[data-logo]')
       // The page starts at its own offset from the top (a strip above the bottom of the screen) — that's how far it rises.
       // Trial: the UMO × Y lockup folds into UMO as the page rises, the wordmark going from the statement's capitals
@@ -1247,7 +1247,7 @@ export default function Guide() {
       {/* Mobile top bar. iOS 26 browsers draw the page under their translucent top bar and stick `top: 0` below it,
           so the white is extended a screen upwards to hide content scrolling above the header. */}
       <header className="lg:hidden sticky top-0 z-20 bg-white p-4 md:p-6 before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-screen before:bg-white before:content-['']">
-        <a href="#top" onClick={toTop} aria-label="В начало" data-mlogo className="block w-[200px]"><UmoYLogo title="UMO" className="w-full" /></a>
+        <a href="#top" onClick={toTop} aria-label="В начало" data-mlogo className="block w-fit"><UmoYLayers title="UMO" /></a>
       </header>
 
       {/* Mobile table of contents: a bar at the bottom names the heading you're reading and stands in for the
