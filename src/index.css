@@ -66,6 +66,38 @@ body {
   overscroll-behavior-y: none;
 }
 
+/* Trial: below lg the guide header's UMO × Y lockup folds with the page's scroll, run by the browser (in step with a
+   finger dragging the page), over the film's height (--umo-y-fold, set by Guide). The same moves as setUmoY in
+   src/guide/UmoYLogo.tsx, in its units: the cobrand slides 70 left into the O, the divider steps 2 left between 30% and
+   70%, the Y turns a quarter and shrinks to 0.46. Without scroll timelines the script does it. */
+@supports (animation-timeline: scroll()) {
+  [data-mlogo] [data-part] {
+    transform-origin: 0 0;
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: scroll(root);
+    animation-range: 0px var(--umo-y-fold, 300px);
+  }
+  [data-mlogo] [data-part='cobrand'] { animation-name: umo-y-cobrand; }
+  [data-mlogo] [data-part='divider'] { animation-name: umo-y-divider; }
+  [data-mlogo] [data-part='y'] { animation-name: umo-y-y; }
+}
+
+@keyframes umo-y-cobrand {
+  from { transform: translate(349px, 0); }
+  to { transform: translate(279px, 0); }
+}
+
+@keyframes umo-y-divider {
+  0%, 30% { transform: translate(1px, 20px); }
+  70%, 100% { transform: translate(-1px, 20px); }
+}
+
+@keyframes umo-y-y {
+  from { transform: translate(51px, 0) translate(50px, 50px) rotate(0deg) scale(1) translate(-50px, -50px); }
+  to { transform: translate(-60px, 0) translate(50px, 50px) rotate(-90deg) scale(0.46) translate(-50px, -50px); }
+}
+
 @theme {
   --font-sans: 'CoFo Sans', sans-serif;
   --breakpoint-xs: 360px;

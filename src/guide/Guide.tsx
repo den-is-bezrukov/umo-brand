@@ -372,10 +372,14 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
       const aside = asideRef.current
       if (!body || !aside) return
       const lift = Math.max(0, body.getBoundingClientRect().top)
-      // Below lg the header's lockup folds as the film scrolls away, the wordmark staying 24 high.
+      // Below lg the header's lockup folds as the film scrolls away, the wordmark staying 24 high. Where the browser
+      // runs animations on the scroll itself (Safari from 26, Chrome), the CSS does it (see index.css), in step with a
+      // finger dragging the page, which a script lags; it only needs to know how far the film is (`--umo-y-fold`).
+      const fold = `${body.offsetTop}px`
+      if (body.style.getPropertyValue('--umo-y-fold') !== fold) body.style.setProperty('--umo-y-fold', fold)
       const mlogo = document.querySelector<HTMLElement>('[data-mlogo]')
       const mUmoY = mlogo?.querySelector<SVGSVGElement>('[data-umo-y]')
-      if (mlogo && mUmoY) mlogo.style.width = `${5 * UMO_Y_HEIGHT.folded * setUmoY(mUmoY, 1 - Math.min(1, lift / Math.max(1, body.offsetTop)))}px`
+      if (mlogo && mUmoY && !SCROLL_TIMELINE) mlogo.style.width = `${5 * UMO_Y_HEIGHT.folded * setUmoY(mUmoY, 1 - Math.min(1, lift / Math.max(1, body.offsetTop)))}px`
       const logo = aside.querySelector<HTMLElement>('[data-logo]')
       // The page starts at its own offset from the top (a strip above the bottom of the screen) — that's how far it rises.
       // Trial: the UMO × Y lockup folds into UMO as the page rises, the wordmark going from the statement's capitals
@@ -418,6 +422,9 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
   }, [bodyRef, asideRef])
   return shown
 }
+
+/** Whether the browser runs CSS animations on the page's scroll (index.css folds the header's lockup with it). */
+const SCROLL_TIMELINE = typeof CSS !== 'undefined' && CSS.supports('animation-timeline: scroll()')
 
 /** Trial: how far, in px, a scroll has to go before useHeroSnap carries it on; 0 carries any. */
 const HERO_SNAP_MIN = 0
