@@ -688,8 +688,7 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, list: RefO
     const parts = () => {
       const q = (s: string) => bar.current?.querySelector<HTMLElement>(s) ?? null
       return {
-        here: q('[data-toc-label="here"]'), fold: q('[data-toc-label="fold"]'),
-        menu: q('[data-toc-icon="menu"]'), close: q('[data-toc-icon="close"]'),
+        here: q('[data-toc-label="here"]'), fold: q('[data-toc-fold]'),
         items: (list.current?.firstElementChild as HTMLElement | null) ?? null,
       }
     }
@@ -719,13 +718,14 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, list: RefO
         dx: label.left - r.left, dy: line - (r.top + parseFloat(getComputedStyle(item).paddingTop) - box.top),
       }
     }
+    // While it moves the bar's label is the list's own line, seen through the window.
     const swap = (moving: boolean) => {
-      const { here, fold, menu, close } = parts()
+      const { here } = parts()
       if (here) here.style.visibility = moving ? 'hidden' : ''
-      if (fold) fold.style.opacity = moving ? '1' : ''
-      if (menu) menu.style.opacity = moving ? '0' : ''
-      if (close) close.style.opacity = moving ? '1' : ''
     }
+    // «Свернуть» comes up from under the screen's edge with the finger, one to one, as the window starts opening, and
+    // goes back down so as it ends closing (the generators' download does so with their sheet): its way is its height.
+    const foldAt = (k: number, listH: number, rowH: number) => Math.max(0, rowH - k * listH)
     const place = (p: number, animate: boolean) => {
       const el = sheet.current
       const shade = dim.current
@@ -749,6 +749,22 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, list: RefO
           items.style.transform = `translate(${dx * (1 - k)}px, ${dy * (1 - k)}px)`
         }
       }
+      const fold = parts().fold
+      if (fold && way) {
+        const rowH = fold.offsetHeight
+        const from = parseFloat(fold.dataset.at ?? String(rowH))
+        const to = foldAt(k, way.listH, rowH)
+        // A tap's move eases out over 350 ms; «Свернуть» covers its way while the window covers as much, so it starts
+        // and ends when the window's way reaches its height (from the closed end).
+        const f = Math.min(1, rowH / way.listH)
+        let timing = '0s'
+        if (animate && to < from) timing = `${Math.round(350 * (1 - Math.cbrt(1 - f)))}ms ${EASE}`
+        if (animate && to > from) timing = `${Math.round(350 * Math.cbrt(f))}ms ${EASE} ${Math.round(350 * (1 - Math.cbrt(f)))}ms`
+        fold.style.transition = `transform ${timing}`
+        fold.style.transform = `translateY(${to}px)`
+        fold.dataset.at = String(to)
+        fold.style.visibility = 'visible'
+      }
       el.style.visibility = k > 0 ? 'visible' : el.style.visibility
       shade.style.visibility = 'visible'
       if (k > 0) swap(true)
@@ -756,6 +772,8 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, list: RefO
         if (pos.current !== p) return
         if (p <= 0) {
           el.style.visibility = shade.style.visibility = ''
+          const fold = parts().fold
+          if (fold) fold.style.visibility = ''
           swap(false)
           way = null
         }
@@ -1499,22 +1517,27 @@ export default function Guide() {
           <div ref={toc.bar} className="relative flex items-start gap-4 bg-white after:pointer-events-none after:absolute after:inset-x-0 after:top-[calc(100%-2px)] after:h-screen after:bg-white after:content-[''] md:gap-6 px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]">
             <button
               type="button"
-              onClick={() => setMenuOpen(!menuOpen)}
+              onClick={() => setMenuOpen(true)}
               aria-expanded={menuOpen}
-              aria-label={menuOpen ? 'Свернуть' : sectionTitle ? `Содержание: ${sectionTitle}` : 'Содержание'}
+              aria-label={sectionTitle ? `Содержание: ${sectionTitle}` : 'Содержание'}
               className="flex min-w-0 cursor-pointer items-start gap-2 text-left before:absolute before:inset-0 before:content-['']"
             >
-              {/* Both icons and both labels stand one over the other and swap as the sheet moves (useTocSheet). */}
-              <span className="relative z-30 grid shrink-0 bg-white *:col-start-1 *:row-start-1">
-                <span data-toc-icon="menu"><TocIcon name="menu" /></span>
-                <span data-toc-icon="close" className="opacity-0"><TocIcon name="close" /></span>
-              </span>
-              <span className="grid min-w-0 *:col-start-1 *:row-start-1">
-                <span data-toc-label="here" data-id={sectionTitle ? active[0] : ''} className="truncate">{sectionTitle ?? 'Содержание'}</span>
-                <span data-toc-label="fold" className="opacity-0">Свернуть</span>
-              </span>
+              <span className="relative z-30 bg-white"><TocIcon name="menu" /></span>
+              <span data-toc-label="here" data-id={sectionTitle ? active[0] : ''} className="min-w-0 truncate">{sectionTitle ?? 'Содержание'}</span>
             </button>
             {!menuOpen && <BarLinks />}
+            {/* «Свернуть», the open sheet's foot, over the whole bar; out of sight under the screen's edge while closed. */}
+            <button
+              type="button"
+              data-toc-fold
+              tabIndex={menuOpen ? undefined : -1}
+              aria-hidden={!menuOpen || undefined}
+              onClick={() => setMenuOpen(false)}
+              className="invisible absolute inset-0 z-40 flex cursor-pointer items-start gap-2 bg-white px-4 pt-4 text-left md:px-6 md:pt-6"
+            >
+              <TocIcon name="close" />
+              Свернуть
+            </button>
           </div>
         </div>
       </div>
