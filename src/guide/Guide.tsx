@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import PriceCard from '@/posters/PriceCard'
 import type { Variant } from '@/posters/cardData'
 import UmoLogo from './UmoLogo'
-import UmoYLayers, { setUmoY } from './UmoYLogo'
+import UmoYLayers, { COBRAND, setUmoY } from './UmoYLogo'
 import UmoYandexLockup from './UmoYandexLockup'
 import PlateArt from '@/plate/PlateArt'
 import { BASELINE as STRIP_BASELINE } from '@/plate/frame'
@@ -351,8 +351,11 @@ function useActiveInView(asideRef: RefObject<HTMLElement | null>, active: string
  */
 const UMO_Y_HEIGHT = { open: 0.68, folded: 24 }
 
-/** Trial: what the first screen adds to the sidebar's 24 px on top, left and bottom for the Y's circle, which overhangs UMO by a third of its height (10–14 px). */
-const UMO_Y_PAD = 12
+/**
+ * Trial: what the first screen adds to the sidebar's 24 px on top, left and bottom for the Y's circle, which overhangs
+ * UMO by a third of its height (10–14 px); none without the cobrand.
+ */
+const UMO_Y_PAD = COBRAND ? 12 : 0
 
 /**
  * While the page slides up over the hero, the sidebar's toggle row stays fixed at the bottom of the screen, while the
@@ -381,11 +384,11 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
       const overhang = `${UMO_Y_PAD}px`
       if (body.style.getPropertyValue('--umo-y-overhang') !== overhang) body.style.setProperty('--umo-y-overhang', overhang)
       // From lg the sidebar's wordmark starts as high as the statement's capitals, or lower where the unfolded lockup
-      // (5/3 of it, 5 times its height wide) wouldn't fit the sidebar, and folds to 24. It's drawn at that starting
-      // size (the unit `--u`) and scaled down, so it stays sharp.
+      // (5/3 of it, 5 times its height wide; without the cobrand, the wordmark alone) wouldn't fit the sidebar, and
+      // folds to 24. It's drawn at that starting size (the unit `--u`) and scaled down, so it stays sharp.
       const statement = document.getElementById('brand')
       const caps = UMO_Y_HEIGHT.open * (statement ? parseFloat(getComputedStyle(statement).fontSize) : 60)
-      open = Math.round(Math.min(caps, (aside.clientWidth - 48) * 0.6 / 5) * 100) / 100
+      open = Math.round(Math.min(caps, (aside.clientWidth - 48) * (COBRAND ? 0.6 : 1) / 5) * 100) / 100
       aside.style.setProperty('--u', `${open / 60}px`)
       const css = umoYKeyframes(open)
       if (keyframes.textContent !== css) keyframes.textContent = css
@@ -409,7 +412,7 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
         if (el) el.style.transform = transform
       }
       move('[data-umo-y-desk]', `translate(${pad}px, ${pad}px) scale(${1 + (UMO_Y_HEIGHT.folded / open - 1) * t})`)
-      move('[data-umo-y-nav]', `translate(${pad}px, ${(open - UMO_Y_PAD) * (1 - t)}px)`)
+      move('[data-umo-y-nav]', `translate(${pad}px, ${(open + UMO_Y_PAD - UMO_Y_HEIGHT.folded) * (1 - t)}px)`)
       move('[data-umo-y-toggle]', `translate(${pad}px, ${-pad}px)`)
       if (nav) nav.style.opacity = String(opacity)
     }
@@ -437,7 +440,7 @@ function umoYKeyframes(open: number) {
   const p = UMO_Y_PAD
   return [
     `@keyframes umo-y-desk { from { transform: translate(${p}px, ${p}px) scale(1) } to { transform: translate(0px, 0px) scale(${UMO_Y_HEIGHT.folded / open}) } }`,
-    `@keyframes umo-y-nav { from { transform: translate(${p}px, ${open - p}px) } to { transform: translate(0px, 0px) } }`,
+    `@keyframes umo-y-nav { from { transform: translate(${p}px, ${open + p - UMO_Y_HEIGHT.folded}px) } to { transform: translate(0px, 0px) } }`,
     `@keyframes umo-y-toggle { from { transform: translate(${p}px, ${-p}px) } to { transform: translate(0px, 0px) } }`,
   ].join('\n')
 }
