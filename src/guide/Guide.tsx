@@ -652,6 +652,113 @@ function BarLinks() {
   )
 }
 
+/**
+ * The mobile contents sheet's moves, as the generators' sheet (docs/generators.md): it follows a finger — the bottom
+ * bar pulled up brings it out, and pulled down it goes, from anywhere on it while its list is scrolled to the top
+ * (else the list scrolls) — and let go it goes on in 350 ms, slowing down, to the nearer of open and closed, its speed
+ * not carrying it on; past open it gives at 30%. A tap, Esc or a link moves it the same way. It stays in the page, out
+ * of sight closed, so it's measured and slides from the first touch; only transforms move.
+ */
+function useTocSheet(open: boolean, setOpen: (open: boolean) => void, list: RefObject<HTMLDivElement | null>) {
+  const bar = useRef<HTMLDivElement>(null)
+  const dim = useRef<HTMLDivElement>(null)
+  const sheet = useRef<HTMLDivElement>(null)
+  const pos = useRef(0)
+  const dragging = useRef(false)
+  const timer = useRef(0)
+  const [api] = useState(() => {
+    const place = (p: number, animate: boolean) => {
+      const el = sheet.current
+      const shade = dim.current
+      if (!el || !shade) return
+      clearTimeout(timer.current)
+      pos.current = p
+      const h = el.offsetHeight
+      const move = animate ? 'transform 350ms cubic-bezier(0.33, 1, 0.68, 1)' : 'none'
+      el.style.transition = move
+      shade.style.transition = animate ? 'opacity 350ms cubic-bezier(0.33, 1, 0.68, 1)' : 'none'
+      el.style.transform = `translateY(${p > 1 ? -(p - 1) * h * 0.3 : (1 - p) * h}px)`
+      shade.style.opacity = String(Math.min(1, Math.max(0, p)))
+      el.style.visibility = shade.style.visibility = 'visible'
+      if (p <= 0) timer.current = window.setTimeout(() => { el.style.visibility = shade.style.visibility = '' }, animate ? 360 : 0)
+    }
+    return {
+      bar, dim, sheet, place,
+      // The list scrolled to the chapter you're reading, as the sheet comes into view.
+      reveal: () => {
+        const lit = list.current?.querySelectorAll('nav [aria-current]')
+        lit?.[lit.length - 1]?.scrollIntoView({ block: 'center' })
+      },
+    }
+  })
+
+  const placed = useRef(false)
+  useEffect(() => {
+    // Put out of sight at once on the page's first render; slid from then on.
+    if (!dragging.current) api.place(open ? 1 : 0, placed.current)
+    placed.current = true
+  }, [open, api])
+
+  useEffect(() => {
+    const barEl = bar.current
+    const sheetEl = sheet.current
+    if (!barEl || !sheetEl) return
+    let start: { x: number, y: number, from: number, mode: 'open' | 'close' | 'none' | null } | null = null
+    const down = (from: number) => (e: TouchEvent) => {
+      start = { x: e.touches[0].clientX, y: e.touches[0].clientY, from, mode: null }
+    }
+    const move = (e: TouchEvent) => {
+      if (!start) return
+      const dx = e.touches[0].clientX - start.x
+      const dy = e.touches[0].clientY - start.y
+      if (!start.mode) {
+        if (Math.abs(dx) < 6 && Math.abs(dy) < 6) return
+        const vertical = Math.abs(dy) > Math.abs(dx)
+        if (start.from === 0) start.mode = vertical && dy < 0 ? 'open' : 'none'
+        else start.mode = vertical && dy > 0 && (list.current?.scrollTop ?? 0) <= 0 ? 'close' : 'none'
+        if (start.mode === 'none') return
+        dragging.current = true
+        if (start.mode === 'open') api.reveal()
+      }
+      if (start.mode === 'none') return
+      e.preventDefault()
+      const h = sheetEl.offsetHeight || 1
+      api.place(start.from - dy / h, false)
+    }
+    const up = (e: TouchEvent) => {
+      const mode = start?.mode
+      start = null
+      if (mode !== 'open' && mode !== 'close') return
+      e.preventDefault()
+      dragging.current = false
+      const target = pos.current >= 0.5
+      api.place(target ? 1 : 0, true)
+      setOpen(target)
+    }
+    const opts = { passive: false }
+    const fromBar = down(0)
+    const fromSheet = down(1)
+    barEl.addEventListener('touchstart', fromBar, { passive: true })
+    sheetEl.addEventListener('touchstart', fromSheet, { passive: true })
+    for (const el of [barEl, sheetEl]) {
+      el.addEventListener('touchmove', move, opts)
+      el.addEventListener('touchend', up, opts)
+      el.addEventListener('touchcancel', up, opts)
+    }
+    return () => {
+      barEl.removeEventListener('touchstart', fromBar)
+      sheetEl.removeEventListener('touchstart', fromSheet)
+      for (const el of [barEl, sheetEl]) {
+        el.removeEventListener('touchmove', move)
+        el.removeEventListener('touchend', up)
+        el.removeEventListener('touchcancel', up)
+      }
+    }
+  }, [api, setOpen, list])
+
+  return api
+}
+
 const EXPAND_KEY = 'umo-guide-toc-expanded'
 
 /** Remembers the expand-all choice per browser; storage may be unavailable, so every access is guarded. */
@@ -1211,10 +1318,10 @@ export default function Guide() {
 
   // The open mobile contents: opened at the chapter you're reading, the page behind kept still, Esc closing it.
   const sheetRef = useRef<HTMLDivElement>(null)
+  const toc = useTocSheet(menuOpen, setMenuOpen, sheetRef)
   useEffect(() => {
     if (!menuOpen) return
-    const lit = sheetRef.current?.querySelectorAll('nav [aria-current]')
-    lit?.[lit.length - 1]?.scrollIntoView({ block: 'center' })
+    toc.reveal()
     const root = document.documentElement
     root.style.overflow = 'hidden'
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setMenuOpen(false) }
@@ -1223,7 +1330,7 @@ export default function Guide() {
       root.style.overflow = ''
       window.removeEventListener('keydown', onKey)
     }
-  }, [menuOpen])
+  }, [menuOpen, toc])
 
   useEffect(() => {
     // Anchors renamed since links went out: send them to where that content lives now, and fix the address.
@@ -1289,40 +1396,35 @@ export default function Guide() {
         {/* A sheet from the bottom, 60% of the screen at most (two thirds and a half were tried; a 6.3" phone still needs a shifted grip for the top), its top corners 16 px round, as the voice examples' bubbles' corners, over the page dimmed: every item within a thumb's
             reach, the list scrolling inside it, opened at the chapter you're reading (it took the whole screen under the
             header, its top items out of reach). A tap on the page above closes it, as «Свернуть» does */}
-        {menuOpen && (
-          <>
-            <div aria-hidden className="fixed inset-0 z-40 bg-black/40" onClick={() => setMenuOpen(false)} />
-            <div className="fixed inset-x-0 bottom-0 z-40 flex max-h-[60dvh] flex-col overflow-hidden rounded-t-2xl bg-white">
-              <div ref={sheetRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 md:px-6 md:pt-6">
-                <Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} />
-              </div>
-              <TocToggle
-                expanded
-                onClick={() => setMenuOpen(false)}
-                className="w-full px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]"
-              />
-            </div>
-          </>
-        )}
-        {!menuOpen && (
-          // The whole bar opens the contents (the button's ::before covers it), save the quick links standing in it. As
-          // with the header, the white runs a screen on past its bottom: iOS 26 Safari draws the page under its floating
-          // toolbar, and while that slides the bar's bottom edge lets the page show through. It overlaps the bar by 2px, so no
-          // seam opens between them on a fractional pixel.
-          <div className="fixed inset-x-0 bottom-0 z-40 flex items-start gap-4 bg-white after:pointer-events-none after:absolute after:inset-x-0 after:top-[calc(100%-2px)] after:h-screen after:bg-white after:content-[''] md:gap-6 px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]">
-            <button
-              type="button"
-              onClick={() => setMenuOpen(true)}
-              aria-expanded={false}
-              aria-label={sectionTitle ? `Содержание: ${sectionTitle}` : 'Содержание'}
-              className="flex min-w-0 cursor-pointer items-start gap-2 text-left before:absolute before:inset-0 before:content-['']"
-            >
-              <TocIcon name="menu" />
-              <span className="min-w-0 truncate">{sectionTitle ?? 'Содержание'}</span>
-            </button>
-            <BarLinks />
+        {/* The bar stays under the sheet, which slides over it; pulled up, it brings the sheet with the finger. */}
+        {/* The whole bar opens the contents (the button's ::before covers it), save the quick links standing in it. As
+            with the header, the white runs a screen on past its bottom: iOS 26 Safari draws the page under its floating
+            toolbar, and while that slides the bar's bottom edge lets the page show through. It overlaps the bar by 2px,
+            so no seam opens between them on a fractional pixel. */}
+        <div ref={toc.bar} aria-hidden={menuOpen || undefined} className="fixed inset-x-0 bottom-0 z-40 flex items-start gap-4 bg-white after:pointer-events-none after:absolute after:inset-x-0 after:top-[calc(100%-2px)] after:h-screen after:bg-white after:content-[''] md:gap-6 px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]">
+          <button
+            type="button"
+            onClick={() => setMenuOpen(true)}
+            aria-expanded={menuOpen}
+            aria-label={sectionTitle ? `Содержание: ${sectionTitle}` : 'Содержание'}
+            className="flex min-w-0 cursor-pointer items-start gap-2 text-left before:absolute before:inset-0 before:content-['']"
+          >
+            <TocIcon name="menu" />
+            <span className="min-w-0 truncate">{sectionTitle ?? 'Содержание'}</span>
+          </button>
+          <BarLinks />
+        </div>
+        <div ref={toc.dim} aria-hidden className="invisible fixed inset-0 z-40 bg-black/40 opacity-0" onClick={() => setMenuOpen(false)} />
+        <div ref={toc.sheet} inert={!menuOpen || undefined} className="invisible fixed inset-x-0 bottom-0 z-40 flex max-h-[60dvh] flex-col overflow-hidden rounded-t-2xl bg-white">
+          <div ref={sheetRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 md:px-6 md:pt-6">
+            <Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} />
           </div>
-        )}
+          <TocToggle
+            expanded
+            onClick={() => setMenuOpen(false)}
+            className="w-full px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]"
+          />
+        </div>
       </div>
 
       {/* 16px on top from lg: the statement's capitals then stand level with the top of the logo beside it. */}
