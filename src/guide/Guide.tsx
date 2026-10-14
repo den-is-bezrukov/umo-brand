@@ -232,11 +232,12 @@ const TEXT_LINK = 'underline decoration-black/40 decoration-[2.5%] underline-off
  * The space between items is the links' own padding (`pad`), not gaps, so the whole list is clickable (Figma 4865:1031).
  */
 /**
- * A chapter title stuck at the top of the sheet's list, 8px under its edge where its text stands as on the first line.
+ * A chapter title stuck at the top of the sheet's list, 8px under its edge where its text stands as on the first line;
+ * 8px over its first item (2 of its own and the item's 6), as Figma 5165:1260.
  * Only its own 8px over the text is covered upwards (a white shadow): there's nothing there but the gap after the last
  * item, so a title in its place hides nothing.
  */
-const STICKY_CHAPTER = 'py-2 sticky top-2 z-10 bg-white shadow-[0_-8px_0_white]'
+const STICKY_CHAPTER = 'pt-2 pb-0.5 sticky top-2 z-10 bg-white shadow-[0_-8px_0_white]'
 
 function NavLink({ id, title, active, current, onNavigate, pad }: { id: string; title: string; active: boolean; current: boolean; onNavigate?: () => void; pad: string }) {
   return (
@@ -668,7 +669,7 @@ function BarLinks() {
  * The mobile contents (Figma 5165:1260, prototype 5165:1261): one list seen through a window. Closed, the window is the
  * bottom bar, 48px, and the list stands in it so the place you're reading is its line, 14px from the bar's top, its
  * items' 16px indent taken away; on the first screen, with no place yet, the bar says «Содержание» over the list.
- * Opening, the window grows up to 60% of the screen, its top corners rounding to 16px, while the list carries the place
+ * Opening, the window grows up to 53% of the screen (Figma's 341 of 640), its top corners rounding to 16px, while the list carries the place
  * to where it stands in the open list (scrolled so it's in its middle), the items move out to their indent, and
  * «Свернуть» comes up from under the screen's edge into the bar's line; closing is the same backwards. No dimming, no
  * fades. It follows a finger as the generators' sheet: the bar pulled up opens it, pulled down closes it, as does the
@@ -1458,12 +1459,11 @@ export default function Guide() {
       <div className="lg:hidden">
         {/* A tap off the open sheet closes it; nothing is dimmed. */}
         {menuOpen && <div aria-hidden className="fixed inset-0 z-40" onClick={() => setMenuOpen(false)} />}
-        {/* The sheet, 60% of the screen (two thirds and a half were tried; a 6.3" phone still needs a shifted grip for
-            the top), seen through its window; the bar is its last 48px. The bar's white runs a screen on past the
+        {/* The sheet, 341 of 640 of the screen as Figma 5165:1260, seen through its window; the bar is its last 48px. The bar's white runs a screen on past the
             screen's bottom (iOS 26 Safari draws the page under its floating toolbar, and while that slid the page
             showed through): a white strip stands there, under the screen's edge. */}
         <div aria-hidden className="pointer-events-none fixed inset-x-0 top-full z-40 h-screen bg-white" />
-        <div ref={toc.box} className="fixed inset-x-0 bottom-0 z-40 h-[60dvh] overflow-hidden will-change-transform">
+        <div ref={toc.box} className="fixed inset-x-0 bottom-0 z-40 h-[53.3dvh] overflow-hidden will-change-transform">
           <div ref={toc.inner} className="absolute inset-0 will-change-transform">
           <div ref={toc.list} inert={!menuOpen || undefined} className="absolute inset-x-0 top-0 bottom-[calc(48px+env(safe-area-inset-bottom))] overflow-y-auto overscroll-contain bg-white px-4 text-[16px] tracking-[-0.01em] md:px-6">
             {/* The list's top padding is inside it, so a stuck title is measured from the sheet's edge in every browser. */}
