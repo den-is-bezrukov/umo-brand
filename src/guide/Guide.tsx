@@ -231,6 +231,13 @@ const TEXT_LINK = 'underline decoration-black/40 decoration-[2.5%] underline-off
  * `active`: you're inside this item (medium weight); `current`: its own heading is the one on screen (the bullet).
  * The space between items is the links' own padding (`pad`), not gaps, so the whole list is clickable (Figma 4865:1031).
  */
+/**
+ * A chapter title stuck at the top of the sheet's list where it stands unscrolled (the list's 16px top padding, 24 from
+ * md, less the title's own 8 over its text), its white running up to the sheet's top (the list's edge cuts the rest) so
+ * items scroll away under it.
+ */
+const STICKY_CHAPTER = "py-2 sticky top-2 z-10 bg-white before:absolute before:inset-x-0 before:bottom-full before:h-12 before:bg-white before:content-[''] md:top-4"
+
 function NavLink({ id, title, active, current, onNavigate, pad }: { id: string; title: string; active: boolean; current: boolean; onNavigate?: () => void; pad: string }) {
   return (
     <a
@@ -274,7 +281,8 @@ function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; o
   )
 }
 
-function Nav({ active, expandAll, onNavigate }: { active: string[]; expandAll: boolean; onNavigate?: () => void }) {
+/** `stickyChapters` (the phone's sheet): a chapter's title stays at the top of the list while its items scroll by. */
+function Nav({ active, expandAll, onNavigate, stickyChapters }: { active: string[]; expandAll: boolean; onNavigate?: () => void; stickyChapters?: boolean }) {
   const activeChapter = NAV.find(c => active.some(id => contains(c, id)))?.id
   return (
     // Chapters 8px above and under (16px apart), items 4px (8px apart): chapter → first item 12px; the last item takes
@@ -286,7 +294,7 @@ function Nav({ active, expandAll, onNavigate }: { active: string[]; expandAll: b
         const open = expandAll || activeChapter === chapter.id
         return (
           <div key={chapter.id} className="flex flex-col">
-            <NavLink id={chapter.id} title={chapter.title} active={activeChapter === chapter.id} current={active.includes(chapter.id)} onNavigate={onNavigate} pad="py-2" />
+            <NavLink id={chapter.id} title={chapter.title} active={activeChapter === chapter.id} current={active.includes(chapter.id)} onNavigate={onNavigate} pad={stickyChapters ? STICKY_CHAPTER : 'py-2'} />
             {chapter.children && (
               <div
                 inert={!open}
@@ -1408,7 +1416,7 @@ export default function Guide() {
         <div className="fixed inset-x-0 -bottom-[52px] z-40 border-b-[52px] border-white md:-bottom-[68px] md:border-b-[68px]">
           <div ref={toc.sheet} inert={!menuOpen || undefined} className="invisible absolute inset-x-0 bottom-[calc(100%-2px)] flex max-h-[calc(60dvh-52px)] flex-col overflow-hidden rounded-t-2xl bg-white md:max-h-[calc(60dvh-68px)]">
             <div ref={sheetRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 pt-4 md:px-6 md:pt-6">
-              <Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} />
+              <Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} stickyChapters />
             </div>
           </div>
           <div ref={toc.bar} className="relative z-10 flex items-start gap-4 bg-white after:pointer-events-none after:absolute after:inset-x-0 after:top-[calc(100%-2px)] after:h-screen after:bg-white after:content-[''] md:gap-6 px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]">
