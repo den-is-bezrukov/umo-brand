@@ -649,6 +649,12 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
  * first screen only and fade out over the first 160px of scroll, as the sidebar's contents fade in from lg, so further
  * down the bar is the contents' alone again.
  */
+/**
+ * A quick link's tap area in the bar: the bar's whole height (its 16px over and under, 24 from md) and half the gap to
+ * each neighbour, so a tap a little off the word still opens the link rather than the contents behind it
+ */
+const BAR_LINK = "relative after:absolute after:-inset-x-2 after:-inset-y-4 after:content-[''] md:after:-inset-x-3 md:after:-inset-y-6"
+
 function BarLinks() {
   const ref = useRef<HTMLElement>(null)
   useEffect(() => {
@@ -669,9 +675,9 @@ function BarLinks() {
   }, [])
   return (
     <nav ref={ref} aria-label="Быстрые ссылки" className="relative hidden shrink-0 gap-x-4 min-[480px]:flex md:gap-x-6">
-      <a href="#positioning" className={LINK_HOVER}>Платформа бренда</a>
-      <a href="#materials" className={LINK_HOVER}>Материалы</a>
-      <Link to="/editor" className={LINK_HOVER}>Редактор</Link>
+      <a href="#positioning" className={`${BAR_LINK} ${LINK_HOVER}`}>Платформа бренда</a>
+      <a href="#materials" className={`${BAR_LINK} ${LINK_HOVER}`}>Материалы</a>
+      <Link to="/editor" className={`${BAR_LINK} ${LINK_HOVER}`}>Редактор</Link>
     </nav>
   )
 }
