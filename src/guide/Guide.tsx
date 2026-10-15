@@ -699,10 +699,20 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, list: RefO
     }
     return {
       bar, dim, sheet, place,
-      // The list scrolled to the chapter you're reading, as the sheet comes into view.
+      // The list scrolled to the chapter you're reading, as the sheet comes into view: its title at the top, standing
+      // as the first chapter's does (the chapter before it showed a cut-off tail above when the item was centred), or,
+      // where the chapter runs past the sheet before the item you're at, that item in the middle.
       reveal: () => {
-        const lit = list.current?.querySelectorAll('nav [aria-current]')
-        lit?.[lit.length - 1]?.scrollIntoView({ block: 'center' })
+        const el = list.current
+        const lit = el?.querySelectorAll<HTMLElement>('nav [aria-current]')
+        const item = lit?.[lit.length - 1]
+        const chapter = lit?.[0]?.parentElement
+        const first = el?.querySelector('nav')?.firstElementChild
+        if (!el || !item || !chapter || !first) return
+        const box = el.getBoundingClientRect()
+        const at = (node: Element) => node.getBoundingClientRect().top - box.top + el.scrollTop
+        el.scrollTop = at(chapter) - at(first)
+        if (item.getBoundingClientRect().bottom > box.bottom) item.scrollIntoView({ block: 'center' })
       },
     }
   })
