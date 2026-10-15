@@ -1301,17 +1301,6 @@ const UMO8_SUBTITLE = <>Гибридный кроссовер<br />с Алисо
 
 type Rule = { good: ReactNode; bad: ReactNode; why: string }
 
-/** Коммуникация → Имя: how the name is written, in the dictionary's three columns */
-const NAME_RULES: Rule[] = [
-  { good: 'UMO', bad: 'УМО, Umo, U.M.O.', why: 'Имя пишем только латиницей и прописными, без точек' },
-  { good: 'UMO 5, UMO 8', bad: 'UMO5, Umo 8, УМО 5', why: 'Имя модели — имя бренда и цифра через пробел' },
-  {
-    good: 'UMO',
-    bad: 'Умка, Умочка, UMOпомрачительно',
-    why: 'Игры и каламбуры с названием запрещены. Слово «Умка» может быть в сленге сообщества владельцев, но никогда в рекламных материалах или у блогеров',
-  },
-]
-
 const DICTIONARY: Rule[] = [
   { good: 'Технологичный', bad: 'Инновационный, революционный', why: 'Мы избегаем затертых маркетинговых штампов, лишенных конкретного смысла' },
   { good: 'Рациональный, честный', bad: 'Доступный, бюджетный', why: 'Слово «доступный» часто считывается как «дешевый», что искажает суть нашего технологического премиума' },
@@ -1680,9 +1669,19 @@ export default function Guide() {
             <Section>
               <Head>
                 <H2 id="name">Имя</H2>
-                <Text><p>UMO — Urban Mobility Object, объект городской мобильности. Читается «Умо», с ударением на первый слог.</p></Text>
+                {/* The name's rules as text in two columns, as other paired texts (a table in the dictionary's columns, right
+                    over the dictionary itself, read as one long table) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
+                  <Text>
+                    <p>UMO — Urban Mobility Object, объект городской мобильности. Читается «Умо», с ударением на первый слог.</p>
+                    <p>Пишем латиницей и прописными, без точек: UMO. Имя модели — имя бренда и цифра через пробел: UMO 5, UMO 8.</p>
+                  </Text>
+                  <Text>
+                    <p>Не пишем «УМО», «Umo», «U.M.O.» и «UMO5».</p>
+                    <p>Не играем с именем: никаких «Умка», «Умочка», «UMOпомрачительно». «Умка» может звучать в сленге владельцев, но не в рекламе и не у блогеров.</p>
+                  </Text>
+                </div>
               </Head>
-              <Dictionary rows={NAME_RULES} />
             </Section>
 
             <Section>
