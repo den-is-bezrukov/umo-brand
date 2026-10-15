@@ -113,7 +113,7 @@ const MEDIA = packMedia(MEDIA_LIST)
 const NAV: NavItem[] = [
   {
     id: 'brand',
-    title: 'Концепция',
+    title: 'Концепция бренда',
     children: [
       { id: 'positioning', title: 'Позиционирование' },
       { id: 'vision', title: 'Видение' },
@@ -275,8 +275,8 @@ function TocIcon({ name }: { name: keyof typeof tocIcons }) {
 }
 
 /**
- * Expand-all row at the foot of the table of contents, named for the guide, «Стандарты бренда», as a generator's header
- * names it: the menu bars spread every chapter and turn into the «Свернуть» chevrons, the name staying.
+ * Expand-all row at the foot of the table of contents, «Содержание» (not «Меню», which repeats the icon and promises to
+ * open what's open already): the menu bars spread every chapter and turn into the «Свернуть» chevrons, the name staying.
  */
 function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; onClick: () => void; className?: string }) {
   return (
@@ -289,7 +289,7 @@ function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; o
       className={`flex cursor-pointer items-start gap-2 bg-white ${NAV_HOVER} text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] ${className}`}
     >
       <TocIcon name={expanded ? 'close' : 'menu'} />
-      Стандарты бренда
+      Содержание
     </button>
   )
 }
@@ -644,7 +644,7 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
 }
 
 /**
- * Below lg, from 480px, where it fits beside «Концепция»: the quick link to Печатные материалы stands in the bottom bar, spaced as its edges (16px, from md 24), in
+ * Below lg, from 480px, where it fits beside «Концепция бренда»: the quick link to Печатные материалы stands in the bottom bar, spaced as its edges (16px, from md 24), in
  * place of their own line under the statement, which leaves the film more of the first screen. They're there for the
  * first screen only and fade out over the first 160px of scroll, as the sidebar's contents fade in from lg, so further
  * down the bar is the contents' alone again.
@@ -1521,8 +1521,8 @@ export default function Guide() {
                 {/* Quick links: into Концепция from its first section (the generators' crumb leads to Носители), and to Печатные материалы,
                     every constructor on one screen. They were «Платформа» and «Материалы для дилеров» */}
                 <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex max-lg:min-[480px]:hidden flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
-                  {/* Below lg the bar names Концепция on the first screen already */}
-                  <a href="#positioning" className={`max-lg:hidden ${LINK_HOVER}`}>Концепция</a>
+                  {/* Below lg the bar names Концепция бренда on the first screen already */}
+                  <a href="#positioning" className={`max-lg:hidden ${LINK_HOVER}`}>Концепция бренда</a>
                   <Link to="/materials" className={LINK_HOVER}>Печатные материалы</Link>
                 </nav>
               </div>
