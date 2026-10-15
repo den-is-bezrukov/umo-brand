@@ -122,12 +122,12 @@ const NAV: NavItem[] = [
     ],
   },
   {
-    id: 'voice',
-    title: 'Голос',
+    id: 'message',
+    title: 'Посыл',
     children: [
       { id: 'name', title: 'Имя' },
       { id: 'descriptors', title: 'Дескрипторы' },
-      { id: 'tone', title: 'Тон' },
+      { id: 'tone', title: 'Тон голоса' },
       { id: 'dictionary', title: 'Словарь' },
       { id: 'examples', title: 'Примеры' },
     ],
@@ -169,7 +169,7 @@ const NAV: NavItem[] = [
 
 /** Chapter anchors that were renamed after the guide went out, mapped to their current ids. */
 const OLD_ANCHORS: Record<string, string> = {
-  dealer: 'spaces', retail: 'spaces', print: 'materials', fonts: 'typography', about: 'brand', intro: 'top',
+  voice: 'tone', dealer: 'spaces', retail: 'spaces', print: 'materials', fonts: 'typography', about: 'brand', intro: 'top',
 }
 
 const flatItems = (items: NavItem[]): NavItem[] => items.flatMap(i => [i, ...flatItems(i.children ?? [])])
@@ -1203,7 +1203,7 @@ const UMO8_SUBTITLE = <>Гибридный кроссовер<br />с Алисо
 
 type Rule = { good: ReactNode; bad: ReactNode; why: string }
 
-/** Голос → Имя: how the name is written, in the dictionary's three columns */
+/** Посыл → Имя: how the name is written, in the dictionary's three columns */
 const NAME_RULES: Rule[] = [
   { good: 'UMO', bad: 'УМО, Umo, U.M.O.', why: 'Имя пишем только латиницей и прописными, без точек' },
   { good: 'UMO 5, UMO 8', bad: 'UMO5, Umo 8, УМО 5', why: 'Имя модели — имя бренда и цифра через пробел' },
@@ -1223,7 +1223,7 @@ const DICTIONARY: Rule[] = [
 ]
 
 /**
- * Голос → Примеры (Figma 5030:11343): the voice as it reads in the brand's own messages — chat-like grey bubbles
+ * Посыл → Примеры (Figma 5030:11343): the voice as it reads in the brand's own messages — chat-like grey bubbles
  * (round but the top-left corner), photos with a line over them. Three columns from `md`, each a stack; in the
  * middle and right ones the photo takes what's left, so the columns end level. On phones they stack in one column,
  * the photos 3:4.
@@ -1528,8 +1528,8 @@ export default function Guide() {
             </div>
           </div>
 
-          {/* ── Голос ── */}
-          <Chapter id="voice" title="Голос">
+          {/* ── Посыл ── */}
+          <Chapter id="message" title="Посыл">
             <Section>
               <Head>
                 <H2 id="name">Имя</H2>
@@ -1560,7 +1560,7 @@ export default function Guide() {
 
             <Section>
               <Head>
-                <H2 id="tone">Тон</H2>
+                <H2 id="tone">Тон голоса</H2>
                 <Text>
                   <p>Голос UMO — вдумчивый, искренний, партнёрский. Обращаемся на «вы». Говорим на языке людей, без пафоса и сложных метафор — наш язык живой и человечный.</p>
                   <p>Выстраиваем диалог с пользователем в каждой точке контакта. Там где позволяет формат, вместо констатации сухих технических терминов раскрываем их на примерах.</p>
