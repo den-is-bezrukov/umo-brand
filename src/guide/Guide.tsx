@@ -113,13 +113,21 @@ const MEDIA = packMedia(MEDIA_LIST)
 const NAV: NavItem[] = [
   {
     id: 'brand',
-    title: 'Платформа бренда',
+    title: 'Платформа',
     children: [
       { id: 'positioning', title: 'Позиционирование' },
       { id: 'vision', title: 'Видение' },
       { id: 'mission', title: 'Миссия' },
       { id: 'audience', title: 'Аудитория' },
-      { id: 'voice', title: 'Голос' },
+    ],
+  },
+  {
+    id: 'voice',
+    title: 'Голос',
+    children: [
+      { id: 'name', title: 'Имя' },
+      { id: 'descriptors', title: 'Дескрипторы' },
+      { id: 'tone', title: 'Тон' },
       { id: 'dictionary', title: 'Словарь' },
       { id: 'examples', title: 'Примеры' },
     ],
@@ -255,8 +263,8 @@ function NavLink({ id, title, active, current, onNavigate, pad, bullet = '-left-
 
 /** Table-of-contents icon, 16×16 on a 20px line: the menu bars to open the contents, the chevrons to fold them. */
 function TocIcon({ name }: { name: keyof typeof tocIcons }) {
-  // The bars end flush at 1 and 15; the chevrons' square ends and bevels are part of their drawing
-  const ends = name === 'close' ? { strokeLinecap: 'square', strokeLinejoin: 'bevel' } as const : {}
+  // The bars end flush at 1 and 15; the chevrons' (both pairs) square ends and bevels are part of their drawing
+  const ends = name !== 'menu' ? { strokeLinecap: 'square', strokeLinejoin: 'bevel' } as const : {}
   return (
     <span aria-hidden className="flex h-5 shrink-0 items-center">
       <svg width="16" height="16" viewBox="0 0 16 16" className="block">
@@ -266,8 +274,11 @@ function TocIcon({ name }: { name: keyof typeof tocIcons }) {
   )
 }
 
-/** Expand-all row at the foot of the table of contents: the menu bars to spread the list, the cross to fold it. */
-function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; onClick: () => void; className?: string }) {
+/**
+ * Expand-all row at the foot of the table of contents, named for the guide, «Бренд UMO»: the menu bars on the first
+ * screen, where the contents are out of view, then the chevrons apart to spread the list, together to fold it.
+ */
+function TocToggle({ expanded, shown, onClick, className = '' }: { expanded: boolean; shown: boolean; onClick: () => void; className?: string }) {
   return (
     <button
       type="button"
@@ -276,8 +287,8 @@ function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; o
       // No width of its own: both places set it, and a `w-full` here outranked theirs in the built CSS
       className={`flex cursor-pointer items-start gap-2 bg-white ${NAV_HOVER} text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] ${className}`}
     >
-      <TocIcon name={expanded ? 'close' : 'menu'} />
-      {expanded ? 'Свернуть' : 'Содержание'}
+      <TocIcon name={expanded ? 'close' : shown ? 'expand' : 'menu'} />
+      {expanded ? 'Свернуть' : 'Бренд UMO'}
     </button>
   )
 }
@@ -285,6 +296,8 @@ function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; o
 /** `stickyChapters` (the phone's sheet): a chapter's title stays at the top of the list while its items scroll by. */
 function Nav({ active, expandAll, onNavigate, stickyChapters }: { active: string[]; expandAll: boolean; onNavigate?: () => void; stickyChapters?: boolean }) {
   const activeChapter = NAV.find(c => active.some(id => contains(c, id)))?.id
+  // Above the first chapter (the first screen) Платформа stands open, so the list doesn't read «UMO — Платформа»
+  const openChapter = activeChapter ?? NAV[0].id
   return (
     // Chapters 8px above and under (16px apart), items 4px (8px apart): chapter → first item 12px; the last item takes
     // 8px under it, so it's 16px to the next chapter, and so does an item over its own nested items (12px to them).
@@ -292,7 +305,7 @@ function Nav({ active, expandAll, onNavigate, stickyChapters }: { active: string
     <nav className="-my-2 flex flex-col text-[16px] tracking-[-0.01em]">
       {NAV.map(chapter => {
         // Like guides.area17.com: only the chapter you're reading is open, unless everything is expanded.
-        const open = expandAll || activeChapter === chapter.id
+        const open = expandAll || openChapter === chapter.id
         return (
           <div key={chapter.id} className="flex flex-col">
             <NavLink id={chapter.id} title={chapter.title} active={activeChapter === chapter.id} current={active.includes(chapter.id)} onNavigate={onNavigate} pad={stickyChapters ? STICKY_CHAPTER : 'py-2'} bullet={stickyChapters ? '-left-3' : undefined} />
@@ -377,7 +390,7 @@ const UMO_Y_GAP = COBRAND ? 8 : 0
  * sidebar runs off it, so the contents unroll between the logo and the row as the page rises. They fade in over the
  * first 160px of scroll: on the first screen there's only the logo and the row. The logo, 200px wide on the first
  * screen, shrinks with the scroll to its usual 120 (24 high) by the time the page reaches the top. Returns whether the
- * contents are in view (half faded in or more), so the toggle row says «Содержание» on the first screen, where there's
+ * contents are in view (half faded in or more), so the toggle row says «Бренд UMO» on the first screen, where there's
  * nothing to fold, even while the list is expanded.
  */
 function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObject<HTMLElement | null>) {
@@ -630,7 +643,7 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
 }
 
 /**
- * Below lg, from 480px, where they fit beside «Содержание»: the quick links stand in the bottom bar, spaced as its edges (16px, from md 24), in
+ * Below lg, from 480px, where they fit beside «Бренд UMO»: the quick links stand in the bottom bar, spaced as its edges (16px, from md 24), in
  * place of their own line under the statement, which leaves the film more of the first screen. They're there for the
  * first screen only and fade out over the first 160px of scroll, as the sidebar's contents fade in from lg, so further
  * down the bar is the contents' alone again.
@@ -1188,12 +1201,20 @@ const GEIST_ZIP = 'https://github.com/vercel/geist-font/releases/download/v1.7.2
 const UMO5_SUBTITLE = <>Электромобиль с Алисой на борту<br />от 2,5 млн ₽</>
 const UMO8_SUBTITLE = <>Гибридный кроссовер<br />с Алисой на борту от 5 млн ₽</>
 
-const DICTIONARY: { good: ReactNode; bad: ReactNode; why: string }[] = [
+type Rule = { good: ReactNode; bad: ReactNode; why: string }
+
+/** Голос → Имя: how the name is written, in the dictionary's three columns */
+const NAME_RULES: Rule[] = [
+  { good: 'UMO', bad: 'УМО, Umo, U.M.O.', why: 'Имя пишем только латиницей и прописными, без точек' },
+  { good: 'UMO 5, UMO 8', bad: 'UMO5, Umo 8, УМО 5', why: 'Имя модели — имя бренда и цифра через пробел' },
   {
-    good: <>UMO<br /><span className="font-normal">только латиницей и капителью</span></>,
+    good: 'UMO',
     bad: 'Умка, Умочка, UMOпомрачительно',
     why: 'Игры и каламбуры с названием запрещены. Слово «Умка» может быть в сленге сообщества владельцев, но никогда в рекламных материалах или у блогеров',
   },
+]
+
+const DICTIONARY: Rule[] = [
   { good: 'Технологичный', bad: 'Инновационный, революционный', why: 'Мы избегаем затертых маркетинговых штампов, лишенных конкретного смысла' },
   { good: 'Рациональный, честный', bad: 'Доступный, бюджетный', why: 'Слово «доступный» часто считывается как «дешевый», что искажает суть нашего технологического премиума' },
   { good: 'Электромобиль, электрокар, гибрид, кроссовер', bad: 'Тачка, машинка, электричка', why: 'Придерживаемся грамотной терминологии, не допускаем панибратства' },
@@ -1271,7 +1292,7 @@ const MISUSE: [string, string][] = [
   ['misuse-color', 'Некорректный выбор цвета, недостаточный контраст'],
 ]
 
-function Dictionary() {
+function Dictionary({ rows }: { rows: Rule[] }) {
   // Fixed tracks: each row is a grid of its own, and with plain 1fr a long unbreakable phrase widened its column in
   // its row only, so the columns jumped from row to row
   const cols = 'md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)]'
@@ -1286,7 +1307,7 @@ function Dictionary() {
         <p className="flex gap-2">Ошибка {mark('✗')}</p>
         <p>Мотивация</p>
       </div>
-      {DICTIONARY.map((row, i) => (
+      {rows.map((row, i) => (
         <div key={i} className={`grid grid-cols-1 ${cols} gap-x-6 gap-y-2 border-t border-[#e6e6e6] py-4`}>
           <p className="font-medium"><span className="md:hidden">✓&nbsp;</span>{list(row.good)}</p>
           <p><span className="md:hidden">✗&nbsp;</span>{list(row.bad)}</p>
@@ -1313,7 +1334,7 @@ export default function Guide() {
   useHeroSnap(bodyRef)
   const tocShown = useHeroReveal(bodyRef, asideRef)
   // The contents row does what it says; on the first screen, where the contents are out of view and it says
-  // «Содержание» whatever the list's state, it takes the page up over the photo and opens the list (an expanded one
+  // «Бренд UMO» whatever the list's state, it takes the page up over the photo and opens the list (an expanded one
   // stays so).
   const onTocToggle = () => {
     if (tocShown || !expandAll) toggleExpandAll()
@@ -1321,7 +1342,7 @@ export default function Guide() {
     if (top > 1) window.scrollTo({ top: window.scrollY + top, behavior: 'smooth' })
   }
   // Two headings rarely share a line on a phone; when they do (Видение / Миссия), the first one names the place. On
-  // the first screen (the film and the statement, before any section) the bar says «Содержание», as the desktop row
+  // the first screen (the film and the statement, before any section) the bar says «Бренд UMO», as the desktop row
   // does there; it said «Платформа бренда» for the statement standing in for that chapter's title
   const sectionTitle = active.length && active[0] !== 'brand' ? TITLES[active[0]] : undefined
 
@@ -1388,7 +1409,7 @@ export default function Guide() {
         <div data-umo-y-nav className="px-6 pb-[68px] will-change-transform"><Nav active={active} expandAll={expandAll} /></div>
         <div className="fixed bottom-0 left-0 z-10 w-[320px] bg-white xl:w-1/3">
           <div data-umo-y-toggle className="will-change-transform">
-            <TocToggle expanded={expandAll && tocShown} onClick={onTocToggle} className="w-full p-6" />
+            <TocToggle expanded={expandAll && tocShown} shown={tocShown} onClick={onTocToggle} className="w-full p-6" />
           </div>
         </div>
       </aside>
@@ -1426,11 +1447,11 @@ export default function Guide() {
               type="button"
               onClick={() => setMenuOpen(!menuOpen)}
               aria-expanded={menuOpen}
-              aria-label={menuOpen ? 'Свернуть' : sectionTitle ? `Содержание: ${sectionTitle}` : 'Содержание'}
+              aria-label={menuOpen ? 'Свернуть' : sectionTitle ? `Содержание: ${sectionTitle}` : 'Содержание: Бренд UMO'}
               className="flex min-w-0 cursor-pointer items-start gap-2 text-left before:absolute before:inset-0 before:content-['']"
             >
               <TocIcon name={menuOpen ? 'close' : 'menu'} />
-              <span className="min-w-0 truncate">{menuOpen ? 'Свернуть' : sectionTitle ?? 'Содержание'}</span>
+              <span className="min-w-0 truncate">{menuOpen ? 'Свернуть' : sectionTitle ?? 'Бренд UMO'}</span>
             </button>
             {!menuOpen && <BarLinks />}
           </div>
@@ -1440,7 +1461,7 @@ export default function Guide() {
       {/* 16px on top from lg: the statement's capitals then stand level with the top of the logo beside it. */}
       <main className="min-w-0 flex-1 p-4 pb-[calc(52px+1rem)] md:p-6 md:pb-[calc(68px+1.5rem)] lg:pt-4 lg:pb-6">
         <div className="flex flex-col gap-section">
-          {/* Платформа бренда follows the hero without a title of its own — the statement stands in for it and carries
+          {/* Платформа follows the hero without a title of its own — the statement stands in for it and carries
               the chapter anchor. */}
           <div>
             <div className="flex flex-col gap-section">
@@ -1504,32 +1525,64 @@ export default function Guide() {
                 </div>
               </Section>
 
-              <Section>
-                <Head>
-                  <H2 id="voice">Голос</H2>
-                  <Text>
-                    <p>Голос UMO — вдумчивый, искренний, партнёрский. Обращаемся на «вы». Говорим на языке людей, без пафоса и сложных метафор — наш язык живой и человечный.</p>
-                    <p>Выстраиваем диалог с пользователем в каждой точке контакта. Там где позволяет формат, вместо констатации сухих технических терминов раскрываем их на примерах.</p>
-                    <p>Рекламные клише категории и агрессивные восклицания не используем.</p>
-                  </Text>
-                </Head>
-                <Fig name="voice" w={912} h={456} />
-              </Section>
-
-              <Section>
-                <H2 id="dictionary">Словарь</H2>
-                <Dictionary />
-              </Section>
-
-              <Section>
-                <Head>
-                  <H2 id="examples">Примеры</H2>
-                  <Text><p>Лучше один раз увидеть: UMO говорит по-человечески и уважительно на вы.</p></Text>
-                </Head>
-                <Examples />
-              </Section>
             </div>
           </div>
+
+          {/* ── Голос ── */}
+          <Chapter id="voice" title="Голос">
+            <Section>
+              <Head>
+                <H2 id="name">Имя</H2>
+                <Text><p>UMO — Urban Mobility Object, объект городской мобильности. Читается «Умо», с ударением на первый слог.</p></Text>
+              </Head>
+              <Dictionary rows={NAME_RULES} />
+            </Section>
+
+            <Section>
+              <Head>
+                <H2 id="descriptors">Дескрипторы</H2>
+                <Text><p>Дескриптор поясняет имя и не меняется от кампании к кампании, в отличие от слогана.</p></Text>
+              </Head>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
+                <Head>
+                  <p className="text-[24px] font-medium leading-none tracking-[-0.01em]">Бренд</p>
+                  <Text><p>Автомобильный бренд, созданный в технологическом партнёрстве с Яндексом</p></Text>
+                </Head>
+                <Head>
+                  <p className="text-[24px] font-medium leading-none tracking-[-0.01em]">Модели</p>
+                  <Text>
+                    <p>Тип машины и «с технологиями Яндекса»:</p>
+                    <p>UMO 5 — Электромобиль с технологиями Яндекса<br />UMO 8 — Гибрид с технологиями Яндекса</p>
+                  </Text>
+                </Head>
+              </div>
+            </Section>
+
+            <Section>
+              <Head>
+                <H2 id="tone">Тон</H2>
+                <Text>
+                  <p>Голос UMO — вдумчивый, искренний, партнёрский. Обращаемся на «вы». Говорим на языке людей, без пафоса и сложных метафор — наш язык живой и человечный.</p>
+                  <p>Выстраиваем диалог с пользователем в каждой точке контакта. Там где позволяет формат, вместо констатации сухих технических терминов раскрываем их на примерах.</p>
+                  <p>Рекламные клише категории и агрессивные восклицания не используем.</p>
+                </Text>
+              </Head>
+              <Fig name="voice" w={912} h={456} />
+            </Section>
+
+            <Section>
+              <H2 id="dictionary">Словарь</H2>
+              <Dictionary rows={DICTIONARY} />
+            </Section>
+
+            <Section>
+              <Head>
+                <H2 id="examples">Примеры</H2>
+                <Text><p>Лучше один раз увидеть: UMO говорит по-человечески и уважительно на вы.</p></Text>
+              </Head>
+              <Examples />
+            </Section>
+          </Chapter>
 
           {/* ── Логотип ── */}
           <Chapter id="logo" title="Логотип">
