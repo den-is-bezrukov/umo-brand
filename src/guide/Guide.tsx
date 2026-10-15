@@ -1519,11 +1519,11 @@ export default function Guide() {
                 <p id="brand" className="scroll-mt-24 text-[32px] font-medium leading-none tracking-[-0.01em] md:text-[48px] lg:mt-[calc(8px-0.164em+var(--umo-y-overhang,0px))] lg:max-w-[912px] lg:scroll-mt-[calc(24px-0.164em)] lg:text-[min(60px,6.58cqw)]">
                   Автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
                 </p>
-                {/* Quick links: read (Концепция, from its first section), see (Материалы), make (Редактор, the constructors'
-                    window). They were Платформа and Материалы для дилеров, then Носители and Печатные материалы */}
+                {/* Quick links: read (Концепция бренда, from its first section), see (Материалы), make (Редактор, the constructors'
+                    window, titled «Редактор материалов»). They were Платформа and Материалы для дилеров, then Носители and Печатные материалы */}
                 <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex max-lg:min-[480px]:hidden flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
                   {/* Below lg the bar names Концепция бренда on the first screen already */}
-                  <a href="#positioning" className={`max-lg:hidden ${LINK_HOVER}`}>Концепция</a>
+                  <a href="#positioning" className={`max-lg:hidden ${LINK_HOVER}`}>Концепция бренда</a>
                   <a href="#materials" className={LINK_HOVER}>Материалы</a>
                   <Link to="/editor" className={LINK_HOVER}>Редактор</Link>
                 </nav>
