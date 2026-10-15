@@ -711,7 +711,15 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, list: RefO
         if (!el || !item || !chapter || !first) return
         const box = el.getBoundingClientRect()
         const at = (node: Element) => node.getBoundingClientRect().top - box.top + el.scrollTop
-        el.scrollTop = at(chapter) - at(first)
+        // A chapter's block right at the top edge: its title then sticks where the first chapter's stands, and the
+        // chapter before, its stuck title included, is gone whole (set 16px lower, as the first chapter, its title
+        // peeked over). Room is made under the list for the last chapters to rise that far too
+        const inner = el.firstElementChild as HTMLElement | null
+        if (inner) inner.style.paddingBottom = ''
+        const target = Math.round(at(chapter))
+        const room = target + el.clientHeight - el.scrollHeight
+        if (inner && room > 0) inner.style.paddingBottom = `${room}px`
+        el.scrollTop = target
         if (item.getBoundingClientRect().bottom > box.bottom) item.scrollIntoView({ block: 'center' })
       },
     }
