@@ -644,7 +644,8 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
 }
 
 /**
- * Below lg, from 480px, where they fit beside the menu icon: the quick links, as on wide screens, stand in the bottom bar, spaced as its edges (16px, from md 24), in
+ * Below lg the quick links, as on wide screens, stand in the bottom bar beside the menu icon (on any phone: «Платформа»
+ * without «бренда» under 420px, where it wouldn't fit), spaced as its edges (16px, from md 24), in
  * place of their own line under the statement, which leaves the film more of the first screen. They're there for the
  * first screen only and fade out over the first 160px of scroll, as the sidebar's contents fade in from lg, so further
  * down the bar is the contents' alone again.
@@ -674,8 +675,9 @@ function BarLinks() {
     return () => { window.removeEventListener('scroll', onScroll); cancelAnimationFrame(frame) }
   }, [])
   return (
-    <nav ref={ref} aria-label="Быстрые ссылки" className="relative hidden shrink-0 gap-x-4 min-[480px]:flex md:gap-x-6">
-      <a href="#positioning" className={`${BAR_LINK} ${LINK_HOVER}`}>Платформа бренда</a>
+    <nav ref={ref} aria-label="Быстрые ссылки" className="relative flex shrink-0 gap-x-4 whitespace-nowrap md:gap-x-6">
+      {/* «Платформа» alone where «бренда» wouldn't fit the bar (the three and the icon need about 400px with it) */}
+      <a href="#positioning" className={`${BAR_LINK} ${LINK_HOVER}`}>Платформа<span className="max-[419px]:hidden"> бренда</span></a>
       <a href="#materials" className={`${BAR_LINK} ${LINK_HOVER}`}>Материалы</a>
       <Link to="/editor" className={`${BAR_LINK} ${LINK_HOVER}`}>Редактор</Link>
     </nav>
@@ -1529,9 +1531,8 @@ export default function Guide() {
                 </p>
                 {/* Quick links: read (Платформа бренда, from its first section), see (Материалы), make (Редактор, the constructors'
                     window, titled «Редактор материалов»). They were Платформа and Материалы для дилеров, then Носители and Печатные материалы */}
-                {/* Under 480px, where the three don't fit a line, one line scrolled sideways by a finger, from screen edge to
-                    edge, with no shade at its ends (4px over and under keep the descenders and the hover line) */}
-                <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex max-lg:min-[480px]:hidden flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em] max-[479px]:-mx-4 max-[479px]:-my-1 max-[479px]:flex-nowrap max-[479px]:overflow-x-auto max-[479px]:overscroll-x-contain max-[479px]:px-4 max-[479px]:py-1 max-[479px]:whitespace-nowrap max-[479px]:[scrollbar-width:none] max-[479px]:[&::-webkit-scrollbar]:hidden">
+                {/* From lg only: below it they stand in the bottom bar beside the menu icon (BarLinks) */}
+                <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex max-lg:hidden flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
                   <a href="#positioning" className={LINK_HOVER}>Платформа бренда</a>
                   <a href="#materials" className={LINK_HOVER}>Материалы</a>
                   <Link to="/editor" className={LINK_HOVER}>Редактор</Link>
