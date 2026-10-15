@@ -183,7 +183,7 @@ vec3 eclipse(vec2 sp) { return pal(.02 + .96 * eclipseV(sp)); }
 // (`halftone` sized them by Затмение's bands: Растр, dropped) ──
 uniform float uAct;     // 1 while the pointer moves, fading to 0 within a couple of seconds after it stops
 uniform float sDots, sSize, sBg, sJitter, sTwinkle, sWave, sHue, sSat, sLens, sRadius;
-uniform float sLight, sTrail;
+uniform float sLight, sTrail, sWaveW;
 uniform float uSeen;    // 0 until the pointer first moves over the page
 uniform vec3 uTrail[8]; // where the pointer has just been (-1..1) and how many seconds ago
 vec3 dots(vec2 sp, bool halftone) {
@@ -211,7 +211,7 @@ vec3 dots(vec2 sp, bool halftone) {
   }
   val = max(val, trail * sTrail * .9);
   float tw = mix(1., .45 + .55 * sin(T * 3. + h(gid) * 30.), sTwinkle);
-  float wave = 1. + sWave * .45 * sin(length(home) * 9. - T * 1.5);
+  float wave = 1. + sWave * .45 * sin(length(home) * 9. / sWaveW - T * 1.5);
   float rad = cell * .5 * sSize * wave * (1. + sTrail * trail * .4);
   float dotv = smoothstep(rad, rad * .55, dd) * mix(sBg, 1., val) * tw * (1. + sLight * lit * 2.);
   float halo = exp(-dd / cell * 4.) * .35 * val * tw;
@@ -305,6 +305,7 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     { id: 'sJitter', label: 'Хаос', min: 0, max: 1, step: 0.01, def: 0.4, only: [6], own: true },
     { id: 'sTwinkle', label: 'Мерцание', min: 0, max: 1, step: 0.01, def: 0.3, only: [6], own: true },
     { id: 'sWave', label: 'Волна', min: 0, max: 1, step: 0.01, def: 0.3, only: [6], own: true },
+    { id: 'sWaveW', label: 'Ширина волны', min: 0.3, max: 8, step: 0.05, def: 1, only: [6], own: true },
     { id: 'sLight', label: 'Свет мыши', min: 0, max: 2, step: 0.01, def: 0.8, only: [6], own: true },
     { id: 'sTrail', label: 'След мыши', min: 0, max: 2, step: 0.01, def: 1, only: [6], own: true },
     { id: 'sLens', label: 'Лупа мыши', min: -1, max: 1, step: 0.01, def: 0.5, only: [6], own: true },
