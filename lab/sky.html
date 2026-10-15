@@ -175,19 +175,16 @@ float eclipseV(vec2 sp) {
 vec3 eclipse(vec2 sp) { return pal(.02 + .96 * eclipseV(sp)); }
 
 // ── Рой: points on a jittered grid over the whole picture, the wordmark's brighter than the
-// background's; a wave breathes through their sizes. The pointer: Лупа swells them while it moves, Свет lights them
+// background's; a wave breathes through their sizes. The pointer: Свет lights them
 // round it, След leaves a fading trail that grows them and brings them to the wordmark's colour.
 // (`halftone` sized them by Затмение's bands: Растр, dropped) ──
-uniform float uAct;     // 1 while the pointer moves, fading to 0 within a couple of seconds after it stops
-uniform float sDots, sSize, sBg, sJitter, sTwinkle, sWave, sHue, sSat, sLens, sRadius;
+uniform float sDots, sSize, sBg, sJitter, sTwinkle, sWave, sHue, sSat, sRadius;
 uniform float sLight, sTrail, sWaveW;
 uniform float uSeen;    // 0 until the pointer first moves over the page
 uniform vec3 uTrail[8]; // where the pointer has just been (-1..1) and how many seconds ago
 vec3 dots(vec2 sp, bool halftone) {
   vec2 mp = uMouse * vec2(R.x / R.y, 1.) * .5;
-  vec2 rel = sp - mp;
-  float near = exp(-dot(rel, rel) / (sRadius * sRadius * .03)) * uAct;
-  vec2 src = mp + rel * (1. - sLens * .5 * near);
+  vec2 src = sp;
   float cell = 1. / sDots;
   vec2 gid = floor(src / cell);
   vec2 jit = (vec2(h(gid + S), h(gid + S + 3.1)) - .5) * sJitter * .7;
@@ -305,7 +302,6 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     { id: 'sWaveW', label: 'Ширина волны', min: 0.3, max: 8, step: 0.05, def: 1, only: [6], own: true },
     { id: 'sLight', label: 'Свет мыши', min: 0, max: 2, step: 0.01, def: 0.8, only: [6], own: true },
     { id: 'sTrail', label: 'След мыши', min: 0, max: 2, step: 0.01, def: 1, only: [6], own: true },
-    { id: 'sLens', label: 'Лупа мыши', min: -1, max: 1, step: 0.01, def: 0.5, only: [6], own: true },
     { id: 'sRadius', label: 'Радиус мыши', min: 0.3, max: 3, step: 0.01, def: 1, only: [6], own: true },
     { id: 'eFreq', label: 'Кольца', min: 0.3, max: 6, step: 0.01, def: 1.6, only: [8], own: true },
     { id: 'eSoft', label: 'Мягкость', min: 0.02, max: 1, step: 0.01, def: 0.8, only: [8], own: true },
@@ -317,7 +313,7 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     { id: 'lScroll', label: 'Бегущая строка', min: 0, max: 3, step: 0.01, def: 0, only: [7] },
     { id: 'uLamp', label: 'Фонарь', min: 0, max: 2, step: 0.01, def: 0.5, only: [2] },
   ]
-  const names = ['R', 'T', 'S', 'V', 'uMouse', 'uTravel', 'uBoost', 'uAct', 'uSeen', 'uTrail', ...CONTROLS.map((c) => c.id)]
+  const names = ['R', 'T', 'S', 'V', 'uMouse', 'uTravel', 'uBoost', 'uSeen', 'uTrail', ...CONTROLS.map((c) => c.id)]
   const u = Object.fromEntries(names.map((k) => [k, gl.getUniformLocation(prog, k)]))
 
   // Every variant as Denis last set it (2026-10-15); they override the sliders' own defaults
@@ -325,7 +321,7 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     seed2: 15, speed2: 0.3, uMouseK2: 0.42, uLayers: 50, uDepth: 10.6, uZoom: 0.51, uTwist: 0, uBend: 0,
     uLine: 1.3, uGlow: 0, uFill: 0, uTone: -0.15, uBank: 0.26, gas: 1.31, layersK: 0.24, uLamp: 1.29,
     speed6: 0.9, seed6: 9, sDots6: 185, sSize6: 0.51, sBg6: 0.65, sHue6: 1,
-    sJitter6: 1, sTwinkle6: 1, sWave6: 1, sLight6: 2, sTrail6: 0, sLens6: -1, sRadius6: 1.25,
+    sJitter6: 1, sTwinkle6: 1, sWave6: 1, sLight6: 2, sTrail6: 0, sRadius6: 1.25,
     speed7: 1.45, seed7: 5, lSize: 4, lWave: 1, lRipple: 0, lScroll: 0,
     speed8: 3, seed8: 2, eFreq8: 0.73, eSoft8: 1, eWarp8: 0.49, eLight8: 1,
   }
@@ -363,14 +359,13 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
   // The pointer over the picture, -1..1 from its centre, y up; the shader gets it eased
   // Pressing on the picture is Газ
   const aim = [0, 0], mouse = [0, 0]
-  let pressed = false, boost = 0, travel = 0, act = 0, actAim = 0, seen = 0
+  let pressed = false, boost = 0, travel = 0, seen = 0
   // The pointer's last places, one every 60 ms: Рой's След
   const trail = []
   addEventListener('pointermove', (e) => {
     const r = canvas.getBoundingClientRect()
     const x = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1))
     const y = Math.max(-1, Math.min(1, 1 - ((e.clientY - r.top) / r.height) * 2))
-    actAim = 1
     seen = 1
     const now = performance.now()
     if (!trail.length || now - trail[0].t > 60) {
@@ -403,9 +398,6 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     t += dt * get('speed')
     last = now
     for (const i of [0, 1]) mouse[i] += (aim[i] - mouse[i]) * 0.06
-    act += (actAim - act) * 0.08
-    actAim *= 0.97
-    gl.uniform1f(u.uAct, act)
     gl.uniform1f(u.uSeen, seen)
     const tr = new Float32Array(24).fill(99)
     trail.forEach((p, i) => tr.set([p.x, p.y, (now - p.t) / 1000], i * 3))
