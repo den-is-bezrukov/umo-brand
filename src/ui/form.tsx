@@ -36,16 +36,16 @@ const crumb = 'underline decoration-transparent decoration-[0.35px] underline-of
 
 /**
  * The top of a generator's form, the same on every screen (Figma 5098:5487, the phone's, carried over to wide screens):
- * the breadcrumbs in Medium, 16 px tall; the generators' line under them (`GeneratorRing`), a chevron ⌄ standing at its
- * right end, as a tab strip's «all tabs» does. The chevron turns ⌃ in place and the line and everything after it in the
- * form give way to every generator, 24 px Medium 20 px apart, the current one black (Figma 5099:5825): the same header,
- * not a second one laid over it. Not a menu icon by the crumbs: the generators are an app of their own, where a burger
- * promised the whole app's menu and opened the generators' list. Wide screens had the crumbs in Medium with a list under
- * «Носители ⌄» and a ring turned by script, which a finger couldn't drive
+ * the breadcrumbs in Medium, 16 px tall, «Бренд UMO · Материалы · Редактор»; the generators' line under them
+ * (`GeneratorRing`). «Редактор», the generators' parent, shows them all: the crumbs give way to the title «Редактор
+ * материалов» with a cross on the right, and the line and everything after it in the form to every generator, 24 px
+ * Medium 16 px apart, the current one black (Figma 5103:6083) — the same as the guide's «Редактор материалов» window. The
+ * cross, the current name or Esc fold it. Not a menu icon by the crumbs: the generators are an app of their own, where a
+ * burger promised the whole app's menu and opened only the generators' list
  */
 export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' | '/price-tag' | '/hours-sign' }) {
   const [menu, setMenu] = useState(false)
-  const toggle = () => { if (!menu) goal('open_menu', { page: location.pathname }); setMenu(!menu) }
+  const open = () => { goal('open_menu', { page: location.pathname }); setMenu(true) }
   // While it's open the rest of the form and the download step aside (`html[data-menu]` in index.css)
   useEffect(() => {
     if (!menu) return
@@ -57,47 +57,47 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
   const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
   return (
     <div data-head className="flex flex-col gap-4">
-      <PhoneCrumbs />
-      {/* «···» on the line's right end, 24 px in, over its shade, on the names' line (24 px, 4 px down) */}
-      <div className="relative">
       {menu ? (
-        // 20 px under the crumbs, where the line stood, so the current name stays put (24 dropped it 4 px; 16 sat the
-        // crumbs on it)
-        <nav aria-label="Конструкторы" className="mt-1 flex flex-col items-start gap-5">
-          {GENERATORS.map(g => g.path === current
-            ? <button key={g.path} type="button" aria-current="page" onClick={() => setMenu(false)} className={`${name} cursor-pointer text-left`}>{g.title}</button>
-            : <Link key={g.path} to={g.path} className={`${name} text-[#bfbfbf] hover:text-[#808080] active:text-[#808080]`}>{g.title}</Link>)}
-        </nav>
-      ) : (
-        <GeneratorRing current={current} />
-      )}
-        {/* «···», three of CoFo Sans's middle dots (it has no midline ellipsis, U+22EF), set and coloured as the line's names
-            (#BFBFBF, #808080 under the pointer), as its last word; the list open, the chevron ⌃ in its place */}
-        {menu ? (
-          <div className="absolute right-0 top-2 flex text-[#808080] transition-[color] duration-250 hover:text-black hover:duration-0">
-            <IconButton label="Свернуть" onClick={toggle} d={CHEVRON.up} />
+        <>
+          <div className={`flex items-center justify-between gap-2 ${CRUMBS}`}>
+            <p>Редактор материалов</p>
+            <IconButton label="Закрыть" onClick={() => setMenu(false)} d={CROSS} />
           </div>
-        ) : (
-          <button type="button" aria-label="Все конструкторы" title="Все конструкторы" onClick={toggle} className={`${name} absolute right-0 top-1 cursor-pointer text-[#bfbfbf] after:absolute after:-inset-[10px] after:content-[''] hover:text-[#808080] active:text-[#808080]`}>···</button>
-        )}
-      </div>
+          <nav aria-label="Конструкторы" className="flex flex-col items-start gap-4">
+            {GENERATORS.map(g => g.path === current
+              ? <button key={g.path} type="button" aria-current="page" onClick={() => setMenu(false)} className={`${name} cursor-pointer text-left`}>{g.title}</button>
+              : <Link key={g.path} to={g.path} className={`${name} text-[#bfbfbf] hover:text-[#808080] active:text-[#808080]`}>{g.title}</Link>)}
+          </nav>
+        </>
+      ) : (
+        <>
+          <PhoneCrumbs onEditor={open} />
+          <GeneratorRing current={current} />
+        </>
+      )}
     </div>
   )
 }
 
-/** The open list's chevron: the form's own (ComboField's, 8 wide and 4 tall, as each of the guide's «Свернуть» pair), centred in 16 px */
-const CHEVRON = { up: 'M4 10L8 6L12 10' }
+/** The form's cross (the list's remove, `staff.tsx`), 8 by 8 in 16 px */
+const CROSS = 'M12 4L8 8M8 8L4 4M8 8L12 12M8 8L4 12'
 
-/** The breadcrumbs: Medium (Regular in Figma 5110:9105), on 16 px lines, with no tracking, as the form's labels, set here
- * so they don't shift between the form (which tracks its type tighter) and the menu over it */
-function PhoneCrumbs() {
+/** The breadcrumbs' type: Medium (Regular in Figma 5110:9105), on 16 px lines, with no tracking, as the form's labels */
+const CRUMBS = "text-[14px] font-medium leading-4 tracking-normal [font-feature-settings:'case'_1]"
+
+/**
+ * The breadcrumbs, set apart from the form's tighter tracking so they don't shift when the list opens: the way back to
+ * the guide (UMO's logo leads to umo.auto, so it isn't here), Материалы, the guide's chapter telling what each medium is
+ * for, and Редактор, which shows every generator
+ */
+function PhoneCrumbs({ onEditor }: { onEditor: () => void }) {
   return (
-    <nav className="flex min-w-0 flex-1 items-center gap-2 text-[14px] font-medium leading-4 tracking-normal [font-feature-settings:'case'_1]">
-      {/* The way back to the guide (UMO's logo leads to umo.auto, so it isn't here), then Материалы, the guide's chapter
-          that tells what each medium is for */}
+    <nav className={`flex min-w-0 flex-1 items-center gap-2 ${CRUMBS}`}>
       <Link to="/" className={crumb}>Бренд UMO</Link>
       <span aria-hidden>·</span>
       <Link to="/#materials" className={crumb}>Материалы</Link>
+      <span aria-hidden>·</span>
+      <button type="button" onClick={onEditor} aria-label="Редактор: все конструкторы" className={`${crumb} cursor-pointer`}>Редактор</button>
     </nav>
   )
 }
@@ -243,11 +243,9 @@ function GeneratorRing({ current }: { current: string }) {
             : <Link key={i} to={g.path} draggable={false} aria-hidden={i < count || i >= 2 * count || undefined} tabIndex={-1} className={`${name} ${tone(g.path)} outline-none`}>{g.title}</Link>
         })}
       </nav>
-      {/* The shades over the edges, as the ring's (Figma 5062:671, 5061:539); the right one solid white for its last
-          48 px, where the header's chevron stands (24 px in, 16 wide), fading in over the 64 px before them on an
-          ease-in-out curve (smoothstep), so the names melt away rather than meet an edge */}
+      {/* The shades over the edges, as the ring's (Figma 5062:671, 5061:539) */}
       <div aria-hidden className="pointer-events-none absolute -inset-y-2 left-0 w-6" style={{ background: 'linear-gradient(90deg, #ffffff80 25%, #fff0), linear-gradient(90deg, #fff 25%, #fff0)' }} />
-      <div aria-hidden className="pointer-events-none absolute -inset-y-2 right-0 w-[112px]" style={{ background: 'linear-gradient(90deg, #fff0, #ffffff07 7.1%, #ffffff28 14.3%, #ffffff55 21.4%, #ffffff80 28.6%, #ffffffaa 35.7%, #ffffffd7 42.9%, #fffffff8 50%, #fff 57.1%)' }} />
+      <div aria-hidden className="pointer-events-none absolute -inset-y-2 right-0 w-12" style={{ background: 'linear-gradient(90deg, #fff0, #ffffff80), linear-gradient(90deg, #fff0, #fff)' }} />
     </div>
   )
 }
