@@ -1531,13 +1531,12 @@ export default function Guide() {
               type="button"
               onClick={() => { if (!menuOpen) setSheetEditor(false); setMenuOpen(!menuOpen) }}
               aria-expanded={menuOpen}
-              aria-label={menuOpen ? 'Закрыть' : sectionTitle ? `Содержание: ${sectionTitle}` : 'Содержание'}
+              aria-label={menuOpen ? 'Свернуть' : sectionTitle ? `Содержание: ${sectionTitle}` : 'Содержание'}
               className="flex min-w-0 cursor-pointer items-start gap-2 text-left before:absolute before:inset-0 before:content-['']"
             >
-              {/* An open sheet is closed, not folded: «Закрыть» with the cross (the sidebar from lg folds: «Свернуть») */}
-              <TocIcon name={menuOpen ? 'cross' : 'menu'} />
+              <TocIcon name={menuOpen ? 'close' : 'menu'} />
               {/* On the first screen the icon alone, the quick links after it as far as they stand from each other */}
-              {(menuOpen || sectionTitle) && <span className="min-w-0 truncate">{menuOpen ? 'Закрыть' : sectionTitle}</span>}
+              {(menuOpen || sectionTitle) && <span className="min-w-0 truncate">{menuOpen ? 'Свернуть' : sectionTitle}</span>}
             </button>
             {/* The quick links until the first section's heading is lit, then at once the section's name in their place */}
             {!menuOpen && !sectionTitle && <BarLinks />}
