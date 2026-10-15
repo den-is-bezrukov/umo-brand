@@ -8,7 +8,7 @@
 <!-- Trial of a shader hero for the guide, built on the UMO wordmark, in the palette of the business card and
      certificate (Figma 4020:2516, 4667:3846). Served by the dev server only (http://localhost:5477/lab/sky.html);
      the build doesn't include it. The earlier gradient skies (Закат, Марево, Облака, Горизонт) are in 8b87bc8, Хром in
-     9f56f7c^, Облако parked in cloud.html -->
+     9f56f7c^, Металл and Следы in 0dcf5e6, Облако parked in cloud.html -->
 <style>
   @font-face { font-family: 'CoFo Sans'; font-weight: 500; src: url('/fonts/CoFoSans-Medium.woff2') format('woff2'); }
   * { box-sizing: border-box; }
@@ -42,8 +42,6 @@
 <div class="panel">
   <div class="tabs" id="tabs">
     <!-- <button data-v="2">Тоннель</button> -->
-    <button data-v="3">Металл</button>
-    <button data-v="4">Следы</button>
     <button data-v="6">Рой</button>
     <button data-v="9">Растр</button>
     <!-- Set aside for now, settings kept: -->
@@ -167,80 +165,6 @@ vec2 toLogo(vec2 sp, float fit, float cap, out float k) {
   return vec2(sp.x, -sp.y) * k + vec2(240, 48);
 }
 
-// ── Металл: after a reel's AE metallic gradient (Gradient Ramp → Colorama → Turbulent Displace + blur → Plane to
-// Sphere + glow): each letter a slab of glass, red-orange inside with the gradient drifting through it, a thin
-// bright rim where the bands crowd at the edge, brightest on the side facing the pointer, a soft halo round it,
-// and now and then it heats up from inside ──
-uniform float mBands, mFlow, mBulge, mGlow, mFlash;
-vec3 metal(vec2 sp) {
-  float k;
-  vec2 P = toLogo(sp, .72, 2.6, k);
-  vec2 mp = uMouse * vec2(R.x / R.y, 1.) * .5;
-  float d = logo(P);
-  vec2 g = vec2(logo(P + vec2(1, 0)) - logo(P - vec2(1, 0)), logo(P + vec2(0, 1)) - logo(P - vec2(0, 1)));
-  g = vec2(g.x, -g.y) / max(length(g), 1e-4);                 // outwards, y up
-  float px = k / R.y;
-  float inside = smoothstep(px, -px, d);
-  float depth = max(-d, 0.);                                   // logo units in from the edge
-  // Gradient Ramp + Turbulent Displace, blurred: a slow low field
-  vec2 tq = sp * 1.3 + S;
-  float t = T * .12;
-  float turb = fbm(tq + vec2(t, -t * .6) + fbm(tq * 1.2 - t) * 1.3);
-  float ramp = sp.y * .8 + (turb - .5) * mFlow;
-  // Colorama: red → orange, cycled there and back
-  float band = abs(fract(ramp * mBands + .25) - .5) * 2.;
-  float heat = pow(.5 + .5 * sin(T * .35), 3.) * mFlash;
-  vec3 body = pal(.5 + .24 * band + .3 * heat);
-  body *= .7 + .3 * smoothstep(-.6, .6, ramp);
-  // Plane to Sphere: the rim
-  vec2 ldir = normalize(mp - sp + vec2(1e-4));
-  float side = clamp(.5 + .5 * dot(g, ldir) + (turb - .5) * .9, 0., 1.);
-  float rim = exp(-depth / (1.2 + 2. * mBulge)) * (.35 + .65 * side);
-  vec3 rimC = mix(pal(.82), vec3(1, .97, .9), side);
-  vec3 c = mix(body, rimC, clamp(rim * 1.3, 0., 1.));
-  // The halo
-  float o = max(d, 0.) / k;
-  vec3 glow = mix(pal(.7), pal(.9), side) * (exp(-o * 40.) * .8 + exp(-o * 7.) * .25) * mGlow * (.4 + .6 * side + heat);
-  return mix(glow, c, inside);
-}
-
-// ── Следы: long-exposure traffic seen from above at an angle — the wordmark lies on the ground, its outline
-// repeated outwards as lanes, white headlights running one way and red tail lights the other, soft with depth
-// of field and haze; the pointer swings the camera round ──
-uniform float tLanes, tGap, tCars, tTail, tPull, tTilt, tBlur, tHalo;
-vec3 trails(vec2 sp) {
-  float yaw = uMouse.x * .6 * tPull + sin(T * .05) * .15;
-  float pitch = mix(.22, 1.35, tTilt) + uMouse.y * .2 * tPull;
-  float dist = 5.5;
-  vec3 ro = dist * vec3(sin(yaw) * cos(pitch), sin(pitch), -cos(yaw) * cos(pitch));
-  vec3 fw = normalize(-ro), rt = normalize(cross(vec3(0, 1, 0), fw)), up = cross(fw, rt);
-  vec3 rd = normalize(fw * 1.6 + rt * sp.x + up * sp.y);
-  vec3 sky = pal(.03 + .3 * exp(-max(rd.y, 0.) * 8.));
-  if (rd.y > -.002) return sky;
-  float t = -ro.y / rd.y;
-  vec3 W = ro + rd * t;
-  vec2 P = vec2(W.x, -W.z) * 120. + vec2(240, 48);
-  float d = logo(P);
-  float dd = d / tGap;
-  float lane = floor(dd + .5);
-  float off = abs(fract(dd + .5) - .5) * tGap;                // to the nearest lane, in logo units
-  float on = step(.5, lane) * step(lane, tLanes);
-  float pxu = t * 120. / (1.6 * R.y) / max(-rd.y, .15);       // a pixel, in logo units, roughly
-  float sig = max(.5, pxu * .7) + tBlur * abs(t - dist) * 3.;  // out of focus, the lines spread and dim
-  float core = exp(-off * off / (2. * sig * sig)) * min(1., 1.4 / sig);
-  float halo = exp(-off / (5. + 8. * tHalo)) * .22 * tHalo;
-  float th = atan((P.y - 48.) * 2.6, P.x - 240.) / 6.2832;
-  float dir = mod(lane, 2.) < .5 ? 1. : -1.;
-  float ph = fract(th * tCars * dir + T * .1 * (1. + .4 * h(vec2(lane, S))) + h(vec2(lane * 7., S)));
-  float car = pow(smoothstep(1. - tTail, 1., ph), 2.);
-  vec3 lc = dir > 0. ? mix(pal(.8), vec3(1, .94, .84), car) : mix(pal(.45), pal(.62) * 1.4, car);
-  vec3 col = lc * (core + halo) * (.12 + 2.4 * car) * on;
-  // The letters: dark ground, their own outline lit
-  col += pal(.85) * exp(-abs(d) / (pxu * 1.2 + sig * .4)) * .5 * min(1., 1.4 / sig);
-  col += pal(.06) * .5;
-  return mix(col, sky, 1. - exp(-t * .045));
-}
-
 // ── Затмение: calm and soft, after a Blender reel of stripes on a torus — the wordmark's outline echoed outwards
 // in a few wide soft bands of warm light and black, bent by a gentle lens, slowly moving out; light falls from
 // the pointer's side ──
@@ -260,17 +184,20 @@ float eclipseV(vec2 sp) {
 vec3 eclipse(vec2 sp) { return pal(.02 + .96 * eclipseV(sp)); }
 
 // ── Рой: points on a jittered grid over the whole picture, the wordmark's bigger and brighter than the
-// background's; a wave breathes through their sizes, and round the pointer they swirl and swell as under a lens.
+// background's; a wave breathes through their sizes. The pointer: Лупа swells them while it moves, Свет lights them
+// round it, След leaves a fading trail that grows them and brings them to the wordmark's colour, Круги sends rings
+// out from where it has been.
 // Растр is the same points sized by Затмение's bands, a halftone of it ──
 uniform float uAct;     // 1 while the pointer moves, fading to 0 within a couple of seconds after it stops
-uniform float sDots, sSize, sBgSize, sBg, sJitter, sTwinkle, sWave, sHue, sBgHue, sSwirl, sLens, sRadius;
+uniform float sDots, sSize, sBgSize, sBg, sJitter, sTwinkle, sWave, sHue, sBgHue, sLens, sRadius;
+uniform float sLight, sTrail, sRipple;
+uniform float uSeen;    // 0 until the pointer first moves over the page
+uniform vec3 uTrail[8]; // where the pointer has just been (-1..1) and how many seconds ago
 vec3 dots(vec2 sp, bool halftone) {
   vec2 mp = uMouse * vec2(R.x / R.y, 1.) * .5;
   vec2 rel = sp - mp;
   float near = exp(-dot(rel, rel) / (sRadius * sRadius * .03)) * uAct;
-  float ang = sSwirl * 2.5 * near;
-  rel = mat2(cos(ang), -sin(ang), sin(ang), cos(ang)) * rel * (1. - sLens * .5 * near);
-  vec2 src = mp + rel;
+  vec2 src = mp + rel * (1. - sLens * .5 * near);
   float cell = 1. / sDots;
   vec2 gid = floor(src / cell);
   vec2 jit = (vec2(h(gid + S), h(gid + S + 3.1)) - .5) * sJitter * .7;
@@ -279,10 +206,22 @@ vec3 dots(vec2 sp, bool halftone) {
   float val;
   if (halftone) val = eclipseV(home);
   else { float k; val = smoothstep(3., -3., logo(toLogo(home, .72, 2.6, k))); }
+  // The pointer's light, trail and rings, at the point's place
+  float r = sRadius * .1;
+  float lit = exp(-dot(home - mp, home - mp) / (r * r * 4.)) * uSeen;
+  float trail = 0., ring = 0.;
+  for (int i = 0; i < 8; i++) {
+    vec3 tp = uTrail[i];
+    if (tp.z > 3.) continue;
+    float dt = length(home - tp.xy * vec2(R.x / R.y, 1.) * .5);
+    trail = max(trail, exp(-dt * dt / (r * r)) * exp(-tp.z * 1.6));
+    ring = max(ring, exp(-pow((dt - tp.z * .4) / .025, 2.)) * exp(-tp.z * 1.3));
+  }
+  val = max(val, trail * sTrail * .9);
   float tw = mix(1., .45 + .55 * sin(T * 3. + h(gid) * 30.), sTwinkle);
   float wave = 1. + sWave * .45 * sin(length(home) * 9. - T * 1.5);
-  float rad = cell * .5 * mix(sBgSize, sSize, val) * wave;
-  float dotv = smoothstep(rad, rad * .55, dd) * mix(sBg, 1., val) * tw;
+  float rad = cell * .5 * mix(sBgSize, sSize, val) * wave * (1. + sRipple * ring * 1.2 + sTrail * trail * .4);
+  float dotv = smoothstep(rad, rad * .55, dd) * mix(sBg, 1., val) * tw * (1. + sLight * lit * 2. + sRipple * ring);
   float halo = exp(-dd / cell * 4.) * .35 * val * tw;
   vec3 c = mix(pal(sBgHue + .05 * h(gid + 7.)), pal(sHue + .1 * h(gid + 7.)), val);
   return c * (dotv + halo);
@@ -314,9 +253,7 @@ void main() {
   float a = R.x / R.y;
   vec2 sp = (gl_FragCoord.xy - R * .5) / R.y;              // centred, y up, 1 = canvas height
   vec3 col;
-  if (V == 3) col = metal(sp);
-  else if (V == 4) col = trails(sp);
-  else if (V == 6) col = dots(sp, false);
+  if (V == 6) col = dots(sp, false);
   else if (V == 9) col = dots(sp, true);
   else if (V == 7) col = board(sp);
   else if (V == 8) col = eclipse(sp);
@@ -367,19 +304,6 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     { id: 'uBank', label: 'Крен', min: 0, max: 2, step: 0.01, def: 1, only: [2] },
     { id: 'gas', label: 'Газ', min: 0, max: 3, step: 0.01, def: 1, only: [2] },
     { id: 'layersK', label: 'Слои мышью', min: 0, max: 2, step: 0.01, def: 1, only: [2] },
-    { id: 'mBands', label: 'Полосы', min: 0.3, max: 4, step: 0.01, def: 1.2, only: [3] },
-    { id: 'mFlow', label: 'Турбуленция', min: 0, max: 2, step: 0.01, def: 1, only: [3] },
-    { id: 'mBulge', label: 'Кромка', min: 0, max: 2, step: 0.01, def: 1, only: [3] },
-    { id: 'mGlow', label: 'Свечение', min: 0, max: 2, step: 0.01, def: 1, only: [3] },
-    { id: 'mFlash', label: 'Нагрев', min: 0, max: 1, step: 0.01, def: 0.8, only: [3] },
-    { id: 'tLanes', label: 'Полосы', min: 1, max: 30, step: 1, def: 12, only: [4] },
-    { id: 'tGap', label: 'Между полосами', min: 3, max: 30, step: 0.5, def: 9, only: [4] },
-    { id: 'tCars', label: 'Машины', min: 1, max: 12, step: 1, def: 3, only: [4] },
-    { id: 'tTail', label: 'Хвост', min: 0.02, max: 0.9, step: 0.01, def: 0.35, only: [4] },
-    { id: 'tTilt', label: 'Наклон', min: 0, max: 1, step: 0.01, def: 0.45, only: [4] },
-    { id: 'tBlur', label: 'Глубина резкости', min: 0, max: 2, step: 0.01, def: 0.8, only: [4] },
-    { id: 'tHalo', label: 'Ореол', min: 0, max: 2, step: 0.01, def: 1, only: [4] },
-    { id: 'tPull', label: 'Мышь', min: 0, max: 2, step: 0.01, def: 1, only: [4] },
     { id: 'sDots', label: 'Точки', min: 30, max: 250, step: 1, def: 110, only: [6, 9], own: true },
     { id: 'sSize', label: 'Размер', min: 0.1, max: 1.2, step: 0.01, def: 0.75, only: [6, 9], own: true },
     { id: 'sBgSize', label: 'Размер фона', min: 0, max: 1.2, step: 0.01, def: 0.45, only: [6, 9], own: true },
@@ -389,7 +313,9 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     { id: 'sJitter', label: 'Хаос', min: 0, max: 1, step: 0.01, def: 0.4, only: [6, 9], own: true },
     { id: 'sTwinkle', label: 'Мерцание', min: 0, max: 1, step: 0.01, def: 0.3, only: [6, 9], own: true },
     { id: 'sWave', label: 'Волна', min: 0, max: 1, step: 0.01, def: 0.3, only: [6, 9], own: true },
-    { id: 'sSwirl', label: 'Вихрь мыши', min: -2, max: 2, step: 0.01, def: 1, only: [6, 9], own: true },
+    { id: 'sLight', label: 'Свет мыши', min: 0, max: 2, step: 0.01, def: 0.8, only: [6, 9], own: true },
+    { id: 'sTrail', label: 'След мыши', min: 0, max: 2, step: 0.01, def: 1, only: [6, 9], own: true },
+    { id: 'sRipple', label: 'Круги мыши', min: 0, max: 2, step: 0.01, def: 0.8, only: [6, 9], own: true },
     { id: 'sLens', label: 'Лупа мыши', min: -1, max: 1, step: 0.01, def: 0.5, only: [6, 9], own: true },
     { id: 'sRadius', label: 'Радиус мыши', min: 0.3, max: 3, step: 0.01, def: 1, only: [6, 9], own: true },
     { id: 'eFreq', label: 'Кольца', min: 0.3, max: 6, step: 0.01, def: 1.6, only: [8, 9], own: true },
@@ -402,21 +328,19 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     { id: 'lScroll', label: 'Бегущая строка', min: 0, max: 3, step: 0.01, def: 0, only: [7] },
     { id: 'uLamp', label: 'Фонарь', min: 0, max: 2, step: 0.01, def: 0.5, only: [2] },
   ]
-  const names = ['R', 'T', 'S', 'V', 'uMouse', 'uTravel', 'uBoost', 'uAct', ...CONTROLS.map((c) => c.id)]
+  const names = ['R', 'T', 'S', 'V', 'uMouse', 'uTravel', 'uBoost', 'uAct', 'uSeen', 'uTrail', ...CONTROLS.map((c) => c.id)]
   const u = Object.fromEntries(names.map((k) => [k, gl.getUniformLocation(prog, k)]))
 
   // Every variant as Denis last set it (2026-10-15); they override the sliders' own defaults
   const SET = {
     seed2: 15, speed2: 0.3, uMouseK2: 0.42, uLayers: 50, uDepth: 10.6, uZoom: 0.51, uTwist: 0, uBend: 0,
     uLine: 1.3, uGlow: 0, uFill: 0, uTone: -0.15, uBank: 0.26, gas: 1.31, layersK: 0.24, uLamp: 1.29,
-    speed3: 2.3, mBands: 3.93, mFlow: 0, mBulge: 0.37, mGlow: 1.01, mFlash: 0,
-    speed4: 1.1, tLanes: 30, tGap: 9.5, tCars: 1, tTail: 0.1,
     speed6: 3, seed6: 5, sTwinkle6: 1,
     speed7: 1.45, seed7: 5, lSize: 4, lWave: 1, lRipple: 0, lScroll: 0,
     speed8: 3, seed8: 2, eFreq8: 0.73, eSoft8: 1, eWarp8: 0.49, eLight8: 1,
-    speed9: 1, sDots9: 70, sSize9: 1, sBgSize9: 0, sBg9: 0, sSwirl9: 0.6, sLens9: 0.4, eFreq9: 1.6, eSoft9: 0.5, eLight9: 0.3, eWarp9: 0.2,
+    speed9: 1, sDots9: 70, sSize9: 1, sBgSize9: 0, sBg9: 0, sLens9: 0.4, eFreq9: 1.6, eSoft9: 0.5, eLight9: 0.3, eWarp9: 0.2,
   }
-  const state = { v: 9, ...Object.fromEntries(CONTROLS.map((c) => [c.id, c.def])), ...SET }
+  const state = { v: 6, ...Object.fromEntries(CONTROLS.map((c) => [c.id, c.def])), ...SET }
   const OWN = Object.fromEntries(CONTROLS.filter((c) => c.own).map((c) => [c.id, c.def]))
   const key = (id) => (id === 'seed' || id in OWN ? id + state.v : id)
   const get = (id) => state[key(id)] ?? OWN[id] ?? (id === 'seed' ? 1 : undefined)
@@ -457,12 +381,20 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
   // The pointer over the picture, -1..1 from its centre, y up; the shader gets it eased
   // Pressing on the picture is Газ
   const aim = [0, 0], mouse = [0, 0]
-  let pressed = false, boost = 0, travel = 0, act = 0, actAim = 0
+  let pressed = false, boost = 0, travel = 0, act = 0, actAim = 0, seen = 0
+  // The pointer's last places, one every 60 ms: Рой's След and Круги
+  const trail = []
   addEventListener('pointermove', (e) => {
     const r = canvas.getBoundingClientRect()
     const x = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1))
     const y = Math.max(-1, Math.min(1, 1 - ((e.clientY - r.top) / r.height) * 2))
     actAim = 1
+    seen = 1
+    const now = performance.now()
+    if (!trail.length || now - trail[0].t > 60) {
+      trail.unshift({ x, y, t: now })
+      trail.length = Math.min(trail.length, 8)
+    }
     aim[0] = x
     aim[1] = y
   })
@@ -492,6 +424,10 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     act += (actAim - act) * 0.08
     actAim *= 0.97
     gl.uniform1f(u.uAct, act)
+    gl.uniform1f(u.uSeen, seen)
+    const tr = new Float32Array(24).fill(99)
+    trail.forEach((p, i) => tr.set([p.x, p.y, (now - p.t) / 1000], i * 3))
+    gl.uniform3fv(u.uTrail, tr)
     const goal = pressed ? get('gas') * 4 : 0
     boost += (goal - boost) * (goal > boost ? 0.08 : 0.03)
     travel += dt * 1.4 * (get('speed') + boost * Math.max(get('speed'), 0.25))
