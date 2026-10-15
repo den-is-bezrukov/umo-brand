@@ -16,21 +16,18 @@
   canvas { position: fixed; left: 0; top: 0; width: 100%; height: calc(100% - var(--strip, 0px)); display: block; }
   .strip { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; padding: 24px 36px 96px; }
   .strip p { margin: 0; max-width: 912px; font-size: min(60px, 6vw); font-weight: 500; line-height: 1; letter-spacing: -0.01em; }
-  .panel { position: fixed; right: 16px; top: 16px; display: flex; flex-direction: column; gap: 12px; padding: 16px;
-    background: rgba(255,255,255,.92); border-radius: 16px; font-size: 14px; width: 272px;
-    max-height: calc(100% - 32px); overflow: auto; }
-  .tabs { display: flex; flex-wrap: wrap; gap: 4px; }
-  .tabs button, .row button { font: inherit; border: 0; border-radius: 8px; padding: 6px 10px; background: #eee; cursor: pointer; }
-  .tabs button[aria-pressed="true"] { background: #000; color: #fff; }
-  .sliders { display: flex; flex-direction: column; gap: 8px; }
+  /* The panel in the browser's own controls: system font, native buttons and sliders, each slider's value beside it */
+  .panel { position: fixed; right: 12px; top: 12px; padding: 8px 10px; background: Canvas; color: CanvasText;
+    border: 1px solid GrayText; font: 12px system-ui, sans-serif; width: 300px; max-height: calc(100% - 24px); overflow: auto; }
+  .tabs { margin-bottom: 6px; }
+  .tabs button[aria-pressed="true"] { font-weight: bold; }
   [hidden] { display: none !important; }
-  label { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
-  input[type=range] { width: 120px; accent-color: #000; }
-  .row { display: flex; flex-wrap: wrap; gap: 4px; }
+  label { display: grid; grid-template-columns: 1fr 120px 36px; align-items: center; gap: 6px; }
+  label output { text-align: right; font-variant-numeric: tabular-nums; }
   @media (max-width: 640px) {
     .strip { padding: 16px 16px 72px; }
     .strip p { font-size: 32px; }
-    .panel { top: auto; bottom: 16px; left: 16px; right: 16px; width: auto; max-height: 45%; }
+    .panel { top: auto; bottom: 12px; left: 12px; right: 12px; width: auto; max-height: 45%; }
   }
 </style>
 </head>
@@ -342,12 +339,13 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
   const sliders = document.getElementById('sliders')
   for (const c of CONTROLS) {
     const label = document.createElement('label')
-    label.textContent = c.label + ' '
+    label.textContent = c.label
     if (c.only) label.dataset.only = c.only.join(' ')
     const el = Object.assign(document.createElement('input'), { type: 'range', min: c.min, max: c.max, step: c.step })
     el.dataset.id = c.id
-    el.addEventListener('input', () => { state[key(c.id)] = +el.value; save() })
-    label.append(el)
+    const out = document.createElement('output')
+    el.addEventListener('input', () => { state[key(c.id)] = +el.value; out.value = el.value; save() })
+    label.append(el, out)
     sliders.append(label)
   }
 
@@ -357,7 +355,7 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     document.querySelectorAll('[data-only]').forEach((el) => {
       el.hidden = !el.dataset.only.split(' ').map(Number).includes(state.v)
     })
-    sliders.querySelectorAll('input').forEach((el) => { el.value = get(el.dataset.id) })
+    sliders.querySelectorAll('input').forEach((el) => { el.value = get(el.dataset.id); el.nextElementSibling.value = el.value })
   }
   tabs.forEach((b) => b.addEventListener('click', () => { state.v = +b.dataset.v; sync(); save() }))
   sync()
