@@ -248,7 +248,7 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW)
   gl.enableVertexAttribArray(0)
   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0)
-  // Defaults: Тоннель and Облако as Denis set them on 2026-10-15. Speed, mouse and seed are each variant's own
+  // Speed, mouse and seed are each variant's own
   // (`speed2`, `seed0`…), so setting one doesn't change the other
   // Sliders: speed scales the clock, the rest are uniforms of the same name; `only` lists the variants they act on
   const CONTROLS = [
@@ -288,8 +288,14 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
   const names = ['R', 'T', 'S', 'V', 'uMouse', 'uTravel', 'uBoost', ...CONTROLS.map((c) => c.id)]
   const u = Object.fromEntries(names.map((k) => [k, gl.getUniformLocation(prog, k)]))
 
-  const state = { v: 2, seed0: 18, seed2: 15, speed0: 1.15,
-    ...Object.fromEntries(CONTROLS.map((c) => [c.id, c.def])) }
+  // Both variants as Denis last set them (2026-10-15); they override the sliders' own defaults
+  const SET = {
+    seed0: 22, speed0: 0.6, uMouseK0: 0.93, uHold: 0.09, uTear: 0, uBoil: 1,
+    uSkyTop: 0.88, uSkyLow: 0, uSun: 0.18, uShade: 1, uLight: 1, uEdge: 1.9,
+    seed2: 15, speed2: 0.3, uMouseK2: 0.42, uLayers: 50, uDepth: 10.6, uZoom: 0.51, uTwist: 0, uBend: 0,
+    uLine: 0.8, uGlow: 0.38, uFill: 0, uTone: -0.17, uBank: 0.26, gas: 3, layersK: 0.26, uLamp: 2,
+  }
+  const state = { v: 2, ...Object.fromEntries(CONTROLS.map((c) => [c.id, c.def])), ...SET }
   const OWN = Object.fromEntries(CONTROLS.filter((c) => c.own).map((c) => [c.id, c.def]))
   const key = (id) => (id === 'seed' || id in OWN ? id + state.v : id)
   const get = (id) => state[key(id)] ?? OWN[id]
