@@ -719,21 +719,28 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, list: RefO
         // Where the list may stand: with a chapter's title stuck at the top just where it stands anyway (its block 8px
         // above the edge, as the title sticks 8px down), or with an item whole right under a stuck title (44px down).
         // Anything else cut a row under the title in half, or left the stuck title of the chapter before peeking. The
-        // list opens at the chapter you're reading; the last chapters, which can't rise that far, at the nearest of
-        // these places above the list's end (it ends with 44px of room for that), and an item centred, when its
-        // chapter runs past the sheet, at the nearest above that
+        // list opens at the chapter you're reading; where that can't rise to the top (the last chapters) or the item
+        // you're at would be under the sheet's edge, at the first place that has that item whole as the last row, the
+        // list getting the few pixels of room under it that takes
+        const inner = el.firstElementChild as HTMLElement | null
+        if (inner) inner.style.paddingBottom = ''
         const stops: number[] = []
         for (const block of Array.from(first.parentElement!.children)) {
           stops.push(at(block) - 8)
           block.querySelectorAll('a').forEach((link, i) => { if (i) stops.push(at(link) - 44) })
         }
-        const below = (top: number) => Math.max(0, Math.round(Math.max(...stops.filter(s => s <= top + 0.5))))
-        const target = Math.max(0, Math.round(at(chapter) - 8))
         const max = el.scrollHeight - el.clientHeight
-        el.scrollTop = target <= max ? target : below(max)
-        if (item.getBoundingClientRect().bottom > box.bottom) {
-          item.scrollIntoView({ block: 'center' })
-          el.scrollTop = below(el.scrollTop)
+        const end = at(item) + item.offsetHeight
+        let top = Math.max(0, Math.round(at(chapter) - 8))
+        if (top > max || end > top + el.clientHeight) {
+          top = Math.max(0, Math.round(Math.min(...stops.filter(s => s >= end - el.clientHeight - 0.5))))
+          if (inner && top > max) inner.style.paddingBottom = `${top - max}px`
+        }
+        el.scrollTop = top
+        // Short of it still (the browser kept the old end), the room grows by what's missing
+        if (inner && el.scrollTop < top - 0.5) {
+          inner.style.paddingBottom = `${(parseFloat(inner.style.paddingBottom) || 0) + top - el.scrollTop}px`
+          el.scrollTop = top
         }
       },
     }
@@ -1454,6 +1461,21 @@ export default function Guide() {
   // The open mobile contents: opened at the chapter you're reading, the page behind kept still, Esc closing it.
   const sheetRef = useRef<HTMLDivElement>(null)
   const toc = useTocSheet(menuOpen, setMenuOpen, sheetRef)
+  // The contents' sheet: 60% of the screen over the bar, cut down to whole 36px rows under the list's top padding, so no
+  // row stands half under its edge (`--toc-h`)
+  useEffect(() => {
+    const fit = () => {
+      const el = toc.sheet.current
+      if (!el) return
+      const md = window.matchMedia('(min-width: 48rem)').matches
+      const pad = md ? 24 : 16
+      const rows = Math.max(4, Math.floor((window.innerHeight * 0.6 - (md ? 68 : 52) - pad) / 36))
+      el.style.setProperty('--toc-h', `${pad + rows * 36}px`)
+    }
+    fit()
+    window.addEventListener('resize', fit)
+    return () => window.removeEventListener('resize', fit)
+  }, [toc])
   useEffect(() => {
     if (!menuOpen) return
     toc.reveal()
@@ -1529,7 +1551,7 @@ export default function Guide() {
       {/* Mobile table of contents: a bar at the bottom names the heading you're reading and stands in for the
           sidebar; tapped, the full contents open between the header and the bar, which turns into «Свернуть». */}
       <div className="lg:hidden">
-        {/* A sheet from the bottom, eleven 36px rows tall, 80% of the screen at most (it was 60%, with 28px items hard to hit), its top corners 16 px round, as the voice examples' bubbles' corners, over the page dimmed: every item within a thumb's
+        {/* A sheet from the bottom, 60% of the screen cut down to whole 36px rows (`--toc-h`), its top corners 16 px round, as the voice examples' bubbles' corners, over the page dimmed: every item within a thumb's
             reach, the list scrolling inside it, opened at the chapter you're reading (it took the whole screen under the
             header, its top items out of reach). A tap on the page above closes it, as «Свернуть» does */}
         <div ref={toc.dim} aria-hidden className="invisible fixed inset-0 z-40 bg-black/40 opacity-0" onClick={() => setMenuOpen(false)} />
@@ -1542,7 +1564,7 @@ export default function Guide() {
         {/* A white border as tall as the bar runs on under it, past the screen's bottom, where the page showed through
             under iOS 26 Safari's floating toolbar as it slid. */}
         <div className="fixed inset-x-0 -bottom-[52px] z-40 border-b-[52px] border-white md:-bottom-[68px] md:border-b-[68px]">
-          <div ref={toc.sheet} inert={!menuOpen || undefined} className={`invisible absolute inset-x-0 bottom-[calc(100%-2px)] flex flex-col overflow-hidden rounded-t-2xl bg-white ${sheetEditor ? 'max-h-[calc(80dvh-52px)] md:max-h-[calc(80dvh-68px)]' : 'h-[min(412px,calc(80dvh-52px))] md:h-[min(420px,calc(80dvh-68px))]'}`}>
+          <div ref={toc.sheet} inert={!menuOpen || undefined} className={`invisible absolute inset-x-0 bottom-[calc(100%-2px)] flex flex-col overflow-hidden rounded-t-2xl bg-white ${sheetEditor ? 'max-h-[calc(80dvh-52px)] md:max-h-[calc(80dvh-68px)]' : 'h-(--toc-h)'}`}>
             {/* The list's top padding is inside it, so a stuck title is measured from the sheet's edge in every browser. */}
             <div ref={sheetRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 md:px-6">
               {sheetEditor ? (
@@ -1555,7 +1577,7 @@ export default function Guide() {
                   </nav>
                 </div>
               ) : (
-                <div className="pt-4 pb-11 md:pt-6"><Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} stickyChapters /></div>
+                <div className="pt-4 md:pt-6"><Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} stickyChapters /></div>
               )}
             </div>
           </div>
