@@ -295,7 +295,11 @@ function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; o
   )
 }
 
-/** `stickyChapters` (the phone's sheet): a chapter's title stays at the top of the list while its items scroll by. */
+/**
+ * `stickyChapters` (the phone's sheet): a chapter's title stays at the top of the list while its items scroll by, and
+ * every row, chapter or item, is 36px tall (its 20px line and 8px over and under), easier for a finger than the
+ * sidebar's 28px items and one grid for the sheet's height and stops
+ */
 function Nav({ active, expandAll, onNavigate, stickyChapters }: { active: string[]; expandAll: boolean; onNavigate?: () => void; stickyChapters?: boolean }) {
   const activeChapter = NAV.find(c => active.some(id => contains(c, id)))?.id
   // Above the first chapter (the first screen) Платформа бренда stands open and lit, so the list doesn't start bare
@@ -320,7 +324,7 @@ function Nav({ active, expandAll, onNavigate, stickyChapters }: { active: string
                   <div className="flex flex-col pl-6">
                     {chapter.children.map(s => (
                       <div key={s.id} className="group/item flex flex-col">
-                        <NavLink id={s.id} title={s.title} active={active.some(id => contains(s, id))} current={active.includes(s.id)} onNavigate={onNavigate} pad={s.children ? 'pt-1 pb-2' : 'py-1 group-last/item:pb-2'} />
+                        <NavLink id={s.id} title={s.title} active={active.some(id => contains(s, id))} current={active.includes(s.id)} onNavigate={onNavigate} pad={stickyChapters ? 'py-2' : s.children ? 'pt-1 pb-2' : 'py-1 group-last/item:pb-2'} />
                         {s.children && (
                           <div className="flex flex-col pl-6">
                             {s.children.map(t => (
@@ -1525,7 +1529,7 @@ export default function Guide() {
       {/* Mobile table of contents: a bar at the bottom names the heading you're reading and stands in for the
           sidebar; tapped, the full contents open between the header and the bar, which turns into «Свернуть». */}
       <div className="lg:hidden">
-        {/* A sheet from the bottom, 60% of the screen at most (two thirds and a half were tried; a 6.3" phone still needs a shifted grip for the top), its top corners 16 px round, as the voice examples' bubbles' corners, over the page dimmed: every item within a thumb's
+        {/* A sheet from the bottom, eleven 36px rows tall, 80% of the screen at most (it was 60%, with 28px items hard to hit), its top corners 16 px round, as the voice examples' bubbles' corners, over the page dimmed: every item within a thumb's
             reach, the list scrolling inside it, opened at the chapter you're reading (it took the whole screen under the
             header, its top items out of reach). A tap on the page above closes it, as «Свернуть» does */}
         <div ref={toc.dim} aria-hidden className="invisible fixed inset-0 z-40 bg-black/40 opacity-0" onClick={() => setMenuOpen(false)} />
@@ -1538,7 +1542,7 @@ export default function Guide() {
         {/* A white border as tall as the bar runs on under it, past the screen's bottom, where the page showed through
             under iOS 26 Safari's floating toolbar as it slid. */}
         <div className="fixed inset-x-0 -bottom-[52px] z-40 border-b-[52px] border-white md:-bottom-[68px] md:border-b-[68px]">
-          <div ref={toc.sheet} inert={!menuOpen || undefined} className="invisible absolute inset-x-0 bottom-[calc(100%-2px)] flex h-[min(296px,calc(60dvh-52px))] flex-col overflow-hidden rounded-t-2xl bg-white md:h-[min(304px,calc(60dvh-68px))]">
+          <div ref={toc.sheet} inert={!menuOpen || undefined} className="invisible absolute inset-x-0 bottom-[calc(100%-2px)] flex h-[min(412px,calc(80dvh-52px))] flex-col overflow-hidden rounded-t-2xl bg-white md:h-[min(420px,calc(80dvh-68px))]">
             {/* The list's top padding is inside it, so a stuck title is measured from the sheet's edge in every browser. */}
             <div ref={sheetRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 md:px-6">
               {sheetEditor ? (
