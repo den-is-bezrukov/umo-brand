@@ -41,13 +41,12 @@
 <div class="panel">
   <div class="tabs" id="tabs">
     <button data-v="0">Облако</button>
-    <button data-v="1">Хром</button>
     <button data-v="2">Тоннель</button>
   </div>
-  <div class="tabs" id="tints" data-only="0">
-    <button data-tint="0">Свет</button>
-    <button data-tint="1">Контровой</button>
-    <button data-tint="2">Закат</button>
+  <div class="tabs" id="presets" data-only="0">
+    <button data-preset="0">Свет</button>
+    <button data-preset="1">Контровой</button>
+    <button data-preset="2">Закат</button>
   </div>
   <div id="sliders" class="sliders"></div>
   <div class="row">
@@ -60,7 +59,6 @@
 precision highp float;
 uniform vec2 R;      // canvas size, px
 uniform float T;     // time, s (already scaled by the speed)
-uniform float W;     // Хром's turbulence 0..2
 uniform float S;     // seed
 uniform int V;       // variant
 out vec4 o;
@@ -129,7 +127,7 @@ float logo3(vec3 p) {
 uniform float uHold;   // share of the cycle the wordmark stands formed, 0..1
 uniform float uTear;   // how far it tears apart
 uniform float uBoil;   // how much it keeps boiling while formed
-uniform int uTint;     // 0 Свет, 1 Контровой, 2 Закат
+uniform float uSkyTop, uSkyLow, uSun, uShade, uLight, uEdge; // colours, as places on the brand gradient
 uniform vec2 uMouse;   // -1..1, eased
 uniform float uMouseK; // how much the mouse turns it
 float form() {
@@ -156,9 +154,7 @@ vec3 cloudLogo(vec2 sp, float a) {
   vec3 sun = normalize(vec3(-.35, .3, 1.));
   float glow = max(dot(rd, sun), 0.);
   float low = smoothstep(.1, -.55, rd.y);
-  vec3 sky = uTint == 0 ? pal(.02 + .3 * low) + pal(.7) * pow(glow, 8.) * .25
-           : uTint == 1 ? pal(.5 + .45 * low) + pal(1.) * pow(glow, 4.) * .5
-           : pal(.08 + .62 * low) + pal(.9) * pow(glow, 6.) * .45;
+  vec3 sky = pal(mix(uSkyTop, uSkyLow, low)) + pal(1.) * pow(glow, 5.) * uSun;
   // Only inside the box round the wordmark and its smoke
   vec3 b = vec3(3.4, 1.6, 1.4);
   vec3 t0 = (-b - ro) / rd, t1 = (b - ro) / rd;
@@ -177,10 +173,8 @@ vec3 cloudLogo(vec2 sp, float a) {
       float sh = 0.;
       for (int j = 1; j <= 3; j++) sh += smoke(p + sun * .14 * float(j), amp, false);
       float lit = clamp(exp(-sh * .8) * (.75 + 1.6 * pow(glow, 2.)), 0., 1.);
-      // Свет: a glowing cloud on the dark; Контровой: a dark mass on the bright sky, lit round its edges
-      vec3 c = uTint == 0 ? mix(pal(.5 + .1 * p.y), pal(1.), lit)
-             : uTint == 1 ? mix(pal(.1), pal(1.), pow(lit, 3.))
-             : mix(pal(.45 + .1 * p.y), pal(1.), lit);
+      // From its shadow to its light; Контраст keeps the light to the edges facing the sun
+      vec3 c = mix(pal(uShade + .05 * p.y), pal(uLight), pow(lit, uEdge));
       float al = 1. - exp(-d * dt * 9.);
       acc += tr * al * c;
       tr *= 1. - al;
@@ -189,34 +183,6 @@ vec3 cloudLogo(vec2 sp, float a) {
     t += dt;
   }
   return sky * tr + acc;
-}
-
-// ── Хром: the wordmark pressed into liquid metal that melts it and casts it again, reflecting the dusk ──
-float melt() { return .5 + .5 * sin(T * .3); }
-float liquid(vec2 P) {
-  vec2 q = P * .007 + S * 3.1;
-  vec2 w = vec2(fbm(q + vec2(0, T * .12)), fbm(q + vec2(5.2, 1.3 - T * .12))) - .5;
-  vec2 pp = P + w * 260. * W * mix(.08, 1., melt());
-  float l = smoothstep(16., -12., logo(pp));
-  float waves = fbm(P * .005 + vec2(T * .15, -T * .1) + S) * .3
-              + sin(length(P - vec2(240, 48)) * .045 - T * 2.2) * .05 * W;
-  return l * l * (3. - 2. * l) + waves;
-}
-vec3 env(vec3 r) {
-  vec3 sun = normalize(vec3(.35, .6, .7));
-  return pal(.22 + .78 * smoothstep(-.5, .9, r.y)) + pal(1.) * pow(max(dot(r, sun), 0.), 60.) * 1.4;
-}
-vec3 chrome(vec2 frag) {
-  float k = min(R.x * .72, R.y * 2.8) / 480.;
-  vec2 P = (frag - R * .5) / k;
-  P = vec2(P.x, -P.y) + vec2(240, 48);
-  float e = 1.5;
-  float gx = (liquid(P + vec2(e, 0)) - liquid(P - vec2(e, 0))) / (2. * e);
-  float gy = (liquid(P + vec2(0, e)) - liquid(P - vec2(0, e))) / (2. * e);
-  vec3 nrm = normalize(vec3(-gx * 18., gy * 18., 1.));
-  vec3 r = reflect(vec3(0, 0, -1), nrm);
-  float fres = .35 + .65 * pow(1. - nrm.z, 2.);
-  return env(r) * mix(.55, 1.1, fres);
 }
 
 // ── Тоннель: flying through wordmarks lined up into the distance, twisting as the road bends ──
@@ -249,7 +215,6 @@ void main() {
   vec2 sp = (gl_FragCoord.xy - R * .5) / R.y;              // centred, y up, 1 = canvas height
   vec3 col;
   if (V == 0) col = cloudLogo(sp, a);
-  else if (V == 1) col = chrome(gl_FragCoord.xy);
   else col = tunnel(sp);
   // A dither under a level apart, so the dark gradient doesn't band
   col += (h(gl_FragCoord.xy + fract(T * 7.) * 91.) - .5) * 1.5 / 255.;
@@ -282,10 +247,15 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
   // Sliders: speed scales the clock, the rest are uniforms of the same name; `only` lists the variants they act on
   const CONTROLS = [
     { id: 'speed', label: 'Скорость', min: 0, max: 3, step: 0.05, def: 0.25, own: true },
-    { id: 'W', label: 'Турбуленция', min: 0, max: 2, step: 0.05, def: 1, only: [1] },
     { id: 'uHold', label: 'Статика', min: 0, max: 1, step: 0.01, def: 1, only: [0] },
     { id: 'uTear', label: 'Разрыв', min: 0, max: 1.5, step: 0.01, def: 0, only: [0] },
     { id: 'uBoil', label: 'Кипение', min: 0, max: 1, step: 0.01, def: 0, only: [0] },
+    { id: 'uSkyTop', label: 'Небо вверху', min: 0, max: 1, step: 0.01, def: 0.5, only: [0] },
+    { id: 'uSkyLow', label: 'Небо внизу', min: 0, max: 1, step: 0.01, def: 0.95, only: [0] },
+    { id: 'uSun', label: 'Солнце', min: 0, max: 1.5, step: 0.01, def: 0.5, only: [0] },
+    { id: 'uShade', label: 'Тень облака', min: 0, max: 1, step: 0.01, def: 0.1, only: [0] },
+    { id: 'uLight', label: 'Свет облака', min: 0, max: 1, step: 0.01, def: 1, only: [0] },
+    { id: 'uEdge', label: 'Контраст', min: 0.5, max: 4, step: 0.05, def: 3, only: [0] },
     { id: 'uLayers', label: 'Слои', min: 4, max: 64, step: 1, def: 14, only: [2] },
     { id: 'uDepth', label: 'Глубина', min: 2, max: 14, step: 0.1, def: 2, only: [2] },
     { id: 'uZoom', label: 'Масштаб', min: 0.4, max: 3, step: 0.01, def: 0.4, only: [2] },
@@ -297,16 +267,22 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     { id: 'uTone', label: 'Тон', min: -0.5, max: 0.3, step: 0.01, def: 0, only: [2] },
     { id: 'uMouseK', label: 'Мышь', min: 0, max: 2, step: 0.01, def: 2, only: [0, 2], own: true },
   ]
-  const names = ['R', 'T', 'S', 'V', 'uTint', 'uMouse', ...CONTROLS.map((c) => c.id)]
+  // Облако's colours to start from: a glowing cloud on the dark, a dark one lit round its edges, the dusk
+  const PRESETS = [
+    { uSkyTop: 0.02, uSkyLow: 0.32, uSun: 0.25, uShade: 0.5, uLight: 1, uEdge: 1 },
+    { uSkyTop: 0.5, uSkyLow: 0.95, uSun: 0.5, uShade: 0.1, uLight: 1, uEdge: 3 },
+    { uSkyTop: 0.08, uSkyLow: 0.7, uSun: 0.45, uShade: 0.45, uLight: 1, uEdge: 1 },
+  ]
+  const names = ['R', 'T', 'S', 'V', 'uMouse', ...CONTROLS.map((c) => c.id)]
   const u = Object.fromEntries(names.map((k) => [k, gl.getUniformLocation(prog, k)]))
 
-  const state = { v: 2, tint: 1, seed0: 18, seed1: 1, seed2: 15, speed0: 1.15, speed1: 1,
+  const state = { v: 2, seed0: 18, seed2: 15, speed0: 1.15,
     ...Object.fromEntries(CONTROLS.map((c) => [c.id, c.def])) }
   const OWN = Object.fromEntries(CONTROLS.filter((c) => c.own).map((c) => [c.id, c.def]))
   const key = (id) => (id === 'seed' || id in OWN ? id + state.v : id)
   const get = (id) => state[key(id)] ?? OWN[id]
-  try { Object.assign(state, JSON.parse(localStorage.getItem('sky-logo3') || '{}')) } catch {}
-  const save = () => { try { localStorage.setItem('sky-logo3', JSON.stringify(state)) } catch {} }
+  try { Object.assign(state, JSON.parse(localStorage.getItem('sky-logo4') || '{}')) } catch {}
+  const save = () => { try { localStorage.setItem('sky-logo4', JSON.stringify(state)) } catch {} }
 
   const sliders = document.getElementById('sliders')
   for (const c of CONTROLS) {
@@ -321,11 +297,10 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
   }
 
   const tabs = [...document.querySelectorAll('#tabs button')]
-  const tints = [...document.querySelectorAll('#tints button')]
+  const presets = [...document.querySelectorAll('#presets button')]
   const seed = document.getElementById('seed')
   const sync = () => {
     tabs.forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.v === state.v)))
-    tints.forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.tint === state.tint)))
     document.querySelectorAll('[data-only]').forEach((el) => {
       el.hidden = !el.dataset.only.split(' ').map(Number).includes(state.v)
     })
@@ -333,7 +308,7 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     seed.textContent = `Сид ${get('seed')}`
   }
   tabs.forEach((b) => b.addEventListener('click', () => { state.v = +b.dataset.v; sync(); save() }))
-  tints.forEach((b) => b.addEventListener('click', () => { state.tint = +b.dataset.tint; sync(); save() }))
+  presets.forEach((b) => b.addEventListener('click', () => { Object.assign(state, PRESETS[+b.dataset.preset]); sync(); save() }))
   seed.addEventListener('click', () => { state[key('seed')] = (get('seed') % 99) + 1; sync(); save() })
   const mock = document.getElementById('mock')
   mock.addEventListener('click', () => {
@@ -373,7 +348,6 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     gl.uniform1f(u.T, t + 3)
     gl.uniform1f(u.S, get('seed'))
     gl.uniform1i(u.V, state.v)
-    gl.uniform1i(u.uTint, state.tint)
     gl.uniform2f(u.uMouse, mouse[0], mouse[1])
     for (const c of CONTROLS) if (c.id !== 'speed') gl.uniform1f(u[c.id], get(c.id))
     gl.drawArrays(gl.TRIANGLES, 0, 3)
