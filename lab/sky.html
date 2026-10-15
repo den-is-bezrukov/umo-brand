@@ -44,7 +44,6 @@
     <button data-v="2">Тоннель</button>
     <button data-v="3">Металл</button>
     <button data-v="4">Следы</button>
-    <button data-v="5">Топокарта</button>
     <button data-v="6">Рой</button>
     <button data-v="7">Табло</button>
   </div>
@@ -224,31 +223,6 @@ vec3 trails(vec2 sp) {
   return col;
 }
 
-// ── Топокарта: the wordmark as a plateau in a landscape, drawn as a map — contour lines, tints by height and
-// hill shading lit from the pointer; the land slowly breathes ──
-uniform float pLines, pRelief, pShade, pBreath;
-float land(vec2 P) {
-  float plate = smoothstep(34., -16., logo(P));
-  float n = fbm(P * .006 + S + vec2(T * .02, 0.));
-  float n2 = fbm(P * .022 + S * 2.);
-  return plate * (.62 + .06 * sin(T * .6) * pBreath) + (n * .55 + n2 * .12) * pRelief * .7
-       + .04 * pBreath * sin(T * .4 + P.x * .01 + P.y * .02);
-}
-vec3 topo(vec2 sp) {
-  float k;
-  vec2 P = toLogo(sp, .7, 2.8, k);
-  float h0 = land(P), hx = land(P + vec2(2, 0)), hy = land(P + vec2(0, 2));
-  vec3 nrm = normalize(vec3(-(hx - h0) * 45., (hy - h0) * 45., 1.));
-  vec3 L = normalize(vec3(uMouse * 1.2 + vec2(-.4, .5), .6));
-  float shade = clamp(dot(nrm, L), 0., 1.);
-  vec3 col = pal(.08 + h0 * .8) * mix(1., .3 + 1.1 * shade, pShade);
-  float c = h0 * pLines;
-  float fw = fwidth(c);
-  float ln = 1. - smoothstep(0., fw * 1.3, abs(fract(c + .5) - .5));
-  float major = 1. - step(.5, mod(floor(c + .5), 5.));
-  return mix(col, pal(.97), ln * mix(.35, .8, major));
-}
-
 // ── Рой: a swarm of points holding the wordmark's shape; it scatters now and then and gathers back, and the
 // pointer blows it apart. Drawn as a still field of points seen through a moving warp ──
 uniform float sDots, sScatter, sPush, sTwinkle;
@@ -302,7 +276,6 @@ void main() {
   vec3 col;
   if (V == 3) col = metal(sp);
   else if (V == 4) col = trails(sp);
-  else if (V == 5) col = topo(sp);
   else if (V == 6) col = swarm(sp);
   else if (V == 7) col = board(sp);
   else col = tunnel(sp);
@@ -362,10 +335,6 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     { id: 'tCars', label: 'Машины', min: 1, max: 12, step: 1, def: 3, only: [4] },
     { id: 'tTail', label: 'Хвост', min: 0.02, max: 0.9, step: 0.01, def: 0.35, only: [4] },
     { id: 'tPull', label: 'Притяжение', min: 0, max: 3, step: 0.01, def: 1, only: [4] },
-    { id: 'pLines', label: 'Горизонтали', min: 4, max: 60, step: 1, def: 24, only: [5] },
-    { id: 'pRelief', label: 'Рельеф', min: 0, max: 2, step: 0.01, def: 1, only: [5] },
-    { id: 'pShade', label: 'Тени', min: 0, max: 1, step: 0.01, def: 0.7, only: [5] },
-    { id: 'pBreath', label: 'Дыхание', min: 0, max: 2, step: 0.01, def: 1, only: [5] },
     { id: 'sDots', label: 'Точки', min: 30, max: 200, step: 1, def: 110, only: [6] },
     { id: 'sScatter', label: 'Разлёт', min: 0, max: 1.5, step: 0.01, def: 0.6, only: [6] },
     { id: 'sPush', label: 'Ветер мыши', min: 0, max: 2, step: 0.01, def: 1, only: [6] },
@@ -379,11 +348,14 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
   const names = ['R', 'T', 'S', 'V', 'uMouse', 'uTravel', 'uBoost', ...CONTROLS.map((c) => c.id)]
   const u = Object.fromEntries(names.map((k) => [k, gl.getUniformLocation(prog, k)]))
 
-  // Тоннель as Denis last set it (2026-10-15); they override the sliders' own defaults
+  // Every variant as Denis last set it (2026-10-15); they override the sliders' own defaults
   const SET = {
-    speed3: 1, speed4: 1, speed5: 1, speed6: 1, speed7: 1,
     seed2: 15, speed2: 0.3, uMouseK2: 0.42, uLayers: 50, uDepth: 10.6, uZoom: 0.51, uTwist: 0, uBend: 0,
-    uLine: 0.8, uGlow: 0.38, uFill: 0, uTone: -0.17, uBank: 0.26, gas: 3, layersK: 0.26, uLamp: 2,
+    uLine: 0.8, uGlow: 0, uFill: 0, uTone: 0.3, uBank: 0.26, gas: 3, layersK: 0.24, uLamp: 1.29,
+    speed3: 2, mBands: 0.47, mFlow: 1.53, mBulge: 2, mGlow: 0.38, mFlash: 0,
+    speed4: 1.1, tLanes: 30, tGap: 9.5, tCars: 1, tTail: 0.1, tPull: 0.51,
+    speed6: 3, sDots: 200, sScatter: 0, sPush: 0.09, sTwinkle: 1,
+    speed7: 1.45, seed7: 5, lSize: 4, lWave: 1, lRipple: 0, lScroll: 0,
   }
   const state = { v: 2, ...Object.fromEntries(CONTROLS.map((c) => [c.id, c.def])), ...SET }
   const OWN = Object.fromEntries(CONTROLS.filter((c) => c.own).map((c) => [c.id, c.def]))
