@@ -162,8 +162,9 @@ html[data-menu] [data-sheet]:not(:has([data-head])) {
 /* One focus look for the keyboard on every page, the browser's own (in the system's accent colour, yellow on some
    Macs) and the controls' rings made one: 2 px at 30% black, 2 px off, round with the element's corners. Unlayered, so
    it wins over the utilities; fields keep their own focused edge (1 px inside at 40%, Figma 5015:11121), as they show
-   it for a click too */
-:focus-visible:not(input, textarea, select) {
+   it for a click too; a dialog, focused as it opens so the keys work in it, isn't a control and shows none (Safari
+   ringed the editor's window) */
+:focus-visible:not(input, textarea, select, [role='dialog']) {
   outline: 2px solid rgb(0 0 0 / 0.3);
   outline-offset: 2px;
 }
