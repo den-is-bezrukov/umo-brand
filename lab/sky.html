@@ -47,7 +47,7 @@
   <div class="tabs" id="motion" data-only="6">
     Движение:
     <button data-motion="0">Нет</button>
-    <button data-motion="1">Нырок в O</button>
+    <button data-motion="1">Нырок</button>
     <button data-motion="3">Сетка</button>
   </div>
   <div id="sliders" class="sliders"></div>
@@ -192,8 +192,8 @@ uniform float uWaveT;  // the wave's own clock, so changing its speed doesn't ma
 uniform float uSeen;    // 0 until the pointer first moves over the page
 uniform vec3 uTrail[32]; // where the pointer has just been (-1..1) and how many seconds ago, newest first
 uniform vec2 uPointer;   // the pointer as it is, not eased (-1..1)
-// Движение (sMotion): 0 none; 1 Нырок в O — an endless dive into the O, where the next UMO sits (Droste), its
-// centre in the middle of the screen, the points staying put while only the shape they draw moves; 3 Сетка — the
+// Движение (sMotion): 0 none; 1 Нырок — an endless dive into the wordmark's centre, copies of it one inside
+// another, the points staying put while only the shape they draw moves; 3 Сетка — the
 // points' grid zooms in, a finer one fading in between, the wordmark standing still (2, outlines growing out of
 // the centre, dropped). uZoomT is the zoom's own clock
 uniform float sMotion;
@@ -203,23 +203,20 @@ float shapeAt(vec2 home) {
   vec2 x = toLogo(home, .72, 2.6, k);
   float px = 3.;
   if (sMotion > .5 && sMotion < 1.5) {
-    // The copy n+1 is copy n shrunk into its O: M(x) = hole + (x - centre) / K, zoomed round M's fixed point
-    const float K = 6.9;
-    vec2 C = vec2(240, 48), H = vec2(409.2, 48);
-    vec2 f = (H * K - C) / (K - 1.);
-    x += f - C;                                               // the dive's centre in the middle of the screen
-    float z = pow(K, fract(uZoomT * .12));
-    vec2 y = f + (x - f) / z;
-    float d = 1e9, sc = z;
-    // Copy n's own coordinates are M⁻ⁿ(y); start one copy bigger (M(y)), round the screen, then go inwards
-    y = H + (y - C) / K;
-    sc *= K;
-    for (int n = -1; n < 4; n++) {
-      d = min(d, logo(y) * sc);
-      y = C + (y - H) * K;
+    // Copies of the wordmark one inside another round its centre, each K times smaller, zoomed into endlessly;
+    // where a copy lies on a bigger one's stroke it's inverted (even-odd), so every one shows
+    const float K = 3.5;
+    vec2 C = vec2(240, 48);
+    float z = pow(K, fract(uZoomT * .2));
+    vec2 y = C + (x - C) / (z * K);                            // one copy bigger than the screen first
+    float sc = z * K, v = 0.;
+    for (int n = -1; n < 5; n++) {
+      float m = smoothstep(px, -px, logo(y) * sc);
+      v = v + m - 2. * v * m;
+      y = C + (y - C) * K;
       sc /= K;
     }
-    return smoothstep(px, -px, d);
+    return v;
   }
   return smoothstep(px, -px, logo(x));
 }
