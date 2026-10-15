@@ -1542,11 +1542,12 @@ export default function Guide() {
         {/* A white border as tall as the bar runs on under it, past the screen's bottom, where the page showed through
             under iOS 26 Safari's floating toolbar as it slid. */}
         <div className="fixed inset-x-0 -bottom-[52px] z-40 border-b-[52px] border-white md:-bottom-[68px] md:border-b-[68px]">
-          <div ref={toc.sheet} inert={!menuOpen || undefined} className="invisible absolute inset-x-0 bottom-[calc(100%-2px)] flex h-[min(412px,calc(80dvh-52px))] flex-col overflow-hidden rounded-t-2xl bg-white md:h-[min(420px,calc(80dvh-68px))]">
+          <div ref={toc.sheet} inert={!menuOpen || undefined} className={`invisible absolute inset-x-0 bottom-[calc(100%-2px)] flex flex-col overflow-hidden rounded-t-2xl bg-white ${sheetEditor ? 'max-h-[calc(80dvh-52px)] md:max-h-[calc(80dvh-68px)]' : 'h-[min(412px,calc(80dvh-52px))] md:h-[min(420px,calc(80dvh-68px))]'}`}>
             {/* The list's top padding is inside it, so a stuck title is measured from the sheet's edge in every browser. */}
             <div ref={sheetRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 md:px-6">
               {sheetEditor ? (
-                // The editor's window set in the sheet: its title, the constructors 24 Medium 20 apart under it
+                // The editor's window set in the sheet: its title, the constructors 24 Medium 20 apart under it; the sheet
+                // as tall as they are (the contents' eleven rows left it a gap under them), 80% of the screen at most
                 <div className="flex flex-col gap-6 pt-4 pb-4 md:pt-6 md:pb-6">
                   <p className="font-medium">Редактор материалов</p>
                   <nav aria-label="Конструкторы" className="flex flex-col items-start gap-5">
