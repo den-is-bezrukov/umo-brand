@@ -186,66 +186,56 @@ uniform float sDots, sSize, sBgSize, sBg, sJitter, sTwinkle, sWave, sHue, sSat, 
 uniform float sLight, sTrail;
 uniform float uSeen;    // 0 until the pointer first moves over the page
 uniform vec3 uTrail[8]; // where the pointer has just been (-1..1) and how many seconds ago
-// Рой's flight: layers of stars rushing at you past the wordmark, as Тоннель's layers do, streaking with speed;
-// the pointer steers where they come from, pressing is Газ ──
-uniform float stStars, stLayers, stDepth, stStreak, stSize, stSteer, stFly, stBright;
-vec3 stars(vec2 sp) {
-  float acc = 0.;
-  vec2 vp = uMouse * vec2(R.x / R.y, 1.) * .5 * stSteer * .6;   // where they come from
-  float stretch = stStreak * (stFly + uBoost) * 4.;
-  for (int i = 0; i < 32; i++) {
-    if (float(i) >= stLayers) break;
-    float z = mod(float(i) * stDepth / stLayers - uTravel * stFly * .5, stDepth) + .05;
-    vec2 q = (sp - vp) * z / .9;                               // the layer's plane
-    vec2 g = q / .14 + float(i) * vec2(17.3, 9.1);
-    vec2 gid = floor(g);
-    if (h(gid + S * 1.7) > stStars) continue;
-    vec2 jit = vec2(h(gid + S), h(gid + S + 3.1)) * .8 + .1;
-    vec2 ds = (g - gid - jit) * .14 * .9 / z;                  // to the star, on screen
-    vec2 dir = normalize(sp - vp + vec2(1e-5));
-    float along = dot(ds, dir), across = dot(ds, vec2(-dir.y, dir.x));
-    float d = length(vec2(along / (1. + stretch * .9 / z), across));
-    float r = stSize * .0035 / z + .0012;
-    float fade = smoothstep(stDepth, stDepth * .55, z) * smoothstep(.05, .35, z);
-    acc += (smoothstep(r, r * .3, d) + exp(-d / r) * .25) * fade * min(1., .02 / r);
-  }
-  return vec3(acc * stBright);
-}
-
-vec3 dots(vec2 sp, bool halftone) {
+// Рой's flight: the points lie on layers one behind another and the layers fly at you, as Тоннель's do; a point
+// is the wordmark's (bigger, brighter) while it passes through its shape, so the wordmark stands still while the
+// points stream through it. They streak with speed; the pointer steers where they come from, pressing is Газ ──
+uniform float stLayers, stDepth, stStreak, stSteer, stFly;
+vec3 dots(vec2 sp) {
   vec2 mp = uMouse * vec2(R.x / R.y, 1.) * .5;
   vec2 rel = sp - mp;
   float near = exp(-dot(rel, rel) / (sRadius * sRadius * .03)) * uAct;
   vec2 src = mp + rel * (1. - sLens * .5 * near);
-  float cell = 1. / sDots;
-  vec2 gid = floor(src / cell);
-  vec2 jit = (vec2(h(gid + S), h(gid + S + 3.1)) - .5) * sJitter * .7;
-  vec2 home = (gid + .5 + jit) * cell;
-  float dd = length(src - home);
-  float val;
-  if (halftone) val = eclipseV(home);
-  else { float k; val = smoothstep(3., -3., logo(toLogo(home, .72, 2.6, k))); }
-  // The pointer's light and trail, at the point's place
+  vec2 vp = mp * stSteer * .6;                                 // where they come from
+  float stretch = stStreak * (stFly + uBoost) * 3.;
   float r = sRadius * .1;
-  float lit = exp(-dot(home - mp, home - mp) / (r * r * 4.)) * uSeen;
-  float trail = 0.;
-  for (int i = 0; i < 8; i++) {
-    vec3 tp = uTrail[i];
-    if (tp.z > 3.) continue;
-    float dt = length(home - tp.xy * vec2(R.x / R.y, 1.) * .5);
-    trail = max(trail, exp(-dt * dt / (r * r)) * exp(-tp.z * 1.6));
+  float cw = 1. / sDots;
+  vec3 col = vec3(0);
+  for (int i = 0; i < 16; i++) {
+    if (float(i) >= stLayers) break;
+    float z = mod(float(i) * stDepth / stLayers - uTravel * stFly * .5, stDepth) + .05;
+    vec2 g = (src - vp) * z / cw + float(i) * vec2(17.3, 9.1);
+    vec2 gid = floor(g);
+    if (h(gid + S + 11.) > 3. / max(stLayers, 3.)) continue;  // as many points in all, however many layers
+    vec2 jit = (vec2(h(gid + S), h(gid + S + 3.1)) - .5) * sJitter * .7;
+    vec2 off = (g - gid - .5 - jit) * cw / z;                   // from the point to here, on screen
+    vec2 home = src - off;
+    float cs = cw / z;                                          // the layer's cell on screen
+    float k;
+    float val = smoothstep(3., -3., logo(toLogo(home, .72, 2.6, k)));
+    float lit = exp(-dot(home - mp, home - mp) / (r * r * 4.)) * uSeen;
+    float trail = 0.;
+    for (int j = 0; j < 8; j++) {
+      vec3 tp = uTrail[j];
+      if (tp.z > 3.) continue;
+      float dt = length(home - tp.xy * vec2(R.x / R.y, 1.) * .5);
+      trail = max(trail, exp(-dt * dt / (r * r)) * exp(-tp.z * 1.6));
+    }
+    val = max(val, trail * sTrail * .9);
+    float tw = mix(1., .45 + .55 * sin(T * 3. + h(gid) * 30.), sTwinkle);
+    float wave = 1. + sWave * .45 * sin(length(home) * 9. - T * 1.5);
+    float rad = min(cs, cw * 2.5) * .5 * mix(sBgSize, sSize, val) * wave * (1. + sTrail * trail * .4);
+    vec2 dir = normalize(home - vp + vec2(1e-5));
+    float along = dot(off, dir), across = dot(off, vec2(-dir.y, dir.x));
+    float dd = length(vec2(along / (1. + stretch * min(cs / cw, 3.)), across));
+    float fade = smoothstep(stDepth, stDepth * .6, z) * smoothstep(.1, .5, z);
+    float dotv = smoothstep(rad, rad * .55, dd) * mix(sBg, 1., val) * tw * (1. + sLight * lit * 2.);
+    float halo = exp(-dd / rad * .9) * .2 * val * tw;
+    // One colour for the wordmark and the background, and how saturated it is (0: grey to white)
+    vec3 c = pal(sHue - .1 + .1 * h(gid + 7.));
+    c = clamp(mix(vec3(dot(c, vec3(.299, .587, .114))), c, sSat), 0., 1.);
+    col += c * (dotv + halo) * fade;
   }
-  val = max(val, trail * sTrail * .9);
-  float tw = mix(1., .45 + .55 * sin(T * 3. + h(gid) * 30.), sTwinkle);
-  float wave = 1. + sWave * .45 * sin(length(home) * 9. - T * 1.5);
-  float rad = cell * .5 * mix(sBgSize, sSize, val) * wave * (1. + sTrail * trail * .4);
-  float dotv = smoothstep(rad, rad * .55, dd) * mix(sBg, 1., val) * tw * (1. + sLight * lit * 2.);
-  float halo = exp(-dd / cell * 4.) * .35 * val * tw;
-  // One colour for the wordmark and the background, and how saturated it is (0: grey to white)
-  vec3 c = pal(sHue - .1 + .1 * h(gid + 7.));
-  c = clamp(mix(vec3(dot(c, vec3(.299, .587, .114))), c, sSat), 0., 1.);
-  vec3 sc = clamp(mix(vec3(dot(pal(sHue), vec3(.299, .587, .114))), pal(sHue), sSat), 0., 1.);
-  return c * (dotv + halo) + sc * stars(sp);
+  return col;
 }
 
 // ── Табло: an LED board — the wordmark lit on a grid of diodes, a wave running over it, ripples from the pointer,
@@ -274,7 +264,7 @@ void main() {
   float a = R.x / R.y;
   vec2 sp = (gl_FragCoord.xy - R * .5) / R.y;              // centred, y up, 1 = canvas height
   vec3 col;
-  if (V == 6) col = dots(sp, false);
+  if (V == 6) col = dots(sp);
   else if (V == 7) col = board(sp);
   else if (V == 8) col = eclipse(sp);
   else col = tunnel(sp);
@@ -324,11 +314,8 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     { id: 'uBank', label: 'Крен', min: 0, max: 2, step: 0.01, def: 1, only: [2] },
     { id: 'gas', label: 'Газ', min: 0, max: 3, step: 0.01, def: 1, only: [2, 6] },
     { id: 'stFly', label: 'Полёт', min: 0, max: 3, step: 0.01, def: 1, only: [6] },
-    { id: 'stStars', label: 'Звёзды', min: 0, max: 1, step: 0.01, def: 0.15, only: [6] },
-    { id: 'stBright', label: 'Яркость звёзд', min: 0, max: 2, step: 0.01, def: 1, only: [6] },
-    { id: 'stSize', label: 'Размер звёзд', min: 0.2, max: 3, step: 0.01, def: 1, only: [6] },
-    { id: 'stLayers', label: 'Слои звёзд', min: 2, max: 32, step: 1, def: 12, only: [6] },
-    { id: 'stDepth', label: 'Глубина', min: 1, max: 12, step: 0.1, def: 6, only: [6] },
+    { id: 'stLayers', label: 'Слои', min: 1, max: 16, step: 1, def: 6, only: [6] },
+    { id: 'stDepth', label: 'Глубина', min: 1, max: 12, step: 0.1, def: 4, only: [6] },
     { id: 'stStreak', label: 'Шлейф', min: 0, max: 2, step: 0.01, def: 0.5, only: [6] },
     { id: 'stSteer', label: 'Руль мышью', min: 0, max: 2, step: 0.01, def: 1, only: [6] },
     { id: 'layersK', label: 'Слои мышью', min: 0, max: 2, step: 0.01, def: 1, only: [2] },
