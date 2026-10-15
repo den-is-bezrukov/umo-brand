@@ -186,32 +186,6 @@ uniform float sDots, sSize, sBgSize, sBg, sJitter, sTwinkle, sWave, sHue, sSat, 
 uniform float sLight, sTrail;
 uniform float uSeen;    // 0 until the pointer first moves over the page
 uniform vec3 uTrail[8]; // where the pointer has just been (-1..1) and how many seconds ago
-// Рой's flight: layers of stars rushing at you past the wordmark, as Тоннель's layers do, streaking with speed;
-// the pointer steers where they come from, pressing is Газ ──
-uniform float stStars, stLayers, stDepth, stStreak, stSize, stSteer, stFly, stBright;
-vec3 stars(vec2 sp) {
-  float acc = 0.;
-  vec2 vp = uMouse * vec2(R.x / R.y, 1.) * .5 * stSteer * .6;   // where they come from
-  float stretch = stStreak * (stFly + uBoost) * 4.;
-  for (int i = 0; i < 32; i++) {
-    if (float(i) >= stLayers) break;
-    float z = mod(float(i) * stDepth / stLayers - uTravel * stFly * .5, stDepth) + .05;
-    vec2 q = (sp - vp) * z / .9;                               // the layer's plane
-    vec2 g = q / .14 + float(i) * vec2(17.3, 9.1);
-    vec2 gid = floor(g);
-    if (h(gid + S * 1.7) > stStars) continue;
-    vec2 jit = vec2(h(gid + S), h(gid + S + 3.1)) * .8 + .1;
-    vec2 ds = (g - gid - jit) * .14 * .9 / z;                  // to the star, on screen
-    vec2 dir = normalize(sp - vp + vec2(1e-5));
-    float along = dot(ds, dir), across = dot(ds, vec2(-dir.y, dir.x));
-    float d = length(vec2(along / (1. + stretch * .9 / z), across));
-    float r = stSize * .0035 / z + .0012;
-    float fade = smoothstep(stDepth, stDepth * .55, z) * smoothstep(.05, .35, z);
-    acc += (smoothstep(r, r * .3, d) + exp(-d / r) * .25) * fade * min(1., .02 / r);
-  }
-  return vec3(acc * stBright);
-}
-
 vec3 dots(vec2 sp, bool halftone) {
   vec2 mp = uMouse * vec2(R.x / R.y, 1.) * .5;
   vec2 rel = sp - mp;
@@ -244,8 +218,7 @@ vec3 dots(vec2 sp, bool halftone) {
   // One colour for the wordmark and the background, and how saturated it is (0: grey to white)
   vec3 c = pal(sHue - .1 + .1 * h(gid + 7.));
   c = clamp(mix(vec3(dot(c, vec3(.299, .587, .114))), c, sSat), 0., 1.);
-  vec3 sc = clamp(mix(vec3(dot(pal(sHue), vec3(.299, .587, .114))), pal(sHue), sSat), 0., 1.);
-  return c * (dotv + halo) + sc * stars(sp);
+  return c * (dotv + halo);
 }
 
 // ── Табло: an LED board — the wordmark lit on a grid of diodes, a wave running over it, ripples from the pointer,
@@ -322,15 +295,7 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     // Тоннель's mouse: Крен rolls it, Газ speeds it up while pressed, Слои мышью: the pointer up adds layers and
     // down takes them away (up to twice and half as many at 1), Фонарь lights it round the pointer
     { id: 'uBank', label: 'Крен', min: 0, max: 2, step: 0.01, def: 1, only: [2] },
-    { id: 'gas', label: 'Газ', min: 0, max: 3, step: 0.01, def: 1, only: [2, 6] },
-    { id: 'stFly', label: 'Полёт', min: 0, max: 3, step: 0.01, def: 1, only: [6] },
-    { id: 'stStars', label: 'Звёзды', min: 0, max: 1, step: 0.01, def: 0.15, only: [6] },
-    { id: 'stBright', label: 'Яркость звёзд', min: 0, max: 2, step: 0.01, def: 1, only: [6] },
-    { id: 'stSize', label: 'Размер звёзд', min: 0.2, max: 3, step: 0.01, def: 1, only: [6] },
-    { id: 'stLayers', label: 'Слои звёзд', min: 2, max: 32, step: 1, def: 12, only: [6] },
-    { id: 'stDepth', label: 'Глубина', min: 1, max: 12, step: 0.1, def: 6, only: [6] },
-    { id: 'stStreak', label: 'Шлейф', min: 0, max: 2, step: 0.01, def: 0.5, only: [6] },
-    { id: 'stSteer', label: 'Руль мышью', min: 0, max: 2, step: 0.01, def: 1, only: [6] },
+    { id: 'gas', label: 'Газ', min: 0, max: 3, step: 0.01, def: 1, only: [2] },
     { id: 'layersK', label: 'Слои мышью', min: 0, max: 2, step: 0.01, def: 1, only: [2] },
     { id: 'sDots', label: 'Точки', min: 30, max: 250, step: 1, def: 110, only: [6], own: true },
     { id: 'sSize', label: 'Размер', min: 0.1, max: 1.2, step: 0.01, def: 0.75, only: [6], own: true },
