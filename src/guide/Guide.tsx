@@ -644,7 +644,7 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
 }
 
 /**
- * Below lg, from 480px, where they fit beside «Концепция»: the quick links stand in the bottom bar, spaced as its edges (16px, from md 24), in
+ * Below lg, from 480px, where they fit beside «Стандарты бренда»: the quick links stand in the bottom bar, spaced as its edges (16px, from md 24), in
  * place of their own line under the statement, which leaves the film more of the first screen. They're there for the
  * first screen only and fade out over the first 160px of scroll, as the sidebar's contents fade in from lg, so further
  * down the bar is the contents' alone again.
@@ -669,7 +669,7 @@ function BarLinks() {
   }, [])
   return (
     <nav ref={ref} aria-label="Быстрые ссылки" className="relative hidden shrink-0 gap-x-4 min-[480px]:flex md:gap-x-6">
-      <a href="#materials" className={LINK_HOVER}>Носители</a>
+      <a href="#positioning" className={LINK_HOVER}>Концепция</a>
       <Link to="/materials" className={LINK_HOVER}>Печатные материалы</Link>
     </nav>
   )
@@ -1388,8 +1388,8 @@ export default function Guide() {
     if (top > 1) window.scrollTo({ top: window.scrollY + top, behavior: 'smooth' })
   }
   // Two headings rarely share a line on a phone; when they do (Видение / Миссия), the first one names the place. On
-  // the first screen (the film and the statement, before any section) the bar names the first chapter,
-  // Концепция, as the sidebar's first line does there
+  // the first screen (the film and the statement, before any section) the bar says «Стандарты бренда», as the
+  // desktop row does (naming Концепция, it repeated the quick link beside it)
   const sectionTitle = active.length && active[0] !== 'brand' ? TITLES[active[0]] : undefined
 
   // The open mobile contents: opened at the chapter you're reading, the page behind kept still, Esc closing it.
@@ -1494,11 +1494,11 @@ export default function Guide() {
               type="button"
               onClick={() => setMenuOpen(!menuOpen)}
               aria-expanded={menuOpen}
-              aria-label={menuOpen ? 'Свернуть' : `Содержание: ${sectionTitle ?? TITLES.brand}`}
+              aria-label={menuOpen ? 'Свернуть' : sectionTitle ? `Содержание: ${sectionTitle}` : 'Стандарты бренда'}
               className="flex min-w-0 cursor-pointer items-start gap-2 text-left before:absolute before:inset-0 before:content-['']"
             >
               <TocIcon name={menuOpen ? 'close' : 'menu'} />
-              <span className="min-w-0 truncate">{menuOpen ? 'Свернуть' : sectionTitle ?? TITLES.brand}</span>
+              <span className="min-w-0 truncate">{menuOpen ? 'Свернуть' : sectionTitle ?? 'Стандарты бренда'}</span>
             </button>
             {!menuOpen && <BarLinks />}
           </div>
@@ -1519,9 +1519,10 @@ export default function Guide() {
                 <p id="brand" className="scroll-mt-24 text-[32px] font-medium leading-none tracking-[-0.01em] md:text-[48px] lg:mt-[calc(8px-0.164em+var(--umo-y-overhang,0px))] lg:max-w-[912px] lg:scroll-mt-[calc(24px-0.164em)] lg:text-[min(60px,6.58cqw)]">
                   Автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
                 </p>
-                {/* Quick links: to Носители, named as the chapter, and to Печатные материалы, every constructor on one screen. They were «Платформа» and «Материалы для дилеров» */}
+                {/* Quick links: into Концепция from its first section (the generators' crumb leads to Носители), and to Печатные материалы,
+                    every constructor on one screen. They were «Платформа» and «Материалы для дилеров» */}
                 <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex max-lg:min-[480px]:hidden flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
-                  <a href="#materials" className={LINK_HOVER}>Носители</a>
+                  <a href="#positioning" className={LINK_HOVER}>Концепция</a>
                   <Link to="/materials" className={LINK_HOVER}>Печатные материалы</Link>
                 </nav>
               </div>
