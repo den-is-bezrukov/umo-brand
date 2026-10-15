@@ -122,8 +122,8 @@ const NAV: NavItem[] = [
     ],
   },
   {
-    id: 'message',
-    title: 'Посыл',
+    id: 'communication',
+    title: 'Коммуникация',
     children: [
       { id: 'name', title: 'Имя' },
       { id: 'descriptors', title: 'Дескрипторы' },
@@ -169,7 +169,7 @@ const NAV: NavItem[] = [
 
 /** Chapter anchors that were renamed after the guide went out, mapped to their current ids. */
 const OLD_ANCHORS: Record<string, string> = {
-  voice: 'tone', dealer: 'spaces', retail: 'spaces', print: 'materials', fonts: 'typography', about: 'brand', intro: 'top',
+  voice: 'tone', message: 'communication', dealer: 'spaces', retail: 'spaces', print: 'materials', fonts: 'typography', about: 'brand', intro: 'top',
 }
 
 const flatItems = (items: NavItem[]): NavItem[] => items.flatMap(i => [i, ...flatItems(i.children ?? [])])
@@ -1301,7 +1301,7 @@ const UMO8_SUBTITLE = <>Гибридный кроссовер<br />с Алисо
 
 type Rule = { good: ReactNode; bad: ReactNode; why: string }
 
-/** Посыл → Имя: how the name is written, in the dictionary's three columns */
+/** Коммуникация → Имя: how the name is written, in the dictionary's three columns */
 const NAME_RULES: Rule[] = [
   { good: 'UMO', bad: 'УМО, Umo, U.M.O.', why: 'Имя пишем только латиницей и прописными, без точек' },
   { good: 'UMO 5, UMO 8', bad: 'UMO5, Umo 8, УМО 5', why: 'Имя модели — имя бренда и цифра через пробел' },
@@ -1321,7 +1321,7 @@ const DICTIONARY: Rule[] = [
 ]
 
 /**
- * Посыл → Примеры (Figma 5030:11343): the voice as it reads in the brand's own messages — chat-like grey bubbles
+ * Коммуникация → Примеры (Figma 5030:11343): the voice as it reads in the brand's own messages — chat-like grey bubbles
  * (round but the top-left corner), photos with a line over them. Three columns from `md`, each a stack; in the
  * middle and right ones the photo takes what's left, so the columns end level. On phones they stack in one column,
  * the photos 3:4.
@@ -1604,7 +1604,7 @@ export default function Guide() {
       {/* 16px on top from lg: the statement's capitals then stand level with the top of the logo beside it. */}
       <main className="min-w-0 flex-1 p-4 pb-[calc(52px+1rem)] md:p-6 md:pb-[calc(68px+1.5rem)] lg:pt-4 lg:pb-6">
         <div className="flex flex-col gap-section">
-          {/* The statement under the hero, the brand's descriptor (Посыл → Дескрипторы), standing as the cover's line,
+          {/* The statement under the hero, the brand's descriptor (Коммуникация → Дескрипторы), standing as the cover's line,
               then Платформа бренда with a title of its own as every chapter (the statement stood in for it). */}
           <div>
             <div className="flex flex-col">
@@ -1675,8 +1675,8 @@ export default function Guide() {
               </Section>
           </Chapter>
 
-          {/* ── Посыл ── */}
-          <Chapter id="message" title="Посыл">
+          {/* ── Коммуникация ── */}
+          <Chapter id="communication" title="Коммуникация">
             <Section>
               <Head>
                 <H2 id="name">Имя</H2>
