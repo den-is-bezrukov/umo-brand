@@ -36,9 +36,9 @@ const crumb = 'underline decoration-transparent decoration-[0.35px] underline-of
 
 /**
  * The top of a generator's form, the same on every screen (Figma 5098:5487, the phone's, carried over to wide screens):
- * the breadcrumbs in Medium, 16 px tall, «Бренд UMO · Редактор материалов ⌄»; the generators' line under them
- * (`GeneratorRing`). «Редактор материалов», the app itself, opens every generator, as GitHub's and Vercel's crumbs switch
- * theirs: the chevron turns ⌃ and nothing else in the row moves, and the line and everything after it in the form give
+ * the breadcrumbs in Medium, 16 px tall, «Бренд UMO · Редактор материалов»; the generators' line under them
+ * (`GeneratorRing`). «Редактор материалов», the app itself, opens every generator in place, nothing in the row moving
+ * (a chevron after it was tried, and only cluttered the row), and the line and everything after it in the form give
  * way to every generator, 24 px Medium 16 px apart, the current one black (Figma 5103:6083). The crumb again, the current
  * name or Esc fold it. Not a menu icon by the crumbs: the generators are an app of their own, where a burger promised the
  * whole app's menu and opened only the generators' list
@@ -59,7 +59,8 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
     <div data-head className="flex flex-col gap-4">
       <PhoneCrumbs open={menu} onEditor={toggle} />
       {menu ? (
-        <nav aria-label="Конструкторы" className="flex flex-col items-start gap-4">
+        // 20 px under the crumbs, as the line's names stand (its 4 px over them), so the first name doesn't jump up
+        <nav aria-label="Конструкторы" className="mt-1 flex flex-col items-start gap-4">
           {GENERATORS.map(g => g.path === current
             ? <button key={g.path} type="button" aria-current="page" onClick={() => setMenu(false)} className={`${name} cursor-pointer text-left`}>{g.title}</button>
             : <Link key={g.path} to={g.path} className={`${name} text-[#bfbfbf] hover:text-[#808080] active:text-[#808080]`}>{g.title}</Link>)}
@@ -71,15 +72,12 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
   )
 }
 
-/** The crumb's chevron as Figma draws it (5186:1406): 5 wide and 2.5 tall, a 1.5 px stroke, in an 8 by 16 box on the crumbs' line */
-const CRUMB_CHEVRON = { down: 'M1.5 7L4 9.5L6.5 7', up: 'M1.5 9.5L4 7L6.5 9.5' }
-
 /** The breadcrumbs' type: Medium (Regular in Figma 5110:9105), on 16 px lines, with no tracking, as the form's labels */
 const CRUMBS = "text-[14px] font-medium leading-4 tracking-normal [font-feature-settings:'case'_1]"
 
 /**
  * The breadcrumbs, set apart from the form's tighter tracking so they don't shift when the list opens: the way back to
- * the guide (UMO's logo leads to umo.auto, so it isn't here) and Редактор материалов ⌄, the app itself, which shows
+ * the guide (UMO's logo leads to umo.auto, so it isn't here) and Редактор материалов, the app itself, which shows
  * every generator (Материалы, the guide's chapter, stood between them)
  */
 function PhoneCrumbs({ open, onEditor }: { open: boolean; onEditor: () => void }) {
@@ -87,10 +85,7 @@ function PhoneCrumbs({ open, onEditor }: { open: boolean; onEditor: () => void }
     <nav className={`flex min-w-0 flex-1 items-center gap-2 ${CRUMBS}`}>
       <Link to="/" className={crumb}>Бренд UMO</Link>
       <span aria-hidden>·</span>
-      <button type="button" onClick={onEditor} aria-expanded={open} aria-label="Редактор материалов: все конструкторы" className="group flex cursor-pointer items-center gap-2">
-        <span className={`${crumb} group-hover:decoration-black/40 group-hover:duration-0`}>Редактор материалов</span>
-        <svg width="8" height="16" viewBox="0 0 8 16" fill="none" aria-hidden><path d={open ? CRUMB_CHEVRON.up : CRUMB_CHEVRON.down} stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" strokeLinejoin="bevel" /></svg>
-      </button>
+      <button type="button" onClick={onEditor} aria-expanded={open} aria-label="Редактор материалов: все конструкторы" className={`${crumb} cursor-pointer`}>Редактор материалов</button>
     </nav>
   )
 }
