@@ -712,19 +712,25 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, list: RefO
         if (!el || !item || !chapter || !first) return
         const box = el.getBoundingClientRect()
         const at = (node: Element) => node.getBoundingClientRect().top - box.top + el.scrollTop
-        // A chapter's block right at the top edge: its title then sticks where the first chapter's stands, and the
-        // chapter before, its stuck title included, is gone whole (set 16px lower, as the first chapter, its title
-        // peeked over). The last chapters, which can't rise that far, leave the list at its end, moved down to where
-        // no chapter's start falls under the stuck title's 44px (where that title, pushed up, showed only its feet)
-        const target = Math.round(at(chapter))
-        const max = el.scrollHeight - el.clientHeight
-        let top = Math.min(target, max)
-        if (target > max) {
-          const cut = Array.from(first.parentElement!.children, block => Math.round(at(block))).find(b => b > top && b < top + 44)
-          if (cut !== undefined) top = cut - 44
+        // Where the list may stand: with a chapter's title stuck at the top just where it stands anyway (its block 8px
+        // above the edge, as the title sticks 8px down), or with an item whole right under a stuck title (44px down).
+        // Anything else cut a row under the title in half, or left the stuck title of the chapter before peeking. The
+        // list opens at the chapter you're reading; the last chapters, which can't rise that far, at the nearest of
+        // these places above the list's end (it ends with 44px of room for that), and an item centred, when its
+        // chapter runs past the sheet, at the nearest above that
+        const stops: number[] = []
+        for (const block of Array.from(first.parentElement!.children)) {
+          stops.push(at(block) - 8)
+          block.querySelectorAll('a').forEach((link, i) => { if (i) stops.push(at(link) - 44) })
         }
-        el.scrollTop = top
-        if (item.getBoundingClientRect().bottom > box.bottom) item.scrollIntoView({ block: 'center' })
+        const below = (top: number) => Math.max(0, Math.round(Math.max(...stops.filter(s => s <= top + 0.5))))
+        const target = Math.max(0, Math.round(at(chapter) - 8))
+        const max = el.scrollHeight - el.clientHeight
+        el.scrollTop = target <= max ? target : below(max)
+        if (item.getBoundingClientRect().bottom > box.bottom) {
+          item.scrollIntoView({ block: 'center' })
+          el.scrollTop = below(el.scrollTop)
+        }
       },
     }
   })
