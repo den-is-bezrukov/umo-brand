@@ -644,7 +644,7 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
 }
 
 /**
- * Below lg, from 480px, where it fits beside «Концепция бренда»: the quick link to Печатные материалы stands in the bottom bar, spaced as its edges (16px, from md 24), in
+ * Below lg, from 480px, where they fit beside «Концепция бренда»: the quick links to Материалы and Редактор stand in the bottom bar, spaced as its edges (16px, from md 24), in
  * place of their own line under the statement, which leaves the film more of the first screen. They're there for the
  * first screen only and fade out over the first 160px of scroll, as the sidebar's contents fade in from lg, so further
  * down the bar is the contents' alone again.
@@ -669,7 +669,8 @@ function BarLinks() {
   }, [])
   return (
     <nav ref={ref} aria-label="Быстрые ссылки" className="relative hidden shrink-0 gap-x-4 min-[480px]:flex md:gap-x-6">
-      <Link to="/materials" className={LINK_HOVER}>Печатные материалы</Link>
+      <a href="#materials" className={LINK_HOVER}>Материалы</a>
+      <Link to="/editor" className={LINK_HOVER}>Редактор</Link>
     </nav>
   )
 }
@@ -1185,12 +1186,12 @@ function Zoom({ label, children }: { label: string; children: ReactNode }) {
 }
 
 /**
- * Печатные материалы (`/materials`, the guide's quick link): every constructor in a window centred over the guide,
+ * Редактор (`/editor`, the guide's quick link): every constructor in a window centred over the guide,
  * dimmed at 40% as under the phone's contents sheet, its corners 16px round as that sheet's. The names as the
  * generators' menu sets them, 24px Medium 20px apart, in its alphabetical order. A tap on the dim, the cross or Esc
  * closes it: back where you came from, or to the guide itself when the window was opened by its link.
  */
-function MaterialsDialog() {
+function EditorDialog() {
   const navigate = useNavigate()
   const close = () => ((window.history.state as { idx?: number } | null)?.idx ? navigate(-1) : navigate('/', { replace: true }))
   const ref = useRef<HTMLDivElement>(null)
@@ -1209,13 +1210,13 @@ function MaterialsDialog() {
         ref={ref}
         role="dialog"
         aria-modal
-        aria-labelledby="materials-title"
+        aria-labelledby="editor-title"
         tabIndex={-1}
         onClick={e => e.stopPropagation()}
         className="flex w-full max-w-[360px] flex-col gap-6 rounded-2xl bg-white p-6 text-black outline-none"
       >
         <div className="flex items-start justify-between gap-4">
-          <h2 id="materials-title" className="text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">Печатные материалы</h2>
+          <h2 id="editor-title" className="text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">Редактор</h2>
           <button type="button" aria-label="Закрыть" onClick={close} className={`relative flex h-5 shrink-0 cursor-pointer items-center ${NAV_HOVER} after:absolute after:-inset-[10px] after:content-['']`}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d="M2 2L14 14M14 2L2 14" stroke="currentColor" strokeWidth="2" strokeLinecap="square" /></svg>
           </button>
@@ -1365,7 +1366,7 @@ function Dictionary({ rows }: { rows: Rule[] }) {
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function Guide() {
-  const materials = useLocation().pathname === '/materials'
+  const editor = useLocation().pathname === '/editor'
   const active = useActiveSection()
   const pageRef = useRef<HTMLDivElement>(null)
   useTypograf(pageRef)
@@ -1435,7 +1436,7 @@ export default function Guide() {
 
   return (
     <div ref={pageRef} id="top" className="min-h-screen bg-white font-sans text-black">
-      {materials && <MaterialsDialog />}
+      {editor && <EditorDialog />}
       {/* The hero is the top of the page: the logo leads here, and it isn't in the contents. On a phone it's the first
           picture, above the header, and covers the header's upward white (z-30). From lg it's fixed behind the page,
           which starts a strip above the bottom of the screen (`--strip`, see useHeroStrip; 252px for a three-line
@@ -1518,12 +1519,13 @@ export default function Guide() {
                 <p id="brand" className="scroll-mt-24 text-[32px] font-medium leading-none tracking-[-0.01em] md:text-[48px] lg:mt-[calc(8px-0.164em+var(--umo-y-overhang,0px))] lg:max-w-[912px] lg:scroll-mt-[calc(24px-0.164em)] lg:text-[min(60px,6.58cqw)]">
                   Автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
                 </p>
-                {/* Quick links: into Концепция from its first section (the generators' crumb leads to Материалы), and to Печатные материалы,
-                    every constructor on one screen. They were «Платформа» and «Материалы для дилеров» */}
+                {/* Quick links: read (Концепция, from its first section), see (Материалы), make (Редактор, the constructors'
+                    window). They were Платформа and Материалы для дилеров, then Носители and Печатные материалы */}
                 <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex max-lg:min-[480px]:hidden flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
                   {/* Below lg the bar names Концепция бренда on the first screen already */}
-                  <a href="#positioning" className={`max-lg:hidden ${LINK_HOVER}`}>Концепция бренда</a>
-                  <Link to="/materials" className={LINK_HOVER}>Печатные материалы</Link>
+                  <a href="#positioning" className={`max-lg:hidden ${LINK_HOVER}`}>Концепция</a>
+                  <a href="#materials" className={LINK_HOVER}>Материалы</a>
+                  <Link to="/editor" className={LINK_HOVER}>Редактор</Link>
                 </nav>
               </div>
               <Section>

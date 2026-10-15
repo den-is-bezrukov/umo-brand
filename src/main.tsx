@@ -55,7 +55,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/name-tag" element={<NameTag />} />
           <Route path="/business-card" element={<LinkDealer param="dealer"><BusinessCard /></LinkDealer>} />
           <Route path="/price-tag" element={<LinkDealer param="dealer"><PriceTag /></LinkDealer>} />
-          <Route path="/materials" element={<Guide />} />
+          <Route path="/editor" element={<Guide />} />
           <Route path="/hours-sign" element={<LinkDealer param="name"><HoursSign /></LinkDealer>} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
