@@ -25,7 +25,7 @@ const img = (name: string) => images[`../assets/guide/${name}.svg`] ?? images[`.
 type NavItem = { id: string; title: string; children?: NavItem[] }
 
 /**
- * The media of Носители (Figma 4844:6695, the order since rearranged on the site). A wide picture (2:1 and wider) takes a whole row of
+ * The media of Материалы (Figma 4844:6695, the order since rearranged on the site). A wide picture (2:1 and wider) takes a whole row of
  * the overview grid, narrow ones pair up, and a narrow one moves up next to an unpaired one before it (what CSS
  * `grid-auto-flow: dense` would do). `MEDIA` is that packed order, so the grid and the sidebar's sub-items list the
  * media as they actually stand.
@@ -163,7 +163,7 @@ const NAV: NavItem[] = [
     ],
   },
   { id: 'spaces', title: 'Пространства' },
-  { id: 'materials', title: 'Носители', children: MEDIA.map(({ id, title }) => ({ id, title })) },
+  { id: 'materials', title: 'Материалы', children: MEDIA.map(({ id, title }) => ({ id, title })) },
   { id: 'contact', title: 'Контакты' },
 ]
 
@@ -1066,7 +1066,7 @@ function fileSize(bytes: number): [number, string] {
  * split into two, filled top to bottom so files of one item stay together. Sizes get one decimal in every
  * row as soon as one of them is under 10 (0,7 КБ), and none otherwise.
  */
-/** `early`: two columns from 560 px, rather than from `sm` (Леттеринг → Модели, whose pictures pair up from 520; narrower «umo-model-8-png.zip» wraps); `bare`: no hairline (Носители, the row right under its picture) */
+/** `early`: two columns from 560 px, rather than from `sm` (Леттеринг → Модели, whose pictures pair up from 520; narrower «umo-model-8-png.zip» wraps); `bare`: no hairline (Материалы, the row right under its picture) */
 function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: string; early?: boolean; bare?: boolean }) {
   const pointed = useContext(PointedPreview)?.[0]
   const sizes = items.flatMap(a => ('file' in a ? [fileSize(downloadSizes[a.file] ?? 0)] : []))
@@ -1146,7 +1146,7 @@ function Constructor({ to, title, flush, children }: { to: string; title: string
   )
 }
 
-/** The Носители overview (Figma 4844:6695): each medium's picture right over its ↗ row to the constructor, carrying its anchor; in `MEDIA` order. */
+/** The Материалы overview (Figma 4844:6695): each medium's picture right over its ↗ row to the constructor, carrying its anchor; in `MEDIA` order. */
 function Carriers({ items }: { items: typeof MEDIA }) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
@@ -1518,7 +1518,7 @@ export default function Guide() {
                 <p id="brand" className="scroll-mt-24 text-[32px] font-medium leading-none tracking-[-0.01em] md:text-[48px] lg:mt-[calc(8px-0.164em+var(--umo-y-overhang,0px))] lg:max-w-[912px] lg:scroll-mt-[calc(24px-0.164em)] lg:text-[min(60px,6.58cqw)]">
                   Автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
                 </p>
-                {/* Quick links: into Концепция from its first section (the generators' crumb leads to Носители), and to Печатные материалы,
+                {/* Quick links: into Концепция from its first section (the generators' crumb leads to Материалы), and to Печатные материалы,
                     every constructor on one screen. They were «Платформа» and «Материалы для дилеров» */}
                 <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex max-lg:min-[480px]:hidden flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
                   {/* Below lg the bar names Концепция бренда on the first screen already */}
@@ -1938,15 +1938,15 @@ export default function Guide() {
             */}
           </Chapter>
 
-          {/* ── Носители ── */}
-          <Chapter id="materials" title="Носители">
+          {/* ── Материалы ── (they were Носители) */}
+          <Chapter id="materials" title="Материалы">
             <Section>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
                 <Text>
                   <p>Готовый дизайн, который встречает клиента у дилера UMO: <Link to="/livery" className={TEXT_LINK}>ливрея демо-автомобиля</Link>, <Link to="/business-card" className={TEXT_LINK}>визитка</Link>, <Link to="/name-tag" className={TEXT_LINK}>бейдж сотрудника</Link>, <Link to="/price-card" className={TEXT_LINK}>прайс-карта</Link>, <Link to="/plate-frame" className={TEXT_LINK}>рамка номера</Link>, <Link to="/price-tag" className={TEXT_LINK}>ценник</Link> и <Link to="/hours-sign" className={TEXT_LINK}>режимник</Link>.</p>
                 </Text>
                 <Text>
-                  <p>Каждый собирается в редакторе: введите свои данные и получите файлы, готовые к печати или производству.</p>
+                  <p>Каждый материал собирается в редакторе: введите свои данные и получите файлы, готовые к печати или производству.</p>
                 </Text>
               </div>
               <Carriers items={MEDIA} />
