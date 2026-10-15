@@ -77,34 +77,6 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
   )
 }
 
-/**
- * Печатные материалы (`/materials`): the generators' menu standing open on a page of its own, where the guide's link
- * leads — the same crumbs and the same list, none of it current. «Свернуть» goes back where you came from, or to
- * Носители in the guide when the page was opened by its link.
- */
-export function GeneratorMenu() {
-  const navigate = useNavigate()
-  // React Router counts the entries it made: above 0 there's a page of this site to go back to
-  const close = () => ((window.history.state as { idx?: number } | null)?.idx ? navigate(-1) : navigate('/#materials'))
-  useEffect(() => {
-    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
-    document.addEventListener('keydown', key)
-    return () => document.removeEventListener('keydown', key)
-  })
-  const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <IconButton label="Свернуть" onClick={close} d={tocIcons.close} />
-        <PhoneCrumbs />
-      </div>
-      <nav aria-label="Конструкторы" className="mt-1 flex flex-col items-start gap-5">
-        {GENERATORS.map(g => <Link key={g.path} to={g.path} className={`${name} hover:text-[#808080] active:text-[#808080]`}>{g.title}</Link>)}
-      </nav>
-    </div>
-  )
-}
-
 /** The breadcrumbs: Medium (Regular in Figma 5110:9105), on 16 px lines, with no tracking, as the form's labels, set here
  * so they don't shift between the form (which tracks its type tighter) and the menu over it; 12 px after the icon (8 + 4: at 8 they stuck to it) */
 function PhoneCrumbs() {

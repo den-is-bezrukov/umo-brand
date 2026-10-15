@@ -1,5 +1,5 @@
 import { createContext, isValidElement, useContext, useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode, type RefObject } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import PriceCard from '@/posters/PriceCard'
 import type { Variant } from '@/posters/cardData'
 import UmoLogo from './UmoLogo'
@@ -1189,6 +1189,50 @@ function Zoom({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
+/**
+ * Печатные материалы (`/materials`, the guide's quick link): every constructor in a window centred over the guide,
+ * dimmed at 40% as under the phone's contents sheet, its corners 16px round as that sheet's. The names as the
+ * generators' menu sets them, 24px Medium 20px apart, in its alphabetical order. A tap on the dim, the cross or Esc
+ * closes it: back where you came from, or to the guide itself when the window was opened by its link.
+ */
+function MaterialsDialog() {
+  const navigate = useNavigate()
+  const close = () => ((window.history.state as { idx?: number } | null)?.idx ? navigate(-1) : navigate('/', { replace: true }))
+  const ref = useRef<HTMLDivElement>(null)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
+    const overflow = document.documentElement.style.overflow
+    document.documentElement.style.overflow = 'hidden'
+    ref.current?.focus()
+    window.addEventListener('keydown', onKey)
+    return () => { window.removeEventListener('keydown', onKey); document.documentElement.style.overflow = overflow }
+  })
+  const items = [...MEDIA_LIST].sort((a, b) => a.title.localeCompare(b.title, 'ru'))
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={close}>
+      <div
+        ref={ref}
+        role="dialog"
+        aria-modal
+        aria-labelledby="materials-title"
+        tabIndex={-1}
+        onClick={e => e.stopPropagation()}
+        className="flex w-full max-w-[360px] flex-col gap-6 rounded-2xl bg-white p-6 text-black outline-none"
+      >
+        <div className="flex items-start justify-between gap-4">
+          <h2 id="materials-title" className="text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">Печатные материалы</h2>
+          <button type="button" aria-label="Закрыть" onClick={close} className={`relative flex h-5 shrink-0 cursor-pointer items-center ${NAV_HOVER} after:absolute after:-inset-[10px] after:content-['']`}>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d="M2 2L14 14M14 2L2 14" stroke="currentColor" strokeWidth="2" strokeLinecap="square" /></svg>
+          </button>
+        </div>
+        <nav aria-label="Конструкторы" className="flex flex-col items-start gap-5">
+          {items.map(m => <Link key={m.to} to={m.to} className={`text-[24px] font-medium leading-6 tracking-[-0.01em] ${NAV_HOVER}`}>{m.title}</Link>)}
+        </nav>
+      </div>
+    </div>
+  )
+}
+
 /** A heading + text group. Sections are separated by 144px; a Chapter adds 72px on top of its first one. */
 function Section({ children }: { children: ReactNode }) {
   return <section className="flex flex-col gap-8 md:gap-12">{children}</section>
@@ -1326,6 +1370,7 @@ function Dictionary({ rows }: { rows: Rule[] }) {
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function Guide() {
+  const materials = useLocation().pathname === '/materials'
   const active = useActiveSection()
   const pageRef = useRef<HTMLDivElement>(null)
   useTypograf(pageRef)
@@ -1393,6 +1438,7 @@ export default function Guide() {
 
   return (
     <div ref={pageRef} id="top" className="min-h-screen bg-white font-sans text-black">
+      {materials && <MaterialsDialog />}
       {/* The hero is the top of the page: the logo leads here, and it isn't in the contents. On a phone it's the first
           picture, above the header, and covers the header's upward white (z-30). From lg it's fixed behind the page,
           which starts a strip above the bottom of the screen (`--strip`, see useHeroStrip; 252px for a three-line
