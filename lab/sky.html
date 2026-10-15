@@ -44,6 +44,13 @@
     <!-- <button data-v="7">Табло</button> -->
     <!-- <button data-v="8">Затмение</button> -->
   </div>
+  <div class="tabs" id="motion" data-only="6">
+    Движение:
+    <button data-motion="0">Нет</button>
+    <button data-motion="1">Нырок в O</button>
+    <button data-motion="2">Логотипы</button>
+    <button data-motion="3">Сетка</button>
+  </div>
   <div id="sliders" class="sliders"></div>
   <button id="reset">Сбросить</button>
 </div>
@@ -186,47 +193,98 @@ uniform float uWaveT;  // the wave's own clock, so changing its speed doesn't ma
 uniform float uSeen;    // 0 until the pointer first moves over the page
 uniform vec3 uTrail[32]; // where the pointer has just been (-1..1) and how many seconds ago, newest first
 uniform vec2 uPointer;   // the pointer as it is, not eased (-1..1)
+// Движение (sMotion): 0 none; 1 Нырок в O — an endless dive into the O, where the next UMO sits (Droste); 2
+// Логотипы — outlines of the wordmark growing out of the centre one after another, as Тоннель's; 3 Сетка — the
+// points' grid zooms in, a finer one fading in between, the wordmark standing still. The points stay put in 1 and
+// 2: only the shape they draw moves. uZoomT is the zoom's own clock
+uniform float sMotion, sOutline;
+uniform float uZoomT;
+float shapeAt(vec2 home) {
+  float k;
+  vec2 x = toLogo(home, .72, 2.6, k);
+  float px = 3.;
+  if (sMotion > .5 && sMotion < 1.5) {
+    // The copy n+1 is copy n shrunk into its O: M(x) = hole + (x - centre) / K, zoomed round M's fixed point
+    const float K = 6.9;
+    vec2 C = vec2(240, 48), H = vec2(409.2, 48);
+    vec2 f = (H * K - C) / (K - 1.);
+    float z = pow(K, fract(uZoomT * .12));
+    vec2 y = f + (x - f) / z;
+    float d = 1e9, sc = z;
+    // Copy n's own coordinates are M⁻ⁿ(y); start one copy bigger (M(y)), round the screen, then go inwards
+    y = H + (y - C) / K;
+    sc *= K;
+    for (int n = -1; n < 4; n++) {
+      d = min(d, logo(y) * sc);
+      y = C + (y - H) * K;
+      sc /= K;
+    }
+    return smoothstep(px, -px, d);
+  }
+  if (sMotion > 1.5 && sMotion < 2.5) {
+    // Outlines growing from the centre, each 1.8 times the last
+    float v = 0.;
+    float ph = fract(uZoomT * .25);
+    for (int n = 0; n < 7; n++) {
+      float sc = pow(1.8, float(n) - 3. + ph);
+      vec2 y = (x - vec2(240, 48)) / sc + vec2(240, 48);
+      float d = abs(logo(y)) * sc;
+      float fade = smoothstep(0., 1., float(n) + ph) * smoothstep(7., 5.5, float(n) + ph);
+      v = max(v, smoothstep(sOutline * 6. + px, sOutline * 6. - px, d) * fade);
+    }
+    return v;
+  }
+  return smoothstep(px, -px, logo(x));
+}
 vec3 dots(vec2 sp, bool halftone) {
-  vec2 src = sp;
-  float cell = 1. / sDots;
-  vec2 gid = floor(src / cell);
-  vec2 c0 = (gid + .5) * cell;
-  // The pointer's light and trail, at the point's cell
+  vec3 col = vec3(0);
   float r = sRadius * .1;
   vec2 asp = vec2(R.x / R.y, 1.) * .5;
   vec2 pp = uPointer * asp;
-  float lit = exp(-dot(c0 - pp, c0 - pp) / (r * r * 4.)) * uSeen;
-  // The trail: the pointer's path as segments, so it stays whole however fast it moves
-  float trail = 0.;
-  for (int i = 0; i < 31; i++) {
-    vec3 a = uTrail[i], b = uTrail[i + 1];
-    if (b.z > 3.) break;
-    vec2 pa = a.xy * asp, pb = b.xy * asp;
-    vec2 ab = pb - pa;
-    float f = clamp(dot(c0 - pa, ab) / max(dot(ab, ab), 1e-8), 0., 1.);
-    float dt = length(c0 - pa - ab * f);
-    trail = max(trail, exp(-dt * dt / (r * r)) * exp(-mix(a.z, b.z, f) * 1.6));
+  // Сетка draws two grids, the coarse one growing out and fading as the fine one grows into its place
+  float ph = fract(uZoomT * .25);
+  int layers = sMotion > 2.5 ? 2 : 1;
+  for (int L = 0; L < 2; L++) {
+    if (L >= layers) break;
+    float zl = layers == 2 ? pow(2., ph - float(L)) : 1.;
+    float alpha = layers == 2 ? (L == 0 ? 1. - ph : ph) : 1.;
+    float cell = zl / sDots;
+    vec2 src = sp;
+    vec2 gid = floor(src / cell);
+    vec2 c0 = (gid + .5) * cell;
+    // The pointer's light and trail, at the point's cell
+    float lit = exp(-dot(c0 - pp, c0 - pp) / (r * r * 4.)) * uSeen;
+    // The trail: the pointer's path as segments, so it stays whole however fast it moves
+    float trail = 0.;
+    for (int i = 0; i < 31; i++) {
+      vec3 a = uTrail[i], b = uTrail[i + 1];
+      if (b.z > 3.) break;
+      vec2 pa = a.xy * asp, pb = b.xy * asp;
+      vec2 ab = pb - pa;
+      float f = clamp(dot(c0 - pa, ab) / max(dot(ab, ab), 1e-8), 0., 1.);
+      float dt = length(c0 - pa - ab * f);
+      trail = max(trail, exp(-dt * dt / (r * r)) * exp(-mix(a.z, b.z, f) * 1.6));
+    }
+    // Хаос мыши: round the pointer and along its trail the points leave their places and shake
+    float stir = sMChaos * max(lit, trail);
+    vec2 shake = vec2(sin(T * 7. + h(gid + 1.) * 40.), cos(T * 6. + h(gid + 2.) * 40.)) * .5;
+    vec2 jit = (vec2(h(gid + S), h(gid + S + 3.1)) - .5) * sJitter * .7;
+    jit = clamp(jit + ((vec2(h(gid + S + 5.), h(gid + S + 9.)) - .5) * .8 + shake * .3) * stir, -.45, .45);
+    vec2 home = (gid + .5 + jit) * cell;
+    float dd = length(src - home);
+    float val = halftone ? eclipseV(home) : shapeAt(home);
+    val = max(val, trail * sTrail * .9);
+    float tw = mix(1., .45 + .55 * sin(T * 3. + h(gid) * 30.), sTwinkle);
+    float wave = 1. + sWave * .45 * sin(length(home) * 9. / sWaveW - uWaveT * 1.5);
+    float rad = cell * .5 * sSize * wave * (1. + sTrail * trail * .4);
+    float dotv = smoothstep(rad, rad * .55, dd) * mix(sBg, 1., val) * tw * (1. + sLight * lit * 2.);
+    float halo = exp(-dd / cell * 4.) * .35 * val * tw;
+    // One colour for the wordmark and the background, and how saturated it is (0: grey to white)
+    vec3 c = pal(sHue - .1 + .1 * h(gid + 7.));
+    c = clamp(mix(vec3(dot(c, vec3(.299, .587, .114))), c, sSat), 0., 1.);
+    col += c * (dotv + halo) * alpha;
   }
-  // Хаос мыши: round the pointer and along its trail the points leave their places and shake
-  float stir = sMChaos * max(lit, trail);
-  vec2 shake = vec2(sin(T * 7. + h(gid + 1.) * 40.), cos(T * 6. + h(gid + 2.) * 40.)) * .5;
-  vec2 jit = (vec2(h(gid + S), h(gid + S + 3.1)) - .5) * sJitter * .7;
-  jit = clamp(jit + ((vec2(h(gid + S + 5.), h(gid + S + 9.)) - .5) * .8 + shake * .3) * stir, -.45, .45);
-  vec2 home = (gid + .5 + jit) * cell;
-  float dd = length(src - home);
-  float val;
-  if (halftone) val = eclipseV(home);
-  else { float k; val = smoothstep(3., -3., logo(toLogo(home, .72, 2.6, k))); }
-  val = max(val, trail * sTrail * .9);
-  float tw = mix(1., .45 + .55 * sin(T * 3. + h(gid) * 30.), sTwinkle);
-  float wave = 1. + sWave * .45 * sin(length(home) * 9. / sWaveW - uWaveT * 1.5);
-  float rad = cell * .5 * sSize * wave * (1. + sTrail * trail * .4);
-  float dotv = smoothstep(rad, rad * .55, dd) * mix(sBg, 1., val) * tw * (1. + sLight * lit * 2.);
-  float halo = exp(-dd / cell * 4.) * .35 * val * tw;
-  // One colour for the wordmark and the background, and how saturated it is (0: grey to white)
-  vec3 c = pal(sHue - .1 + .1 * h(gid + 7.));
-  c = clamp(mix(vec3(dot(c, vec3(.299, .587, .114))), c, sSat), 0., 1.);
-  return c * (dotv + halo);
+  return col;
 }
 
 // ── Табло: an LED board — the wordmark lit on a grid of diodes, a wave running over it, ripples from the pointer,
@@ -305,6 +363,8 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     { id: 'uBank', label: 'Крен', min: 0, max: 2, step: 0.01, def: 1, only: [2] },
     { id: 'gas', label: 'Газ', min: 0, max: 3, step: 0.01, def: 1, only: [2] },
     { id: 'layersK', label: 'Слои мышью', min: 0, max: 2, step: 0.01, def: 1, only: [2] },
+    { id: 'sZoomV', label: 'Скорость зума', min: -2, max: 2, step: 0.01, def: 0.5, only: [6], own: true },
+    { id: 'sOutline', label: 'Толщина контура', min: 0.2, max: 3, step: 0.01, def: 1, only: [6], own: true },
     { id: 'sDots', label: 'Точки', min: 30, max: 250, step: 1, def: 110, only: [6], own: true },
     { id: 'sSize', label: 'Размер', min: 0.1, max: 1.2, step: 0.01, def: 0.75, only: [6], own: true },
     { id: 'sBg', label: 'Яркость фона', min: 0, max: 1, step: 0.01, def: 0.45, only: [6], own: true },
@@ -329,7 +389,7 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     { id: 'lScroll', label: 'Бегущая строка', min: 0, max: 3, step: 0.01, def: 0, only: [7] },
     { id: 'uLamp', label: 'Фонарь', min: 0, max: 2, step: 0.01, def: 0.5, only: [2] },
   ]
-  const names = ['R', 'T', 'S', 'V', 'uMouse', 'uTravel', 'uBoost', 'uWaveT', 'uSeen', 'uTrail', 'uPointer', ...CONTROLS.map((c) => c.id)]
+  const names = ['R', 'T', 'S', 'V', 'uMouse', 'uTravel', 'uBoost', 'uWaveT', 'uZoomT', 'sMotion', 'uSeen', 'uTrail', 'uPointer', ...CONTROLS.map((c) => c.id)]
   const u = Object.fromEntries(names.map((k) => [k, gl.getUniformLocation(prog, k)]))
 
   // Every variant as Denis last set it (2026-10-15); they override the sliders' own defaults
@@ -363,14 +423,17 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
   }
 
   const tabs = [...document.querySelectorAll('#tabs button')]
+  const motions = [...document.querySelectorAll('#motion button')]
   const sync = () => {
     tabs.forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.v === state.v)))
+    motions.forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.motion === (state.sMotion ?? 0))))
     document.querySelectorAll('[data-only]').forEach((el) => {
       el.hidden = !el.dataset.only.split(' ').map(Number).includes(state.v)
     })
     sliders.querySelectorAll('input').forEach((el) => { el.value = get(el.dataset.id); el.nextElementSibling.value = el.value })
   }
   tabs.forEach((b) => b.addEventListener('click', () => { state.v = +b.dataset.v; sync(); save() }))
+  motions.forEach((b) => b.addEventListener('click', () => { state.sMotion = +b.dataset.motion; sync(); save() }))
   // Сбросить: the variant's sliders back to its defaults (SET above, else the sliders' own)
   document.getElementById('reset').addEventListener('click', () => {
     for (const c of CONTROLS) {
@@ -389,7 +452,7 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
   // The pointer over the picture, -1..1 from its centre, y up; the shader gets it eased
   // Pressing on the picture is Газ
   const aim = [0, 0], mouse = [0, 0]
-  let waveT = 0
+  let waveT = 0, zoomT = 0
   let pressed = false, boost = 0, travel = 0, seen = 0
   // The pointer's last places, one every 25 ms, the newest kept on the pointer: Рой's След
   const trail = []
@@ -429,6 +492,9 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     t += dt * get('speed')
     waveT += dt * get('speed') * get('sWaveV')
     gl.uniform1f(u.uWaveT, waveT)
+    zoomT += dt * get('speed') * get('sZoomV')
+    gl.uniform1f(u.uZoomT, zoomT)
+    gl.uniform1f(u.sMotion, state.sMotion ?? 0)
     last = now
     for (const i of [0, 1]) mouse[i] += (aim[i] - mouse[i]) * 0.06
     gl.uniform1f(u.uSeen, seen)
