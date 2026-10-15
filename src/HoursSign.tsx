@@ -9,7 +9,7 @@ import { loadFont, toD } from '@/livery/geometry'
 import { maskPhone, siteFor } from '@/card/card'
 import { SIGN, SIGN_KEY, LOGO, buildSign, oneLine, timeText, type SignField, type Input } from '@/hours/sign'
 import { DEALER_NAMES, dealerFilter, withoutUmo, phoneOf } from '@/data/dealers'
-import { DEFAULT_HOURS_LINE, ADDRESSES, addressOf, hoursOf } from '@/data/hours'
+import { DEFAULT_HOURS_LINE, addressOf, hoursOf } from '@/data/hours'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 
 // The dealership's hours sign (Figma: UMO | Evrone, node 3819:4211): a 480×680 mm plate with the logo, the hours, a
@@ -330,8 +330,9 @@ export default function HoursSign() {
               <div data-field="dealer"><ComboField value={dealer} onChange={pickDealer} options={NAMES} filter={dealerFilter} placeholder={PLACEHOLDER.dealer} label="Дилеры UMO" singleLine invalid={wrong.has('dealer')} /></div>
             </Field>
             <Field label="Адрес">
-              {/* The dealer's own address first, then every dealer's, narrowed as it's typed */}
-              <div data-field="address"><ComboField value={address} onChange={setAddress} options={[...new Set([addressOf(dealer), ...ADDRESSES].filter((a): a is string => !!a))]} placeholder={PLACEHOLDER.address} label="Адреса дилеров" singleLine invalid={wrong.has('address')} /></div>
+              {/* A plain field, as the business card's: the dealer's address put in as it's picked, edited by hand (a list of
+                  every dealer's address let a picked dealer take another's) */}
+              <div data-field="address"><TextInput value={address} onChange={setAddress} placeholder={PLACEHOLDER.address} invalid={wrong.has('address')} /></div>
             </Field>
             <Field label="Телефон">
               {/* A live mask, as the business card's: set as the sign sets it while it's typed, the caret after the same digit */}

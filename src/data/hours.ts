@@ -9,9 +9,6 @@ export const HOURS_LINES = [DEFAULT_HOURS_LINE, 'Ежедневно', 'Без в
 /** The address umo.auto (or dealers-own.json) gives a dealer */
 export const addressOf = (name: string) => dealerOf(name)?.address
 
-/** Every dealer's address, for the address field's suggestions */
-export const ADDRESSES = [...new Set(DEALERS.map(d => d.address).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'ru'))
-
 /**
  * A dealer's hours as the sign sets them, «9:00», from umo.auto's «ежедневно, 09:00–21:00»; none for the few open
  * different hours on different days, as the sign has one range
