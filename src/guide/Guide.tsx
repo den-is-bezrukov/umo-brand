@@ -113,7 +113,7 @@ const MEDIA = packMedia(MEDIA_LIST)
 const NAV: NavItem[] = [
   {
     id: 'brand',
-    title: 'Платформа бренда',
+    title: 'Концепция',
     children: [
       { id: 'positioning', title: 'Позиционирование' },
       { id: 'vision', title: 'Видение' },
@@ -296,7 +296,7 @@ function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; o
 /** `stickyChapters` (the phone's sheet): a chapter's title stays at the top of the list while its items scroll by. */
 function Nav({ active, expandAll, onNavigate, stickyChapters }: { active: string[]; expandAll: boolean; onNavigate?: () => void; stickyChapters?: boolean }) {
   const activeChapter = NAV.find(c => active.some(id => contains(c, id)))?.id
-  // Above the first chapter (the first screen) Платформа бренда stands open and lit: from lg it's the first screen's
+  // Above the first chapter (the first screen) Концепция stands open and lit: from lg it's the first screen's
   // bottom line, leading the list up as the page rises
   const openChapter = activeChapter ?? NAV[0].id
   return (
@@ -388,7 +388,7 @@ const UMO_Y_GAP = COBRAND ? 8 : 0
 
 /**
  * While the page slides up over the hero, the sidebar rises with it. On the first screen its list stands lower, the
- * first chapter, Платформа бренда, on the bottom line beside the quick links, and as the page rises it leads the rest
+ * first chapter, Концепция, on the bottom line beside the quick links, and as the page rises it leads the rest
  * of the list up to its place under the logo. The logo, 200px wide on the first screen, shrinks with the scroll to its
  * usual 120 (24 high) by the time the page reaches the top. Until then the sidebar doesn't scroll on its own: the list
  * standing lower runs past its foot.
@@ -648,7 +648,7 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
 }
 
 /**
- * Below lg, from 480px, where they fit beside «Содержание»: the quick links stand in the bottom bar, spaced as its edges (16px, from md 24), in
+ * Below lg, from 480px, where they fit beside «Концепция»: the quick links stand in the bottom bar, spaced as its edges (16px, from md 24), in
  * place of their own line under the statement, which leaves the film more of the first screen. They're there for the
  * first screen only and fade out over the first 160px of scroll, as the sidebar's contents fade in from lg, so further
  * down the bar is the contents' alone again.
@@ -674,7 +674,7 @@ function BarLinks() {
   return (
     <nav ref={ref} aria-label="Быстрые ссылки" className="relative hidden shrink-0 gap-x-4 min-[480px]:flex md:gap-x-6">
       <a href="#materials" className={LINK_HOVER}>Носители</a>
-      {/* <a href="/print" className={LINK_HOVER}>Печатные материалы</a> — the constructors' page, to be made */}
+      <Link to="/materials" className={LINK_HOVER}>Печатные материалы</Link>
     </nav>
   )
 }
@@ -1345,8 +1345,8 @@ export default function Guide() {
     if (top > 1) window.scrollTo({ top: window.scrollY + top, behavior: 'smooth' })
   }
   // Two headings rarely share a line on a phone; when they do (Видение / Миссия), the first one names the place. On
-  // the first screen (the film and the statement, before any section) the bar says «Содержание»; it said «Платформа
-  // бренда» for the statement standing in for that chapter's title
+  // the first screen (the film and the statement, before any section) the bar names the first chapter,
+  // Концепция, as the sidebar's first line does there
   const sectionTitle = active.length && active[0] !== 'brand' ? TITLES[active[0]] : undefined
 
   // The open mobile contents: opened at the chapter you're reading, the page behind kept still, Esc closing it.
@@ -1452,11 +1452,11 @@ export default function Guide() {
               type="button"
               onClick={() => setMenuOpen(!menuOpen)}
               aria-expanded={menuOpen}
-              aria-label={menuOpen ? 'Свернуть' : sectionTitle ? `Содержание: ${sectionTitle}` : 'Содержание'}
+              aria-label={menuOpen ? 'Свернуть' : `Содержание: ${sectionTitle ?? TITLES.brand}`}
               className="flex min-w-0 cursor-pointer items-start gap-2 text-left before:absolute before:inset-0 before:content-['']"
             >
               <TocIcon name={menuOpen ? 'close' : 'menu'} />
-              <span className="min-w-0 truncate">{menuOpen ? 'Свернуть' : sectionTitle ?? 'Содержание'}</span>
+              <span className="min-w-0 truncate">{menuOpen ? 'Свернуть' : sectionTitle ?? TITLES.brand}</span>
             </button>
             {!menuOpen && <BarLinks />}
           </div>
@@ -1466,7 +1466,7 @@ export default function Guide() {
       {/* 16px on top from lg: the statement's capitals then stand level with the top of the logo beside it. */}
       <main className="min-w-0 flex-1 p-4 pb-[calc(52px+1rem)] md:p-6 md:pb-[calc(68px+1.5rem)] lg:pt-4 lg:pb-6">
         <div className="flex flex-col gap-section">
-          {/* Платформа follows the hero without a title of its own — the statement stands in for it and carries
+          {/* Концепция follows the hero without a title of its own — the statement stands in for it and carries
               the chapter anchor. */}
           <div>
             <div className="flex flex-col gap-section">
@@ -1477,11 +1477,10 @@ export default function Guide() {
                 <p id="brand" className="scroll-mt-24 text-[32px] font-medium leading-none tracking-[-0.01em] md:text-[48px] lg:mt-[calc(8px-0.164em+var(--umo-y-overhang,0px))] lg:max-w-[912px] lg:scroll-mt-[calc(24px-0.164em)] lg:text-[min(60px,6.58cqw)]">
                   Автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
                 </p>
-                {/* Quick links: to Носители, named as the chapter, and (once the page listing the constructors is made)
-                    to the constructors. They were «Платформа» and «Материалы для дилеров» */}
+                {/* Quick links: to Носители, named as the chapter, and to Печатные материалы, every constructor on one screen. They were «Платформа» and «Материалы для дилеров» */}
                 <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex max-lg:min-[480px]:hidden flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
                   <a href="#materials" className={LINK_HOVER}>Носители</a>
-                  {/* <a href="/print" className={LINK_HOVER}>Печатные материалы</a> — the constructors' page, to be made */}
+                  <Link to="/materials" className={LINK_HOVER}>Печатные материалы</Link>
                 </nav>
               </div>
               <Section>
