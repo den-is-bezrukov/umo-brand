@@ -125,7 +125,7 @@ const NAV: NavItem[] = [
     id: 'communication',
     title: 'Коммуникация',
     children: [
-      { id: 'name', title: 'Имя' },
+      { id: 'name', title: 'Имена' },
       { id: 'descriptors', title: 'Дескрипторы' },
       { id: 'tone', title: 'Тон голоса' },
       { id: 'dictionary', title: 'Словарь' },
@@ -1668,7 +1668,7 @@ export default function Guide() {
           <Chapter id="communication" title="Коммуникация" loose>
             <Section>
               <Head>
-                <H2 id="name">Имя</H2>
+                <H2 id="name">Имена</H2>
                 {/* The name's rules as text in two columns, as other paired texts (a table in the dictionary's columns, right
                     over the dictionary itself, read as one long table) */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
@@ -1687,21 +1687,17 @@ export default function Guide() {
             <Section>
               <Head>
                 <H2 id="descriptors">Дескрипторы</H2>
-                <Text><p>Дескриптор поясняет имя и не меняется от кампании к кампании, в отличие от слогана.</p></Text>
-              </Head>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
-                <Head>
-                  <p className="text-[24px] font-medium leading-none tracking-[-0.01em]">Бренд</p>
-                  <Text><p>Автомобильный бренд, созданный в технологическом партнёрстве с Яндексом</p></Text>
-                </Head>
-                <Head>
-                  <p className="text-[24px] font-medium leading-none tracking-[-0.01em]">Модели</p>
+                {/* One text in two columns, as Имена (it had a heading per brand and models) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
                   <Text>
-                    <p>Тип машины и «с технологиями Яндекса»:</p>
-                    <p>UMO 5 — Электромобиль с технологиями Яндекса<br />UMO 8 — Гибрид с технологиями Яндекса</p>
+                    <p>Дескриптор поясняет имя и не меняется от кампании к кампании, в отличие от слогана.</p>
+                    <p>Дескриптор бренда — «Автомобильный бренд, созданный в технологическом партнёрстве с Яндексом».</p>
                   </Text>
-                </Head>
-              </div>
+                  <Text>
+                    <p>Дескриптор модели — её тип и «с технологиями Яндекса»: UMO 5 — «Электромобиль с технологиями Яндекса», UMO 8 — «Гибрид с технологиями Яндекса».</p>
+                  </Text>
+                </div>
+              </Head>
             </Section>
 
             <Section>
