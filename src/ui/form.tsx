@@ -36,8 +36,8 @@ const crumb = 'underline decoration-transparent decoration-[0.35px] underline-of
 
 /**
  * The top of a generator's form, the same on every screen (Figma 5098:5487, the phone's, carried over to wide screens):
- * the breadcrumbs in Medium, 16 px tall, «Бренд UMO · Материалы · Редактор»; the generators' line under them
- * (`GeneratorRing`). «Редактор», the generators' parent, shows them all: the crumbs give way to the title «Редактор
+ * the breadcrumbs in Medium, 16 px tall, «Бренд UMO · Редактор материалов»; the generators' line under them
+ * (`GeneratorRing`). «Редактор материалов», the generators' parent, shows them all: the crumbs give way to the title «Редактор
  * материалов» with a cross on the right, and the line and everything after it in the form to every generator, 24 px
  * Medium 16 px apart, the current one black (Figma 5103:6083) — the same as the guide's «Редактор материалов» window. The
  * cross, the current name or Esc fold it. Not a menu icon by the crumbs: the generators are an app of their own, where a
@@ -87,17 +87,15 @@ const CRUMBS = "text-[14px] font-medium leading-4 tracking-normal [font-feature-
 
 /**
  * The breadcrumbs, set apart from the form's tighter tracking so they don't shift when the list opens: the way back to
- * the guide (UMO's logo leads to umo.auto, so it isn't here), Материалы, the guide's chapter telling what each medium is
- * for, and Редактор, which shows every generator
+ * the guide (UMO's logo leads to umo.auto, so it isn't here) and Редактор материалов, the app itself, which shows every
+ * generator (Материалы, the guide's chapter, stood between them)
  */
 function PhoneCrumbs({ onEditor }: { onEditor: () => void }) {
   return (
     <nav className={`flex min-w-0 flex-1 items-center gap-2 ${CRUMBS}`}>
       <Link to="/" className={crumb}>Бренд UMO</Link>
       <span aria-hidden>·</span>
-      <Link to="/#materials" className={crumb}>Материалы</Link>
-      <span aria-hidden>·</span>
-      <button type="button" onClick={onEditor} aria-label="Редактор: все конструкторы" className={`${crumb} cursor-pointer`}>Редактор</button>
+      <button type="button" onClick={onEditor} aria-label="Редактор материалов: все конструкторы" className={`${crumb} cursor-pointer`}>Редактор материалов</button>
     </nav>
   )
 }
