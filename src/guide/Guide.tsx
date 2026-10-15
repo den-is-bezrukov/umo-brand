@@ -276,7 +276,7 @@ function TocIcon({ name }: { name: keyof typeof tocIcons }) {
 
 /**
  * Expand-all row at the foot of the table of contents, «Содержание» (not «Меню», which repeats the icon and promises to
- * open what's open already): the menu bars spread every chapter and turn into the «Свернуть» chevrons, the name staying.
+ * open what's open already): the menu bars spread every chapter, and the row turns into «Свернуть» with its chevrons.
  */
 function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; onClick: () => void; className?: string }) {
   return (
@@ -289,7 +289,7 @@ function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; o
       className={`flex cursor-pointer items-start gap-2 bg-white ${NAV_HOVER} text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] ${className}`}
     >
       <TocIcon name={expanded ? 'close' : 'menu'} />
-      Содержание
+      {expanded ? 'Свернуть' : 'Содержание'}
     </button>
   )
 }
