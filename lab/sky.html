@@ -277,28 +277,29 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW)
   gl.enableVertexAttribArray(0)
   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0)
+  // Defaults: Тоннель as Denis set it on 2026-10-15 (seed 15)
   // Sliders: speed scales the clock, the rest are uniforms of the same name; `only` lists the variants they act on
   const CONTROLS = [
-    { id: 'speed', label: 'Скорость', min: 0, max: 3, step: 0.05, def: 1 },
+    { id: 'speed', label: 'Скорость', min: 0, max: 3, step: 0.05, def: 0.25 },
     { id: 'W', label: 'Турбуленция', min: 0, max: 2, step: 0.05, def: 1, only: [1] },
     { id: 'uHold', label: 'Статика', min: 0, max: 1, step: 0.01, def: 0.7, only: [0] },
     { id: 'uTear', label: 'Разрыв', min: 0, max: 1.5, step: 0.01, def: 0.8, only: [0] },
     { id: 'uBoil', label: 'Кипение', min: 0, max: 1, step: 0.01, def: 0.3, only: [0] },
-    { id: 'uLayers', label: 'Слои', min: 4, max: 64, step: 1, def: 32, only: [2] },
-    { id: 'uDepth', label: 'Глубина', min: 2, max: 14, step: 0.1, def: 7, only: [2] },
-    { id: 'uZoom', label: 'Масштаб', min: 0.4, max: 3, step: 0.01, def: 1.1, only: [2] },
-    { id: 'uTwist', label: 'Закрутка', min: 0, max: 3, step: 0.01, def: 1, only: [2] },
-    { id: 'uBend', label: 'Изгиб', min: 0, max: 3, step: 0.01, def: 1, only: [2] },
-    { id: 'uLine', label: 'Линия', min: 0.5, max: 6, step: 0.1, def: 1.5, only: [2] },
-    { id: 'uGlow', label: 'Свечение', min: 0, max: 3, step: 0.01, def: 1, only: [2] },
-    { id: 'uFill', label: 'Заливка', min: 0, max: 1, step: 0.01, def: 0.25, only: [2] },
+    { id: 'uLayers', label: 'Слои', min: 4, max: 64, step: 1, def: 14, only: [2] },
+    { id: 'uDepth', label: 'Глубина', min: 2, max: 14, step: 0.1, def: 2, only: [2] },
+    { id: 'uZoom', label: 'Масштаб', min: 0.4, max: 3, step: 0.01, def: 0.4, only: [2] },
+    { id: 'uTwist', label: 'Закрутка', min: 0, max: 3, step: 0.01, def: 0, only: [2] },
+    { id: 'uBend', label: 'Изгиб', min: 0, max: 3, step: 0.01, def: 2.44, only: [2] },
+    { id: 'uLine', label: 'Линия', min: 0.5, max: 6, step: 0.1, def: 1.2, only: [2] },
+    { id: 'uGlow', label: 'Свечение', min: 0, max: 3, step: 0.01, def: 0.64, only: [2] },
+    { id: 'uFill', label: 'Заливка', min: 0, max: 1, step: 0.01, def: 0, only: [2] },
     { id: 'uTone', label: 'Тон', min: -0.5, max: 0.3, step: 0.01, def: 0, only: [2] },
-    { id: 'uMouseK', label: 'Мышь', min: 0, max: 2, step: 0.01, def: 1, only: [0, 2] },
+    { id: 'uMouseK', label: 'Мышь', min: 0, max: 2, step: 0.01, def: 2, only: [0, 2] },
   ]
   const names = ['R', 'T', 'S', 'V', 'uTint', 'uMouse', ...CONTROLS.map((c) => c.id)]
   const u = Object.fromEntries(names.map((k) => [k, gl.getUniformLocation(prog, k)]))
 
-  const state = { v: 0, seed: 1, tint: 0, ...Object.fromEntries(CONTROLS.map((c) => [c.id, c.def])) }
+  const state = { v: 2, seed: 15, tint: 0, ...Object.fromEntries(CONTROLS.map((c) => [c.id, c.def])) }
   try { Object.assign(state, JSON.parse(localStorage.getItem('sky-logo2') || '{}')) } catch {}
   const save = () => { try { localStorage.setItem('sky-logo2', JSON.stringify(state)) } catch {} }
 
