@@ -646,9 +646,9 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
 /**
  * Below lg the quick links, as on wide screens, stand in the bottom bar beside the menu icon (on any phone: «Платформа»
  * without «бренда» under 420px, where it wouldn't fit), spaced as its edges (16px, from md 24), in
- * place of their own line under the statement, which leaves the film more of the first screen. They're there for the
- * first screen only and fade out over the first 160px of scroll, as the sidebar's contents fade in from lg, so further
- * down the bar is the contents' alone again.
+ * place of their own line under the statement, which leaves the film more of the first screen. They stand there until
+ * the first section's heading is lit, and the section's name takes their place at once (they faded out over the first
+ * 160px of scroll, leaving the bar a stretch with the icon alone).
  */
 /**
  * A quick link's tap area in the bar: the bar's whole height (its 16px over and under, 24 from md) and half the gap to
@@ -657,25 +657,8 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
 const BAR_LINK = "relative after:absolute after:-inset-x-2 after:-inset-y-4 after:content-[''] md:after:-inset-x-3 md:after:-inset-y-6"
 
 function BarLinks() {
-  const ref = useRef<HTMLElement>(null)
-  useEffect(() => {
-    let frame = 0
-    const update = () => {
-      frame = 0
-      const nav = ref.current
-      if (!nav) return
-      const opacity = Math.max(0, 1 - window.scrollY / 160)
-      nav.style.opacity = String(opacity)
-      // Gone, it leaves the bar to the section's name.
-      nav.style.display = opacity ? '' : 'none'
-    }
-    const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }
-    update()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => { window.removeEventListener('scroll', onScroll); cancelAnimationFrame(frame) }
-  }, [])
   return (
-    <nav ref={ref} aria-label="Быстрые ссылки" className="relative flex shrink-0 gap-x-4 whitespace-nowrap md:gap-x-6">
+    <nav aria-label="Быстрые ссылки" className="relative flex shrink-0 gap-x-4 whitespace-nowrap md:gap-x-6">
       {/* «Платформа» alone where «бренда» wouldn't fit the bar (the three and the icon need about 400px with it) */}
       <a href="#positioning" className={`${BAR_LINK} ${LINK_HOVER}`}>Платформа<span className="max-[419px]:hidden"> бренда</span></a>
       <a href="#materials" className={`${BAR_LINK} ${LINK_HOVER}`}>Материалы</a>
@@ -1510,7 +1493,8 @@ export default function Guide() {
               {/* On the first screen the icon alone, the quick links after it as far as they stand from each other */}
               {(menuOpen || sectionTitle) && <span className="min-w-0 truncate">{menuOpen ? 'Свернуть' : sectionTitle}</span>}
             </button>
-            {!menuOpen && <BarLinks />}
+            {/* The quick links until the first section's heading is lit, then at once the section's name in their place */}
+            {!menuOpen && !sectionTitle && <BarLinks />}
           </div>
         </div>
       </div>
