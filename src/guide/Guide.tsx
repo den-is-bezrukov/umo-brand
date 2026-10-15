@@ -1669,18 +1669,12 @@ export default function Guide() {
             <Section>
               <Head>
                 <H2 id="name">Имена</H2>
-                {/* The name's rules as text in two columns, as other paired texts (a table in the dictionary's columns, right
-                    over the dictionary itself, read as one long table) */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
-                  <Text>
-                    <p>UMO — Urban Mobility Object, объект городской мобильности. Читается «Умо», с ударением на первый слог.</p>
-                    <p>Имя набирается латиницей, прописными и без точек: UMO. Имя модели складывается из имени бренда и цифры через пробел: UMO 5, UMO 8.</p>
-                  </Text>
-                  <Text>
-                    <p>Написания «УМО», «Umo», «U.M.O.» и «UMO5» ошибочны.</p>
-                    <p>Имя не обыгрывается: «Умка», «Умочка», «UMOпомрачительно» неуместны в рекламе и у блогеров. «Умка» остаётся сленгом владельцев.</p>
-                  </Text>
-                </div>
+                <Text>
+                  <p>UMO — Urban Mobility Object, объект городской мобильности. Читается «Умо», с ударением на первый слог.</p>
+                  <p>Имя набирается латиницей, прописными и без точек: UMO. Имя модели складывается из имени бренда и цифры через пробел: UMO 5, UMO 8.</p>
+                  <p>Написания «УМО», «Umo», «U.M.O.» и «UMO5» ошибочны.</p>
+                  <p>Имя не обыгрывается: «Умка», «Умочка», «UMOпомрачительно» неуместны в рекламе и у блогеров. «Умка» остаётся сленгом владельцев.</p>
+                </Text>
               </Head>
             </Section>
 
