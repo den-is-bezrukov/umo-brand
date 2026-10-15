@@ -20,6 +20,7 @@
   .panel { position: fixed; right: 12px; top: 12px; padding: 8px 10px; background: Canvas; color: CanvasText;
     border: 1px solid GrayText; font: 12px system-ui, sans-serif; width: 300px; max-height: calc(100% - 24px); overflow: auto; }
   .tabs { margin-bottom: 6px; }
+  #reset { margin-top: 8px; }
   .tabs button[aria-pressed="true"] { font-weight: bold; }
   [hidden] { display: none !important; }
   label { display: grid; grid-template-columns: 1fr 120px 36px; align-items: center; gap: 6px; }
@@ -44,6 +45,7 @@
     <!-- <button data-v="8">Затмение</button> -->
   </div>
   <div id="sliders" class="sliders"></div>
+  <button id="reset">Сбросить</button>
 </div>
 
 <script type="x-shader/x-fragment" id="fs">#version 300 es
@@ -339,7 +341,8 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     speed7: 1.45, seed7: 5, lSize: 4, lWave: 1, lRipple: 0, lScroll: 0,
     speed8: 3, seed8: 2, eFreq8: 0.73, eSoft8: 1, eWarp8: 0.49, eLight8: 1,
   }
-  const state = { v: 6, ...Object.fromEntries(CONTROLS.map((c) => [c.id, c.def])), ...SET }
+  const DEFAULTS = { ...Object.fromEntries(CONTROLS.map((c) => [c.id, c.def])), ...SET }
+  const state = { v: 6, ...DEFAULTS }
   const OWN = Object.fromEntries(CONTROLS.filter((c) => c.own).map((c) => [c.id, c.def]))
   const key = (id) => (id === 'seed' || id in OWN ? id + state.v : id)
   const get = (id) => state[key(id)] ?? OWN[id] ?? (id === 'seed' ? 1 : undefined)
@@ -368,6 +371,19 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     sliders.querySelectorAll('input').forEach((el) => { el.value = get(el.dataset.id); el.nextElementSibling.value = el.value })
   }
   tabs.forEach((b) => b.addEventListener('click', () => { state.v = +b.dataset.v; sync(); save() }))
+  // Сбросить: the variant's sliders back to its defaults (SET above, else the sliders' own)
+  document.getElementById('reset').addEventListener('click', () => {
+    for (const c of CONTROLS) {
+      if (c.only && !c.only.includes(state.v)) continue
+      const k = key(c.id)
+      if (k in DEFAULTS) state[k] = DEFAULTS[k]
+      else delete state[k]
+    }
+    const ks = key('seed')
+    if (ks in DEFAULTS) state[ks] = DEFAULTS[ks]
+    sync()
+    save()
+  })
   sync()
 
   // The pointer over the picture, -1..1 from its centre, y up; the shader gets it eased
