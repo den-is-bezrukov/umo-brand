@@ -669,7 +669,7 @@ function BarLinks() {
     <nav aria-label="Быстрые ссылки" className="relative -my-4 -mr-4 -ml-2 flex min-w-0 gap-x-4 overflow-x-auto overscroll-x-contain py-4 pr-4 whitespace-nowrap [scrollbar-width:none] md:-my-6 md:-mr-6 md:-ml-4 md:gap-x-6 md:py-6 md:pr-6 [&::-webkit-scrollbar]:hidden">
       <a href="#brand" className={`${BAR_LINK} ${LINK_HOVER}`}>Платформа бренда</a>
       <a href="#materials" className={`${BAR_LINK} ${LINK_HOVER}`}>Материалы</a>
-      <Link to="/editor" className={`${BAR_LINK} ${LINK_HOVER}`}>Редактор</Link>
+      <Link to="/editor" className={`${BAR_LINK} ${LINK_HOVER}`}>Редактор материалов</Link>
     </nav>
   )
 }
@@ -1621,7 +1621,7 @@ export default function Guide() {
                 <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex max-lg:hidden flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
                   <a href="#brand" className={LINK_HOVER}>Платформа бренда</a>
                   <a href="#materials" className={LINK_HOVER}>Материалы</a>
-                  <Link to="/editor" className={LINK_HOVER}>Редактор</Link>
+                  <Link to="/editor" className={LINK_HOVER}>Редактор материалов</Link>
                 </nav>
               </div>
             </div>
