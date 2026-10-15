@@ -1183,9 +1183,30 @@ function Zoom({ label, children }: { label: string; children: ReactNode }) {
  * generators' menu sets them, 24px Medium 20px apart, in its alphabetical order. A tap on the dim, the cross or Esc
  * closes it: back where you came from, or to the guide itself when the window was opened by its link.
  */
-function EditorDialog() {
+/** Leaving `/editor`: back where you came from, or to the guide itself when it was opened by its link */
+function useCloseEditor() {
   const navigate = useNavigate()
-  const close = () => ((window.history.state as { idx?: number } | null)?.idx ? navigate(-1) : navigate('/', { replace: true }))
+  return () => ((window.history.state as { idx?: number } | null)?.idx ? navigate(-1) : navigate('/', { replace: true }))
+}
+
+/** Whether the screen is lg or wider, where the guide has its sidebar (below it, the bottom bar and its sheet) */
+function useWide() {
+  const query = '(min-width: 64rem)'
+  const [wide, setWide] = useState(() => window.matchMedia(query).matches)
+  useEffect(() => {
+    const m = window.matchMedia(query)
+    const on = () => setWide(m.matches)
+    m.addEventListener('change', on)
+    return () => m.removeEventListener('change', on)
+  }, [])
+  return wide
+}
+
+/** The constructors as the editor lists them: by name, as the generators' own list */
+const EDITOR_ITEMS = [...MEDIA_LIST].sort((a, b) => a.title.localeCompare(b.title, 'ru'))
+
+function EditorDialog() {
+  const close = useCloseEditor()
   const ref = useRef<HTMLDivElement>(null)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
@@ -1195,7 +1216,6 @@ function EditorDialog() {
     window.addEventListener('keydown', onKey)
     return () => { window.removeEventListener('keydown', onKey); document.documentElement.style.overflow = overflow }
   })
-  const items = [...MEDIA_LIST].sort((a, b) => a.title.localeCompare(b.title, 'ru'))
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={close}>
       <div
@@ -1214,7 +1234,7 @@ function EditorDialog() {
           </button>
         </div>
         <nav aria-label="Конструкторы" className="flex flex-col items-start gap-5">
-          {items.map(m => <Link key={m.to} to={m.to} className={`text-[24px] font-medium leading-6 tracking-[-0.01em] ${NAV_HOVER}`}>{m.title}</Link>)}
+          {EDITOR_ITEMS.map(m => <Link key={m.to} to={m.to} className={`text-[24px] font-medium leading-6 tracking-[-0.01em] ${NAV_HOVER}`}>{m.title}</Link>)}
         </nav>
       </div>
     </div>
@@ -1359,11 +1379,26 @@ function Dictionary({ rows }: { rows: Rule[] }) {
 
 export default function Guide() {
   const editor = useLocation().pathname === '/editor'
+  const wide = useWide()
+  const closeEditor = useCloseEditor()
   const active = useActiveSection()
   const pageRef = useRef<HTMLDivElement>(null)
   useTypograf(pageRef)
   const [expandAll, toggleExpandAll] = useExpandAll()
   const [menuOpen, setMenuOpen] = useState(false)
+  // Below lg the bottom bar's sheet holds the contents or, at `/editor`, the constructors (Редактор материалов), as the
+  // window from lg; it says which until it's slid away, then goes back to the contents
+  const [sheetEditor, setSheetEditor] = useState(false)
+  useEffect(() => {
+    if (editor && !wide) { setSheetEditor(true); setMenuOpen(true) }
+    else if (!editor && sheetEditor && menuOpen) setMenuOpen(false)
+  }, [editor, wide]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (menuOpen || !sheetEditor) return
+    if (editor) closeEditor()
+    const t = window.setTimeout(() => setSheetEditor(false), 360)
+    return () => clearTimeout(t)
+  }, [menuOpen]) // eslint-disable-line react-hooks/exhaustive-deps
   const asideRef = useRef<HTMLElement>(null)
   const bodyRef = useRef<HTMLDivElement>(null)
   useActiveInView(asideRef, active, expandAll)
@@ -1428,7 +1463,7 @@ export default function Guide() {
 
   return (
     <div ref={pageRef} id="top" className="min-h-screen bg-white font-sans text-black">
-      {editor && <EditorDialog />}
+      {editor && wide && <EditorDialog />}
       {/* The hero is the top of the page: the logo leads here, and it isn't in the contents. On a phone it's the first
           picture, above the header, and covers the header's upward white (z-30). From lg it's fixed behind the page,
           which starts a strip above the bottom of the screen (`--strip`, see useHeroStrip; 252px for a three-line
@@ -1478,13 +1513,23 @@ export default function Guide() {
           <div ref={toc.sheet} inert={!menuOpen || undefined} className="invisible absolute inset-x-0 bottom-[calc(100%-2px)] flex max-h-[calc(60dvh-52px)] flex-col overflow-hidden rounded-t-2xl bg-white md:max-h-[calc(60dvh-68px)]">
             {/* The list's top padding is inside it, so a stuck title is measured from the sheet's edge in every browser. */}
             <div ref={sheetRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 md:px-6">
-              <div className="pt-4 md:pt-6"><Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} stickyChapters /></div>
+              {sheetEditor ? (
+                // The editor's window set in the sheet: its title, the constructors 24 Medium 20 apart under it
+                <div className="flex flex-col gap-6 pt-4 pb-4 md:pt-6 md:pb-6">
+                  <p className="font-medium">Редактор материалов</p>
+                  <nav aria-label="Конструкторы" className="flex flex-col items-start gap-5">
+                    {EDITOR_ITEMS.map(m => <Link key={m.to} to={m.to} className={`text-[24px] font-medium leading-6 tracking-[-0.01em] ${NAV_HOVER}`}>{m.title}</Link>)}
+                  </nav>
+                </div>
+              ) : (
+                <div className="pt-4 md:pt-6"><Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} stickyChapters /></div>
+              )}
             </div>
           </div>
           <div ref={toc.bar} className="relative z-10 flex items-start gap-4 bg-white after:pointer-events-none after:absolute after:inset-x-0 after:top-[calc(100%-2px)] after:h-screen after:bg-white after:content-[''] md:gap-6 px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]">
             <button
               type="button"
-              onClick={() => setMenuOpen(!menuOpen)}
+              onClick={() => { if (!menuOpen) setSheetEditor(false); setMenuOpen(!menuOpen) }}
               aria-expanded={menuOpen}
               aria-label={menuOpen ? 'Свернуть' : sectionTitle ? `Содержание: ${sectionTitle}` : 'Содержание'}
               className="flex min-w-0 cursor-pointer items-start gap-2 text-left before:absolute before:inset-0 before:content-['']"
