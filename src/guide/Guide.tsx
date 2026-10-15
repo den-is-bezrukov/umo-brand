@@ -234,10 +234,10 @@ const TEXT_LINK = 'underline decoration-black/40 decoration-[2.5%] underline-off
 /**
  * A chapter title stuck at the top of the sheet's list, 8px under its edge where its text stands as on the first line.
  * Only its own 8px over the text is covered upwards (a white shadow): there's nothing there but the gap after the last
- * item, so a title in its place hides nothing. Titles stand 4px in from the list's edge (a margin, so the bullet keeps to
- * the text), their items 20px further.
+ * item, so a title in its place hides nothing. Titles stand 2px in from the list's edge (a margin, so the bullet keeps to
+ * the text), their items 22px further.
  */
-const STICKY_CHAPTER = 'ml-1 py-2 sticky top-2 z-10 bg-white shadow-[0_-8px_0_white]'
+const STICKY_CHAPTER = 'ml-0.5 py-2 sticky top-2 z-10 bg-white shadow-[0_-8px_0_white]'
 
 function NavLink({ id, title, active, current, onNavigate, pad }: { id: string; title: string; active: boolean; current: boolean; onNavigate?: () => void; pad: string }) {
   return (
