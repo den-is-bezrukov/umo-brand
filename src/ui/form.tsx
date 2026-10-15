@@ -2,7 +2,6 @@ import { useContext, useEffect, useId, useLayoutEffect, useRef, useState } from 
 import { createPortal } from 'react-dom'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { goal } from './metrika'
-import tocIcons from '@/icons/toc'
 import { InFoot, InSheet } from './phone'
 import { MOD, withMod, otherLayout } from './keys'
 
@@ -37,12 +36,12 @@ const crumb = 'underline decoration-transparent decoration-[0.35px] underline-of
 
 /**
  * The top of a generator's form, the same on every screen (Figma 5098:5487, the phone's, carried over to wide screens):
- * the menu icon and the breadcrumbs in Medium, 16 px tall (a size icon across from them on phones went: the sheet is
- * swiped); the generators' line under them (`GeneratorRing`). The menu icon turns into
- * the guide's «Свернуть» in place and the line and everything after it in the form give way to every generator, 24 px
- * Medium 20 px apart, the current one black (Figma 5099:5825): the same header, not a second one laid over it (a sheet
- * over the form, repeating the crumbs, was tried, and shifted them by its own tracking). Wide screens had the crumbs in
- * Medium with a list under «Носители ⌄» and a ring turned by script, which a finger couldn't drive
+ * the breadcrumbs in Medium, 16 px tall; the generators' line under them (`GeneratorRing`), a chevron ⌄ standing at its
+ * right end, as a tab strip's «all tabs» does. The chevron turns ⌃ in place and the line and everything after it in the
+ * form give way to every generator, 24 px Medium 20 px apart, the current one black (Figma 5099:5825): the same header,
+ * not a second one laid over it. Not a menu icon by the crumbs: the generators are an app of their own, where a burger
+ * promised the whole app's menu and opened the generators' list. Wide screens had the crumbs in Medium with a list under
+ * «Носители ⌄» and a ring turned by script, which a finger couldn't drive
  */
 export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' | '/price-tag' | '/hours-sign' }) {
   const [menu, setMenu] = useState(false)
@@ -58,10 +57,9 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
   const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
   return (
     <div data-head className="flex flex-col gap-4">
-      <div className="flex items-center gap-2">
-        <IconButton label={menu ? 'Свернуть' : 'Конструкторы'} onClick={toggle} d={menu ? tocIcons.close : tocIcons.menu} />
-        <PhoneCrumbs />
-      </div>
+      <PhoneCrumbs />
+      {/* The chevron on the line's right end, 24 px in, over its shade, level with the names (their 24 px line 4 px down) */}
+      <div className="relative">
       {menu ? (
         // 20 px under the crumbs, where the line stood, so the current name stays put (24 dropped it 4 px; 16 sat the
         // crumbs on it)
@@ -73,15 +71,23 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
       ) : (
         <GeneratorRing current={current} />
       )}
+        {/* Grey as the form's other icons (#808080), black under the pointer */}
+        <div className="absolute right-0 top-2 flex text-[#808080] transition-[color] duration-250 hover:text-black hover:duration-0">
+          <IconButton label={menu ? 'Свернуть' : 'Все конструкторы'} onClick={toggle} d={menu ? CHEVRON.up : CHEVRON.down} />
+        </div>
+      </div>
     </div>
   )
 }
 
+/** The line's chevron: the form's own (ComboField's, 8 wide and 4 tall, as each of the guide's «Свернуть» pair), centred in 16 px */
+const CHEVRON = { down: 'M4 6L8 10L12 6', up: 'M4 10L8 6L12 10' }
+
 /** The breadcrumbs: Medium (Regular in Figma 5110:9105), on 16 px lines, with no tracking, as the form's labels, set here
- * so they don't shift between the form (which tracks its type tighter) and the menu over it; 12 px after the icon (8 + 4: at 8 they stuck to it) */
+ * so they don't shift between the form (which tracks its type tighter) and the menu over it */
 function PhoneCrumbs() {
   return (
-    <nav className="ml-1 flex min-w-0 flex-1 items-center gap-2 text-[14px] font-medium leading-4 tracking-normal [font-feature-settings:'case'_1]">
+    <nav className="flex min-w-0 flex-1 items-center gap-2 text-[14px] font-medium leading-4 tracking-normal [font-feature-settings:'case'_1]">
       {/* The way back to the guide (UMO's logo leads to umo.auto, so it isn't here), then Материалы, the guide's chapter
           that tells what each medium is for */}
       <Link to="/" className={crumb}>Бренд UMO</Link>
@@ -232,9 +238,11 @@ function GeneratorRing({ current }: { current: string }) {
             : <Link key={i} to={g.path} draggable={false} aria-hidden={i < count || i >= 2 * count || undefined} tabIndex={-1} className={`${name} ${tone(g.path)} outline-none`}>{g.title}</Link>
         })}
       </nav>
-      {/* The shades over the edges, as the ring's (Figma 5062:671, 5061:539) */}
+      {/* The shades over the edges, as the ring's (Figma 5062:671, 5061:539); the right one solid white for its last
+          48 px, where the header's chevron stands (24 px in, 16 wide), fading in over the 64 px before them on an
+          ease-in-out curve (smoothstep), so the names melt away rather than meet an edge */}
       <div aria-hidden className="pointer-events-none absolute -inset-y-2 left-0 w-6" style={{ background: 'linear-gradient(90deg, #ffffff80 25%, #fff0), linear-gradient(90deg, #fff 25%, #fff0)' }} />
-      <div aria-hidden className="pointer-events-none absolute -inset-y-2 right-0 w-12" style={{ background: 'linear-gradient(90deg, #fff0, #ffffff80), linear-gradient(90deg, #fff0, #fff)' }} />
+      <div aria-hidden className="pointer-events-none absolute -inset-y-2 right-0 w-[112px]" style={{ background: 'linear-gradient(90deg, #fff0, #ffffff07 7.1%, #ffffff28 14.3%, #ffffff55 21.4%, #ffffff80 28.6%, #ffffffaa 35.7%, #ffffffd7 42.9%, #fffffff8 50%, #fff 57.1%)' }} />
     </div>
   )
 }
