@@ -241,11 +241,12 @@ const TEXT_LINK = 'underline decoration-black/40 decoration-[2.5%] underline-off
  */
 /**
  * A chapter title stuck at the top of the sheet's list, 8px under its edge where its text stands as on the first line.
- * Only its own 8px over the text is covered upwards (a white shadow): there's nothing there but the gap after the last
- * item, so a title in its place hides nothing. Titles stand 2px in from the list's edge (a margin, so the bullet keeps to
+ * Its own 8px over the text is covered upwards (a white shadow): there's nothing there but the gap after the last
+ * item, so a title in its place hides nothing; and 4px under it, an item's own padding, so the descenders of the item
+ * scrolling away under it don't peek out below. Titles stand 2px in from the list's edge (a margin, so the bullet keeps to
  * the text), their items 22px further. Its bullet stands about midway between the screen's edge and the text.
  */
-const STICKY_CHAPTER = 'ml-0.5 py-2 sticky top-2 z-10 bg-white shadow-[0_-8px_0_white]'
+const STICKY_CHAPTER = 'ml-0.5 py-2 sticky top-2 z-10 bg-white shadow-[0_-8px_0_white,0_4px_0_white]'
 
 function NavLink({ id, title, active, current, onNavigate, pad, bullet = '-left-[0.9em]' }: { id: string; title: string; active: boolean; current: boolean; onNavigate?: () => void; pad: string; bullet?: string }) {
   return (
@@ -713,13 +714,16 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, list: RefO
         const at = (node: Element) => node.getBoundingClientRect().top - box.top + el.scrollTop
         // A chapter's block right at the top edge: its title then sticks where the first chapter's stands, and the
         // chapter before, its stuck title included, is gone whole (set 16px lower, as the first chapter, its title
-        // peeked over). Room is made under the list for the last chapters to rise that far too
-        const inner = el.firstElementChild as HTMLElement | null
-        if (inner) inner.style.paddingBottom = ''
+        // peeked over). The last chapters, which can't rise that far, leave the list at its end, moved down to where
+        // no chapter's start falls under the stuck title's 44px (where that title, pushed up, showed only its feet)
         const target = Math.round(at(chapter))
-        const room = target + el.clientHeight - el.scrollHeight
-        if (inner && room > 0) inner.style.paddingBottom = `${room}px`
-        el.scrollTop = target
+        const max = el.scrollHeight - el.clientHeight
+        let top = Math.min(target, max)
+        if (target > max) {
+          const cut = Array.from(first.parentElement!.children, block => Math.round(at(block))).find(b => b > top && b < top + 44)
+          if (cut !== undefined) top = cut - 44
+        }
+        el.scrollTop = top
         if (item.getBoundingClientRect().bottom > box.bottom) item.scrollIntoView({ block: 'center' })
       },
     }
@@ -1528,7 +1532,7 @@ export default function Guide() {
         {/* A white border as tall as the bar runs on under it, past the screen's bottom, where the page showed through
             under iOS 26 Safari's floating toolbar as it slid. */}
         <div className="fixed inset-x-0 -bottom-[52px] z-40 border-b-[52px] border-white md:-bottom-[68px] md:border-b-[68px]">
-          <div ref={toc.sheet} inert={!menuOpen || undefined} className="invisible absolute inset-x-0 bottom-[calc(100%-2px)] flex max-h-[calc(60dvh-52px)] flex-col overflow-hidden rounded-t-2xl bg-white md:max-h-[calc(60dvh-68px)]">
+          <div ref={toc.sheet} inert={!menuOpen || undefined} className="invisible absolute inset-x-0 bottom-[calc(100%-2px)] flex h-[min(296px,calc(60dvh-52px))] flex-col overflow-hidden rounded-t-2xl bg-white md:h-[min(304px,calc(60dvh-68px))]">
             {/* The list's top padding is inside it, so a stuck title is measured from the sheet's edge in every browser. */}
             <div ref={sheetRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 md:px-6">
               {sheetEditor ? (
@@ -1540,7 +1544,7 @@ export default function Guide() {
                   </nav>
                 </div>
               ) : (
-                <div className="pt-4 md:pt-6"><Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} stickyChapters /></div>
+                <div className="pt-4 pb-11 md:pt-6"><Nav active={active} expandAll onNavigate={() => setMenuOpen(false)} stickyChapters /></div>
               )}
             </div>
           </div>
