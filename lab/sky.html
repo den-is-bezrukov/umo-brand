@@ -48,7 +48,6 @@
     Движение:
     <button data-motion="0">Нет</button>
     <button data-motion="1">Нырок в O</button>
-    <button data-motion="2">Логотипы</button>
     <button data-motion="3">Сетка</button>
   </div>
   <div id="sliders" class="sliders"></div>
@@ -193,11 +192,11 @@ uniform float uWaveT;  // the wave's own clock, so changing its speed doesn't ma
 uniform float uSeen;    // 0 until the pointer first moves over the page
 uniform vec3 uTrail[32]; // where the pointer has just been (-1..1) and how many seconds ago, newest first
 uniform vec2 uPointer;   // the pointer as it is, not eased (-1..1)
-// Движение (sMotion): 0 none; 1 Нырок в O — an endless dive into the O, where the next UMO sits (Droste); 2
-// Логотипы — outlines of the wordmark growing out of the centre one after another, as Тоннель's; 3 Сетка — the
-// points' grid zooms in, a finer one fading in between, the wordmark standing still. The points stay put in 1 and
-// 2: only the shape they draw moves. uZoomT is the zoom's own clock
-uniform float sMotion, sOutline;
+// Движение (sMotion): 0 none; 1 Нырок в O — an endless dive into the O, where the next UMO sits (Droste), its
+// centre in the middle of the screen, the points staying put while only the shape they draw moves; 3 Сетка — the
+// points' grid zooms in, a finer one fading in between, the wordmark standing still (2, outlines growing out of
+// the centre, dropped). uZoomT is the zoom's own clock
+uniform float sMotion;
 uniform float uZoomT;
 float shapeAt(vec2 home) {
   float k;
@@ -208,6 +207,7 @@ float shapeAt(vec2 home) {
     const float K = 6.9;
     vec2 C = vec2(240, 48), H = vec2(409.2, 48);
     vec2 f = (H * K - C) / (K - 1.);
+    x += f - C;                                               // the dive's centre in the middle of the screen
     float z = pow(K, fract(uZoomT * .12));
     vec2 y = f + (x - f) / z;
     float d = 1e9, sc = z;
@@ -220,19 +220,6 @@ float shapeAt(vec2 home) {
       sc /= K;
     }
     return smoothstep(px, -px, d);
-  }
-  if (sMotion > 1.5 && sMotion < 2.5) {
-    // Outlines growing from the centre, each 1.8 times the last
-    float v = 0.;
-    float ph = fract(uZoomT * .25);
-    for (int n = 0; n < 7; n++) {
-      float sc = pow(1.8, float(n) - 3. + ph);
-      vec2 y = (x - vec2(240, 48)) / sc + vec2(240, 48);
-      float d = abs(logo(y)) * sc;
-      float fade = smoothstep(0., 1., float(n) + ph) * smoothstep(7., 5.5, float(n) + ph);
-      v = max(v, smoothstep(sOutline * 6. + px, sOutline * 6. - px, d) * fade);
-    }
-    return v;
   }
   return smoothstep(px, -px, logo(x));
 }
@@ -364,7 +351,6 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     { id: 'gas', label: 'Газ', min: 0, max: 3, step: 0.01, def: 1, only: [2] },
     { id: 'layersK', label: 'Слои мышью', min: 0, max: 2, step: 0.01, def: 1, only: [2] },
     { id: 'sZoomV', label: 'Скорость зума', min: -2, max: 2, step: 0.01, def: 0.5, only: [6], own: true },
-    { id: 'sOutline', label: 'Толщина контура', min: 0.2, max: 3, step: 0.01, def: 1, only: [6], own: true },
     { id: 'sDots', label: 'Точки', min: 30, max: 250, step: 1, def: 110, only: [6], own: true },
     { id: 'sSize', label: 'Размер', min: 0.1, max: 1.2, step: 0.01, def: 0.75, only: [6], own: true },
     { id: 'sBg', label: 'Яркость фона', min: 0, max: 1, step: 0.01, def: 0.45, only: [6], own: true },
