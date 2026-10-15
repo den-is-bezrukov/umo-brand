@@ -184,12 +184,11 @@ vec3 eclipse(vec2 sp) { return pal(.02 + .96 * eclipseV(sp)); }
 
 // ── Рой: points on a jittered grid over the whole picture, the wordmark's bigger and brighter than the
 // background's; a wave breathes through their sizes. The pointer: Лупа swells them while it moves, Свет lights them
-// round it, След leaves a fading trail that grows them and brings them to the wordmark's colour, Круги sends rings
-// out from where it has been.
+// round it, След leaves a fading trail that grows them and brings them to the wordmark's colour.
 // (`halftone` sized them by Затмение's bands: Растр, dropped) ──
 uniform float uAct;     // 1 while the pointer moves, fading to 0 within a couple of seconds after it stops
 uniform float sDots, sSize, sBgSize, sBg, sJitter, sTwinkle, sWave, sHue, sBgHue, sLens, sRadius;
-uniform float sLight, sTrail, sRipple;
+uniform float sLight, sTrail;
 uniform float uSeen;    // 0 until the pointer first moves over the page
 uniform vec3 uTrail[8]; // where the pointer has just been (-1..1) and how many seconds ago
 vec3 dots(vec2 sp, bool halftone) {
@@ -205,22 +204,21 @@ vec3 dots(vec2 sp, bool halftone) {
   float val;
   if (halftone) val = eclipseV(home);
   else { float k; val = smoothstep(3., -3., logo(toLogo(home, .72, 2.6, k))); }
-  // The pointer's light, trail and rings, at the point's place
+  // The pointer's light and trail, at the point's place
   float r = sRadius * .1;
   float lit = exp(-dot(home - mp, home - mp) / (r * r * 4.)) * uSeen;
-  float trail = 0., ring = 0.;
+  float trail = 0.;
   for (int i = 0; i < 8; i++) {
     vec3 tp = uTrail[i];
     if (tp.z > 3.) continue;
     float dt = length(home - tp.xy * vec2(R.x / R.y, 1.) * .5);
     trail = max(trail, exp(-dt * dt / (r * r)) * exp(-tp.z * 1.6));
-    ring = max(ring, exp(-pow((dt - tp.z * .4) / .025, 2.)) * exp(-tp.z * 1.3));
   }
   val = max(val, trail * sTrail * .9);
   float tw = mix(1., .45 + .55 * sin(T * 3. + h(gid) * 30.), sTwinkle);
   float wave = 1. + sWave * .45 * sin(length(home) * 9. - T * 1.5);
-  float rad = cell * .5 * mix(sBgSize, sSize, val) * wave * (1. + sRipple * ring * 1.2 + sTrail * trail * .4);
-  float dotv = smoothstep(rad, rad * .55, dd) * mix(sBg, 1., val) * tw * (1. + sLight * lit * 2. + sRipple * ring);
+  float rad = cell * .5 * mix(sBgSize, sSize, val) * wave * (1. + sTrail * trail * .4);
+  float dotv = smoothstep(rad, rad * .55, dd) * mix(sBg, 1., val) * tw * (1. + sLight * lit * 2.);
   float halo = exp(-dd / cell * 4.) * .35 * val * tw;
   vec3 c = mix(pal(sBgHue + .05 * h(gid + 7.)), pal(sHue + .1 * h(gid + 7.)), val);
   return c * (dotv + halo);
@@ -313,7 +311,6 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     { id: 'sWave', label: 'Волна', min: 0, max: 1, step: 0.01, def: 0.3, only: [6], own: true },
     { id: 'sLight', label: 'Свет мыши', min: 0, max: 2, step: 0.01, def: 0.8, only: [6], own: true },
     { id: 'sTrail', label: 'След мыши', min: 0, max: 2, step: 0.01, def: 1, only: [6], own: true },
-    { id: 'sRipple', label: 'Круги мыши', min: 0, max: 2, step: 0.01, def: 0.8, only: [6], own: true },
     { id: 'sLens', label: 'Лупа мыши', min: -1, max: 1, step: 0.01, def: 0.5, only: [6], own: true },
     { id: 'sRadius', label: 'Радиус мыши', min: 0.3, max: 3, step: 0.01, def: 1, only: [6], own: true },
     { id: 'eFreq', label: 'Кольца', min: 0.3, max: 6, step: 0.01, def: 1.6, only: [8], own: true },
@@ -334,7 +331,7 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     seed2: 15, speed2: 0.3, uMouseK2: 0.42, uLayers: 50, uDepth: 10.6, uZoom: 0.51, uTwist: 0, uBend: 0,
     uLine: 1.3, uGlow: 0, uFill: 0, uTone: -0.15, uBank: 0.26, gas: 1.31, layersK: 0.24, uLamp: 1.29,
     speed6: 0.9, seed6: 9, sDots6: 185, sSize6: 0.51, sBgSize6: 0.45, sBg6: 0.65, sHue6: 1, sBgHue6: 0.91,
-    sJitter6: 1, sTwinkle6: 1, sWave6: 1, sLight6: 2, sTrail6: 0, sRipple6: 0, sLens6: -1, sRadius6: 1.25,
+    sJitter6: 1, sTwinkle6: 1, sWave6: 1, sLight6: 2, sTrail6: 0, sLens6: -1, sRadius6: 1.25,
     speed7: 1.45, seed7: 5, lSize: 4, lWave: 1, lRipple: 0, lScroll: 0,
     speed8: 3, seed8: 2, eFreq8: 0.73, eSoft8: 1, eWarp8: 0.49, eLight8: 1,
   }
@@ -380,7 +377,7 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
   // Pressing on the picture is Газ
   const aim = [0, 0], mouse = [0, 0]
   let pressed = false, boost = 0, travel = 0, act = 0, actAim = 0, seen = 0
-  // The pointer's last places, one every 60 ms: Рой's След and Круги
+  // The pointer's last places, one every 60 ms: Рой's След
   const trail = []
   addEventListener('pointermove', (e) => {
     const r = canvas.getBoundingClientRect()
