@@ -187,7 +187,7 @@ vec3 cloudLogo(vec2 sp, float a) {
 
 // ── Тоннель: flying through wordmarks lined up into the distance, twisting as the road bends ──
 uniform float uLayers, uDepth, uTwist, uBend, uLine, uGlow, uFill, uTone, uZoom;
-uniform float uTravel; // how far we've flown: the clock, sped up by Газ and Рывок
+uniform float uTravel; // how far we've flown: the clock, sped up by Газ
 uniform float uBoost;  // how much faster than the speed set, now
 uniform float uBank;   // the mouse rolls the tunnel, as a car leaning into a turn
 uniform float uLamp;   // the lines brighten round the pointer
@@ -197,6 +197,7 @@ vec3 tunnel(vec2 sp) {
   float gap = uDepth / uLayers;
   for (int i = 0; i < 64; i++) {
     if (float(i) >= uLayers) break;
+    float last = float(i) + 1. > uLayers ? fract(uLayers) : 1.;   // a layer coming or going fades
     float z = mod(float(i) * gap - uTravel, uDepth) + .06;
     float ang = z * .22 * uTwist + sin(T * .25 + S) * .5 * uTwist - uMouse.x * uBank * .6;
     vec2 bend = vec2(sin(z * .6 + T * .5 + S), cos(z * .45 + T * .4 + S * 2.)) * .12 * uBend * z;
@@ -208,7 +209,7 @@ vec3 tunnel(vec2 sp) {
     float fade = smoothstep(uDepth + .05, uDepth * .6, z) * smoothstep(.06, .5, z);
     vec3 c = pal(mix(1., .38, z / uDepth) + uTone);
     float line = smoothstep(px * uLine * (1. + uBoost * .15), 0., abs(d)) + exp(-abs(d) * 70.) * .45 * uGlow * (1. + uBoost * .4);
-    acc += c * (line * .55 + (d < 0. ? uFill * .15 : 0.)) * fade;
+    acc += c * (line * .55 + (d < 0. ? uFill * .15 : 0.)) * fade * last;
   }
   acc *= 1. + uLamp * 2.5 * exp(-length(sp - uMouse * vec2(R.x / R.y, 1.) * .5) * 5.);
   vec3 bg = pal(.12 + uTone * .3 - .1 * length(sp));
@@ -271,11 +272,11 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     { id: 'uFill', label: 'Заливка', min: 0, max: 1, step: 0.01, def: 0, only: [2] },
     { id: 'uTone', label: 'Тон', min: -0.5, max: 0.3, step: 0.01, def: 0, only: [2] },
     { id: 'uMouseK', label: 'Мышь', min: 0, max: 2, step: 0.01, def: 2, only: [0, 2], own: true },
-    // Тоннель's mouse: Крен rolls it, Газ speeds it up while pressed, Рывок while the pointer moves fast, Фонарь
-    // lights it round the pointer
+    // Тоннель's mouse: Крен rolls it, Газ speeds it up while pressed, Слои мышью: the pointer up adds layers and
+    // down takes them away (up to twice and half as many at 1), Фонарь lights it round the pointer
     { id: 'uBank', label: 'Крен', min: 0, max: 2, step: 0.01, def: 1, only: [2] },
     { id: 'gas', label: 'Газ', min: 0, max: 3, step: 0.01, def: 1, only: [2] },
-    { id: 'rush', label: 'Рывок', min: 0, max: 3, step: 0.01, def: 1, only: [2] },
+    { id: 'layersK', label: 'Слои мышью', min: 0, max: 2, step: 0.01, def: 1, only: [2] },
     { id: 'uLamp', label: 'Фонарь', min: 0, max: 2, step: 0.01, def: 0.5, only: [2] },
   ]
   // Облако's colours to start from: a glowing cloud on the dark, a dark one lit round its edges, the dusk
@@ -329,17 +330,13 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
   sync()
 
   // The pointer over the picture, -1..1 from its centre, y up; the shader gets it eased
-  // Pressing on the picture is Газ; how fast the pointer moves (in picture heights a second) feeds Рывок
+  // Pressing on the picture is Газ
   const aim = [0, 0], mouse = [0, 0]
-  let pressed = false, rush = 0, boost = 0, travel = 0, lastMove = 0
+  let pressed = false, boost = 0, travel = 0
   addEventListener('pointermove', (e) => {
     const r = canvas.getBoundingClientRect()
     const x = Math.max(-1, Math.min(1, ((e.clientX - r.left) / r.width) * 2 - 1))
     const y = Math.max(-1, Math.min(1, 1 - ((e.clientY - r.top) / r.height) * 2))
-    const now = performance.now(), dt = Math.max(now - lastMove, 8) / 1000
-    const v = Math.hypot((x - aim[0]) * r.width, (y - aim[1]) * r.height) / 2 / r.height / dt
-    if (now - lastMove < 100) rush = Math.max(rush, Math.min(v, 6))
-    lastMove = now
     aim[0] = x
     aim[1] = y
   })
@@ -367,9 +364,8 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     t += dt * get('speed')
     last = now
     for (const i of [0, 1]) mouse[i] += (aim[i] - mouse[i]) * 0.06
-    const goal = (pressed ? get('gas') * 4 : 0) + rush * get('rush')
+    const goal = pressed ? get('gas') * 4 : 0
     boost += (goal - boost) * (goal > boost ? 0.08 : 0.03)
-    rush *= 0.9
     travel += dt * 1.4 * (get('speed') + boost * Math.max(get('speed'), 0.25))
     gl.uniform1f(u.uTravel, travel)
     gl.uniform1f(u.uBoost, boost)
@@ -380,6 +376,7 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     gl.uniform1i(u.V, state.v)
     gl.uniform2f(u.uMouse, mouse[0], mouse[1])
     for (const c of CONTROLS) if (c.id !== 'speed') gl.uniform1f(u[c.id], get(c.id))
+    gl.uniform1f(u.uLayers, Math.max(2, Math.min(64, get('uLayers') * 2 ** (mouse[1] * get('layersK')))))
     gl.drawArrays(gl.TRIANGLES, 0, 3)
     requestAnimationFrame(frame)
   }
