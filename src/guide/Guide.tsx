@@ -113,7 +113,7 @@ const MEDIA = packMedia(MEDIA_LIST)
 const NAV: NavItem[] = [
   {
     id: 'brand',
-    title: 'Платформа',
+    title: 'Платформа бренда',
     children: [
       { id: 'positioning', title: 'Позиционирование' },
       { id: 'vision', title: 'Видение' },
@@ -275,20 +275,20 @@ function TocIcon({ name }: { name: keyof typeof tocIcons }) {
 }
 
 /**
- * Expand-all row at the foot of the table of contents, named for the guide, «Бренд UMO»: the menu bars on the first
- * screen, where the contents are out of view, then the chevrons apart to spread the list, together to fold it.
+ * Expand-all row at the end of the sidebar's list, stuck to the bottom of the screen when the list runs past it: the
+ * chevrons apart to spread every chapter, together to fold them.
  */
-function TocToggle({ expanded, shown, onClick, className = '' }: { expanded: boolean; shown: boolean; onClick: () => void; className?: string }) {
+function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; onClick: () => void; className?: string }) {
   return (
     <button
       type="button"
       onClick={onClick}
       aria-expanded={expanded}
-      // No width of its own: both places set it, and a `w-full` here outranked theirs in the built CSS
+      // No width of its own: its place sets it
       className={`flex cursor-pointer items-start gap-2 bg-white ${NAV_HOVER} text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] ${className}`}
     >
-      <TocIcon name={expanded ? 'close' : shown ? 'expand' : 'menu'} />
-      {expanded ? 'Свернуть' : 'Бренд UMO'}
+      <TocIcon name={expanded ? 'close' : 'expand'} />
+      {expanded ? 'Свернуть' : 'Развернуть'}
     </button>
   )
 }
@@ -296,7 +296,8 @@ function TocToggle({ expanded, shown, onClick, className = '' }: { expanded: boo
 /** `stickyChapters` (the phone's sheet): a chapter's title stays at the top of the list while its items scroll by. */
 function Nav({ active, expandAll, onNavigate, stickyChapters }: { active: string[]; expandAll: boolean; onNavigate?: () => void; stickyChapters?: boolean }) {
   const activeChapter = NAV.find(c => active.some(id => contains(c, id)))?.id
-  // Above the first chapter (the first screen) Платформа stands open, so the list doesn't read «UMO — Платформа»
+  // Above the first chapter (the first screen) Платформа бренда stands open and lit: from lg it's the first screen's
+  // bottom line, leading the list up as the page rises
   const openChapter = activeChapter ?? NAV[0].id
   return (
     // Chapters 8px above and under (16px apart), items 4px (8px apart): chapter → first item 12px; the last item takes
@@ -308,7 +309,7 @@ function Nav({ active, expandAll, onNavigate, stickyChapters }: { active: string
         const open = expandAll || openChapter === chapter.id
         return (
           <div key={chapter.id} className="flex flex-col">
-            <NavLink id={chapter.id} title={chapter.title} active={activeChapter === chapter.id} current={active.includes(chapter.id)} onNavigate={onNavigate} pad={stickyChapters ? STICKY_CHAPTER : 'py-2'} bullet={stickyChapters ? '-left-3' : undefined} />
+            <NavLink id={chapter.id} title={chapter.title} active={openChapter === chapter.id} current={active.includes(chapter.id)} onNavigate={onNavigate} pad={stickyChapters ? STICKY_CHAPTER : 'py-2'} bullet={stickyChapters ? '-left-3' : undefined} />
             {chapter.children && (
               <div
                 inert={!open}
@@ -386,23 +387,22 @@ const UMO_Y_PAD = COBRAND ? 12 : 0
 const UMO_Y_GAP = COBRAND ? 8 : 0
 
 /**
- * While the page slides up over the hero, the sidebar's toggle row stays fixed at the bottom of the screen, while the
- * sidebar runs off it, so the contents unroll between the logo and the row as the page rises. They fade in over the
- * first 160px of scroll: on the first screen there's only the logo and the row. The logo, 200px wide on the first
- * screen, shrinks with the scroll to its usual 120 (24 high) by the time the page reaches the top. Returns whether the
- * contents are in view (half faded in or more), so the toggle row says «Бренд UMO» on the first screen, where there's
- * nothing to fold, even while the list is expanded.
+ * While the page slides up over the hero, the sidebar rises with it. On the first screen its list stands lower, the
+ * first chapter, Платформа бренда, on the bottom line beside the quick links, and as the page rises it leads the rest
+ * of the list up to its place under the logo. The logo, 200px wide on the first screen, shrinks with the scroll to its
+ * usual 120 (24 high) by the time the page reaches the top. Until then the sidebar doesn't scroll on its own: the list
+ * standing lower runs past its foot.
  */
 function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObject<HTMLElement | null>) {
-  const [shown, setShown] = useState(false)
   useEffect(() => {
     let frame = 0
     let open = 40
+    let drop = 0
     // The fold's moves that depend on the screen, as keyframes (index.css has them for a 60px statement until then).
     const keyframes = document.createElement('style')
     document.head.appendChild(keyframes)
     // What changes with the screen, not the scroll: how far the page rises (the fold's length), the statement's
-    // capitals, the sidebar's width.
+    // capitals, the sidebar's width, how far the list stands lower on the first screen.
     const layout = () => {
       const body = bodyRef.current
       const aside = asideRef.current
@@ -418,7 +418,11 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
       const caps = UMO_Y_HEIGHT.open * (statement ? parseFloat(getComputedStyle(statement).fontSize) : 60)
       open = Math.round(Math.min(caps, (aside.clientWidth - 48) * (COBRAND ? 0.6 : 1) / 5) * 100) / 100
       aside.style.setProperty('--u', `${open / 60}px`)
-      const css = umoYKeyframes(open)
+      // The first chapter's line on the first screen: 24px over the screen's foot plus the lockup's extra, a 20px line
+      // up, where the quick links stand. The list's own top there is the page's top plus its place in the sidebar.
+      const list = aside.querySelector<HTMLElement>('[data-umo-y-nav]')
+      if (list) drop = Math.round(window.innerHeight - 24 - 20 - UMO_Y_PAD - body.offsetTop - list.offsetTop)
+      const css = umoYKeyframes(open, drop)
       if (keyframes.textContent !== css) keyframes.textContent = css
     }
     const update = () => {
@@ -426,13 +430,13 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
       const body = bodyRef.current
       const aside = asideRef.current
       if (!body || !aside) return
-      const opacity = Math.min(1, window.scrollY / 160)
-      const nav = aside.querySelector<HTMLElement>('nav')
-      if (nav) nav.style.visibility = opacity ? '' : 'hidden'
-      setShown(opacity >= 0.5)
+      const top = body.getBoundingClientRect().top
+      // The list standing lower runs past the sidebar's foot: no scrolling it until the page is up
+      const overflow = top > 0.5 ? 'hidden' : ''
+      if (aside.style.overflowY !== overflow) aside.style.overflowY = overflow
       if (SCROLL_TIMELINE) return
       // Without scroll timelines the script makes the moves of index.css frame by frame.
-      const t = 1 - Math.min(1, Math.max(0, body.getBoundingClientRect().top) / Math.max(1, body.offsetTop))
+      const t = 1 - Math.min(1, Math.max(0, top) / Math.max(1, body.offsetTop))
       document.querySelectorAll<HTMLElement>('[data-umo-y-layers]').forEach(el => setUmoY(el, t))
       const pad = UMO_Y_PAD * (1 - t)
       const move = (selector: string, transform: string) => {
@@ -440,36 +444,37 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
         if (el) el.style.transform = transform
       }
       move('[data-umo-y-desk]', `translate(${pad}px, ${pad}px) scale(${1 + (UMO_Y_HEIGHT.folded / open - 1) * t})`)
-      move('[data-umo-y-nav]', `translate(${pad}px, ${(open + UMO_Y_PAD - UMO_Y_HEIGHT.folded) * (1 - t)}px)`)
-      move('[data-umo-y-toggle]', `translate(${pad}px, ${-pad}px)`)
-      if (nav) nav.style.opacity = String(opacity)
+      move('[data-umo-y-nav]', `translate(${pad}px, ${drop * (1 - t)}px)`)
     }
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }
     const onResize = () => { layout(); onScroll() }
     onResize()
+    // The strip under the film is measured after fonts load (useHeroStrip), moving the page's top
+    const ro = new ResizeObserver(onResize)
+    if (bodyRef.current) ro.observe(bodyRef.current)
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onResize)
     return () => {
+      ro.disconnect()
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onResize)
       cancelAnimationFrame(frame)
       keyframes.remove()
     }
   }, [bodyRef, asideRef])
-  return shown
 }
 
 /**
- * The sidebar's fold from lg, for a wordmark starting `open` px high: it scales down to 24, and the logo, the contents
- * and their toggle row come in from the first screen's extra UMO_Y_PAD to the usual 24 — the contents also rising by
- * what the logo loses in height. All moves, no layout, so the browser runs them on the scroll (see index.css).
+ * The sidebar's fold from lg, for a wordmark starting `open` px high: it scales down to 24, and the logo and the list
+ * come in from the first screen's extra UMO_Y_PAD to the usual 24, the list also rising from `drop` lower, where its
+ * first chapter stands on the first screen's bottom line. All moves, no layout, so the browser runs them on the scroll
+ * (see index.css).
  */
-function umoYKeyframes(open: number) {
+function umoYKeyframes(open: number, drop: number) {
   const p = UMO_Y_PAD
   return [
     `@keyframes umo-y-desk { from { transform: translate(${p}px, ${p}px) scale(1) } to { transform: translate(0px, 0px) scale(${UMO_Y_HEIGHT.folded / open}) } }`,
-    `@keyframes umo-y-nav { from { transform: translate(${p}px, ${open + p - UMO_Y_HEIGHT.folded}px) } to { transform: translate(0px, 0px) } }`,
-    `@keyframes umo-y-toggle { from { transform: translate(${p}px, ${-p}px) } to { transform: translate(0px, 0px) } }`,
+    `@keyframes umo-y-nav { from { transform: translate(${p}px, ${drop}px) } to { transform: translate(0px, 0px) } }`,
   ].join('\n')
 }
 
@@ -643,7 +648,7 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
 }
 
 /**
- * Below lg, from 480px, where they fit beside «Бренд UMO»: the quick links stand in the bottom bar, spaced as its edges (16px, from md 24), in
+ * Below lg, from 480px, where they fit beside «Содержание»: the quick links stand in the bottom bar, spaced as its edges (16px, from md 24), in
  * place of their own line under the statement, which leaves the film more of the first screen. They're there for the
  * first screen only and fade out over the first 160px of scroll, as the sidebar's contents fade in from lg, so further
  * down the bar is the contents' alone again.
@@ -668,8 +673,8 @@ function BarLinks() {
   }, [])
   return (
     <nav ref={ref} aria-label="Быстрые ссылки" className="relative hidden shrink-0 gap-x-4 min-[480px]:flex md:gap-x-6">
-      <a href="#positioning" className={LINK_HOVER}>Платформа</a>
-      <a href="#materials" className={LINK_HOVER}>Материалы для дилеров</a>
+      <a href="#materials" className={LINK_HOVER}>Носители</a>
+      {/* <a href="/print" className={LINK_HOVER}>Печатные материалы</a> — the constructors' page, to be made */}
     </nav>
   )
 }
@@ -1332,18 +1337,16 @@ export default function Guide() {
   const quickRef = useRef<HTMLElement>(null)
   useHeroStrip(pageRef, quickRef, bodyRef)
   useHeroSnap(bodyRef)
-  const tocShown = useHeroReveal(bodyRef, asideRef)
-  // The contents row does what it says; on the first screen, where the contents are out of view and it says
-  // «Бренд UMO» whatever the list's state, it takes the page up over the photo and opens the list (an expanded one
-  // stays so).
+  useHeroReveal(bodyRef, asideRef)
+  // The expand row does what it says; short of the top, it also takes the page up over the photo.
   const onTocToggle = () => {
-    if (tocShown || !expandAll) toggleExpandAll()
+    toggleExpandAll()
     const top = bodyRef.current?.getBoundingClientRect().top ?? 0
     if (top > 1) window.scrollTo({ top: window.scrollY + top, behavior: 'smooth' })
   }
   // Two headings rarely share a line on a phone; when they do (Видение / Миссия), the first one names the place. On
-  // the first screen (the film and the statement, before any section) the bar says «Бренд UMO», as the desktop row
-  // does there; it said «Платформа бренда» for the statement standing in for that chapter's title
+  // the first screen (the film and the statement, before any section) the bar says «Содержание»; it said «Платформа
+  // бренда» for the statement standing in for that chapter's title
   const sectionTitle = active.length && active[0] !== 'brand' ? TITLES[active[0]] : undefined
 
   // The open mobile contents: opened at the chapter you're reading, the page behind kept still, Esc closing it.
@@ -1404,14 +1407,16 @@ export default function Guide() {
       <aside ref={asideRef} className="hidden lg:flex sticky top-0 h-screen w-[320px] xl:w-1/3 shrink-0 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {/* The logo's box is the folded UMO, 120 by 24; the lockup is drawn larger over it and scaled (useHeroReveal). */}
         <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" onClick={toTop} aria-label="В начало" data-logo className="block h-6 w-[120px]"><div data-umo-y-desk className="origin-top-left will-change-transform"><UmoYLayers title="UMO" /></div></a></div>
-        {/* The row is fixed to the bottom of the screen — not moved there by script, which lags the scroll a frame and
-            makes it shake — so the list keeps its height free at the end. */}
-        <div data-umo-y-nav className="px-6 pb-[68px] will-change-transform"><Nav active={active} expandAll={expandAll} /></div>
-        <div className="fixed bottom-0 left-0 z-10 w-[320px] bg-white xl:w-1/3">
-          <div data-umo-y-toggle className="will-change-transform">
-            <TocToggle expanded={expandAll && tocShown} shown={tocShown} onClick={onTocToggle} className="w-full p-6" />
-          </div>
+        {/* The list, then its expand row: the row follows the list's end and sticks to the bottom of the screen when the
+            list runs past it, the list scrolling under it. On the first screen the list stands lower, its first chapter
+            on the bottom line (useHeroReveal), and leads the rest up as the page rises. */}
+        <div data-umo-y-nav className="px-6 will-change-transform">
+          <Nav active={active} expandAll={expandAll} />
+          <TocToggle expanded={expandAll} onClick={onTocToggle} className="sticky bottom-0 z-10 -mx-6 w-[calc(100%+48px)] p-6" />
         </div>
+        {/* The sidebar's 24px at the foot of the screen stay white, so the list coming up from under it on the first
+            screen shows only its first chapter, and the items rising after it come in whole */}
+        <div aria-hidden className="pointer-events-none fixed bottom-0 left-0 z-10 h-6 w-[320px] bg-white xl:w-1/3" />
       </aside>
 
       {/* Mobile top bar. iOS 26 browsers draw the page under their translucent top bar and stick `top: 0` below it,
@@ -1447,11 +1452,11 @@ export default function Guide() {
               type="button"
               onClick={() => setMenuOpen(!menuOpen)}
               aria-expanded={menuOpen}
-              aria-label={menuOpen ? 'Свернуть' : sectionTitle ? `Содержание: ${sectionTitle}` : 'Содержание: Бренд UMO'}
+              aria-label={menuOpen ? 'Свернуть' : sectionTitle ? `Содержание: ${sectionTitle}` : 'Содержание'}
               className="flex min-w-0 cursor-pointer items-start gap-2 text-left before:absolute before:inset-0 before:content-['']"
             >
               <TocIcon name={menuOpen ? 'close' : 'menu'} />
-              <span className="min-w-0 truncate">{menuOpen ? 'Свернуть' : sectionTitle ?? 'Бренд UMO'}</span>
+              <span className="min-w-0 truncate">{menuOpen ? 'Свернуть' : sectionTitle ?? 'Содержание'}</span>
             </button>
             {!menuOpen && <BarLinks />}
           </div>
@@ -1472,11 +1477,11 @@ export default function Guide() {
                 <p id="brand" className="scroll-mt-24 text-[32px] font-medium leading-none tracking-[-0.01em] md:text-[48px] lg:mt-[calc(8px-0.164em+var(--umo-y-overhang,0px))] lg:max-w-[912px] lg:scroll-mt-[calc(24px-0.164em)] lg:text-[min(60px,6.58cqw)]">
                   Автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
                 </p>
-                {/* Quick links: into the brand platform, from its first section, and to Носители with their constructors,
-                    named for whom they're for (they were «Стандарты» and «Носители») */}
+                {/* Quick links: to Носители, named as the chapter, and (once the page listing the constructors is made)
+                    to the constructors. They were «Платформа» and «Материалы для дилеров» */}
                 <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex max-lg:min-[480px]:hidden flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
-                  <a href="#positioning" className={LINK_HOVER}>Платформа</a>
-                  <a href="#materials" className={LINK_HOVER}>Материалы для дилеров</a>
+                  <a href="#materials" className={LINK_HOVER}>Носители</a>
+                  {/* <a href="/print" className={LINK_HOVER}>Печатные материалы</a> — the constructors' page, to be made */}
                 </nav>
               </div>
               <Section>
