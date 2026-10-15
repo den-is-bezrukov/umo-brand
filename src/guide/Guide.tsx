@@ -275,29 +275,25 @@ function TocIcon({ name }: { name: keyof typeof tocIcons }) {
 }
 
 /**
- * Expand-all row at the end of the sidebar's list, stuck to the bottom of the screen when the list runs past it: the
- * chevrons apart to spread every chapter, together to fold them.
+ * The head of the sidebar's list, as a generator's header (docs/generators.md): the icon shows the whole list — the menu
+ * bars spread every chapter and turn into the «Свернуть» chevrons — and «Бренд UMO», the generators' crumb, leads to the
+ * guide's start. It stays under the logo while an expanded list scrolls by.
  */
-function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; onClick: () => void; className?: string }) {
+function TocHead({ expanded, onToggle, className = '' }: { expanded: boolean; onToggle: () => void; className?: string }) {
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-expanded={expanded}
-      // No width of its own: its place sets it
-      className={`flex cursor-pointer items-start gap-2 bg-white ${NAV_HOVER} text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] ${className}`}
-    >
-      <TocIcon name={expanded ? 'close' : 'expand'} />
-      {expanded ? 'Свернуть' : 'Развернуть'}
-    </button>
+    <div className={`flex items-start gap-2 bg-white text-[16px] font-medium leading-[1.25] tracking-[-0.01em] ${className}`}>
+      <button type="button" onClick={onToggle} aria-expanded={expanded} aria-label={expanded ? 'Свернуть содержание' : 'Развернуть содержание'} className={`relative cursor-pointer ${NAV_HOVER} after:absolute after:-inset-[10px] after:content-['']`}>
+        <TocIcon name={expanded ? 'close' : 'menu'} />
+      </button>
+      <a href="#top" onClick={toTop} className={NAV_HOVER}>Бренд UMO</a>
+    </div>
   )
 }
 
 /** `stickyChapters` (the phone's sheet): a chapter's title stays at the top of the list while its items scroll by. */
 function Nav({ active, expandAll, onNavigate, stickyChapters }: { active: string[]; expandAll: boolean; onNavigate?: () => void; stickyChapters?: boolean }) {
   const activeChapter = NAV.find(c => active.some(id => contains(c, id)))?.id
-  // Above the first chapter (the first screen) Концепция stands open and lit: from lg it's the first screen's
-  // bottom line, leading the list up as the page rises
+  // Above the first chapter (the first screen) Концепция stands open and lit
   const openChapter = activeChapter ?? NAV[0].id
   return (
     // Chapters 8px above and under (16px apart), items 4px (8px apart): chapter → first item 12px; the last item takes
@@ -387,9 +383,9 @@ const UMO_Y_PAD = COBRAND ? 12 : 0
 const UMO_Y_GAP = COBRAND ? 8 : 0
 
 /**
- * While the page slides up over the hero, the sidebar rises with it. On the first screen its list stands lower, the
- * first chapter, Концепция, on the bottom line beside the quick links, and as the page rises it leads the rest
- * of the list up to its place under the logo. The logo, 200px wide on the first screen, shrinks with the scroll to its
+ * While the page slides up over the hero, the sidebar rises with it. On the first screen its list stands lower, its
+ * head, «☰ Бренд UMO», on the bottom line beside the quick links, and as the page rises it leads the list up to its
+ * place under the logo. The logo, 200px wide on the first screen, shrinks with the scroll to its
  * usual 120 (24 high) by the time the page reaches the top. Until then the sidebar doesn't scroll on its own: the list
  * standing lower runs past its foot.
  */
@@ -1383,7 +1379,7 @@ export default function Guide() {
   useHeroStrip(pageRef, quickRef, bodyRef)
   useHeroSnap(bodyRef)
   useHeroReveal(bodyRef, asideRef)
-  // The expand row does what it says; short of the top, it also takes the page up over the photo.
+  // The head's icon spreads or folds the list; short of the top, it also takes the page up over the photo.
   const onTocToggle = () => {
     toggleExpandAll()
     const top = bodyRef.current?.getBoundingClientRect().top ?? 0
@@ -1453,15 +1449,15 @@ export default function Guide() {
       <aside ref={asideRef} className="hidden lg:flex sticky top-0 h-screen w-[320px] xl:w-1/3 shrink-0 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {/* The logo's box is the folded UMO, 120 by 24; the lockup is drawn larger over it and scaled (useHeroReveal). */}
         <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" onClick={toTop} aria-label="В начало" data-logo className="block h-6 w-[120px]"><div data-umo-y-desk className="origin-top-left will-change-transform"><UmoYLayers title="UMO" /></div></a></div>
-        {/* The list, then its expand row: the row follows the list's end and sticks to the bottom of the screen when the
-            list runs past it, the list scrolling under it. On the first screen the list stands lower, its first chapter
-            on the bottom line (useHeroReveal), and leads the rest up as the page rises. */}
-        <div data-umo-y-nav className="px-6 will-change-transform">
-          <Nav active={active} expandAll={expandAll} />
-          <TocToggle expanded={expandAll} onClick={onTocToggle} className="sticky bottom-0 z-10 -mx-6 w-[calc(100%+48px)] p-6" />
+        {/* «☰ Бренд UMO», then the list 24px under it. On the first screen they stand lower, the head on the bottom line
+            (useHeroReveal), and it leads the list up as the page rises; docked, the head stays under the logo while an
+            expanded list scrolls by (the logo's box is 72px). */}
+        <div data-umo-y-nav className="px-6 pb-6 will-change-transform">
+          <TocHead expanded={expandAll} onToggle={onTocToggle} className="sticky top-[72px] z-10 -mx-6 px-6 pb-2" />
+          <div className="mt-4"><Nav active={active} expandAll={expandAll} /></div>
         </div>
         {/* The sidebar's 24px at the foot of the screen stay white, so the list coming up from under it on the first
-            screen shows only its first chapter, and the items rising after it come in whole */}
+            screen shows only its head, and the items rising after it come in whole */}
         <div aria-hidden className="pointer-events-none fixed bottom-0 left-0 z-10 h-6 w-[320px] bg-white xl:w-1/3" />
       </aside>
 
