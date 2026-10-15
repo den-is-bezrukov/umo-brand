@@ -1676,7 +1676,7 @@ export default function Guide() {
           </Chapter>
 
           {/* ── Коммуникация ── */}
-          <Chapter id="communication" title="Коммуникация">
+          <Chapter id="communication" title="Коммуникация" loose>
             <Section>
               <Head>
                 <H2 id="name">Имя</H2>
