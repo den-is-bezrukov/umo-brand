@@ -420,7 +420,7 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
       // From lg the sidebar's wordmark starts as high as the statement's capitals, or lower where the unfolded lockup
       // (5/3 of it, 5 times its height wide; without the cobrand, the wordmark alone) wouldn't fit the sidebar, and
       // folds to 24. It's drawn at that starting size (the unit `--u`) and scaled down, so it stays sharp.
-      const statement = document.getElementById('brand')
+      const statement = document.getElementById('statement')
       const caps = UMO_Y_HEIGHT.open * (statement ? parseFloat(getComputedStyle(statement).fontSize) : 60)
       open = Math.round(Math.min(caps, (aside.clientWidth - 48) * (COBRAND ? 0.6 : 1) / 5) * 100) / 100
       aside.style.setProperty('--u', `${open / 60}px`)
@@ -666,7 +666,7 @@ function BarLinks() {
   return (
     <nav aria-label="Быстрые ссылки" className="relative -ml-2 flex shrink-0 gap-x-4 whitespace-nowrap md:-ml-4 md:gap-x-6">
       {/* «Платформа» alone where «бренда» wouldn't fit the bar (the three and the icon need about 400px with it) */}
-      <a href="#positioning" className={`${BAR_LINK} ${LINK_HOVER}`}>Платформа<span className="max-[419px]:hidden"> бренда</span></a>
+      <a href="#brand" className={`${BAR_LINK} ${LINK_HOVER}`}>Платформа<span className="max-[419px]:hidden"> бренда</span></a>
       <a href="#materials" className={`${BAR_LINK} ${LINK_HOVER}`}>Материалы</a>
       <Link to="/editor" className={`${BAR_LINK} ${LINK_HOVER}`}>Редактор</Link>
     </nav>
@@ -1457,7 +1457,7 @@ export default function Guide() {
   // Two headings rarely share a line on a phone; when they do (Видение / Миссия), the first one names the place. On
   // the first screen (the film and the statement, before any section) the bar shows the menu icon alone, the quick
   // links after it, as on wide screens
-  const sectionTitle = active.length && active[0] !== 'brand' ? TITLES[active[0]] : undefined
+  const sectionTitle = active.length ? TITLES[active[0]] : undefined
 
   // The open mobile contents: opened at the chapter you're reading, the page behind kept still, Esc closing it.
   const sheetRef = useRef<HTMLDivElement>(null)
@@ -1603,26 +1603,31 @@ export default function Guide() {
       {/* 16px on top from lg: the statement's capitals then stand level with the top of the logo beside it. */}
       <main className="min-w-0 flex-1 p-4 pb-[calc(52px+1rem)] md:p-6 md:pb-[calc(68px+1.5rem)] lg:pt-4 lg:pb-6">
         <div className="flex flex-col gap-section">
-          {/* Платформа бренда follows the hero without a title of its own — the statement stands in for it and carries
-              the chapter anchor. */}
+          {/* The statement under the hero, the brand's descriptor (Посыл → Дескрипторы), standing as the cover's line,
+              then Платформа бренда with a title of its own as every chapter (the statement stood in for it). */}
           <div>
-            <div className="flex flex-col gap-section">
+            <div className="flex flex-col">
               {/* From lg the statement is 60px in the 912px Figma column and scales with the column below that
                   (6.58cqw), so it wraps the same three lines at any width. Its capitals stand level with the top of
                   the logo: the body's 16px on top, plus 8px less CoFo Sans's 0.164em above the caps. */}
               <div className="flex flex-col gap-8 md:gap-12 lg:[container-type:inline-size]">
-                <p id="brand" className="scroll-mt-24 text-[32px] font-medium leading-none tracking-[-0.01em] md:text-[48px] lg:mt-[calc(8px-0.164em+var(--umo-y-overhang,0px))] lg:max-w-[912px] lg:scroll-mt-[calc(24px-0.164em)] lg:text-[min(60px,6.58cqw)]">
+                <p id="statement" className="text-[32px] font-medium leading-none tracking-[-0.01em] md:text-[48px] lg:mt-[calc(8px-0.164em+var(--umo-y-overhang,0px))] lg:max-w-[912px] lg:text-[min(60px,6.58cqw)]">
                   Автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
                 </p>
                 {/* Quick links: read (Платформа бренда, from its first section), see (Материалы), make (Редактор, the constructors'
                     window, titled «Редактор материалов»). They were Платформа and Материалы для дилеров, then Носители and Печатные материалы */}
                 {/* From lg only: below it they stand in the bottom bar beside the menu icon (BarLinks) */}
                 <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex max-lg:hidden flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
-                  <a href="#positioning" className={LINK_HOVER}>Платформа бренда</a>
+                  <a href="#brand" className={LINK_HOVER}>Платформа бренда</a>
                   <a href="#materials" className={LINK_HOVER}>Материалы</a>
                   <Link to="/editor" className={LINK_HOVER}>Редактор</Link>
                 </nav>
               </div>
+            </div>
+          </div>
+
+          {/* ── Платформа бренда ── */}
+          <Chapter id="brand" title="Платформа бренда">
               <Section>
                 {/* Picture above the heading; the anchor sits on it so links land on the picture */}
                 <div id="positioning" className="scroll-mt-24 lg:scroll-mt-6"><Fig name="positioning" w={912} h={456} alt="" /></div>
@@ -1668,9 +1673,7 @@ export default function Guide() {
                   </Head>
                 </div>
               </Section>
-
-            </div>
-          </div>
+          </Chapter>
 
           {/* ── Посыл ── */}
           <Chapter id="message" title="Посыл">
