@@ -42,6 +42,11 @@
 <div class="panel">
   <div class="tabs" id="tabs">
     <button data-v="2">Тоннель</button>
+    <button data-v="3">Металл</button>
+    <button data-v="4">Следы</button>
+    <button data-v="5">Топокарта</button>
+    <button data-v="6">Рой</button>
+    <button data-v="7">Табло</button>
   </div>
   <div id="sliders" class="sliders"></div>
   <div class="row">
@@ -152,11 +157,155 @@ vec3 tunnel(vec2 sp) {
   return bg + acc;
 }
 
+
+// The wordmark fitted to the picture: `fit` of its width, no taller than `cap` canvas heights wide. Returns the
+// point in the logo's units; `k` is how many of them make one canvas height
+vec2 toLogo(vec2 sp, float fit, float cap, out float k) {
+  k = 480. / min(R.x / R.y * fit, cap);
+  return vec2(sp.x, -sp.y) * k + vec2(240, 48);
+}
+
+// ── Металл: after the reel's Gradient Ramp → Colorama → Turbulent Displace → Plane to Sphere — the letters as
+// bulging lenses with the brand gradient flowing through them in bands, a glow round them, a flash now and then ──
+uniform float mBands, mFlow, mBulge, mGlow, mFlash;
+vec3 metal(vec2 sp) {
+  float k;
+  vec2 P = toLogo(sp, .72, 2.6, k);
+  vec2 mp = uMouse * vec2(R.x / R.y, 1.) * .5;
+  float d = logo(P);
+  vec2 g = vec2(logo(P + vec2(1, 0)) - logo(P - vec2(1, 0)), logo(P + vec2(0, 1)) - logo(P - vec2(0, 1)));
+  g = vec2(g.x, -g.y) / max(length(g), 1e-4);                 // outwards, y up
+  float px = k / R.y;
+  float inside = smoothstep(px, -px, d);
+  float dome = sqrt(clamp(-d / 18., 0., 1.));                  // 0 at the edge, 1 along the stroke's middle
+  vec2 q = sp + g * (1. - dome) * .07 * mBulge;               // seen through the bulge
+  float t = T * .15;
+  vec2 tq = q * 1.6 + S;
+  float turb = fbm(tq + vec2(t, -t * .7) + fbm(tq * 1.3 - t) * 1.2);
+  float ramp = q.y * 1.1 + q.x * .25 + (turb - .5) * mFlow * 1.4 + length(q - mp) * .35;
+  float band = abs(fract(ramp * mBands - T * .05) - .5) * 2.;  // the ramp cycled there and back, no seam
+  vec3 c = pal(.38 + .4 * band + .25 * dome);                  // hot along the middle, red at the rim
+  vec3 nrm = normalize(vec3(g * (1. - dome) * 1.6, 1.));
+  vec3 L = normalize(vec3(mp - sp, .5));
+  c += pal(1.) * pow(max(dot(reflect(-L, nrm), vec3(0, 0, 1)), 0.), 20.) * .9;
+  float fl = pow(.5 + .5 * sin(T * .45), 14.) * mFlash;       // the flash: the core goes white-hot
+  c = mix(c, vec3(1, .95, .88), fl * dome * .85);
+  float outside = max(d, 0.) / k;
+  vec3 glow = pal(.72 + fl * .25) * exp(-outside * 8.) * mGlow * (.5 + fl);
+  return mix(glow, c, inside);
+}
+
+// ── Следы: long-exposure traffic round the wordmark — its outline repeated outwards as lanes, lights running
+// along them both ways, the pointer pulling the lanes towards it ──
+uniform float tLanes, tGap, tCars, tTail, tPull;
+vec3 trails(vec2 sp) {
+  float k;
+  vec2 P = toLogo(sp, .55, 2.2, k);
+  vec2 mp = uMouse * vec2(R.x / R.y, 1.) * .5;
+  float px = k / R.y;
+  float d = logo(P);
+  float md = length(sp - mp);
+  d -= tPull * 40. * exp(-md * md * 14.);
+  float dd = d / tGap;
+  float lane = floor(dd + .5);
+  float off = abs(fract(dd + .5) - .5) * tGap;                // distance to the nearest lane, in logo units
+  float on = step(.5, lane) * step(lane, tLanes);
+  float line = smoothstep(px * 1.3, 0., off) + exp(-off / (px * 3.)) * .3;
+  float th = atan((P.y - 48.) * 2.6, P.x - 240.) / 6.2832;    // round the word
+  float dir = mod(lane, 2.) < .5 ? 1. : -1.;
+  float ph = fract(th * tCars * dir + T * .1 * (1. + .4 * h(vec2(lane, S))) + h(vec2(lane * 7., S)));
+  float car = pow(smoothstep(1. - tTail, 1., ph), 2.);
+  vec3 laneC = pal(mix(.95, .4, lane / max(tLanes, 1.)));
+  vec3 col = laneC * line * (.3 + 2. * car) * on;
+  col += vec3(1, .93, .85) * line * on * smoothstep(.97, 1., ph);
+  // The letters: dark, with their own outline lit
+  float edge = smoothstep(px * 1.3, 0., abs(logo(P)));
+  col += pal(.85) * edge * .8 + pal(.08) * smoothstep(px, -px, logo(P));
+  return col;
+}
+
+// ── Топокарта: the wordmark as a plateau in a landscape, drawn as a map — contour lines, tints by height and
+// hill shading lit from the pointer; the land slowly breathes ──
+uniform float pLines, pRelief, pShade, pBreath;
+float land(vec2 P) {
+  float plate = smoothstep(34., -16., logo(P));
+  float n = fbm(P * .006 + S + vec2(T * .02, 0.));
+  float n2 = fbm(P * .022 + S * 2.);
+  return plate * (.62 + .06 * sin(T * .6) * pBreath) + (n * .55 + n2 * .12) * pRelief * .7
+       + .04 * pBreath * sin(T * .4 + P.x * .01 + P.y * .02);
+}
+vec3 topo(vec2 sp) {
+  float k;
+  vec2 P = toLogo(sp, .7, 2.8, k);
+  float h0 = land(P), hx = land(P + vec2(2, 0)), hy = land(P + vec2(0, 2));
+  vec3 nrm = normalize(vec3(-(hx - h0) * 45., (hy - h0) * 45., 1.));
+  vec3 L = normalize(vec3(uMouse * 1.2 + vec2(-.4, .5), .6));
+  float shade = clamp(dot(nrm, L), 0., 1.);
+  vec3 col = pal(.08 + h0 * .8) * mix(1., .3 + 1.1 * shade, pShade);
+  float c = h0 * pLines;
+  float fw = fwidth(c);
+  float ln = 1. - smoothstep(0., fw * 1.3, abs(fract(c + .5) - .5));
+  float major = 1. - step(.5, mod(floor(c + .5), 5.));
+  return mix(col, pal(.97), ln * mix(.35, .8, major));
+}
+
+// ── Рой: a swarm of points holding the wordmark's shape; it scatters now and then and gathers back, and the
+// pointer blows it apart. Drawn as a still field of points seen through a moving warp ──
+uniform float sDots, sScatter, sPush, sTwinkle;
+vec3 swarm(vec2 sp) {
+  vec2 mp = uMouse * vec2(R.x / R.y, 1.) * .5;
+  float sc = sScatter * smoothstep(.25, .85, .5 + .5 * sin(T * .4));
+  vec2 w = vec2(fbm(sp * 2. + S + T * .1), fbm(sp * 2. + S + 5. - T * .1)) - .5;
+  vec2 rel = sp - mp;
+  vec2 push = rel / max(length(rel), 1e-4) * sPush * .22 * exp(-dot(rel, rel) * 14.);
+  vec2 src = sp - w * sc - push;
+  float cell = 1. / sDots;
+  vec2 gid = floor(src / cell);
+  vec2 jit = (vec2(h(gid + S), h(gid + S + 3.1)) - .5) * .55;
+  vec2 home = (gid + .5 + jit) * cell;
+  float dd = length(src - home);
+  float k;
+  vec2 P = toLogo(home, .72, 2.6, k);
+  float inLogo = smoothstep(3., -3., logo(P));
+  float rad = cell * mix(.1, .36, inLogo);
+  float tw = mix(1., .45 + .55 * sin(T * 3. + h(gid) * 30.), sTwinkle);
+  float dotv = smoothstep(rad, rad * .35, dd) * mix(.1, 1., inLogo) * tw;
+  float halo = exp(-dd / cell * 4.) * .55 * inLogo * tw;
+  return pal(mix(.62, 1., h(gid + 7.))) * (dotv + halo);
+}
+
+// ── Табло: an LED board — the wordmark lit on a grid of diodes, a wave running over it, ripples from the pointer,
+// and it can run across as a ticker ──
+uniform float lSize, lWave, lRipple, lScroll;
+vec3 board(vec2 sp) {
+  vec2 mp = uMouse * vec2(R.x / R.y, 1.) * .5;
+  float cell = lSize / R.y;
+  vec2 gid = floor(sp / cell);
+  vec2 c0 = (gid + .5) * cell;
+  vec2 f = (sp - c0) / cell;
+  float k;
+  vec2 cp = c0;
+  float span = min(R.x / R.y * .72, 2.6);
+  if (lScroll > 0.) cp.x = mod(cp.x + T * .15 * lScroll + span * .7, span * 1.4) - span * .7;
+  float on = step(logo(toLogo(cp, .72, 2.6, k)), 0.);
+  float wave = .5 + .5 * sin(c0.x * 4. + c0.y * 2. - T * 2.);
+  float r0 = length(c0 - mp);
+  float rip = sin(r0 * 40. - T * 6.) * exp(-r0 * 3.) * lRipple;
+  float b = clamp(on * mix(1., wave, lWave) + max(rip, 0.) * .7 + .05, 0., 1.);
+  float r = length(f);
+  return pal(.12 + .88 * b) * (smoothstep(.42, .3, r) + exp(-r * 4.) * .4 * b);
+}
+
 void main() {
   float a = R.x / R.y;
   vec2 sp = (gl_FragCoord.xy - R * .5) / R.y;              // centred, y up, 1 = canvas height
   vec3 col;
-  col = tunnel(sp);
+  if (V == 3) col = metal(sp);
+  else if (V == 4) col = trails(sp);
+  else if (V == 5) col = topo(sp);
+  else if (V == 6) col = swarm(sp);
+  else if (V == 7) col = board(sp);
+  else col = tunnel(sp);
   // A dither under a level apart, so the dark gradient doesn't band
   col += (h(gl_FragCoord.xy + fract(T * 7.) * 91.) - .5) * 1.5 / 255.;
   o = vec4(col, 1);
@@ -203,6 +352,28 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     { id: 'uBank', label: 'Крен', min: 0, max: 2, step: 0.01, def: 1, only: [2] },
     { id: 'gas', label: 'Газ', min: 0, max: 3, step: 0.01, def: 1, only: [2] },
     { id: 'layersK', label: 'Слои мышью', min: 0, max: 2, step: 0.01, def: 1, only: [2] },
+    { id: 'mBands', label: 'Полосы', min: 0.3, max: 4, step: 0.01, def: 1.2, only: [3] },
+    { id: 'mFlow', label: 'Турбуленция', min: 0, max: 2, step: 0.01, def: 1, only: [3] },
+    { id: 'mBulge', label: 'Линза', min: 0, max: 2, step: 0.01, def: 1, only: [3] },
+    { id: 'mGlow', label: 'Свечение', min: 0, max: 2, step: 0.01, def: 1, only: [3] },
+    { id: 'mFlash', label: 'Вспышка', min: 0, max: 1, step: 0.01, def: 0.8, only: [3] },
+    { id: 'tLanes', label: 'Полосы', min: 1, max: 30, step: 1, def: 12, only: [4] },
+    { id: 'tGap', label: 'Между полосами', min: 3, max: 30, step: 0.5, def: 9, only: [4] },
+    { id: 'tCars', label: 'Машины', min: 1, max: 12, step: 1, def: 3, only: [4] },
+    { id: 'tTail', label: 'Хвост', min: 0.02, max: 0.9, step: 0.01, def: 0.35, only: [4] },
+    { id: 'tPull', label: 'Притяжение', min: 0, max: 3, step: 0.01, def: 1, only: [4] },
+    { id: 'pLines', label: 'Горизонтали', min: 4, max: 60, step: 1, def: 24, only: [5] },
+    { id: 'pRelief', label: 'Рельеф', min: 0, max: 2, step: 0.01, def: 1, only: [5] },
+    { id: 'pShade', label: 'Тени', min: 0, max: 1, step: 0.01, def: 0.7, only: [5] },
+    { id: 'pBreath', label: 'Дыхание', min: 0, max: 2, step: 0.01, def: 1, only: [5] },
+    { id: 'sDots', label: 'Точки', min: 30, max: 200, step: 1, def: 110, only: [6] },
+    { id: 'sScatter', label: 'Разлёт', min: 0, max: 1.5, step: 0.01, def: 0.6, only: [6] },
+    { id: 'sPush', label: 'Ветер мыши', min: 0, max: 2, step: 0.01, def: 1, only: [6] },
+    { id: 'sTwinkle', label: 'Мерцание', min: 0, max: 1, step: 0.01, def: 0.5, only: [6] },
+    { id: 'lSize', label: 'Диод, px', min: 4, max: 24, step: 1, def: 9, only: [7] },
+    { id: 'lWave', label: 'Волна', min: 0, max: 1, step: 0.01, def: 0.5, only: [7] },
+    { id: 'lRipple', label: 'Рябь', min: 0, max: 2, step: 0.01, def: 1, only: [7] },
+    { id: 'lScroll', label: 'Бегущая строка', min: 0, max: 3, step: 0.01, def: 0, only: [7] },
     { id: 'uLamp', label: 'Фонарь', min: 0, max: 2, step: 0.01, def: 0.5, only: [2] },
   ]
   const names = ['R', 'T', 'S', 'V', 'uMouse', 'uTravel', 'uBoost', ...CONTROLS.map((c) => c.id)]
@@ -210,13 +381,14 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
 
   // Тоннель as Denis last set it (2026-10-15); they override the sliders' own defaults
   const SET = {
+    speed3: 1, speed4: 1, speed5: 1, speed6: 1, speed7: 1,
     seed2: 15, speed2: 0.3, uMouseK2: 0.42, uLayers: 50, uDepth: 10.6, uZoom: 0.51, uTwist: 0, uBend: 0,
     uLine: 0.8, uGlow: 0.38, uFill: 0, uTone: -0.17, uBank: 0.26, gas: 3, layersK: 0.26, uLamp: 2,
   }
   const state = { v: 2, ...Object.fromEntries(CONTROLS.map((c) => [c.id, c.def])), ...SET }
   const OWN = Object.fromEntries(CONTROLS.filter((c) => c.own).map((c) => [c.id, c.def]))
   const key = (id) => (id === 'seed' || id in OWN ? id + state.v : id)
-  const get = (id) => state[key(id)] ?? OWN[id]
+  const get = (id) => state[key(id)] ?? OWN[id] ?? (id === 'seed' ? 1 : undefined)
   try { Object.assign(state, JSON.parse(localStorage.getItem('sky-logo4') || '{}')) } catch {}
   const save = () => { try { localStorage.setItem('sky-logo4', JSON.stringify(state)) } catch {} }
 
