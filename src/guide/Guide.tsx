@@ -275,25 +275,29 @@ function TocIcon({ name }: { name: keyof typeof tocIcons }) {
 }
 
 /**
- * The head of the sidebar's list, as a generator's header (docs/generators.md): the icon shows the whole list — the menu
- * bars spread every chapter and turn into the «Свернуть» chevrons — and «Бренд UMO», the generators' crumb, leads to the
- * guide's start. It stays under the logo while an expanded list scrolls by.
+ * Expand-all row at the foot of the table of contents, named for the guide, «Стандарты бренда», as a generator's header
+ * names it: the menu bars spread every chapter and turn into the «Свернуть» chevrons, the name staying.
  */
-function TocHead({ expanded, onToggle, className = '' }: { expanded: boolean; onToggle: () => void; className?: string }) {
+function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; onClick: () => void; className?: string }) {
   return (
-    <div className={`flex items-start gap-2 bg-white text-[16px] font-medium leading-[1.25] tracking-[-0.01em] ${className}`}>
-      <button type="button" onClick={onToggle} aria-expanded={expanded} aria-label={expanded ? 'Свернуть содержание' : 'Развернуть содержание'} className={`relative cursor-pointer ${NAV_HOVER} after:absolute after:-inset-[10px] after:content-['']`}>
-        <TocIcon name={expanded ? 'close' : 'menu'} />
-      </button>
-      <a href="#top" onClick={toTop} className={NAV_HOVER}>Бренд UMO</a>
-    </div>
+    <button
+      type="button"
+      onClick={onClick}
+      aria-expanded={expanded}
+      aria-label={expanded ? 'Свернуть содержание' : 'Развернуть содержание'}
+      // No width of its own: both places set it, and a `w-full` here outranked theirs in the built CSS
+      className={`flex cursor-pointer items-start gap-2 bg-white ${NAV_HOVER} text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] ${className}`}
+    >
+      <TocIcon name={expanded ? 'close' : 'menu'} />
+      Стандарты бренда
+    </button>
   )
 }
 
 /** `stickyChapters` (the phone's sheet): a chapter's title stays at the top of the list while its items scroll by. */
 function Nav({ active, expandAll, onNavigate, stickyChapters }: { active: string[]; expandAll: boolean; onNavigate?: () => void; stickyChapters?: boolean }) {
   const activeChapter = NAV.find(c => active.some(id => contains(c, id)))?.id
-  // Above the first chapter (the first screen) Концепция stands open and lit
+  // Above the first chapter (the first screen) Концепция stands open and lit, so the list doesn't start bare
   const openChapter = activeChapter ?? NAV[0].id
   return (
     // Chapters 8px above and under (16px apart), items 4px (8px apart): chapter → first item 12px; the last item takes
@@ -383,22 +387,23 @@ const UMO_Y_PAD = COBRAND ? 12 : 0
 const UMO_Y_GAP = COBRAND ? 8 : 0
 
 /**
- * While the page slides up over the hero, the sidebar rises with it. On the first screen its list stands lower, its
- * head, «☰ Бренд UMO», on the bottom line beside the quick links, and as the page rises it leads the list up to its
- * place under the logo. The logo, 200px wide on the first screen, shrinks with the scroll to its
- * usual 120 (24 high) by the time the page reaches the top. Until then the sidebar doesn't scroll on its own: the list
- * standing lower runs past its foot.
+ * While the page slides up over the hero, the sidebar's toggle row stays fixed at the bottom of the screen, while the
+ * sidebar runs off it, so the contents unroll between the logo and the row as the page rises. They fade in over the
+ * first 160px of scroll: on the first screen there's only the logo and the row. The logo, 200px wide on the first
+ * screen, shrinks with the scroll to its usual 120 (24 high) by the time the page reaches the top. Returns whether the
+ * contents are in view (half faded in or more), so the toggle row shows the menu bars on the first screen, where
+ * there's nothing to fold, even while the list is expanded.
  */
 function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObject<HTMLElement | null>) {
+  const [shown, setShown] = useState(false)
   useEffect(() => {
     let frame = 0
     let open = 40
-    let drop = 0
     // The fold's moves that depend on the screen, as keyframes (index.css has them for a 60px statement until then).
     const keyframes = document.createElement('style')
     document.head.appendChild(keyframes)
     // What changes with the screen, not the scroll: how far the page rises (the fold's length), the statement's
-    // capitals, the sidebar's width, how far the list stands lower on the first screen.
+    // capitals, the sidebar's width.
     const layout = () => {
       const body = bodyRef.current
       const aside = asideRef.current
@@ -414,11 +419,7 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
       const caps = UMO_Y_HEIGHT.open * (statement ? parseFloat(getComputedStyle(statement).fontSize) : 60)
       open = Math.round(Math.min(caps, (aside.clientWidth - 48) * (COBRAND ? 0.6 : 1) / 5) * 100) / 100
       aside.style.setProperty('--u', `${open / 60}px`)
-      // The first chapter's line on the first screen: 24px over the screen's foot plus the lockup's extra, a 20px line
-      // up, where the quick links stand. The list's own top there is the page's top plus its place in the sidebar.
-      const list = aside.querySelector<HTMLElement>('[data-umo-y-nav]')
-      if (list) drop = Math.round(window.innerHeight - 24 - 20 - UMO_Y_PAD - body.offsetTop - list.offsetTop)
-      const css = umoYKeyframes(open, drop)
+      const css = umoYKeyframes(open)
       if (keyframes.textContent !== css) keyframes.textContent = css
     }
     const update = () => {
@@ -426,13 +427,13 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
       const body = bodyRef.current
       const aside = asideRef.current
       if (!body || !aside) return
-      const top = body.getBoundingClientRect().top
-      // The list standing lower runs past the sidebar's foot: no scrolling it until the page is up
-      const overflow = top > 0.5 ? 'hidden' : ''
-      if (aside.style.overflowY !== overflow) aside.style.overflowY = overflow
+      const opacity = Math.min(1, window.scrollY / 160)
+      const nav = aside.querySelector<HTMLElement>('nav')
+      if (nav) nav.style.visibility = opacity ? '' : 'hidden'
+      setShown(opacity >= 0.5)
       if (SCROLL_TIMELINE) return
       // Without scroll timelines the script makes the moves of index.css frame by frame.
-      const t = 1 - Math.min(1, Math.max(0, top) / Math.max(1, body.offsetTop))
+      const t = 1 - Math.min(1, Math.max(0, body.getBoundingClientRect().top) / Math.max(1, body.offsetTop))
       document.querySelectorAll<HTMLElement>('[data-umo-y-layers]').forEach(el => setUmoY(el, t))
       const pad = UMO_Y_PAD * (1 - t)
       const move = (selector: string, transform: string) => {
@@ -440,37 +441,36 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
         if (el) el.style.transform = transform
       }
       move('[data-umo-y-desk]', `translate(${pad}px, ${pad}px) scale(${1 + (UMO_Y_HEIGHT.folded / open - 1) * t})`)
-      move('[data-umo-y-nav]', `translate(${pad}px, ${drop * (1 - t)}px)`)
+      move('[data-umo-y-nav]', `translate(${pad}px, ${(open + UMO_Y_PAD - UMO_Y_HEIGHT.folded) * (1 - t)}px)`)
+      move('[data-umo-y-toggle]', `translate(${pad}px, ${-pad}px)`)
+      if (nav) nav.style.opacity = String(opacity)
     }
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }
     const onResize = () => { layout(); onScroll() }
     onResize()
-    // The strip under the film is measured after fonts load (useHeroStrip), moving the page's top
-    const ro = new ResizeObserver(onResize)
-    if (bodyRef.current) ro.observe(bodyRef.current)
     window.addEventListener('scroll', onScroll, { passive: true })
     window.addEventListener('resize', onResize)
     return () => {
-      ro.disconnect()
       window.removeEventListener('scroll', onScroll)
       window.removeEventListener('resize', onResize)
       cancelAnimationFrame(frame)
       keyframes.remove()
     }
   }, [bodyRef, asideRef])
+  return shown
 }
 
 /**
- * The sidebar's fold from lg, for a wordmark starting `open` px high: it scales down to 24, and the logo and the list
- * come in from the first screen's extra UMO_Y_PAD to the usual 24, the list also rising from `drop` lower, where its
- * first chapter stands on the first screen's bottom line. All moves, no layout, so the browser runs them on the scroll
- * (see index.css).
+ * The sidebar's fold from lg, for a wordmark starting `open` px high: it scales down to 24, and the logo, the contents
+ * and their toggle row come in from the first screen's extra UMO_Y_PAD to the usual 24 — the contents also rising by
+ * what the logo loses in height. All moves, no layout, so the browser runs them on the scroll (see index.css).
  */
-function umoYKeyframes(open: number, drop: number) {
+function umoYKeyframes(open: number) {
   const p = UMO_Y_PAD
   return [
     `@keyframes umo-y-desk { from { transform: translate(${p}px, ${p}px) scale(1) } to { transform: translate(0px, 0px) scale(${UMO_Y_HEIGHT.folded / open}) } }`,
-    `@keyframes umo-y-nav { from { transform: translate(${p}px, ${drop}px) } to { transform: translate(0px, 0px) } }`,
+    `@keyframes umo-y-nav { from { transform: translate(${p}px, ${open + p - UMO_Y_HEIGHT.folded}px) } to { transform: translate(0px, 0px) } }`,
+    `@keyframes umo-y-toggle { from { transform: translate(${p}px, ${-p}px) } to { transform: translate(0px, 0px) } }`,
   ].join('\n')
 }
 
@@ -1378,10 +1378,12 @@ export default function Guide() {
   const quickRef = useRef<HTMLElement>(null)
   useHeroStrip(pageRef, quickRef, bodyRef)
   useHeroSnap(bodyRef)
-  useHeroReveal(bodyRef, asideRef)
-  // The head's icon spreads or folds the list; short of the top, it also takes the page up over the photo.
+  const tocShown = useHeroReveal(bodyRef, asideRef)
+  // The contents row does what it says; on the first screen, where the contents are out of view and it shows
+  // the menu bars whatever the list's state, it takes the page up over the photo and opens the list (an expanded one
+  // stays so).
   const onTocToggle = () => {
-    toggleExpandAll()
+    if (tocShown || !expandAll) toggleExpandAll()
     const top = bodyRef.current?.getBoundingClientRect().top ?? 0
     if (top > 1) window.scrollTo({ top: window.scrollY + top, behavior: 'smooth' })
   }
@@ -1449,16 +1451,14 @@ export default function Guide() {
       <aside ref={asideRef} className="hidden lg:flex sticky top-0 h-screen w-[320px] xl:w-1/3 shrink-0 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {/* The logo's box is the folded UMO, 120 by 24; the lockup is drawn larger over it and scaled (useHeroReveal). */}
         <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" onClick={toTop} aria-label="В начало" data-logo className="block h-6 w-[120px]"><div data-umo-y-desk className="origin-top-left will-change-transform"><UmoYLayers title="UMO" /></div></a></div>
-        {/* «☰ Бренд UMO», then the list 24px under it. On the first screen they stand lower, the head on the bottom line
-            (useHeroReveal), and it leads the list up as the page rises; docked, the head stays under the logo while an
-            expanded list scrolls by (the logo's box is 72px). */}
-        <div data-umo-y-nav className="px-6 pb-6 will-change-transform">
-          <TocHead expanded={expandAll} onToggle={onTocToggle} className="sticky top-[72px] z-10 -mx-6 px-6 pb-2" />
-          <div className="mt-4"><Nav active={active} expandAll={expandAll} /></div>
+        {/* The row is fixed to the bottom of the screen — not moved there by script, which lags the scroll a frame and
+            makes it shake — so the list keeps its height free at the end. */}
+        <div data-umo-y-nav className="px-6 pb-[68px] will-change-transform"><Nav active={active} expandAll={expandAll} /></div>
+        <div className="fixed bottom-0 left-0 z-10 w-[320px] bg-white xl:w-1/3">
+          <div data-umo-y-toggle className="will-change-transform">
+            <TocToggle expanded={expandAll && tocShown} onClick={onTocToggle} className="w-full p-6" />
+          </div>
         </div>
-        {/* The sidebar's 24px at the foot of the screen stay white, so the list coming up from under it on the first
-            screen shows only its head, and the items rising after it come in whole */}
-        <div aria-hidden className="pointer-events-none fixed bottom-0 left-0 z-10 h-6 w-[320px] bg-white xl:w-1/3" />
       </aside>
 
       {/* Mobile top bar. iOS 26 browsers draw the page under their translucent top bar and stick `top: 0` below it,

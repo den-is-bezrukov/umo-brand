@@ -68,11 +68,11 @@ body {
 
 /* Trial: the guide's UMO × Y lockups (src/guide/UmoYLogo.tsx) fold with the page's scroll over the film's height
    (--umo-y-fold, set by Guide), run by the browser on the scroll's own thread, in step with a finger: only transforms
-   of layers move. From lg the sidebar comes in too (umo-y-desk, -nav: Guide writes them for the screen; these are for a
-   60px statement until it does), its list rising from the first screen's bottom line. Without scroll timelines
+   of layers move. From lg the sidebar comes in too (umo-y-desk, -nav, -toggle: Guide writes them for the screen; these
+   are for a 60px statement until it does), and its contents fade in over the first 160px. Without scroll timelines
    Guide's script makes the same moves. */
 @supports (animation-timeline: scroll()) {
-  :is([data-umo-y-layers] [data-layer], [data-umo-y-desk], [data-umo-y-nav]) {
+  :is([data-umo-y-layers] [data-layer], [data-umo-y-desk], [data-umo-y-nav], [data-umo-y-toggle]) {
     animation-timing-function: linear;
     animation-fill-mode: both;
     animation-timeline: scroll(root);
@@ -83,6 +83,12 @@ body {
   [data-umo-y-layers] [data-layer='y'] { animation-name: umo-y-y; }
   [data-umo-y-desk] { animation-name: umo-y-desk; }
   [data-umo-y-nav] { animation-name: umo-y-nav; }
+  [data-umo-y-toggle] { animation-name: umo-y-toggle; }
+  [data-umo-y-nav] nav {
+    animation: umo-y-fade linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0px 160px;
+  }
 }
 
 /* The moves in percent of each layer (the layer's own width), so they hold at any size. */
@@ -109,6 +115,16 @@ body {
 @keyframes umo-y-nav {
   from { transform: translate(12px, 28.8px); }
   to { transform: translate(0px, 0px); }
+}
+
+@keyframes umo-y-toggle {
+  from { transform: translate(12px, -12px); }
+  to { transform: translate(0px, 0px); }
+}
+
+@keyframes umo-y-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
 }
 
 @theme {
