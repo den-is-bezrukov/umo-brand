@@ -7,7 +7,8 @@
 <title>Небо — прототип</title>
 <!-- Trial of a shader hero for the guide, built on the UMO wordmark, in the palette of the business card and
      certificate (Figma 4020:2516, 4667:3846). Served by the dev server only (http://localhost:5477/lab/sky.html);
-     the build doesn't include it. The earlier gradient skies (Закат, Марево, Облака, Горизонт) are in 8b87bc8 -->
+     the build doesn't include it. The earlier gradient skies (Закат, Марево, Облака, Горизонт) are in 8b87bc8, Хром in
+     9f56f7c^, Облако parked in cloud.html -->
 <style>
   @font-face { font-family: 'CoFo Sans'; font-weight: 500; src: url('/fonts/CoFoSans-Medium.woff2') format('woff2'); }
   * { box-sizing: border-box; }
@@ -40,13 +41,7 @@
 
 <div class="panel">
   <div class="tabs" id="tabs">
-    <button data-v="0">Облако</button>
     <button data-v="2">Тоннель</button>
-  </div>
-  <div class="tabs" id="presets" data-only="0">
-    <button data-preset="0">Свет</button>
-    <button data-preset="1">Контровой</button>
-    <button data-preset="2">Закат</button>
   </div>
   <div id="sliders" class="sliders"></div>
   <div class="row">
@@ -123,67 +118,8 @@ float logo3(vec3 p) {
   return min(max(w.x, w.y), 0.) + length(max(w, 0.)) - .03;
 }
 
-// ── Облако: the wordmark made of cloud, forming out of the turbulence and tearing back into it ──
-uniform float uHold;   // share of the cycle the wordmark stands formed, 0..1
-uniform float uTear;   // how far it tears apart
-uniform float uBoil;   // how much it keeps boiling while formed
-uniform float uSkyTop, uSkyLow, uSun, uShade, uLight, uEdge; // colours, as places on the brand gradient
 uniform vec2 uMouse;   // -1..1, eased
-uniform float uMouseK; // how much the mouse turns it
-float form() {
-  float ph = .5 + .5 * sin(T * .3);
-  return smoothstep(0., max(1. - uHold, .02), ph);
-}
-float smoke(vec3 p, float amp, bool fine) {
-  vec3 s = vec3(S * 3.7, S * 1.3, S * 2.9);
-  vec3 w = vec3(n3(p * 1.1 + s + vec3(0, T * .3, 0)), n3(p * 1.1 + s + vec3(5.1, 2. + T * .3, 1)),
-                n3(p * 1.1 + s + vec3(2, 7. + T * .3, 3))) - .5;
-  vec3 q = p + w * amp;
-  float d = -logo3(q) * 5.;
-  if (fine) d += (fbm3(q * 3.2 + s + vec3(0, T * .4, 0)) - .45) * 2.4;
-  return clamp(d, 0., 1.);
-}
-vec3 cloudLogo(vec2 sp, float a) {
-  float dist = clamp(9.6 / a, 3.8, 15.);
-  vec3 ro = vec3(0, 0, -dist), rd = normalize(vec3(sp, 1.6));
-  // The mouse turns the camera round the wordmark
-  float ay = -uMouse.x * .45 * uMouseK, ax = uMouse.y * .25 * uMouseK;
-  mat2 ry = mat2(cos(ay), -sin(ay), sin(ay), cos(ay)), rx = mat2(cos(ax), -sin(ax), sin(ax), cos(ax));
-  ro.xz = ry * ro.xz; rd.xz = ry * rd.xz;
-  ro.yz = rx * ro.yz; rd.yz = rx * rd.yz;
-  vec3 sun = normalize(vec3(-.35, .3, 1.));
-  float glow = max(dot(rd, sun), 0.);
-  float low = smoothstep(.1, -.55, rd.y);
-  vec3 sky = pal(mix(uSkyTop, uSkyLow, low)) + pal(1.) * pow(glow, 5.) * uSun;
-  // Only inside the box round the wordmark and its smoke
-  vec3 b = vec3(3.4, 1.6, 1.4);
-  vec3 t0 = (-b - ro) / rd, t1 = (b - ro) / rd;
-  vec3 tn = min(t0, t1), tf = max(t0, t1);
-  float tin = max(max(tn.x, tn.y), tn.z), tout = min(min(tf.x, tf.y), tf.z);
-  if (tin > tout) return sky;
-  float amp = mix(uTear * 1.6, uBoil * .3, form());
-  float dt = (tout - tin) / 56.;
-  float t = tin + dt * h(gl_FragCoord.xy + fract(T) * 13.);
-  vec3 acc = vec3(0);
-  float tr = 1.;
-  for (int i = 0; i < 56; i++) {
-    vec3 p = ro + rd * t;
-    float d = smoke(p, amp, true);
-    if (d > .002) {
-      float sh = 0.;
-      for (int j = 1; j <= 3; j++) sh += smoke(p + sun * .14 * float(j), amp, false);
-      float lit = clamp(exp(-sh * .8) * (.75 + 1.6 * pow(glow, 2.)), 0., 1.);
-      // From its shadow to its light; Контраст keeps the light to the edges facing the sun
-      vec3 c = mix(pal(uShade + .05 * p.y), pal(uLight), pow(lit, uEdge));
-      float al = 1. - exp(-d * dt * 9.);
-      acc += tr * al * c;
-      tr *= 1. - al;
-      if (tr < .02) break;
-    }
-    t += dt;
-  }
-  return sky * tr + acc;
-}
+uniform float uMouseK; // how much the mouse steers
 
 // ── Тоннель: flying through wordmarks lined up into the distance, twisting as the road bends ──
 uniform float uLayers, uDepth, uTwist, uBend, uLine, uGlow, uFill, uTone, uZoom;
@@ -220,8 +156,7 @@ void main() {
   float a = R.x / R.y;
   vec2 sp = (gl_FragCoord.xy - R * .5) / R.y;              // centred, y up, 1 = canvas height
   vec3 col;
-  if (V == 0) col = cloudLogo(sp, a);
-  else col = tunnel(sp);
+  col = tunnel(sp);
   // A dither under a level apart, so the dark gradient doesn't band
   col += (h(gl_FragCoord.xy + fract(T * 7.) * 91.) - .5) * 1.5 / 255.;
   o = vec4(col, 1);
@@ -253,15 +188,6 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
   // Sliders: speed scales the clock, the rest are uniforms of the same name; `only` lists the variants they act on
   const CONTROLS = [
     { id: 'speed', label: 'Скорость', min: 0, max: 3, step: 0.05, def: 0.25, own: true },
-    { id: 'uHold', label: 'Статика', min: 0, max: 1, step: 0.01, def: 1, only: [0] },
-    { id: 'uTear', label: 'Разрыв', min: 0, max: 1.5, step: 0.01, def: 0, only: [0] },
-    { id: 'uBoil', label: 'Кипение', min: 0, max: 1, step: 0.01, def: 0, only: [0] },
-    { id: 'uSkyTop', label: 'Небо вверху', min: 0, max: 1, step: 0.01, def: 0.5, only: [0] },
-    { id: 'uSkyLow', label: 'Небо внизу', min: 0, max: 1, step: 0.01, def: 0.95, only: [0] },
-    { id: 'uSun', label: 'Солнце', min: 0, max: 1.5, step: 0.01, def: 0.5, only: [0] },
-    { id: 'uShade', label: 'Тень облака', min: 0, max: 1, step: 0.01, def: 0.1, only: [0] },
-    { id: 'uLight', label: 'Свет облака', min: 0, max: 1, step: 0.01, def: 1, only: [0] },
-    { id: 'uEdge', label: 'Контраст', min: 0.5, max: 4, step: 0.05, def: 3, only: [0] },
     { id: 'uLayers', label: 'Слои', min: 4, max: 64, step: 1, def: 14, only: [2] },
     { id: 'uDepth', label: 'Глубина', min: 2, max: 14, step: 0.1, def: 2, only: [2] },
     { id: 'uZoom', label: 'Масштаб', min: 0.4, max: 3, step: 0.01, def: 0.4, only: [2] },
@@ -271,7 +197,7 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     { id: 'uGlow', label: 'Свечение', min: 0, max: 3, step: 0.01, def: 0.64, only: [2] },
     { id: 'uFill', label: 'Заливка', min: 0, max: 1, step: 0.01, def: 0, only: [2] },
     { id: 'uTone', label: 'Тон', min: -0.5, max: 0.3, step: 0.01, def: 0, only: [2] },
-    { id: 'uMouseK', label: 'Мышь', min: 0, max: 2, step: 0.01, def: 2, only: [0, 2], own: true },
+    { id: 'uMouseK', label: 'Мышь', min: 0, max: 2, step: 0.01, def: 2, only: [2], own: true },
     // Тоннель's mouse: Крен rolls it, Газ speeds it up while pressed, Слои мышью: the pointer up adds layers and
     // down takes them away (up to twice and half as many at 1), Фонарь lights it round the pointer
     { id: 'uBank', label: 'Крен', min: 0, max: 2, step: 0.01, def: 1, only: [2] },
@@ -279,19 +205,11 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     { id: 'layersK', label: 'Слои мышью', min: 0, max: 2, step: 0.01, def: 1, only: [2] },
     { id: 'uLamp', label: 'Фонарь', min: 0, max: 2, step: 0.01, def: 0.5, only: [2] },
   ]
-  // Облако's colours to start from: a glowing cloud on the dark, a dark one lit round its edges, the dusk
-  const PRESETS = [
-    { uSkyTop: 0.02, uSkyLow: 0.32, uSun: 0.25, uShade: 0.5, uLight: 1, uEdge: 1 },
-    { uSkyTop: 0.5, uSkyLow: 0.95, uSun: 0.5, uShade: 0.1, uLight: 1, uEdge: 3 },
-    { uSkyTop: 0.08, uSkyLow: 0.7, uSun: 0.45, uShade: 0.45, uLight: 1, uEdge: 1 },
-  ]
   const names = ['R', 'T', 'S', 'V', 'uMouse', 'uTravel', 'uBoost', ...CONTROLS.map((c) => c.id)]
   const u = Object.fromEntries(names.map((k) => [k, gl.getUniformLocation(prog, k)]))
 
-  // Both variants as Denis last set them (2026-10-15); they override the sliders' own defaults
+  // Тоннель as Denis last set it (2026-10-15); they override the sliders' own defaults
   const SET = {
-    seed0: 22, speed0: 0.6, uMouseK0: 0.93, uHold: 0.09, uTear: 0, uBoil: 1,
-    uSkyTop: 0.88, uSkyLow: 0, uSun: 0.18, uShade: 1, uLight: 1, uEdge: 1.9,
     seed2: 15, speed2: 0.3, uMouseK2: 0.42, uLayers: 50, uDepth: 10.6, uZoom: 0.51, uTwist: 0, uBend: 0,
     uLine: 0.8, uGlow: 0.38, uFill: 0, uTone: -0.17, uBank: 0.26, gas: 3, layersK: 0.26, uLamp: 2,
   }
@@ -315,7 +233,6 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
   }
 
   const tabs = [...document.querySelectorAll('#tabs button')]
-  const presets = [...document.querySelectorAll('#presets button')]
   const seed = document.getElementById('seed')
   const sync = () => {
     tabs.forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.v === state.v)))
@@ -326,7 +243,6 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     seed.textContent = `Сид ${get('seed')}`
   }
   tabs.forEach((b) => b.addEventListener('click', () => { state.v = +b.dataset.v; sync(); save() }))
-  presets.forEach((b) => b.addEventListener('click', () => { Object.assign(state, PRESETS[+b.dataset.preset]); sync(); save() }))
   seed.addEventListener('click', () => { state[key('seed')] = (get('seed') % 99) + 1; sync(); save() })
   const mock = document.getElementById('mock')
   mock.addEventListener('click', () => {
@@ -351,14 +267,13 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
   addEventListener('pointerup', () => { pressed = false })
   addEventListener('pointercancel', () => { pressed = false })
 
-  // Drawn at CSS pixels, not the screen's. The cloud, marched through in 56 steps, at half that again: it's soft,
-  // and it keeps it smooth. With the mock on, the picture takes what the white strip leaves, as the guide's first
+  // Drawn at CSS pixels, not the screen's. With the mock on, the picture takes what the white strip leaves, as the guide's first
   // screen shows it
   const strip = document.querySelector('.strip')
   function resize() {
     const off = document.body.classList.contains('mock-off') ? 0 : strip.offsetHeight
     document.body.style.setProperty('--strip', off + 'px')
-    const k = state.v === 0 ? 0.5 : 1
+    const k = 1
     const w = Math.round(innerWidth * k), h = Math.round((innerHeight - off) * k)
     if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h }
     gl.viewport(0, 0, w, h)
