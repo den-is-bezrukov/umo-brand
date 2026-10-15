@@ -82,9 +82,11 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
 function PhoneCrumbs() {
   return (
     <nav className="ml-1 flex min-w-0 flex-1 items-center gap-2 text-[14px] font-medium leading-4 tracking-normal [font-feature-settings:'case'_1]">
-      {/* The way back to the guide (UMO's logo leads to umo.auto, so it isn't here). «Носители» after it went: the
-          generators are listed twice under it already, in the line and the menu */}
+      {/* The way back to the guide (UMO's logo leads to umo.auto, so it isn't here), then Носители, the guide's chapter
+          that tells what each medium is for */}
       <Link to="/" className={crumb}>Бренд UMO</Link>
+      <span aria-hidden>·</span>
+      <Link to="/#materials" className={crumb}>Носители</Link>
     </nav>
   )
 }
