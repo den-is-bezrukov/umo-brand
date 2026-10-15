@@ -12,20 +12,19 @@
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; background: #000; color: #000; font-family: 'CoFo Sans', system-ui, sans-serif; }
   canvas { position: fixed; left: 0; top: 0; width: 100%; height: calc(100% - var(--strip, 0px)); display: block; }
-  .logo { position: fixed; left: 36px; top: 36px; width: 200px; color: #fff; }
   .strip { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; padding: 24px 36px 96px; }
   .strip p { margin: 0; max-width: 912px; font-size: min(60px, 6vw); font-weight: 500; line-height: 1; letter-spacing: -0.01em; }
-  .mock-off .logo, .mock-off .strip { display: none; }
+  .mock-off .strip { display: none; }
   .panel { position: fixed; right: 16px; top: 16px; display: flex; flex-direction: column; gap: 12px; padding: 16px;
     background: rgba(255,255,255,.92); border-radius: 16px; font-size: 14px; width: 272px; }
   .tabs { display: flex; flex-wrap: wrap; gap: 4px; }
   .tabs button, .row button { font: inherit; border: 0; border-radius: 8px; padding: 6px 10px; background: #eee; cursor: pointer; }
   .tabs button[aria-pressed="true"] { background: #000; color: #fff; }
   label { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  label[hidden] { display: none; }
   input[type=range] { width: 120px; accent-color: #000; }
-  .row { display: flex; gap: 4px; }
+  .row { display: flex; flex-wrap: wrap; gap: 4px; }
   @media (max-width: 640px) {
-    .logo { left: 16px; top: 16px; width: 120px; }
     .strip { padding: 16px 16px 72px; }
     .strip p { font-size: 32px; }
     .panel { top: auto; bottom: 16px; left: 16px; right: 16px; width: auto; }
@@ -34,11 +33,6 @@
 </head>
 <body>
 <canvas id="c"></canvas>
-<svg class="logo" viewBox="0 0 480 96" fill="currentColor" aria-hidden="true">
-  <path d="M218.401 34.8H182.399V96H146.4V34.6746C146.4 10.0442 158.096 0 182.399 0H218.401V34.8ZM290.398 0C314.693 0 326.4 10.0299 326.4 34.6746V96H290.398V34.8H254.399V96H218.401V34.8H254.399V0H290.398Z" />
-  <path d="M98.4 61.2H36V0H0V61.3254C0 85.9702 11.7204 96 36.0301 96H98.3663C122.694 96 134.4 85.9558 134.4 61.3254V0H98.4V61.2Z" />
-  <path fill-rule="evenodd" d="M443.973 0C468.284 0 480 10.0299 480 34.6746V61.3254C480 85.9558 468.299 96 443.973 96H374.43C350.116 96 338.4 85.9702 338.4 61.3254V34.6746C338.4 10.0442 350.116 0 374.43 0H443.973ZM374.4 61.2H444V34.6746L374.4 34.8V61.2Z" />
-</svg>
 <div class="strip"><p>Автомобильный бренд, созданный в&nbsp;технологическом партнёрстве с&nbsp;Яндексом</p></div>
 
 <div class="panel">
@@ -50,8 +44,9 @@
   </div>
   <label>Скорость <input id="speed" type="range" min="0" max="3" step="0.05" value="1" /></label>
   <label>Турбуленция <input id="warp" type="range" min="0" max="2" step="0.05" value="1" /></label>
-  <label>Зерно <input id="grain" type="range" min="0" max="1" step="0.01" value="0.3" /></label>
+  <label data-only="2">Плотность <input id="cover" type="range" min="0" max="1" step="0.01" value="0.5" /></label>
   <div class="row">
+    <button id="seed"></button>
     <button id="flip">Перевернуть</button>
     <button id="mock">Без макета</button>
   </div>
@@ -61,9 +56,10 @@
 precision highp float;
 uniform vec2 R;      // canvas size, px
 uniform float T;     // time, s (already scaled by the speed)
-uniform float G;     // grain 0..1
 uniform float W;     // turbulence 0..2
-uniform float F;     // 1: light at the top
+uniform float C;     // cloud cover 0..1
+uniform float S;     // seed
+uniform float F;     // 1: upside down
 uniform int V;       // variant
 out vec4 o;
 
@@ -78,6 +74,23 @@ float fbm(vec2 p) {
   for (int i = 0; i < 5; i++) { s += a * n(p); p = m * p; a *= .5; }
   return s;
 }
+float h3(vec3 p) { p = fract(p * .3183099 + .1); p *= 17.; return fract(p.x * p.y * p.z * (p.x + p.y + p.z)); }
+float n3(vec3 x) {
+  vec3 i = floor(x), f = fract(x);
+  f = f * f * (3. - 2. * f);
+  return mix(mix(mix(h3(i), h3(i + vec3(1, 0, 0)), f.x), mix(h3(i + vec3(0, 1, 0)), h3(i + vec3(1, 1, 0)), f.x), f.y),
+             mix(mix(h3(i + vec3(0, 0, 1)), h3(i + vec3(1, 0, 1)), f.x), mix(h3(i + vec3(0, 1, 1)), h3(i + vec3(1, 1, 1)), f.x), f.y), f.z);
+}
+float fbm3(vec3 p, int oct) {
+  float s = 0., a = .5;
+  for (int i = 0; i < 5; i++) {
+    if (i >= oct) break;
+    s += a * n3(p);
+    p = p * 2.03 + vec3(1.7, 9.2, 3.1);
+    a *= .5;
+  }
+  return s;
+}
 // The brand gradient, black → maroon → red → peach, sampled from the certificate (Figma 4667:3846)
 vec3 pal(float t) {
   t = clamp(t, 0., 1.);
@@ -90,57 +103,97 @@ vec3 pal(float t) {
   return mix(c4, c5, (t - .8) / .2);
 }
 
+// A cloud layer from 1 to 2.6 up. Its shapes boil in place: the warp field changes with time, nothing slides
+float cloud(vec3 p, int oct) {
+  float hh = (p.y - 1.) / 1.6;
+  if (hh < 0. || hh > 1.) return 0.;
+  vec3 q = p * .45 + vec3(S * 13.7, S * 3.1, S * 7.9);
+  vec3 w = vec3(n3(q * .7 + vec3(0, T * .06, 0)), n3(q * .7 + vec3(4.3, 1.1 + T * .06, 7.7)),
+                n3(q * .7 + vec3(2.1, 5.5 + T * .06, 3.3))) - .5;
+  q += w * 1.4 * W;
+  float d = fbm3(q, oct);
+  float shape = smoothstep(0., .2, hh) * smoothstep(1., .45, hh);
+  return clamp((d * shape - (.6 - C * .32)) * 3.5, 0., 1.);
+}
+
+// Горизонт's sky: the gradient with a glow where the sun has gone down
+vec3 duskSky(float sx, float y, float hy) {
+  float w = fbm(vec2(sx * 1.2, y * 6.) + vec2(T * .03, 0.) + S * 5.3);
+  float d = length(vec2(sx * .6, (y - hy) * 2.4));
+  return pal(y / hy * .92 + (w - .5) * .06 * W + .24 * exp(-d * 3.));
+}
+
 void main() {
   vec2 uv = gl_FragCoord.xy / R;
   float a = R.x / R.y;
   float x = uv.x, y = 1. - uv.y;          // y: 0 at the top
   if (F > .5) y = 1. - y;
+  float sx = (x - .5) * a;
+  vec2 s2 = vec2(S * 13.1, S * 7.7);
   vec3 col;
 
   if (V == 0) {
     // Закат: the gradient's bands drift and wave, as a dusk sky
-    vec2 q = vec2(x * a, y) * 1.4;
+    vec2 q = vec2(x * a, y) * 1.4 + s2;
     float w = fbm(q * vec2(.7, 1.8) + vec2(T * .04, 0.));
     float w2 = fbm(q + vec2(-T * .02, T * .015) + w * 1.6);
     col = pal(y + (w2 - .5) * .32 * W);
   } else if (V == 1) {
     // Марево: long horizontal streaks, as heat haze over asphalt
-    vec2 q = vec2(x * a * .5, y * 5.);
+    vec2 q = vec2(x * a * .5, y * 5.) + s2;
     float w = fbm(q + vec2(T * .07, -T * .01));
     float w2 = fbm(q * vec2(1., 1.6) + vec2(w * 2.2, w * .6) - vec2(T * .05, 0.));
     col = pal(y + (w2 - .5) * .2 * W);
   } else if (V == 2) {
-    // Облака: masses of cloud lit from below, brighter towards the horizon
-    vec2 q = vec2(x * a, y * 1.6) * 2.2;
-    float d = fbm(q * .6 + vec2(T * .02, 0.));
-    float c = fbm(q + vec2(T * .035, 0.) + d * 1.4 * W);
-    float lit = smoothstep(.35, .75, c);
-    col = pal(y * .9 + (lit - .4) * .45 * W * (.35 + .65 * y));
+    // Облака: a raymarched layer of cloud, backlit by a sun just under it
+    vec3 rd = normalize(vec3(sx, (.5 - y) + .62, 1.2));
+    vec3 sun = normalize(vec3(.25, .08, 1.));
+    float glow = max(dot(rd, sun), 0.);
+    vec3 sky = pal(1. - smoothstep(0., .85, rd.y) * .97) + pal(1.) * pow(glow, 12.) * .3;
+    float t0 = 1. / rd.y, t1 = min(2.6 / rd.y, 40.);
+    float dt = (t1 - t0) / 40.;
+    float t = t0 + dt * h(gl_FragCoord.xy + fract(T) * 13.);
+    vec3 acc = vec3(0);
+    float tr = 1.;
+    for (int i = 0; i < 40; i++) {
+      vec3 p = rd * t;
+      float d = cloud(p, 5);
+      if (d > .001) {
+        float sh = 0.;
+        for (int j = 1; j <= 4; j++) sh += cloud(p + sun * .22 * float(j), 3);
+        float lit = exp(-sh * 1.3) * (.55 + 1.1 * pow(glow, 3.));
+        float hh = clamp((p.y - 1.) / 1.6, 0., 1.);
+        vec3 c = mix(pal(.34 - .14 * hh), pal(1.), clamp(lit * lit, 0., 1.));
+        c = mix(c, pal(.88), (1. - exp(-t * .03)) * .7);
+        float al = 1. - exp(-d * dt * 1.8);
+        acc += tr * al * c;
+        tr *= 1. - al;
+        if (tr < .02) break;
+      }
+      t += dt;
+    }
+    col = sky * tr + acc;
   } else {
-    // Горизонт: the sky over a dark road, its markings running towards you
-    float hy = .58;
-    float sx = (x - .5) * a;
+    // Горизонт: the dusk mirrored in a wet road, its ripples rushing towards you; no markings
+    float hy = .64;
     if (y < hy) {
-      float w = fbm(vec2(sx * 1.2, y * 6.) + vec2(T * .03, 0.));
-      float t = y / hy * .92 + (w - .5) * .08 * W;
-      float d = length(vec2(sx * .7, (y - hy) * 2.2));
-      col = pal(t + .22 * exp(-d * 3.5));
+      col = duskSky(sx, y, hy);
     } else {
       float dy = y - hy;
-      float z = .32 / dy;                  // depth
-      float X = sx * z;                    // across the road
-      float fade = exp(-z * .35) * smoothstep(0., .02, dy);
-      float lw = fwidth(X) * 1.2;
-      float edge = 1. - smoothstep(.012, .012 + lw, abs(abs(X) - .6));
-      float dash = (1. - smoothstep(.018, .018 + lw, abs(X))) * step(fract(z * .9 - T * .9), .5);
-      vec3 ground = mix(pal(.03), pal(.55), exp(-dy * 18.) * .55);
-      col = mix(ground, pal(.9), (edge + dash) * fade);
+      float z = .25 / dy;                                    // depth
+      float near = min(dy * 8., 1.);
+      float r = fbm(vec2(sx * z * 1.6, z * 1.2 - T * .7) + s2);
+      float ry = hy - dy * .9 - (r - .5) * .07 * W * near;
+      vec3 refl = duskSky(sx + (r - .5) * .05 * W * near, max(ry, 0.), hy);
+      float st = fbm(vec2(sx * z * 5., z * .25 - T * .25) + s2 * 2.);
+      float gloss = mix(.8, .18, smoothstep(0., .36, dy)) * (.55 + .45 * st);
+      col = mix(pal(.02) * (.7 + .5 * st), refl, gloss);
     }
+    col = mix(col, pal(.85), exp(-abs(y - hy) * 70.) * .3);  // haze along the horizon
   }
 
-  // Grain, and a little dither that keeps the dark gradient from banding even at 0
-  float g = h(gl_FragCoord.xy + fract(T * 7.) * 91.) - .5;
-  col += g * (1.5 + G * 28.) / 255.;
+  // A dither under a level apart, so the dark gradient doesn't band
+  col += (h(gl_FragCoord.xy + fract(T * 7.) * 91.) - .5) * 1.5 / 255.;
   o = vec4(col, 1);
 }
 </script>
@@ -165,20 +218,27 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW)
   gl.enableVertexAttribArray(0)
   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0)
-  const u = Object.fromEntries(['R', 'T', 'G', 'W', 'F', 'V'].map((k) => [k, gl.getUniformLocation(prog, k)]))
+  const u = Object.fromEntries(['R', 'T', 'W', 'C', 'S', 'F', 'V'].map((k) => [k, gl.getUniformLocation(prog, k)]))
 
-  const state = { v: 0, speed: 1, warp: 1, grain: 0.3, flip: 0 }
+  const state = { v: 0, speed: 1, warp: 1, cover: 0.5, seed: 1, flip: 0 }
   try { Object.assign(state, JSON.parse(localStorage.getItem('sky') || '{}')) } catch {}
   const save = () => { try { localStorage.setItem('sky', JSON.stringify(state)) } catch {} }
 
   const tabs = [...document.querySelectorAll('#tabs button')]
-  const sync = () => tabs.forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.v === state.v)))
+  const only = [...document.querySelectorAll('[data-only]')]
+  const seed = document.getElementById('seed')
+  const sync = () => {
+    tabs.forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.v === state.v)))
+    only.forEach((el) => { el.hidden = +el.dataset.only !== state.v })
+    seed.textContent = `Сид ${state.seed}`
+  }
   tabs.forEach((b) => b.addEventListener('click', () => { state.v = +b.dataset.v; sync(); save() }))
-  for (const k of ['speed', 'warp', 'grain']) {
+  for (const k of ['speed', 'warp', 'cover']) {
     const el = document.getElementById(k)
     el.value = state[k]
     el.addEventListener('input', () => { state[k] = +el.value; save() })
   }
+  seed.addEventListener('click', () => { state.seed = (state.seed % 99) + 1; sync(); save() })
   document.getElementById('flip').addEventListener('click', () => { state.flip = 1 - state.flip; save() })
   const mock = document.getElementById('mock')
   mock.addEventListener('click', () => {
@@ -187,13 +247,15 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
   })
   sync()
 
-  // Drawn at CSS pixels, not the screen's: a soft gradient doesn't need retina, and it's a quarter of the work
+  // Drawn at CSS pixels, not the screen's: a soft gradient doesn't need retina. The clouds, marched through in
+  // 40 steps, at half that again: they're soft too, and it keeps them smooth
   // With the mock on, the sky takes what the white strip leaves, as the guide's first screen shows it
   const strip = document.querySelector('.strip')
   function resize() {
     const off = document.body.classList.contains('mock-off') ? 0 : strip.offsetHeight
     document.body.style.setProperty('--strip', off + 'px')
-    const w = Math.round(innerWidth), h = Math.round(innerHeight - off)
+    const k = state.v === 2 ? 0.5 : 1
+    const w = Math.round(innerWidth * k), h = Math.round((innerHeight - off) * k)
     if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h }
     gl.viewport(0, 0, w, h)
   }
@@ -205,8 +267,9 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     resize()
     gl.uniform2f(u.R, canvas.width, canvas.height)
     gl.uniform1f(u.T, t + 20)
-    gl.uniform1f(u.G, state.grain)
     gl.uniform1f(u.W, state.warp)
+    gl.uniform1f(u.C, state.cover)
+    gl.uniform1f(u.S, state.seed)
     gl.uniform1f(u.F, state.flip)
     gl.uniform1i(u.V, state.v)
     gl.drawArrays(gl.TRIANGLES, 0, 3)
