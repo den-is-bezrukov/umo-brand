@@ -1,9 +1,6 @@
 import { useState, useEffect, useRef, useCallback, Fragment } from 'react'
-import { pdf } from '@react-pdf/renderer'
 import QRCode from 'qrcode'
 import PriceCard from '@/posters/PriceCard'
-import PriceCardPdf from '@/posters/pdf/PriceCardPdf'
-import { ensurePdfFonts } from '@/posters/pdf/pdfFonts'
 import type { Variant } from '@/posters/cardData'
 import { goal } from '@/ui/metrika'
 import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField, GeneratorHeader, LinkButtons, DownloadBar, unfilled, stepsLeft } from '@/ui/form'
@@ -134,11 +131,11 @@ function firstIssue(c: Card): { field: 'url' | 'full' | 'credit'; text: string }
 /** The link the QR leads to: the card's own if it's a link, the model's page otherwise */
 const qrUrlOf = (c: Card) => isValidUrl(c.url.trim()) ? c.url.trim() : DEFAULT_URL[c.model]
 
-/** The cards' PDF, an A3 page each */
-function pdfOf(cards: Card[]) {
-  ensurePdfFonts()
+/** The cards' PDF, an A3 page each; the PDF code comes in on the first call */
+async function pdfOf(cards: Card[]) {
+  const { cardsPdf } = await import('@/posters/pdf/cardsPdf')
   const pages = cards.map(c => ({ variant: `${c.model}-${c.trim}` as Variant, fullPrice: c.full, creditPrice: c.creditOn ? c.credit : undefined, qrUrl: qrUrlOf(c) }))
-  return pdf(<PriceCardPdf pages={pages} title={pdfName(cards)} />).toBlob()
+  return cardsPdf(pages, pdfName(cards))
 }
 
 function downloadGoal(cards: Card[], extra?: Record<string, unknown>) {
