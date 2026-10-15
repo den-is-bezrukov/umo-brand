@@ -1529,7 +1529,9 @@ export default function Guide() {
                 </p>
                 {/* Quick links: read (Платформа бренда, from its first section), see (Материалы), make (Редактор, the constructors'
                     window, titled «Редактор материалов»). They were Платформа and Материалы для дилеров, then Носители and Печатные материалы */}
-                <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex max-lg:min-[480px]:hidden flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
+                {/* Under 480px, where the three don't fit a line, one line scrolled sideways by a finger, from screen edge to
+                    edge, with no shade at its ends (4px over and under keep the descenders and the hover line) */}
+                <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex max-lg:min-[480px]:hidden flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em] max-[479px]:-mx-4 max-[479px]:-my-1 max-[479px]:flex-nowrap max-[479px]:overflow-x-auto max-[479px]:overscroll-x-contain max-[479px]:px-4 max-[479px]:py-1 max-[479px]:whitespace-nowrap max-[479px]:[scrollbar-width:none] max-[479px]:[&::-webkit-scrollbar]:hidden">
                   <a href="#positioning" className={LINK_HOVER}>Платформа бренда</a>
                   <a href="#materials" className={LINK_HOVER}>Материалы</a>
                   <Link to="/editor" className={LINK_HOVER}>Редактор</Link>
