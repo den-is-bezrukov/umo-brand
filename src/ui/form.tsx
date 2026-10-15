@@ -36,16 +36,16 @@ const crumb = 'underline decoration-transparent decoration-[0.35px] underline-of
 
 /**
  * The top of a generator's form, the same on every screen (Figma 5098:5487, the phone's, carried over to wide screens):
- * the breadcrumbs in Medium, 16 px tall, «Бренд UMO · Редактор материалов»; the generators' line under them
- * (`GeneratorRing`). «Редактор материалов», the generators' parent, shows them all: the crumbs give way to the title «Редактор
- * материалов» with a cross on the right, and the line and everything after it in the form to every generator, 24 px
- * Medium 16 px apart, the current one black (Figma 5103:6083) — the same as the guide's «Редактор материалов» window. The
- * cross, the current name or Esc fold it. Not a menu icon by the crumbs: the generators are an app of their own, where a
- * burger promised the whole app's menu and opened only the generators' list
+ * the breadcrumbs in Medium, 16 px tall, «Бренд UMO · Редактор материалов ⌄»; the generators' line under them
+ * (`GeneratorRing`). «Редактор материалов», the app itself, opens every generator, as GitHub's and Vercel's crumbs switch
+ * theirs: the chevron turns ⌃ and nothing else in the row moves, and the line and everything after it in the form give
+ * way to every generator, 24 px Medium 16 px apart, the current one black (Figma 5103:6083). The crumb again, the current
+ * name or Esc fold it. Not a menu icon by the crumbs: the generators are an app of their own, where a burger promised the
+ * whole app's menu and opened only the generators' list
  */
 export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' | '/price-tag' | '/hours-sign' }) {
   const [menu, setMenu] = useState(false)
-  const open = () => { goal('open_menu', { page: location.pathname }); setMenu(true) }
+  const toggle = () => { if (!menu) goal('open_menu', { page: location.pathname }); setMenu(!menu) }
   // While it's open the rest of the form and the download step aside (`html[data-menu]` in index.css)
   useEffect(() => {
     if (!menu) return
@@ -57,55 +57,41 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
   const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
   return (
     <div data-head className="flex flex-col gap-4">
+      <PhoneCrumbs open={menu} onEditor={toggle} />
       {menu ? (
-        <>
-          <div className={`flex items-center justify-between gap-2 ${CRUMBS}`}>
-            <p>Редактор материалов</p>
-            <IconButton label="Закрыть" onClick={() => setMenu(false)} d={CROSS} />
-          </div>
-          <nav aria-label="Конструкторы" className="flex flex-col items-start gap-4">
-            {GENERATORS.map(g => g.path === current
-              ? <button key={g.path} type="button" aria-current="page" onClick={() => setMenu(false)} className={`${name} cursor-pointer text-left`}>{g.title}</button>
-              : <Link key={g.path} to={g.path} className={`${name} text-[#bfbfbf] hover:text-[#808080] active:text-[#808080]`}>{g.title}</Link>)}
-          </nav>
-        </>
+        <nav aria-label="Конструкторы" className="flex flex-col items-start gap-4">
+          {GENERATORS.map(g => g.path === current
+            ? <button key={g.path} type="button" aria-current="page" onClick={() => setMenu(false)} className={`${name} cursor-pointer text-left`}>{g.title}</button>
+            : <Link key={g.path} to={g.path} className={`${name} text-[#bfbfbf] hover:text-[#808080] active:text-[#808080]`}>{g.title}</Link>)}
+        </nav>
       ) : (
-        <>
-          <PhoneCrumbs onEditor={open} />
-          <GeneratorRing current={current} />
-        </>
+        <GeneratorRing current={current} />
       )}
     </div>
   )
 }
 
-/** The form's cross (the list's remove, `staff.tsx`), 8 by 8 in 16 px */
-const CROSS = 'M12 4L8 8M8 8L4 4M8 8L12 12M8 8L4 12'
+/** The crumb's chevron as Figma draws it (5186:1406): 5 wide and 2.5 tall, a 1.5 px stroke, in an 8 by 16 box on the crumbs' line */
+const CRUMB_CHEVRON = { down: 'M1.5 7L4 9.5L6.5 7', up: 'M1.5 9.5L4 7L6.5 9.5' }
 
 /** The breadcrumbs' type: Medium (Regular in Figma 5110:9105), on 16 px lines, with no tracking, as the form's labels */
 const CRUMBS = "text-[14px] font-medium leading-4 tracking-normal [font-feature-settings:'case'_1]"
 
 /**
  * The breadcrumbs, set apart from the form's tighter tracking so they don't shift when the list opens: the way back to
- * the guide (UMO's logo leads to umo.auto, so it isn't here) and Редактор материалов, the app itself, which shows every
- * generator (Материалы, the guide's chapter, stood between them)
+ * the guide (UMO's logo leads to umo.auto, so it isn't here) and Редактор материалов ⌄, the app itself, which shows
+ * every generator (Материалы, the guide's chapter, stood between them)
  */
-function PhoneCrumbs({ onEditor }: { onEditor: () => void }) {
+function PhoneCrumbs({ open, onEditor }: { open: boolean; onEditor: () => void }) {
   return (
     <nav className={`flex min-w-0 flex-1 items-center gap-2 ${CRUMBS}`}>
       <Link to="/" className={crumb}>Бренд UMO</Link>
       <span aria-hidden>·</span>
-      <button type="button" onClick={onEditor} aria-label="Редактор материалов: все конструкторы" className={`${crumb} cursor-pointer`}>Редактор материалов</button>
+      <button type="button" onClick={onEditor} aria-expanded={open} aria-label="Редактор материалов: все конструкторы" className="group flex cursor-pointer items-center gap-2">
+        <span className={`${crumb} group-hover:decoration-black/40 group-hover:duration-0`}>Редактор материалов</span>
+        <svg width="8" height="16" viewBox="0 0 8 16" fill="none" aria-hidden><path d={open ? CRUMB_CHEVRON.up : CRUMB_CHEVRON.down} stroke="currentColor" strokeWidth="1.5" strokeLinecap="square" strokeLinejoin="bevel" /></svg>
+      </button>
     </nav>
-  )
-}
-
-/** A 16 px icon with a 2 px stroke as the form's own, on whole pixels (Figma's sheet has 1 px: 5110:9103, 5110:9091, 5103:6163), black, a finger's 36 px round it */
-function IconButton({ label, onClick, d }: { label: string; onClick: () => void; d: string }) {
-  return (
-    <button type="button" aria-label={label} title={label} onClick={onClick} className={`relative flex size-4 shrink-0 cursor-pointer items-center justify-center rounded-[4px] after:absolute after:-inset-[10px] after:content-['']`}>
-      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d={d} stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" /></svg>
-    </button>
   )
 }
 
