@@ -1186,12 +1186,10 @@ function Zoom({ label, children }: { label: string; children: ReactNode }) {
 }
 
 /**
- * Редактор материалов (`/editor`, the guide's quick link «Редактор»): every constructor in a window centred over the
- * guide, dimmed at 40% as under the phone's contents sheet, its corners 16px round as that sheet's. Set as the sidebar's
- * contents: 320 wide with 24px in, the title as a chapter (16 Medium), the constructors as its items (16 Regular, 24px
- * in, 4px above and under each, so 12px from the title to the first), greying under the pointer, in the generators'
- * alphabetical order. A tap on the dim, the cross or Esc closes it: back where you came from, or to the guide itself when
- * the window was opened by its link.
+ * Редактор материалов (`/editor`, the guide's quick link «Редактор»): every constructor in a window centred over the guide,
+ * dimmed at 40% as under the phone's contents sheet, its corners 16px round as that sheet's. The names as the
+ * generators' menu sets them, 24px Medium 20px apart, in its alphabetical order. A tap on the dim, the cross or Esc
+ * closes it: back where you came from, or to the guide itself when the window was opened by its link.
  */
 function EditorDialog() {
   const navigate = useNavigate()
@@ -1215,16 +1213,16 @@ function EditorDialog() {
         aria-labelledby="editor-title"
         tabIndex={-1}
         onClick={e => e.stopPropagation()}
-        className="flex w-full max-w-[320px] flex-col rounded-2xl bg-white p-6 text-[16px] leading-[1.25] tracking-[-0.01em] text-black outline-none"
+        className="flex w-full max-w-[360px] flex-col gap-6 rounded-2xl bg-white p-6 text-black outline-none"
       >
         <div className="flex items-start justify-between gap-4">
-          <h2 id="editor-title" className="font-medium">Редактор материалов</h2>
+          <h2 id="editor-title" className="text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">Редактор материалов</h2>
           <button type="button" aria-label="Закрыть" onClick={close} className={`relative flex h-5 shrink-0 cursor-pointer items-center ${NAV_HOVER} after:absolute after:-inset-[10px] after:content-['']`}>
             <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d="M2 2L14 14M14 2L2 14" stroke="currentColor" strokeWidth="2" strokeLinecap="square" /></svg>
           </button>
         </div>
-        <nav aria-label="Конструкторы" className="-mb-1 mt-2 flex flex-col pl-6">
-          {items.map(m => <Link key={m.to} to={m.to} className={`block py-1 ${NAV_HOVER}`}>{m.title}</Link>)}
+        <nav aria-label="Конструкторы" className="flex flex-col items-start gap-5">
+          {items.map(m => <Link key={m.to} to={m.to} className={`text-[24px] font-medium leading-6 tracking-[-0.01em] ${NAV_HOVER}`}>{m.title}</Link>)}
         </nav>
       </div>
     </div>
