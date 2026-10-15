@@ -16,7 +16,6 @@
   canvas { position: fixed; left: 0; top: 0; width: 100%; height: calc(100% - var(--strip, 0px)); display: block; }
   .strip { position: fixed; left: 0; right: 0; bottom: 0; background: #fff; padding: 24px 36px 96px; }
   .strip p { margin: 0; max-width: 912px; font-size: min(60px, 6vw); font-weight: 500; line-height: 1; letter-spacing: -0.01em; }
-  .mock-off .strip { display: none; }
   .panel { position: fixed; right: 16px; top: 16px; display: flex; flex-direction: column; gap: 12px; padding: 16px;
     background: rgba(255,255,255,.92); border-radius: 16px; font-size: 14px; width: 272px;
     max-height: calc(100% - 32px); overflow: auto; }
@@ -48,10 +47,6 @@
     <!-- <button data-v="8">Затмение</button> -->
   </div>
   <div id="sliders" class="sliders"></div>
-  <div class="row">
-    <button id="seed"></button>
-    <button id="mock">Без макета</button>
-  </div>
 </div>
 
 <script type="x-shader/x-fragment" id="fs">#version 300 es
@@ -355,22 +350,14 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
   }
 
   const tabs = [...document.querySelectorAll('#tabs button')]
-  const seed = document.getElementById('seed')
   const sync = () => {
     tabs.forEach((b) => b.setAttribute('aria-pressed', String(+b.dataset.v === state.v)))
     document.querySelectorAll('[data-only]').forEach((el) => {
       el.hidden = !el.dataset.only.split(' ').map(Number).includes(state.v)
     })
     sliders.querySelectorAll('input').forEach((el) => { el.value = get(el.dataset.id) })
-    seed.textContent = `Сид ${get('seed')}`
   }
   tabs.forEach((b) => b.addEventListener('click', () => { state.v = +b.dataset.v; sync(); save() }))
-  seed.addEventListener('click', () => { state[key('seed')] = (get('seed') % 99) + 1; sync(); save() })
-  const mock = document.getElementById('mock')
-  mock.addEventListener('click', () => {
-    document.body.classList.toggle('mock-off')
-    mock.textContent = document.body.classList.contains('mock-off') ? 'С макетом' : 'Без макета'
-  })
   sync()
 
   // The pointer over the picture, -1..1 from its centre, y up; the shader gets it eased
@@ -398,11 +385,11 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
   addEventListener('pointerup', () => { pressed = false })
   addEventListener('pointercancel', () => { pressed = false })
 
-  // Drawn at CSS pixels, not the screen's. With the mock on, the picture takes what the white strip leaves, as the guide's first
+  // Drawn at CSS pixels, not the screen's. The picture takes what the white strip leaves, as the guide's first
   // screen shows it
   const strip = document.querySelector('.strip')
   function resize() {
-    const off = document.body.classList.contains('mock-off') ? 0 : strip.offsetHeight
+    const off = strip.offsetHeight
     document.body.style.setProperty('--strip', off + 'px')
     const k = 1
     const w = Math.round(innerWidth * k), h = Math.round((innerHeight - off) * k)
