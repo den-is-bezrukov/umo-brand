@@ -8,7 +8,7 @@ interface Props {
   /** Leave out for a card with no credit offer: one price, under «Цена:» */
   creditPrice?: string
   qrSvg?: string
-  /** Replaces the print-resolution car photo, e.g. with a small preview on the brand guide page. */
+  /** Replaces the car photo's screen copy, e.g. with a smaller one on the brand guide page. */
   image?: string
 }
 
@@ -41,7 +41,7 @@ function singlePriceTop(qrSvg?: string) {
 
 export default function PriceCard({ variant, fullPrice, creditPrice, qrSvg, image }: Props) {
   const data = cards[variant]
-  const carImage = image ?? data.image
+  const carImage = image ?? data.preview
   const svg = data.model === 'umo8' ? svgUmo8 : svgUmo5
 
   return (

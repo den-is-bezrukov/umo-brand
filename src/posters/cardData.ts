@@ -1,11 +1,17 @@
 import imgUmo5 from '@/assets/umo5-car.jpg'
 import imgUmo8 from '@/assets/umo8-car.jpg'
+// The screen's copies, 1600 px WebP (~120 KB): the preview never draws the photo wider; the PDF takes the full JPEGs
+import previewUmo5 from '@/assets/umo5-car-preview.webp'
+import previewUmo8 from '@/assets/umo8-car-preview.webp'
 
 export type Variant = 'umo8-max' | 'umo8-ultra' | 'umo5-max' | 'umo5-pro'
 
 export interface CardData {
   model: 'umo5' | 'umo8'
+  /** The print photo, for the PDF */
   image: string
+  /** Its light copy, for the preview */
+  preview: string
   trimLabel: string
   descriptionLines: string[]
 }
@@ -14,6 +20,7 @@ export const cards: Record<Variant, CardData> = {
   'umo8-max': {
     model: 'umo8',
     image: imgUmo8,
+    preview: previewUmo8,
     trimLabel: 'Это комплектация Макс:',
     descriptionLines: [
       'Комфорт продуман до мелочей: массаж, панорамная\xa0крыша и вентиляция всех сидений.',
@@ -24,6 +31,7 @@ export const cards: Record<Variant, CardData> = {
   'umo8-ultra': {
     model: 'umo8',
     image: imgUmo8,
+    preview: previewUmo8,
     trimLabel: 'Это комплектация Ультра:',
     descriptionLines: [
       'Комфорт продуман до мелочей: массаж, панорамная крыша и вентиляция всех сидений. Сиденья с режимом нулевой гравитации — дорога больше не утомляет. Проекция на лобовом стекле, салон в коже Nappa с замшевым потолком, объёмный звук 22 динамиков. Машина сама умеет парковаться, а ИИ фары элегантно подчеркивают статус автомобиля.',
@@ -32,6 +40,7 @@ export const cards: Record<Variant, CardData> = {
   'umo5-max': {
     model: 'umo5',
     image: imgUmo5,
+    preview: previewUmo5,
     trimLabel: 'Это комплектация Макс:',
     descriptionLines: [
       'Всё нужное для комфортной городской жизни: Алиса помогает за рулем, система интеллектуального вождения с адаптивным круиз-контролем и\xa0панорамная крыша, которая наполняет салон светом.',
@@ -41,6 +50,7 @@ export const cards: Record<Variant, CardData> = {
   'umo5-pro': {
     model: 'umo5',
     image: imgUmo5,
+    preview: previewUmo5,
     trimLabel: 'Это комплектация Про:',
     descriptionLines: [
       'Всё нужное для комфортной городской жизни: электрический привод багажника с дистанционным управлением. За рулём помогает Алиса: проложит маршрут, включит любимую песню, чтобы вы могли сфокусироваться на дороге. Управляйте автомобилем из любой точки через приложение UMO.',
