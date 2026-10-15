@@ -58,7 +58,7 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
   return (
     <div data-head className="flex flex-col gap-4">
       <PhoneCrumbs />
-      {/* The chevron on the line's right end, 24 px in, over its shade, level with the names (their 24 px line 4 px down) */}
+      {/* «···» on the line's right end, 24 px in, over its shade, on the names' line (24 px, 4 px down) */}
       <div className="relative">
       {menu ? (
         // 20 px under the crumbs, where the line stood, so the current name stays put (24 dropped it 4 px; 16 sat the
@@ -71,17 +71,22 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
       ) : (
         <GeneratorRing current={current} />
       )}
-        {/* Grey as the form's other icons (#808080), black under the pointer */}
-        <div className="absolute right-0 top-2 flex text-[#808080] transition-[color] duration-250 hover:text-black hover:duration-0">
-          <IconButton label={menu ? 'Свернуть' : 'Все конструкторы'} onClick={toggle} d={menu ? CHEVRON.up : CHEVRON.down} />
-        </div>
+        {/* «···», three of CoFo Sans's middle dots (it has no midline ellipsis, U+22EF), set and coloured as the line's names
+            (#BFBFBF, #808080 under the pointer), as its last word; the list open, the chevron ⌃ in its place */}
+        {menu ? (
+          <div className="absolute right-0 top-2 flex text-[#808080] transition-[color] duration-250 hover:text-black hover:duration-0">
+            <IconButton label="Свернуть" onClick={toggle} d={CHEVRON.up} />
+          </div>
+        ) : (
+          <button type="button" aria-label="Все конструкторы" title="Все конструкторы" onClick={toggle} className={`${name} absolute right-0 top-1 cursor-pointer text-[#bfbfbf] after:absolute after:-inset-[10px] after:content-[''] hover:text-[#808080] active:text-[#808080]`}>···</button>
+        )}
       </div>
     </div>
   )
 }
 
-/** The line's chevron: the form's own (ComboField's, 8 wide and 4 tall, as each of the guide's «Свернуть» pair), centred in 16 px */
-const CHEVRON = { down: 'M4 6L8 10L12 6', up: 'M4 10L8 6L12 10' }
+/** The open list's chevron: the form's own (ComboField's, 8 wide and 4 tall, as each of the guide's «Свернуть» pair), centred in 16 px */
+const CHEVRON = { up: 'M4 10L8 6L12 10' }
 
 /** The breadcrumbs: Medium (Regular in Figma 5110:9105), on 16 px lines, with no tracking, as the form's labels, set here
  * so they don't shift between the form (which tracks its type tighter) and the menu over it */
