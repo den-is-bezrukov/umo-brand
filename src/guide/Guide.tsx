@@ -662,8 +662,9 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
 const BAR_LINK = "relative after:absolute after:-inset-x-2 after:-inset-y-4 after:content-[''] md:after:-inset-x-3 md:after:-inset-y-6"
 
 function BarLinks() {
+  // 8px after the menu icon, as any label stands after its icon (the bar's gap less 8, 16 from md)
   return (
-    <nav aria-label="Быстрые ссылки" className="relative flex shrink-0 gap-x-4 whitespace-nowrap md:gap-x-6">
+    <nav aria-label="Быстрые ссылки" className="relative -ml-2 flex shrink-0 gap-x-4 whitespace-nowrap md:-ml-4 md:gap-x-6">
       {/* «Платформа» alone where «бренда» wouldn't fit the bar (the three and the icon need about 400px with it) */}
       <a href="#positioning" className={`${BAR_LINK} ${LINK_HOVER}`}>Платформа<span className="max-[419px]:hidden"> бренда</span></a>
       <a href="#materials" className={`${BAR_LINK} ${LINK_HOVER}`}>Материалы</a>
@@ -1590,7 +1591,7 @@ export default function Guide() {
               className="flex min-w-0 cursor-pointer items-start gap-2 text-left before:absolute before:inset-0 before:content-['']"
             >
               <TocIcon name={menuOpen ? 'close' : 'menu'} />
-              {/* On the first screen the icon alone, the quick links after it as far as they stand from each other */}
+              {/* On the first screen the icon alone, the quick links 8px after it, as a label stands after its icon */}
               {(menuOpen || sectionTitle) && <span className="min-w-0 truncate">{menuOpen ? 'Свернуть' : sectionTitle}</span>}
             </button>
             {/* The quick links until the first section's heading is lit, then at once the section's name in their place */}
