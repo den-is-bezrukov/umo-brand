@@ -235,11 +235,11 @@ const TEXT_LINK = 'underline decoration-black/40 decoration-[2.5%] underline-off
  * A chapter title stuck at the top of the sheet's list, 8px under its edge where its text stands as on the first line.
  * Only its own 8px over the text is covered upwards (a white shadow): there's nothing there but the gap after the last
  * item, so a title in its place hides nothing. Titles stand 2px in from the list's edge (a margin, so the bullet keeps to
- * the text), their items 22px further.
+ * the text), their items 22px further. Its bullet stands about midway between the screen's edge and the text.
  */
 const STICKY_CHAPTER = 'ml-0.5 py-2 sticky top-2 z-10 bg-white shadow-[0_-8px_0_white]'
 
-function NavLink({ id, title, active, current, onNavigate, pad }: { id: string; title: string; active: boolean; current: boolean; onNavigate?: () => void; pad: string }) {
+function NavLink({ id, title, active, current, onNavigate, pad, bullet = '-left-[0.9em]' }: { id: string; title: string; active: boolean; current: boolean; onNavigate?: () => void; pad: string; bullet?: string }) {
   return (
     <a
       href={`#${id}`}
@@ -247,7 +247,7 @@ function NavLink({ id, title, active, current, onNavigate, pad }: { id: string; 
       aria-current={active ? 'location' : undefined}
       className={`relative block leading-[1.25] ${pad} ${active ? 'font-medium' : NAV_HOVER}`}
     >
-      {current && <span aria-hidden className="absolute -left-[0.9em]">•</span>}
+      {current && <span aria-hidden className={`absolute ${bullet}`}>•</span>}
       {title}
     </a>
   )
@@ -295,7 +295,7 @@ function Nav({ active, expandAll, onNavigate, stickyChapters }: { active: string
         const open = expandAll || activeChapter === chapter.id
         return (
           <div key={chapter.id} className="flex flex-col">
-            <NavLink id={chapter.id} title={chapter.title} active={activeChapter === chapter.id} current={active.includes(chapter.id)} onNavigate={onNavigate} pad={stickyChapters ? STICKY_CHAPTER : 'py-2'} />
+            <NavLink id={chapter.id} title={chapter.title} active={activeChapter === chapter.id} current={active.includes(chapter.id)} onNavigate={onNavigate} pad={stickyChapters ? STICKY_CHAPTER : 'py-2'} bullet={stickyChapters ? '-left-3' : undefined} />
             {chapter.children && (
               <div
                 inert={!open}
