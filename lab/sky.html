@@ -180,6 +180,7 @@ vec3 eclipse(vec2 sp) { return pal(.02 + .96 * eclipseV(sp)); }
 // (`halftone` sized them by Затмение's bands: Растр, dropped) ──
 uniform float sDots, sSize, sBg, sJitter, sTwinkle, sWave, sHue, sSat, sRadius;
 uniform float sLight, sTrail, sWaveW;
+uniform float uWaveT;  // the wave's own clock, so changing its speed doesn't make it jump
 uniform float uSeen;    // 0 until the pointer first moves over the page
 uniform vec3 uTrail[8]; // where the pointer has just been (-1..1) and how many seconds ago
 vec3 dots(vec2 sp, bool halftone) {
@@ -205,7 +206,7 @@ vec3 dots(vec2 sp, bool halftone) {
   }
   val = max(val, trail * sTrail * .9);
   float tw = mix(1., .45 + .55 * sin(T * 3. + h(gid) * 30.), sTwinkle);
-  float wave = 1. + sWave * .45 * sin(length(home) * 9. / sWaveW - T * 1.5);
+  float wave = 1. + sWave * .45 * sin(length(home) * 9. / sWaveW - uWaveT * 1.5);
   float rad = cell * .5 * sSize * wave * (1. + sTrail * trail * .4);
   float dotv = smoothstep(rad, rad * .55, dd) * mix(sBg, 1., val) * tw * (1. + sLight * lit * 2.);
   float halo = exp(-dd / cell * 4.) * .35 * val * tw;
@@ -300,6 +301,7 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     { id: 'sTwinkle', label: 'Мерцание', min: 0, max: 1, step: 0.01, def: 0.3, only: [6], own: true },
     { id: 'sWave', label: 'Волна', min: 0, max: 1, step: 0.01, def: 0.3, only: [6], own: true },
     { id: 'sWaveW', label: 'Ширина волны', min: 0.3, max: 8, step: 0.05, def: 1, only: [6], own: true },
+    { id: 'sWaveV', label: 'Скорость волны', min: -3, max: 3, step: 0.01, def: 1, only: [6], own: true },
     { id: 'sLight', label: 'Свет мыши', min: 0, max: 2, step: 0.01, def: 0.8, only: [6], own: true },
     { id: 'sTrail', label: 'След мыши', min: 0, max: 2, step: 0.01, def: 1, only: [6], own: true },
     { id: 'sRadius', label: 'Радиус мыши', min: 0.3, max: 3, step: 0.01, def: 1, only: [6], own: true },
@@ -313,7 +315,7 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     { id: 'lScroll', label: 'Бегущая строка', min: 0, max: 3, step: 0.01, def: 0, only: [7] },
     { id: 'uLamp', label: 'Фонарь', min: 0, max: 2, step: 0.01, def: 0.5, only: [2] },
   ]
-  const names = ['R', 'T', 'S', 'V', 'uMouse', 'uTravel', 'uBoost', 'uSeen', 'uTrail', ...CONTROLS.map((c) => c.id)]
+  const names = ['R', 'T', 'S', 'V', 'uMouse', 'uTravel', 'uBoost', 'uWaveT', 'uSeen', 'uTrail', ...CONTROLS.map((c) => c.id)]
   const u = Object.fromEntries(names.map((k) => [k, gl.getUniformLocation(prog, k)]))
 
   // Every variant as Denis last set it (2026-10-15); they override the sliders' own defaults
@@ -359,6 +361,7 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
   // The pointer over the picture, -1..1 from its centre, y up; the shader gets it eased
   // Pressing on the picture is Газ
   const aim = [0, 0], mouse = [0, 0]
+  let waveT = 0
   let pressed = false, boost = 0, travel = 0, seen = 0
   // The pointer's last places, one every 60 ms: Рой's След
   const trail = []
@@ -396,6 +399,8 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
   function frame(now) {
     const dt = still ? 0 : Math.min(now - last, 100) / 1000
     t += dt * get('speed')
+    waveT += dt * get('speed') * get('sWaveV')
+    gl.uniform1f(u.uWaveT, waveT)
     last = now
     for (const i of [0, 1]) mouse[i] += (aim[i] - mouse[i]) * 0.06
     gl.uniform1f(u.uSeen, seen)
