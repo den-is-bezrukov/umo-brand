@@ -182,7 +182,8 @@ uniform float sDots, sSize, sBg, sJitter, sTwinkle, sWave, sHue, sSat, sRadius;
 uniform float sLight, sTrail, sWaveW;
 uniform float uWaveT;  // the wave's own clock, so changing its speed doesn't make it jump
 uniform float uSeen;    // 0 until the pointer first moves over the page
-uniform vec3 uTrail[8]; // where the pointer has just been (-1..1) and how many seconds ago
+uniform vec3 uTrail[32]; // where the pointer has just been (-1..1) and how many seconds ago, newest first
+uniform vec2 uPointer;   // the pointer as it is, not eased (-1..1)
 vec3 dots(vec2 sp, bool halftone) {
   vec2 mp = uMouse * vec2(R.x / R.y, 1.) * .5;
   vec2 src = sp;
@@ -196,13 +197,19 @@ vec3 dots(vec2 sp, bool halftone) {
   else { float k; val = smoothstep(3., -3., logo(toLogo(home, .72, 2.6, k))); }
   // The pointer's light and trail, at the point's place
   float r = sRadius * .1;
-  float lit = exp(-dot(home - mp, home - mp) / (r * r * 4.)) * uSeen;
+  vec2 asp = vec2(R.x / R.y, 1.) * .5;
+  vec2 pp = uPointer * asp;
+  float lit = exp(-dot(home - pp, home - pp) / (r * r * 4.)) * uSeen;
+  // The trail: the pointer's path as segments, so it stays whole however fast it moves
   float trail = 0.;
-  for (int i = 0; i < 8; i++) {
-    vec3 tp = uTrail[i];
-    if (tp.z > 3.) continue;
-    float dt = length(home - tp.xy * vec2(R.x / R.y, 1.) * .5);
-    trail = max(trail, exp(-dt * dt / (r * r)) * exp(-tp.z * 1.6));
+  for (int i = 0; i < 31; i++) {
+    vec3 a = uTrail[i], b = uTrail[i + 1];
+    if (b.z > 3.) break;
+    vec2 pa = a.xy * asp, pb = b.xy * asp;
+    vec2 ab = pb - pa;
+    float f = clamp(dot(home - pa, ab) / max(dot(ab, ab), 1e-8), 0., 1.);
+    float dt = length(home - pa - ab * f);
+    trail = max(trail, exp(-dt * dt / (r * r)) * exp(-mix(a.z, b.z, f) * 1.6));
   }
   val = max(val, trail * sTrail * .9);
   float tw = mix(1., .45 + .55 * sin(T * 3. + h(gid) * 30.), sTwinkle);
@@ -315,7 +322,7 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     { id: 'lScroll', label: 'Бегущая строка', min: 0, max: 3, step: 0.01, def: 0, only: [7] },
     { id: 'uLamp', label: 'Фонарь', min: 0, max: 2, step: 0.01, def: 0.5, only: [2] },
   ]
-  const names = ['R', 'T', 'S', 'V', 'uMouse', 'uTravel', 'uBoost', 'uWaveT', 'uSeen', 'uTrail', ...CONTROLS.map((c) => c.id)]
+  const names = ['R', 'T', 'S', 'V', 'uMouse', 'uTravel', 'uBoost', 'uWaveT', 'uSeen', 'uTrail', 'uPointer', ...CONTROLS.map((c) => c.id)]
   const u = Object.fromEntries(names.map((k) => [k, gl.getUniformLocation(prog, k)]))
 
   // Every variant as Denis last set it (2026-10-15); they override the sliders' own defaults
@@ -363,7 +370,7 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
   const aim = [0, 0], mouse = [0, 0]
   let waveT = 0
   let pressed = false, boost = 0, travel = 0, seen = 0
-  // The pointer's last places, one every 60 ms: Рой's След
+  // The pointer's last places, one every 25 ms, the newest kept on the pointer: Рой's След
   const trail = []
   addEventListener('pointermove', (e) => {
     const r = canvas.getBoundingClientRect()
@@ -371,10 +378,10 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     const y = Math.max(-1, Math.min(1, 1 - ((e.clientY - r.top) / r.height) * 2))
     seen = 1
     const now = performance.now()
-    if (!trail.length || now - trail[0].t > 60) {
+    if (!trail.length || now - trail[0].t > 25) {
       trail.unshift({ x, y, t: now })
-      trail.length = Math.min(trail.length, 8)
-    }
+      trail.length = Math.min(trail.length, 32)
+    } else Object.assign(trail[0], { x, y })
     aim[0] = x
     aim[1] = y
   })
@@ -404,9 +411,10 @@ in vec2 p; void main() { gl_Position = vec4(p, 0, 1); }`
     last = now
     for (const i of [0, 1]) mouse[i] += (aim[i] - mouse[i]) * 0.06
     gl.uniform1f(u.uSeen, seen)
-    const tr = new Float32Array(24).fill(99)
+    const tr = new Float32Array(96).fill(99)
     trail.forEach((p, i) => tr.set([p.x, p.y, (now - p.t) / 1000], i * 3))
     gl.uniform3fv(u.uTrail, tr)
+    gl.uniform2f(u.uPointer, aim[0], aim[1])
     const goal = pressed ? get('gas') * 4 : 0
     boost += (goal - boost) * (goal > boost ? 0.08 : 0.03)
     travel += dt * 1.4 * (get('speed') + boost * Math.max(get('speed'), 0.25))
