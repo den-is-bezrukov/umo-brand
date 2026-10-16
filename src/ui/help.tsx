@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useRef, useState, type ReactNode } from 'react'
 import { useTypograf } from '@/guide/typograf'
 import { goal } from './metrika'
 import Dialog from './Dialog'
+import Ring from './Ring'
 
 /**
  * «Помощь», the «?» at the end of the breadcrumbs (as Composter's): one panel for every generator, a tab each and
@@ -173,15 +174,6 @@ const HELP: Record<string, Help> = {
   },
 }
 
-/** The combobox's tick, by the open section */
-function Tick() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-      <path d="M11.5 4L5.5 10L2.5 7" stroke="black" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" />
-    </svg>
-  )
-}
-
 const H = 'text-[16px] font-medium leading-5 tracking-[-0.01em]'
 
 function Steps({ items }: { items: ReactNode[] }) {
@@ -195,8 +187,6 @@ function Steps({ items }: { items: ReactNode[] }) {
 function Part({ title, children }: { title: string; children: ReactNode }) {
   return <section className="flex flex-col gap-3"><h3 className={H}>{title}</h3>{children}</section>
 }
-
-const TAB = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
 
 function Generator({ help }: { help: Help }) {
   return (
@@ -219,52 +209,25 @@ function Faq({ items }: { items: [string, ReactNode][] }) {
 }
 
 /**
- * «Помощь» in the site's dialog (`Dialog`, as the guide's «Редактор материалов»), 560 px wide. The section stands still
- * under the title as the text scrolls: a dropdown, its name in 24 px Medium with a combobox's chevron, the list under it
- * as a combobox's (white, 2 px inside, rows 8 px round, the pointed one grey, the open one medium with a tick), the
- * generators in the ring's order and «Общее», opened on the page's own. Esc folds the list before the dialog
+ * «Помощь» in the site's dialog (`Dialog`, as the guide's «Редактор материалов»), 560 px wide. Under the title the
+ * sections in a `Ring`, the generators' line again (a drum, the names running off under the white at the edges): the
+ * generators in its order and «Общее», opened on the page's own; a hairline under it sets the head apart from the text,
+ * which scrolls under it. A pick shows that section from its top
  */
 function HelpPanel({ page, tabs, onClose }: { page: string; tabs: { path: string; title: string }[]; onClose: () => void }) {
   const [tab, setTab] = useState(page)
-  const [menu, setMenu] = useState(false)
   const body = useRef<HTMLDivElement>(null)
-  const drop = useRef<HTMLDivElement>(null)
   useTypograf(body)
-  useEffect(() => {
-    if (!menu) return
-    // On the document, so the dialog's Esc on the window doesn't hear it
-    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); setMenu(false) } }
-    const away = (e: PointerEvent) => { if (!drop.current?.contains(e.target as Node)) setMenu(false) }
-    document.addEventListener('keydown', key)
-    document.addEventListener('pointerdown', away)
-    return () => { document.removeEventListener('keydown', key); document.removeEventListener('pointerdown', away) }
-  }, [menu])
   const pick = (t: string) => {
     setTab(t)
-    setMenu(false)
     const scroller = body.current?.parentElement
     if (scroller) scroller.scrollTop = 0
   }
-  const all = [...tabs, { path: 'general', title: 'Общее' }]
+  const items = [...tabs.map(t => ({ key: t.path, title: t.title })), { key: 'general', title: 'Общее' }]
   const help = HELP[tab]
   const head = (
-    <div ref={drop} className="relative">
-      <button type="button" aria-haspopup="listbox" aria-expanded={menu} onClick={() => setMenu(!menu)} className={`${TAB} flex cursor-pointer items-center gap-2`}>
-        {all.find(t => t.path === tab)!.title}
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden className={menu ? 'rotate-180' : ''}>
-          <path d="M3 5L7 9L11 5" stroke="black" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" />
-        </svg>
-      </button>
-      {menu && (
-        <div role="listbox" aria-label="Разделы помощи" className="absolute top-[calc(100%+8px)] left-0 z-10 w-[240px] rounded-[8px] bg-white p-[2px] text-[14px] leading-5 shadow-[0_10px_15px_rgba(0,0,0,0.1)] ring-1 ring-black/5">
-          {all.map(t => (
-            <div key={t.path} role="option" aria-selected={t.path === tab} onClick={() => pick(t.path)} className={`flex cursor-pointer items-start gap-2 rounded-[8px] px-3 py-[10px] hover:bg-[#f5f5f5] ${t.path === tab ? 'font-medium' : ''}`}>
-              <span className="min-w-0 flex-1">{t.title}</span>
-              {t.path === tab && <span className="flex h-5 w-4 shrink-0 items-center justify-center"><Tick /></span>}
-            </div>
-          ))}
-        </div>
-      )}
+    <div className="-mx-6 border-b border-black/10 px-6 pb-6">
+      <Ring label="Разделы помощи" items={items} current={tab} onPick={pick} />
     </div>
   )
   return (

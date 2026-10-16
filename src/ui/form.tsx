@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { goal } from './metrika'
 import HelpButton from './help'
+import Ring from './Ring'
 import { InFoot, InSheet } from './phone'
 import { MOD, withMod, otherLayout } from './keys'
 
@@ -94,142 +95,23 @@ function PhoneCrumbs({ open, onEditor }: { open: boolean; onEditor: () => void }
   )
 }
 
-/** Copies of the generators in the line: the middle one in view, a whole turn either side to scroll through */
-const PHONE_TURNS = 3
-
 /**
- * The generators' line, on every screen: scrolled natively, as a phone's tabs, by a finger, a trackpad or the wheel (the
- * ring turned by script ran on and came back round on its own, unlike anything else under a finger), and picked as a drum: the name the line comes to rest on,
- * 24 px from the edge where the ring had the current one, opens the instant the finger is off and the line is still; a
- * tap opens one too. It goes round as the ring did: the generators in their order three times over, the current one of
- * the middle copy at the edge, so there's a whole turn to scroll either way; every page puts its own there, so the line
- * looks the same after a pick, and a turn's worth of scrolling to the same name puts it back in the middle unseen.
- * 20 px apart (16 in Figma 5098:5496), the one nearest the edge black as it goes
+ * The generators' line, the site's `Ring`: a pick opens the generator (from the keys with the focus kept on the next
+ * page's line, so ← → go on turning it); the current one is the page's heading, the others links
  */
 function GeneratorRing({ current }: { current: string }) {
   const navigate = useNavigate()
-  // Opened from the keys, the next page takes the focus back on its line, so ← → go on turning it
   const turned = (useLocation().state as { turned?: boolean } | null)?.turned
-  const count = GENERATORS.length
-  const middle = Math.floor(PHONE_TURNS / 2) * count + GENERATORS.findIndex(g => g.path === current)
-  const nav = useRef<HTMLElement>(null)
-  const [lit, setLit] = useState(current)
-  const item = (i: number) => nav.current?.children[i] as HTMLElement | undefined
-  // The current one of the middle copy at the edge, before the first paint and again once the font is in
-  useLayoutEffect(() => {
-    const home = () => { const n = nav.current, el = item(middle); if (n && el) n.scrollLeft = el.offsetLeft - 24 }
-    home()
-    if (turned) nav.current?.focus({ preventScroll: true })
-    document.fonts?.ready.then(home)
-  }, [current]) // eslint-disable-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    const n = nav.current
-    if (!n) return
-    const nearest = () => {
-      let best = middle
-      let gap = Infinity
-      for (let i = 0; i < count * PHONE_TURNS; i++) {
-        const d = Math.abs(item(i)!.offsetLeft - n.scrollLeft - 24)
-        if (d < gap) { gap = d; best = i }
-      }
-      return best
-    }
-    // The moment the line is still: `scrollend` where the browser has it, the instant the run and the snap are over;
-    // elsewhere 150 ms with no scrolling (0 would open a name the line only passes by)
-    const ends = 'onscrollend' in window
-    let touching = false
-    let timer = 0
-    // Only a scroll someone made picks: the snap redoing itself as the panel resizes ended a scroll too, and opened the
-    // next generator on its own
-    let moved = false
-    // The name the arrows last turned it to, while they drive it
-    let target = -1
-    // The wheel scrolls the line across (a mouse has no other way to), and a pick waits until it's been still a moment,
-    // as each notch of the wheel ends a scroll of its own
-    let wheeled = 0
-    const wheel = (e: WheelEvent) => {
-      moved = true
-      target = -1
-      if (Math.abs(e.deltaX) >= Math.abs(e.deltaY)) { wheeled = performance.now(); return }
-      e.preventDefault()
-      wheeled = performance.now()
-      n.scrollBy({ left: e.deltaY * (e.deltaMode === 1 ? 16 : 1), behavior: 'smooth' })
-    }
-    const pick = () => {
-      if (touching || !moved) return
-      const quiet = performance.now() - wheeled
-      if (quiet < 300) { clearTimeout(timer); timer = window.setTimeout(pick, 300 - quiet); return }
-      const i = nearest()
-      const path = GENERATORS[i % count].path
-      moved = false
-      if (path !== current) navigate(path)
-      // The same name a turn away: back to the middle copy, unseen
-      else if (i !== middle) n.scrollLeft += item(middle)!.offsetLeft - item(i)!.offsetLeft
-    }
-    const settle = () => { clearTimeout(timer); if (!ends) timer = window.setTimeout(pick, 150) }
-    // The keys turn it without opening anything (one stray arrow left a page and its unsaved list): ← → by one name
-    // each, counted from the one the last press went to, so quick presses add up (the browser's own arrow scroll took
-    // one press while the line was still moving), Enter or Space opens that name, Esc turns it home, as does the focus
-    // leaving it. A finger's or the wheel's scroll still opens where it rests
-    const turnTo = (i: number) => { target = i; n.scrollTo({ left: item(i)!.offsetLeft - 24, behavior: 'smooth' }) }
-    const home = () => turnTo(middle)
-    const key = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-        e.preventDefault()
-        const from = target >= 0 ? target : nearest()
-        turnTo(Math.max(0, Math.min(count * PHONE_TURNS - 1, from + (e.key === 'ArrowRight' ? 1 : -1))))
-      } else if (e.key === 'Enter' || e.key === ' ') {
-        e.preventDefault()
-        const path = GENERATORS[(target >= 0 ? target : nearest()) % count].path
-        if (path !== current) navigate(path, { state: { turned: true } })
-      } else if (e.key === 'Escape') home()
-    }
-    const leave = (e: FocusEvent) => { if (!n.contains(e.relatedTarget as Node)) home() }
-    // Resized, the current one back at the edge
-    const observer = new ResizeObserver(() => { if (!moved) n.scrollLeft = item(middle)!.offsetLeft - 24 })
-    observer.observe(n)
-    const scroll = () => { setLit(GENERATORS[nearest() % count].path); settle() }
-    const down = () => { touching = true; moved = true; target = -1; clearTimeout(timer) }
-    const up = () => { touching = false; settle() }
-    if (ends) n.addEventListener('scrollend', pick)
-    n.addEventListener('wheel', wheel, { passive: false })
-    n.addEventListener('keydown', key)
-    n.addEventListener('focusout', leave)
-    n.addEventListener('scroll', scroll, { passive: true })
-    n.addEventListener('touchstart', down, { passive: true })
-    n.addEventListener('touchend', up)
-    n.addEventListener('touchcancel', up)
-    return () => {
-      clearTimeout(timer)
-      n.removeEventListener('scrollend', pick)
-      n.removeEventListener('wheel', wheel)
-      n.removeEventListener('keydown', key)
-      n.removeEventListener('focusout', leave)
-      observer.disconnect()
-      n.removeEventListener('scroll', scroll)
-      n.removeEventListener('touchstart', down)
-      n.removeEventListener('touchend', up)
-      n.removeEventListener('touchcancel', up)
-    }
-  }, [current]) // eslint-disable-line react-hooks/exhaustive-deps
-  const name = 'shrink-0 snap-start text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
-  const tone = (path: string) => (path === lit ? 'text-black' : 'text-[#bfbfbf] hover:text-[#808080] active:text-[#808080]')
   return (
-    <div className="relative -mx-6 my-1">
-      {/* 8 px over and under for the descenders (р, у), which the scroller would clip; one Tab stop, ringed whole, its
-          names turned with ← → and opened with Enter (not one stop each) */}
-      <nav ref={nav} aria-label="Конструкторы" tabIndex={0} className="relative -my-2 flex snap-x snap-mandatory scroll-pl-6 gap-5 overflow-x-auto overscroll-x-contain py-2 pl-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {Array.from({ length: PHONE_TURNS * count }, (_, i) => {
-          const g = GENERATORS[i % count]
-          return i === middle
-            ? <h1 key={i} className={`${name} ${tone(g.path)}`}>{g.title}</h1>
-            : <Link key={i} to={g.path} draggable={false} aria-hidden={i < count || i >= 2 * count || undefined} tabIndex={-1} className={`${name} ${tone(g.path)} outline-none`}>{g.title}</Link>
-        })}
-      </nav>
-      {/* The shades over the edges, as the ring's (Figma 5062:671, 5061:539) */}
-      <div aria-hidden className="pointer-events-none absolute -inset-y-2 left-0 w-6" style={{ background: 'linear-gradient(90deg, #ffffff80 25%, #fff0), linear-gradient(90deg, #fff 25%, #fff0)' }} />
-      <div aria-hidden className="pointer-events-none absolute -inset-y-2 right-0 w-12" style={{ background: 'linear-gradient(90deg, #fff0, #ffffff80), linear-gradient(90deg, #fff0, #fff)' }} />
-    </div>
+    <Ring
+      label="Конструкторы"
+      items={GENERATORS.map(g => ({ key: g.path, title: g.title }))}
+      current={current}
+      onPick={(path, keys) => navigate(path, keys ? { state: { turned: true } } : undefined)}
+      href={path => path}
+      heading
+      focus={turned}
+    />
   )
 }
 
