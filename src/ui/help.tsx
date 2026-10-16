@@ -170,6 +170,15 @@ const HELP: Record<string, Help> = {
   },
 }
 
+/** The combobox's tick, by the open section */
+function Tick() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
+      <path d="M11.5 4L5.5 10L2.5 7" stroke="black" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" />
+    </svg>
+  )
+}
+
 function Cross() {
   return <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d="M2 2L14 14M14 2L2 14" stroke="currentColor" strokeWidth="2" strokeLinecap="square" /></svg>
 }
@@ -213,31 +222,30 @@ function Faq({ items }: { items: [string, ReactNode][] }) {
 /**
  * The panel. Not modal, as Composter's: the form stays as it is under it. On wide screens 480 px over the canvas, 16 px
  * off the sidebar and the screen's edges, shadowed as the phone's sheet; on phones a screen of its own, as a combobox's
- * search, portalled, as the phone's sheet would hold it under the download. «Помощь» and the tabs stay at its top as
- * it scrolls; the tabs are the generators' line again (24 px Medium, the current one black, scrolled sideways), the
- * page's own first. Closed by ×, Esc, the «?» again or a click outside it
+ * search, portalled, as the phone's sheet would hold it under the download. «Помощь» and the section stay at its top as
+ * it scrolls. The section is a dropdown: its name in 24 px Medium with a combobox's chevron, the list under it as a
+ * combobox's (white, 2 px inside, rows 8 px round, the pointed one grey, the open one medium with a tick), the
+ * generators in the ring's order and «Общее», opened on the page's own. Esc folds the list first, then the panel;
+ * ×, the «?» again or a click outside close it
  */
 function HelpPanel({ page, tabs, button, onClose }: { page: string; tabs: { path: string; title: string }[]; button: React.RefObject<HTMLButtonElement | null>; onClose: () => void }) {
   const [tab, setTab] = useState(page)
+  const [menu, setMenu] = useState(false)
   const panel = useRef<HTMLDivElement>(null)
-  const line = useRef<HTMLDivElement>(null)
+  const drop = useRef<HTMLDivElement>(null)
   useTypograf(panel)
   useEffect(() => {
-    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
+    const key = (e: KeyboardEvent) => { if (e.key !== 'Escape') return; if (menu) setMenu(false); else onClose() }
     const away = (e: PointerEvent) => {
       const t = e.target as Node
+      if (menu && !drop.current?.contains(t)) setMenu(false)
       if (!panel.current?.contains(t) && !button.current?.contains(t)) onClose()
     }
     document.addEventListener('keydown', key)
     document.addEventListener('pointerdown', away)
     return () => { document.removeEventListener('keydown', key); document.removeEventListener('pointerdown', away) }
-  }, [onClose, button])
-  // The page's tab in view on opening
-  useEffect(() => {
-    const el = line.current?.querySelector<HTMLElement>('[aria-selected="true"]')
-    if (el && line.current) line.current.scrollLeft = el.offsetLeft - 24
-  }, [])
-  const pick = (t: string) => { setTab(t); if (panel.current) panel.current.scrollTop = 0 }
+  }, [onClose, button, menu])
+  const pick = (t: string) => { setTab(t); setMenu(false); if (panel.current) panel.current.scrollTop = 0 }
   const all = [...tabs, { path: 'general', title: 'Общее' }]
   const help = HELP[tab]
   return createPortal(
@@ -254,15 +262,26 @@ function HelpPanel({ page, tabs, button, onClose }: { page: string; tabs: { path
             <Cross />
           </button>
         </div>
-        <div ref={line} role="tablist" aria-label="Разделы помощи" className="flex gap-5 overflow-x-auto px-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {all.map(t => (
-            <button key={t.path} type="button" role="tab" aria-selected={t.path === tab} onClick={() => pick(t.path)} className={`${TAB} shrink-0 cursor-pointer ${t.path === tab ? 'text-black' : 'text-[#bfbfbf] hover:text-[#808080]'}`}>
-              {t.title}
-            </button>
-          ))}
+        <div ref={drop} className="relative px-6">
+          <button type="button" aria-haspopup="listbox" aria-expanded={menu} onClick={() => setMenu(!menu)} className={`${TAB} flex cursor-pointer items-center gap-2`}>
+            {all.find(t => t.path === tab)!.title}
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden className={menu ? 'rotate-180' : ''}>
+              <path d="M3 5L7 9L11 5" stroke="black" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" />
+            </svg>
+          </button>
+          {menu && (
+            <div role="listbox" aria-label="Разделы помощи" className="absolute top-[calc(100%+8px)] left-6 z-10 w-[240px] rounded-[8px] bg-white p-[2px] text-[14px] leading-5 shadow-[0_10px_15px_rgba(0,0,0,0.1)] ring-1 ring-black/5">
+              {all.map(t => (
+                <div key={t.path} role="option" aria-selected={t.path === tab} onClick={() => pick(t.path)} className={`flex cursor-pointer items-start gap-2 rounded-[8px] px-3 py-[10px] hover:bg-[#f5f5f5] ${t.path === tab ? 'font-medium' : ''}`}>
+                  <span className="min-w-0 flex-1">{t.title}</span>
+                  {t.path === tab && <span className="flex h-5 w-4 shrink-0 items-center justify-center"><Tick /></span>}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
-      <div role="tabpanel" className="flex flex-col gap-8">
+      <div className="flex flex-col gap-8">
         {help ? <Generator help={help} /> : <Faq items={GENERAL} />}
       </div>
     </div>,
