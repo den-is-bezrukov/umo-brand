@@ -7,7 +7,7 @@
 <title>Линза — прототип</title>
 <!-- Figma 5204:5248: the black wordmark on white (5204:5250) through Figma's «Lens distortion» effect (v2; Distortion 1,
      Aberration 1, Lateral, High; the wordmark across the width inside the guide's page margins; its Center point here follows the pointer), a white layer in Difference over it. The effect's WGSL (Lens-distortion-source.zip)
-     ported to WebGL2 line by line; the Difference layer is the last line of the shader. Dev server only:
+     ported to WebGL2 line by line, Distortion and Aberration let past Figma's 0–1 and a choice of what lies past the picture's edge; the Difference layer is the last line of the shader. Dev server only:
      http://localhost:5477/lab/lens.html -->
 <style>
   * { box-sizing: border-box; }
@@ -23,10 +23,11 @@
 <body>
 <canvas id="c"></canvas>
 <div class="panel">
-  <label>Distortion <input id="dist" type="range" min="0" max="1" step="0.01" value="1" /><output></output></label>
-  <label>Aberration <input id="ab" type="range" min="0" max="1" step="0.01" value="1" /><output></output></label>
+  <label>Distortion <input id="dist" type="range" min="-1" max="2" step="0.01" value="1" /><output></output></label>
+  <label>Aberration <input id="ab" type="range" min="0" max="3" step="0.01" value="1" /><output></output></label>
   <label>Mode <select id="mode"><option value="0">Lateral</option><option value="1">Longitudinal</option><option value="2">Anamorphic</option></select><span></span></label>
   <label>Quality <select id="q"><option value="0">High</option><option value="1">Medium</option><option value="2">Low</option></select><span></span></label>
+  <label>За краем <select id="edge"><option value="0">Пусто</option><option value="1">Зеркало</option><option value="2">Растянуть</option></select><span></span></label>
   <label>Разрешение <input id="res" type="range" min="0.25" max="1" step="0.05" value="0.5" /><output></output></label>
   <label>Влияние <input id="inf" type="range" min="0" max="1" step="0.01" value="1" /><output></output></label>
   <label>По вертикали <input id="infy" type="range" min="0" max="1" step="0.01" value="1" /><output></output></label>
@@ -45,6 +46,7 @@ uniform int bucket;         // aberration bucket, 0 = no split
 uniform int taps;           // kernel taps
 uniform float invKernel;
 uniform float weightSum;
+uniform int edge;           // past the picture's edge: 0 nothing (as Figma), 1 mirrored, 2 the edge stretched
 uniform sampler2D inputTex;
 in vec2 uv;
 out vec4 o;
@@ -54,7 +56,9 @@ const float SPREAD = 1.4;
 
 vec4 sampleZero(vec2 p) {
   vec2 t = p / dims;
-  if (t.x < 0. || t.x > 1. || t.y < 0. || t.y > 1.) return vec4(0.);
+  if (edge == 1) t = 1. - abs(mod(t, 2.) - 1.);
+  else if (edge == 2) t = clamp(t, 0., 1.);
+  else if (t.x < 0. || t.x > 1. || t.y < 0. || t.y > 1.) return vec4(0.);
   return textureLod(inputTex, t, 0.);
 }
 vec2 lensDistort(vec2 p, float a) {
@@ -181,6 +185,7 @@ function draw() {
   gl.uniform1f(U('amount'), dist);
   gl.uniform1f(U('chromaParam'), ab);
   gl.uniform1i(U('mode'), +$('mode').value);
+  gl.uniform1i(U('edge'), +$('edge').value);
   gl.uniform1i(U('bucket'), b);
   gl.uniform1i(U('taps'), k.taps);
   gl.uniform1f(U('invKernel'), k.inv);
