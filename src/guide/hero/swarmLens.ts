@@ -92,7 +92,7 @@ void main() {
   vec3 v = vec3(0.);
   float wsum = 0.;
   int taps = int(TAPS);
-  for (int i = 0; i < 16; i++) {
+  for (int i = 0; i < 32; i++) {
     if (i >= taps) break;
     float fi = taps > 1 ? float(i) / float(taps - 1) - .5 : 0.;
     float w = 1. - abs(fi * 2.) + .001;
@@ -145,8 +145,8 @@ export const GROUPS: readonly (readonly Control[])[] = [
   ],
   [
     ['DIST', 'Distortion', -1, 2, 0.01, 0.25],
-    ['ABER', 'Aberration', 0, 3, 0.01, 3],
-    ['TAPS', 'Отсчёты', 1, 16, 1, 8],
+    ['ABER', 'Aberration', 0, 8, 0.01, 3],
+    ['TAPS', 'Отсчёты', 1, 32, 1, 8],
     ['WIDTH', 'Ширина лого', 0.3, 1, 0.01, 0.9],
     ['RAINBOW', 'Радуга', 0, 1, 0.01, 0],
     ['EDGE', 'За краем', 0, 2, 1, 0, ['Пусто', 'Зеркало', 'Растянуть']],
