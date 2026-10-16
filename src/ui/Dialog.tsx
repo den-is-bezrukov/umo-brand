@@ -5,10 +5,11 @@ import { createPortal } from 'react-dom'
 const HOVER = 'transition-[color] duration-350 ease-[ease] hover:text-[#808080] hover:duration-0'
 
 /**
- * The site's one dialog: the guide's «Редактор материалов» and the generators' «Помощь». Centred on the page over
- * black at 40%, 16 px off the screen's edges, white, 16 px round, 24 px in: the title in 16 px Medium and × on one row,
- * `head` under it (24 px apart), both standing still while the rest scrolls when it's taller than the screen. Esc, ×
- * or a click on the dark close it; the page under it doesn't scroll. Portalled, so a phone's sheet can't hold it
+ * The site's one dialog: the guide's «Редактор материалов» and the generators' «Помощь». Over black at 40%, centred
+ * across and standing 64 px from the top (16 on phones), white, 16 px round, 24 px in: the title in
+ * 16 px Medium and × on one row, `head` under it (24 px apart). It grows with what's in it, no scroll inside: taller
+ * than the screen, the dark scrolls with it, the page under it staying still. Esc, × or a click on the dark close it.
+ * Portalled, so a phone's sheet can't hold it
  */
 export default function Dialog({ title, onClose, width = 360, head, children }: { title: string; onClose: () => void; width?: number; head?: ReactNode; children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -17,12 +18,12 @@ export default function Dialog({ title, onClose, width = 360, head, children }: 
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose() }
     const overflow = document.documentElement.style.overflow
     document.documentElement.style.overflow = 'hidden'
-    ref.current?.focus()
+    ref.current?.focus({ preventScroll: true })
     window.addEventListener('keydown', onKey)
     return () => { window.removeEventListener('keydown', onKey); document.documentElement.style.overflow = overflow }
   }, [onClose])
   return createPortal(
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 font-sans" onClick={onClose}>
+    <div data-dim className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain bg-black/40 p-4 font-sans md:p-16" onClick={onClose}>
       <div
         ref={ref}
         role="dialog"
@@ -31,9 +32,9 @@ export default function Dialog({ title, onClose, width = 360, head, children }: 
         tabIndex={-1}
         onClick={e => e.stopPropagation()}
         style={{ maxWidth: width }}
-        className="flex max-h-full w-full flex-col gap-6 rounded-2xl bg-white pt-6 text-black outline-none"
+        className="flex w-full flex-col gap-6 rounded-2xl bg-white p-6 text-black outline-none"
       >
-        <div className="flex shrink-0 flex-col gap-6 px-6">
+        <div className="flex flex-col gap-6">
           <div className="flex items-start justify-between gap-4">
             <h2 id={id} className="text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">{title}</h2>
             <button type="button" aria-label="Закрыть" onClick={onClose} className={`relative flex h-5 shrink-0 cursor-pointer items-center ${HOVER} after:absolute after:-inset-[10px] after:content-['']`}>
@@ -42,7 +43,7 @@ export default function Dialog({ title, onClose, width = 360, head, children }: 
           </div>
           {head}
         </div>
-        <div className="min-h-0 overflow-y-auto px-6 pb-6">{children}</div>
+        {children}
       </div>
     </div>,
     document.body,

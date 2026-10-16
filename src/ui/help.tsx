@@ -212,7 +212,7 @@ function Faq({ items }: { items: [string, ReactNode][] }) {
  * «Помощь» in the site's dialog (`Dialog`, as the guide's «Редактор материалов»), 560 px wide. Under the title the
  * sections in a `Ring`, the generators' line again (a drum, the names running off under the white at the edges): the
  * generators in its order and «Общее», opened on the page's own; a hairline under it sets the head apart from the text,
- * which scrolls under it. A pick shows that section from its top
+ * the dialog growing with it. A pick shows that section from its top
  */
 function HelpPanel({ page, tabs, onClose }: { page: string; tabs: { path: string; title: string }[]; onClose: () => void }) {
   const [tab, setTab] = useState(page)
@@ -220,14 +220,14 @@ function HelpPanel({ page, tabs, onClose }: { page: string; tabs: { path: string
   useTypograf(body)
   const pick = (t: string) => {
     setTab(t)
-    const scroller = body.current?.parentElement
-    if (scroller) scroller.scrollTop = 0
+    const dim = body.current?.closest<HTMLElement>('[data-dim]')
+    if (dim) dim.scrollTop = 0
   }
   const items = [...tabs.map(t => ({ key: t.path, title: t.title })), { key: 'general', title: 'Общее' }]
   const help = HELP[tab]
   const head = (
     <div className="-mx-6 border-b border-black/10 px-6 pb-6">
-      <Ring label="Разделы помощи" items={items} current={tab} onPick={pick} />
+      <Ring label="Разделы помощи" items={items} current={tab} onPick={pick} small />
     </div>
   )
   return (
