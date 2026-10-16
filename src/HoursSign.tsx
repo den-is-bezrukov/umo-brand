@@ -293,8 +293,10 @@ export default function HoursSign() {
   const preview = (
     <>
         <figure className="flex w-full flex-col items-center gap-2">
-          {/* As tall as the canvas allows on wide screens, as wide as it on phones */}
-          <svg viewBox={`0 0 ${SIGN.w} ${SIGN.h}`} className="block h-auto w-full max-w-[480px] bg-white md:h-[calc(100dvh-128px-30px)] md:w-auto md:max-w-full" role="img" aria-label="Режимник">
+          {/* As tall as the canvas allows on wide screens, as wide as it on phones; on wide screens its width is the
+              smaller of the canvas's and the one the height allows (12/17 of it, 480 × 680), so a narrow canvas shrinks
+              the sign whole: a fixed height with the width capped stretched its white box past 480 × 680 */}
+          <svg viewBox={`0 0 ${SIGN.w} ${SIGN.h}`} className="block h-auto w-full max-w-[480px] bg-white md:w-[min(100%,calc((100dvh-128px-30px)*12/17))] md:max-w-none" role="img" aria-label="Режимник">
             <path d={toD(LOGO)} fill="#000" fillRule="evenodd" />
             {[...byFill].map(([color, d]) => <path key={color} d={d} fill={color} />)}
           </svg>
