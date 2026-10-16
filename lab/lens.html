@@ -27,6 +27,7 @@
   <label>Aberration <input id="ab" type="range" min="0" max="3" step="0.01" value="1" /><output></output></label>
   <label>Mode <select id="mode"><option value="0">Lateral</option><option value="1">Longitudinal</option><option value="2">Anamorphic</option></select><span></span></label>
   <label>Quality <select id="q"><option value="0">High</option><option value="1">Medium</option><option value="2">Low</option></select><span></span></label>
+  <label>Зелёный <input id="green" type="range" min="0" max="1" step="0.01" value="1" /><output></output></label>
   <label>За краем <select id="edge"><option value="0">Пусто</option><option value="1">Зеркало</option><option value="2">Растянуть</option></select><span></span></label>
   <label>Разрешение <input id="res" type="range" min="0.25" max="1" step="0.05" value="0.5" /><output></output></label>
   <label>Влияние <input id="inf" type="range" min="0" max="1" step="0.01" value="1" /><output></output></label>
@@ -46,6 +47,7 @@ uniform int bucket;         // aberration bucket, 0 = no split
 uniform int taps;           // kernel taps
 uniform float invKernel;
 uniform float weightSum;
+uniform float green;        // 1 as is, 0 green no higher than the lesser of red and blue: fringes red, magenta, blue
 uniform int edge;           // past the picture's edge: 0 nothing (as Figma), 1 mirrored, 2 the edge stretched
 uniform sampler2D inputTex;
 in vec2 uv;
@@ -111,7 +113,9 @@ void main() {
   }
   vec4 c = acc / 4.;
   // The white Difference layer over the effect, on the frame's white: 1 - (c over white)
-  o = vec4(clamp(vec3(c.a) - c.rgb, 0., 1.), 1.);
+  vec3 col = clamp(vec3(c.a) - c.rgb, 0., 1.);
+  col.g = mix(min(col.g, min(col.r, col.b)), col.g, green);
+  o = vec4(col, 1.);
 }
 </script>
 
@@ -186,6 +190,7 @@ function draw() {
   gl.uniform1f(U('chromaParam'), ab);
   gl.uniform1i(U('mode'), +$('mode').value);
   gl.uniform1i(U('edge'), +$('edge').value);
+  gl.uniform1f(U('green'), +$('green').value);
   gl.uniform1i(U('bucket'), b);
   gl.uniform1i(U('taps'), k.taps);
   gl.uniform1f(U('invKernel'), k.inv);
