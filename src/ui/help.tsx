@@ -248,7 +248,7 @@ function HelpPanel({ page, tabs, onClose }: { page: string; tabs: { path: string
   const items = [...tabs, { path: 'general', title: 'Общие вопросы' }]
   const help = HELP[tab]
   const toggle = (
-    <button type="button" aria-expanded={menu} onClick={() => setMenu(!menu)} className="inline-flex cursor-pointer items-center gap-1 text-left">
+    <button type="button" aria-expanded={menu} onClick={() => setMenu(!menu)} className="inline-flex cursor-pointer items-center gap-2 text-left">
       {MAKES[tab] ?? 'Общие вопросы'}
       <ChevronIcon open={menu} />
     </button>
