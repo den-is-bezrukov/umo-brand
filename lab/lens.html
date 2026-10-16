@@ -6,13 +6,13 @@
 <meta name="robots" content="noindex" />
 <title>Линза — прототип</title>
 <!-- Figma 5204:5248: the black wordmark on white (5204:5250) through Figma's «Lens distortion» effect (v2; Distortion 1,
-     Aberration 1, Lateral, High; its Center point here follows the pointer), a white layer in Difference over it. The effect's WGSL (Lens-distortion-source.zip)
+     Aberration 1, Lateral, High; the wordmark sized as the guide's hero; its Center point here follows the pointer), a white layer in Difference over it. The effect's WGSL (Lens-distortion-source.zip)
      ported to WebGL2 line by line; the Difference layer is the last line of the shader. Dev server only:
      http://localhost:5477/lab/lens.html -->
 <style>
   * { box-sizing: border-box; }
   html, body { margin: 0; height: 100%; background: #000; }
-  canvas { position: fixed; left: 0; top: 50%; width: 100%; aspect-ratio: 2 / 1; transform: translateY(-50%); display: block; }
+  canvas { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
   .panel { position: fixed; right: 12px; top: 12px; padding: 8px 10px; background: Canvas; color: CanvasText;
     border: 1px solid GrayText; font: 12px system-ui, sans-serif; width: 300px; }
   label { display: grid; grid-template-columns: 1fr 120px 36px; align-items: center; gap: 6px; }
@@ -108,8 +108,8 @@ void main() {
 </script>
 
 <script>
-// The wordmark as the Figma frame has it (5204:5250), 2000×1000
-const SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="1000" viewBox="0 0 2000 1000"><rect width="2000" height="1000" fill="white"/><path d="M910.003 445H759.994V700H610V444.478C610 341.851 658.732 300 759.994 300H910.003V445ZM1209.99 300C1311.22 300 1360 341.791 1360 444.478V700H1209.99V445H1060V700H910.003V445H1060V300H1209.99Z"/><path d="M410 555H150V300H0V555.522C0 658.209 48.8349 700 150.125 700H409.86C511.225 700 560 658.149 560 555.522V300H410V555Z"/><path fill-rule="evenodd" d="M1849.89 300C1951.18 300 2000 341.791 2000 444.478V555.522C2000 658.149 1951.24 700 1849.89 700H1560.13C1458.82 700 1410 658.209 1410 555.522V444.478C1410 341.851 1458.82 300 1560.13 300H1849.89ZM1560 555H1850V444.478L1560 445V555Z"/></svg>`;
+// The wordmark as the Figma frame has it (5204:5250), cut to its own 2000×400 box
+const SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="400" viewBox="0 300 2000 400"><path d="M910.003 445H759.994V700H610V444.478C610 341.851 658.732 300 759.994 300H910.003V445ZM1209.99 300C1311.22 300 1360 341.791 1360 444.478V700H1209.99V445H1060V700H910.003V445H1060V300H1209.99Z"/><path d="M410 555H150V300H0V555.522C0 658.209 48.8349 700 150.125 700H409.86C511.225 700 560 658.149 560 555.522V300H410V555Z"/><path fill-rule="evenodd" d="M1849.89 300C1951.18 300 2000 341.791 2000 444.478V555.522C2000 658.149 1951.24 700 1849.89 700H1560.13C1458.82 700 1410 658.209 1410 555.522V444.478C1410 341.851 1458.82 300 1560.13 300H1849.89ZM1560 555H1850V444.478L1560 445V555Z"/></svg>`;
 
 // The effect's kernel, as main.ts computes it
 function bucketFor(s) { return s <= .001 ? 0 : s < .08 ? 1 : s < .18 ? 2 : s < .35 ? 3 : 4; }
@@ -160,7 +160,10 @@ function draw() {
   const w = Math.round(cv.clientWidth * dpr), h = Math.round(cv.clientHeight * dpr);
   if (off.width !== w || off.height !== h) {
     cv.width = off.width = w; cv.height = off.height = h;
-    off.getContext('2d').drawImage(img, 0, 0, w, h);
+    // On white, sized as the guide's hero (HeroDots): .72 of the width, no wider than 2.6 heights, centred
+    const ctx = off.getContext('2d'), lw = Math.min(w * .72, h * 2.6), lh = lw / 5;
+    ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(img, (w - lw) / 2, (h - lh) / 2, lw, lh);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, off);
   }
   const dist = +$('dist').value, ab = +$('ab').value, q = +$('q').value, b = bucketFor(ab), k = kernel(q, b);
