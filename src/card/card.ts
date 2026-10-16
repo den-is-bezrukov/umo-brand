@@ -3,6 +3,7 @@ import { qrOutline, type Cmd } from '@/livery/geometry'
 import { caseMap, pathCmds } from '@/plate/frame'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { nameFault } from '@/ui/names'
+import { withListBreak } from '@/data/positions'
 import type { Fonts } from '@/nametag/tag'
 
 // A dealership employee's business card (Figma: UMO | Evrone, section 4021:2849): 90×50 mm, two sides. The face
@@ -283,11 +284,12 @@ export function buildBack(fonts: Fonts, dealer: Dealer, person: Person, qr: QrDa
     else if (mixedScripts(email)) issues.push({ field: 'email', text: 'Почта: смешаны русские и латинские буквы' })
     y -= PITCH
   }
-  // The position may take two lines, breaking where typed or picked from the list
+  // The position may take two lines, breaking where typed, or where the list breaks it (typed or picked on one line)
   const font = fonts.regular
-  const position = wrap(font, person.position, SMALL, PERSON_W)
+  const listed = withListBreak(person.position)
+  const position = wrap(font, listed, SMALL, PERSON_W)
   const first = y - (Math.max(position.length, 1) - 1) * LEADING
-  lines('position', 'Должность', person.position, first, SMALL, PERSON_W, 2, true)
+  lines('position', 'Должность', listed, first, SMALL, PERSON_W, 2, true)
   y = first - AFTER_HEADING
 
   // Name and surname on one line, never shrunk: too long is an error, as on the name tag

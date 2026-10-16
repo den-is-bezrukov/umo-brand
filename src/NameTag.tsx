@@ -5,7 +5,7 @@ import { goal } from '@/ui/metrika'
 import { toD } from '@/livery/geometry'
 import { TAG, TAGS_KEY, buildTag, loadFonts, type Field, type FieldBox, type Fonts, type Person } from '@/nametag/tag'
 import { readXlsx, parsePasted } from '@/nametag/table'
-import { POSITIONS } from '@/data/positions'
+import { POSITION_OPTIONS } from '@/data/positions'
 import TagArt from '@/nametag/TagArt'
 import { isPdf, pdfInZip, readPdfData } from '@/ui/pdfData'
 import { MobileEditor, usePhone } from '@/ui/mobile'
@@ -287,11 +287,11 @@ export default function NameTag() {
 }
 
 /**
- * The position: a combobox of the typical positions (`POSITIONS`, each carrying its line break on the tag), free text
+ * The position: a combobox of the typical positions (`POSITION_OPTIONS`, on one line; the tag breaks them as `POSITIONS` do), free text
  * still allowed
  */
 function PositionPicker({ value, onChange, invalid }: { value: string; onChange: (v: string) => void; invalid: boolean }) {
-  return <ComboField value={value} onChange={onChange} options={POSITIONS} placeholder="Должность" label="Типовые должности" invalid={invalid} />
+  return <ComboField value={value} onChange={onChange} options={POSITION_OPTIONS} placeholder="Должность" label="Типовые должности" invalid={invalid} />
 }
 
 /** The outlines of every field `only` keeps */

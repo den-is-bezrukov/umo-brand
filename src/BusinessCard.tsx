@@ -8,7 +8,7 @@ import { loadFonts, type Fonts } from '@/nametag/tag'
 import { xlsxCells, pastedCells, byHeaders, FULL_NAME, fromFullName, type Cells } from '@/nametag/table'
 import { CARDS_KEY, CARD, QR, FACE, BACK_LOGO, DEALER_FIELDS, buildBack, siteFor, siteText, splitPhone, maskPhone, type CardField, type Dealer, type Person, type QrData } from '@/card/card'
 import CardArt from '@/card/CardArt'
-import { POSITIONS } from '@/data/positions'
+import { POSITION_OPTIONS } from '@/data/positions'
 import { DEALER_NAMES, dealerFilter, dealerOf, withoutUmo, phoneOf } from '@/data/dealers'
 import { isPdf, readPdfData } from '@/ui/pdfData'
 import { MobileEditor, usePhone } from '@/ui/mobile'
@@ -370,7 +370,7 @@ export default function BusinessCard() {
                       <TextInput value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={bad('surname', 'Фамилия') || issues.some(t => t.startsWith('Имя и фамилия'))} />
                     </Labelled>
                     <Labelled label="Должность">
-                      <ComboField key={p.key} value={p.position} onChange={v => update(p.key, { position: v })} options={POSITIONS} placeholder="Должность" label="Типовые должности" invalid={bad('position', 'Должность')} />
+                      <ComboField key={p.key} value={p.position} onChange={v => update(p.key, { position: v })} options={POSITION_OPTIONS} placeholder="Должность" label="Типовые должности" invalid={bad('position', 'Должность')} />
                     </Labelled>
                     <Labelled label="Почта">
                       {/* The browser's own suggestions: what's typed before the @ at the card's site first (agat-vladimir.umo.auto
