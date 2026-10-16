@@ -22,6 +22,7 @@ export default defineConfig(({ mode }) => {
       siteMetaPlugin(siteConfiguration),
       downloadSizesPlugin(),
       reactRefreshBoundaryFallback(),
+      heroSavePlugin(),
     ],
     resolve: {
       alias: {
@@ -280,6 +281,35 @@ function reactRefreshBoundaryFallback(): Plugin {
       }
 
       return null
+    },
+  }
+}
+
+/**
+ * Dev server only: the lab's «В гайд» (lab/swarm-lens.html) POSTs the sliders to /__hero, written here to
+ * src/guide/hero.json, the guide's first screen's settings; numbers only.
+ */
+function heroSavePlugin(): Plugin {
+  return {
+    name: 'hero-save',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use('/__hero', (req, res) => {
+        if (req.method !== 'POST') { res.statusCode = 405; res.end(); return }
+        let body = ''
+        req.on('data', (chunk) => { body += chunk })
+        req.on('end', () => {
+          try {
+            const data = JSON.parse(body)
+            const clean = Object.fromEntries(Object.entries(data).filter(([k, v]) => /^\w+$/.test(k) && typeof v === 'number' && Number.isFinite(v)))
+            fs.writeFileSync(path.resolve(__dirname, 'src/guide/hero.json'), JSON.stringify(clean, null, 2) + '\n')
+            res.end('ok')
+          } catch {
+            res.statusCode = 400
+            res.end()
+          }
+        })
+      })
     },
   }
 }

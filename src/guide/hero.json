@@ -1,0 +1,22 @@
+{
+  "DOTS": 400,
+  "SIZE": 1,
+  "BG": 0.5,
+  "JITTER": 0,
+  "TWINKLE": 0.5,
+  "WAVE": 0.25,
+  "WAVE_W": 0.5,
+  "DIST": -1,
+  "ABER": 3,
+  "TAPS": 16,
+  "WIDTH": 0.9,
+  "RAINBOW": 0,
+  "inf": 0.75,
+  "infy": 0.5,
+  "ease": 0.75,
+  "LIGHT": 2,
+  "TRAIL": 0,
+  "CHAOS": 4,
+  "RADIUS": 1,
+  "speed": 1.5
+}
