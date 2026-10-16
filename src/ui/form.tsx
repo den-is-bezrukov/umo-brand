@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { goal } from './metrika'
 import HelpButton from './help'
 import Ring from './Ring'
+import { ChevronIcon } from './icons'
 import { InFoot, InSheet } from './phone'
 import { MOD, withMod, otherLayout } from './keys'
 
@@ -352,9 +353,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
         onClick={() => { if (inSheet) { setAll(true); openScreen(); return } box.current?.querySelector<HTMLElement>('textarea, input')?.focus(); setAll(true); setOpen(o => !o || !all) }}
         className="absolute top-0 right-0 flex size-10 in-[[data-sheet]]:h-12! cursor-pointer items-center justify-center"
       >
-        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-          <path d="M3 5L7 9L11 5" stroke="black" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" />
-        </svg>
+        <ChevronIcon />
       </button>
       <div
         ref={list}

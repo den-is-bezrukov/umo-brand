@@ -1,7 +1,8 @@
-import { useCallback, useRef, useState, type ReactNode } from 'react'
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTypograf } from '@/guide/typograf'
 import { goal } from './metrika'
 import Dialog from './Dialog'
+import { ChevronIcon } from './icons'
 
 /**
  * «Инструкция», the «?» at the end of the breadcrumbs (as Composter's): one panel for every generator, a tab each and
@@ -207,50 +208,62 @@ function Faq({ items }: { items: [string, ReactNode][] }) {
   )
 }
 
-/** The dialog's title per section: what the dealer is making */
-const HOW: Record<string, string> = {
-  '/name-tag': 'Как сделать бейдж',
-  '/business-card': 'Как сделать визитку',
-  '/livery': 'Как сделать ливрею',
-  '/price-card': 'Как сделать прайс-карту',
-  '/plate-frame': 'Как сделать рамку номера',
-  '/hours-sign': 'Как сделать режимник',
-  '/price-tag': 'Как сделать ценники',
-  general: 'Общие вопросы',
+/** What each instruction makes, after «Как сделать» in the title */
+const MAKES: Record<string, string> = {
+  '/name-tag': 'бейдж',
+  '/business-card': 'визитку',
+  '/livery': 'ливрею',
+  '/price-card': 'прайс-карту',
+  '/plate-frame': 'рамку номера',
+  '/hours-sign': 'режимник',
+  '/price-tag': 'ценники',
 }
 
 /**
- * «Инструкция» in the site's dialog (`Dialog`, as the guide's «Редактор материалов»), 560 px wide, titled with what's
- * being made, «Как сделать рамку номера», opened on the page's own. Every instruction ends with «Все инструкции»: the
- * generators in the ring's order and «Общие вопросы», the open one medium, the others picked in place, the dialog
- * shown again from its top (tried: a ring of tabs under the title, a dropdown in it). Fine while there are seven
+ * «Инструкция» in the site's dialog (`Dialog`, as the guide's «Редактор материалов»), 560 px wide, opened on the page's
+ * own and titled with what's being made: «Как сделать рамку номера» and a combobox's chevron, «Общие вопросы» for what
+ * they share. The made thing and the chevron open the list of instructions in the dialog's body, in place of the text,
+ * as «Редактор материалов» in the form's header opens the generators: 24 px Medium, 16 apart, the open one black, the
+ * rest #bfbfbf; a pick shows that instruction from its top; the title again or Esc fold the list back (tried: a ring of
+ * tabs under the title, a combobox's list over the text, «Все инструкции» at the foot)
  */
 function HelpPanel({ page, tabs, onClose }: { page: string; tabs: { path: string; title: string }[]; onClose: () => void }) {
   const [tab, setTab] = useState(page)
+  const [menu, setMenu] = useState(false)
   const body = useRef<HTMLDivElement>(null)
   useTypograf(body)
+  useEffect(() => {
+    if (!menu) return
+    // On the document, so the dialog's Esc on the window doesn't hear it
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); setMenu(false) } }
+    document.addEventListener('keydown', key)
+    return () => document.removeEventListener('keydown', key)
+  }, [menu])
   const pick = (t: string) => {
     setTab(t)
+    setMenu(false)
     const dim = body.current?.closest<HTMLElement>('[data-dim]')
     if (dim) dim.scrollTop = 0
   }
   const items = [...tabs, { path: 'general', title: 'Общие вопросы' }]
   const help = HELP[tab]
+  const toggle = (
+    <button type="button" aria-expanded={menu} onClick={() => setMenu(!menu)} className="inline-flex cursor-pointer items-center gap-1 text-left">
+      {MAKES[tab] ?? 'Общие вопросы'}
+      <ChevronIcon open={menu} />
+    </button>
+  )
+  const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] text-left'
   return (
-    <Dialog title={HOW[tab]} onClose={onClose} width={560}>
+    <Dialog title={MAKES[tab] ? <>Как сделать {toggle}</> : toggle} onClose={onClose} width={560}>
       <div ref={body} className="flex flex-col gap-8 text-[14px] leading-5 font-normal tracking-normal">
-        {help ? <Generator help={help} /> : <Faq items={GENERAL} />}
-        <Part title="Все инструкции">
-          <ul className="flex flex-col gap-2">
-            {items.map(i => (
-              <li key={i.path}>
-                {i.path === tab
-                  ? <span aria-current="true" className="font-medium">{i.title}</span>
-                  : <button type="button" onClick={() => pick(i.path)} className="cursor-pointer text-left transition-[color] duration-350 ease-[ease] hover:text-[#808080] hover:duration-0">{i.title}</button>}
-              </li>
-            ))}
-          </ul>
-        </Part>
+        {menu ? (
+          <nav aria-label="Инструкции" className="flex flex-col items-start gap-4">
+            {items.map(i => i.path === tab
+              ? <button key={i.path} type="button" aria-current="true" onClick={() => setMenu(false)} className={`${name} cursor-pointer`}>{i.title}</button>
+              : <button key={i.path} type="button" onClick={() => pick(i.path)} className={`${name} cursor-pointer text-[#bfbfbf] hover:text-[#808080] active:text-[#808080]`}>{i.title}</button>)}
+          </nav>
+        ) : help ? <Generator help={help} /> : <Faq items={GENERAL} />}
       </div>
     </Dialog>
   )

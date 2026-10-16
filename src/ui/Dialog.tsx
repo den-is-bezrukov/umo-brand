@@ -8,11 +8,11 @@ const HOVER = 'transition-[color] duration-350 ease-[ease] hover:text-[#808080] 
 /**
  * The site's one dialog: the guide's «Редактор материалов» and the generators' «Инструкция». Over black at 40%, centred
  * across and standing 64 px from the top (16 on phones), white, 16 px round, 24 px in: the title in
- * 16 px Medium and × (the generators' `CrossIcon`, 1 px) on one row, `head` under it (24 px apart). It grows with what's in it, no scroll inside: taller
+ * 16 px Medium and × (the generators' `CrossIcon` at 2 px) on one row, `head` under it (24 px apart). It grows with what's in it, no scroll inside: taller
  * than the screen, the dark scrolls with it, the page under it staying still. Esc, × or a click on the dark close it.
  * Portalled, so a phone's sheet can't hold it
  */
-export default function Dialog({ title, onClose, width = 360, head, children }: { title: string; onClose: () => void; width?: number; head?: ReactNode; children: ReactNode }) {
+export default function Dialog({ title, onClose, width = 360, head, children }: { title: ReactNode; onClose: () => void; width?: number; head?: ReactNode; children: ReactNode }) {
   const ref = useRef<HTMLDivElement>(null)
   const id = useId()
   useEffect(() => {
@@ -39,7 +39,7 @@ export default function Dialog({ title, onClose, width = 360, head, children }: 
           <div className="flex items-start justify-between gap-4">
             <h2 id={id} className="text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">{title}</h2>
             <button type="button" aria-label="Закрыть" onClick={onClose} className={`relative flex h-5 shrink-0 cursor-pointer items-center ${HOVER} after:absolute after:-inset-[10px] after:content-['']`}>
-              <CrossIcon />
+              <CrossIcon weight={2} />
             </button>
           </div>
           {head}
