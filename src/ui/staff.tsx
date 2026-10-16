@@ -4,6 +4,7 @@ import { InSlide } from '@/ui/phone'
 import { MOD, withMod } from '@/ui/keys'
 import { outlined, flash } from '@/ui/form'
 import { splitFullName } from '@/nametag/table'
+import { ICON } from './icons'
 
 // A staff list, shared by the generators that make one item per person (name tags, business cards): two modes,
 // «Вручную», a list typed on the page with one person selected in the sidebar, and «Из таблицы», a filled-in template
@@ -494,8 +495,6 @@ function staffWord(n: number): string {
 
 const XLSX = '.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 
-// A 1 px stroke here, finer than the sidebar's 2 px icons, as the column stands quietly beside the item (Figma 5030:11424)
-const ICON = { fill: 'none', stroke: 'currentColor', strokeWidth: 1, strokeLinecap: 'square' as const, strokeLinejoin: 'bevel' as const }
 
 export const ResetIcon = () => (
   <svg width="14" height="14" viewBox="0 0 14 14" {...ICON} aria-hidden><path d="M2.5 8.5C2.5 10.9853 4.51472 13 7 13C9.48528 13 11.5 10.9853 11.5 8.5C11.5 6.01472 9.48528 4 7 4L2.25 4M4.75 6.5L2.25 4L4.75 1.5" /></svg>
@@ -533,9 +532,6 @@ export const TrashIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M3.5 5.5V10.5C3.5 12.3856 3.5 13.3284 4.08579 13.9142C4.67157 14.5 5.61438 14.5 7.5 14.5H8.5C10.3856 14.5 11.3284 14.5 11.9142 13.9142C12.5 13.3284 12.5 12.3856 12.5 10.5V5.5M2.5 3.5H13.5M5.5 3V1.5H10.5V3M9.5 6.5V11.5M6.5 6.5V11.5" /></svg>
 )
 
-export const CrossIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M12 4L8 8M8 8L4 4M8 8L12 12M8 8L4 12" /></svg>
-)
 
 /** The item's actions (Figma 5030:11424): 30 px buttons (a phone's slide has its own, over the picture), the icon #808080, black on hover, no tile, as the other quiet controls */
 function Action({ label, keys, hidden, onClick, children }: { label: string; keys?: string; hidden?: boolean; onClick: () => void; children: React.ReactNode }) {
