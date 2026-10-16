@@ -625,12 +625,13 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         ref={sheetEl}
         // Its shadow off while it's at the page's top, over the whole screen with no list row: it had nowhere to fall and
         // read as cut off. Fixed to the screen of its own, its foot always at the screen's bottom, so Safari 26 carries
-        // its white under its floating bar (it carried the page's grey, the page being the fixed box there)
-        className={`fixed inset-x-0 bottom-0 flex flex-col rounded-t-[24px] bg-white ${full && !row ? '' : 'shadow-[0_10px_30px_rgba(0,0,0,0.1)]'}`}
+        // its white under its floating bar (it carried the page's grey, the page being the fixed box there). At most 480 px
+        // wide, centred: wider, on a folded-out phone or an iPad mini, its fields ran to 700 px for a name
+        className={`fixed inset-x-0 bottom-0 mx-auto flex max-w-[480px] flex-col rounded-t-[24px] bg-white ${full && !row ? '' : 'shadow-[0_10px_30px_rgba(0,0,0,0.1)]'}`}
         style={{ height: tall, transform: `translateY(${edge[sheet]}px)` }}
       >
         {/* The grabber, the sign a phone's sheets carry that they're dragged (the hold is the whole canvas and the header,
-            not it): a quarter of the screen wide and 2 px thick, 8 px over the edge, on the canvas, going with the sheet (it was in it, under the edge); none
+            not it): a quarter of the sheet wide and 2 px thick, 8 px over the edge, on the canvas, going with the sheet (it was in it, under the edge); none
             over the whole screen */}
         {!full && <span aria-hidden className="pointer-events-none absolute -top-2.5 left-1/2 h-0.5 w-1/4 -translate-x-1/2 rounded-full bg-black/10" />}
         <div ref={scroller} data-sheet onFocus={onFocus} onBlur={onBlur} // Always a scroll: switched off lowered, iOS laid the form's layers anew as the finger let go, and the generators'
@@ -649,7 +650,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           indicator. Tried closer to Safari's bottom tab bar: 16, then on iOS alone 16, 0, 2 and 8 — touching the edge,
           the black button turned Safari 26's bar black, and 24 all round is what the sheet's sides have */}
       {!typing && (
-        <div ref={footEl} data-sheet style={footAt(edge[sheet])} className="fixed inset-x-0 bottom-0 bg-gradient-to-b from-white/0 to-white px-6 pt-6 pb-[calc(24px+env(safe-area-inset-bottom))] tracking-normal">
+        <div ref={footEl} data-sheet style={footAt(edge[sheet])} className="fixed inset-x-0 bottom-0 mx-auto max-w-[480px] bg-gradient-to-b from-white/0 to-white px-6 pt-6 pb-[calc(24px+env(safe-area-inset-bottom))] tracking-normal">
           <InFoot.Provider value={() => { if (sheetRef.current === 'preview') move('half') }}>{download}</InFoot.Provider>
         </div>
       )}
