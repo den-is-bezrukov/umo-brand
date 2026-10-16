@@ -435,10 +435,11 @@ export function UploadArea<P extends object>({ staff }: { staff: Staff<P> }) {
 }
 
 /**
- * An item's edge on the canvas, the same on every generator: 1 px outside it at 10% black, 40% while the pointer is in
- * its row (the secondary buttons' edge; it was black, too loud for a poster)
+ * An item's edge on the canvas, the same on every generator: 1 px inside it at 10% black, 40% while the pointer is in
+ * its row (the secondary buttons' edge; it was black, too loud for a poster). Inside, so an item as wide as the phone's
+ * 480 px sheet hides whole behind it (outside, it showed at the sheet's sides as a line)
  */
-export const ITEM_EDGE = 'outline-1 outline-offset-0 outline-black/10 group-hover/row:outline-black/40'
+export const ITEM_EDGE = 'outline-1 -outline-offset-1 outline-black/10 group-hover/row:outline-black/40'
 
 /**
  * «Добавить» under the list: a secondary button as wide as its text («Поделиться»'s edge, 10% and 40% on hover),

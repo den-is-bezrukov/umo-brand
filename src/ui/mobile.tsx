@@ -664,7 +664,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
 }
 
 /**
- * A picture as large as the strip allows, 20 px off its sides and 10 over and under (the items' 1 px edge outside them
+ * A picture as large as the strip allows, 20 px off its sides and 10 over and under (the items' 1 px edge
  * stays in, however the strip's height rounds), along with what stands under it — an item's faults, a sheet's caption —
  * measured, so they're never cut off by the sheet
  */
