@@ -27,6 +27,7 @@
   <label>Aberration <input id="ab" type="range" min="0" max="1" step="0.01" value="1" /><output></output></label>
   <label>Mode <select id="mode"><option value="0">Lateral</option><option value="1">Longitudinal</option><option value="2">Anamorphic</option></select><span></span></label>
   <label>Quality <select id="q"><option value="0">High</option><option value="1">Medium</option><option value="2">Low</option></select><span></span></label>
+  <label>Разрешение <input id="res" type="range" min="0.25" max="1" step="0.05" value="0.5" /><output></output></label>
   <label>Влияние <input id="inf" type="range" min="0" max="1" step="0.01" value="1" /><output></output></label>
   <label>По вертикали <input id="infy" type="range" min="0" max="1" step="0.01" value="1" /><output></output></label>
   <label>Плавность <input id="ease" type="range" min="0.02" max="1" step="0.01" value="0.2" /><output></output></label>
@@ -159,7 +160,8 @@ const $ = id => document.getElementById(id);
 
 function draw() {
   if (!img.complete) return;
-  const dpr = Math.min(devicePixelRatio, 2);
+  // Разрешение: the share of the screen's pixels (up to 2×) the effect is computed at, the browser stretches it back
+  const dpr = Math.min(devicePixelRatio, 2) * +$('res').value;
   const w = Math.round(cv.clientWidth * dpr), h = Math.round(cv.clientHeight * dpr);
   if (off.width !== w || off.height !== h) {
     cv.width = off.width = w; cv.height = off.height = h;
