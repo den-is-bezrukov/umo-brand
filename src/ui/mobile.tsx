@@ -429,6 +429,12 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     if (!t && typed.current) typed.current.top = scroller.current?.scrollTop ?? 0
     setTyping(t)
   }
+  // A focused field taken out of the form (the list to «Из таблицы», an item reset or removed) sends no blur, and the
+  // download stayed aside for good: after every render, typing is only while a field in the form still has the focus
+  useLayoutEffect(() => {
+    const el = document.activeElement
+    if (typing && !(types(el) && formEl.current?.contains(el))) setTyping(false)
+  })
   // The keyboard gone, the sheet goes back where it was with the field still at its top, under its label (the room
   // under the form going with the keyboard left it anywhere, the field out of sight); the last ones, short of room,
   // at the form's end. The form moves on from where it stood, not from where its scroll was cut short
