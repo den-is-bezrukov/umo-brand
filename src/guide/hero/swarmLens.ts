@@ -17,6 +17,8 @@ uniform float uSeen;     // 0 until the pointer first moves over the page
 uniform vec2 uPointer;   // the pointer, -1..1 over the canvas, y up
 uniform vec3 uTrail[32]; // where it has just been and how many seconds ago, newest first
 uniform vec2 uCentre;    // the lens's centre, 0..1 over the canvas, y down, eased
+uniform float uVh;       // the window's height in canvas heights: Точек count per window height, so the points
+                         // are the same size in the lab's full-screen canvas and the guide's shorter box
 // Рой
 uniform float DOTS, SIZE, BG, JITTER, TWINKLE, WAVE, WAVE_W, LIGHT, TRAIL, CHAOS, RADIUS;
 // The lens
@@ -55,7 +57,7 @@ float logo(vec2 p) {
 
 void main() {
   vec2 sp = (gl_FragCoord.xy - R * .5) / R.y;               // centred, y up, 1 = the canvas's height
-  float cell = 1. / DOTS;
+  float cell = uVh / DOTS;
   vec2 gid = floor(sp / cell);
   vec2 c0 = (gid + .5) * cell;
   vec2 asp = vec2(R.x / R.y, 1.) * .5;
@@ -179,7 +181,7 @@ export function swarmLens(canvas: HTMLCanvasElement, params: () => Params, { vis
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 3, -1, -1, 3]), gl.STATIC_DRAW)
   gl.enableVertexAttribArray(0)
   gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0)
-  const uniforms = ['R', 'T', 'uWaveT', 'uSeen', 'uPointer', 'uTrail', 'uCentre', ...CONTROLS.map(([id]) => id).filter((id) => /^[A-Z]/.test(id))]
+  const uniforms = ['R', 'T', 'uWaveT', 'uSeen', 'uPointer', 'uTrail', 'uCentre', 'uVh', ...CONTROLS.map(([id]) => id).filter((id) => /^[A-Z]/.test(id))]
   const u = Object.fromEntries(uniforms.map((k) => [k, gl.getUniformLocation(prog, k)]))
 
   // The pointer over the canvas, -1..1, y up, and its path one point every 25 ms (Рой); the lens's centre eases
@@ -219,6 +221,7 @@ export function swarmLens(canvas: HTMLCanvasElement, params: () => Params, { vis
     cx += (0.5 + (px - 0.5) * p.inf - cx) * p.ease
     cy += (0.5 + (py - 0.5) * p.inf * p.infy - cy) * p.ease
     const w = canvas.clientWidth, h = canvas.clientHeight
+    if (!w || !h) return
     if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h }
     gl.viewport(0, 0, w, h)
     gl.uniform2f(u.R, w, h)
@@ -227,6 +230,7 @@ export function swarmLens(canvas: HTMLCanvasElement, params: () => Params, { vis
     gl.uniform1f(u.uSeen, seen)
     gl.uniform2f(u.uPointer, pointer[0], pointer[1])
     gl.uniform2f(u.uCentre, cx, cy)
+    gl.uniform1f(u.uVh, innerHeight / h)
     const tr = new Float32Array(96).fill(99)
     trail.forEach((q, i) => tr.set([q.x, q.y, (now - q.t) / 1000], i * 3))
     gl.uniform3fv(u.uTrail, tr)
