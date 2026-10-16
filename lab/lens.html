@@ -47,7 +47,7 @@ uniform int bucket;         // aberration bucket, 0 = no split
 uniform int taps;           // kernel taps
 uniform float invKernel;
 uniform float weightSum;
-uniform float green;        // 1 as is, 0 green turned into magenta: fringes red, magenta, blue, as bright
+uniform float green;        // 1 as is, 0 green no higher than the lesser of red and blue: fringes red, magenta, blue
 uniform int edge;           // past the picture's edge: 0 nothing (as Figma), 1 mirrored, 2 the edge stretched
 uniform sampler2D inputTex;
 in vec2 uv;
@@ -114,9 +114,7 @@ void main() {
   vec4 c = acc / 4.;
   // The white Difference layer over the effect, on the frame's white: 1 - (c over white)
   vec3 col = clamp(vec3(c.a) - c.rgb, 0., 1.);
-  // The green above the lesser of red and blue moves into red and blue, so the glow keeps its brightness
-  float d = max(col.g - min(col.r, col.b), 0.) * (1. - green);
-  col = clamp(col + vec3(d, -d, d), 0., 1.);
+  col.g = mix(min(col.g, min(col.r, col.b)), col.g, green);
   o = vec4(col, 1.);
 }
 </script>
