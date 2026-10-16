@@ -12,6 +12,7 @@ import { TAG, BAND, BAND_ART, DEFAULT_CAPTION, SIDE as TAG_SIDE, CAP as TAG_CAP,
 import { SIGN, LOGO as SIGN_LOGO, MARGIN as SIGN_MARGIN, TIME as SIGN_TIME, LINE as SIGN_LINE, INFO as SIGN_INFO, INFO_LAST as SIGN_INFO_LAST } from '@/hours/sign'
 import tocIcons from '@/icons/toc'
 import { useTypograf } from './typograf'
+import Dialog from '@/ui/Dialog'
 import downloadSizes from 'virtual:download-sizes'
 import heroMp4 from '@/assets/guide/hero.mp4'
 import hero720Mp4 from '@/assets/guide/hero-720.mp4'
@@ -1248,37 +1249,12 @@ const EDITOR_ITEMS = [...MEDIA_LIST].sort((a, b) => a.title.localeCompare(b.titl
 
 function EditorDialog() {
   const close = useCloseEditor()
-  const ref = useRef<HTMLDivElement>(null)
-  useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') close() }
-    const overflow = document.documentElement.style.overflow
-    document.documentElement.style.overflow = 'hidden'
-    ref.current?.focus()
-    window.addEventListener('keydown', onKey)
-    return () => { window.removeEventListener('keydown', onKey); document.documentElement.style.overflow = overflow }
-  })
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={close}>
-      <div
-        ref={ref}
-        role="dialog"
-        aria-modal
-        aria-labelledby="editor-title"
-        tabIndex={-1}
-        onClick={e => e.stopPropagation()}
-        className="flex w-full max-w-[360px] flex-col gap-6 rounded-2xl bg-white p-6 text-black outline-none"
-      >
-        <div className="flex items-start justify-between gap-4">
-          <h2 id="editor-title" className="text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">Редактор материалов</h2>
-          <button type="button" aria-label="Закрыть" onClick={close} className={`relative flex h-5 shrink-0 cursor-pointer items-center ${NAV_HOVER} after:absolute after:-inset-[10px] after:content-['']`}>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d="M2 2L14 14M14 2L2 14" stroke="currentColor" strokeWidth="2" strokeLinecap="square" /></svg>
-          </button>
-        </div>
-        <nav aria-label="Конструкторы" className="flex flex-col items-start gap-5">
-          {EDITOR_ITEMS.map(m => <Link key={m.to} to={m.to} className={`text-[24px] font-medium leading-6 tracking-[-0.01em] ${NAV_HOVER}`}>{m.title}</Link>)}
-        </nav>
-      </div>
-    </div>
+    <Dialog title="Редактор материалов" onClose={close}>
+      <nav aria-label="Конструкторы" className="flex flex-col items-start gap-5">
+        {EDITOR_ITEMS.map(m => <Link key={m.to} to={m.to} className={`text-[24px] font-medium leading-6 tracking-[-0.01em] ${NAV_HOVER}`}>{m.title}</Link>)}
+      </nav>
+    </Dialog>
   )
 }
 

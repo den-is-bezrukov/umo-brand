@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
-import { createPortal } from 'react-dom'
 import { useTypograf } from '@/guide/typograf'
 import { goal } from './metrika'
+import Dialog from './Dialog'
 
 /**
  * «Помощь», the «?» at the end of the breadcrumbs (as Composter's): one panel for every generator, a tab each and
@@ -179,10 +179,6 @@ function Tick() {
   )
 }
 
-function Cross() {
-  return <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d="M2 2L14 14M14 2L2 14" stroke="currentColor" strokeWidth="2" strokeLinecap="square" /></svg>
-}
-
 const H = 'text-[16px] font-medium leading-5 tracking-[-0.01em]'
 
 function Steps({ items }: { items: ReactNode[] }) {
@@ -220,85 +216,71 @@ function Faq({ items }: { items: [string, ReactNode][] }) {
 }
 
 /**
- * The panel. Not modal, as Composter's: the form stays as it is under it. On wide screens 480 px over the canvas, 16 px
- * off the sidebar and the screen's edges, shadowed as the phone's sheet; on phones a screen of its own, as a combobox's
- * search, portalled, as the phone's sheet would hold it under the download. «Помощь» and the section stay at its top as
- * it scrolls. The section is a dropdown: its name in 24 px Medium with a combobox's chevron, the list under it as a
- * combobox's (white, 2 px inside, rows 8 px round, the pointed one grey, the open one medium with a tick), the
- * generators in the ring's order and «Общее», opened on the page's own. Esc folds the list first, then the panel;
- * ×, the «?» again or a click outside close it
+ * «Помощь» in the site's dialog (`Dialog`, as the guide's «Редактор материалов»), 560 px wide. The section stands still
+ * under the title as the text scrolls: a dropdown, its name in 24 px Medium with a combobox's chevron, the list under it
+ * as a combobox's (white, 2 px inside, rows 8 px round, the pointed one grey, the open one medium with a tick), the
+ * generators in the ring's order and «Общее», opened on the page's own. Esc folds the list before the dialog
  */
-function HelpPanel({ page, tabs, button, onClose }: { page: string; tabs: { path: string; title: string }[]; button: React.RefObject<HTMLButtonElement | null>; onClose: () => void }) {
+function HelpPanel({ page, tabs, onClose }: { page: string; tabs: { path: string; title: string }[]; onClose: () => void }) {
   const [tab, setTab] = useState(page)
   const [menu, setMenu] = useState(false)
-  const panel = useRef<HTMLDivElement>(null)
+  const body = useRef<HTMLDivElement>(null)
   const drop = useRef<HTMLDivElement>(null)
-  useTypograf(panel)
+  useTypograf(body)
   useEffect(() => {
-    const key = (e: KeyboardEvent) => { if (e.key !== 'Escape') return; if (menu) setMenu(false); else onClose() }
-    const away = (e: PointerEvent) => {
-      const t = e.target as Node
-      if (menu && !drop.current?.contains(t)) setMenu(false)
-      if (!panel.current?.contains(t) && !button.current?.contains(t)) onClose()
-    }
+    if (!menu) return
+    // On the document, so the dialog's Esc on the window doesn't hear it
+    const key = (e: KeyboardEvent) => { if (e.key === 'Escape') { e.stopPropagation(); setMenu(false) } }
+    const away = (e: PointerEvent) => { if (!drop.current?.contains(e.target as Node)) setMenu(false) }
     document.addEventListener('keydown', key)
     document.addEventListener('pointerdown', away)
     return () => { document.removeEventListener('keydown', key); document.removeEventListener('pointerdown', away) }
-  }, [onClose, button, menu])
-  const pick = (t: string) => { setTab(t); setMenu(false); if (panel.current) panel.current.scrollTop = 0 }
+  }, [menu])
+  const pick = (t: string) => {
+    setTab(t)
+    setMenu(false)
+    const scroller = body.current?.parentElement
+    if (scroller) scroller.scrollTop = 0
+  }
   const all = [...tabs, { path: 'general', title: 'Общее' }]
   const help = HELP[tab]
-  return createPortal(
-    <div
-      ref={panel}
-      role="dialog"
-      aria-labelledby="help-title"
-      className="fixed inset-0 z-50 overflow-y-auto bg-white px-6 pb-[calc(24px+env(safe-area-inset-bottom))] text-[14px] leading-5 font-normal tracking-normal text-black md:inset-auto md:top-4 md:bottom-auto md:left-[337px] md:max-h-[calc(100dvh-32px)] md:w-[min(480px,calc(100vw-353px))] md:rounded-2xl md:pb-6 md:shadow-[0_10px_30px_rgba(0,0,0,0.1)]"
-    >
-      <div className="sticky top-0 z-10 -mx-6 flex flex-col gap-4 bg-white pt-6 pb-8">
-        <div className="flex items-start justify-between gap-4 px-6">
-          <h2 id="help-title" className={H}>Помощь</h2>
-          <button type="button" aria-label="Закрыть" onClick={onClose} className="relative flex h-5 shrink-0 cursor-pointer items-center text-black/50 hover:text-black after:absolute after:-inset-[10px] after:content-['']">
-            <Cross />
-          </button>
-        </div>
-        <div ref={drop} className="relative px-6">
-          <button type="button" aria-haspopup="listbox" aria-expanded={menu} onClick={() => setMenu(!menu)} className={`${TAB} flex cursor-pointer items-center gap-2`}>
-            {all.find(t => t.path === tab)!.title}
-            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden className={menu ? 'rotate-180' : ''}>
-              <path d="M3 5L7 9L11 5" stroke="black" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" />
-            </svg>
-          </button>
-          {menu && (
-            <div role="listbox" aria-label="Разделы помощи" className="absolute top-[calc(100%+8px)] left-6 z-10 w-[240px] rounded-[8px] bg-white p-[2px] text-[14px] leading-5 shadow-[0_10px_15px_rgba(0,0,0,0.1)] ring-1 ring-black/5">
-              {all.map(t => (
-                <div key={t.path} role="option" aria-selected={t.path === tab} onClick={() => pick(t.path)} className={`flex cursor-pointer items-start gap-2 rounded-[8px] px-3 py-[10px] hover:bg-[#f5f5f5] ${t.path === tab ? 'font-medium' : ''}`}>
-                  <span className="min-w-0 flex-1">{t.title}</span>
-                  {t.path === tab && <span className="flex h-5 w-4 shrink-0 items-center justify-center"><Tick /></span>}
-                </div>
-              ))}
+  const head = (
+    <div ref={drop} className="relative">
+      <button type="button" aria-haspopup="listbox" aria-expanded={menu} onClick={() => setMenu(!menu)} className={`${TAB} flex cursor-pointer items-center gap-2`}>
+        {all.find(t => t.path === tab)!.title}
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden className={menu ? 'rotate-180' : ''}>
+          <path d="M3 5L7 9L11 5" stroke="black" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" />
+        </svg>
+      </button>
+      {menu && (
+        <div role="listbox" aria-label="Разделы помощи" className="absolute top-[calc(100%+8px)] left-0 z-10 w-[240px] rounded-[8px] bg-white p-[2px] text-[14px] leading-5 shadow-[0_10px_15px_rgba(0,0,0,0.1)] ring-1 ring-black/5">
+          {all.map(t => (
+            <div key={t.path} role="option" aria-selected={t.path === tab} onClick={() => pick(t.path)} className={`flex cursor-pointer items-start gap-2 rounded-[8px] px-3 py-[10px] hover:bg-[#f5f5f5] ${t.path === tab ? 'font-medium' : ''}`}>
+              <span className="min-w-0 flex-1">{t.title}</span>
+              {t.path === tab && <span className="flex h-5 w-4 shrink-0 items-center justify-center"><Tick /></span>}
             </div>
-          )}
+          ))}
         </div>
-      </div>
-      <div className="flex flex-col gap-8">
+      )}
+    </div>
+  )
+  return (
+    <Dialog title="Помощь" onClose={onClose} width={560} head={head}>
+      <div ref={body} className="flex flex-col gap-8 text-[14px] leading-5 font-normal tracking-normal">
         {help ? <Generator help={help} /> : <Faq items={GENERAL} />}
       </div>
-    </div>,
-    document.body,
+    </Dialog>
   )
 }
 
 /** The «?» at the end of the breadcrumbs, in their type */
 export default function HelpButton({ page, tabs }: { page: string; tabs: { path: string; title: string }[] }) {
   const [open, setOpen] = useState(false)
-  const button = useRef<HTMLButtonElement>(null)
   const close = useCallback(() => setOpen(false), [])
   const toggle = () => { if (!open) goal('open_help', { page }); setOpen(!open) }
   return (
     <>
       <button
-        ref={button}
         type="button"
         onClick={toggle}
         aria-expanded={open}
@@ -308,7 +290,7 @@ export default function HelpButton({ page, tabs }: { page: string; tabs: { path:
       >
         ?
       </button>
-      {open && <HelpPanel page={page} tabs={tabs} button={button} onClose={close} />}
+      {open && <HelpPanel page={page} tabs={tabs} onClose={close} />}
     </>
   )
 }
