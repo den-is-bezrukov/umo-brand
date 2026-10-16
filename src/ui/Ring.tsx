@@ -7,7 +7,7 @@ const TURNS = 3
 type Item = { key: string; title: string }
 
 /**
- * A line of names to pick one from: the generators' line in their form's header and «Инструкция»'s sections. Scrolled
+ * A line of names to pick one from: the generators' line in their form's header. Scrolled
  * natively, as a phone's tabs, by a finger, a trackpad or the wheel (the ring turned by script ran on and came back
  * round on its own, unlike anything else under a finger), and picked as a drum: the name the line comes to rest on,
  * 24 px from the edge where the ring had the current one, is picked the instant the finger is off and the line is
@@ -20,7 +20,7 @@ type Item = { key: string; title: string }
  * `href` makes the names links (the generators, pages of their own); `heading` makes the current one an h1; `focus`
  * puts the focus on the line as it mounts (a generator opened from the keys)
  */
-export default function Ring({ label, items, current, onPick, href, heading, focus, small }: {
+export default function Ring({ label, items, current, onPick, href, heading, focus }: {
   label: string
   items: Item[]
   current: string
@@ -29,8 +29,6 @@ export default function Ring({ label, items, current, onPick, href, heading, foc
   href?: (key: string) => string
   heading?: boolean
   focus?: boolean
-  /** 16 px names, as the headings under it (in «Инструкция»), 16 px apart */
-  small?: boolean
 }) {
   const count = items.length
   const middle = Math.floor(TURNS / 2) * count + items.findIndex(g => g.key === current)
@@ -140,13 +138,13 @@ export default function Ring({ label, items, current, onPick, href, heading, foc
       n.removeEventListener('touchcancel', up)
     }
   }, [current]) // eslint-disable-line react-hooks/exhaustive-deps
-  const name = `shrink-0 snap-start font-medium tracking-[-0.01em] whitespace-nowrap ${small ? 'text-[16px] leading-5' : 'text-[24px] leading-6'}`
+  const name = 'shrink-0 snap-start text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
   const tone = (key: string) => (key === lit ? 'text-black' : 'text-[#bfbfbf] hover:text-[#808080] active:text-[#808080]')
   return (
     <div className="relative -mx-6 my-1">
       {/* 8 px over and under for the descenders (р, у), which the scroller would clip; one Tab stop, ringed whole, its
           names turned with ← → and picked with Enter (not one stop each) */}
-      <nav ref={nav} aria-label={label} tabIndex={0} className={`relative -my-2 flex snap-x snap-mandatory scroll-pl-6 ${small ? 'gap-4' : 'gap-5'} overflow-x-auto overscroll-x-contain py-2 pl-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}>
+      <nav ref={nav} aria-label={label} tabIndex={0} className={`relative -my-2 flex snap-x snap-mandatory scroll-pl-6 gap-5 overflow-x-auto overscroll-x-contain py-2 pl-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}>
         {Array.from({ length: TURNS * count }, (_, i) => {
           const g = items[i % count]
           const copy = i < count || i >= 2 * count || undefined

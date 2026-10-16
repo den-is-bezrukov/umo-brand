@@ -2,7 +2,6 @@ import { useCallback, useRef, useState, type ReactNode } from 'react'
 import { useTypograf } from '@/guide/typograf'
 import { goal } from './metrika'
 import Dialog from './Dialog'
-import Ring from './Ring'
 
 /**
  * «Инструкция», the «?» at the end of the breadcrumbs (as Composter's): one panel for every generator, a tab each and
@@ -192,7 +191,7 @@ function Generator({ help }: { help: Help }) {
   return (
     <>
       <p>{help.what}</p>
-      <Part title="Как сделать"><Steps items={help.steps} /></Part>
+      <Part title="Шаги"><Steps items={help.steps} /></Part>
       {help.table && <Part title="Из таблицы"><Steps items={help.table} /></Part>}
       <Part title="Печать">{help.print.map((p, i) => <p key={i}>{p}</p>)}</Part>
       {help.faq.length > 0 && <Part title="Вопросы"><Faq items={help.faq} /></Part>}
@@ -208,11 +207,23 @@ function Faq({ items }: { items: [string, ReactNode][] }) {
   )
 }
 
+/** The dialog's title per section: what the dealer is making */
+const HOW: Record<string, string> = {
+  '/name-tag': 'Как сделать бейдж',
+  '/business-card': 'Как сделать визитку',
+  '/livery': 'Как сделать ливрею',
+  '/price-card': 'Как сделать прайс-карту',
+  '/plate-frame': 'Как сделать рамку номера',
+  '/hours-sign': 'Как сделать режимник',
+  '/price-tag': 'Как сделать ценники',
+  general: 'Общие вопросы',
+}
+
 /**
- * «Инструкция» in the site's dialog (`Dialog`, as the guide's «Редактор материалов»), 560 px wide. Under the title the
- * sections in a `Ring`, the generators' line again (a drum, the names running off under the white at the edges): the
- * generators in its order and «Общее», opened on the page's own; a hairline under it sets the head apart from the text,
- * the dialog growing with it. A pick shows that section from its top
+ * «Инструкция» in the site's dialog (`Dialog`, as the guide's «Редактор материалов»), 560 px wide, titled with what's
+ * being made, «Как сделать рамку номера», opened on the page's own. Every instruction ends with «Все инструкции»: the
+ * generators in the ring's order and «Общие вопросы», the open one medium, the others picked in place, the dialog
+ * shown again from its top (tried: a ring of tabs under the title, a dropdown in it). Fine while there are seven
  */
 function HelpPanel({ page, tabs, onClose }: { page: string; tabs: { path: string; title: string }[]; onClose: () => void }) {
   const [tab, setTab] = useState(page)
@@ -223,17 +234,23 @@ function HelpPanel({ page, tabs, onClose }: { page: string; tabs: { path: string
     const dim = body.current?.closest<HTMLElement>('[data-dim]')
     if (dim) dim.scrollTop = 0
   }
-  const items = [...tabs.map(t => ({ key: t.path, title: t.title })), { key: 'general', title: 'Общее' }]
+  const items = [...tabs, { path: 'general', title: 'Общие вопросы' }]
   const help = HELP[tab]
-  const head = (
-    <div className="-mx-6 border-b border-black/10 px-6 pb-6">
-      <Ring label="Разделы помощи" items={items} current={tab} onPick={pick} small />
-    </div>
-  )
   return (
-    <Dialog title="Инструкция" onClose={onClose} width={560} head={head}>
+    <Dialog title={HOW[tab]} onClose={onClose} width={560}>
       <div ref={body} className="flex flex-col gap-8 text-[14px] leading-5 font-normal tracking-normal">
         {help ? <Generator help={help} /> : <Faq items={GENERAL} />}
+        <Part title="Все инструкции">
+          <ul className="flex flex-col gap-2">
+            {items.map(i => (
+              <li key={i.path}>
+                {i.path === tab
+                  ? <span aria-current="true" className="font-medium">{i.title}</span>
+                  : <button type="button" onClick={() => pick(i.path)} className="cursor-pointer text-left transition-[color] duration-350 ease-[ease] hover:text-[#808080] hover:duration-0">{i.title}</button>}
+              </li>
+            ))}
+          </ul>
+        </Part>
       </div>
     </Dialog>
   )
