@@ -13,6 +13,7 @@ export type Goal =
   | 'download_hours_sign'
   | 'copy_link'
   | 'open_menu'
+  | 'open_help'
   | 'dealer_link'
 
 export function goal(id: Goal, params?: Record<string, string | number | boolean>) {

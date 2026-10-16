@@ -2,6 +2,7 @@ import { useContext, useEffect, useId, useLayoutEffect, useRef, useState } from 
 import { createPortal } from 'react-dom'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { goal } from './metrika'
+import HelpButton from './help'
 import { InFoot, InSheet } from './phone'
 import { MOD, withMod, otherLayout } from './keys'
 
@@ -57,7 +58,10 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
   const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
   return (
     <div data-head className="flex flex-col gap-4">
-      <PhoneCrumbs open={menu} onEditor={toggle} />
+      <div className="flex items-center gap-2">
+        <PhoneCrumbs open={menu} onEditor={toggle} />
+        <HelpButton page={current} title={GENERATORS.find(g => g.path === current)!.title} />
+      </div>
       {menu ? (
         // 20 px under the crumbs, as the line's names stand (its 4 px over them), so the first name doesn't jump up
         <nav aria-label="Конструкторы" className="mt-1 flex flex-col items-start gap-4">
@@ -82,7 +86,7 @@ const CRUMBS = "text-[14px] font-medium leading-4 tracking-normal [font-feature-
  */
 function PhoneCrumbs({ open, onEditor }: { open: boolean; onEditor: () => void }) {
   return (
-    <nav className={`flex min-w-0 flex-1 items-center gap-2 ${CRUMBS}`}>
+    <nav className={`flex min-w-0 flex-1 items-center gap-2 whitespace-nowrap ${CRUMBS}`}>
       <Link to="/" className={crumb}>Бренд UMO</Link>
       <span aria-hidden>·</span>
       <button type="button" onClick={onEditor} aria-expanded={open} aria-label="Редактор материалов: все конструкторы" className={`${crumb} cursor-pointer`}>Редактор материалов</button>
