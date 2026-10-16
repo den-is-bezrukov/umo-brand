@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ResetIcon, DuplicateIcon, TrashIcon, Removed, type Staff } from '@/ui/staff'
-import { InSlide, InFoot, InSheet } from '@/ui/phone'
+import { InSlide, InFoot, InSheet, SheetLayer } from '@/ui/phone'
 
 // A trial of the generators' phone layout (Figma 5098:5806, «Mobile Layout»): the canvas over a sheet holding the
 // sidebar (header and form) with the download at its foot. A list's pictures are swiped one at a time, with a row over
@@ -410,6 +410,13 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     const t = types(e.target)
     setTyping(t)
     if (!t || !matchMedia('(pointer: coarse)').matches) return
+    // A combobox's field over the sheet (its list open in `SheetLayer`): the sheet goes up with the keyboard, the form
+    // under it staying where it is
+    if (!formEl.current?.contains(e.target as Node)) {
+      if (before.current === null) before.current = sheetRef.current
+      move('full', undefined, true)
+      return
+    }
     typed.current = { field: e.target as HTMLElement, top: 0 }
     if (before.current === null) before.current = sheetRef.current
     // From field to field the sheet is open already and nothing renders: lifted here, then (it stayed low, and iOS
@@ -430,10 +437,10 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     setTyping(t)
   }
   // A focused field taken out of the form (the list to «Из таблицы», an item reset or removed) sends no blur, and the
-  // download stayed aside for good: after every render, typing is only while a field in the form still has the focus
+  // download stayed aside for good: after every render, typing is only while a field in the sheet still has the focus
   useLayoutEffect(() => {
     const el = document.activeElement
-    if (typing && !(types(el) && formEl.current?.contains(el))) setTyping(false)
+    if (typing && !(types(el) && sheetEl.current?.contains(el))) setTyping(false)
   })
   // The keyboard gone, the sheet goes back where it was with the field still at its top, under its label (the room
   // under the form going with the keyboard left it anywhere, the field out of sight); the last ones, short of room,
@@ -462,6 +469,8 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     if (field) liftField(field)
   })
   const sheetEl = useRef<HTMLDivElement>(null)
+  /** The layer over the sheet a combobox's list opens in */
+  const [layerEl, setLayerEl] = useState<HTMLDivElement | null>(null)
   const canvasEl = useRef<HTMLDivElement>(null)
   /** The canvas over the sheet: down to its 60% place it grows as the sheet goes, the picture with it, at the
    * sheet's own pace under a finger or not (it grew after, in a move of its own); above it it stays (the sheet over the
@@ -651,9 +660,13 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           {/* Groups 24 px apart (`src/index.css`, as on wide screens), so from one 48 px control to the next is 48 (16 + 8
               for a label + 24); at 60% as much again under the form's end as is under the screen, to scroll it into view */}
           <div ref={formEl} className="*:gap-6! *:p-6!" style={{ paddingBottom: `calc(${96 + (typing ? screen.h : full ? 0 : below)}px + env(safe-area-inset-bottom))` }}>
-            <InSheet.Provider value={sheet}>{sidebar}</InSheet.Provider>
+            <SheetLayer.Provider value={{ el: layerEl, hidden: edge[sheet] }}>
+              <InSheet.Provider value={sheet}>{sidebar}</InSheet.Provider>
+            </SheetLayer.Provider>
           </div>
         </div>
+        {/* A combobox's list, over the form within the sheet's round top, as large as the sheet shows */}
+        <div ref={setLayerEl} className="absolute inset-0 overflow-hidden rounded-t-[24px] empty:hidden" />
       </div>
 
       {/* The download over the form's foot, on a white gradient the form fades under, 24 px in all round (Figma 5098:5539),
@@ -661,7 +674,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           indicator. Tried closer to Safari's bottom tab bar: 16, then on iOS alone 16, 0, 2 and 8 — touching the edge,
           the black button turned Safari 26's bar black, and 24 all round is what the sheet's sides have */}
       {!typing && (
-        <div ref={footEl} data-sheet style={footAt(edge[sheet])} className="fixed inset-x-0 bottom-0 mx-auto max-w-[480px] bg-gradient-to-b from-white/0 to-white px-6 pt-6 pb-[calc(24px+env(safe-area-inset-bottom))] tracking-normal">
+        <div ref={footEl} data-sheet style={footAt(edge[sheet])} className="fixed inset-x-0 bottom-0 mx-auto max-w-[480px] [:root:has([data-combo])_&]:hidden bg-gradient-to-b from-white/0 to-white px-6 pt-6 pb-[calc(24px+env(safe-area-inset-bottom))] tracking-normal">
           <InFoot.Provider value={() => { if (sheetRef.current === 'preview') move('half') }}>{download}</InFoot.Provider>
         </div>
       )}

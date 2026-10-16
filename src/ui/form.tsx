@@ -5,7 +5,7 @@ import { goal } from './metrika'
 import HelpButton from './help'
 import Ring from './Ring'
 import { ChevronIcon } from './icons'
-import { InFoot, InSheet } from './phone'
+import { InFoot, InSheet, SheetLayer } from './phone'
 import { MOD, withMod, otherLayout } from './keys'
 
 // Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag, business card). Light UI per the Figma layout
@@ -271,8 +271,11 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
   const shown = all || !typed || hit || !matching.length ? options : matching
   const id = useId()
   // In the phone's sheet the list is a screen of its own, as a search: the field over it with «Готово», the list filling
-  // the rest. It opens with no keyboard, the list in full view for a pick; a tap on its field brings the keyboard to type
+  // the rest, within the sheet as it stands (it was over the whole screen, wider and taller than the sheet). It opens
+  // with no keyboard, the list in full view for a pick; a tap on its field brings the keyboard to type, the sheet going
+  // over the whole screen with it as for any field
   const inSheet = !!useContext(InSheet)
+  const layer = useContext(SheetLayer)
   const [screen, setScreen] = useState(false)
   const screenField = useRef<HTMLDivElement>(null)
   const openScreen = () => {
@@ -280,6 +283,19 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
     setScreen(true)
   }
   const closeScreen = () => { setScreen(false); setAll(false) }
+  // A tap over the sheet (the picture) closes it, as «Готово», and does nothing else there (it lowered the sheet); a drag
+  // there still takes the sheet, as its click goes nowhere
+  useEffect(() => {
+    const sheet = layer.el?.parentElement
+    if (!screen || !sheet) return
+    const tap = (e: MouseEvent) => {
+      if (sheet.contains(e.target as Node)) return
+      e.stopPropagation()
+      closeScreen()
+    }
+    document.addEventListener('click', tap, true)
+    return () => document.removeEventListener('click', tap, true)
+  }, [screen, layer.el]) // eslint-disable-line react-hooks/exhaustive-deps
   /** Each field its own anchor */
   const anchor = `--combo${id.replace(/[^a-z0-9]/gi, '')}`
 
@@ -389,9 +405,9 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
           </div>
         ))}
       </div>
-      {screen && createPortal(
-        <div role="dialog" aria-label={label} className="fixed inset-0 z-50 flex flex-col bg-white font-sans text-black">
-          <div ref={screenField} className="flex shrink-0 items-start gap-3 px-6 pt-4 pb-2">
+      {screen && layer.el && createPortal(
+        <div role="dialog" aria-label={label} data-combo className="absolute inset-0 flex flex-col bg-white font-sans text-black" style={{ paddingBottom: layer.hidden }}>
+          <div ref={screenField} className="flex shrink-0 items-start gap-3 px-6 pt-6 pb-2">
             <TextArea
               value={value}
               placeholder={placeholder}
@@ -404,7 +420,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
             <button type="button" onClick={closeScreen} className="h-10 shrink-0 cursor-pointer text-[14px] leading-5 font-medium">Готово</button>
           </div>
           {/* Rows across the screen, as a native list, the picked one medium with a tick */}
-          <div role="listbox" aria-label={label} className="min-h-0 flex-1 overflow-y-auto px-3 pb-6 text-[14px] leading-5">
+          <div role="listbox" aria-label={label} className="min-h-0 flex-1 overflow-y-auto px-3 pb-[calc(24px+env(safe-area-inset-bottom))] text-[14px] leading-5">
             {shown.map(t => (
               <div
                 key={t}
@@ -419,7 +435,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
             ))}
           </div>
         </div>,
-        document.body,
+        layer.el,
       )}
     </div>
   )
