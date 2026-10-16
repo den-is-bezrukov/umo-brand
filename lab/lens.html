@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="robots" content="noindex" />
+<title>Линза — прототип</title>
+<!-- Figma 5204:5248: the black wordmark on white (5204:5250) through Figma's «Lens distortion» effect (v2; Distortion 1,
+     Aberration 1, Lateral, High), a white layer in Difference over it. The effect's WGSL (Lens-distortion-source.zip)
+     ported to WebGL2 line by line; the Difference layer is the last line of the shader. Dev server only:
+     http://localhost:5477/lab/lens.html -->
+<style>
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: #000; }
+  canvas { position: fixed; left: 0; top: 50%; width: 100%; aspect-ratio: 2 / 1; transform: translateY(-50%); display: block; }
+  .panel { position: fixed; right: 12px; top: 12px; padding: 8px 10px; background: Canvas; color: CanvasText;
+    border: 1px solid GrayText; font: 12px system-ui, sans-serif; width: 300px; }
+  label { display: grid; grid-template-columns: 1fr 120px 36px; align-items: center; gap: 6px; }
+  label output { text-align: right; font-variant-numeric: tabular-nums; }
+  @media (max-width: 640px) { .panel { top: auto; bottom: 12px; left: 12px; right: 12px; width: auto; } }
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+<div class="panel">
+  <label>Distortion <input id="dist" type="range" min="0" max="1" step="0.01" value="1" /><output></output></label>
+  <label>Aberration <input id="ab" type="range" min="0" max="1" step="0.01" value="1" /><output></output></label>
+  <label>Mode <select id="mode"><option value="0">Lateral</option><option value="1">Longitudinal</option><option value="2">Anamorphic</option></select><span></span></label>
+  <label>Quality <select id="q"><option value="0">High</option><option value="1">Medium</option><option value="2">Low</option></select><span></span></label>
+</div>
+
+<script type="x-shader/x-fragment" id="fs">#version 300 es
+precision highp float;
+uniform vec2 dims;          // canvas size, px
+uniform vec2 centre;        // px
+uniform float radius;       // half-diagonal, px
+uniform float amount;       // distortionStrength
+uniform float chromaParam;  // aberrationStrength
+uniform int mode;           // 0 lateral, 1 longitudinal, 2 anamorphic
+uniform int bucket;         // aberration bucket, 0 = no split
+uniform int taps;           // kernel taps
+uniform float invKernel;
+uniform float weightSum;
+uniform sampler2D inputTex;
+in vec2 uv;
+out vec4 o;
+
+const vec2 JITTER[4] = vec2[4](vec2(0.), vec2(.5, -.333333), vec2(-.25, .333333), vec2(.25, -.111111));
+const float SPREAD = 1.4;
+
+vec4 sampleZero(vec2 p) {
+  vec2 t = p / dims;
+  if (t.x < 0. || t.x > 1. || t.y < 0. || t.y > 1.) return vec4(0.);
+  return textureLod(inputTex, t, 0.);
+}
+vec2 lensDistort(vec2 p, float a) {
+  vec2 c = p - centre, n = c / radius;
+  float d2 = dot(n, n);
+  return c * (1. + a * (d2 + d2 * d2)) + centre;
+}
+vec4 distorted(vec2 p, float a) { return sampleZero(lensDistort(p, a)); }
+float unpremul(float v, float a) { return a > .01 ? v / max(.001, a) : 1.; }
+
+void main() {
+  vec2 local = uv * dims;
+  float chroma = (1. + abs(amount)) * chromaParam;
+  vec4 acc = vec4(0.);
+  for (int j = 0; j < 4; j++) {
+    vec2 tap = local + JITTER[j] * SPREAD;
+    if (bucket == 0) {
+      vec4 s = distorted(tap, amount);
+      acc += vec4(unpremul(s.r, s.a) * s.a, unpremul(s.g, s.a) * s.a, unpremul(s.b, s.a) * s.a, s.a);
+      continue;
+    }
+    vec2 rv = tap - centre;
+    float rl = length(rv);
+    vec2 rdir = rl >= .001 ? rv / rl : vec2(1., 0.);
+    vec4 tc = vec4(0.);
+    for (int i = 0; i < 64; i++) {
+      if (i >= taps) break;
+      float fi = float(i) * invKernel - .5;
+      float w = 1. - abs(fi * 2.);
+      vec4 rs, gs, bs;
+      if (mode == 1) {
+        float k = chroma * radius * .15;
+        rs = sampleZero(lensDistort(tap + rdir * (fi + .5) * k, amount));
+        gs = sampleZero(lensDistort(tap + rdir * fi * k, amount));
+        bs = sampleZero(lensDistort(tap + rdir * (fi - .5) * k, amount));
+      } else if (mode == 2) {
+        float k = chroma * dims.x * .15;
+        rs = sampleZero(lensDistort(tap + vec2((fi + .5) * k, 0.), amount));
+        gs = sampleZero(lensDistort(tap + vec2(fi * k, 0.), amount));
+        bs = sampleZero(lensDistort(tap + vec2((fi - .5) * k, 0.), amount));
+      } else {
+        rs = distorted(tap, amount + (fi + .5) * chroma);
+        gs = distorted(tap, amount + fi * chroma);
+        bs = distorted(tap, amount + (fi - .5) * chroma);
+      }
+      float a = max(max(rs.a, gs.a), bs.a);
+      tc += vec4(unpremul(rs.r, rs.a) * a, unpremul(gs.g, gs.a) * a, unpremul(bs.b, bs.a) * a, a) * w;
+    }
+    acc += tc / max(weightSum, .0001);
+  }
+  vec4 c = acc / 4.;
+  // The white Difference layer over the effect, on the frame's white: 1 - (c over white)
+  o = vec4(clamp(vec3(c.a) - c.rgb, 0., 1.), 1.);
+}
+</script>
+
+<script>
+// The wordmark as the Figma frame has it (5204:5250), 2000×1000
+const SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="2000" height="1000" viewBox="0 0 2000 1000"><rect width="2000" height="1000" fill="white"/><path d="M910.003 445H759.994V700H610V444.478C610 341.851 658.732 300 759.994 300H910.003V445ZM1209.99 300C1311.22 300 1360 341.791 1360 444.478V700H1209.99V445H1060V700H910.003V445H1060V300H1209.99Z"/><path d="M410 555H150V300H0V555.522C0 658.209 48.8349 700 150.125 700H409.86C511.225 700 560 658.149 560 555.522V300H410V555Z"/><path fill-rule="evenodd" d="M1849.89 300C1951.18 300 2000 341.791 2000 444.478V555.522C2000 658.149 1951.24 700 1849.89 700H1560.13C1458.82 700 1410 658.209 1410 555.522V444.478C1410 341.851 1458.82 300 1560.13 300H1849.89ZM1560 555H1850V444.478L1560 445V555Z"/></svg>`;
+
+// The effect's kernel, as main.ts computes it
+function bucketFor(s) { return s <= .001 ? 0 : s < .08 ? 1 : s < .18 ? 2 : s < .35 ? 3 : 4; }
+function kernel(quality, bucket) {
+  const base = 64 / (quality + 1), scale = [0, .25, .5, .75, 1][bucket];
+  const size = scale === 0 ? 3 : Math.max(3, base * scale);
+  const taps = Math.ceil(size), inv = 1 / Math.max(size - 1, 1);
+  let sum = 0;
+  for (let i = 0; i < taps; i++) sum += 1 - Math.abs((i * inv - .5) * 2);
+  return { taps, inv, sum };
+}
+
+const cv = document.getElementById('c');
+const gl = cv.getContext('webgl2');
+const vs = `#version 300 es
+in vec2 p; out vec2 uv;
+void main() { uv = vec2(p.x * .5 + .5, .5 - p.y * .5); gl_Position = vec4(p, 0, 1); }`;
+function sh(type, src) {
+  const s = gl.createShader(type);
+  gl.shaderSource(s, src); gl.compileShader(s);
+  if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+  return s;
+}
+const prog = gl.createProgram();
+gl.attachShader(prog, sh(gl.VERTEX_SHADER, vs));
+gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, document.getElementById('fs').textContent));
+gl.linkProgram(prog); gl.useProgram(prog);
+gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, 1, 1]), gl.STATIC_DRAW);
+gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
+const U = n => gl.getUniformLocation(prog, n);
+
+const tex = gl.createTexture();
+gl.bindTexture(gl.TEXTURE_2D, tex);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+
+const img = new Image();
+img.src = 'data:image/svg+xml,' + encodeURIComponent(SVG);
+const off = document.createElement('canvas');
+const $ = id => document.getElementById(id);
+
+function draw() {
+  if (!img.complete) return;
+  const dpr = Math.min(devicePixelRatio, 2);
+  const w = Math.round(cv.clientWidth * dpr), h = Math.round(cv.clientHeight * dpr);
+  if (off.width !== w || off.height !== h) {
+    cv.width = off.width = w; cv.height = off.height = h;
+    off.getContext('2d').drawImage(img, 0, 0, w, h);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, off);
+  }
+  const dist = +$('dist').value, ab = +$('ab').value, q = +$('q').value, b = bucketFor(ab), k = kernel(q, b);
+  for (const i of document.querySelectorAll('input')) i.nextElementSibling.value = (+i.value).toFixed(2);
+  gl.viewport(0, 0, w, h);
+  gl.uniform2f(U('dims'), w, h);
+  gl.uniform2f(U('centre'), w / 2, h / 2);
+  gl.uniform1f(U('radius'), Math.hypot(w, h) / 2);
+  gl.uniform1f(U('amount'), dist);
+  gl.uniform1f(U('chromaParam'), ab);
+  gl.uniform1i(U('mode'), +$('mode').value);
+  gl.uniform1i(U('bucket'), b);
+  gl.uniform1i(U('taps'), k.taps);
+  gl.uniform1f(U('invKernel'), k.inv);
+  gl.uniform1f(U('weightSum'), k.sum);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+img.onload = draw;
+addEventListener('resize', draw);
+for (const el of document.querySelectorAll('input, select')) el.addEventListener('input', draw);
+</script>
+</body>
+</html>
