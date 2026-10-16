@@ -656,14 +656,15 @@ export function LinkButtons({ incomplete, file: make, fileOnly }: {
 export const unfilled = (said: string[]) => said[0]
 
 /**
- * How many things are left to do before the download, after the note over it: «1/5», the one it names out of all the
- * empty and wrong fields left, over the whole list; none while it's the last
+ * Which item the note over the download is about, after it: «3/8», its number (as beside it in the list) of all; none
+ * for one item or a note about what they share (the dealer). It was «1/5», the first of all the empty and wrong fields
+ * left, which never moved on and read as a stuck progress
  */
-export const stepsLeft = (n: number) => (n > 1 ? `1/${n}` : undefined)
+export const itemOf = (index: number, total: number) => (total > 1 && index >= 0 ? `${index + 1}/${total}` : undefined)
 
 /**
  * The download, at the foot of the sidebar (in the phone's sheet): one black button saying the next step while
- * something's in the way («Выбрать дилера 1/3», «Цена слишком низкая») and leading there, «Скачать PDF» once nothing
+ * something's in the way («Указать имя 3/8», «Цена слишком низкая») and leading there, «Скачать PDF» once nothing
  * is. It was always «Скачать», greyed out, with a secondary button over it saying the step (and before that a black
  * line, under the button for a while)
  */
@@ -673,7 +674,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   busy: boolean
   disabled?: boolean
   note?: string
-  /** «1/5» after the note, grey: the one it names out of all that's left to do (`stepsLeft`) */
+  /** «3/8» after the note, grey: the item it's about (`itemOf`) */
   count?: string
   onNote?: () => void
   /** «Поделиться», right over the download: off with it, the line over them speaking for both */
@@ -692,7 +693,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
     return () => clearTimeout(t)
   }, [said])
   // One button, in the phone's sheet (Figma 5098:5806) and on wide screens alike: while the download is off, what's in
-  // the way and how much is left («Выбрать дилера 1/3»), leading there (the phone's sheet opening first); else the
+  // the way and in which item («Указать имя 3/8»), leading there (the phone's sheet opening first); else the
   // download, «Поделиться» with it. The bright button stays the next step, so it's pressed even unread, and the press
   // teaches what to do (on wide screens a secondary button saying the step stood over a greyed-out download)
   const foot = useContext(InFoot)

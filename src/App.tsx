@@ -3,7 +3,7 @@ import QRCode from 'qrcode'
 import PriceCard from '@/posters/PriceCard'
 import type { Variant } from '@/posters/cardData'
 import { goal } from '@/ui/metrika'
-import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField, GeneratorHeader, LinkButtons, DownloadBar, unfilled, stepsLeft } from '@/ui/form'
+import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField, GeneratorHeader, LinkButtons, DownloadBar, unfilled, itemOf } from '@/ui/form'
 import { linkParams, useLinkState, saveAndOpenPdf } from '@/ui/share'
 import { useStaff, ItemFrame, AddTile, Removed, plain, ITEM_EDGE, type Row } from '@/ui/staff'
 import { MobileEditor, usePhone } from '@/ui/mobile'
@@ -345,7 +345,7 @@ export default function App() {
           busy={exporting}
           disabled={failing.length > 0}
           note={items.length > 1 ? (failing.length ? firstIssue(items[staff.inWork(failing).index])?.text : undefined) : issue?.text}
-          count={stepsLeft(items.reduce((n, c) => { const i = check(c); return n + [i.urlBad, i.fullTooLow, i.creditTooLow, i.fullLessThanCredit].filter(Boolean).length }, 0))}
+          count={failing.length ? itemOf(staff.inWork(failing).index, items.length) : undefined}
           onNote={items.length > 1 ? () => staff.nextOf(failing) : toIssue}
           // No «Сбросить» here: each card has its own beside it
           links={<LinkButtons incomplete={failing.length > 0} file={shareFile} />}

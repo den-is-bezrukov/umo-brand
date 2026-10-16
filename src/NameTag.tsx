@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadBar, LinkButtons, canShareFiles, unfilled, stepsLeft, Segments, SegBtn, outlined } from '@/ui/form'
+import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadBar, LinkButtons, canShareFiles, unfilled, itemOf, Segments, SegBtn, outlined } from '@/ui/form'
 import { useStaff, plain, pickTable, TableSource, UploadArea, AddTile, fullNameField, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD } from '@/livery/geometry'
@@ -245,7 +245,7 @@ export default function NameTag() {
           busy={exporting}
           disabled={!ok}
           note={!items.length ? 'Загрузить таблицу' : (failing.length ? problemOf(staff.inWork(failing).index) : undefined)}
-          count={stepsLeft(items.reduce((n, _, i) => n + missing[i].length + (tags?.[i]?.issues.length ?? 0), 0))}
+          count={failing.length ? itemOf(staff.inWork(failing).index, items.length) : undefined}
           onNote={items.length ? () => staff.nextOf(failing) : pickTable}
           links={canShareFiles && <LinkButtons incomplete={!ok} file={shareFiles} fileOnly />}
         />

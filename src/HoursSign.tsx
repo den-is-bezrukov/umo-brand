@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Font } from 'opentype.js'
 import { goal } from '@/ui/metrika'
-import { Field, TextInput, ComboField, GeneratorHeader, LinkButtons, DownloadBar, stepsLeft, flash } from '@/ui/form'
+import { Field, TextInput, ComboField, GeneratorHeader, LinkButtons, DownloadBar, flash } from '@/ui/form'
 import { isPdf, readPdfData } from '@/ui/pdfData'
 import { CaptionReset } from '@/ui/staff'
 import { linkParams, useLinkState, saveAndOpenPdf } from '@/ui/share'
@@ -192,8 +192,6 @@ export default function HoursSign() {
   const note = !firstAt ? undefined
     : firstAt === firstEmpty ? MISSING[firstAt]
       : issues.find(i => i.field === firstAt)!.text
-  // The two hours ask once
-  const left = new Set(empty.map(f => f === 'to' ? 'from' : f)).size + issues.length
 
   const form = useRef<HTMLDivElement>(null)
   const toField = () => form.current?.querySelector<HTMLElement>(`[data-field="${firstAt}"] input, [data-field="${firstAt}"] textarea`)?.focus()
@@ -369,7 +367,6 @@ export default function HoursSign() {
           busy={exporting}
           disabled={!ok}
           note={note}
-          count={stepsLeft(left)}
           onNote={toField}
           links={!blank && <LinkButtons incomplete={!ok} file={shareFile} />}
         />
