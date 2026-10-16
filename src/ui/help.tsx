@@ -203,7 +203,7 @@ function Generator({ help }: { help: Help }) {
 function Faq({ items }: { items: [string, ReactNode][] }) {
   return (
     <dl className="flex flex-col gap-4">
-      {items.map(([q, a]) => <div key={q}><dt className="font-medium">{q}</dt><dd className="text-black/60">{a}</dd></div>)}
+      {items.map(([q, a]) => <div key={q}><dt className="font-medium">{q}</dt><dd>{a}</dd></div>)}
     </dl>
   )
 }
@@ -263,7 +263,7 @@ function HelpPanel({ page, tabs, onClose }: { page: string; tabs: { path: string
               ? <button key={i.path} type="button" aria-current="true" onClick={() => setMenu(false)} className={`${name} cursor-pointer`}>{i.title}</button>
               : <button key={i.path} type="button" onClick={() => pick(i.path)} className={`${name} cursor-pointer text-[#bfbfbf] hover:text-[#808080] active:text-[#808080]`}>{i.title}</button>)}
           </nav>
-        ) : help ? <Generator help={help} /> : <Faq items={GENERAL} />}
+        ) : help ? <Generator help={help} /> : GENERAL.map(([q, a]) => <Part key={q} title={q}><p>{a}</p></Part>)}
       </div>
     </Dialog>
   )
