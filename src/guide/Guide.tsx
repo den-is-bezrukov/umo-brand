@@ -13,6 +13,7 @@ import { SIGN, LOGO as SIGN_LOGO, MARGIN as SIGN_MARGIN, TIME as SIGN_TIME, LINE
 import tocIcons from '@/icons/toc'
 import { useTypograf } from './typograf'
 import Dialog from '@/ui/Dialog'
+import { TEXT_LINK, SUPPORT_BOT } from '@/ui/links'
 import downloadSizes from 'virtual:download-sizes'
 import heroMp4 from '@/assets/guide/hero.mp4'
 import hero720Mp4 from '@/assets/guide/hero-720.mp4'
@@ -233,8 +234,6 @@ const NAV_HOVER = 'transition-[color] duration-350 ease-[ease] hover:text-[#8080
  */
 const UNDERLINE = 'underline decoration-transparent decoration-[2.5%] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 ease-[ease]'
 const LINK_HOVER = `${UNDERLINE} hover:decoration-black/40 hover:duration-0`
-/** A link inside body copy keeps that line at 40% so it reads as a link, and it turns black under the pointer */
-const TEXT_LINK = 'underline decoration-black/40 decoration-[2.5%] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 ease-[ease] hover:decoration-black hover:duration-0'
 
 /**
  * `active`: you're inside this item (medium weight); `current`: its own heading is the one on screen (the bullet).
@@ -2028,7 +2027,7 @@ export default function Guide() {
             <Chapter id="contact" title="Контакты">
               <Section>
                 <Text wide>
-                  <p>Если ответа нет в стандартах или макет вывески, рекламы или другого носителя нужно согласовать, <a href="https://t.me/umo_support_bot" target="_blank" rel="noopener" className={TEXT_LINK}>напишите боту поддержки</a>. Приложите макет и расскажите, где он будет размещён, — разберёмся вместе.</p>
+                  <p>Если ответа нет в стандартах или макет вывески, рекламы или другого носителя нужно согласовать, <a href={SUPPORT_BOT} target="_blank" rel="noopener" className={TEXT_LINK}>напишите боту поддержки</a>. Приложите макет и расскажите, где он будет размещён, — разберёмся вместе.</p>
                   <p>Спасибо, что делаете UMO вместе с нами.</p>
                 </Text>
               </Section>
