@@ -6,7 +6,7 @@ import { CrossIcon } from './icons'
 const HOVER = 'transition-[color] duration-350 ease-[ease] hover:text-[#808080] hover:duration-0'
 
 /**
- * The site's one dialog: the guide's «Редактор материалов» and the generators' «Помощь». Over black at 40%, centred
+ * The site's one dialog: the guide's «Редактор материалов» and the generators' «Инструкция». Over black at 40%, centred
  * across and standing 64 px from the top (16 on phones), white, 16 px round, 24 px in: the title in
  * 16 px Medium and × (the generators' `CrossIcon`, 1 px) on one row, `head` under it (24 px apart). It grows with what's in it, no scroll inside: taller
  * than the screen, the dark scrolls with it, the page under it staying still. Esc, × or a click on the dark close it.

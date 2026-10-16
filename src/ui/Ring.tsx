@@ -7,7 +7,7 @@ const TURNS = 3
 type Item = { key: string; title: string }
 
 /**
- * A line of names to pick one from: the generators' line in their form's header and «Помощь»'s sections. Scrolled
+ * A line of names to pick one from: the generators' line in their form's header and «Инструкция»'s sections. Scrolled
  * natively, as a phone's tabs, by a finger, a trackpad or the wheel (the ring turned by script ran on and came back
  * round on its own, unlike anything else under a finger), and picked as a drum: the name the line comes to rest on,
  * 24 px from the edge where the ring had the current one, is picked the instant the finger is off and the line is
@@ -29,7 +29,7 @@ export default function Ring({ label, items, current, onPick, href, heading, foc
   href?: (key: string) => string
   heading?: boolean
   focus?: boolean
-  /** 16 px names, as the headings under it (in «Помощь»), 16 px apart */
+  /** 16 px names, as the headings under it (in «Инструкция»), 16 px apart */
   small?: boolean
 }) {
   const count = items.length

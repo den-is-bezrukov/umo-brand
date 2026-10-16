@@ -5,7 +5,7 @@ import Dialog from './Dialog'
 import Ring from './Ring'
 
 /**
- * «Помощь», the «?» at the end of the breadcrumbs (as Composter's): one panel for every generator, a tab each and
+ * «Инструкция», the «?» at the end of the breadcrumbs (as Composter's): one panel for every generator, a tab each and
  * «Общее» for what they share, opened on the current one's: what to do, the table, the print and the usual questions,
  * for a dealer on their own. Help lives here, apart from the controls: no hint texts by them
  */
@@ -209,7 +209,7 @@ function Faq({ items }: { items: [string, ReactNode][] }) {
 }
 
 /**
- * «Помощь» in the site's dialog (`Dialog`, as the guide's «Редактор материалов»), 560 px wide. Under the title the
+ * «Инструкция» in the site's dialog (`Dialog`, as the guide's «Редактор материалов»), 560 px wide. Under the title the
  * sections in a `Ring`, the generators' line again (a drum, the names running off under the white at the edges): the
  * generators in its order and «Общее», opened on the page's own; a hairline under it sets the head apart from the text,
  * the dialog growing with it. A pick shows that section from its top
@@ -231,7 +231,7 @@ function HelpPanel({ page, tabs, onClose }: { page: string; tabs: { path: string
     </div>
   )
   return (
-    <Dialog title="Помощь" onClose={onClose} width={560} head={head}>
+    <Dialog title="Инструкция" onClose={onClose} width={560} head={head}>
       <div ref={body} className="flex flex-col gap-8 text-[14px] leading-5 font-normal tracking-normal">
         {help ? <Generator help={help} /> : <Faq items={GENERAL} />}
       </div>
@@ -250,8 +250,8 @@ export default function HelpButton({ page, tabs }: { page: string; tabs: { path:
         type="button"
         onClick={toggle}
         aria-expanded={open}
-        aria-label="Помощь"
-        title="Помощь"
+        aria-label="Инструкция"
+        title="Инструкция"
         className={`relative ml-auto shrink-0 cursor-pointer text-[14px] font-medium leading-4 after:absolute after:-inset-[10px] after:content-[''] ${open ? 'text-black' : 'text-[#808080] hover:text-black'}`}
       >
         ?
