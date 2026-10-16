@@ -483,11 +483,18 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   /** The download goes down with the sheet under its 60% place, at half its pace, out of sight lowered (it went at once) */
   const footEl = useRef<HTMLDivElement>(null)
   const footAt = (at: number) => ({ transform: `translateY(${Math.max(0, at - edge.half) * FOOT_PACE}px)` })
+  /** The canvas cut 10 px over the sheet's edge (a picture keeps that far off it anyway): past the sheet's 480 px the
+   * picture under the sheet stood out at its sides, and over the whole screen its top showed between the row and the sheet */
+  const clipAt = (at: number) => ({ clipPath: `inset(0 0 ${Math.max(0, laidH - (screen.h - tall + at) + INSET)}px 0)` })
   const place = (at: number) => {
     if (sheetEl.current) sheetEl.current.style.transform = `translateY(${at}px)`
     if (footEl.current) {
       footEl.current.getAnimations().forEach(a => a.cancel())
       Object.assign(footEl.current.style, footAt(at))
+    }
+    if (canvasEl.current) {
+      canvasEl.current.getAnimations().forEach(a => a.cancel())
+      Object.assign(canvasEl.current.style, clipAt(at))
     }
     for (const el of fits()) {
       el.getAnimations().forEach(a => a.cancel())
@@ -504,6 +511,11 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       footEl.current.animate(steps.map(footAt), timing)
       Object.assign(footEl.current.style, footAt(to))
     }
+    if (canvasEl.current) {
+      canvasEl.current.getAnimations().forEach(a => a.cancel())
+      canvasEl.current.animate(steps.map(clipAt), timing)
+      Object.assign(canvasEl.current.style, clipAt(to))
+    }
     for (const el of fits()) {
       el.getAnimations().forEach(a => a.cancel())
       const end = fitAt(el, to)
@@ -515,6 +527,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   useLayoutEffect(() => {
     const at = drag.current?.at ?? edge[sheetRef.current]
     for (const el of fits()) if (!el.getAnimations().length) Object.assign(el.style, fitAt(el, at))
+    if (canvasEl.current && !canvasEl.current.getAnimations().length) Object.assign(canvasEl.current.style, clipAt(at))
   })
   const formEl = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => {
