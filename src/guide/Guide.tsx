@@ -13,10 +13,9 @@ import { SIGN, LOGO as SIGN_LOGO, MARGIN as SIGN_MARGIN, TIME as SIGN_TIME, LINE
 import tocIcons from '@/icons/toc'
 import { useTypograf } from './typograf'
 import downloadSizes from 'virtual:download-sizes'
-// The test-drive film, set aside while the hero is HeroSwarmLens (see Hero); the points (HeroDots) and the lens (HeroLens) set aside too
-// import heroMp4 from '@/assets/guide/hero.mp4'
-// import hero720Mp4 from '@/assets/guide/hero-720.mp4'
-import HeroSwarmLens from './HeroSwarmLens'
+// The test-drive film on the first screen; the shader heroes (HeroSwarmLens, HeroLens, HeroDots) set aside in their files
+import heroMp4 from '@/assets/guide/hero.mp4'
+import hero720Mp4 from '@/assets/guide/hero-720.mp4'
 
 // Figures are exported from Figma (UMO | Evrone, node 4810:686) at 2x and
 // cropped per frame — see "Brand guide" in AGENTS.md for how to refresh them.
@@ -581,24 +580,6 @@ function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObjec
 }
 
 /**
- * The hero: Рой в линзе (HeroSwarmLens, its settings in hero.json from the lab's «В гайд»), in place of the
- * test-drive film for now — the film's code is kept below, commented out, to come back to; the points (HeroDots) and
- * the lens (HeroLens) that stood here before stay in their files.
- * Below lg it heads the page and takes what the first screen has left above the header, statement and quick links
- * (`--mstrip`) and the bottom bar with a gap over it (52 + 16, from md 68 + 24), so the guide's first section starts
- * below the fold; never less than half the screen's width, as on a phone held sideways.
- */
-function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
-  const ref = useRef<HTMLDivElement>(null)
-  return (
-    <div ref={ref} style={{ '--umo-y-gap': `${UMO_Y_GAP}px` } as CSSProperties} className="relative z-30 h-[calc(100svh-var(--mstrip,260px)-68px-var(--umo-y-gap))] max-lg:mb-[var(--umo-y-gap)] md:h-[calc(100svh-var(--mstrip,360px)-92px-var(--umo-y-gap))] max-lg:[[data-hero-full]_&]:h-[calc(100svh-52px)] md:max-lg:[[data-hero-full]_&]:h-[calc(100svh-68px)] lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:h-[calc(100vh-var(--strip,286px))]">
-      <HeroSwarmLens boxRef={ref} bodyRef={bodyRef} />
-    </div>
-  )
-}
-
-/*
-/**
  * The hero: the UMO test-drive film, looped and muted — the source MP4s as they came (H.264, no re-encoding: they're
  * already set up for the web); the poster is their first frame, so nothing jumps when it starts. The 1080p film (12 MB)
  * by default, the 720p one (6.2 MB) on a slow connection: at once where the browser tells the speed (Chrome, Edge,
@@ -609,7 +590,7 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
  * Below lg it heads the page and takes what the first screen has left above the header, statement and quick links
  * (`--mstrip`) and the bottom bar with a gap over it (52 + 16, from md 68 + 24), so the guide's first section starts
  * below the fold; never less than half the screen's width, as on a phone held sideways.
- * /
+ */
 function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
   const ref = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -643,7 +624,7 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
       // From lg the page slides over the fixed film; on a phone the film scrolls away above the page.
       const below = bodyRef.current?.getBoundingClientRect().top ?? Infinity
       const seen = Math.min(box.bottom, below) - Math.max(box.top, 0) > 0
-      if (seen && video.paused) video.play().catch(() => { /* autoplay refused: the poster stays * / })
+      if (seen && video.paused) video.play().catch(() => { /* autoplay refused: the poster stays */ })
       else if (!seen && !video.paused) video.pause()
     }
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }
@@ -667,7 +648,6 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
     </div>
   )
 }
-*/
 
 /**
  * Below lg the quick links, as on wide screens, stand in the bottom bar beside the menu icon (on any phone: «Платформа»
