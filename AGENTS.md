@@ -8,7 +8,7 @@ This file describes the project as it is now. The history of decisions (what was
 
 This file holds only what every task needs. The details live in `docs/`, one file per area; read the ones your task touches before changing anything, and keep them up to date as you go (describe what you changed, as it is now, in the file it belongs to):
 
-- `docs/guide.md` — the brand guide: grid and rhythm, chapters, first screen, navigation, downloads, favicon, the UMO Sans page
+- `docs/guide.md` — the brand guide: grid and rhythm, chapters, first screen, navigation, downloads, favicon
 - `docs/generators.md` — what all generators share: the form, the phone layout, item lists, links with settings, files dropped back, name checks, obscene words, Metrika goals. Read it for any generator task
 - `BACKLOG.md` — what's parked for later, in Russian; when a task from it is done, remove its line in the same commit
 - `docs/price-card.md`, `docs/livery.md`, `docs/plate-frame.md`, `docs/name-tag.md`, `docs/business-card.md`, `docs/price-tag.md`, `docs/hours-sign.md` — each generator's layout in mm, its Figma nodes, texts, limits and file
@@ -31,8 +31,8 @@ Releases are [GitHub Releases](https://github.com/den-is-bezrukov/umo-brand/rele
 
 Start with task-relevant files below. Only follow imports or inspect other files when required, when a documented path is missing, or when the repository contradicts this guide.
 
-- `src/main.tsx` - React entrypoint and router: `/` → `src/guide/Guide.tsx`, `/umo-sans` → `src/guide/SansGuide.tsx` (`/golos` redirects there), `/price-card` → `src/App.tsx`, `/livery` → `src/Livery.tsx`, `/plate-frame` → `src/PlateFrame.tsx`, `/name-tag` → `src/NameTag.tsx`, `/business-card` → `src/BusinessCard.tsx`, `/price-tag` → `src/PriceTag.tsx`, `/hours-sign` → `src/HoursSign.tsx`, `/editor` → the guide with the Редактор window (every generator) open (all lazy-loaded), anything else redirects to `/`. `MetrikaHits` here sends a Metrika view per page path
-- `src/guide/` - The brand guide (`Guide.tsx`, `UmoLogo.tsx`) and `SansGuide.tsx`, the guide set in UMO Sans (see `docs/guide.md`)
+- `src/main.tsx` - React entrypoint and router: `/` → `src/guide/Guide.tsx`, `/price-card` → `src/App.tsx`, `/livery` → `src/Livery.tsx`, `/plate-frame` → `src/PlateFrame.tsx`, `/name-tag` → `src/NameTag.tsx`, `/business-card` → `src/BusinessCard.tsx`, `/price-tag` → `src/PriceTag.tsx`, `/hours-sign` → `src/HoursSign.tsx`, `/editor` → the guide with the Редактор window (every generator) open (all lazy-loaded), anything else redirects to `/`. `MetrikaHits` here sends a Metrika view per page path
+- `src/guide/` - The brand guide (`Guide.tsx`, `UmoLogo.tsx`); UMO Sans, the font tried on it, lives in its own project (`../umo-sans`), not here
 - `src/App.tsx` - The price card generator; its posters in `src/posters/` (`PriceCard.tsx` web preview, `pdf/PriceCardPdf.tsx` PDF, loaded on the first download through `pdf/cardsPdf.tsx`, data from `cardData.ts`)
 - `src/Livery.tsx` - The livery generator; `src/livery/`: surfaces in mm (`layout.ts`: `UMO8`, `UMO5`, `LIVERIES`), outlines (`geometry.ts`), the wordmark with the 8 and the 5 (`logo.ts`), the PDF/zip (`pdf.ts`)
 - `src/PlateFrame.tsx` - The plate frame generator; `src/plate/`: the print strip (`frame.ts`: `STRIP`, `buildStrip`), its PDF (`pdf.ts`), the plate in its frame (`PlateArt.tsx`, also the guide's picture)

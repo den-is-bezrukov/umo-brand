@@ -62,7 +62,3 @@ Under Логотип на иконках, after the favicon, `umo-icon-black.zip
 ## Favicon and site icons
 
 Icons in `public/` (Figma fav 4870:3556): `favicon.svg` and `favicon.ico` are the U module of the logo, white on a black tile (the full wordmark turns to mush at 16px). The tile is rounded in the icon itself: radius 1 on the 16 grid with 60% corner smoothing, since Safari and Chrome show favicons as drawn. The U is hinted: on a 16-unit grid its stems (2), bar (2) and edges sit on whole units, so it lands on whole pixels at 16, 32 and 48; the .ico's 16px frame keeps the hand-drawn U with mirrored corners and takes its rounded-corner alpha from the SVG; 32/48 are Chrome renders of the SVG at 768px, box-downscaled. `apple-touch-icon.png` (180) carries the whole UMO wordmark at 2/3 of the tile (120×24 at 30,78), as the app icon in Логотип на иконках.
-
-## The guide in UMO Sans (`/umo-sans`)
-
-`src/guide/SansGuide.tsx` is the brand guide set in UMO Sans instead of CoFo Sans, to judge the font in place: it wraps `Guide` and sets `--font-sans`, so live text changes and pictures don't. Not linked from anywhere. The font is `fonts/umo-sans/` (sources, build, README); its Regular and Medium WOFF2 are copied to `public/fonts/UMOSans-*.woff2` and declared in `src/index.css` — copy them again after rebuilding the font.
