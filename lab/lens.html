@@ -27,6 +27,9 @@
   <label>Aberration <input id="ab" type="range" min="0" max="1" step="0.01" value="1" /><output></output></label>
   <label>Mode <select id="mode"><option value="0">Lateral</option><option value="1">Longitudinal</option><option value="2">Anamorphic</option></select><span></span></label>
   <label>Quality <select id="q"><option value="0">High</option><option value="1">Medium</option><option value="2">Low</option></select><span></span></label>
+  <label>Влияние <input id="inf" type="range" min="0" max="1" step="0.01" value="1" /><output></output></label>
+  <label>По вертикали <input id="infy" type="range" min="0" max="1" step="0.01" value="1" /><output></output></label>
+  <label>Плавность <input id="ease" type="range" min="0.02" max="1" step="0.01" value="0.2" /><output></output></label>
 </div>
 
 <script type="x-shader/x-fragment" id="fs">#version 300 es
@@ -182,14 +185,17 @@ function draw() {
   gl.uniform1f(U('weightSum'), k.sum);
   gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
 }
-// Center point follows the pointer, eased; back to the middle when it leaves
-let cx = .5, cy = .5, tx = .5, ty = .5, raf = 0;
+// Center point follows the pointer: Влияние is how far from the middle towards it (По вертикали scales that for y),
+// Плавность the share of the way left it covers each frame; back to the middle when the pointer leaves
+let cx = .5, cy = .5, tx = .5, ty = .5, px = .5, py = .5, raf = 0;
 function tick() {
-  cx += (tx - cx) * .2; cy += (ty - cy) * .2;
+  const e = +$('ease').value, k = +$('inf').value;
+  tx = .5 + (px - .5) * k; ty = .5 + (py - .5) * k * +$('infy').value;
+  cx += (tx - cx) * e; cy += (ty - cy) * e;
   if (Math.abs(tx - cx) + Math.abs(ty - cy) < 1e-4) { cx = tx; cy = ty; raf = 0; } else raf = requestAnimationFrame(tick);
   draw();
 }
-function aim(x, y) { tx = x; ty = y; if (!raf) raf = requestAnimationFrame(tick); }
+function aim(x, y) { px = x; py = y; if (!raf) raf = requestAnimationFrame(tick); }
 addEventListener('pointermove', e => {
   const r = cv.getBoundingClientRect();
   aim((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
@@ -198,7 +204,7 @@ document.documentElement.addEventListener('pointerleave', () => aim(.5, .5));
 
 img.onload = draw;
 addEventListener('resize', draw);
-for (const el of document.querySelectorAll('input, select')) el.addEventListener('input', draw);
+for (const el of document.querySelectorAll('input, select')) el.addEventListener('input', () => aim(px, py));
 </script>
 </body>
 </html>
