@@ -407,7 +407,8 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
       </div>
       {screen && layer.el && createPortal(
         <div role="dialog" aria-label={label} data-combo className="absolute inset-0 flex flex-col bg-white font-sans text-black" style={{ paddingBottom: layer.hidden }}>
-          <div ref={screenField} className="flex shrink-0 items-start gap-3 px-6 pt-6 pb-2">
+          {/* «Готово» in the field, where the closed one has its chevron (it stood after the field) */}
+          <div ref={screenField} className="relative shrink-0 px-6 pt-6 pb-2">
             <TextArea
               value={value}
               placeholder={placeholder}
@@ -415,13 +416,13 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
               enterKeyHint="done"
               onChange={v => { onChange(singleLine || truncate ? v.replace(/\s*\n\s*/g, ' ') : v); setAll(false) }}
               onKeyDown={e => { if ((e.key === 'Enter' && singleLine) || e.key === 'Escape') { e.preventDefault(); closeScreen() } }}
-              className="flex-1"
+              className="pr-[68px]"
             />
-            <button type="button" onClick={closeScreen} className="h-10 in-[[data-sheet]]:h-12 shrink-0 cursor-pointer text-[14px] leading-5 font-medium">Готово</button>
+            <button type="button" onClick={closeScreen} className="absolute top-6 right-6 h-10 in-[[data-sheet]]:h-12 cursor-pointer px-3 text-[14px] leading-5 font-medium">Готово</button>
           </div>
           {/* Rows across the screen, as a native list, the picked one medium with a tick; their text in line with the field's,
               the tick under «Готово» */}
-          <div role="listbox" aria-label={label} className="min-h-0 flex-1 overflow-y-auto pr-3 pl-6 pb-[calc(24px+env(safe-area-inset-bottom))] text-[14px] leading-5">
+          <div role="listbox" aria-label={label} className="min-h-0 flex-1 overflow-y-auto px-6 pb-[calc(24px+env(safe-area-inset-bottom))] text-[14px] leading-5">
             {shown.map(t => (
               <div
                 key={t}
