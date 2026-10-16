@@ -665,8 +665,9 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
             </SheetLayer.Provider>
           </div>
         </div>
-        {/* A combobox's list, over the form within the sheet's round top, as large as the sheet shows */}
-        <div ref={setLayerEl} className="absolute inset-0 overflow-hidden rounded-t-[24px] empty:hidden" />
+        {/* A combobox's list, over the form within the sheet's round top, as large as the sheet shows; marked as the sheet,
+            so its controls are the sheet's 48 px */}
+        <div ref={setLayerEl} data-sheet className="absolute inset-0 overflow-hidden rounded-t-[24px] empty:hidden" />
       </div>
 
       {/* The download over the form's foot, on a white gradient the form fades under, 24 px in all round (Figma 5098:5539),

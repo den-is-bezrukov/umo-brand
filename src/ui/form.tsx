@@ -417,7 +417,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
               onKeyDown={e => { if ((e.key === 'Enter' && singleLine) || e.key === 'Escape') { e.preventDefault(); closeScreen() } }}
               className="flex-1"
             />
-            <button type="button" onClick={closeScreen} className="h-10 shrink-0 cursor-pointer text-[14px] leading-5 font-medium">Готово</button>
+            <button type="button" onClick={closeScreen} className="h-10 in-[[data-sheet]]:h-12 shrink-0 cursor-pointer text-[14px] leading-5 font-medium">Готово</button>
           </div>
           {/* Rows across the screen, as a native list, the picked one medium with a tick; their text in line with the field's,
               the tick under «Готово» */}
