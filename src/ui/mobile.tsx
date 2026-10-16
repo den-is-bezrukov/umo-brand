@@ -472,29 +472,27 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
     if (!s) return {}
     // One with no shape of its own (the plate frame's strip, a table's upload) takes what's in view, the upload
     // filling it, the strip in its middle: laid out large, the upload stood its least height and ran under the sheet
-    if (!ratio) return { height: `${Math.max(0, s.clientHeight + grow - 2 * INSET)}px` }
+    // Above its 60% place, as the sheet rises over the picture, the picture goes down to the screen's middle with it,
+    // standing there behind the sheet over the whole screen: past the sheet's 480 px it shows at its sides, even, and
+    // not as its top over the sheet's edge (the canvas cut at the sheet's edge, tried, was taken out)
+    const rise = edge.half > 0 ? Math.min(1, Math.max(0, (edge.half - at) / edge.half)) : 0
+    const middle = rise && (screen.h / 2 - (s.getBoundingClientRect().top + (s.clientHeight + grow) / 2)) * rise
+    if (!ratio) return { height: `${Math.max(0, s.clientHeight + grow - 2 * INSET)}px`, transform: `translateY(${middle}px)` }
     if (!w) return {}
     const extra = el.offsetHeight - w * ratio
     const to = Math.max(0, Math.floor(Math.min(s.clientWidth - 2 * side, (s.clientHeight + grow - 2 * INSET - extra) / ratio)))
-    return { transform: `translateY(${grow / 2}px) scale(${to / w})` }
+    return { transform: `translateY(${grow / 2 + middle}px) scale(${to / w})` }
   }
   const fits = () => [...(canvasEl.current?.querySelectorAll<HTMLElement>('[data-fit]') ?? [])]
   /** The sheet at a place, and the pictures with it */
   /** The download goes down with the sheet under its 60% place, at half its pace, out of sight lowered (it went at once) */
   const footEl = useRef<HTMLDivElement>(null)
   const footAt = (at: number) => ({ transform: `translateY(${Math.max(0, at - edge.half) * FOOT_PACE}px)` })
-  /** The canvas cut 10 px over the sheet's edge (a picture keeps that far off it anyway): past the sheet's 480 px the
-   * picture under the sheet stood out at its sides, and over the whole screen its top showed between the row and the sheet */
-  const clipAt = (at: number) => ({ clipPath: `inset(0 0 ${Math.max(0, laidH - (screen.h - tall + at) + INSET)}px 0)` })
   const place = (at: number) => {
     if (sheetEl.current) sheetEl.current.style.transform = `translateY(${at}px)`
     if (footEl.current) {
       footEl.current.getAnimations().forEach(a => a.cancel())
       Object.assign(footEl.current.style, footAt(at))
-    }
-    if (canvasEl.current) {
-      canvasEl.current.getAnimations().forEach(a => a.cancel())
-      Object.assign(canvasEl.current.style, clipAt(at))
     }
     for (const el of fits()) {
       el.getAnimations().forEach(a => a.cancel())
@@ -511,11 +509,6 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
       footEl.current.animate(steps.map(footAt), timing)
       Object.assign(footEl.current.style, footAt(to))
     }
-    if (canvasEl.current) {
-      canvasEl.current.getAnimations().forEach(a => a.cancel())
-      canvasEl.current.animate(steps.map(clipAt), timing)
-      Object.assign(canvasEl.current.style, clipAt(to))
-    }
     for (const el of fits()) {
       el.getAnimations().forEach(a => a.cancel())
       const end = fitAt(el, to)
@@ -527,7 +520,6 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   useLayoutEffect(() => {
     const at = drag.current?.at ?? edge[sheetRef.current]
     for (const el of fits()) if (!el.getAnimations().length) Object.assign(el.style, fitAt(el, at))
-    if (canvasEl.current && !canvasEl.current.getAnimations().length) Object.assign(canvasEl.current.style, clipAt(at))
   })
   const formEl = useRef<HTMLDivElement>(null)
   useLayoutEffect(() => {
