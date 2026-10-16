@@ -175,15 +175,6 @@ const HELP: Record<string, Help> = {
   },
 }
 
-/** The «?» in Composter's toolbelt, from its Figma: a stroked question mark */
-function QuestionIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M11.9999 17.1504C12.4694 17.1504 12.8495 17.5306 12.8495 18C12.8495 18.4694 12.4694 18.8496 11.9999 18.8496C11.5305 18.8496 11.1503 18.4694 11.1503 18C11.1503 17.5306 11.5305 17.1504 11.9999 17.1504ZM12.2665 4C13.4408 4.00002 14.4862 4.38304 15.2431 5.07812C16.0033 5.77637 16.4443 6.76454 16.4443 7.91113C16.4443 8.73658 16.2604 9.42976 15.8915 10.0381C15.5271 10.6392 15.0008 11.1258 14.3661 11.5713C13.5421 12.1496 13.105 12.555 12.8525 13.0117C12.6036 13.462 12.4999 14.0249 12.4999 15H11.4999C11.4999 13.9751 11.6027 13.2035 11.9765 12.5273C12.3467 11.8579 12.9491 11.3437 13.791 10.7529C14.3628 10.3516 14.7695 9.95909 15.0361 9.51953C15.2983 9.08706 15.4443 8.57806 15.4443 7.91113C15.4443 7.0325 15.1118 6.31542 14.5663 5.81445C14.0174 5.31042 13.2241 5.00002 12.2665 5C11.291 5.00002 10.4035 5.28108 9.76849 5.83105C9.14485 6.3714 8.71575 7.21296 8.71576 8.44434H7.71576C7.71575 6.9579 8.24586 5.82738 9.1142 5.0752C9.97153 4.33269 11.1102 4.00002 12.2665 4Z" />
-    </svg>
-  )
-}
-
 function Cross() {
   return <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden><path d="M2 2L14 14M14 2L2 14" stroke="currentColor" strokeWidth="2" strokeLinecap="square" /></svg>
 }
@@ -235,9 +226,9 @@ export default function HelpButton({ page, title }: { page: string; title: strin
         aria-expanded={open}
         aria-label="Помощь"
         title="Помощь"
-        className={`relative -my-0.5 ml-auto flex shrink-0 cursor-pointer items-center after:absolute after:-inset-[10px] after:content-[''] ${open ? 'text-black' : 'text-[#808080] hover:text-black'}`}
+        className={`relative ml-auto shrink-0 cursor-pointer text-[14px] font-medium leading-4 after:absolute after:-inset-[10px] after:content-[''] ${open ? 'text-black' : 'text-[#808080] hover:text-black'}`}
       >
-        <QuestionIcon />
+        ?
       </button>
       {open && createPortal(
         <div
