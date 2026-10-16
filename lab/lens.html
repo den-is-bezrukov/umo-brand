@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex" />
 <title>Линза — прототип</title>
 <!-- Figma 5204:5248: the black wordmark on white (5204:5250) through Figma's «Lens distortion» effect (v2; Distortion 1,
-     Aberration 1, Lateral, High; the wordmark sized as the guide's hero; its Center point here follows the pointer), a white layer in Difference over it. The effect's WGSL (Lens-distortion-source.zip)
+     Aberration 1, Lateral, High; the wordmark across the width inside the guide's page margins; its Center point here follows the pointer), a white layer in Difference over it. The effect's WGSL (Lens-distortion-source.zip)
      ported to WebGL2 line by line; the Difference layer is the last line of the shader. Dev server only:
      http://localhost:5477/lab/lens.html -->
 <style>
@@ -160,8 +160,9 @@ function draw() {
   const w = Math.round(cv.clientWidth * dpr), h = Math.round(cv.clientHeight * dpr);
   if (off.width !== w || off.height !== h) {
     cv.width = off.width = w; cv.height = off.height = h;
-    // On white, sized as the guide's hero (HeroDots): .72 of the width, no wider than 2.6 heights, centred
-    const ctx = off.getContext('2d'), lw = Math.min(w * .72, h * 2.6), lh = lw / 5;
+    // On white, across the width inside the guide's page margins (16px, 24 from 768px), centred
+    const m = (innerWidth >= 768 ? 24 : 16) * dpr;
+    const ctx = off.getContext('2d'), lw = w - 2 * m, lh = lw / 5;
     ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, w, h);
     ctx.drawImage(img, (w - lw) / 2, (h - lh) / 2, lw, lh);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, off);
