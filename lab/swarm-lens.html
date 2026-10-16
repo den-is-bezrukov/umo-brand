@@ -38,13 +38,15 @@ const box = document.getElementById('sliders')
 for (const g of GROUPS) {
   const div = document.createElement('div')
   div.className = 'group'
-  for (const [id, name, min, max, step, val] of g)
-    div.insertAdjacentHTML('beforeend', `<label>${name} <input id="${id}" type="range" min="${min}" max="${max}" step="${step}" value="${val}" /><output></output></label>`)
+  for (const [id, name, min, max, step, val, choices] of g)
+    div.insertAdjacentHTML('beforeend', choices
+      ? `<label>${name} <select id="${id}">${choices.map((c, i) => `<option value="${min + i}">${c}</option>`).join('')}</select><span></span></label>`
+      : `<label>${name} <input id="${id}" type="range" min="${min}" max="${max}" step="${step}" value="${val}" /><output></output></label>`)
   box.append(div)
 }
 const $ = id => document.getElementById(id)
 const values = () => Object.fromEntries(CONTROLS.map(([id]) => [id, +$(id).value]))
-const show = () => { for (const [id, , , , step] of CONTROLS) $(id).nextElementSibling.value = step >= 1 ? $(id).value : (+$(id).value).toFixed(2) }
+const show = () => { for (const [id, , , , step, , choices] of CONTROLS) if (!choices) $(id).nextElementSibling.value = step >= 1 ? $(id).value : (+$(id).value).toFixed(2) }
 
 // Запомнить keeps the panel's values in this browser, Сброс returns to them (to the guide's, hero.json, without any);
 // the page opens with them too

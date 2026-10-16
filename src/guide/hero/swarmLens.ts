@@ -23,6 +23,7 @@ uniform float uVh;       // the window's height in canvas heights: Точек co
 uniform float DOTS, SIZE, BG, JITTER, TWINKLE, WAVE, WAVE_W, LIGHT, TRAIL, CHAOS, RADIUS;
 // The lens
 uniform float DIST, ABER, TAPS, RAINBOW, WIDTH;
+uniform float EDGE;      // past the picture's edge: 0 nothing, 1 mirrored, 2 the edge stretched (as lens.html)
 out vec4 o;
 
 float h(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
@@ -98,6 +99,12 @@ void main() {
     vec3 a = DIST + (fi + vec3(.5, 0., -.5)) * chroma;
     for (int ch = 0; ch < 3; ch++) {
       vec2 q = c * (1. + a[ch] * bend) + centre;
+      // Where the lens reaches past the canvas: nothing there, the picture mirrored, or its edge stretched
+      vec2 t = vec2(q.x / (2. * asp.x) + .5, .5 - q.y);
+      if (EDGE > 1.5) t = clamp(t, 0., 1.);
+      else if (EDGE > .5) t = 1. - abs(mod(t, 2.) - 1.);
+      else if (t.x < 0. || t.x > 1. || t.y < 0. || t.y > 1.) continue;
+      q = vec2((t.x - .5) * 2. * asp.x, .5 - t.y);
       v[ch] += w * smoothstep(3., -3., logo(vec2(q.x, -q.y) * k + vec2(240, 48)));
     }
     wsum += w;
@@ -124,8 +131,8 @@ void main() {
 }
 `
 
-/** [id, label, min, max, step, default]: ids in capitals are the shader's uniforms, the rest the script's */
-export type Control = readonly [string, string, number, number, number, number]
+/** [id, label, min, max, step, default, the names of a list's choices]: ids in capitals are the shader's uniforms, the rest the script's */
+export type Control = readonly [string, string, number, number, number, number, (readonly string[])?]
 export const GROUPS: readonly (readonly Control[])[] = [
   [
     ['DOTS', 'Точек', 60, 400, 1, 250],
@@ -142,6 +149,7 @@ export const GROUPS: readonly (readonly Control[])[] = [
     ['TAPS', 'Отсчёты', 1, 16, 1, 8],
     ['WIDTH', 'Ширина лого', 0.3, 1, 0.01, 0.9],
     ['RAINBOW', 'Радуга', 0, 1, 0.01, 0],
+    ['EDGE', 'За краем', 0, 2, 1, 0, ['Пусто', 'Зеркало', 'Растянуть']],
     ['inf', 'Влияние', 0, 1, 0.01, 0.5],
     ['infy', 'По вертикали', 0, 1, 0.01, 0.5],
     ['ease', 'Плавность', 0.02, 1, 0.01, 0.75],
