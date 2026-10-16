@@ -60,7 +60,7 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
     <div data-head className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
         <PhoneCrumbs open={menu} onEditor={toggle} />
-        <HelpButton page={current} title={GENERATORS.find(g => g.path === current)!.title} />
+        <HelpButton page={current} tabs={GENERATORS} />
       </div>
       {menu ? (
         // 20 px under the crumbs, as the line's names stand (its 4 px over them), so the first name doesn't jump up
