@@ -17,6 +17,8 @@
     border: 1px solid GrayText; font: 12px system-ui, sans-serif; width: 300px; }
   label { display: grid; grid-template-columns: 1fr 120px 36px; align-items: center; gap: 6px; }
   label output { text-align: right; font-variant-numeric: tabular-nums; }
+  .buttons { display: flex; gap: 6px; margin-top: 10px; }
+  .buttons button { flex: 1; font: inherit; }
   @media (max-width: 640px) { .panel { top: auto; bottom: 12px; left: 12px; right: 12px; width: auto; } }
 </style>
 </head>
@@ -34,6 +36,7 @@
   <label>Влияние <input id="inf" type="range" min="0" max="1" step="0.01" value="0.5" /><output></output></label>
   <label>По вертикали <input id="infy" type="range" min="0" max="1" step="0.01" value="0.5" /><output></output></label>
   <label>Плавность <input id="ease" type="range" min="0.02" max="1" step="0.01" value="1" /><output></output></label>
+  <div class="buttons"><button id="save">Запомнить</button><button id="reset">Сброс</button></div>
 </div>
 
 <script type="x-shader/x-fragment" id="fs">#version 300 es
@@ -221,6 +224,22 @@ addEventListener('pointermove', e => {
   aim((e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height);
 });
 document.documentElement.addEventListener('pointerleave', () => aim(.5, .5));
+
+// Запомнить keeps the panel's values in this browser, Сброс returns to them (to the page's own without any);
+// the page opens with them too
+const KEY = 'lens-lab', fields = [...document.querySelectorAll('.panel input, .panel select')];
+const own = Object.fromEntries(fields.map(el => [el.id, el.value]));
+function load() {
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(KEY)) || {}; } catch {}
+  for (const el of fields) el.value = saved[el.id] ?? own[el.id];
+  aim(px, py);
+}
+$('save').onclick = () => {
+  try { localStorage.setItem(KEY, JSON.stringify(Object.fromEntries(fields.map(el => [el.id, el.value])))); } catch {}
+};
+$('reset').onclick = load;
+load();
 
 img.onload = draw;
 addEventListener('resize', draw);
