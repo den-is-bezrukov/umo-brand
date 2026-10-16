@@ -32,6 +32,7 @@
 
 <script type="module">
 import { GROUPS, CONTROLS, DEFAULTS, swarmLens } from '/src/guide/hero/swarmLens.ts'
+import hero from '/src/guide/hero.json'
 
 const box = document.getElementById('sliders')
 for (const g of GROUPS) {
@@ -45,13 +46,13 @@ const $ = id => document.getElementById(id)
 const values = () => Object.fromEntries(CONTROLS.map(([id]) => [id, +$(id).value]))
 const show = () => { for (const [id, , , , step] of CONTROLS) $(id).nextElementSibling.value = step >= 1 ? $(id).value : (+$(id).value).toFixed(2) }
 
-// Запомнить keeps the panel's values in this browser, Сброс returns to them (to the page's own without any);
+// Запомнить keeps the panel's values in this browser, Сброс returns to them (to the guide's, hero.json, without any);
 // the page opens with them too
 const KEY = 'swarm-lens-lab'
 function load() {
   let saved = {}
   try { saved = JSON.parse(localStorage.getItem(KEY)) || {} } catch {}
-  for (const [id] of CONTROLS) $(id).value = saved[id] ?? DEFAULTS[id]
+  for (const [id] of CONTROLS) $(id).value = saved[id] ?? hero[id] ?? DEFAULTS[id]
   show()
 }
 $('save').onclick = () => { try { localStorage.setItem(KEY, JSON.stringify(values())) } catch {} }
