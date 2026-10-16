@@ -13,10 +13,10 @@ import { SIGN, LOGO as SIGN_LOGO, MARGIN as SIGN_MARGIN, TIME as SIGN_TIME, LINE
 import tocIcons from '@/icons/toc'
 import { useTypograf } from './typograf'
 import downloadSizes from 'virtual:download-sizes'
-// The test-drive film, set aside while the hero is HeroDots (see Hero)
+// The test-drive film, set aside while the hero is HeroLens (see Hero); the points (HeroDots) set aside too
 // import heroMp4 from '@/assets/guide/hero.mp4'
 // import hero720Mp4 from '@/assets/guide/hero-720.mp4'
-import HeroDots from './HeroDots'
+import HeroLens from './HeroLens'
 
 // Figures are exported from Figma (UMO | Evrone, node 4810:686) at 2x and
 // cropped per frame — see "Brand guide" in AGENTS.md for how to refresh them.
@@ -581,8 +581,8 @@ function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObjec
 }
 
 /**
- * The hero: the wordmark drawn by points (HeroDots), in place of the test-drive film for now — the film's code is
- * kept below, commented out, to come back to.
+ * The hero: the wordmark through a lens (HeroLens), in place of the test-drive film for now — the film's code is
+ * kept below, commented out, to come back to; the points that stood here before (HeroDots) stay in their file.
  * Below lg it heads the page and takes what the first screen has left above the header, statement and quick links
  * (`--mstrip`) and the bottom bar with a gap over it (52 + 16, from md 68 + 24), so the guide's first section starts
  * below the fold; never less than half the screen's width, as on a phone held sideways.
@@ -591,7 +591,7 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
   const ref = useRef<HTMLDivElement>(null)
   return (
     <div ref={ref} style={{ '--umo-y-gap': `${UMO_Y_GAP}px` } as CSSProperties} className="relative z-30 h-[calc(100svh-var(--mstrip,260px)-68px-var(--umo-y-gap))] max-lg:mb-[var(--umo-y-gap)] md:h-[calc(100svh-var(--mstrip,360px)-92px-var(--umo-y-gap))] max-lg:[[data-hero-full]_&]:h-[calc(100svh-52px)] md:max-lg:[[data-hero-full]_&]:h-[calc(100svh-68px)] lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:h-[calc(100vh-var(--strip,286px))]">
-      <HeroDots boxRef={ref} bodyRef={bodyRef} />
+      <HeroLens boxRef={ref} bodyRef={bodyRef} />
     </div>
   )
 }
