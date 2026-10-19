@@ -22,7 +22,7 @@ const LIST: Generator[] = [
 ]
 export const GENERATORS = LIST.map(g => ({ ...g, templates: g.templates?.map(t => ({ ...t, label: t.label ?? `Шаблон ${g.of}` })) }))
 
-/** The template icon's tooltip on the generator at `path`, and Материалы' card row while its PDF is pointed at: «Скачать шаблон бейджа» */
+/** The template icon's tooltip on the generator at `path`: «Скачать шаблон бейджа» */
 export const templateTitle = (path: string) => {
   const g = LIST.find(g => g.path === path)
   return g ? `Скачать шаблон ${g.of}` : 'Скачать шаблон'
