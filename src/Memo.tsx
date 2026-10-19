@@ -109,7 +109,7 @@ export default function Memo() {
   const phone = usePhone()
   useEffect(() => { loadFonts().then(f => setFonts({ r: f.regular, m: f.medium })) }, [])
 
-  // `template` in the link (umo.autos/memo?template, a link that never goes stale): every field its placeholder, the
+  // `t` in the link (umo.autos/memo?t, or ?template, a link that never goes stale): every field its placeholder, the
   // emails too, made from the memo as it is now
   const makeBlank = fonts ? () => {
     const dealer = { name: PLACEHOLDER.dealer!, address: PLACEHOLDER.address!, phone: PLACEHOLDER.dealerPhone!, email: 'Почта', site: PLACEHOLDER.site! }

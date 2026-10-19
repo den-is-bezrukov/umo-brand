@@ -6,4 +6,4 @@ Only one range of hours: the six dealers open different hours on different days 
 
 The PDF's title is its file name. A link with `pdf` saves `UMO_hours-sign.pdf` to the downloads and opens it with no editor; a sign at fault opens the editor (see «Links with settings» in `docs/generators.md`).
 
-«Скачать шаблон», an icon in the caption before its reset, `UMO_hours-sign_template.pdf`: the same page, the text live in CoFo Sans Medium in C60 M40 Y40 K100, the logo in outlines (`signTemplate`; the lines noted by `placeRuns`); `umo.autos/hours-sign?template` gives it blank, every field its placeholder and «Работаем без выходных» (see «Editable templates» in `docs/generators.md`).
+«Скачать шаблон», an icon in the caption before its reset, `UMO_hours-sign_template.pdf`: the same page, the text live in CoFo Sans Medium in C60 M40 Y40 K100, the logo in outlines (`signTemplate`; the lines noted by `placeRuns`); `umo.autos/hours-sign?t` gives it blank, every field its placeholder and «Работаем без выходных» (see «Editable templates» in `docs/generators.md`).

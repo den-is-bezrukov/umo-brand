@@ -56,7 +56,7 @@ const Bot = ({ children }: { children: ReactNode }) => <a href={SUPPORT_BOT} tar
  */
 const TEMPLATE = (path: string): ReactNode[] => [
   'Если типографии или производству нужно поправить текст, нажмите значок «Скачать шаблон» (стрелка вниз) у нужного макета: в PDF будет этот макет с живым текстом, пустые поля — заглушками.',
-  <>Пустой шаблон всегда по ссылке <CopyLink href={`https://umo.autos${path}?template`}>{`umo.autos${path}?template`}</CopyLink>.</>,
+  <>Пустой шаблон всегда по ссылке <CopyLink href={`https://umo.autos${path}?t`}>{`umo.autos${path}?t`}</CopyLink>.</>,
 ]
 
 /** What every generator shares, the «Общее» tab */
@@ -190,7 +190,7 @@ const HELP: Record<string, Help> = {
     print: [
       'Ctrl + P, A4, двусторонняя печать.',
       'Если нужно поменять текст памятки, нажмите значок «Скачать шаблон» (стрелка вниз) у нужного консультанта: в этом PDF весь текст живой. Откройте его в Illustrator или Acrobat, где установлен шрифт CoFo Sans.',
-      <>Пустой шаблон для дизайнера всегда по ссылке <CopyLink href="https://umo.autos/memo?template">umo.autos/memo?template</CopyLink>, её можно отправить вместо файла.</>,
+      <>Пустой шаблон для дизайнера всегда по ссылке <CopyLink href="https://umo.autos/memo?t">umo.autos/memo?t</CopyLink>, её можно отправить вместо файла.</>,
     ],
     faq: [
       ['Нужно отчество', 'Допишите его в поле «Имя» после имени: «Иван Сергеевич». На памятке будет «Иван Сергеевич Петров».'],

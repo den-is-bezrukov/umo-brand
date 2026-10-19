@@ -4,7 +4,7 @@ import { goal, type Goal } from './metrika'
 import { linkParams, saveAndOpenPdf } from './share'
 
 // «Скачать шаблон»: every generator's editable template (the print file's pages, the text live in CoFo Sans,
-// `liveText.ts`), as a button under the canvas and as a link that never goes stale, `?template`, the blank one.
+// `liveText.ts`), as a button under the canvas and as a link that never goes stale, `?t` (`?template`, the first one, still works), the blank one.
 
 /** Saves a template under its name */
 function save(blob: Blob, name: string) {
@@ -56,12 +56,12 @@ export function TemplateButton({ make, name, goalId, params }: { make: (() => Pr
 }
 
 /**
- * `template` in the link (umo.autos/<generator>?template) saves the blank template to the downloads and opens it, no
+ * `t` in the link (umo.autos/<generator>?t; `template`, as the first links had it, too) saves the blank template to the downloads and opens it, no
  * editor, as the `pdf` links do: true while that's under way, the page rendering nothing. `make` is undefined until
  * the fonts are in
  */
 export function useTemplateLink(make: (() => Promise<Blob>) | undefined, name: string, goalId: Goal): boolean {
-  const [only, setOnly] = useState(() => linkParams().has('template'))
+  const [only, setOnly] = useState(() => linkParams().has('t') || linkParams().has('template'))
   const started = useRef(false)
   useEffect(() => {
     if (!only || !make || started.current) return
