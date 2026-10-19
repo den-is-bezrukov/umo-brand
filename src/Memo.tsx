@@ -37,6 +37,8 @@ const UNFILLED: Partial<Record<MemoField, string>> = {
 const PERSON_FIELDS: MemoField[] = ['position', 'name', 'surname', 'phone', 'email']
 const PERSON_REQUIRED = ['position', 'name', 'surname', 'phone'] as const
 const DEALER_REQUIRED = ['dealer', 'dealerPhone', 'address', 'site'] as const
+/** A page's least width in the spread; narrower, the pages go in a column */
+const SPREAD_PAGE = 400
 
 /** The dealership as typed: the site follows the name until it's edited (null) */
 type DealerInput = Omit<Dealer, 'site'> & { site: string | null }
@@ -310,6 +312,23 @@ export default function Memo() {
 
   const first = <div className="outline-1 outline-black/10"><Sheet src={page1} /></div>
 
+  // The spread while each page has room for SPREAD_PAGE px, else the business card's column: the first page once at
+  // the top, each consultant's second under it
+  const canvas = useRef<HTMLElement>(null)
+  const [spread, setSpread] = useState(true)
+  useEffect(() => {
+    const el = canvas.current
+    if (!el) return
+    const fit = () => {
+      const cs = getComputedStyle(el)
+      const w = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
+      setSpread((w - 16) / 2 >= SPREAD_PAGE)
+    }
+    const ro = new ResizeObserver(fit)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [phone, templateOnly])
+
   if (templateOnly) return null
   if (phone) return <MobileEditor slides={[{ key: 'first', number: 0, label: 'Первый лист', ratio: PAGE.h / PAGE.w, node: first }, ...items.map((p, i) => ({ key: p.key, item: p.key, number: i + 1, label: `${p.name} ${p.surname}`.replace(/\s+/g, ' ').trim() || 'Второй лист', ratio: PAGE.h / PAGE.w, node: renderItem(p, i) }))]} onAdd={addItem} sidebar={sidebar} download={download} staff={staff} />
 
@@ -320,12 +339,15 @@ export default function Memo() {
         {download}
       </aside>
       <main
+        ref={canvas}
         {...staff.dropTarget}
         onClick={e => { if (!(e.target as Element).closest('figure, [data-add], [data-template]')) staff.setSelected(null) }}
         className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16 ${staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
       >
         <div className="m-auto grid w-full grid-cols-1 gap-8">
-          {items.map((p, i) => renderItem(p, i, true))}
+          {/* The first page, everyone's, once at the top and never dimmed */}
+          {!spread && <div className="flex justify-center"><div className="w-full max-w-[600px]">{first}</div></div>}
+          {items.map((p, i) => renderItem(p, i, spread))}
           <Removed staff={staff} at={items.length} />
         </div>
       </main>
