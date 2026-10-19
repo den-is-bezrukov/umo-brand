@@ -1,8 +1,9 @@
-import { useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useRef, useState } from 'react'
 import { ICON } from './icons'
 import { goal, type Goal } from './metrika'
 import { linkParams, saveAndOpenPdf } from './share'
-import { templateTitle } from '@/data/generators'
+import { templateTitle, itemName } from '@/data/generators'
+import { ItemNumber } from '@/ui/staff'
 
 // «Скачать шаблон»: every generator's editable template (the print file's pages, the text live in CoFo Sans,
 // `liveText.ts`), as a button under the canvas and as a link that never goes stale, `?t` (`?template`, the first one, still works), the blank one.
@@ -31,6 +32,9 @@ export function TemplateButton({ make, name, goalId, params }: { make: (() => Pr
   const [busy, setBusy] = useState(false)
   // Named by the generator it's on, from its entry in `GENERATORS`
   const title = templateTitle(location.pathname)
+  // Screen readers' name with the item's number in a list's column («Скачать шаблон визитки 2», as `Action`)
+  const n = useContext(ItemNumber)
+  const said = n ? `Скачать шаблон ${itemName(location.pathname, n, true)}` : title
   const click = async (e: React.MouseEvent) => {
     // The template's, not the item's, which would select it
     e.stopPropagation()
@@ -48,7 +52,7 @@ export function TemplateButton({ make, name, goalId, params }: { make: (() => Pr
       type="button"
       data-template
       title={title}
-      aria-label={title}
+      aria-label={said}
       onClick={click}
       disabled={!make}
       className={`flex size-[30px] shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] hover:text-black disabled:cursor-default disabled:hover:text-[#808080] ${busy ? 'animate-pulse' : ''}`}

@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ResetIcon, DuplicateIcon, TrashIcon, PlusIcon, Removed, type Staff } from '@/ui/staff'
 import { InSlide, InFoot, InSheet, SheetLayer } from '@/ui/phone'
-import { addTitle } from '@/data/generators'
+import { addTitle, itemName } from '@/data/generators'
 
 // A trial of the generators' phone layout (Figma 5098:5806, «Mobile Layout»): the canvas over a sheet holding the
 // sidebar (header and form) with the download at its foot. A list's pictures are swiped one at a time, with a row over
@@ -50,12 +50,12 @@ const arrowsOn = () => new URLSearchParams(location.search).get('arrows') !== '0
 
 const ICON = { fill: 'none', stroke: 'currentColor', strokeWidth: 1, strokeLinecap: 'square' as const, strokeLinejoin: 'bevel' as const }
 
-function Btn({ label, onClick, hidden, children }: { label: string; onClick: () => void; hidden?: boolean; children: React.ReactNode }) {
+function Btn({ label, name, onClick, hidden, children }: { label: string; name?: string; onClick: () => void; hidden?: boolean; children: React.ReactNode }) {
   return (
     <button
       type="button"
       title={label}
-      aria-label={label}
+      aria-label={name ?? label}
       onClick={onClick}
       // 30 px as in Figma, a finger's 40 round it (the ::after); hidden keeps its place, so the others don't move
       className={`relative flex size-[30px] shrink-0 after:absolute after:-inset-[5px] after:content-[''] cursor-pointer items-center justify-center rounded-[8px] text-[#808080] active:text-black ${hidden ? 'invisible' : ''}`}
@@ -390,8 +390,10 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
   // A list's item shows its number of all («2/5»), its name being on it already; a slide that isn't an item its name,
   // after its number only when it has one of its own (the business card's face, «0/Обложка»; the livery's «Левый борт»)
   const total = slides.filter(s => s.item !== undefined).length
-  const resetBtn = <Btn label={reset?.label ?? 'Сбросить'} hidden={!reset} onClick={() => reset?.onClick()}><ResetIcon /></Btn>
-  const copyBtn = <Btn label="Дублировать" hidden={!staff || !current} onClick={() => staff?.duplicate(current.key, false)}><DuplicateIcon /></Btn>
+  // Screen readers' names of what acts on the item shown, with it and its number («Удалить визитку 2», as `Action`)
+  const of = slide?.item !== undefined ? itemName(location.pathname, total > 1 ? number : undefined) : ''
+  const resetBtn = <Btn label={reset?.label ?? 'Сбросить'} name={of && `${reset?.label ?? 'Сбросить'} ${of}`} hidden={!reset} onClick={() => reset?.onClick()}><ResetIcon /></Btn>
+  const copyBtn = <Btn label="Дублировать" name={of && `Дублировать ${of}`} hidden={!staff || !current} onClick={() => staff?.duplicate(current.key, false)}><DuplicateIcon /></Btn>
   const addBtn = <Btn label={addTitle(location.pathname)} hidden={!onAdd} onClick={() => onAdd?.(current?.key)}><PlusIcon /></Btn>
   // The sheet is always as tall as over the whole screen and moved down out of it (its edge, the white under the form,
   // and the form each a layer moved and cut, which a phone draws without laying the form out again: a sheet changing its
@@ -580,7 +582,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
           canvas, its actions kept */}
       {row && (
         <div className="flex h-[30px] shrink-0 items-center justify-between">
-          <Btn label="Удалить" hidden={!staff || !current || staff.people.length < 2 || !!staff.removed} onClick={() => staff?.remove(current.key)}><TrashIcon /></Btn>
+          <Btn label="Удалить" name={of && `Удалить ${of}`} hidden={!staff || !current || staff.people.length < 2 || !!staff.removed} onClick={() => staff?.remove(current.key)}><TrashIcon /></Btn>
           {staff?.removed ? (
             <div className="-my-[5px] min-w-0 flex-1"><Removed staff={staff} at={staff.removed.index} /></div>
           ) : (

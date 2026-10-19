@@ -1,11 +1,11 @@
-import { useContext, useEffect, useRef, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 import { flushSync } from 'react-dom'
 import { InSlide } from '@/ui/phone'
 import { MOD, withMod } from '@/ui/keys'
 import { outlined, flash } from '@/ui/form'
 import { splitFullName } from '@/nametag/table'
 import { ICON } from './icons'
-import { addTitle } from '@/data/generators'
+import { addTitle, itemName } from '@/data/generators'
 
 // A staff list, shared by the generators that make one item per person (name tags, business cards): two modes,
 // «Вручную», a list typed on the page with one person selected in the sidebar, and «Из таблицы», a filled-in template
@@ -559,13 +559,18 @@ export const TrashIcon = () => (
 
 
 /** The item's actions (Figma 5030:11424): 30 px buttons (a phone's slide has its own, over the picture), the icon #808080, black on hover, no tile, as the other quiet controls */
-export function Action({ label, keys, hidden, onClick, children }: { label: string; keys?: string; hidden?: boolean; onClick: () => void; children: React.ReactNode }) {
+/** The number of the item whose column an action stands in, while there are several, for its screen readers' name */
+export const ItemNumber = createContext<number | undefined>(undefined)
+
+/** `name`: what screen readers and agents call it, the tooltip's word with the item it acts on («Удалить визитку 2»):
+ * a page of «Удалить, Удалить, Удалить» read out of their places says nothing; the tooltip stays the word alone */
+export function Action({ label, name, keys, hidden, onClick, children }: { label: string; name?: string; keys?: string; hidden?: boolean; onClick: () => void; children: React.ReactNode }) {
   if (hidden) return null
   return (
     <button
       type="button"
       title={keys ? `${label} ${keys}` : label}
-      aria-label={label}
+      aria-label={name ?? label}
       aria-keyshortcuts={keys?.replace('⌘', 'Meta+').replace('Ctrl+', 'Control+')}
       // A click here is the action's, not the row's, which would select the item again
       onClick={e => { e.stopPropagation(); onClick() }}
@@ -594,6 +599,8 @@ export function ItemFrame<P extends object>({ staff, item, n, onAdd, extra, chil
   // On a phone's slide the item stands alone: its number is over the strip, its actions under it
   if (useContext(InSlide)) return <div className="@container relative">{children}</div>
   const active = staff.mode === 'manual' && item.key === staff.selected
+  const num = staff.items.length > 1 ? n : undefined
+  const of = itemName(location.pathname, num)
   const hover = '[@media(hover:hover)]:hidden [@media(hover:hover)]:group-hover/row:flex [@media(hover:hover)]:group-focus-within/row:flex'
   return (
     // The column hangs outside the item
@@ -610,17 +617,17 @@ export function ItemFrame<P extends object>({ staff, item, n, onAdd, extra, chil
         <div className={`flex-1 flex-col items-center ${active ? 'flex' : 'hidden'} ${hover}`}>
           {/* What acts on this item: duplicate, template, reset, the bin; then the plus, a new one after it, last */}
           {staff.mode === 'manual' && (
-            <Action label="Дублировать" keys={`${MOD}D`} onClick={() => staff.duplicate(item.key)}>
+            <Action label="Дублировать" name={`Дублировать ${of}`} keys={`${MOD}D`} onClick={() => staff.duplicate(item.key)}>
               <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M3.5 6H2V14H10V12.5M6 2H14V10H6V2Z" /></svg>
             </Action>
           )}
-          {extra}
+          <ItemNumber.Provider value={num}>{extra}</ItemNumber.Provider>
           {staff.mode === 'manual' && (
             <>
-              <Action label="Сбросить" hidden={staff.isBlank(item)} onClick={() => staff.clear(item.key)}>
+              <Action label="Сбросить" name={`Сбросить ${of}`} hidden={staff.isBlank(item)} onClick={() => staff.clear(item.key)}>
                 <ResetIcon />
               </Action>
-              <Action label="Удалить" hidden={staff.people.length < 2} onClick={() => staff.remove(item.key)}>
+              <Action label="Удалить" name={`Удалить ${of}`} hidden={staff.people.length < 2} onClick={() => staff.remove(item.key)}>
                 <TrashIcon />
               </Action>
               {onAdd && (

@@ -29,6 +29,14 @@ export const templateTitle = (path: string) => {
   return g ? `Скачать шаблон ${g.of}` : 'Скачать шаблон'
 }
 
+/** An item on the generator at `path` as the screen readers' names of its actions say it: «визитку 2» («Удалить
+ * визитку 2»), its number while there are several; `of` the genitive («Скачать шаблон визитки 2») */
+export const itemName = (path: string, n?: number, of = false) => {
+  const g = LIST.find(g => g.path === path)
+  const word = g ? (of ? g.of : g.one) : ''
+  return [word, n].filter(Boolean).join(' ')
+}
+
 /** The plus's tooltip («Добавить») on the generator at `path`: «Добавить визитку» */
 export const addTitle = (path: string) => {
   const g = LIST.find(g => g.path === path)
