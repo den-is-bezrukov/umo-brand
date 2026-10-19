@@ -14,3 +14,6 @@ logs/
 
 # Local preview servers for Claude chats
 .claude/launch.json
+
+# macOS folder settings
+.DS_Store
