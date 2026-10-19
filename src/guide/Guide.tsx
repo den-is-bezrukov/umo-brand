@@ -114,20 +114,24 @@ function packMedia<T extends { w: number; h: number }>(items: T[]): T[] {
 }
 /**
  * A generator the cards above don't have yet gets one of its own after them, 444×333: its generator's picture
- * (`GENERATED`, loaded as the guide needs it), a grey card with its name while there's none; until a picture is made
- * for it, which then goes up into `DRAWN`
+ * (`GENERATED`, loaded as the guide needs it), a grey card while there's none; until a picture is made for it, which
+ * then goes up into `DRAWN`. The last of them goes wide, 912×456 as the livery's, when it would stand alone in its
+ * row (an odd number of narrow cards), and narrow again once another generator pairs it
  */
-const GENERATED: Record<string, React.LazyExoticComponent<() => ReactNode>> = {
+const GENERATED: Record<string, React.LazyExoticComponent<(props: { wide?: boolean }) => ReactNode>> = {
   '/memo': lazy(() => import('@/memo/MemoPreview')),
 }
-const GreyCard = () => <div className="aspect-4/3 bg-[#f5f5f5]" />
+const GreyCard = ({ wide }: { wide?: boolean }) => <div className={`${wide ? 'aspect-2/1' : 'aspect-4/3'} bg-[#f5f5f5]`} />
+const UNDRAWN = GENERATORS.filter(g => !DRAWN.some(m => m.to === g.path))
+const LONE = (DRAWN.filter(m => !isWide(m)).length + UNDRAWN.length) % 2 === 1
 const MEDIA_LIST: Medium[] = [
   ...DRAWN,
-  ...GENERATORS.filter(g => !DRAWN.some(m => m.to === g.path)).map(g => {
+  ...UNDRAWN.map((g, i) => {
     const Picture = GENERATED[g.path] ?? GreyCard
+    const wide = LONE && i === UNDRAWN.length - 1
     return {
-      id: g.path.slice(1), to: g.path, title: g.title, row: g.row ?? g.title, w: 444, h: 333,
-      picture: <Suspense fallback={<GreyCard />}><Picture /></Suspense>,
+      id: g.path.slice(1), to: g.path, title: g.title, row: g.row ?? g.title, w: wide ? 912 : 444, h: wide ? 456 : 333,
+      picture: <Suspense fallback={<GreyCard wide={wide} />}><Picture wide={wide} /></Suspense>,
     }
   }),
 ]
