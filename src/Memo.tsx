@@ -242,8 +242,11 @@ export default function Memo() {
     const max = el.scrollWidth - el.clientWidth, pages = el.querySelectorAll('[data-page]')
     return max < 1 ? -1 : Math.round(el.scrollLeft / (max / (pages.length - 1)))
   }
+  /** The page each row stands at, by its item, for the number beside it */
+  const [rowAt, setRowAt] = useState<Record<number, number>>({})
   const markPage = (el: HTMLElement) => {
-    const at = pageAt(el)
+    const at = pageAt(el), key = Number(el.dataset.pages)
+    setRowAt(r => (r[key] === at ? r : { ...r, [key]: at }))
     el.querySelectorAll('[data-page]').forEach((p, k) => p.toggleAttribute('data-off', at >= 0 && k !== at))
   }
   /** A row put at a page, the consultant's (the second) */
@@ -345,12 +348,14 @@ export default function Memo() {
                   ))}
                 </button>
               )
-              const frame = (children: React.ReactNode) => <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>{children}</ItemFrame>
+              // Scrolling, the number says the memo and its page in view, «1/2», a lone memo's too
+              const at = rowAt[p.key] ?? -1
+              const frame = (children: React.ReactNode) => <ItemFrame staff={staff} item={p} n={i + 1} label={scrolls && at >= 0 ? `${i + 1}/${at + 1}` : undefined} onAdd={addItem} extra={templateIcon(i)}>{children}</ItemFrame>
               return (
                 <div className="relative">
                   {/* Across the canvas's whole width, past its 64 px padding, which the row keeps as its own ends; let go,
                       it stands at a page, in the canvas's middle, never between them */}
-                  <div data-pages onScroll={e => markPage(e.currentTarget)} className="-mx-16 snap-x snap-mandatory overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  <div data-pages={p.key} onScroll={e => markPage(e.currentTarget)} className="-mx-16 snap-x snap-mandatory overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     {/* Its width set: the item's box is a size container, which `w-max` takes as nothing */}
                     <div className="mx-auto box-content" style={{ width: PAGES * pageW + (PAGES - 1) * PAGES_GAP, paddingInline: rowEnd }}>
                       {scrolls ? pages : frame(pages)}

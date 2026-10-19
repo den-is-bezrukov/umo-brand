@@ -588,8 +588,10 @@ export function Action({ label, name, keys, hidden, onClick, children }: { label
  * empty), «Удалить» (while there's another), the most used and harmless first, then «Добавить», a new item rather than an action on this one, last. A phone's slide
  * shows the item bare, its number and actions in the row over it. An action not offered leaves no gap: the next moves up.
  */
-export function ItemFrame<P extends object>({ staff, item, n, onAdd, extra, children }: {
+export function ItemFrame<P extends object>({ staff, item, n, label, onAdd, extra, children }: {
   staff: Staff<P>; item: Row<P>; n: number
+  /** Said in the number's place, a lone item's too (the memo's «1/2», its page in view) */
+  label?: string
   /** «Добавить», last in the column, the manual list only: a new item right after this one (⌘↩ is the page's, `useAddKey`, at the end) */
   onAdd?: (after: number) => void
   /** The list's own actions after it, in either mode («Скачать шаблон») */
@@ -612,7 +614,7 @@ export function ItemFrame<P extends object>({ staff, item, n, onAdd, extra, chil
           the canvas (the memo's spread) ends where its figure does, and the actions hid on the way to them */}
       <div className="absolute top-0 bottom-0 left-full flex w-[38px] flex-col items-center pl-2">
       {/* A lone item has no number: a «1» there says nothing */}
-      {staff.items.length > 1 && <span aria-hidden className="pointer-events-none pb-[5px] text-center text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1]">{n}</span>}
+      {(staff.items.length > 1 || label) && <span aria-hidden className="pointer-events-none pb-[5px] text-center text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1]">{label ?? n}</span>}
       {(staff.mode === 'manual' || extra) && (
         <div className={`flex-1 flex-col items-center ${active ? 'flex' : 'hidden'} ${hover}`}>
           {/* What acts on this item: duplicate, template, reset, the bin; then the plus, a new one after it, last */}
