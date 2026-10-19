@@ -225,10 +225,11 @@ export default function Memo() {
 
   // The spread while each page has room for SPREAD_PAGE px, else the business card's column: the first page once at
   // the top, each consultant's second under it
-  const canvas = useRef<HTMLElement>(null)
+  // A state, not a ref: the canvas comes after the first render (the phone check, the fonts), and a ref's effect missed it
+  const [canvas, setCanvas] = useState<HTMLElement | null>(null)
   const [spread, setSpread] = useState(true)
   useEffect(() => {
-    const el = canvas.current
+    const el = canvas
     if (!el) return
     const fit = () => {
       const cs = getComputedStyle(el)
@@ -238,7 +239,7 @@ export default function Memo() {
     const ro = new ResizeObserver(fit)
     ro.observe(el)
     return () => ro.disconnect()
-  }, [phone, templateOnly])
+  }, [canvas])
 
   /** The memo the edited field is seen on: the consultant's, or for the dealership's fields the one selected or the first */
   const shownAt = editing && !phone ? items.findIndex(p => p.key === (current ?? items[0])?.key) : -1
@@ -370,7 +371,7 @@ export default function Memo() {
         {download}
       </aside>
       <main
-        ref={canvas}
+        ref={setCanvas}
         {...staff.dropTarget}
         onClick={e => { if (!(e.target as Element).closest('figure, [data-add], [data-template]')) staff.setSelected(null) }}
         className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16 ${staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
