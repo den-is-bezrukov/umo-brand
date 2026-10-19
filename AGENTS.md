@@ -48,7 +48,7 @@ Start with task-relevant files below. Only follow imports or inspect other files
 - `src/index.css` - Global CSS entrypoint, Tailwind CSS v4 import, fonts
 - `index.html` - Vite HTML shell. On iOS only, a script adds `maximum-scale=1` to the viewport: iOS Safari zooms into any field under 16px on focus and doesn't zoom back, while still allowing a pinch zoom; on Android the same setting would block pinching. It also holds the Yandex.Metrika counter (113514674), loaded on umo.autos only, `defer`
 - `site.config.json` - Site title/description/favicon/OG-image/robots, applied to the built HTML by the `site-meta` Vite plugin (the icons: see `docs/guide.md`)
-- `vite.config.ts` - Vite configuration: React, Tailwind CSS v4, the `@` alias for `src`, the `site-meta` plugin and `virtual:download-sizes`
+- `vite.config.ts` - Vite configuration: React, Tailwind CSS v4, the `@` alias for `src`, and the `site-meta` plugin
 
 ## Dependencies
 

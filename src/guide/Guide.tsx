@@ -15,7 +15,6 @@ import { useTypograf } from './typograf'
 import Dialog from '@/ui/Dialog'
 import { TEXT_LINK, SUPPORT_BOT } from '@/ui/links'
 import { GENERATORS } from '@/data/generators'
-import downloadSizes from 'virtual:download-sizes'
 import heroMp4 from '@/assets/guide/hero.mp4'
 import hero720Mp4 from '@/assets/guide/hero-720.mp4'
 
@@ -1117,28 +1116,27 @@ function PriceCardPreview({ variant, fullPrice, creditPrice, image, alt }: {
 }
 
 /**
- * A file from public/downloads/ (the row shows its name and size), a page of this site (its title and path), or a file
- * a generator makes, `t` the link that makes it (a blank template: `?t`), named by `label` («Шаблон режимника»), `size` its size as measured
+ * A file from public/downloads/, its row named in Russian by `label` (the file's own name, as saved, stays English), a
+ * page of this site (its title and path), or a file a generator makes, `t` the link that makes it (a blank template:
+ * `?t`), named by `label` («Шаблон режимника»)
  */
-type Asset = { file: string } | { to: string; title: string } | { t: string; label: string; file: string; size: number }
-const sizeOf = (a: Asset) => ('size' in a ? a.size : 'file' in a ? downloadSizes[a.file] ?? 0 : 0)
+type Asset = { file: string; label?: string; format?: string } | { to: string; title: string } | { t: string; label: string; file: string }
 
-/** Size in КБ below 1000 КБ, else МБ. */
-function fileSize(bytes: number): [number, string] {
-  return bytes < 1e6 ? [bytes / 1e3, 'КБ'] : [bytes / 1e6, 'МБ']
-}
+/**
+ * A file's format, on the right of its row in place of a size (every file here is small, so a size said nothing; the
+ * format says what opens it): its extension, or for an archive what's in it («umo-logo-png.zip»: PNG); `format` where
+ * the name doesn't say («SVG, PNG»)
+ */
+const formatOf = (a: { file: string; format?: string }) =>
+  (a.format ?? a.file.match(/-(png|svg)\.zip$/)?.[1] ?? a.file.split('.').pop() ?? '').toUpperCase()
 
 /**
  * Asset list: a row per file or page, a hairline above each. Up to 3 rows stay in one column, 4 and more
- * split into two, filled top to bottom so files of one item stay together. Sizes get one decimal in every
- * row as soon as one of them is under 10 (0,7 КБ), and none otherwise.
+ * split into two, filled top to bottom so files of one item stay together.
  */
-/** `early`: two columns from 560 px, rather than from `sm` (Леттеринг → Модели, whose pictures pair up from 520; narrower «umo-model-8-png.zip» wraps); `bare`: no hairline over the first row (Материалы, the row right under its picture) */
+/** `early`: two columns from 560 px, rather than from `sm` (Леттеринг → Модели, whose pictures pair up from 520); `bare`: no hairline over the first row (Материалы, the row right under its picture) */
 function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: string; early?: boolean; bare?: boolean }) {
   const pointed = useContext(PointedPreview)?.[0]
-  const sizes = items.flatMap(a => ('file' in a ? [fileSize(sizeOf(a))] : []))
-  const digits = sizes.some(([n]) => n < 10) ? 1 : 0
-  const number = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: digits, maximumFractionDigits: digits })
   const two = items.length > 3
   return (
     <div
@@ -1164,22 +1162,21 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
             </Link>
           )
         }
-        const [n, unit] = fileSize(sizeOf(a))
         // A generator's file: its link makes and saves it, in a tab of its own so the guide stays
         if ('t' in a) {
           return (
             <a key={a.file} href={a.t} target="_blank" rel="noopener" className={row}>
               <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>
               <span className={name}>{a.label}</span>
-              <span className={meta}>{number.format(n)} {unit}</span>
+              <span className={meta}>{formatOf(a)}</span>
             </a>
           )
         }
         return (
           <a key={a.file} href={`/downloads/${a.file}`} download className={row}>
             <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>
-            <span className={name}>{a.file}</span>
-            <span className={meta}>{number.format(n)} {unit}</span>
+            <span className={name}>{a.label ?? a.file}</span>
+            <span className={meta}>{formatOf(a)}</span>
           </a>
         )
       })}
@@ -1215,7 +1212,7 @@ function Previews({ className, children }: { className: string; children: ReactN
 }
 
 /** A constructor page's preview over its ↗ row; `flush` sets the row right under the preview, with no gap and no hairline. */
-function Constructor({ to, title, flush, templates = [], children }: { to: string; title: string; flush?: boolean; templates?: { label: string; file: string; size: number; query?: string }[]; children: ReactNode }) {
+function Constructor({ to, title, flush, templates = [], children }: { to: string; title: string; flush?: boolean; templates?: { label: string; file: string; query?: string }[]; children: ReactNode }) {
   return (
     <div className={`group/preview flex flex-col ${flush ? '' : 'gap-4 md:gap-6'}`}>
       <PreviewLink asset={{ to, title }} label={title}>{children}</PreviewLink>
@@ -1751,7 +1748,7 @@ export default function Guide() {
                 <PreviewLink asset={{ file: 'umo-logo.svg' }} label="Скачать логотип, SVG">
                   <LogoPlate w={912} h={456} logo={480} bg="#f5f5f5" phone43 />
                 </PreviewLink>
-                <Assets items={[{ file: 'umo-logo.svg' }, { file: 'umo-logo-png.zip' }]} preview="umo-logo.svg" />
+                <Assets items={[{ file: 'umo-logo.svg', label: 'Логотип UMO' }, { file: 'umo-logo-png.zip', label: 'Логотип UMO' }]} preview="umo-logo.svg" />
               </div>
             </Section>
 
@@ -1847,7 +1844,7 @@ export default function Guide() {
                     <Fig name="icon-favicon" w={444} h={333} alt="Фавиконка во вкладке тёмного браузера" />
                   </PreviewLink>
                 </div>
-                <Assets items={[{ file: 'umo-icon-white.zip' }, { file: 'umo-icon-black.zip' }, { file: 'umo-favicon.svg' }, { file: 'umo-favicon.ico' }]} />
+                <Assets items={[{ file: 'umo-icon-white.zip', label: 'Иконка UMO на белом', format: 'SVG, PNG' }, { file: 'umo-icon-black.zip', label: 'Иконка UMO на чёрном', format: 'SVG, PNG' }, { file: 'umo-favicon.svg', label: 'Фавиконка UMO' }, { file: 'umo-favicon.ico', label: 'Фавиконка UMO' }]} />
               </Previews>
             </Section>
 
@@ -1874,7 +1871,7 @@ export default function Guide() {
                   <PreviewLink asset={{ file: 'umo-yandex.svg' }} label="Скачать логотип UMO | Яндекс, SVG">
                     <Fig name="cobrand-square-example" w={444} h={333} alt="UMO и Яндекс" />
                   </PreviewLink>
-                  <Assets items={[{ file: 'umo-yandex.svg' }, { file: 'umo-yandex-png.zip' }]} preview="umo-yandex.svg" />
+                  <Assets items={[{ file: 'umo-yandex.svg', label: 'Лок-ап UMO | Яндекс' }, { file: 'umo-yandex-png.zip', label: 'Лок-ап UMO | Яндекс' }]} preview="umo-yandex.svg" />
                 </div>
                 <div className="flex flex-col gap-4 md:gap-6">
                   <Zoom label="Схема кобрендинга с горизонтальным логотипом">
@@ -1939,8 +1936,8 @@ export default function Guide() {
                 <Assets
                   early
                   items={[
-                    { file: 'umo-model-8.svg' }, { file: 'umo-model-8-png.zip' }, { file: 'umo-plate-8-svg.zip' },
-                    { file: 'umo-model-5.svg' }, { file: 'umo-model-5-png.zip' }, { file: 'umo-plate-5-svg.zip' },
+                    { file: 'umo-model-8.svg', label: 'Леттеринг MODEL 8' }, { file: 'umo-model-8-png.zip', label: 'Леттеринг MODEL 8' }, { file: 'umo-plate-8-svg.zip', label: 'Номерная плашка UMO 8' },
+                    { file: 'umo-model-5.svg', label: 'Леттеринг MODEL 5' }, { file: 'umo-model-5-png.zip', label: 'Леттеринг MODEL 5' }, { file: 'umo-plate-5-svg.zip', label: 'Номерная плашка UMO 5' },
                   ]}
                 />
               </div>
