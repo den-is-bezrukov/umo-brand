@@ -63,12 +63,13 @@ const psName = (font: Font) => {
 
 /**
  * The lines as text on a page: `toPage(x, y)` turns the generator's units into the page's points (y up), `scale`
- * its units into points; `cmyk` the fill (a `white` line, white)
+ * its units into points; `fill` the colour, CMYK (a `white` line, white) or the operators setting one (a spot colour)
  */
-export function textOps(page: PDFPage, fonts: LiveFonts, lines: TextLine[], toPage: (x: number, y: number) => [number, number], scale: number, cmyk: [number, number, number, number]): PDFOperator[] {
+export function textOps(page: PDFPage, fonts: LiveFonts, lines: TextLine[], toPage: (x: number, y: number) => [number, number], scale: number, fill: [number, number, number, number] | PDFOperator[]): PDFOperator[] {
   if (!lines.length) return []
   const names = new Map([...fonts].map(([n, f]) => [n, page.node.newFontDictionary(n.replace('CoFoSans-', 'CoFo'), f.ref)]))
-  const ops: PDFOperator[] = [pushGraphicsState(), setFillingCmykColor(...cmyk), beginText()]
+  const cmyk = typeof fill[0] === 'number' ? fill as [number, number, number, number] : undefined
+  const ops: PDFOperator[] = [pushGraphicsState(), ...(cmyk ? [setFillingCmykColor(...cmyk)] : fill as PDFOperator[]), beginText()]
   for (const line of lines) {
     const name = psName(line.font)
     const font = fonts.get(name)!
@@ -83,7 +84,8 @@ export function textOps(page: PDFPage, fonts: LiveFonts, lines: TextLine[], toPa
       if (Math.abs(gap) > 0.001) tj.push(PDFNumber.of(Math.round(-gap / size * 1000 * 100) / 100))
     })
     const [x, y] = toPage(line.chars[0].x, line.baseline)
-    ops.push(setFillingCmykColor(...(line.white ? [0, 0, 0, 0] as typeof cmyk : cmyk)), setFontAndSize(names.get(name)!, size), setTextMatrix(1, 0, 0, 1, x, y), PDFOperator.of(PDFOperatorNames.ShowTextAdjusted, [tj]))
+    if (cmyk) ops.push(setFillingCmykColor(...(line.white ? [0, 0, 0, 0] as typeof cmyk : cmyk)))
+    ops.push(setFontAndSize(names.get(name)!, size), setTextMatrix(1, 0, 0, 1, x, y), PDFOperator.of(PDFOperatorNames.ShowTextAdjusted, [tj]))
   }
   ops.push(endText(), popGraphicsState())
   return ops

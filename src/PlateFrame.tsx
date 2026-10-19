@@ -9,6 +9,8 @@ import { STRIP, buildStrip, lineStart, type Align } from '@/plate/frame'
 import PlateArt from '@/plate/PlateArt'
 import { DEALER_NAMES, dealerFilter, withoutUmo } from '@/data/dealers'
 import { MobileEditor, usePhone } from '@/ui/mobile'
+import { recordText } from '@/ui/liveText'
+import { TemplateButton, useTemplateLink } from '@/ui/template'
 
 // Number plate frame generator (Figma: UMO | Evrone, node 4970:2419): the dealer's line printed under the plate, as a
 // 501×21 mm PDF with the text in outlines, for the frame maker. The line is the dealer's marketing name as umo.auto
@@ -103,6 +105,16 @@ export default function PlateFrame() {
     }
   }
 
+  /** The editable template: the strip as on the page, the placeholder while nothing is typed */
+  const templateOf = (line: string) => {
+    const one = recordText(() => buildStrip(font!, line, align))
+    return import('@/plate/pdf').then(m => m.stripTemplate(one.result, one.lines))
+  }
+  const makeTemplate = font ? () => templateOf(shown) : undefined
+  /** The blank one a `template` link gives: «UMO Центр» */
+  const makeBlank = font ? () => templateOf(PREFIX + PLACEHOLDER_NAME) : undefined
+  const templateOnly = useTemplateLink(makeBlank, 'UMO_plate-frame_template.pdf', 'download_plate_frame_template')
+
   // `pdf` in the link (a link made for the dealer) opens the strip's PDF itself, with no editor, once the font
   // is in; a line at fault opens the editor instead, showing what's wrong
   const [pdfOnly, setPdfOnly] = useState(() => link.has('pdf'))
@@ -186,7 +198,7 @@ export default function PlateFrame() {
         />
   )
 
-  if (pdfOnly) return null
+  if (pdfOnly || templateOnly) return null
   // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
   if (phone) return <MobileEditor slides={[{ key: 'frame', label: 'Поле печати', node: preview, reset: blank ? undefined : { onClick: reset, label: 'Вернуть рамку по умолчанию' } }]} sidebar={sidebar} download={download} />
 
@@ -198,8 +210,9 @@ export default function PlateFrame() {
         {download}
       </aside>
 
-      <main className="flex flex-1 items-center bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
+      <main className="flex flex-1 flex-col items-center justify-center gap-8 bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
         {preview}
+        <TemplateButton make={makeTemplate} name="UMO_plate-frame_template.pdf" goalId="download_plate_frame_template" />
       </main>
 
     </div>

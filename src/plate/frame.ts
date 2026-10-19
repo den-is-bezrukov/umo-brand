@@ -1,6 +1,7 @@
 import type { Font, Glyph } from 'opentype.js'
 import type { Cmd } from '@/livery/geometry'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
+import { noteLine } from '@/ui/liveText'
 
 // The print strip of a number plate frame (Figma: UMO | Evrone, node 4970:2419): the 501×21 mm field under the plate of
 // a standard 522×132 frame, where the frame maker prints in white on the black plastic. One line of CoFo Sans Medium,
@@ -61,8 +62,10 @@ function setLine(font: Font, text: string, x: number, baseline: number) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const commands: any[] = []
   const ink = { x1: Infinity, x2: -Infinity }
+  const pens: number[] = []
   let pen = x
   glyphs.forEach((g, i) => {
+    pens.push(pen)
     const p = g.getPath(pen, baseline, SIZE)
     commands.push(...p.commands)
     const b = p.getBoundingBox()
@@ -70,14 +73,16 @@ function setLine(font: Font, text: string, x: number, baseline: number) {
     pen += g.advanceWidth! * scale
     if (i < glyphs.length - 1) pen += font.getKerningValue(g, glyphs[i + 1]) * scale + TRACKING * SIZE
   })
-  return { commands, ink, width: pen - x }
+  return { commands, ink, width: pen - x, pens }
 }
 
 export function buildStrip(font: Font, raw: string, align: Align): Strip {
   const text = cleanText(raw)
   const { width } = setLine(font, text, 0, BASELINE)
   const x = align === 'left' ? 0 : (STRIP.w - width) / 2
-  const { commands, ink } = setLine(font, text, x, BASELINE)
+  const { commands, ink, pens } = setLine(font, text, x, BASELINE)
+  // Noted for the editable template
+  noteLine(font, SIZE, BASELINE, text, pens)
   const issues: string[] = []
   if (!text) issues.push('Нет текста')
   else if (width > STRIP.w || ink.x2 > STRIP.w || ink.x1 < 0) issues.push(`Текст шире ${STRIP.w} мм`)

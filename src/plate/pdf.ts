@@ -3,6 +3,7 @@ import {
   moveTo, lineTo, appendBezierCurve, closePath, pushGraphicsState, popGraphicsState, rectangle, fill, setFillingCmykColor,
 } from 'pdf-lib'
 import { STRIP, type Strip } from './frame'
+import { embedCoFo, textOps, type TextLine } from '@/ui/liveText'
 
 // Loaded only when the PDF is downloaded, so the guide and the constructor page don't carry pdf-lib.
 
@@ -16,8 +17,19 @@ export const STRIP_FILE = 'UMO_plate-frame_501x21.pdf'
  * text reads as it will on the frame; it sits on a layer of its own, «Фон — не печатать», set not to print.
  */
 export async function stripPdf(strip: Strip): Promise<Blob> {
+  return stripPage(strip, STRIP_FILE)
+}
+
+/** The editable template: the same page, the text live in CoFo Sans (`src/ui/liveText.ts`), in the same White */
+export async function stripTemplate(strip: Strip, lines: TextLine[]): Promise<Blob> {
+  return stripPage(strip, 'UMO_plate-frame_template.pdf', lines)
+}
+
+/** The page: the text as outlines, or, with `lines`, the noted lines as text */
+async function stripPage(strip: Strip, title: string, lines?: TextLine[]): Promise<Blob> {
   const doc = await PDFDocument.create()
-  doc.setTitle(STRIP_FILE)
+  doc.setTitle(title)
+  const live = lines && await embedCoFo(doc)
   const page = doc.addPage([STRIP.w * PT, STRIP.h * PT])
   const tint = doc.context.obj({ FunctionType: 2, Domain: [0, 1], C0: [0, 0, 0, 0], C1: [0, 0, 0, 0], N: 1 })
   const white = doc.context.register(doc.context.obj([PDFName.of('Separation'), PDFName.of('White'), PDFName.of('DeviceCMYK'), tint]))
@@ -38,14 +50,20 @@ export async function stripPdf(strip: Strip): Promise<Blob> {
   const H = page.getHeight()
   const X = (x: number) => x * PT
   const Y = (y: number) => H - y * PT
+  const inWhite = [
+    PDFOperator.of(PDFOperatorNames.NonStrokingColorspace, [PDFName.of('White')]),
+    PDFOperator.of(PDFOperatorNames.NonStrokingColorN, [PDFNumber.of(1)]),
+  ]
   const ops: PDFOperator[] = [
     PDFOperator.of(PDFOperatorNames.BeginMarkedContentSequence, [PDFName.of('OC'), PDFName.of('Background')]),
     pushGraphicsState(), setFillingCmykColor(0, 0, 0, 1), rectangle(0, 0, page.getWidth(), H), fill(), popGraphicsState(),
     PDFOperator.of(PDFOperatorNames.EndMarkedContent),
-    pushGraphicsState(),
-    PDFOperator.of(PDFOperatorNames.NonStrokingColorspace, [PDFName.of('White')]),
-    PDFOperator.of(PDFOperatorNames.NonStrokingColorN, [PDFNumber.of(1)]),
   ]
+  if (live) {
+    page.pushOperators(...ops, ...textOps(page, live, lines, (x, y) => [X(x), Y(y)], PT, inWhite))
+    return new Blob([await doc.save() as BlobPart], { type: 'application/pdf' })
+  }
+  ops.push(pushGraphicsState(), ...inWhite)
   for (const c of strip.cmds) {
     if (c[0] === 'M') ops.push(moveTo(X(c[1]), Y(c[2])))
     else if (c[0] === 'L') ops.push(lineTo(X(c[1]), Y(c[2])))
