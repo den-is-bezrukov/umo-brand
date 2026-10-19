@@ -9,8 +9,34 @@ const W = 841.89
 const S = W / 1754
 const px = (n: number) => n * S
 
-/** No `creditPrice`: a card with no credit offer, one price under «Цена:» */
-interface Props { variant: Variant; fullPrice: string; creditPrice?: string; qrUrl: string }
+/**
+ * No `creditPrice`: a card with no credit offer, one price under «Цена:». `template`: the editable template, the
+ * card's own texts given as placeholders in brackets, the photo a checkerboard (`Fish`); its text is live anyway
+ */
+interface Props { variant: Variant; fullPrice: string; creditPrice?: string; qrUrl: string; template?: boolean }
+
+/** The template's texts in place of the model's and trim's */
+const FISH = {
+  /** Before and after Alice's sign, which stays, as the cards set it */
+  headline: ['[Дескриптор модели] с Алисо', '\xa0и\xa0сервисами Яндекса. Запас хода до [000] км, разгон до 100 км/ч за [0,0] секунды'],
+  trim: '[Название комплектации]:',
+  description: '[Описание комплектации: главное в ней, одно-три предложения]',
+  price: '[0 000 000]',
+}
+
+/** The photo's place in the template: a light checkerboard, 40 px squares */
+function Fish() {
+  const cell = 40
+  const cols = Math.ceil(1754 / cell)
+  const rows = Math.ceil(560 / cell)
+  const d = Array.from({ length: rows }, (_, r) => Array.from({ length: cols }, (_, c) => (r + c) % 2 ? `M${c * cell} ${r * cell}h${cell}v${cell}h-${cell}Z` : '').join('')).join('')
+  return (
+    <Svg width={W} height={px(560)} viewBox="0 0 1754 560">
+      <Path d="M0 0H1754V560H0Z" fill="#d9d9d9" />
+      <Path d={d} fill="#cccccc" />
+    </Svg>
+  )
+}
 
 /** `large`: the headline's size on a line as tall as the type, for a card with one price */
 function PriceBlock({ label, value, large }: { label: string; value: string; large?: boolean }) {
@@ -41,7 +67,7 @@ function singlePriceTop(qrUrl: string) {
 }
 
 /** One card, an A3 page: the file holds a page per card */
-function PriceCardPage({ variant, fullPrice, creditPrice, qrUrl }: Props) {
+function PriceCardPage({ variant, fullPrice, creditPrice, qrUrl, template }: Props) {
   const data = cards[variant]
   const svg = data.model === 'umo8' ? svgUmo8 : svgUmo5
 
@@ -58,12 +84,12 @@ function PriceCardPage({ variant, fullPrice, creditPrice, qrUrl }: Props) {
 
         {/* Car image */}
         <View style={{ position: 'absolute', bottom: 0, left: 0, width: W, height: px(560), overflow: 'hidden' }}>
-          <Image src={data.image} style={{
+          {template ? <Fish /> : <Image src={data.image} style={{
             position: 'absolute',
             width: px(carW), height: px(carH),
             left: carLeft,
             top: carTop,
-          }} />
+          }} />}
         </View>
 
         {/* UMO logo */}
@@ -75,8 +101,10 @@ function PriceCardPage({ variant, fullPrice, creditPrice, qrUrl }: Props) {
           </Svg>
         </View>
 
-        {/* Model number */}
-        {data.model === 'umo8' ? (
+        {/* Model number; in the template a light grey block of a digit's size in its place */}
+        {template ? (
+          <View style={{ position: 'absolute', left: px(540), top: px(100), width: px(92), height: px(80), backgroundColor: '#d9d9d9' }} />
+        ) : data.model === 'umo8' ? (
           <View style={{ position: 'absolute', left: px(540), top: px(100) }}>
             <Svg width={px(100)} height={px(80)} viewBox="0 0 100 80">
               <Path d={svgUmo8.p1b67d8f0} fill="black" />
@@ -93,7 +121,15 @@ function PriceCardPage({ variant, fullPrice, creditPrice, qrUrl }: Props) {
         {/* Headline */}
         <View style={{ position: 'absolute', left: px(100), top: px(280), width: px(1554) }}>
           <Text style={{ fontFamily: 'CoFo Sans', fontWeight: 500, fontSize: px(96), lineHeight: 1.25, color: 'black' }}>
-            {data.model === 'umo8' ? (
+            {template ? (
+              <>
+                <Text>{FISH.headline[0]}</Text>
+                <Text style={{ letterSpacing: px(-9.6) }}>{'й'}</Text>
+                <Text>{' '}</Text>
+                <Text style={{ fontFamily: 'GeistY', color: '#7a55ff' }}>{'☺'}</Text>
+                <Text>{FISH.headline[1]}</Text>
+              </>
+            ) : data.model === 'umo8' ? (
               <>
                 <Text>{'Гибридный кроссовер\n'}</Text>
                 <Text>{'с Алисо'}</Text>
@@ -117,22 +153,22 @@ function PriceCardPage({ variant, fullPrice, creditPrice, qrUrl }: Props) {
         {/* Description */}
         <View style={{ position: 'absolute', left: px(100), top: px(835), width: px(1554), gap: px(30) }}>
           <Text style={{ fontFamily: 'CoFo Sans', fontWeight: 500, fontSize: px(40), lineHeight: 1.13, color: '#666' }}>
-            {data.trimLabel}
+            {template ? FISH.trim : data.trimLabel}
           </Text>
           <Text style={{ fontFamily: 'CoFo Sans', fontWeight: 500, fontSize: px(60), lineHeight: 1.25, color: 'black' }}>
-            {data.descriptionLines.join('\n')}
+            {template ? FISH.description : data.descriptionLines.join('\n')}
           </Text>
         </View>
 
         {/* Prices */}
         {creditPrice === undefined ? (
           <View style={{ position: 'absolute', left: px(100), top: px(singlePriceTop(qrUrl)) }}>
-            <PriceBlock label={'Цена:'} value={fullPrice} large />
+            <PriceBlock label={'Цена:'} value={template ? FISH.price : fullPrice} large />
           </View>
         ) : (
           <View style={{ position: 'absolute', left: px(100), top: px(1505), gap: px(30) }}>
-            <PriceBlock label={'Без кредита:'} value={fullPrice} />
-            <PriceBlock label={'В кредит с субсидией:'} value={creditPrice} />
+            <PriceBlock label={'Без кредита:'} value={template ? FISH.price : fullPrice} />
+            <PriceBlock label={'В кредит с субсидией:'} value={template ? FISH.price : creditPrice} />
           </View>
         )}
 

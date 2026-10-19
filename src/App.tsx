@@ -7,6 +7,7 @@ import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField
 import { linkParams, useLinkState, saveAndOpenPdf } from '@/ui/share'
 import { useStaff, ItemFrame, useAddKey, Removed, plain, ITEM_EDGE, type Row } from '@/ui/staff'
 import { MobileEditor, usePhone } from '@/ui/mobile'
+import { TemplateButton, useTemplateLink } from '@/ui/template'
 
 const POSTER_W = 1754
 const POSTER_H = 2480
@@ -136,6 +137,13 @@ async function pdfOf(cards: Card[]) {
   const { cardsPdf } = await import('@/posters/pdf/cardsPdf')
   const pages = cards.map(c => ({ variant: `${c.model}-${c.trim}` as Variant, fullPrice: c.full, creditPrice: c.creditOn ? c.credit : undefined, qrUrl: qrUrlOf(c) }))
   return cardsPdf(pages, pdfName(cards))
+}
+
+/** The editable template of one card: its layout, model and prices' count, the texts and photo as placeholders */
+const TEMPLATE_FILE = 'UMO_price-card_template.pdf'
+async function templateOf(c: Card) {
+  const { cardsPdf } = await import('@/posters/pdf/cardsPdf')
+  return cardsPdf([{ variant: `${c.model}-${c.trim}` as Variant, fullPrice: c.full, creditPrice: c.creditOn ? c.credit : undefined, qrUrl: qrUrlOf(c), template: true }], TEMPLATE_FILE)
 }
 
 function downloadGoal(cards: Card[], extra?: Record<string, unknown>) {
@@ -366,8 +374,11 @@ export default function App() {
   // often the same model in another trim or at another price
   const addCard = (after?: number) => staff.add(plain(items[items.length - 1]), undefined, after)
   useAddKey(!phone ? () => addCard(staff.selected) : undefined)
+  /** «Скачать шаблон» in the card's column: that card's; `?t`, the default UMO 5 card's */
+  const templateIcon = (c: Card) => <TemplateButton make={() => templateOf(c)} name={TEMPLATE_FILE} goalId="download_price_card_template" />
+  const templateOnly = useTemplateLink(() => templateOf(defaultCard('umo5')), TEMPLATE_FILE, 'download_price_card_template')
 
-  if (pdfOnly) return null
+  if (pdfOnly || templateOnly) return null
   if (phone) return <MobileEditor slides={items.map(c => ({ key: c.key, item: c.key, label: `UMO ${c.model === 'umo8' ? 8 : 5} ${c.trim.toUpperCase()}`, ratio: POSTER_H / POSTER_W, node: (w: number) => cardAt(c, w) }))} staff={frame} sidebar={sidebar} download={download} />
 
   return (
@@ -390,7 +401,7 @@ export default function App() {
                   <Removed staff={staff} at={i} />
                   <figure ref={staff.figureRef(c.key)} onClick={() => staff.pick(c.key)} className="group/row flex cursor-pointer justify-center">
                     <div className="w-full" style={{ maxWidth: cardW }}>
-                      <ItemFrame staff={frame} item={c} n={i + 1} onAdd={addCard}>
+                      <ItemFrame staff={frame} item={c} n={i + 1} onAdd={addCard} extra={templateIcon(c)}>
                         {/* A plain box, not a button: a button's centred text shifted the card's own layout. Clipped to
                             the card, so the photo doesn't run past its edge, and edged as every generator's items
                             (`ITEM_EDGE`) */}

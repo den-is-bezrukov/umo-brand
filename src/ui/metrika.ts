@@ -11,6 +11,7 @@ export type Goal =
   | 'download_owner_memo'
   | 'download_owner_memo_template'
   | 'download_business_card_template'
+  | 'download_price_card_template'
   | 'download_price_tag_template'
   | 'download_hours_sign_template'
   | 'download_name_tag_template'
