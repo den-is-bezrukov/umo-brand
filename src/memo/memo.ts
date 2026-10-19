@@ -21,8 +21,7 @@ export const PAGE = { w: 2100, h: 2970 }
 
 export const MEMO_TEXTS = TEXTS as MemoText[]
 
-const TOP = 2520
-/** Where the dealership's column ends, as in Figma (its five lines from `TOP`): it grows up from there */
+/** Where the dealership's column ends, as in Figma (its five lines from 2520): it grows up from there */
 const BOTTOM = 2820
 const COLUMNS = [150, 1050]
 /** Each column's measure: 50 px clear of the next, as the second page's two columns of features */
@@ -32,9 +31,9 @@ const HEAD = { size: 45, lineHeight: 59.85, font: 'm' as const }
 const BODY = { size: 36, lineHeight: 45, font: 'r' as const }
 
 export interface Dealer { name: string; address: string; phone: string; email: string; site: string }
-export interface Person { position: string; name: string; phone: string; email: string }
+export interface Person { position: string; name: string; surname: string; phone: string; email: string }
 
-export type MemoField = 'dealer' | 'address' | 'dealerPhone' | 'dealerEmail' | 'site' | 'position' | 'name' | 'phone' | 'email'
+export type MemoField = 'dealer' | 'address' | 'dealerPhone' | 'dealerEmail' | 'site' | 'position' | 'name' | 'surname' | 'phone' | 'email'
 export const DEALER_FIELDS: MemoField[] = ['dealer', 'dealerPhone', 'address', 'dealerEmail', 'site']
 
 export interface Issue { field: MemoField | null; text: string }
@@ -70,21 +69,25 @@ export function buildBlock(fonts: MemoFonts, dealer: Dealer, person: Person): Bl
   const set: FieldLines[] = []
   const issues: Issue[] = []
 
-  /** A column hanging from `TOP`, or, `up`, standing on `BOTTOM` and growing up as its lines grow */
-  const column = (x: number, items: [MemoField, string, string, number][], up = false) => {
-    const shown = items.map(([field, label, raw, max], i) => {
+  /**
+   * A column hanging from `top`, or, with none, standing on `BOTTOM` and growing up as its lines grow; returns its top.
+   * An item: field, label, text, most lines and, for a line of two fields, where the second's characters start and which it is
+   */
+  const column = (x: number, items: [MemoField, string, string, number, [number, MemoField]?][], top?: number) => {
+    const shown = items.map(([field, label, raw, max, split], i) => {
       const style = i ? BODY : HEAD
-      const text = max > 1 ? lines(raw) : oneLine(raw)
-      return { field, label, max, style, text }
+      const text = max > 1 ? lines(raw) : split ? raw : oneLine(raw)
+      return { field, label, max, style, text, split }
     }).filter(it => it.text)
     const at = (y: number, it: typeof shown[number]): MemoText => ({
       page: 1, id: it.field, x, y, w: MEASURE, size: it.style.size, lineHeight: it.style.lineHeight,
       paragraphSpacing: 0, listSpacing: 0, align: 'left', text: it.text, runs: [[0, it.text.length, it.style.font]],
     })
     const height = shown.reduce((h, it, i) => h + (i ? GAP : 0) + layoutText(fonts, at(0, it)).length * it.style.lineHeight, 0)
-    let y = up ? BOTTOM - height : TOP
+    let y = top ?? BOTTOM - height
+    const start = y
     shown.forEach(it => {
-      const { field, label, max, style, text } = it
+      const { field, label, max, style, text, split } = it
       const l = layoutText(fonts, at(y, it))
       if (l.length > max) issues.push({ field, text: `${label} — не больше ${max === 1 ? 'одной строки' : `${max} строк`}` })
       const font = fonts[style.font]
@@ -92,9 +95,16 @@ export function buildBlock(fonts: MemoFonts, dealer: Dealer, person: Person): Bl
       if (absent.length) issues.push({ field, text: `${label}: нет в шрифте ${absent.map(c => `«${c}»`).join(', ')}` })
       if (hasProfanity(text)) issues.push({ field, text: `${label}: ${PROFANITY.toLowerCase()}` })
       set.push({ field, size: style.size, lines: l })
-      fields[field] = outlines(fonts, style.size, l)
+      if (split) {
+        // One line of two fields, each its own outlines (black, red or grey on its own)
+        const glyphs = l.flatMap(line => line.segs.flatMap(sg => glyphRuns(fonts, style.size, sg, line.baseline)))
+        const path = (g: typeof glyphs) => g.flatMap(r => pathCmds(r.glyph.getPath(r.x, r.y, style.size).commands))
+        fields[field] = path(glyphs.slice(0, split[0]))
+        fields[split[1]] = path(glyphs.slice(split[0]))
+      } else fields[field] = outlines(fonts, style.size, l)
       y += l.length * style.lineHeight + GAP
     })
+    return start
   }
 
   /** The dealer's phone and email are said as the dealer's, as their fields are labelled */
@@ -114,21 +124,28 @@ export function buildBlock(fonts: MemoFonts, dealer: Dealer, person: Person): Bl
 
   // The phone over the address, level with the consultant's name, so an address of two or three lines (on 4,5 mm
   // lines, against 6 mm between the lines) comes after the rows the columns share
-  column(COLUMNS[0], [
+  // The dealership stands on `BOTTOM` and grows up; the consultant hangs from its top, the dealer's name and the
+  // position always on one line
+  const top = column(COLUMNS[0], [
     ['dealer', 'Название', dealer.name, 1],
     ['dealerPhone', 'Телефон дилера', phone('dealerPhone', dealer.phone), 1],
     ['address', 'Адрес', dealer.address, 3],
     ['dealerEmail', 'Почта дилера', email('dealerEmail', dealer.email), 1],
     ['site', 'Сайт', siteText(dealer.site), 1],
-  ], true)
+  ])
   column(COLUMNS[1], [
     ['position', 'Должность', person.position, 2],
-    ['name', 'Имя', person.name, 1],
+    // Name and surname on one line, the name first, as the business card has them
+    ['name', 'Имя и фамилия', `${oneLine(person.name)} ${oneLine(person.surname)}`.trim(), 1, [oneLine(person.name).length + 1, 'surname']],
     ['phone', 'Телефон', phone('phone', person.phone), 1],
     ['email', 'Почта', email('email', person.email), 1],
-  ])
-  const fault = nameFault(oneLine(person.name))
-  if (fault) issues.push({ field: 'name', text: `Имя: ${fault}` })
+  ], top)
+  for (const [field, label, t] of [['name', 'Имя', person.name], ['surname', 'Фамилия', person.surname]] as const) {
+    const fault = nameFault(oneLine(t))
+    if (fault) issues.push({ field, text: `${label}: ${fault}` })
+  }
+  // The line too long is the surname's fault too
+  for (const i of issues.filter(i => i.field === 'name' && i.text.startsWith('Имя и фамилия'))) issues.push({ ...i, field: 'surname' })
 
   return { fields, set, issues: issues.filter((v, i) => issues.findIndex(o => o.text === v.text && o.field === v.field) === i) }
 }

@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, LinkButtons, canShareFiles, unfilled, itemOf, ALERT_LABEL, outlined } from '@/ui/form'
-import { useStaff, plain, AddTile, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
+import { useStaff, plain, AddTile, fullNameField, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, type Cmd } from '@/livery/geometry'
 import { loadFonts } from '@/nametag/tag'
@@ -19,22 +19,22 @@ import { MobileEditor, usePhone } from '@/ui/mobile'
 // consultant per memo, as the business card's staff (`useStaff`). «Скачать PDF» gives the memos in outlines,
 // «Скачать шаблон», beside «Добавить», the same with every text live in CoFo Sans, to be edited where the font is.
 
-const BLANK: Person = { position: 'Мастер-консультант', name: '', phone: '', email: '' }
+const BLANK: Person = { position: 'Мастер-консультант', name: '', surname: '', phone: '', email: '' }
 /** Shown grey on the page in place of an empty required field; in the template as they are */
 const PLACEHOLDER: Partial<Record<MemoField, string>> = {
   dealer: 'Название дилера', address: 'Адрес', dealerPhone: 'Телефон', site: 'Сайт',
-  position: 'Должность', name: 'Фамилия Имя Отчество', phone: 'Телефон',
+  position: 'Должность', name: 'Имя', surname: 'Фамилия', phone: 'Телефон',
 }
 const MISSING: Partial<Record<MemoField, string>> = {
   dealer: 'Нет названия дилера', address: 'Нет адреса', dealerPhone: 'Нет телефона дилера', site: 'Нет сайта',
-  position: 'Нет должности', name: 'Нет имени', phone: 'Нет телефона',
+  position: 'Нет должности', name: 'Нет имени', surname: 'Нет фамилии', phone: 'Нет телефона',
 }
 const UNFILLED: Partial<Record<MemoField, string>> = {
   dealer: 'Выбрать дилера', address: 'Указать адрес', dealerPhone: 'Указать телефон дилера', site: 'Указать сайт',
-  position: 'Указать должность', name: 'Добавить имя', phone: 'Указать телефон',
+  position: 'Указать должность', name: 'Добавить имя', surname: 'Добавить фамилию', phone: 'Указать телефон',
 }
-const PERSON_FIELDS: MemoField[] = ['position', 'name', 'phone', 'email']
-const PERSON_REQUIRED = ['position', 'name', 'phone'] as const
+const PERSON_FIELDS: MemoField[] = ['position', 'name', 'surname', 'phone', 'email']
+const PERSON_REQUIRED = ['position', 'name', 'surname', 'phone'] as const
 const DEALER_REQUIRED = ['dealer', 'dealerPhone', 'address', 'site'] as const
 
 /** The dealership as typed: the site follows the name until it's edited (null) */
@@ -85,7 +85,7 @@ export default function Memo() {
   const dealer: Dealer = { ...input, site: input.site ?? siteFor(input.name) }
 
   const staff = useStaff<Person>({
-    columns: { position: 'Должность', name: 'ФИО', phone: 'Телефон', email: 'Почта' },
+    columns: { position: 'Должность', name: 'Имя', surname: 'Фамилия', phone: 'Телефон', email: 'Почта' },
     blank: BLANK,
     // The memos' own PDF brings back the dealership and the consultants, to change a line and download again
     readFile: data => {
@@ -126,7 +126,7 @@ export default function Memo() {
     return {
       ghost,
       dealer: { name: or('dealer', dealer.name), address: or('address', dealer.address), phone: or('dealerPhone', dealer.phone), email: dealer.email, site: or('site', dealer.site) },
-      person: { position: or('position', p.position), name: or('name', p.name), phone: or('phone', p.phone), email: p.email },
+      person: { position: or('position', p.position), name: or('name', p.name), surname: or('surname', p.surname), phone: or('phone', p.phone), email: p.email },
     }
   }
 
@@ -267,8 +267,13 @@ export default function Memo() {
               <Labelled label="Должность">
                 <ComboField key={p.key} value={p.position} onChange={v => update(p.key, { position: v })} options={POSITION_OPTIONS} placeholder="Должность" label="Типовые должности" invalid={bad('position', 'Должность')} />
               </Labelled>
-              <Labelled label="ФИО">
-                <TextInput value={p.name} onChange={v => update(p.key, { name: v })} placeholder="Фамилия Имя Отчество" invalid={bad('name', 'Имя')} />
+              {/* A whole name typed or pasted into «Имя» splits into both, the patronymic dropped (`fullNameField`, as the
+                  business card's); typed after the name by hand, it stays */}
+              <Labelled label="Имя">
+                <TextInput value={p.name} onChange={v => update(p.key, { name: v })} {...fullNameField(p, s => update(p.key, s))} placeholder="Имя" invalid={bad('name', 'Имя')} />
+              </Labelled>
+              <Labelled label="Фамилия">
+                <TextInput value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={bad('surname', 'Фамилия') || issues.some(t => t.startsWith('Имя и фамилия'))} />
               </Labelled>
               <Labelled label="Телефон">
                 <TextInput value={p.phone} onChange={v => phoneChange(v, text => update(p.key, { phone: text }))} placeholder="+7 987 654 32 10" inputMode="tel" invalid={bad('phone', 'Телефон')} />
@@ -298,7 +303,7 @@ export default function Memo() {
 
   const first = <div className="outline-1 outline-black/10"><Sheet src={page1} /></div>
 
-  if (phone) return <MobileEditor slides={[{ key: 'first', number: 0, label: 'Первый лист', ratio: PAGE.h / PAGE.w, node: first }, ...items.map((p, i) => ({ key: p.key, item: p.key, number: i + 1, label: p.name.trim() || 'Второй лист', ratio: PAGE.h / PAGE.w, node: renderItem(p, i) }))]} sidebar={sidebar} download={download} staff={staff} />
+  if (phone) return <MobileEditor slides={[{ key: 'first', number: 0, label: 'Первый лист', ratio: PAGE.h / PAGE.w, node: first }, ...items.map((p, i) => ({ key: p.key, item: p.key, number: i + 1, label: `${p.name} ${p.surname}`.replace(/\s+/g, ' ').trim() || 'Второй лист', ratio: PAGE.h / PAGE.w, node: renderItem(p, i) }))]} sidebar={sidebar} download={download} staff={staff} />
 
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
