@@ -1,6 +1,5 @@
-import { flushSync } from 'react-dom'
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, LinkButtons, canShareFiles, unfilled, itemOf, rowAction, ALERT_LABEL, outlined } from '@/ui/form'
+import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, LinkButtons, canShareFiles, unfilled, itemOf, ALERT_LABEL, outlined } from '@/ui/form'
 import { useStaff, plain, AddTile, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, type Cmd } from '@/livery/geometry'
@@ -84,7 +83,6 @@ function Sheet({ src, text, alert, ghost }: { src: string; text?: string; alert?
 export default function Memo() {
   const [input, setDealer] = useState<DealerInput>(NO_DEALER)
   const dealer: Dealer = { ...input, site: input.site ?? siteFor(input.name) }
-  const [dealerOpen, setDealerOpen] = useState(false)
 
   const staff = useStaff<Person>({
     columns: { position: 'Должность', name: 'ФИО', phone: 'Телефон', email: 'Почта' },
@@ -155,7 +153,6 @@ export default function Memo() {
   const dealerForm = useRef<HTMLDivElement>(null)
   const toDealer = () => {
     const at = dealerMissing[0] ?? [...dealerWrong][0] ?? 'dealer'
-    if (at !== 'dealer') flushSync(() => setDealerOpen(true))
     dealerForm.current?.querySelector<HTMLElement>(`[data-field="${at}"] textarea, [data-field="${at}"] input`)?.focus()
   }
 
@@ -251,20 +248,13 @@ export default function Memo() {
         {/* The dealership: the whole list's */}
         <div ref={dealerForm} className="flex flex-col gap-4">
           <div data-field="dealer" className="group/field flex flex-col gap-3">
-            <div className="flex items-center justify-between gap-2">
-              <p className={`text-[14px] leading-4 text-[#808080] ${ALERT_LABEL}`}>Дилер</p>
-              <button type="button" onClick={() => setDealerOpen(o => !o)} aria-expanded={dealerOpen} className={rowAction}>
-                {dealerOpen ? 'Свернуть' : 'Редактировать'}
-              </button>
-            </div>
+            <p className={`text-[14px] leading-4 text-[#808080] ${ALERT_LABEL}`}>Дилер</p>
             <ComboField value={dealer.name} onChange={pickDealer} options={DEALER_OPTIONS} filter={dealerFilter} singleLine placeholder="Название дилера" label="Дилеры UMO" invalid={dealerWrong.has('dealer')} />
           </div>
-          {dealerOpen && <>
             {field('address', 'Адрес', <TextArea value={input.address} onChange={v => setDealer(d => ({ ...d, address: v }))} placeholder="Адрес" invalid={dealerWrong.has('address')} />)}
             {field('dealerPhone', 'Телефон дилера', <TextInput value={input.phone} onChange={v => phoneChange(v, text => setDealer(d => ({ ...d, phone: text })))} placeholder="+7 987 654 32 10" inputMode="tel" invalid={dealerWrong.has('dealerPhone')} />)}
             {field('dealerEmail', 'Почта дилера', <TextInput value={input.email} onChange={v => setDealer(d => ({ ...d, email: v }))} placeholder="Почта дилера" inputMode="email" invalid={dealerWrong.has('dealerEmail')} />)}
             {field('site', 'Сайт', <TextInput value={dealer.site} onChange={v => setDealer(d => ({ ...d, site: v }))} placeholder="Сайт" invalid={dealerWrong.has('site')} />)}
-          </>}
         </div>
 
         {mode === 'manual' && current && (() => {
