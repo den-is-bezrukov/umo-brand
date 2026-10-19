@@ -225,8 +225,8 @@ export default function Memo() {
 
   const problemOf = (i: number) => personIssues(i)[0]?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!)) : undefined)
 
-  // The pages in a row, each as tall as the canvas (600 px wide at most); a row wider than the canvas scrolls across,
-  // standing at the second page, the consultant's, to start with and whenever a field has the caret. `rowW`: the row's
+  // The pages in a row, each as tall as the canvas (600 px wide at most); where both don't fit, one page in view, whole
+  // (a part of the other, in view, was cut off awkwardly), the row scrolling across, standing at the second page, the consultant's, to start with and whenever a field has the caret. `rowW`: the row's
   // width in view. A state, not a ref: the canvas comes after the first render (the phone check, the fonts), and a
   // ref's effect missed it
   const [canvas, setCanvas] = useState<HTMLElement | null>(null)
@@ -246,7 +246,7 @@ export default function Memo() {
       const h = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
       const pw = Math.floor(Math.min(PAGE_MAX, w, h * PAGE.w / PAGE.h))
       setPageW(pw)
-      setRowW(Math.min(w, 2 * pw + PAGES_GAP))
+      setRowW(w >= 2 * pw + PAGES_GAP ? 2 * pw + PAGES_GAP : pw)
     }
     const ro = new ResizeObserver(fit)
     ro.observe(el)
