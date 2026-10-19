@@ -182,18 +182,27 @@ export function buildBlocks(fonts: MemoFonts, dealer: Dealer, people: Person[]):
 /** A shape of Figma's pages: a path (or a rounded rectangle) filled black or white, or stroked; `text` marks text outlines */
 export interface Shape { d: Cmd[]; fill?: 'black' | 'white'; evenOdd?: boolean; stroke?: { width: number; opacity: number }; text?: boolean }
 
-/** Absolute M L H V C Z, as Figma writes them */
+/** Absolute M L H V C Z, as Figma writes them, and Q, as opentype.js writes a glyph swapped in by hand */
 function parsePath(d: string): Cmd[] {
   const cmds: Cmd[] = []
   let x = 0
   let y = 0
-  for (const [, op, args] of d.matchAll(/([MLHVCZ])([^MLHVCZ]*)/g)) {
+  for (const [, op, args] of d.matchAll(/([MLHVCQZ])([^MLHVCQZ]*)/g)) {
     const n = args.trim() ? args.trim().split(/[\s,]+/).map(Number) : []
     if (op === 'Z') { cmds.push(['Z']); continue }
     if (op === 'H') { for (const v of n) { x = v; cmds.push(['L', x, y]) } continue }
     if (op === 'V') { for (const v of n) { y = v; cmds.push(['L', x, y]) } continue }
     if (op === 'C') {
       for (let i = 0; i + 5 < n.length; i += 6) { cmds.push(['C', n[i], n[i + 1], n[i + 2], n[i + 3], n[i + 4], n[i + 5]]); [x, y] = [n[i + 4], n[i + 5]] }
+      continue
+    }
+    if (op === 'Q') {
+      // a quadratic curve as the cubic it equals: control points 2/3 of the way to the quadratic's one
+      for (let i = 0; i + 3 < n.length; i += 4) {
+        const [qx, qy, ex, ey] = n.slice(i, i + 4)
+        cmds.push(['C', x + (2 / 3) * (qx - x), y + (2 / 3) * (qy - y), ex + (2 / 3) * (qx - ex), ey + (2 / 3) * (qy - ey), ex, ey]);
+        [x, y] = [ex, ey]
+      }
       continue
     }
     for (let i = 0; i + 1 < n.length; i += 2) { [x, y] = [n[i], n[i + 1]]; cmds.push([op === 'M' && i === 0 ? 'M' : 'L', x, y]) }
