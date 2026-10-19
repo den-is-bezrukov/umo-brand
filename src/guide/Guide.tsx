@@ -1158,6 +1158,16 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
         const linked = preview === ('to' in a ? a.to : a.file)
         const lit = pointed !== undefined && pointed === ('to' in a ? a.to : a.file)
         const name = `min-w-0 flex-1 font-medium ${UNDERLINE} group-hover:decoration-black/40 group-hover:duration-0 ${linked ? 'group-has-[[data-preview]:hover]/preview:decoration-black/40 group-has-[[data-preview]:hover]/preview:duration-0' : ''} ${lit ? 'decoration-black/40 duration-0' : ''}`
+        // The name with the arrow after it, 8 px off, shown while what it stands for is pointed at (`show`: the classes
+        // that show it; the font's ↗ and ↓)
+        const named = (text: ReactNode, show: string, arrow = '↓') => (
+          <span className="flex min-w-0 flex-1 items-center gap-2">
+            <span className={name.replace('min-w-0 flex-1 ', 'min-w-0 ')}>{text}</span>
+            <span aria-hidden className={`hidden font-medium ${show}`}>{arrow}</span>
+          </span>
+        )
+        // The row's own link pointed at, or its picture
+        const pointedRow = `group-hover:inline ${linked ? 'group-has-[[data-preview]:hover]/preview:inline' : ''} ${lit ? 'inline' : ''}`
         // A format pointed at itself is underlined as the name is, the link it stands for
         const format = `${UNDERLINE} hover:decoration-black/40 hover:duration-0`
         const meta = `shrink-0 text-[#808080] [font-feature-settings:"tnum"_1] group-hover:text-black ${linked ? 'group-has-[[data-preview]:hover]/preview:text-black' : ''} ${lit ? 'text-black' : ''}`
@@ -1196,7 +1206,7 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
           return (
             <a key={a.file} href={a.t} target="_blank" rel="noopener" title={`Скачать ${formatOf(a)}`} className={row}>
               {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>}
-              <span className={name}>{a.label}</span>
+              {named(a.label, pointedRow)}
               <span className={`${meta} ${format}`}>{formatOf(a)}</span>
             </a>
           )
@@ -1205,14 +1215,14 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
           // The row is the file's link, its other formats links of their own after it, each the row's height (a
           // finger's target on phones), pointing at one lighting it alone
           return (
-            <div key={a.file} className={`flex items-stretch ${bare && i === 0 ? '' : 'border-t border-[#e6e6e6]'}`}>
+            <div key={a.file} className={`group/row flex items-stretch ${bare && i === 0 ? '' : 'border-t border-[#e6e6e6]'}`}>
               <a href={`/downloads/${a.file}`} download title={`Скачать ${formatOf(a)}`} className={`${row.replace(/border-t border-\[#e6e6e6\]/, '')} min-w-0 flex-1`}>
                 {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>}
-                <span className={name}>{a.label ?? a.file}</span>
+                {named(a.label ?? a.file, `${pointedRow} group-has-[[data-format]:hover]/row:inline`)}
                 <span className={`${meta} ${format}`}>{formatOf(a)}</span>
               </a>
               {a.also.map(f => (
-                <a key={f.file} href={`/downloads/${f.file}`} download title={`Скачать ${formatOf(f)}`} aria-label={`${a.label ?? a.file}, ${formatOf(f)}`} className="flex shrink-0 items-center pl-3 text-[16px] leading-none tracking-[-0.01em] text-[#808080] [font-feature-settings:'tnum'_1] hover:text-black group/format">
+                <a key={f.file} href={`/downloads/${f.file}`} download data-format title={`Скачать ${formatOf(f)}`} aria-label={`${a.label ?? a.file}, ${formatOf(f)}`} className="flex shrink-0 items-center pl-3 text-[16px] leading-none tracking-[-0.01em] text-[#808080] [font-feature-settings:'tnum'_1] hover:text-black group/format">
                   <span className={`${UNDERLINE} group-hover/format:decoration-black/40 group-hover/format:duration-0`}>{formatOf(f)}</span>
                 </a>
               ))}
@@ -1222,7 +1232,7 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
         return (
           <a key={a.file} href={`/downloads/${a.file}`} download title={`Скачать ${formatOf(a)}`} className={row}>
             {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>}
-            <span className={name}>{a.label ?? a.file}</span>
+            {named(a.label ?? a.file, pointedRow)}
             <span className={`${meta} ${format}`}>{formatOf(a)}</span>
           </a>
         )
