@@ -4,6 +4,7 @@ import tailwindcss from '@tailwindcss/vite'
 import path from 'node:path'
 
 import siteConfiguration from './site.config.json'
+import { GENERATORS } from './src/data/generators'
 
 // Vite config — https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -19,6 +20,7 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
       siteMetaPlugin(siteConfiguration),
+      routePages([...GENERATORS.map(g => g.path), '/editor']),
       reactRefreshBoundaryFallback(),
     ],
     resolve: {
@@ -223,6 +225,27 @@ function siteMetaPlugin(config: SiteConfiguration): Plugin {
           tags,
         }
       },
+    },
+  }
+}
+
+/**
+ * A copy of index.html per route (`memo.html`), which GitHub Pages serves at `/memo` with a 200. Without it a route
+ * is answered by 404.html (public/), a 404 that redirects to `/`: people see the page, but link previews in
+ * messengers and search engines see a missing one.
+ */
+function routePages(paths: string[]): Plugin {
+  return {
+    name: 'route-pages',
+    apply: 'build',
+    enforce: 'post',
+    generateBundle(_, bundle) {
+      const index = bundle['index.html']
+      if (index?.type !== 'asset') return
+
+      for (const p of paths) {
+        this.emitFile({ type: 'asset', fileName: `${p.slice(1)}.html`, source: index.source })
+      }
     },
   }
 }
