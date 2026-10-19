@@ -40,7 +40,7 @@ const DRAWN: Medium[] = [
   { id: 'livery', to: '/livery', title: 'Ливрея', row: 'Настроить ливрею', w: 912, h: 456, picture: <Fig name="livery-umo5" flat="#f6f6f6" w={912} h={456} alt="UMO 5 с ливреей дилера" /> },
   {
     // Figma 4985:10019: the 210×297 card centred on the 444×333 grey
-    id: 'price-card', to: '/price-card', title: 'Прайс-карта', row: 'Обновить прайс-карту', w: 444, h: 333,
+    id: 'price-card', to: '/price-card', title: 'Прайс-карта', row: 'Редактировать прайс-карту', w: 444, h: 333,
     picture: (
       <div className="flex aspect-4/3 items-center justify-center bg-[#f5f5f5]">
         <div className="w-[47.3%]">
