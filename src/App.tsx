@@ -5,7 +5,7 @@ import type { Variant } from '@/posters/cardData'
 import { goal } from '@/ui/metrika'
 import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField, GeneratorHeader, LinkButtons, DownloadBar, unfilled, itemOf } from '@/ui/form'
 import { linkParams, useLinkState, saveAndOpenPdf } from '@/ui/share'
-import { useStaff, ItemFrame, AddTile, Removed, plain, ITEM_EDGE, type Row } from '@/ui/staff'
+import { useStaff, ItemFrame, useAddKey, Removed, plain, ITEM_EDGE, type Row } from '@/ui/staff'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 
 const POSTER_W = 1754
@@ -362,6 +362,11 @@ export default function App() {
     </div>
   )
   // A card's reset brings back its model's defaults (`frame`)
+  // «Добавить» in the card's column, ⌘↩ from anywhere (wide screens): the next card starts as the last one, most
+  // often the same model in another trim or at another price
+  const addCard = () => staff.add(plain(items[items.length - 1]))
+  useAddKey(!phone ? addCard : undefined)
+
   if (pdfOnly) return null
   if (phone) return <MobileEditor slides={items.map(c => ({ key: c.key, item: c.key, label: `UMO ${c.model === 'umo8' ? 8 : 5} ${c.trim.toUpperCase()}`, ratio: POSTER_H / POSTER_W, node: (w: number) => cardAt(c, w) }))} staff={frame} sidebar={sidebar} download={download} />
 
@@ -385,7 +390,7 @@ export default function App() {
                   <Removed staff={staff} at={i} />
                   <figure ref={staff.figureRef(c.key)} onClick={() => staff.pick(c.key)} className="group/row flex cursor-pointer justify-center">
                     <div className="w-full" style={{ maxWidth: cardW }}>
-                      <ItemFrame staff={frame} item={c} n={i + 1}>
+                      <ItemFrame staff={frame} item={c} n={i + 1} onAdd={addCard}>
                         {/* A plain box, not a button: a button's centred text shifted the card's own layout. Clipped to
                             the card, so the photo doesn't run past its edge, and edged as every generator's items
                             (`ITEM_EDGE`) */}
@@ -405,8 +410,6 @@ export default function App() {
               )
             })}
             <Removed staff={staff} at={items.length} />
-            {/* The next card starts as the last one: most often the same model in another trim or at another price */}
-            <AddTile onClick={() => staff.add(plain(items[items.length - 1]))} />
           </div>
         )}
       </main>
