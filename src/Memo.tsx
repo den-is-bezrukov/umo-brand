@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, LinkButtons, canShareFiles, unfilled, itemOf, ALERT_LABEL, outlined } from '@/ui/form'
+import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, LinkButtons, canShareFiles, unfilled, itemOf, ALERT_LABEL } from '@/ui/form'
 import { useStaff, plain, AddTile, fullNameField, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, type Cmd } from '@/livery/geometry'
@@ -13,7 +13,7 @@ import { POSITION_OPTIONS } from '@/data/positions'
 import { DEALER_NAMES, dealerFilter, dealerOf, withoutUmo, phoneOf } from '@/data/dealers'
 import { isPdf, readPdfData } from '@/ui/pdfData'
 import { MobileEditor, usePhone } from '@/ui/mobile'
-import { linkParams, saveAndOpenPdf } from '@/ui/share'
+import { TemplateButton, useTemplateLink } from '@/ui/template'
 
 // Owner's memo generator (Figma: UMO | Evrone, section 5222:5427): two A4 pages a dealership hands over with a car,
 // Figma's but for the contacts at the foot of the second, which are set here: the dealership once for the list, a
@@ -106,26 +106,17 @@ export default function Memo() {
 
   const [fonts, setFonts] = useState<MemoFonts>()
   const [exporting, setExporting] = useState(false)
-  const [templating, setTemplating] = useState(false)
   const phone = usePhone()
   useEffect(() => { loadFonts().then(f => setFonts({ r: f.regular, m: f.medium })) }, [])
 
-  // `template` in the link (umo.autos/memo?template, a link that never goes stale) saves the blank template to the
-  // downloads and opens it, no editor: every field its placeholder, the emails too, made from the memo as it is now
-  const [templateOnly, setTemplateOnly] = useState(() => linkParams().has('template'))
-  const templateStarted = useRef(false)
-  useEffect(() => {
-    if (!templateOnly || !fonts || templateStarted.current) return
-    templateStarted.current = true
+  // `template` in the link (umo.autos/memo?template, a link that never goes stale): every field its placeholder, the
+  // emails too, made from the memo as it is now
+  const makeBlank = fonts ? () => {
     const dealer = { name: PLACEHOLDER.dealer!, address: PLACEHOLDER.address!, phone: PLACEHOLDER.dealerPhone!, email: 'Почта', site: PLACEHOLDER.site! }
     const person = { position: BLANK.position, name: PLACEHOLDER.name!, surname: PLACEHOLDER.surname!, phone: PLACEHOLDER.phone!, email: 'Почта' }
-    import('@/memo/pdf')
-      .then(async ({ memosTemplate }) => {
-        saveAndOpenPdf(await memosTemplate(buildBlocks(fonts, dealer, [person]), fonts), 'UMO_owner-memo_template.pdf')
-        goal('download_owner_memo_template', { count: 1, via: 'link' })
-      })
-      .catch(() => setTemplateOnly(false))
-  }, [fonts]) // eslint-disable-line react-hooks/exhaustive-deps
+    return import('@/memo/pdf').then(m => m.memosTemplate(buildBlocks(fonts, dealer, [person]), fonts))
+  } : undefined
+  const templateOnly = useTemplateLink(makeBlank, 'UMO_owner-memo_template.pdf', 'download_owner_memo_template')
 
   useEffect(() => {
     const prev = document.title
@@ -205,17 +196,7 @@ export default function Memo() {
   }
 
   /** The template takes what's typed, the placeholders where nothing is: it's edited anyway */
-  const handleTemplate = async () => {
-    if (!memos || !fonts) return
-    setTemplating(true)
-    try {
-      const { memosTemplate } = await import('@/memo/pdf')
-      save(await memosTemplate(memos.map(m => m.block), fonts), 'UMO_owner-memo_template.pdf')
-      goal('download_owner_memo_template', { count: memos.length })
-    } finally {
-      setTemplating(false)
-    }
-  }
+  const makeTemplate = memos && fonts ? () => import('@/memo/pdf').then(m => m.memosTemplate(memos.map(x => x.block), fonts)) : undefined
 
   const problemOf = (i: number) => personIssues(i)[0]?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!)) : undefined)
 
@@ -343,9 +324,7 @@ export default function Memo() {
           <Removed staff={staff} at={items.length} />
           {/* The pair centred, 8 px apart */}
           <div className="flex justify-center gap-2">
-            <button type="button" data-template onClick={handleTemplate} disabled={!memos || templating} className={`${outlined} flex-none`}>
-              {templating ? 'Собираем…' : 'Скачать шаблон'}
-            </button>
+            <TemplateButton make={makeTemplate} name="UMO_owner-memo_template.pdf" goalId="download_owner_memo_template" params={{ count: items.length }} />
             <AddTile onClick={() => staff.add()} />
           </div>
         </div>
