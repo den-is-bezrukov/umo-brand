@@ -294,17 +294,17 @@ export default function Memo() {
               </ItemFrame>
             ) : (
               // Across the canvas's whole width, past its 64 px padding, which the row keeps as its own ends (the actions in
-              // the right one)
-              <div ref={atEnd} data-pages className="-mx-16 overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              // the right one); let go, it stands at a page, 64 px off the canvas's edge, never between them
+              <div ref={atEnd} data-pages className="-mx-16 snap-x snap-mandatory scroll-px-16 overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {/* Its width set: the item's box is a size container, which `w-max` takes as nothing */}
                 <div className="mx-auto box-content px-16" style={{ width: 2 * pageW + PAGES_GAP }}>
                   <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>
                     <button type="button" aria-pressed={mode === 'manual' ? active : undefined} className="flex cursor-pointer" style={{ gap: PAGES_GAP }}>
                       {/* The first page, everyone's, never dimmed */}
-                      <div className={`shrink-0 ${ITEM_EDGE}`} style={{ width: pageW }}><Sheet src={page1} /></div>
+                      <div className={`shrink-0 snap-start ${ITEM_EDGE}`} style={{ width: pageW }}><Sheet src={page1} /></div>
                       <div
                         ref={i === shownAt ? shownPage : undefined}
-                        className={`shrink-0 ${ITEM_EDGE} transition-opacity duration-150 ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
+                        className={`shrink-0 snap-end ${ITEM_EDGE} transition-opacity duration-150 ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
                         style={{ width: pageW }}
                       >
                         {second}
