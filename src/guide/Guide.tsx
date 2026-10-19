@@ -1219,8 +1219,8 @@ function Constructor({ to, title, flush, templates = [], children }: { to: strin
   return (
     <div className={`group/preview flex flex-col ${flush ? '' : 'gap-4 md:gap-6'}`}>
       <PreviewLink asset={{ to, title }} label={title}>{children}</PreviewLink>
-      {/* Its blank templates, made by its `?t` link, then the generator */}
-      <Assets items={[...templates.map(({ query, ...f }) => ({ t: `${to}?${query ? `${query}&` : ''}t`, ...f })), { to, title }]} preview={to} bare={flush} />
+      {/* The generator, then its blank templates, made by its `?t` link */}
+      <Assets items={[{ to, title }, ...templates.map(({ query, ...f }) => ({ t: `${to}?${query ? `${query}&` : ''}t`, ...f }))]} preview={to} bare={flush} />
     </div>
   )
 }
