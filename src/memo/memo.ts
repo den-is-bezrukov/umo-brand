@@ -90,24 +90,26 @@ export function buildBlock(fonts: MemoFonts, dealer: Dealer, person: Person): Bl
     })
   }
 
+  /** The dealer's phone and email are said as the dealer's, as their fields are labelled */
+  const whose = (field: MemoField, label: string) => DEALER_FIELDS.includes(field) ? `${label} дилера` : label
   const phone = (field: MemoField, raw: string) => {
     const f = formatPhone(raw)
-    if (oneLine(raw) && !f) issues.push({ field, text: 'Телефон: проверьте номер' })
+    if (oneLine(raw) && !f) issues.push({ field, text: `${whose(field, 'Телефон')}: проверьте номер` })
     return f ?? raw
   }
   const email = (field: MemoField, raw: string) => {
     const e = oneLine(raw)
     if (!e) return e
-    if (!EMAIL.test(e)) issues.push({ field, text: 'Почта: проверьте адрес' })
-    else if (mixedScripts(e)) issues.push({ field, text: 'Почта: смешаны русские и латинские буквы' })
+    if (!EMAIL.test(e)) issues.push({ field, text: `${whose(field, 'Почта')}: проверьте адрес` })
+    else if (mixedScripts(e)) issues.push({ field, text: `${whose(field, 'Почта')}: смешаны русские и латинские буквы` })
     return e
   }
 
   column(COLUMNS[0], [
     ['dealer', 'Название', dealer.name, 1],
     ['address', 'Адрес', dealer.address, 2],
-    ['dealerPhone', 'Телефон', phone('dealerPhone', dealer.phone), 1],
-    ['dealerEmail', 'Почта', email('dealerEmail', dealer.email), 1],
+    ['dealerPhone', 'Телефон дилера', phone('dealerPhone', dealer.phone), 1],
+    ['dealerEmail', 'Почта дилера', email('dealerEmail', dealer.email), 1],
     ['site', 'Сайт', siteText(dealer.site), 1],
   ])
   column(COLUMNS[1], [

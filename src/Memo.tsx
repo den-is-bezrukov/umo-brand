@@ -261,8 +261,8 @@ export default function Memo() {
           </div>
           {dealerOpen && <>
             {field('address', 'Адрес', <TextArea value={input.address} onChange={v => setDealer(d => ({ ...d, address: v }))} placeholder="Адрес" invalid={dealerWrong.has('address')} />)}
-            {field('dealerPhone', 'Телефон', <TextInput value={input.phone} onChange={v => phoneChange(v, text => setDealer(d => ({ ...d, phone: text })))} placeholder="+7 987 654 32 10" inputMode="tel" invalid={dealerWrong.has('dealerPhone')} />)}
-            {field('dealerEmail', 'Почта', <TextInput value={input.email} onChange={v => setDealer(d => ({ ...d, email: v }))} placeholder="Почта" inputMode="email" invalid={dealerWrong.has('dealerEmail')} />)}
+            {field('dealerPhone', 'Телефон дилера', <TextInput value={input.phone} onChange={v => phoneChange(v, text => setDealer(d => ({ ...d, phone: text })))} placeholder="+7 987 654 32 10" inputMode="tel" invalid={dealerWrong.has('dealerPhone')} />)}
+            {field('dealerEmail', 'Почта дилера', <TextInput value={input.email} onChange={v => setDealer(d => ({ ...d, email: v }))} placeholder="Почта дилера" inputMode="email" invalid={dealerWrong.has('dealerEmail')} />)}
             {field('site', 'Сайт', <TextInput value={dealer.site} onChange={v => setDealer(d => ({ ...d, site: v }))} placeholder="Сайт" invalid={dealerWrong.has('site')} />)}
           </>}
         </div>
