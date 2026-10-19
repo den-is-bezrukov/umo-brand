@@ -148,23 +148,53 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
   /** Each item's row on the canvas, to scroll to */
   const figures = useRef(new Map<number, HTMLElement>())
   /**
-   * The item to the middle of the canvas. The last ones had no room under them to get there, so the canvas grows at
-   * its foot by what's missing (and gives it back once a higher one is centred); its look is otherwise unchanged
+   * The item to the middle of the canvas. The first and the last ones had no room over or under them to get there, so
+   * the canvas grows at its top or foot by just what's missing, nothing more, so there's no scrolling off into the empty
+   * (and gives it back once a middle one is centred, or none is selected). The list doesn't jump as it grows or shrinks:
+   * the scroll makes up for it where it can, and what's left glides back into place
    */
+  const ROOM = { top: 0, bottom: 0 }
+  const room = useRef(ROOM)
+  const roomFor = (canvas: HTMLElement, key: number | undefined) => {
+    const el = key === undefined ? undefined : figures.current.get(key)
+    const list = canvas.firstElementChild as HTMLElement | null
+    const before = list?.getBoundingClientRect().top
+    const set = (r: typeof ROOM) => {
+      const pad = getComputedStyle(canvas)
+      canvas.style.paddingTop = `${parseFloat(pad.paddingTop) - room.current.top + r.top}px`
+      canvas.style.paddingBottom = `${parseFloat(pad.paddingBottom) - room.current.bottom + r.bottom}px`
+      room.current = r
+    }
+    set(ROOM)
+    // Only on wide screens: a phone's canvas is its slides. The list centred in the canvas while it fits moves by half
+    // of what's added over it, so the room is found in a few steps
+    if (el && matchMedia('(min-width: 768px)').matches) {
+      for (let i = 0; i < 8; i++) {
+        const r = el.getBoundingClientRect()
+        const want = r.top - canvas.getBoundingClientRect().top + canvas.scrollTop + r.height / 2 - canvas.clientHeight / 2
+        const over = -want
+        const under = want - (canvas.scrollHeight - canvas.clientHeight)
+        if (over < 1 && under < 1) break
+        set({ top: room.current.top + Math.max(0, over), bottom: room.current.bottom + Math.max(0, under) })
+      }
+    }
+    if (!list || before === undefined) return
+    canvas.scrollTop += list.getBoundingClientRect().top - before
+    const left = before - list.getBoundingClientRect().top
+    if (Math.abs(left) >= 1) list.animate([{ transform: `translateY(${left}px)` }, { transform: 'none' }], { duration: 300, easing: 'cubic-bezier(0.33, 0, 0.67, 1)' })
+  }
   const centreOn = (key: number) => {
     const el = figures.current.get(key)
     const canvas = el?.closest('main')
     if (!el || !canvas) return
-    canvas.style.paddingBottom = ''
-    const r = el.getBoundingClientRect()
-    const under = canvas.scrollHeight - (r.bottom - canvas.getBoundingClientRect().top + canvas.scrollTop)
-    const short = canvas.clientHeight / 2 - r.height / 2 - under
-    if (short > 0 && matchMedia('(min-width: 768px)').matches) canvas.style.paddingBottom = `${parseFloat(getComputedStyle(canvas).paddingBottom) + short}px`
+    roomFor(canvas, key)
     el.scrollIntoView({ block: 'center', behavior: 'smooth' })
   }
   useEffect(() => {
     if (focusNext.current) form.current?.querySelector<HTMLElement>('textarea, input')?.focus()
     if (centre.current && selected !== undefined) centreOn(selected)
+    // None selected: the room given back
+    if (selected === undefined) { const canvas = [...figures.current.values()][0]?.closest('main'); if (canvas) roomFor(canvas, undefined) }
     focusNext.current = false
     centre.current = false
   }, [selected])
