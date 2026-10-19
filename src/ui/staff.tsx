@@ -547,7 +547,7 @@ export function Action({ label, keys, hidden, onClick, children }: { label: stri
  * An item on the canvas with its number (from 1, as the table's rows; wide screens only) and its actions in one column
  * to its right (Figma 5030:11397; they were the number left and the actions right, 5008:10960), shown while the pointer is in its row (or the focus in it), on any item, acting on it
  * without selecting it; with no pointer to hover (touch screens), under the selected one only. The actions: «Дублировать», «Сбросить» (while there's something to
- * empty), «Удалить» (while there's another), the most used and harmless first, the bin furthest. A phone's slide
+ * empty), «Удалить» (while there's another), the most used and harmless first, the bin last, 8 px apart with reset. A phone's slide
  * shows the item bare, its number and actions in the row over it. An action not offered leaves no gap: the next moves up.
  */
 export function ItemFrame<P extends object>({ staff, item, n, onAdd, extra, children }: {
@@ -575,8 +575,8 @@ export function ItemFrame<P extends object>({ staff, item, n, onAdd, extra, chil
       {staff.items.length > 1 && <span aria-hidden className="pointer-events-none pb-[5px] text-center text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1]">{n}</span>}
       {(staff.mode === 'manual' || extra) && (
         <div className={`flex-1 flex-col items-center ${active ? 'flex' : 'hidden'} ${hover}`}>
-          {/* Those always there at the top, so they never move: duplicate, template, add; reset and the bin apart, at the
-              item's bottom edge (right after the rest when the item is too short for the gap) */}
+          {/* Those always there first, so they never move: duplicate, template, add; then, 8 px apart, reset and the bin
+              (at the item's bottom edge it was a long way off) */}
           {staff.mode === 'manual' && (
             <Action label="Дублировать" keys={`${MOD}D`} onClick={() => staff.duplicate(item.key)}>
               <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M3.5 6H2V14H10V12.5M6 2H14V10H6V2Z" /></svg>
@@ -590,8 +590,8 @@ export function ItemFrame<P extends object>({ staff, item, n, onAdd, extra, chil
                   <PlusIcon />
                 </Action>
               )}
-              {/* What undoes the work, apart at the item's bottom edge: reset, then the bin */}
-              <div className="mt-auto flex flex-col">
+              {/* What undoes the work, 8 px under the rest: reset, then the bin */}
+              <div className="mt-2 flex flex-col">
                 <Action label="Сбросить" hidden={staff.isBlank(item)} onClick={() => staff.clear(item.key)}>
                   <ResetIcon />
                 </Action>
