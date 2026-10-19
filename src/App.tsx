@@ -402,7 +402,7 @@ export default function App() {
       </aside>
 
       {/* ── The cards ── */}
-      <main ref={canvasRef} className="flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
+      <main ref={canvasRef} className="flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[88px] md:min-w-0 md:snap-y md:snap-proximity md:overflow-y-auto md:p-16">
         {scale > 0 && (
           <div className="m-auto grid w-full grid-cols-1 gap-8">
             {items.map((c, i) => {
@@ -410,7 +410,7 @@ export default function App() {
               return (
                 <Fragment key={c.key}>
                   <Removed staff={staff} at={i} />
-                  <figure ref={staff.figureRef(c.key)} onClick={() => staff.pick(c.key)} className="group/row flex cursor-pointer justify-center">
+                  <figure ref={staff.figureRef(c.key)} onClick={() => staff.pick(c.key)} className="group/row flex cursor-pointer snap-center justify-center">
                     <div className="w-full" style={{ maxWidth: cardW }}>
                       <ItemFrame staff={frame} item={c} n={i + 1} onAdd={addCard} extra={templateIcon(c)}>
                         {/* A plain box, not a button: a button's centred text shifted the card's own layout. Clipped to

@@ -217,7 +217,7 @@ export default function PriceTag() {
             return (
               <Fragment key={it.key}>
               <Removed staff={staff} at={i} />
-              <figure ref={staff.figureRef(it.key)} onClick={() => staff.pick(it.key)} className="group/row flex cursor-pointer justify-center">
+              <figure ref={staff.figureRef(it.key)} onClick={() => staff.pick(it.key)} className="group/row flex cursor-pointer snap-center justify-center">
                 <div className="flex w-full max-w-[480px] flex-col gap-3">
                   <ItemFrame staff={staff} item={it} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>
                   <button
@@ -344,7 +344,7 @@ export default function PriceTag() {
       <main
         {...staff.dropTarget}
         onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure, [data-add], [data-template]')) staff.setSelected(null) }}
-        className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16
+        className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[88px] md:min-w-0 md:snap-y md:snap-proximity md:overflow-y-auto md:p-16
           ${mode === 'table' && staff.file && staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
       >
         {mode === 'table' && !staff.file ? (

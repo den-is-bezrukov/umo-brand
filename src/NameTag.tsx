@@ -178,7 +178,7 @@ export default function NameTag() {
                 key={it.key}
                 ref={staff.figureRef(key)}
                 onClick={() => staff.pick(key)}
-                className="group/row flex cursor-pointer justify-center"
+                className="group/row flex cursor-pointer snap-center justify-center"
               >
                 <div className="@container flex w-full max-w-[480px] flex-col gap-3">
                 {/* In the manual list a tag is picked for editing by clicking it; the picked one is outlined */}
@@ -291,7 +291,7 @@ export default function NameTag() {
       <main
         {...staff.dropTarget}
         onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure, [data-add], [data-template]')) setSelected(null) }}
-        className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16
+        className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[88px] md:min-w-0 md:snap-y md:snap-proximity md:overflow-y-auto md:p-16
           ${mode === 'table' && staff.file && staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
       >
         {mode === 'table' && !staff.file ? (
