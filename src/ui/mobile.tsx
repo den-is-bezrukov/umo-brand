@@ -1,10 +1,10 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { ResetIcon, DuplicateIcon, TrashIcon, Removed, type Staff } from '@/ui/staff'
+import { ResetIcon, DuplicateIcon, TrashIcon, PlusIcon, Removed, type Staff } from '@/ui/staff'
 import { InSlide, InFoot, InSheet, SheetLayer } from '@/ui/phone'
 
 // A trial of the generators' phone layout (Figma 5098:5806, «Mobile Layout»): the canvas over a sheet holding the
 // sidebar (header and form) with the download at its foot. A list's pictures are swiped one at a time, with a row over
-// them: delete (its place kept empty while «Удаляем · Вернуть» has its own bin), «‹ n/total ↺ ›» (a slide that isn't an item: its name), copy; one portrait picture has its reset and copy in the canvas's top corners instead, a landscape one a row with its name. A tap on
+// them: delete (its place kept empty while «Удаляем · Вернуть» has its own bin), «‹ ↺ n/total ⧉ ›» (a slide that isn't an item: its name), add; one portrait picture has its reset, copy and add in the canvas's top corners instead, a landscape one a row with its name. A tap on
 // a picture that would grow by it, or a swipe down, lowers the sheet to its header (a portrait one: a landscape one is
 // as wide either way); a swipe on the header or a pull past the form's edge opens the form over the whole screen or
 // puts it back.
@@ -29,7 +29,7 @@ const HALF_SHARE = 0.6
 /** A picture's inset in the canvas: 10 px of padding and 10 more beside it, over and under it (Figma 5105:8456) */
 const SIDE = 20
 const INSET = 10
-/** Off the sides with the controls in the canvas's top corners: past them (10 + 30) and 10 more */
+/** Off the sides with the controls in the canvas's top corners: past them (10 + 30) and 10 more; 30 more with copy and add both in the right one */
 const CORNER = 50
 /** The canvas's padding and its rows' height (Figma 5105:8488) */
 const ROW = 30
@@ -85,10 +85,12 @@ type Sheet = 'preview' | 'half' | 'full'
 let keptSheet: Sheet = 'half'
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export function MobileEditor({ slides, staff, sidebar, download }: {
+export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
   slides: Slide[]
   /** A list's pages: the selected item shown, a swipe selecting the next */
   staff?: Staff<any> // eslint-disable-line @typescript-eslint/no-explicit-any
+  /** «Добавить», the manual list only: a new item right after the one shown, as the plus in its column on wide screens */
+  onAdd?: (after?: number) => void
   sidebar: React.ReactNode
   download: React.ReactNode
 }) {
@@ -389,6 +391,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
   const total = slides.filter(s => s.item !== undefined).length
   const resetBtn = <Btn label={reset?.label ?? 'Сбросить'} hidden={!reset} onClick={() => reset?.onClick()}><ResetIcon /></Btn>
   const copyBtn = <Btn label="Дублировать" hidden={!staff || !current} onClick={() => staff?.duplicate(current.key, false)}><DuplicateIcon /></Btn>
+  const addBtn = <Btn label="Добавить" hidden={!onAdd} onClick={() => onAdd?.(current?.key)}><PlusIcon /></Btn>
   // The sheet is always as tall as over the whole screen and moved down out of it (its edge, the white under the form,
   // and the form each a layer moved and cut, which a phone draws without laying the form out again: a sheet changing its
   // height froze on an iPhone, the form laid out on every frame). At 60% the form has as much again under its end, so it
@@ -569,9 +572,11 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
         className="relative flex flex-col p-[10px]"
         style={{ height: laidH }}
       >
-      {/* A list's row over the picture (Figma 5105:7604): delete on the left, copy on the right, between them the
-          number between the arrows, the reset right after it; for a moment after a removal «Удаляем ·
-          Вернуть» in the middle. Over the whole-screen form it's all there is of the canvas, its actions kept */}
+      {/* A list's row over the picture (Figma 5105:7604): delete on the left, add on the right, at the row's ends; between
+          them the number between the arrows, the reset before it and copy after it, what acts on the item shown round
+          its number (none kept in place: the number and copy centred together while there's nothing to reset); for a
+          moment after a removal «Удаляем · Вернуть» in the middle. Over the whole-screen form it's all there is of the
+          canvas, its actions kept */}
       {row && (
         <div className="flex h-[30px] shrink-0 items-center justify-between">
           <Btn label="Удалить" hidden={!staff || !current || staff.people.length < 2 || !!staff.removed} onClick={() => staff?.remove(current.key)}><TrashIcon /></Btn>
@@ -580,37 +585,39 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
           ) : (
             <div className="flex min-w-0 flex-1 items-center justify-center">
               {back}
+              {reset && resetBtn}
               <span className="min-w-0 truncate px-1 text-[14px] leading-5 text-[#808080] [font-feature-settings:'case'_1,'lnum'_1,'tnum'_1]">
                 {slide?.item !== undefined ? `${number}/${total}` : slide?.number !== undefined ? `${number}/${slide.label}` : slide?.label}
               </span>
-              {reset && resetBtn}
+              {staff && current && copyBtn}
               {next}
             </div>
           )}
-          {copyBtn}
+          {addBtn}
         </div>
       )}
 
-      {/* One picture: a row over it as a list's, its name in the middle with the reset after it, copy on the right (in
-          the canvas's top corners over the strip, Figma 5105:8373, they covered a landscape item's edge, and the name
-          stood in a caption under the picture, unlike a list's) */}
+      {/* One picture: a row over it as a list's, the reset before its name, copy after it, add on the right (in the
+          canvas's top corners over the strip, Figma 5105:8373, they covered a landscape item's edge, and the name stood
+          in a caption under the picture, unlike a list's) */}
       {/* Only with something in it: empty (a table's upload), it stood over it as a strip of the canvas */}
       {!row && !corners && ((slide?.label && slide.item === undefined) || reset || (staff && current)) && (
         <div className="flex h-[30px] shrink-0 items-center justify-between">
           <Btn label="" hidden onClick={() => {}}>{null}</Btn>
+          {/* Only what's there: the reset, the name and copy centred together, no place kept */}
           <div className="flex min-w-0 flex-1 items-center justify-center">
-            {slide?.label && slide.item === undefined && <span className="min-w-0 truncate px-1 text-[14px] leading-5 text-[#808080] [font-feature-settings:'case'_1,'lnum'_1,'tnum'_1]">{slide.label}</span>}
-            {/* Only while there's something to reset: the name and the reset centred together, no place kept for it */}
             {reset && resetBtn}
+            {slide?.label && slide.item === undefined && <span className="min-w-0 truncate px-1 text-[14px] leading-5 text-[#808080] [font-feature-settings:'case'_1,'lnum'_1,'tnum'_1]">{slide.label}</span>}
+            {staff && current && copyBtn}
           </div>
-          {staff ? copyBtn : <Btn label="" hidden onClick={() => {}}>{null}</Btn>}
+          {addBtn}
         </div>
       )}
 
       {corners && (
         <>
           <div className="absolute top-[10px] left-[10px]">{reset && resetBtn}</div>
-          <div className="absolute top-[10px] right-[10px]">{staff && copyBtn}</div>
+          <div className="absolute top-[10px] right-[10px] flex">{staff && current && copyBtn}{onAdd && addBtn}</div>
         </>
       )}
 
@@ -628,7 +635,7 @@ export function MobileEditor({ slides, staff, sidebar, download }: {
             // move a copy 4 px down and cut its top edge); one taller than the screen's width scrolls. A sheet's caption
             // goes, its name in the row
             <div key={s.key} className={`flex h-full w-full shrink-0 snap-center ${s.ratio ? 'overflow-clip' : 'overflow-y-auto [scrollbar-width:none]'} ${s.label ? '[&_figcaption]:hidden' : ''}`}>
-              {box.w > 0 && <Fitted ratio={s.ratio} box={box} node={s.node} side={corners ? CORNER : SIDE} />}
+              {box.w > 0 && <Fitted ratio={s.ratio} box={box} node={s.node} side={corners ? CORNER + (onAdd ? 30 : 0) : SIDE} />}
             </div>
           ))}
         </div>

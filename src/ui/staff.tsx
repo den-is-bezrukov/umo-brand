@@ -287,7 +287,8 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
   const add = (from?: P, fresh = !from, after?: number) => {
     const r = row(from ?? blank)
     if (fresh) setFresh(f => new Set(f).add(r.key))
-    focusNext.current = true
+    // Not on phones: a focus out of the tap brings no keyboard there, only the form over the whole screen
+    focusNext.current = matchMedia('(min-width: 768px)').matches
     centre.current = true
     const at = after === undefined ? -1 : people.findIndex(p => p.key === after)
     setPeople(at < 0 ? [...people, r] : [...people.slice(0, at + 1), r, ...people.slice(at + 1)])
