@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTypograf } from '@/guide/typograf'
 import { goal } from './metrika'
 import Dialog from './Dialog'
-import { ChevronIcon, DuplicateIcon } from './icons'
+import { ChevronIcon, LinkIcon } from './icons'
 import { SUPPORT_BOT, TEXT_LINK } from './links'
 import { linkParams } from './share'
 
@@ -27,7 +27,7 @@ type Help = {
 const SITE = (more = ''): [string, ReactNode] => ['Проверьте сайт', `Редактор подставляет сайт по названию салона, например agat-vladimir.umo.auto. Откройте его в браузере: если он не открывается или у салона свой сайт, впишите свой или umo.auto.${more}`]
 
 /**
- * A link to send, with its copy after it: the duplicate icon, #808080, black on hover; copied, «Скопировано» in its place
+ * A link to send, with its copy after it: the link icon, #808080, black on hover; copied, «Скопировано» in its place
  * for two seconds, as «Поделиться» says it
  */
 function CopyLink({ href, children }: { href: string; children: ReactNode }) {
@@ -40,7 +40,7 @@ function CopyLink({ href, children }: { href: string; children: ReactNode }) {
         ? <span className="ml-1 text-[#808080]">Скопировано</span>
         : (
           <button type="button" title="Скопировать ссылку" aria-label="Скопировать ссылку" onClick={() => navigator.clipboard.writeText(href).then(() => setCopied(true))} className="ml-1 inline-flex cursor-pointer align-[-3px] text-[#808080] hover:text-black">
-            <DuplicateIcon />
+            <LinkIcon />
           </button>
         )}
     </>

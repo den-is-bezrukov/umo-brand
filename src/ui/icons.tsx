@@ -11,7 +11,14 @@ export const CrossIcon = ({ weight = 1 }: { weight?: number }) => (
   <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} strokeWidth={weight} aria-hidden><path d="M12 4L8 8M8 8L4 4M8 8L12 12M8 8L4 12" /></svg>
 )
 
-/** Duplicate, two squares: an item's copy in the lists, the template link's copy in «Инструкция» */
+/** A link, two chain links: copying a link (`CopyLink` in «Инструкция»), apart from duplicating an item */
+export const LinkIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden>
+    <g transform="rotate(-45 8 8)"><rect x="1.5" y="5.5" width="7" height="5" rx="2.5" /><rect x="7.5" y="5.5" width="7" height="5" rx="2.5" /></g>
+  </svg>
+)
+
+/** Duplicate, two squares: an item's copy in the lists */
 export const DuplicateIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M3.5 6H2V14H10V12.5M6 2H14V10H6V2Z" /></svg>
 )
