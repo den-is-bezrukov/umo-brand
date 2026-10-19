@@ -1118,9 +1118,10 @@ function PriceCardPreview({ variant, fullPrice, creditPrice, image, alt }: {
 /**
  * A file from public/downloads/, its row named in Russian by `label` (the file's own name, as saved, stays English), a
  * page of this site (its title and path), or a file a generator makes, `t` the link that makes it (a blank template:
- * `?t`), named by `label` («Шаблон режимника»)
+ * `?t`), named by `label` («Шаблон режимника»). `also`: the same item in other formats, on the right of its row after
+ * the file's own: the row downloads the vector, its PNG the PNG («Логотип UMO  SVG  PNG»; they were a row each)
  */
-type Asset = { file: string; label?: string; format?: string } | { to: string; title: string } | { t: string; label: string; file: string }
+type Asset = { file: string; label?: string; format?: string; also?: { file: string; format?: string }[] } | { to: string; title: string } | { t: string; label: string; file: string }
 
 /**
  * A file's format, on the right of its row in place of a size (every file here is small, so a size said nothing; the
@@ -1170,6 +1171,24 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
               <span className={name}>{a.label}</span>
               <span className={meta}>{formatOf(a)}</span>
             </a>
+          )
+        }
+        if (a.also?.length) {
+          // The row is the file's link, its other formats links of their own after it, each the row's height (a
+          // finger's target on phones), pointing at one lighting it alone
+          return (
+            <div key={a.file} className={`flex items-stretch ${bare && i === 0 ? '' : 'border-t border-[#e6e6e6]'}`}>
+              <a href={`/downloads/${a.file}`} download className={`${row.replace(/border-t border-\[#e6e6e6\]/, '')} min-w-0 flex-1`}>
+                <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>
+                <span className={name}>{a.label ?? a.file}</span>
+                <span className={meta}>{formatOf(a)}</span>
+              </a>
+              {a.also.map(f => (
+                <a key={f.file} href={`/downloads/${f.file}`} download aria-label={`${a.label ?? a.file}, ${formatOf(f)}`} className="flex shrink-0 items-center pl-3 text-[16px] leading-none tracking-[-0.01em] text-[#808080] [font-feature-settings:'tnum'_1] hover:text-black">
+                  {formatOf(f)}
+                </a>
+              ))}
+            </div>
           )
         }
         return (
@@ -1748,7 +1767,7 @@ export default function Guide() {
                 <PreviewLink asset={{ file: 'umo-logo.svg' }} label="Скачать логотип, SVG">
                   <LogoPlate w={912} h={456} logo={480} bg="#f5f5f5" phone43 />
                 </PreviewLink>
-                <Assets items={[{ file: 'umo-logo.svg', label: 'Логотип UMO' }, { file: 'umo-logo-png.zip', label: 'Логотип UMO' }]} preview="umo-logo.svg" />
+                <Assets items={[{ file: 'umo-logo.svg', label: 'Логотип UMO', also: [{ file: 'umo-logo-png.zip' }] }]} preview="umo-logo.svg" />
               </div>
             </Section>
 
@@ -1844,7 +1863,7 @@ export default function Guide() {
                     <Fig name="icon-favicon" w={444} h={333} alt="Фавиконка во вкладке тёмного браузера" />
                   </PreviewLink>
                 </div>
-                <Assets items={[{ file: 'umo-icon-white.zip', label: 'Иконка UMO на белом', format: 'SVG, PNG' }, { file: 'umo-icon-black.zip', label: 'Иконка UMO на чёрном', format: 'SVG, PNG' }, { file: 'umo-favicon.svg', label: 'Фавиконка UMO' }, { file: 'umo-favicon.ico', label: 'Фавиконка UMO' }]} />
+                <Assets items={[{ file: 'umo-icon-white.zip', label: 'Иконка UMO на белом', format: 'SVG, PNG' }, { file: 'umo-icon-black.zip', label: 'Иконка UMO на чёрном', format: 'SVG, PNG' }, { file: 'umo-favicon.svg', label: 'Фавиконка UMO', also: [{ file: 'umo-favicon.ico' }] }]} />
               </Previews>
             </Section>
 
@@ -1871,7 +1890,7 @@ export default function Guide() {
                   <PreviewLink asset={{ file: 'umo-yandex.svg' }} label="Скачать логотип UMO | Яндекс, SVG">
                     <Fig name="cobrand-square-example" w={444} h={333} alt="UMO и Яндекс" />
                   </PreviewLink>
-                  <Assets items={[{ file: 'umo-yandex.svg', label: 'Лок-ап UMO | Яндекс' }, { file: 'umo-yandex-png.zip', label: 'Лок-ап UMO | Яндекс' }]} preview="umo-yandex.svg" />
+                  <Assets items={[{ file: 'umo-yandex.svg', label: 'Лок-ап UMO | Яндекс', also: [{ file: 'umo-yandex-png.zip' }] }]} preview="umo-yandex.svg" />
                 </div>
                 <div className="flex flex-col gap-4 md:gap-6">
                   <Zoom label="Схема кобрендинга с горизонтальным логотипом">
@@ -1936,8 +1955,8 @@ export default function Guide() {
                 <Assets
                   early
                   items={[
-                    { file: 'umo-model-8.svg', label: 'Леттеринг MODEL 8' }, { file: 'umo-model-8-png.zip', label: 'Леттеринг MODEL 8' }, { file: 'umo-plate-8-svg.zip', label: 'Номерная плашка UMO 8' },
-                    { file: 'umo-model-5.svg', label: 'Леттеринг MODEL 5' }, { file: 'umo-model-5-png.zip', label: 'Леттеринг MODEL 5' }, { file: 'umo-plate-5-svg.zip', label: 'Номерная плашка UMO 5' },
+                    { file: 'umo-model-8.svg', label: 'Леттеринг MODEL 8', also: [{ file: 'umo-model-8-png.zip' }] }, { file: 'umo-plate-8-svg.zip', label: 'Номерная плашка UMO 8' },
+                    { file: 'umo-model-5.svg', label: 'Леттеринг MODEL 5', also: [{ file: 'umo-model-5-png.zip' }] }, { file: 'umo-plate-5-svg.zip', label: 'Номерная плашка UMO 5' },
                   ]}
                 />
               </div>
