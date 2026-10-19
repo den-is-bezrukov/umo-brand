@@ -1116,8 +1116,12 @@ function PriceCardPreview({ variant, fullPrice, creditPrice, image, alt }: {
   )
 }
 
-/** A file from public/downloads/ (the row shows its name and size) or a page of this site (its title and path). */
-type Asset = { file: string } | { to: string; title: string }
+/**
+ * A file from public/downloads/ (the row shows its name and size), a page of this site (its title and path), or a file
+ * a generator makes, `t` the link that makes it (a blank template: `?t`), `size` its size as measured
+ */
+type Asset = { file: string } | { to: string; title: string } | { t: string; file: string; size: number }
+const sizeOf = (a: Asset) => ('size' in a ? a.size : 'file' in a ? downloadSizes[a.file] ?? 0 : 0)
 
 /** Size in КБ below 1000 КБ, else МБ. */
 function fileSize(bytes: number): [number, string] {
@@ -1132,7 +1136,7 @@ function fileSize(bytes: number): [number, string] {
 /** `early`: two columns from 560 px, rather than from `sm` (Леттеринг → Модели, whose pictures pair up from 520; narrower «umo-model-8-png.zip» wraps); `bare`: no hairline (Материалы, the row right under its picture) */
 function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: string; early?: boolean; bare?: boolean }) {
   const pointed = useContext(PointedPreview)?.[0]
-  const sizes = items.flatMap(a => ('file' in a ? [fileSize(downloadSizes[a.file] ?? 0)] : []))
+  const sizes = items.flatMap(a => ('file' in a ? [fileSize(sizeOf(a))] : []))
   const digits = sizes.some(([n]) => n < 10) ? 1 : 0
   const number = new Intl.NumberFormat('ru-RU', { minimumFractionDigits: digits, maximumFractionDigits: digits })
   const two = items.length > 3
@@ -1159,7 +1163,17 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
             </Link>
           )
         }
-        const [n, unit] = fileSize(downloadSizes[a.file] ?? 0)
+        const [n, unit] = fileSize(sizeOf(a))
+        // A generator's file: its link makes and saves it, in a tab of its own so the guide stays
+        if ('t' in a) {
+          return (
+            <a key={a.file} href={a.t} target="_blank" rel="noopener" className={row}>
+              <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>
+              <span className={name}>{a.file}</span>
+              <span className={meta}>{number.format(n)} {unit}</span>
+            </a>
+          )
+        }
         return (
           <a key={a.file} href={`/downloads/${a.file}`} download className={row}>
             <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>
@@ -1200,11 +1214,12 @@ function Previews({ className, children }: { className: string; children: ReactN
 }
 
 /** A constructor page's preview over its ↗ row; `flush` sets the row right under the preview, with no gap and no hairline. */
-function Constructor({ to, title, flush, children }: { to: string; title: string; flush?: boolean; children: ReactNode }) {
+function Constructor({ to, title, flush, template, children }: { to: string; title: string; flush?: boolean; template?: { file: string; size: number }; children: ReactNode }) {
   return (
     <div className={`group/preview flex flex-col ${flush ? '' : 'gap-4 md:gap-6'}`}>
       <PreviewLink asset={{ to, title }} label={title}>{children}</PreviewLink>
-      <Assets items={[{ to, title }]} preview={to} bare={flush} />
+      {/* The generator, then its blank template, made by its `?t` link */}
+      <Assets items={[{ to, title }, ...(template ? [{ t: `${to}?t`, ...template }] : [])]} preview={to} bare={flush} />
     </div>
   )
 }
@@ -1215,7 +1230,7 @@ function Carriers({ items }: { items: typeof MEDIA }) {
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
       {items.map(c => (
         <div key={c.to} id={c.id} className={`scroll-mt-24 ${isWide(c) ? 'sm:col-span-2' : ''}`}>
-          <Constructor to={c.to} title={c.row} flush>{c.picture}</Constructor>
+          <Constructor to={c.to} title={c.row} flush template={GENERATORS.find(g => g.path === c.to)?.template}>{c.picture}</Constructor>
         </div>
       ))}
     </div>
