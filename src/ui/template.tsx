@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { ICON } from './icons'
 import { goal, type Goal } from './metrika'
 import { linkParams, saveAndOpenPdf } from './share'
+import { templateTitle } from '@/data/generators'
 
 // «Скачать шаблон»: every generator's editable template (the print file's pages, the text live in CoFo Sans,
 // `liveText.ts`), as a button under the canvas and as a link that never goes stale, `?t` (`?template`, the first one, still works), the blank one.
@@ -28,6 +29,8 @@ const TemplateIcon = () => (
  */
 export function TemplateButton({ make, name, goalId, params }: { make: (() => Promise<Blob>) | undefined; name: string; goalId: Goal; params?: Record<string, string | number | boolean> }) {
   const [busy, setBusy] = useState(false)
+  // Named by the generator it's on, from its entry in `GENERATORS`
+  const title = templateTitle(location.pathname)
   const click = async (e: React.MouseEvent) => {
     // The template's, not the item's, which would select it
     e.stopPropagation()
@@ -44,8 +47,8 @@ export function TemplateButton({ make, name, goalId, params }: { make: (() => Pr
     <button
       type="button"
       data-template
-      title="Скачать шаблон"
-      aria-label="Скачать шаблон"
+      title={title}
+      aria-label={title}
       onClick={click}
       disabled={!make}
       className={`flex size-[30px] shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] hover:text-black disabled:cursor-default disabled:hover:text-[#808080] ${busy ? 'animate-pulse' : ''}`}
