@@ -223,8 +223,9 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
   const nextOf = (keys: number[]) => goTo(nextTarget(keys))
   /** The item in work a click on the note over the download leads to: its place in the list, whose first fault the note names */
   const inWork = (keys: number[]) => ({ index: items.findIndex(it => it.key === nextTarget(keys)) })
-  /** A click on an item: select it, in the manual mode */
+  /** A click on an item: select it, in the manual mode, to the middle of the canvas, the one already selected too (a lone business card, selected from the start, stayed under its face) */
   const pick = (key: number) => {
+    if (key === selected) centreOn(key)
     centre.current = true
     setSelected(key)
     setFlagged(null)
