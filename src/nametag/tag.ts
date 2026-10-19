@@ -3,6 +3,7 @@ import { loadFont, type Cmd } from '@/livery/geometry'
 import { withListBreak } from '@/data/positions'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { nameFault } from '@/ui/names'
+import { noteLine } from '@/ui/liveText'
 
 // A dealership employee's name tag (Figma: UMO | Evrone, node 4021:2878), as in the hand-made Illustrator source in
 // Yandex Disk `02 UMO/Name Tag`: a 70×25 mm plate with 4 mm rounded corners, the name and surname in CoFo Sans Medium
@@ -114,8 +115,14 @@ function wrap(font: Font, text: string, block: Block): string[] {
 
 function setLines(font: Font, lines: string[], block: Block, first: number, label: string, cmds: Cmd[], issues: string[]) {
   lines.forEach((t, i) => {
-    const path = font.getPath(t.replace(/ /g, ' '), MARGIN, block.baseline + (first + i) * block.leading, block.size)
+    const text = t.replace(/ /g, ' ')
+    const baseline = block.baseline + (first + i) * block.leading
+    const path = font.getPath(text, MARGIN, baseline, block.size)
     cmds.push(...pathCmds(path.commands))
+    // Noted for the editable template, each glyph at the pen `getPath` gives it
+    const pens: number[] = []
+    font.forEachGlyph(text, MARGIN, baseline, block.size, {}, (_g, x) => { pens.push(x) })
+    noteLine(font, block.size, baseline, text, pens)
     if (inkWidth(font, t, block.size) > block.maxWidth + 0.01) issues.push(`${label} шире ${block.maxWidth} мм`)
   })
 }

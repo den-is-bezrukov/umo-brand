@@ -6,6 +6,7 @@ import { zipSync, strToU8 } from 'fflate'
 import { TAG, LOGO, TAGS_KEY, type Tag } from './tag'
 import { writePdfData } from '@/ui/pdfDataWrite'
 import type { Cmd } from '@/livery/geometry'
+import { embedCoFo, textOps, type LiveFonts, type TextLine } from '@/ui/liveText'
 
 // Loaded only when the files are downloaded, so the page doesn't carry pdf-lib until then.
 
@@ -59,8 +60,26 @@ async function tagsPdf(tags: Tag[], people: unknown): Promise<Uint8Array> {
   doc.setTitle('UMO name tags 70×25')
   // The staff as typed, so the PDF (or the ZIP holding it) dropped back on the page opens them
   writePdfData(doc, TAGS_KEY, { people })
+  await tagPages(doc, tags.map(tag => ({ tag })))
+  return doc.save({ useObjectStreams: false })
+}
+
+/**
+ * The editable template (`UMO_name-tags_template.pdf`, a file of its own, not in the ZIP): the same pages, the text
+ * live in CoFo Sans (`src/ui/liveText.ts`), the logo in outlines
+ */
+export async function tagsTemplate(tags: { tag: Tag; lines: TextLine[] }[]): Promise<Blob> {
+  const doc = await PDFDocument.create()
+  doc.setTitle('UMO_name-tags_template.pdf')
+  await tagPages(doc, tags, await embedCoFo(doc))
+  const bytes = await doc.save({ useObjectStreams: false })
+  return new Blob([bytes as BlobPart], { type: 'application/pdf' })
+}
+
+/** The pages: the text as outlines, or, with `live`, the noted lines as text */
+async function tagPages(doc: PDFDocument, tags: { tag: Tag; lines?: TextLine[] }[], live?: LiveFonts) {
   const logo = svgCmds(LOGO)
-  for (const tag of tags) {
+  for (const { tag, lines = [] } of tags) {
     const page = doc.addPage([TAG.w * PT, TAG.h * PT])
     const H = page.getHeight()
     page.pushOperators(
@@ -68,11 +87,11 @@ async function tagsPdf(tags: Tag[], people: unknown): Promise<Uint8Array> {
       ...pathOps(outline(), H), stroke(), popGraphicsState(),
       pushGraphicsState(), setFillingCmykColor(...INK),
       ...pathOps(logo, H), PDFOperator.of(PDFOperatorNames.FillNonZero),
-      ...pathOps(tag.cmds, H), PDFOperator.of(PDFOperatorNames.FillNonZero),
+      ...(live ? [] : [...pathOps(tag.cmds, H), PDFOperator.of(PDFOperatorNames.FillNonZero)]),
       popGraphicsState(),
     )
+    if (live) page.pushOperators(...textOps(page, live, lines, (x, y) => [x * PT, H - y * PT], PT, INK))
   }
-  return doc.save({ useObjectStreams: false })
 }
 
 /** The requirements of the source's `UMO_name-tag_spec_ТТ.txt`, the text now coming in outlines */

@@ -10,6 +10,8 @@ import TagArt from '@/nametag/TagArt'
 import { isPdf, pdfInZip, readPdfData } from '@/ui/pdfData'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { linkParams } from '@/ui/share'
+import { recordText } from '@/ui/liveText'
+import { TemplateButton, useTemplateLink } from '@/ui/template'
 
 // Name tag generator (Figma: UMO | Evrone, node 4021:2878): a dealership's staff list in, one zip out with the tags
 // in outlines, a page each, and the maker's requirements. Two modes: «Вручную», a list typed on the page, and «Из
@@ -83,6 +85,20 @@ export default function NameTag() {
     surname: p.surname.trim() ? '' : PLACEHOLDER.surname,
     position: p.position.trim() ? '' : PLACEHOLDER.position,
   })) : undefined, [fonts, items])
+  /** The editable template: the tags as on the page, placeholders where nothing is typed */
+  const templateOf = (people: Person[]) => {
+    const all = people.map(p => recordText(() => buildTag(fonts!, {
+      name: p.name.trim() ? p.name : PLACEHOLDER.name,
+      surname: p.surname.trim() ? p.surname : PLACEHOLDER.surname,
+      position: p.position.trim() ? p.position : PLACEHOLDER.position,
+    })))
+    return import('@/nametag/pdf').then(m => m.tagsTemplate(all.map(t => ({ tag: t.result, lines: t.lines }))))
+  }
+  const makeTemplate = fonts && items.length ? () => templateOf(items.map(it => it.person)) : undefined
+  /** The blank one a `template` link gives: one placeholder tag */
+  const makeBlank = fonts ? () => templateOf([PLACEHOLDER]) : undefined
+  const templateOnly = useTemplateLink(makeBlank, 'UMO_name-tags_template.pdf', 'download_name_tag_template')
+
   /** A tag needs a name, a surname and a position */
   const missing = items.map(({ person: p }) => [
     ...(!p.name.trim() ? [NO_NAME] : []),
@@ -251,6 +267,7 @@ export default function NameTag() {
         />
   )
 
+  if (templateOnly) return null
   // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
   if (phone) return <MobileEditor slides={mode === 'table' && !staff.file ? [{ key: 'upload', node: <UploadArea staff={staff} /> }] : items.map((it, i) => ({ key: it.key, item: it.key, label: `${it.person.name} ${it.person.surname}`.replace(/\s+/g, ' ').trim(), ratio: TAG.h / TAG.w, node: renderItem(it, i) }))} sidebar={sidebar} download={download} staff={staff} />
 
@@ -276,8 +293,11 @@ export default function NameTag() {
         <div className="m-auto grid w-full grid-cols-1 gap-8">
           {items.map(renderItem)}
           <Removed staff={staff} at={items.length} />
-          {/* «Добавить» as the next tag in the grid: a dashed plate of the tag's shape; the manual list only */}
-          {mode === 'manual' && <AddTile onClick={() => staff.add()} />}
+          {/* «Скачать шаблон» and «Добавить» centred as a pair, 8 px apart */}
+          <div className="flex justify-center gap-2">
+            <TemplateButton make={makeTemplate} name="UMO_name-tags_template.pdf" goalId="download_name_tag_template" params={{ count: items.length }} />
+            {mode === 'manual' && <AddTile onClick={() => staff.add()} />}
+          </div>
         </div>
         )}
       </main>
