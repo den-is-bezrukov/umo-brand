@@ -282,9 +282,9 @@ export default function Memo() {
         <figure ref={staff.figureRef(p.key)} onClick={() => staff.pick(p.key)} className="group/row flex cursor-pointer justify-center">
           <div className="flex w-full max-w-[600px] flex-col gap-3" style={phone ? undefined : { maxWidth: pageW }}>
             <div className="relative">
-              {/* The pages, 48 px wide, 8 px left of the page shown, from its top: a click shows that one */}
+              {/* The pages, 30 px wide as the actions on the right, 8 px left of the page shown, from its top: a click shows that one */}
               {!phone && (
-                <div className="absolute top-0 right-full flex w-14 flex-col gap-2 pr-2">
+                <div className="absolute top-0 right-full flex w-[38px] flex-col gap-2 pr-2">
                   {([1, 2] as const).map(n => (
                     <button
                       key={n}
@@ -293,7 +293,7 @@ export default function Memo() {
                       aria-pressed={page === n}
                       onClick={() => setPage(n)}
                       // The one shown clear in a ring at 40% black (the items' edge on hover) round its edge, the others dimmed as the items not selected
-                      className={`relative z-0 block w-12 cursor-pointer outline-1 transition-opacity duration-150 ${page === n ? 'outline-black/40' : 'outline-black/10 opacity-40 hover:opacity-100'}`}
+                      className={`relative z-0 block w-[30px] cursor-pointer outline-1 transition-opacity duration-150 ${page === n ? 'outline-black/40' : 'outline-black/10 opacity-40 hover:opacity-100'}`}
                     >
                       {n === 1 ? <Sheet src={page1} /> : second}
                     </button>
