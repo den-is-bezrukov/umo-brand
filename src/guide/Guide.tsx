@@ -1284,7 +1284,7 @@ function Zoom({ label, children }: { label: string; children: ReactNode }) {
 /**
  * Редактор материалов (`/editor`, the guide's quick link «Редактор»): every constructor in a window centred over the guide,
  * dimmed at 40% as under the phone's contents sheet, its corners 16px round as that sheet's. The names as the
- * generators' menu sets them, 24px Medium 20px apart, in its alphabetical order. A tap on the dim, the cross or Esc
+ * generators' menu sets them, 24px Medium 20px apart, in its alphabetical order, each in a new tab (`EditorLinks`). A tap on the dim, the cross or Esc
  * closes it: back where you came from, or to the guide itself when the window was opened by its link.
  */
 /** Leaving `/editor`: back where you came from, or to the guide itself when it was opened by its link */
@@ -1307,12 +1307,26 @@ function useWide() {
 }
 
 
+/**
+ * The constructors as the window and the phone's sheet list them: each opens in a tab of its own, the guide staying
+ * where it was; pointed at, the name gets the page links' hairline underline and a ↗ after it, 8 px off (it turned grey,
+ * as the contents do)
+ */
+function EditorLinks() {
+  return GENERATORS.map(m => (
+    <Link key={m.path} to={m.path} target="_blank" rel="noopener" className="group flex items-center gap-2 text-[24px] font-medium leading-6 tracking-[-0.01em]">
+      <span className={`${UNDERLINE} group-hover:decoration-black/40 group-hover:duration-0`}>{m.title}</span>
+      <span aria-hidden className="opacity-0 group-hover:opacity-100">↗</span>
+    </Link>
+  ))
+}
+
 function EditorDialog() {
   const close = useCloseEditor()
   return (
     <Dialog title="Редактор материалов" onClose={close}>
       <nav aria-label="Конструкторы" className="flex flex-col items-start gap-5">
-        {GENERATORS.map(m => <Link key={m.path} to={m.path} className={`text-[24px] font-medium leading-6 tracking-[-0.01em] ${NAV_HOVER}`}>{m.title}</Link>)}
+        <EditorLinks />
       </nav>
     </Dialog>
   )
@@ -1600,7 +1614,7 @@ export default function Guide() {
                 <div className="flex flex-col gap-6 pt-4 pb-4 md:pt-6 md:pb-6">
                   <p className="font-medium">Редактор материалов</p>
                   <nav aria-label="Конструкторы" className="flex flex-col items-start gap-5">
-                    {GENERATORS.map(m => <Link key={m.path} to={m.path} className={`text-[24px] font-medium leading-6 tracking-[-0.01em] ${NAV_HOVER}`}>{m.title}</Link>)}
+                    <EditorLinks />
                   </nav>
                 </div>
               ) : (
