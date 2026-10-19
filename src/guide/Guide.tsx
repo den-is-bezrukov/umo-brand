@@ -1215,12 +1215,12 @@ function Previews({ className, children }: { className: string; children: ReactN
 }
 
 /** A constructor page's preview over its ↗ row; `flush` sets the row right under the preview, with no gap and no hairline. */
-function Constructor({ to, title, flush, template, children }: { to: string; title: string; flush?: boolean; template?: { file: string; size: number }; children: ReactNode }) {
+function Constructor({ to, title, flush, templates = [], children }: { to: string; title: string; flush?: boolean; templates?: { file: string; size: number; query?: string }[]; children: ReactNode }) {
   return (
     <div className={`group/preview flex flex-col ${flush ? '' : 'gap-4 md:gap-6'}`}>
       <PreviewLink asset={{ to, title }} label={title}>{children}</PreviewLink>
-      {/* The generator, then its blank template, made by its `?t` link */}
-      <Assets items={[{ to, title }, ...(template ? [{ t: `${to}?t`, ...template }] : [])]} preview={to} bare={flush} />
+      {/* The generator, then its blank templates, made by its `?t` link */}
+      <Assets items={[{ to, title }, ...templates.map(({ query, ...f }) => ({ t: `${to}?${query ? `${query}&` : ''}t`, ...f }))]} preview={to} bare={flush} />
     </div>
   )
 }
@@ -1231,7 +1231,7 @@ function Carriers({ items }: { items: typeof MEDIA }) {
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
       {items.map(c => (
         <div key={c.to} id={c.id} className={`scroll-mt-24 ${isWide(c) ? 'sm:col-span-2' : ''}`}>
-          <Constructor to={c.to} title={c.row} flush template={GENERATORS.find(g => g.path === c.to)?.template}>{c.picture}</Constructor>
+          <Constructor to={c.to} title={c.row} flush templates={GENERATORS.find(g => g.path === c.to)?.templates}>{c.picture}</Constructor>
         </div>
       ))}
     </div>
