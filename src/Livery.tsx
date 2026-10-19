@@ -212,7 +212,7 @@ export default function Livery() {
     try {
       const { liveryZip } = await import('@/livery/pdf')
       const prefix = model === 'umo8' ? 'UMO8' : 'UMO5'
-      const blob = await liveryZip(prefix, sheets)
+      const blob = await liveryZip(prefix, sheets, await makeBlank!())
       const link = document.createElement('a')
       link.href = URL.createObjectURL(blob)
       link.download = `${prefix}_dealer-livery.zip`
@@ -243,6 +243,7 @@ export default function Livery() {
     return import('@/livery/pdf').then(m => m.liveryTemplate(prefix, blank))
   } : undefined
   const templateOnly = useTemplateLink(makeBlank, templateName, 'download_livery_template')
+  const templateIcon = <TemplateButton make={makeBlank} name={templateName} goalId="download_livery_template" />
 
   // `pdf` in the link (a link made for the dealer) downloads the ZIP once the font is in, the editor staying
   // with the car in it, as the name tag's (a ZIP doesn't open in the browser); sheets at fault only show what's wrong
@@ -347,11 +348,12 @@ export default function Livery() {
 
       <main className="flex-1 bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
         <div className="mx-auto flex max-w-[1200px] flex-col gap-10">
-          {/* «Скачать шаблон» by the first sheet's caption, before its reset: the template is all the sheets' */}
-          {sheets.slice(0, 2).map((s, i) => <SheetPreview key={s.surface.id} sheet={s} seams={seams} dims={dims} onReset={sidesAtDefaults ? undefined : resetSides} resetLabel="Вернуть борта по умолчанию" extra={i === 0 && <TemplateButton make={makeBlank} name={templateName} goalId="download_livery_template" />} />)}
+          {/* «Скачать шаблон» by every sheet's caption, before its reset, each the same file of all the sheets: sought
+              by the one in hand (it stood by the left side's only and read as that side's) */}
+          {sheets.slice(0, 2).map(s => <SheetPreview key={s.surface.id} sheet={s} seams={seams} dims={dims} onReset={sidesAtDefaults ? undefined : resetSides} resetLabel="Вернуть борта по умолчанию" extra={templateIcon} />)}
           {sheets[2] && (
             <div className="w-full md:w-1/2">
-              <SheetPreview sheet={sheets[2]} seams={seams} dims={dims} onReset={rearAtDefaults ? undefined : resetRear} resetLabel="Вернуть стекло по умолчанию" />
+              <SheetPreview sheet={sheets[2]} seams={seams} dims={dims} onReset={rearAtDefaults ? undefined : resetRear} resetLabel="Вернуть стекло по умолчанию" extra={templateIcon} />
             </div>
           )}
         </div>

@@ -111,16 +111,19 @@ async function specFile(sheets: Sheet[], title: string): Promise<Uint8Array> {
 
 /**
  * A dealer livery in one zip: the decals (left side, right side, rear window — one page each, every page at its own
- * size) and the spec, named as in the Livery folder on Yandex Disk
+ * size), the spec, named as in the Livery folder on Yandex Disk, and the editable template (the model's defaults, as
+ * the icon gives it), so whoever gets the zip has all of it
  */
-export async function liveryZip(prefix: string, sheets: Sheet[]): Promise<Blob> {
-  const [livery, spec] = await Promise.all([
+export async function liveryZip(prefix: string, sheets: Sheet[], template: Blob): Promise<Blob> {
+  const [livery, spec, tpl] = await Promise.all([
     cutFile(sheets, `${prefix} dealer livery`),
     specFile(sheets, `${prefix} dealer livery spec`),
+    template.arrayBuffer(),
   ])
   const zip = zipSync({
     [`00_${prefix}_dealer-livery_spec.pdf`]: spec,
     [`${prefix}_dealer-livery.pdf`]: livery,
+    [`${prefix}_dealer-livery_template.pdf`]: new Uint8Array(tpl),
   }, { level: 0 })
   return new Blob([zip as BlobPart], { type: 'application/zip' })
 }
