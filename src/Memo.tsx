@@ -76,11 +76,11 @@ function boxOf(cmds: Cmd[]): Box | undefined {
   }
   return b
 }
-/** The edited field's frame, 1,5 mm round its lines */
-const FOCUS_PAD = 15
+/** The edited field's lines */
+const EDITING = '#0066ff'
 
-/** A page of the memo: Figma's art under the contacts, `text` black, `alert` red, `ghost` grey, `focus` the edited field's frame */
-function Sheet({ src, text, alert, ghost, focus }: { src: string; text?: string; alert?: string; ghost?: string; focus?: Box }) {
+/** A page of the memo: Figma's art under the contacts, `text` black, `alert` red, `ghost` grey, `focus` the edited field's lines blue */
+function Sheet({ src, text, alert, ghost, focus }: { src: string; text?: string; alert?: string; ghost?: string; focus?: string }) {
   return (
     <div className="relative bg-white">
       <img src={src} alt="" className="block w-full" style={{ aspectRatio: `${PAGE.w} / ${PAGE.h}` }} draggable={false} />
@@ -89,12 +89,7 @@ function Sheet({ src, text, alert, ghost, focus }: { src: string; text?: string;
           {ghost && <path d={ghost} fill="#a6a6a6" />}
           {text && <path d={text} fill="#000" />}
           {alert && <path d={alert} fill="#e30" />}
-          {focus && (
-            <rect
-              x={focus.x1 - FOCUS_PAD} y={focus.y1 - FOCUS_PAD} width={focus.x2 - focus.x1 + 2 * FOCUS_PAD} height={focus.y2 - focus.y1 + 2 * FOCUS_PAD}
-              fill="none" stroke="#000" strokeOpacity={0.4} strokeWidth={1} vectorEffect="non-scaling-stroke"
-            />
-          )}
+          {focus && <path d={focus} fill={EDITING} />}
         </svg>
       )}
     </div>
@@ -251,9 +246,8 @@ export default function Memo() {
   /** The memo the edited field is seen on: the consultant's, or for the dealership's fields the one selected or the first */
   const zoomed = editing && !phone ? (current ?? items[0])?.key : undefined
   const zoomedAt = items.findIndex(p => p.key === zoomed)
-  /** The contacts and the edited field, in the page's px */
+  /** The contacts, in the page's px */
   const zoomBlock = zoomedAt >= 0 && memos?.[zoomedAt] ? boxOf(Object.values(memos[zoomedAt].block.fields).flat() as Cmd[]) : undefined
-  const zoomField = zoomedAt >= 0 && editing ? boxOf(memos?.[zoomedAt]?.block.fields[editing] ?? []) : undefined
   const zoomItem = useRef<HTMLButtonElement>(null)
   const zoomPage = useRef<HTMLDivElement>(null)
   const [zoom, setZoom] = useState<string>()
@@ -312,11 +306,11 @@ export default function Memo() {
                   style={{ transform: zooms ? zoom : undefined }}
                 >
                 <Sheet
-                  focus={zooms ? zoomField : undefined}
+                  focus={memo && zooms && editing && !wrong.has(editing) ? toD(paths(f => f === editing)) : undefined}
                   src={page2}
-                  text={memo ? toD(paths(f => !memo.ghost.has(f) && !wrong.has(f))) : undefined}
+                  text={memo ? toD(paths(f => !memo.ghost.has(f) && !wrong.has(f) && !(zooms && f === editing))) : undefined}
                   alert={memo ? toD(paths(f => !memo.ghost.has(f) && wrong.has(f))) : undefined}
-                  ghost={memo ? toD(paths(f => memo.ghost.has(f))) : undefined}
+                  ghost={memo ? toD(paths(f => memo.ghost.has(f) && !(zooms && f === editing && !wrong.has(f)))) : undefined}
                 />
                 </div>
               </button>
