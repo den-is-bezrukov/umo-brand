@@ -1157,7 +1157,8 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
         // The row a preview above stands for lights up while the preview is pointed at
         const linked = preview === ('to' in a ? a.to : a.file)
         const lit = pointed !== undefined && pointed === ('to' in a ? a.to : a.file)
-        const name = `min-w-0 flex-1 font-medium ${UNDERLINE} group-hover:decoration-black/40 group-hover:duration-0 ${linked ? 'group-has-[[data-preview]:hover]/preview:decoration-black/40 group-has-[[data-preview]:hover]/preview:duration-0' : ''} ${lit ? 'decoration-black/40 duration-0' : ''}`
+        // Underlined only while pointed at itself, as a format is (the row or its picture pointed at shows the arrow after it)
+        const name = `min-w-0 flex-1 font-medium ${UNDERLINE} hover:decoration-black/40 hover:duration-0`
         // The name with the arrow after it, 8 px off, shown while what it stands for is pointed at (`show`: the classes
         // that show it; the font's ↗ and ↓)
         const named = (text: ReactNode, show: string, arrow = '↓') => (
