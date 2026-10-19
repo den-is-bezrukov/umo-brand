@@ -41,8 +41,8 @@ const DEALER_REQUIRED = ['dealer', 'dealerPhone', 'address', 'site'] as const
 const PAGE_MAX = 600
 /** Between the pages in a row: the item's actions' column (8 + 30 + 8), so a third page would clear them as the canvas's edge does */
 const PAGES_GAP = 46
-/** TEST: the pages on the canvas, the second copied as a third to try a longer row */
-const PAGES = 3
+/** The pages on the canvas */
+const PAGES = 2
 
 /** The dealership as typed: the site follows the name until it's edited (null) */
 type DealerInput = Omit<Dealer, 'site'> & { site: string | null }
