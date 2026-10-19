@@ -262,6 +262,8 @@ export default function Memo() {
    */
   const dragRow = (e: React.PointerEvent<HTMLElement>) => {
     if (e.pointerType !== 'mouse' || e.button !== 0) return
+    // No selection or the browser's own drag, which cancelled the pointer and left the row hanging
+    e.preventDefault()
     const el = e.currentTarget, x0 = e.clientX, left0 = el.scrollLeft
     const pages = [...el.querySelectorAll<HTMLElement>('[data-page]')]
     const nearest = () => {
@@ -274,18 +276,23 @@ export default function Memo() {
     const move = (m: PointerEvent) => {
       dx = m.clientX - x0
       if (!moved && Math.abs(dx) < 5) return
-      if (!moved) { moved = true; el.style.scrollSnapType = 'none'; document.body.style.cursor = 'grabbing'; el.style.pointerEvents = 'none' }
+      if (!moved) { moved = true; el.style.scrollSnapType = 'none'; document.body.style.cursor = 'grabbing' }
       el.scrollLeft = left0 - dx
     }
     const up = () => {
       window.removeEventListener('pointermove', move)
       window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', up)
       if (!moved) return
-      el.style.scrollSnapType = ''; el.style.pointerEvents = ''; document.body.style.cursor = ''
+      document.body.style.cursor = ''
       // Any drag goes on to the next page that way, even if the one it left is still the nearest
       let to = nearest()
       if (to === from) to = Math.min(pages.length - 1, Math.max(0, from - Math.sign(dx)))
       pages[to]?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+      // The snap back once the row is there: back at once, it jumped to the nearest page before gliding on
+      const snap = () => { el.style.scrollSnapType = ''; clearTimeout(late) }
+      const late = setTimeout(snap, 800)
+      el.addEventListener('scrollend', snap, { once: true })
       // The click the drag ends in, if any, lands on nothing
       const eat = (c: MouseEvent) => { c.stopPropagation(); c.preventDefault() }
       window.addEventListener('click', eat, { capture: true, once: true })
@@ -293,6 +300,7 @@ export default function Memo() {
     }
     window.addEventListener('pointermove', move)
     window.addEventListener('pointerup', up)
+    window.addEventListener('pointercancel', up)
   }
   const toPage = (e: React.MouseEvent<HTMLElement>) => e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
   // A row put at the consultant's page as it comes, once the canvas is measured (before, its ends weren't set and it
