@@ -1,8 +1,8 @@
-import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, LinkButtons, canShareFiles, unfilled, itemOf, ALERT_LABEL } from '@/ui/form'
 import { useStaff, plain, useAddKey, fullNameField, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
-import { toD, type Cmd } from '@/livery/geometry'
+import { toD, type Box, type Cmd } from '@/livery/geometry'
 import { loadFonts } from '@/ui/type'
 import { siteFor, maskPhone } from '@/card/card'
 import { MEMOS_KEY, PAGE, DEALER_FIELDS, buildBlocks, type Dealer, type MemoField, type Person } from '@/memo/memo'
@@ -67,16 +67,34 @@ const save = (blob: Blob, name: string) => {
   URL.revokeObjectURL(a.href)
 }
 
-/** A page of the memo: Figma's art under the contacts, `text` black, `alert` red, `ghost` grey */
-function Sheet({ src, text, alert, ghost }: { src: string; text?: string; alert?: string; ghost?: string }) {
+/** The box round a path's points, in the page's px */
+function boxOf(cmds: Cmd[]): Box | undefined {
+  let b: Box | undefined
+  for (const c of cmds) for (let k = 1; k < c.length; k += 2) {
+    const x = c[k] as number, y = c[k + 1] as number
+    b = b ? { x1: Math.min(b.x1, x), y1: Math.min(b.y1, y), x2: Math.max(b.x2, x), y2: Math.max(b.y2, y) } : { x1: x, y1: y, x2: x, y2: y }
+  }
+  return b
+}
+/** The edited field's frame, 1,5 mm round its lines */
+const FOCUS_PAD = 15
+
+/** A page of the memo: Figma's art under the contacts, `text` black, `alert` red, `ghost` grey, `focus` the edited field's frame */
+function Sheet({ src, text, alert, ghost, focus }: { src: string; text?: string; alert?: string; ghost?: string; focus?: Box }) {
   return (
     <div className="relative bg-white">
       <img src={src} alt="" className="block w-full" style={{ aspectRatio: `${PAGE.w} / ${PAGE.h}` }} draggable={false} />
-      {(text || alert || ghost) && (
+      {(text || alert || ghost || focus) && (
         <svg viewBox={`0 0 ${PAGE.w} ${PAGE.h}`} className="absolute inset-0 block size-full" aria-hidden>
           {ghost && <path d={ghost} fill="#a6a6a6" />}
           {text && <path d={text} fill="#000" />}
           {alert && <path d={alert} fill="#e30" />}
+          {focus && (
+            <rect
+              x={focus.x1 - FOCUS_PAD} y={focus.y1 - FOCUS_PAD} width={focus.x2 - focus.x1 + 2 * FOCUS_PAD} height={focus.y2 - focus.y1 + 2 * FOCUS_PAD}
+              fill="none" stroke="#000" strokeOpacity={0.4} strokeWidth={1} vectorEffect="non-scaling-stroke"
+            />
+          )}
         </svg>
       )}
     </div>
@@ -109,6 +127,12 @@ export default function Memo() {
   const [fonts, setFonts] = useState<MemoFonts>()
   const [exporting, setExporting] = useState(false)
   const phone = usePhone()
+  /** The field with the caret in the form: its memo comes up on the canvas, the second page's foot filling the item */
+  const [editing, setEditing] = useState<MemoField | null>(null)
+  const fieldOf = (el: Element | null) => (el?.closest('[data-field]')?.getAttribute('data-field') as MemoField | null) ?? null
+  // Off a field only once the focus has settled (a list's option, clicked, takes it on its way back to the field)
+  const onFormFocus = () => setEditing(fieldOf(document.activeElement))
+  const onFormBlur = () => setTimeout(() => setEditing(fieldOf(document.activeElement)), 100)
   useEffect(() => { loadFonts().then(f => setFonts({ r: f.regular, m: f.medium })) }, [])
 
   // `t` in the link (umo.autos/memo?t, or ?template, a link that never goes stale): every field its placeholder, the
@@ -207,11 +231,62 @@ export default function Memo() {
 
   const problemOf = (i: number) => personIssues(i)[0]?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!)) : undefined)
 
+  // The spread while each page has room for SPREAD_PAGE px, else the business card's column: the first page once at
+  // the top, each consultant's second under it
+  const canvas = useRef<HTMLElement>(null)
+  const [spread, setSpread] = useState(true)
+  useEffect(() => {
+    const el = canvas.current
+    if (!el) return
+    const fit = () => {
+      const cs = getComputedStyle(el)
+      const w = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
+      setSpread((w - 16) / 2 >= SPREAD_PAGE)
+    }
+    const ro = new ResizeObserver(fit)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [phone, templateOnly])
+
+  /** The memo the edited field is seen on: the consultant's, or for the dealership's fields the one selected or the first */
+  const zoomed = editing && !phone ? (current ?? items[0])?.key : undefined
+  const zoomedAt = items.findIndex(p => p.key === zoomed)
+  /** The contacts and the edited field, in the page's px */
+  const zoomBlock = zoomedAt >= 0 && memos?.[zoomedAt] ? boxOf(Object.values(memos[zoomedAt].block.fields).flat() as Cmd[]) : undefined
+  const zoomField = zoomedAt >= 0 && editing ? boxOf(memos?.[zoomedAt]?.block.fields[editing] ?? []) : undefined
+  const zoomItem = useRef<HTMLButtonElement>(null)
+  const zoomPage = useRef<HTMLDivElement>(null)
+  const [zoom, setZoom] = useState<string>()
+  // The second page scaled to the item's width, the contacts in its middle (in the column it's that wide already, and
+  // only moves into view); the item keeps its size, so nothing round it moves
+  useLayoutEffect(() => {
+    const box = zoomItem.current, page = zoomPage.current
+    if (!box || !page || !zoomBlock) { setZoom(undefined); return }
+    const fit = () => {
+      const W = box.clientWidth, H = page.offsetHeight
+      const k = W / page.offsetWidth
+      const mid = (zoomBlock.y1 + zoomBlock.y2) / 2 / PAGE.h
+      const y = Math.min(0, Math.max(H - H * k, H / 2 - mid * H * k))
+      setZoom(`translate(${-page.offsetLeft}px, ${y}px) scale(${k})`)
+      // The contacts in view on the canvas, at the middle if they weren't
+      const main = box.closest('main')
+      if (!main) return
+      const r = box.getBoundingClientRect(), m = main.getBoundingClientRect()
+      const top = r.top + y + zoomBlock.y1 / PAGE.h * H * k, bottom = r.top + y + zoomBlock.y2 / PAGE.h * H * k
+      if (top < m.top || bottom > m.bottom) main.scrollBy({ top: (top + bottom) / 2 - (m.top + m.bottom) / 2, behavior: 'smooth' })
+    }
+    fit()
+    const ro = new ResizeObserver(fit)
+    ro.observe(box)
+    return () => ro.disconnect()
+  }, [zoomed, !!zoomBlock, zoomBlock?.y1, zoomBlock?.y2, spread]) // eslint-disable-line react-hooks/exhaustive-deps
+
   /** `spread`: the memo as it prints, the first page beside the consultant's second, on wide screens */
   const renderItem = (p: typeof items[number], i: number, spread = false) => {
     const memo = memos?.[i]
     const active = mode === 'manual' && p.key === current?.key
     const dimmed = mode === 'manual' && !!current && !active && !phone
+    const zooms = p.key === zoomed
     const wrong = new Set<MemoField>([...dealerWrong, ...(memo?.issues.map(x => x.field).filter((f): f is MemoField => !!f) ?? [])])
     const paths = (only: (f: MemoField) => boolean) => memo
       ? (Object.entries(memo.block.fields) as [MemoField, Cmd[]][]).filter(([f]) => only(f)).flatMap(([, c]) => c)
@@ -225,12 +300,19 @@ export default function Memo() {
               <button
                 type="button"
                 aria-pressed={mode === 'manual' ? active : undefined}
-                className={`grid w-full cursor-pointer gap-4 ${spread ? 'grid-cols-2' : ''}`}
+                ref={zooms ? zoomItem : undefined}
+                // Zoomed, the item is edged as a whole, its page past it cut off
+                className={`relative grid w-full cursor-pointer gap-4 ${spread ? 'grid-cols-2' : ''} ${zooms ? `overflow-hidden ${ITEM_EDGE}` : ''}`}
               >
                 {/* The first page, everyone's, never dimmed */}
                 {spread && <div className={ITEM_EDGE}><Sheet src={page1} /></div>}
-                <div className={`${ITEM_EDGE} transition-opacity duration-150 ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}>
+                <div
+                  ref={zooms ? zoomPage : undefined}
+                  className={`origin-top-left transition-[opacity,transform] duration-300 ease-out ${zooms && zoom ? '' : ITEM_EDGE} ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
+                  style={{ transform: zooms ? zoom : undefined }}
+                >
                 <Sheet
+                  focus={zooms ? zoomField : undefined}
                   src={page2}
                   text={memo ? toD(paths(f => !memo.ghost.has(f) && !wrong.has(f))) : undefined}
                   alert={memo ? toD(paths(f => !memo.ghost.has(f) && wrong.has(f))) : undefined}
@@ -251,7 +333,7 @@ export default function Memo() {
   )
 
   const sidebar = (
-    <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
+    <div onFocus={onFormFocus} onBlur={onFormBlur} className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
       <GeneratorHeader current="/memo" />
       <div className="flex flex-col gap-4 tracking-normal">
         {/* The dealership: the whole list's */}
@@ -273,23 +355,23 @@ export default function Memo() {
           const bad = (f: MemoField, label: string) => issues.some(t => t.startsWith(label) || t === MISSING[f])
           return (
             <div ref={staff.form} className="flex flex-col gap-4">
-              <Labelled label="Должность">
+              <div data-field="position"><Labelled label="Должность">
                 <ComboField key={p.key} value={p.position} onChange={v => update(p.key, { position: v })} options={POSITION_OPTIONS} placeholder="Должность" label="Типовые должности" invalid={bad('position', 'Должность')} />
-              </Labelled>
+              </Labelled></div>
               {/* A whole name typed or pasted into «Имя» splits into both, the patronymic dropped (`fullNameField`, as the
                   business card's); typed after the name by hand, it stays */}
-              <Labelled label="Имя">
+              <div data-field="name"><Labelled label="Имя">
                 <TextInput value={p.name} onChange={v => update(p.key, { name: v })} {...fullNameField(p, s => update(p.key, s))} placeholder="Имя" invalid={bad('name', 'Имя')} />
-              </Labelled>
-              <Labelled label="Фамилия">
+              </Labelled></div>
+              <div data-field="surname"><Labelled label="Фамилия">
                 <TextInput value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={bad('surname', 'Фамилия') || issues.some(t => t.startsWith('Имя и фамилия'))} />
-              </Labelled>
-              <Labelled label="Телефон">
+              </Labelled></div>
+              <div data-field="phone"><Labelled label="Телефон">
                 <TextInput value={p.phone} onChange={v => phoneChange(v, text => update(p.key, { phone: text }))} placeholder="+7 987 654 32 10" inputMode="tel" invalid={bad('phone', 'Телефон')} />
-              </Labelled>
-              <Labelled label="Почта">
+              </Labelled></div>
+              <div data-field="email"><Labelled label="Почта">
                 <TextInput value={p.email} onChange={v => update(p.key, { email: v })} placeholder="Почта" inputMode="email" invalid={bad('email', 'Почта')} />
-              </Labelled>
+              </Labelled></div>
             </div>
           )
         })()}
@@ -312,22 +394,6 @@ export default function Memo() {
 
   const first = <div className="outline-1 outline-black/10"><Sheet src={page1} /></div>
 
-  // The spread while each page has room for SPREAD_PAGE px, else the business card's column: the first page once at
-  // the top, each consultant's second under it
-  const canvas = useRef<HTMLElement>(null)
-  const [spread, setSpread] = useState(true)
-  useEffect(() => {
-    const el = canvas.current
-    if (!el) return
-    const fit = () => {
-      const cs = getComputedStyle(el)
-      const w = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
-      setSpread((w - 16) / 2 >= SPREAD_PAGE)
-    }
-    const ro = new ResizeObserver(fit)
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [phone, templateOnly])
 
   if (templateOnly) return null
   if (phone) return <MobileEditor slides={[{ key: 'first', number: 0, label: 'Первый лист', ratio: PAGE.h / PAGE.w, node: first }, ...items.map((p, i) => ({ key: p.key, item: p.key, number: i + 1, label: `${p.name} ${p.surname}`.replace(/\s+/g, ' ').trim() || 'Второй лист', ratio: PAGE.h / PAGE.w, node: renderItem(p, i) }))]} onAdd={addItem} sidebar={sidebar} download={download} staff={staff} />
