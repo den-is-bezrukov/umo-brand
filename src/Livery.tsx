@@ -212,7 +212,7 @@ export default function Livery() {
     try {
       const { liveryZip } = await import('@/livery/pdf')
       const prefix = model === 'umo8' ? 'UMO8' : 'UMO5'
-      const blob = await liveryZip(prefix, sheets, await makeBlank!())
+      const blob = await liveryZip(prefix, sheets)
       const link = document.createElement('a')
       link.href = URL.createObjectURL(blob)
       link.download = `${prefix}_dealer-livery.zip`
@@ -234,16 +234,16 @@ export default function Livery() {
   }
 
   const prefix = model === 'umo8' ? 'UMO8' : 'UMO5'
-  const templateName = `${prefix}_dealer-livery_template.pdf`
-  /** The editable template, the icon's and a `template` link's alike: the model's sheets at their defaults, the rear
-   * window too, whatever's typed or switched off on the page (it was the sheets as on the page, without the window) */
-  const makeBlank = font ? () => {
+  const defaultsName = `${prefix}_dealer-livery.pdf`
+  /** The model's decals at their defaults, the icon's and the guide's `?t` link's alike: the three sheets, the rear
+   * window too, whatever's typed or switched off on the page (it was an editable template of them) */
+  const makeDefaults = font ? () => {
     const text = { dealer: DEFAULT_TOP, tagline: DEFAULT_TAGLINE[model], url: DEFAULT_URL[model] }
-    const blank = SURFACES.map(id => buildSheet(font, layout[id], text))
-    return import('@/livery/pdf').then(m => m.liveryTemplate(prefix, blank))
+    const sheets = SURFACES.map(id => buildSheet(font, layout[id], text))
+    return import('@/livery/pdf').then(m => m.liveryDefaults(prefix, sheets))
   } : undefined
-  const templateOnly = useTemplateLink(makeBlank, templateName, 'download_livery_template')
-  const templateIcon = <TemplateButton make={makeBlank} name={templateName} goalId="download_livery_template" />
+  const templateOnly = useTemplateLink(makeDefaults, defaultsName, 'download_livery_template')
+  const templateIcon = <TemplateButton make={makeDefaults} name={defaultsName} goalId="download_livery_template" title="Скачать ливрею по умолчанию" />
 
   // `pdf` in the link (a link made for the dealer) downloads the ZIP once the font is in, the editor staying
   // with the car in it, as the name tag's (a ZIP doesn't open in the browser); sheets at fault only show what's wrong
@@ -348,7 +348,7 @@ export default function Livery() {
 
       <main className="flex-1 bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
         <div className="mx-auto flex max-w-[1200px] flex-col gap-10">
-          {/* «Скачать шаблон» by every sheet's caption, before its reset, each the same file of all the sheets: sought
+          {/* «Скачать ливрею по умолчанию» (the template icon) by every sheet's caption, before its reset, each the same file of all the sheets: sought
               by the one in hand (it stood by the left side's only and read as that side's) */}
           {sheets.slice(0, 2).map(s => <SheetPreview key={s.surface.id} sheet={s} seams={seams} dims={dims} onReset={sidesAtDefaults ? undefined : resetSides} resetLabel="Вернуть борта по умолчанию" extra={templateIcon} />)}
           {sheets[2] && (

@@ -5,7 +5,6 @@ import {
 import { zipSync } from 'fflate'
 import { specMarks, labelCmds, loadFont, type Cmd, type Sheet } from './geometry'
 import type { Surface } from './layout'
-import { embedCoFo, textOps } from '@/ui/liveTextPdf'
 
 const PT = 72 / 25.4
 // The livery colour of the Illustrator sources: rich black, C60 M40 Y40 K100.
@@ -41,22 +40,11 @@ async function cutFile(sheets: Sheet[], title: string): Promise<Uint8Array> {
 }
 
 /**
- * The editable template (`UMO8_dealer-livery_template.pdf`): the decals' pages as in the cut file, the dealer and
- * tagline live in CoFo Sans (`src/ui/liveTextPdf.ts`), the QR and lettering in outlines; for editing the text only,
- * the plotter cuts the outlines
+ * The model's decals at their defaults, the rear window too, whatever's on the page (`UMO8_dealer-livery.pdf`, as in the
+ * zip): the icon's and the guide's `?t` link's file (it was an editable template, live text over outlines; no one used it)
  */
-export async function liveryTemplate(prefix: string, sheets: Sheet[]): Promise<Blob> {
-  const doc = await PDFDocument.create()
-  doc.setTitle(`${prefix}_dealer-livery_template.pdf`)
-  const fonts = await embedCoFo(doc)
-  for (const s of sheets) {
-    const page = doc.addPage([s.surface.w * PT, s.surface.h * PT])
-    const H = page.getHeight()
-    fillShapes(page, s.fixed, PT, 0, 0, 'ink')
-    const lines = [...s.dealer.lines, ...s.tagline.lines].filter(l => !l.extra).map(l => l.live)
-    page.pushOperators(...textOps(page, fonts, lines, (x, y) => [x * PT, H - y * PT], PT, INK))
-  }
-  return new Blob([await doc.save() as BlobPart], { type: 'application/pdf' })
+export async function liveryDefaults(prefix: string, sheets: Sheet[]): Promise<Blob> {
+  return new Blob([await cutFile(sheets, `${prefix} dealer livery`) as BlobPart], { type: 'application/pdf' })
 }
 
 /** The car photo flattened onto its background, as a JPEG the PDF can carry */
@@ -111,19 +99,16 @@ async function specFile(sheets: Sheet[], title: string): Promise<Uint8Array> {
 
 /**
  * A dealer livery in one zip: the decals (left side, right side, rear window — one page each, every page at its own
- * size), the spec, named as in the Livery folder on Yandex Disk, and the editable template (the model's defaults, as
- * the icon gives it), so whoever gets the zip has all of it
+ * size) and the spec, named as in the Livery folder on Yandex Disk
  */
-export async function liveryZip(prefix: string, sheets: Sheet[], template: Blob): Promise<Blob> {
-  const [livery, spec, tpl] = await Promise.all([
+export async function liveryZip(prefix: string, sheets: Sheet[]): Promise<Blob> {
+  const [livery, spec] = await Promise.all([
     cutFile(sheets, `${prefix} dealer livery`),
     specFile(sheets, `${prefix} dealer livery spec`),
-    template.arrayBuffer(),
   ])
   const zip = zipSync({
     [`00_${prefix}_dealer-livery_spec.pdf`]: spec,
     [`${prefix}_dealer-livery.pdf`]: livery,
-    [`${prefix}_dealer-livery_template.pdf`]: new Uint8Array(tpl),
   }, { level: 0 })
   return new Blob([zip as BlobPart], { type: 'application/zip' })
 }

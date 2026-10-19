@@ -146,6 +146,21 @@ async function templateOf(c: Card) {
   return cardsPdf([{ variant: `${c.model}-${c.trim}` as Variant, fullPrice: c.full, creditPrice: c.creditOn ? c.credit : undefined, qrUrl: qrUrlOf(c), template: true }], TEMPLATE_FILE)
 }
 
+/**
+ * What the guide's PDF link (`?t`) gives: every model's every trim at its price as it comes, UMO 5 first, an A3 page each,
+ * ready to print or edit (it was the blank template of the UMO 5 card; the card's own template stays in its column)
+ */
+const DEFAULTS_FILE = 'UMO_price-cards.pdf'
+const allDefaults = () => (['umo5', 'umo8'] as Model[]).flatMap(m => TRIMS[m].map(trim => {
+  const full = DEFAULTS[`${m}-${trim}`]
+  return { ...defaultCard(m), trim, full, credit: creditFor(full) }
+}))
+async function defaultsPdf() {
+  const { cardsPdf } = await import('@/posters/pdf/cardsPdf')
+  const pages = allDefaults().map(c => ({ variant: `${c.model}-${c.trim}` as Variant, fullPrice: c.full, qrUrl: qrUrlOf(c) }))
+  return cardsPdf(pages, DEFAULTS_FILE)
+}
+
 function downloadGoal(cards: Card[], extra?: Record<string, unknown>) {
   const one = cards.length === 1 ? cards[0] : null
   // QR links other than the model's page go along: where dealers send people
@@ -376,7 +391,7 @@ export default function App() {
   useAddKey(!phone ? () => addCard(staff.selected) : undefined)
   /** «Скачать шаблон» in the card's column: that card's; `?t`, the default UMO 5 card's */
   const templateIcon = (c: Card) => <TemplateButton make={() => templateOf(c)} name={TEMPLATE_FILE} goalId="download_price_card_template" />
-  const templateOnly = useTemplateLink(() => templateOf(defaultCard('umo5')), TEMPLATE_FILE, 'download_price_card_template')
+  const templateOnly = useTemplateLink(defaultsPdf, DEFAULTS_FILE, 'download_price_card_template')
 
   if (pdfOnly || templateOnly) return null
   if (phone) return <MobileEditor slides={items.map(c => ({ key: c.key, item: c.key, label: `UMO ${c.model === 'umo8' ? 8 : 5} ${c.trim.toUpperCase()}`, ratio: POSTER_H / POSTER_W, node: (w: number) => cardAt(c, w) }))} staff={frame} onAdd={addCard} sidebar={sidebar} download={download} />

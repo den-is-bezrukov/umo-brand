@@ -1120,9 +1120,11 @@ function PriceCardPreview({ variant, fullPrice, creditPrice, image, alt }: {
  * A file from public/downloads/, its row named in Russian by `label` (the file's own name, as saved, stays English), a
  * page of this site (its title and path), or a file a generator makes, `t` the link that makes it (a blank template:
  * `?t`), named by `label` («Шаблон режимника»). `also`: the same item in other formats, on the right of its row after
- * the file's own: the row downloads the vector, its PNG the PNG («Логотип UMO  SVG  PNG»; they were a row each)
+ * the file's own: the row downloads the vector, its PNG the PNG («Логотип UMO  SVG  PNG»; they were a row each). A page's
+ * `verb` stands on its right in place of its path, `template` a PDF link after it («Режимник  Редактор  PDF»: the
+ * row opens the constructor, the template second to it; they were a row each, the constructor's named by what's done there)
  */
-type Asset = { file: string; label?: string; also?: { file: string }[] } | { to: string; title: string } | { t: string; label: string; file: string }
+type Asset = { file: string; label?: string; also?: { file: string }[] } | { to: string; title: string; verb?: string; template?: { t: string; file: string } } | { t: string; label: string; file: string }
 
 /**
  * A file's format, on the right of its row in place of a size (every file here is small, so a size said nothing; the
@@ -1159,6 +1161,21 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
         // A format pointed at itself is underlined as the name is, the link it stands for
         const format = `${UNDERLINE} hover:decoration-black/40 hover:duration-0`
         const meta = `shrink-0 text-[#808080] [font-feature-settings:"tnum"_1] group-hover:text-black ${linked ? 'group-has-[[data-preview]:hover]/preview:text-black' : ''} ${lit ? 'text-black' : ''}`
+        if ('to' in a && a.template) {
+          const tpl = a.template
+          return (
+            <div key={a.to} className={`flex items-stretch ${bare && i === 0 ? '' : 'border-t border-[#e6e6e6]'}`}>
+              <Link to={a.to} className={`${row.replace(/border-t border-\[#e6e6e6\]/, '')} min-w-0 flex-1`}>
+                {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 text-center font-medium">↗</span>}
+                <span className={name}>{a.title}</span>
+                <span className={`${meta} ${format}`}>{a.verb ?? a.to}</span>
+              </Link>
+              <a href={tpl.t} target="_blank" rel="noopener" title={`Скачать ${formatOf(tpl)}`} aria-label={`${a.title}, шаблон ${formatOf(tpl)}`} className="group/format flex shrink-0 items-center pl-3 text-[16px] leading-none tracking-[-0.01em] text-[#808080] hover:text-black">
+                <span className={`${UNDERLINE} group-hover/format:decoration-black/40 group-hover/format:duration-0`}>{formatOf(tpl)}</span>
+              </a>
+            </div>
+          )
+        }
         if ('to' in a) {
           return (
             <Link key={a.to} to={a.to} className={row}>
@@ -1236,12 +1253,12 @@ function Previews({ className, children }: { className: string; children: ReactN
 }
 
 /** A constructor page's preview over its ↗ row; `flush` sets the row right under the preview, with no gap and no hairline. */
-function Constructor({ to, title, flush, templates = [], children }: { to: string; title: string; flush?: boolean; templates?: { label: string; file: string; query?: string }[]; children: ReactNode }) {
+function Constructor({ to, title, label, flush, template, children }: { to: string; title: string; label: string; flush?: boolean; template?: { file: string; query?: string }; children: ReactNode }) {
   return (
     <div className={`group/preview flex flex-col ${flush ? '' : 'gap-4 md:gap-6'}`}>
-      <PreviewLink asset={{ to, title }} label={title}>{children}</PreviewLink>
-      {/* The generator, then its blank templates, made by its `?t` link */}
-      <Assets items={[{ to, title }, ...templates.map(({ query, ...f }) => ({ t: `${to}?${query ? `${query}&` : ''}t`, ...f }))]} preview={to} bare={flush} />
+      <PreviewLink asset={{ to, title }} label={label}>{children}</PreviewLink>
+      {/* The generator's row, its template (made by its `?t` link) a PDF after «Редактор» */}
+      <Assets items={[{ to, title, verb: 'Редактор', template: template && { t: `${to}?${template.query ? `${template.query}&` : ''}t`, file: template.file } }]} preview={to} bare={flush} />
     </div>
   )
 }
@@ -1252,7 +1269,7 @@ function Carriers({ items }: { items: typeof MEDIA }) {
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
       {items.map(c => (
         <div key={c.to} id={c.id} className={`scroll-mt-24 ${isWide(c) ? 'sm:col-span-2' : ''}`}>
-          <Constructor to={c.to} title={c.row} flush templates={GENERATORS.find(g => g.path === c.to)?.templates}>{c.picture}</Constructor>
+          <Constructor to={c.to} title={c.title} label={c.row} flush template={GENERATORS.find(g => g.path === c.to)?.templates?.[0]}>{c.picture}</Constructor>
         </div>
       ))}
     </div>

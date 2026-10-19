@@ -13,9 +13,9 @@ type Generator = { path: string; title: string; phrase: string; of: string; one:
 const LIST: Generator[] = [
   { path: '/name-tag', title: 'Бейдж', phrase: 'бейдж сотрудника', of: 'бейджа', one: 'бейдж', templates: [{ file: 'UMO_name-tags_template.pdf' }] },
   { path: '/business-card', title: 'Визитка', phrase: 'визитка', of: 'визитки', one: 'визитку', templates: [{ file: 'UMO_business-cards_template.pdf' }] },
-  { path: '/livery', title: 'Ливрея', phrase: 'ливрея демо-автомобиля', of: 'ливреи', one: 'ливрею', templates: [{ label: 'Шаблон ливреи UMO 5', file: 'UMO5_dealer-livery_template.pdf' }, { label: 'Шаблон ливреи UMO 8', file: 'UMO8_dealer-livery_template.pdf', query: 'model=umo8' }] },
+  { path: '/livery', title: 'Ливрея', phrase: 'ливрея демо-автомобиля', of: 'ливреи', one: 'ливрею', templates: [{ file: 'UMO5_dealer-livery.pdf' }] },
   { path: '/memo', title: 'Памятка', phrase: 'памятка владельца', of: 'памятки', one: 'памятку', row: 'Подготовить памятку', templates: [{ file: 'UMO_owner-memo_template.pdf' }] },
-  { path: '/price-card', title: 'Прайс-карта', phrase: 'прайс-карта', of: 'прайс-карты', one: 'прайс-карту', templates: [{ file: 'UMO_price-card_template.pdf' }] },
+  { path: '/price-card', title: 'Прайс-карта', phrase: 'прайс-карта', of: 'прайс-карты', one: 'прайс-карту', templates: [{ file: 'UMO_price-cards.pdf' }] },
   { path: '/plate-frame', title: 'Рамка номера', phrase: 'рамка\u00a0номера', of: 'рамки номера', one: 'рамку номера', templates: [{ file: 'UMO_plate-frame_template.pdf' }] },
   { path: '/hours-sign', title: 'Режимник', phrase: 'режимник', of: 'режимника', one: 'режимник', templates: [{ file: 'UMO_hours-sign_template.pdf' }] },
   { path: '/price-tag', title: 'Ценник', phrase: 'ценник', of: 'ценника', one: 'ценник', templates: [{ file: 'UMO_price-tags_template.pdf' }] },

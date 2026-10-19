@@ -28,10 +28,11 @@ const TemplateIcon = () => (
  * before its reset (`CaptionReset`'s `extra`). A text button under the canvas was the first thing clicked, before the real download. `make`
  * gives what's on the page, placeholders where nothing is
  */
-export function TemplateButton({ make, name, goalId, params }: { make: (() => Promise<Blob>) | undefined; name: string; goalId: Goal; params?: Record<string, string | number | boolean> }) {
+export function TemplateButton({ make, name, goalId, params, title: own }: { make: (() => Promise<Blob>) | undefined; name: string; goalId: Goal; params?: Record<string, string | number | boolean>; title?: string }) {
   const [busy, setBusy] = useState(false)
   // Named by the generator it's on, from its entry in `GENERATORS`
-  const title = templateTitle(location.pathname)
+  // `title` where the file isn't a template (the livery's decals at their defaults)
+  const title = own ?? templateTitle(location.pathname)
   // Screen readers' name with the item's number in a list's column («Скачать шаблон визитки 2», as `Action`)
   const n = useContext(ItemNumber)
   const said = n ? `Скачать шаблон ${itemName(location.pathname, n, true)}` : title
