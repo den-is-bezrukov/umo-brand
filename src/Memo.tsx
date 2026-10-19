@@ -39,6 +39,8 @@ const PERSON_REQUIRED = ['position', 'name', 'surname', 'phone'] as const
 const DEALER_REQUIRED = ['dealer', 'dealerPhone', 'address', 'site'] as const
 /** A page's widest on the canvas */
 const PAGE_MAX = 600
+/** Between the pages in a row */
+const PAGES_GAP = 16
 
 /** The dealership as typed: the site follows the name until it's edited (null) */
 type DealerInput = Omit<Dealer, 'site'> & { site: string | null }
@@ -223,13 +225,18 @@ export default function Memo() {
 
   const problemOf = (i: number) => personIssues(i)[0]?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!)) : undefined)
 
-  // One page at a time, as tall as the canvas (600 px wide at most), the pages beside it on the left to pick another;
-  // the second, the consultant's, to start with and whenever a field has the caret. A state, not a ref: the canvas comes
-  // after the first render (the phone check, the fonts), and a ref's effect missed it
+  // The pages in a row, each as tall as the canvas (600 px wide at most); a row wider than the canvas scrolls across,
+  // standing at the second page, the consultant's, to start with and whenever a field has the caret. `rowW`: the row's
+  // width in view. A state, not a ref: the canvas comes after the first render (the phone check, the fonts), and a
+  // ref's effect missed it
   const [canvas, setCanvas] = useState<HTMLElement | null>(null)
   const [pageW, setPageW] = useState(PAGE_MAX)
-  const [page, setPage] = useState<1 | 2>(2)
-  useEffect(() => { if (editing) setPage(2) }, [editing])
+  const [rowW, setRowW] = useState(2 * PAGE_MAX + PAGES_GAP)
+  /** A row put at its last page as it comes; kept by reference, or every render would put it back */
+  const atLast = useCallback((el: HTMLDivElement | null) => { if (el) el.scrollLeft = el.scrollWidth }, [])
+  useEffect(() => {
+    if (editing) canvas?.querySelectorAll('[data-pages]').forEach(el => el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' }))
+  }, [editing, canvas])
   useEffect(() => {
     const el = canvas
     if (!el) return
@@ -237,7 +244,9 @@ export default function Memo() {
       const cs = getComputedStyle(el)
       const w = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
       const h = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
-      setPageW(Math.floor(Math.min(PAGE_MAX, w, h * PAGE.w / PAGE.h)))
+      const pw = Math.floor(Math.min(PAGE_MAX, w, h * PAGE.w / PAGE.h))
+      setPageW(pw)
+      setRowW(Math.min(w, 2 * pw + PAGES_GAP))
     }
     const ro = new ResizeObserver(fit)
     ro.observe(el)
@@ -256,7 +265,7 @@ export default function Memo() {
     const r = page.getBoundingClientRect(), m = main.getBoundingClientRect()
     const top = r.top + block.y1 / PAGE.h * r.height, bottom = r.top + block.y2 / PAGE.h * r.height
     if (top < m.top || bottom > m.bottom) main.scrollBy({ top: (top + bottom) / 2 - (m.top + m.bottom) / 2, behavior: 'smooth' })
-  }, [shownAt, !!block, page]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [shownAt, !!block]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const renderItem = (p: typeof items[number], i: number) => {
     const memo = memos?.[i]
@@ -275,46 +284,34 @@ export default function Memo() {
       />
     )
     // On phones each slide is the second page (the first a slide of its own)
-    const shows = phone ? 2 : page
     return (
       <Fragment key={p.key}>
         <Removed staff={staff} at={i} />
         <figure ref={staff.figureRef(p.key)} onClick={() => staff.pick(p.key)} className="group/row flex cursor-pointer justify-center">
-          <div className="flex w-full max-w-[600px] flex-col gap-3" style={phone ? undefined : { maxWidth: pageW }}>
-            <div className="relative">
-              {/* The pages, 42 px wide, 8 px left of the page shown, from its top: a click shows that one */}
-              {!phone && (
-                <div className="absolute top-0 right-full flex w-[50px] flex-col gap-2 pr-2">
-                  {([1, 2] as const).map(n => (
-                    <button
-                      key={n}
-                      type="button"
-                      aria-label={`Лист ${n}`}
-                      aria-pressed={page === n}
-                      onClick={() => setPage(n)}
-                      // The one shown clear in a ring at 40% black (the items' edge on hover) round its edge, the others dimmed as the items not selected
-                      className={`relative z-0 block w-[42px] cursor-pointer outline-1 transition-opacity duration-150 ${page === n ? 'outline-black/40' : 'outline-black/10 opacity-40 hover:opacity-100'}`}
+          <div className="flex w-full max-w-[600px] flex-col gap-3" style={phone ? undefined : { maxWidth: rowW }}>
+            <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>
+              <button
+                type="button"
+                aria-pressed={mode === 'manual' ? active : undefined}
+                className="block w-full cursor-pointer"
+              >
+                {phone ? <div className={ITEM_EDGE}>{second}</div> : (
+                  // A page partly out of view comes into it on a click
+                  <div ref={atLast} data-pages className="flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" style={{ gap: PAGES_GAP }}>
+                    {/* The first page, everyone's, never dimmed */}
+                    <div onClick={e => e.currentTarget.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' })} className={`shrink-0 snap-start ${ITEM_EDGE}`} style={{ width: pageW }}><Sheet src={page1} /></div>
+                    <div
+                      ref={i === shownAt ? shownPage : undefined}
+                      onClick={e => e.currentTarget.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' })}
+                      className={`shrink-0 snap-end ${ITEM_EDGE} transition-opacity duration-150 ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
+                      style={{ width: pageW }}
                     >
-                      {n === 1 ? <Sheet src={page1} /> : second}
-                    </button>
-                  ))}
-                </div>
-              )}
-              <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>
-                <button
-                  type="button"
-                  aria-pressed={mode === 'manual' ? active : undefined}
-                  className="block w-full cursor-pointer"
-                >
-                  {/* The first page, everyone's, never dimmed */}
-                  {shows === 1 ? <div className={ITEM_EDGE}><Sheet src={page1} /></div> : (
-                    <div ref={i === shownAt ? shownPage : undefined} className={`${ITEM_EDGE} transition-opacity duration-150 ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}>
                       {second}
                     </div>
-                  )}
-                </button>
-              </ItemFrame>
-            </div>
+                  </div>
+                )}
+              </button>
+            </ItemFrame>
             {problems[i].length > 0 && <ItemAlert staff={staff} item={p.key}>{problems[i].join(' · ')}</ItemAlert>}
           </div>
         </figure>
