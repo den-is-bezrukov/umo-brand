@@ -81,8 +81,8 @@ function boxOf(cmds: Cmd[]): Box | undefined {
   return b
 }
 
-/** The pages' edge, `ITEM_EDGE`'s (keep them in step) on a layer over the page: on the page itself the contacts, laid over the art, cover it */
-const PAGE_EDGE = "relative after:pointer-events-none after:absolute after:inset-0 after:content-[''] after:outline-1 after:-outline-offset-1 after:outline-black/10 group-hover/row:after:outline-black/40"
+/** The pages' edge, as `ITEM_EDGE` but 20% on hover (40 is harsh round a page this big), on a layer over the page: on the page itself the contacts, laid over the art, cover it */
+const PAGE_EDGE = "relative after:pointer-events-none after:absolute after:inset-0 after:content-[''] after:outline-1 after:-outline-offset-1 after:outline-black/10 group-hover/row:after:outline-black/20"
 
 /** A page of the memo: Figma's art under the contacts, `text` black, `alert` red, `ghost` grey */
 function Sheet({ src, text, alert, ghost }: { src: string; text?: string; alert?: string; ghost?: string }) {
