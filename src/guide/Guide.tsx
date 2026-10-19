@@ -1131,6 +1131,9 @@ type Asset = { file: string; label?: string; also?: { file: string }[] } | { to:
 const formatOf = (a: { file: string }) =>
   (a.file.match(/-(png|svg)\.zip$/)?.[1] ?? a.file.split('.').pop() ?? '').toUpperCase()
 
+/** The rows' ↗ and ↓ before the name: off (a trial), the right column saying it already (a path, a format) */
+const ROW_ARROWS = false
+
 /**
  * Asset list: a row per file or page, a hairline above each. Up to 3 rows stay in one column, 4 and more
  * split into two, filled top to bottom so files of one item stay together.
@@ -1159,7 +1162,7 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
         if ('to' in a) {
           return (
             <Link key={a.to} to={a.to} className={row}>
-              <span aria-hidden className="w-4 shrink-0 text-center font-medium">↗</span>
+              {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 text-center font-medium">↗</span>}
               <span className={name}>{a.title}</span>
               <span className={meta}>{a.to}</span>
             </Link>
@@ -1169,7 +1172,7 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
         if ('t' in a) {
           return (
             <a key={a.file} href={a.t} target="_blank" rel="noopener" className={row}>
-              <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>
+              {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>}
               <span className={name}>{a.label}</span>
               <span className={`${meta} ${format}`}>{formatOf(a)}</span>
             </a>
@@ -1181,7 +1184,7 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
           return (
             <div key={a.file} className={`flex items-stretch ${bare && i === 0 ? '' : 'border-t border-[#e6e6e6]'}`}>
               <a href={`/downloads/${a.file}`} download className={`${row.replace(/border-t border-\[#e6e6e6\]/, '')} min-w-0 flex-1`}>
-                <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>
+                {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>}
                 <span className={name}>{a.label ?? a.file}</span>
                 <span className={`${meta} ${format}`}>{formatOf(a)}</span>
               </a>
@@ -1195,7 +1198,7 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
         }
         return (
           <a key={a.file} href={`/downloads/${a.file}`} download className={row}>
-            <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>
+            {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>}
             <span className={name}>{a.label ?? a.file}</span>
             <span className={`${meta} ${format}`}>{formatOf(a)}</span>
           </a>
