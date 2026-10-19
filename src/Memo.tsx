@@ -231,11 +231,14 @@ export default function Memo() {
   // not a ref: the canvas comes after the first render (the phone check, the fonts), and a ref's effect missed it
   const [canvas, setCanvas] = useState<HTMLElement | null>(null)
   const [pageW, setPageW] = useState(PAGE_MAX)
+  const [rowEnd, setRowEnd] = useState(64)
   /** The page a row stands at, `data-at` (none while both are in view), the other dimmed */
   const markPage = (el: HTMLElement) => {
     const max = el.scrollWidth - el.clientWidth
     el.dataset.at = max < 1 ? '' : el.scrollLeft > max / 2 ? '2' : '1'
   }
+  /** A click on a page brings it to the canvas's middle */
+  const toPage = (e: React.MouseEvent<HTMLElement>) => e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
   /** A row put at its end as it comes; kept by reference, or every render would put it back */
   const atEnd = useCallback((el: HTMLDivElement | null) => { if (el) { el.scrollLeft = el.scrollWidth; markPage(el) } }, [])
   // The canvas resized, a row may now fit or not
@@ -250,7 +253,10 @@ export default function Memo() {
       const cs = getComputedStyle(el)
       const w = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
       const h = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
-      setPageW(Math.floor(Math.min(PAGE_MAX, w, h * PAGE.w / PAGE.h)))
+      const pw = Math.floor(Math.min(PAGE_MAX, w, h * PAGE.w / PAGE.h))
+      setPageW(pw)
+      // The row's ends: the canvas's 64 px while it fits, else as much as centres a page at either end
+      setRowEnd(2 * pw + PAGES_GAP <= w ? 64 : Math.max(64, (el.clientWidth - pw) / 2))
     }
     const ro = new ResizeObserver(fit)
     ro.observe(el)
@@ -301,17 +307,18 @@ export default function Memo() {
               </ItemFrame>
             ) : (
               // Across the canvas's whole width, past its 64 px padding, which the row keeps as its own ends (the actions in
-              // the right one); let go, it stands at a page, 64 px off the canvas's edge, never between them
-              <div ref={atEnd} data-pages onScroll={e => markPage(e.currentTarget)} className="group/pages -mx-16 snap-x snap-mandatory scroll-px-16 overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              // the right one); let go, it stands at a page, in the canvas's middle, never between them
+              <div ref={atEnd} data-pages onScroll={e => markPage(e.currentTarget)} className="group/pages -mx-16 snap-x snap-mandatory overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {/* Its width set: the item's box is a size container, which `w-max` takes as nothing */}
-                <div className="mx-auto box-content px-16" style={{ width: 2 * pageW + PAGES_GAP }}>
+                <div className="mx-auto box-content" style={{ width: 2 * pageW + PAGES_GAP, paddingInline: rowEnd }}>
                   <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>
                     <button type="button" aria-pressed={mode === 'manual' ? active : undefined} className="flex cursor-pointer" style={{ gap: PAGES_GAP }}>
                       {/* The first page, everyone's, dimmed only while the row stands at the second; a page out of the way, clear on hover */}
-                      <div className={`shrink-0 snap-start ${ITEM_EDGE} transition-opacity duration-150 group-data-[at=2]/pages:opacity-40 hover:opacity-100!`} style={{ width: pageW }}><Sheet src={page1} /></div>
+                      <div onClick={toPage} className={`shrink-0 snap-center ${ITEM_EDGE} transition-opacity duration-150 group-data-[at=2]/pages:opacity-40 hover:opacity-100!`} style={{ width: pageW }}><Sheet src={page1} /></div>
                       <div
                         ref={i === shownAt ? shownPage : undefined}
-                        className={`shrink-0 snap-end ${ITEM_EDGE} transition-opacity duration-150 ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''} group-data-[at=1]/pages:opacity-40 hover:opacity-100!`}
+                        onClick={toPage}
+                        className={`shrink-0 snap-center ${ITEM_EDGE} transition-opacity duration-150 ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''} group-data-[at=1]/pages:opacity-40 hover:opacity-100!`}
                         style={{ width: pageW }}
                       >
                         {second}
