@@ -1,4 +1,4 @@
-import { createContext, isValidElement, useContext, useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode, type RefObject } from 'react'
+import { createContext, isValidElement, lazy, Suspense, useContext, useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode, type RefObject } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import PriceCard from '@/posters/PriceCard'
 import type { Variant } from '@/posters/cardData'
@@ -35,7 +35,8 @@ type NavItem = { id: string; title: string; children?: NavItem[] }
  */
 // `row`: the ↗ row under the picture, named for what a dealer does there, so it reads as a tool to click into (it was
 // the medium's name alone, as the contents list it, then «Редактор ливреи»…)
-const MEDIA_LIST: { id: string; to: string; title: string; row: string; w: number; h: number; picture: ReactNode }[] = [
+type Medium = { id: string; to: string; title: string; row: string; w: number; h: number; picture: ReactNode }
+const DRAWN: Medium[] = [
   { id: 'livery', to: '/livery', title: 'Ливрея', row: 'Настроить ливрею', w: 912, h: 456, picture: <Fig name="livery-umo5" flat="#f6f6f6" w={912} h={456} alt="UMO 5 с ливреей дилера" /> },
   {
     // Figma 4985:10019: the 210×297 card centred on the 444×333 grey
@@ -111,6 +112,25 @@ function packMedia<T extends { w: number; h: number }>(items: T[]): T[] {
   }
   return packed
 }
+/**
+ * A generator the cards above don't have yet gets one of its own after them, 444×333: its generator's picture
+ * (`GENERATED`, loaded as the guide needs it), a grey card with its name while there's none; until a picture is made
+ * for it, which then goes up into `DRAWN`
+ */
+const GENERATED: Record<string, React.LazyExoticComponent<() => ReactNode>> = {
+  '/memo': lazy(() => import('@/memo/MemoPreview')),
+}
+const GreyCard = () => <div className="aspect-4/3 bg-[#f5f5f5]" />
+const MEDIA_LIST: Medium[] = [
+  ...DRAWN,
+  ...GENERATORS.filter(g => !DRAWN.some(m => m.to === g.path)).map(g => {
+    const Picture = GENERATED[g.path] ?? GreyCard
+    return {
+      id: g.path.slice(1), to: g.path, title: g.title, row: g.row ?? g.title, w: 444, h: 333,
+      picture: <Suspense fallback={<GreyCard />}><Picture /></Suspense>,
+    }
+  }),
+]
 const MEDIA = packMedia(MEDIA_LIST)
 
 const NAV: NavItem[] = [
