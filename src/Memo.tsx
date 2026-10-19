@@ -225,18 +225,10 @@ export default function Memo() {
 
   const problemOf = (i: number) => personIssues(i)[0]?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!)) : undefined)
 
-  // The pages in a row, each as tall as the canvas (600 px wide at most); where both don't fit, one page in view, whole
-  // (a part of the other, in view, was cut off awkwardly), the row scrolling across, standing at the second page, the consultant's, to start with and whenever a field has the caret. `rowW`: the row's
-  // width in view. A state, not a ref: the canvas comes after the first render (the phone check, the fonts), and a
-  // ref's effect missed it
+  // Both pages in a row, as large as the canvas lets them stand whole (600 px wide at most). A state, not a ref: the
+  // canvas comes after the first render (the phone check, the fonts), and a ref's effect missed it
   const [canvas, setCanvas] = useState<HTMLElement | null>(null)
   const [pageW, setPageW] = useState(PAGE_MAX)
-  const [rowW, setRowW] = useState(2 * PAGE_MAX + PAGES_GAP)
-  /** A row put at its last page as it comes; kept by reference, or every render would put it back */
-  const atLast = useCallback((el: HTMLDivElement | null) => { if (el) el.scrollLeft = el.scrollWidth }, [])
-  useEffect(() => {
-    if (editing) canvas?.querySelectorAll('[data-pages]').forEach(el => el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' }))
-  }, [editing, canvas])
   useEffect(() => {
     const el = canvas
     if (!el) return
@@ -244,9 +236,7 @@ export default function Memo() {
       const cs = getComputedStyle(el)
       const w = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
       const h = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
-      const pw = Math.floor(Math.min(PAGE_MAX, w, h * PAGE.w / PAGE.h))
-      setPageW(pw)
-      setRowW(w >= 2 * pw + PAGES_GAP ? 2 * pw + PAGES_GAP : pw)
+      setPageW(Math.floor(Math.min(PAGE_MAX, (w - PAGES_GAP) / 2, h * PAGE.w / PAGE.h)))
     }
     const ro = new ResizeObserver(fit)
     ro.observe(el)
@@ -288,7 +278,7 @@ export default function Memo() {
       <Fragment key={p.key}>
         <Removed staff={staff} at={i} />
         <figure ref={staff.figureRef(p.key)} onClick={() => staff.pick(p.key)} className="group/row flex cursor-pointer justify-center">
-          <div className="flex w-full max-w-[600px] flex-col gap-3" style={phone ? undefined : { maxWidth: rowW }}>
+          <div className="flex w-full max-w-[600px] flex-col gap-3" style={phone ? undefined : { maxWidth: 2 * pageW + PAGES_GAP }}>
             <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>
               <button
                 type="button"
@@ -296,14 +286,12 @@ export default function Memo() {
                 className="block w-full cursor-pointer"
               >
                 {phone ? <div className={ITEM_EDGE}>{second}</div> : (
-                  // A page partly out of view comes into it on a click
-                  <div ref={atLast} data-pages className="flex snap-x snap-mandatory overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden" style={{ gap: PAGES_GAP }}>
+                  <div className="flex" style={{ gap: PAGES_GAP }}>
                     {/* The first page, everyone's, never dimmed */}
-                    <div onClick={e => e.currentTarget.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' })} className={`shrink-0 snap-start ${ITEM_EDGE}`} style={{ width: pageW }}><Sheet src={page1} /></div>
+                    <div className={`shrink-0 ${ITEM_EDGE}`} style={{ width: pageW }}><Sheet src={page1} /></div>
                     <div
                       ref={i === shownAt ? shownPage : undefined}
-                      onClick={e => e.currentTarget.scrollIntoView({ inline: 'nearest', block: 'nearest', behavior: 'smooth' })}
-                      className={`shrink-0 snap-end ${ITEM_EDGE} transition-opacity duration-150 ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
+                      className={`shrink-0 ${ITEM_EDGE} transition-opacity duration-150 ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
                       style={{ width: pageW }}
                     >
                       {second}
