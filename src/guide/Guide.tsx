@@ -14,7 +14,7 @@ import tocIcons from '@/icons/toc'
 import { useTypograf } from './typograf'
 import Dialog from '@/ui/Dialog'
 import { TEXT_LINK, SUPPORT_BOT } from '@/ui/links'
-import { GENERATORS, editTitle, downloadTitle } from '@/data/generators'
+import { GENERATORS, editTitle, templateTitle } from '@/data/generators'
 import heroMp4 from '@/assets/guide/hero.mp4'
 import hero720Mp4 from '@/assets/guide/hero-720.mp4'
 
@@ -1128,7 +1128,7 @@ function PriceCardPreview({ variant, fullPrice, creditPrice, image, alt }: {
  * the file's own: the row downloads the vector, its PNG the PNG («Логотип UMO  SVG  PNG»; they were a row each). A page's
  * `verb`, if any, stands on its right in place of its path, `template` a PDF link after it («Указать часы работы  PDF»: the
  * row opens the constructor, named by what's done there, the template second to it; `download`, the name while the PDF is
- * pointed at, «Скачать визитку»)
+ * pointed at, «Скачать шаблон визитки»)
  */
 type Asset = { file: string; label?: string; also?: { file: string }[] } | { to: string; title: string; verb?: string; download?: string; template?: { t: string; file: string } } | { t: string; label: string; file: string }
 
@@ -1188,7 +1188,7 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
               <Link to={a.to} title={editTitle(a.to)} className={`${row.replace(/border-t border-\[#e6e6e6\]/, '')} min-w-0 flex-1`}>
                 {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 text-center font-medium">↗</span>}
                 <span className="flex min-w-0 flex-1 items-center gap-2">
-                  {/* Over the PDF the verb gives way to «Скачать» («Скачать визитку»), the name saying what that click does */}
+                  {/* Over the PDF the verb gives way to «Скачать» («Скачать шаблон визитки»), the name saying what that click does */}
                   <span className={`${name.replace('min-w-0 flex-1 ', 'min-w-0 ')} ${a.download ? 'group-has-[[data-format]:hover]/row:hidden' : ''}`}>{a.title}</span>
                   {a.download && <span aria-hidden className={`hidden ${name.replace('min-w-0 flex-1 ', 'min-w-0 ')} group-has-[[data-format]:hover]/row:inline`}>{a.download}</span>}
                   <span aria-hidden className={`hidden font-medium group-hover:inline ${linked ? 'group-has-[[data-preview]:hover]/preview:inline' : ''}`}>↗</span>
@@ -1284,7 +1284,7 @@ function Constructor({ to, title, label, flush, template, children }: { to: stri
     <div className={`group/preview flex flex-col ${flush ? '' : 'gap-4 md:gap-6'}`}>
       <PreviewLink asset={{ to, title }} label={label}>{children}</PreviewLink>
       {/* The generator's row, named by what's done there, its template (made by its `?t` link) a PDF after it */}
-      <Assets items={[{ to, title: label, download: template && downloadTitle(to), template: template && { t: `${to}?${template.query ? `${template.query}&` : ''}t`, file: template.file } }]} preview={to} bare={flush} />
+      <Assets items={[{ to, title: label, download: template && templateTitle(to), template: template && { t: `${to}?${template.query ? `${template.query}&` : ''}t`, file: template.file } }]} preview={to} bare={flush} />
     </div>
   )
 }

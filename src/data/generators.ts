@@ -22,7 +22,7 @@ const LIST: Generator[] = [
 ]
 export const GENERATORS = LIST.map(g => ({ ...g, templates: g.templates?.map(t => ({ ...t, label: t.label ?? `Шаблон ${g.of}` })) }))
 
-/** The template icon's tooltip on the generator at `path`: «Скачать шаблон бейджа» */
+/** The template icon's tooltip on the generator at `path`, and Материалы' card row while its PDF is pointed at: «Скачать шаблон бейджа» */
 export const templateTitle = (path: string) => {
   const g = LIST.find(g => g.path === path)
   return g ? `Скачать шаблон ${g.of}` : 'Скачать шаблон'
@@ -34,12 +34,6 @@ export const itemName = (path: string, n?: number, of = false) => {
   const g = LIST.find(g => g.path === path)
   const word = g ? (of ? g.of : g.one) : ''
   return [word, n].filter(Boolean).join(' ')
-}
-
-/** Материалы' card row while its PDF is pointed at: «Скачать визитку» */
-export const downloadTitle = (path: string) => {
-  const g = LIST.find(g => g.path === path)
-  return g ? `Скачать ${g.one}` : 'Скачать'
 }
 
 /** A link into the generator at `path`, its tooltip: «Редактировать визитку» */
