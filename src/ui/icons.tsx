@@ -1,8 +1,10 @@
 /**
  * The generators' quiet icons' stroke: 1 px, finer than the sidebar's 2 px icons, as the item's action column stands
- * quietly beside it (Figma 5030:11424); `staff.tsx` draws its icons with it. Here, apart, what's used outside the lists
+ * quietly beside it (Figma 5030:11424); `staff.tsx` draws its icons with it. Here, apart, what's used outside the lists.
+ * The pointer goes through them to their button: Chrome showed no `title` over an SVG inside a button, so no icon on
+ * the canvas had its tooltip
  */
-export const ICON = { fill: 'none', stroke: 'currentColor', strokeWidth: 1, strokeLinecap: 'square' as const, strokeLinejoin: 'bevel' as const }
+export const ICON = { fill: 'none', stroke: 'currentColor', strokeWidth: 1, strokeLinecap: 'square' as const, strokeLinejoin: 'bevel' as const, pointerEvents: 'none' as const }
 
 /** The generators' cross, 16 px; 2 px in the site's dialog, as the chevron by its title */
 export const CrossIcon = ({ weight = 1 }: { weight?: number }) => (
