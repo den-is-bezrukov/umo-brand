@@ -5,7 +5,8 @@ import {
 import { SIGN, SIGN_KEY, LOGO, type Sign } from './sign'
 import type { Cmd } from '@/livery/geometry'
 import { writePdfData } from '@/ui/pdfDataWrite'
-import { embedCoFo, textOps, type LiveFonts, type TextLine } from '@/ui/liveText'
+import { embedCoFo, textOps, type LiveFonts } from '@/ui/liveTextPdf'
+import type { TextLine } from '@/ui/liveText'
 
 // Loaded only when the PDF is downloaded, so the page doesn't carry pdf-lib until then.
 
@@ -28,7 +29,7 @@ export async function signPdf(sign: Sign, data: unknown): Promise<Blob> {
   return signPage(doc, sign)
 }
 
-/** The editable template: the same page, the text live in CoFo Sans (`src/ui/liveText.ts`), the logo in outlines */
+/** The editable template: the same page, the text live in CoFo Sans (`src/ui/liveTextPdf.ts`), the logo in outlines */
 export async function signTemplate(sign: Sign, lines: TextLine[]): Promise<Blob> {
   const doc = await PDFDocument.create()
   doc.setTitle(SIGN_TEMPLATE)

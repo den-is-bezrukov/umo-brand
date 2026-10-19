@@ -7,7 +7,8 @@ import { TAG, BAND, BAND_ART, type Tag } from './tag'
 import { DATA_KEY, type TagsData } from './read'
 import { writePdfData } from '@/ui/pdfDataWrite'
 import type { Cmd } from '@/livery/geometry'
-import { embedCoFo, textOps, type LiveFonts, type TextLine } from '@/ui/liveText'
+import { embedCoFo, textOps, type LiveFonts } from '@/ui/liveTextPdf'
+import type { TextLine } from '@/ui/liveText'
 
 // Loaded only when the tags are downloaded, so the page doesn't carry pdf-lib until then.
 

@@ -6,7 +6,8 @@ import { zipSync, strToU8 } from 'fflate'
 import { TAG, LOGO, TAGS_KEY, type Tag } from './tag'
 import { writePdfData } from '@/ui/pdfDataWrite'
 import type { Cmd } from '@/livery/geometry'
-import { embedCoFo, textOps, type LiveFonts, type TextLine } from '@/ui/liveText'
+import { embedCoFo, textOps, type LiveFonts } from '@/ui/liveTextPdf'
+import type { TextLine } from '@/ui/liveText'
 
 // Loaded only when the files are downloaded, so the page doesn't carry pdf-lib until then.
 
@@ -66,7 +67,7 @@ async function tagsPdf(tags: Tag[], people: unknown): Promise<Uint8Array> {
 
 /**
  * The editable template (`UMO_name-tags_template.pdf`, a file of its own, not in the ZIP): the same pages, the text
- * live in CoFo Sans (`src/ui/liveText.ts`), the logo in outlines
+ * live in CoFo Sans (`src/ui/liveTextPdf.ts`), the logo in outlines
  */
 export async function tagsTemplate(tags: { tag: Tag; lines: TextLine[] }[]): Promise<Blob> {
   const doc = await PDFDocument.create()

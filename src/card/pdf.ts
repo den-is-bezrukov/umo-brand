@@ -6,7 +6,8 @@ import {
 import { CARD, FACE, BACK_LOGO, type Back } from './card'
 import type { Cmd } from '@/livery/geometry'
 import { writePdfData } from '@/ui/pdfDataWrite'
-import { embedCoFo, textOps, type LiveFonts, type TextLine } from '@/ui/liveText'
+import { embedCoFo, textOps, type LiveFonts } from '@/ui/liveTextPdf'
+import type { TextLine } from '@/ui/liveText'
 import { CARDS_KEY } from './card'
 
 // Loaded only when the cards are downloaded, so the page doesn't carry pdf-lib until then.
@@ -52,7 +53,7 @@ export async function cardsPdf(backs: Back[], { faceEach, marks }: PageOptions, 
 
 /**
  * The editable template (`UMO_business-cards_template.pdf`): the same pages, the text live in CoFo Sans
- * (`src/ui/liveText.ts`), the logos and QR in outlines
+ * (`src/ui/liveTextPdf.ts`), the logos and QR in outlines
  */
 export async function cardsTemplate(backs: { back: Back; lines: TextLine[] }[], options: PageOptions): Promise<Blob> {
   const doc = await PDFDocument.create()

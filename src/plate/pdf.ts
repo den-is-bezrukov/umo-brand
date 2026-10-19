@@ -3,7 +3,8 @@ import {
   moveTo, lineTo, appendBezierCurve, closePath, pushGraphicsState, popGraphicsState, rectangle, fill, setFillingCmykColor,
 } from 'pdf-lib'
 import { STRIP, type Strip } from './frame'
-import { embedCoFo, textOps, type TextLine } from '@/ui/liveText'
+import { embedCoFo, textOps } from '@/ui/liveTextPdf'
+import type { TextLine } from '@/ui/liveText'
 
 // Loaded only when the PDF is downloaded, so the guide and the constructor page don't carry pdf-lib.
 
@@ -20,7 +21,7 @@ export async function stripPdf(strip: Strip): Promise<Blob> {
   return stripPage(strip, STRIP_FILE)
 }
 
-/** The editable template: the same page, the text live in CoFo Sans (`src/ui/liveText.ts`), in the same White */
+/** The editable template: the same page, the text live in CoFo Sans (`src/ui/liveTextPdf.ts`), in the same White */
 export async function stripTemplate(strip: Strip, lines: TextLine[]): Promise<Blob> {
   return stripPage(strip, 'UMO_plate-frame_template.pdf', lines)
 }
