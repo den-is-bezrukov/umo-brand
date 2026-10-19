@@ -316,7 +316,7 @@ function HelpPanel({ page, tabs, onClose, initial = page }: { page: string; tabs
         ) : <>
           {help ? <Generator help={help} /> : GENERAL.map(([q, a]) => <Part key={q} title={q}><p>{a}</p></Part>)}
           {/* The instruction's own link, to send: the generator with it open (`?help`; «Общие вопросы» from this page) */}
-          <p>Ссылка на эту инструкцию: <CopyLink href={help ? `https://umo.autos${tab}?help` : `https://umo.autos${page}?help=general`}>{help ? `umo.autos${tab}?help` : `umo.autos${page}?help=general`}</CopyLink></p>
+          <p>Ссылка на инструкцию: <CopyLink href={help ? `https://umo.autos${tab}?help` : `https://umo.autos${page}?help=general`}>{help ? `umo.autos${tab}?help` : `umo.autos${page}?help=general`}</CopyLink></p>
         </>}
       </div>
     </Dialog>
