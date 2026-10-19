@@ -9,6 +9,11 @@ export const CrossIcon = ({ weight = 1 }: { weight?: number }) => (
   <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} strokeWidth={weight} aria-hidden><path d="M12 4L8 8M8 8L4 4M8 8L12 12M8 8L4 12" /></svg>
 )
 
+/** Duplicate, two squares: an item's copy in the lists, the template link's copy in «Инструкция» */
+export const DuplicateIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M3.5 6H2V14H10V12.5M6 2H14V10H6V2Z" /></svg>
+)
+
 /** A combobox's chevron, 14 px, a 2 px stroke as the sidebar's icons; turned over while what it opens is open */
 export const ChevronIcon = ({ open }: { open?: boolean }) => (
   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden className={open ? 'rotate-180' : undefined}>

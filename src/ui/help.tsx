@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useTypograf } from '@/guide/typograf'
 import { goal } from './metrika'
 import Dialog from './Dialog'
-import { ChevronIcon } from './icons'
+import { ChevronIcon, DuplicateIcon } from './icons'
 import { SUPPORT_BOT, TEXT_LINK } from './links'
 
 /**
@@ -24,6 +24,27 @@ type Help = {
 
 /** The site the generator makes up from the dealer's name (`siteFor`), to be checked: such subdomains didn't resolve as of 2026-10-16 */
 const SITE = (more = ''): [string, ReactNode] => ['Проверьте сайт', `Редактор подставляет сайт по названию салона, например agat-vladimir.umo.auto. Откройте его в браузере: если он не открывается или у салона свой сайт, впишите свой или umo.auto.${more}`]
+
+/**
+ * A link to send, with its copy after it: the duplicate icon, #808080, black on hover; copied, «Скопировано» in its place
+ * for two seconds, as «Поделиться» says it
+ */
+function CopyLink({ href, children }: { href: string; children: ReactNode }) {
+  const [copied, setCopied] = useState(false)
+  useEffect(() => { if (!copied) return; const t = setTimeout(() => setCopied(false), 2000); return () => clearTimeout(t) }, [copied])
+  return (
+    <>
+      <a href={href} target="_blank" rel="noopener" className={TEXT_LINK}>{children}</a>
+      {copied
+        ? <span className="ml-1 text-[#808080]">Скопировано</span>
+        : (
+          <button type="button" title="Скопировать ссылку" aria-label="Скопировать ссылку" onClick={() => navigator.clipboard.writeText(href).then(() => setCopied(true))} className="ml-1 inline-flex cursor-pointer align-[-3px] text-[#808080] hover:text-black">
+            <DuplicateIcon />
+          </button>
+        )}
+    </>
+  )
+}
 
 /** UMO's support bot, linked as the guide's «Контакты» link it */
 const Bot = ({ children }: { children: ReactNode }) => <a href={SUPPORT_BOT} target="_blank" rel="noopener" className={TEXT_LINK}>{children}</a>
@@ -153,7 +174,7 @@ const HELP: Record<string, Help> = {
     print: [
       'Ctrl + P, A4, двусторонняя печать.',
       'Если нужно поменять текст памятки, нажмите «Скачать шаблон» под макетом: в этом PDF весь текст живой. Откройте его в Illustrator или Acrobat, где установлен шрифт CoFo Sans.',
-      <>Пустой шаблон для дизайнера всегда по ссылке <a href="https://umo.autos/memo?template" target="_blank" rel="noopener" className={TEXT_LINK}>umo.autos/memo?template</a>: её можно отправить вместо файла.</>,
+      <>Пустой шаблон для дизайнера всегда по ссылке <CopyLink href="https://umo.autos/memo?template">umo.autos/memo?template</CopyLink>, её можно отправить вместо файла.</>,
     ],
     faq: [
       ['Нужно отчество', 'Допишите его в поле «Имя» после имени: «Иван Сергеевич». На памятке будет «Иван Сергеевич Петров».'],

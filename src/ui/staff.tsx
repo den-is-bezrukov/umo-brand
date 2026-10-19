@@ -524,9 +524,7 @@ export function CaptionReset({ onClick, label = 'Сбросить' }: { onClick:
   )
 }
 
-export const DuplicateIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M3.5 6H2V14H10V12.5M6 2H14V10H6V2Z" /></svg>
-)
+export { DuplicateIcon } from './icons'
 
 /** Delete, a bin (Figma 5105:8492, its outline as exported), the canvas icons' 1 px stroke; on wide screens and phones alike */
 export const TrashIcon = () => (
