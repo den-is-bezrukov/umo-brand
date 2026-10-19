@@ -252,12 +252,14 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
    * A new item at the end: empty, or a copy of `from` (the price card's next card starts as the last one), fresh unless
    * said otherwise (a business card's new person starts with the salon's phone, still fresh)
    */
-  const add = (from?: P, fresh = !from) => {
+  /** A new item, `from` or blank, at the end or right after the item `after` (the plus in its column) */
+  const add = (from?: P, fresh = !from, after?: number) => {
     const r = row(from ?? blank)
     if (fresh) setFresh(f => new Set(f).add(r.key))
     focusNext.current = true
     centre.current = true
-    setPeople([...people, r])
+    const at = after === undefined ? -1 : people.findIndex(p => p.key === after)
+    setPeople(at < 0 ? [...people, r] : [...people.slice(0, at + 1), r, ...people.slice(at + 1)])
     setSelected(r.key)
   }
   /**
@@ -550,8 +552,8 @@ export function Action({ label, keys, hidden, onClick, children }: { label: stri
  */
 export function ItemFrame<P extends object>({ staff, item, n, onAdd, extra, children }: {
   staff: Staff<P>; item: Row<P>; n: number
-  /** «Добавить» after the item's own actions, the manual list only (⌘↩ is the page's, `useAddKey`) */
-  onAdd?: () => void
+  /** «Добавить», last in the column, the manual list only: a new item right after this one (⌘↩ is the page's, `useAddKey`, at the end) */
+  onAdd?: (after: number) => void
   /** The list's own actions after it, in either mode («Скачать шаблон») */
   extra?: React.ReactNode
   children: React.ReactNode
@@ -573,24 +575,27 @@ export function ItemFrame<P extends object>({ staff, item, n, onAdd, extra, chil
       {staff.items.length > 1 && <span aria-hidden className="pointer-events-none pb-[5px] text-center text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1]">{n}</span>}
       {(staff.mode === 'manual' || extra) && (
         <div className={`flex-col ${active ? 'flex' : 'hidden'} ${hover}`}>
+          {/* Those always there first, so they never move: template, duplicate; then reset, remove, add */}
+          {extra}
+          {staff.mode === 'manual' && (
+            <Action label="Дублировать" keys={`${MOD}D`} onClick={() => staff.duplicate(item.key)}>
+              <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M3.5 6H2V14H10V12.5M6 2H14V10H6V2Z" /></svg>
+            </Action>
+          )}
           {staff.mode === 'manual' && (
             <>
-              <Action label="Дублировать" keys={`${MOD}D`} onClick={() => staff.duplicate(item.key)}>
-                <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M3.5 6H2V14H10V12.5M6 2H14V10H6V2Z" /></svg>
-              </Action>
               <Action label="Сбросить" hidden={staff.isBlank(item)} onClick={() => staff.clear(item.key)}>
                 <ResetIcon />
               </Action>
               <Action label="Удалить" hidden={staff.people.length < 2} onClick={() => staff.remove(item.key)}>
                 <TrashIcon />
               </Action>
+              {onAdd && (
+                <Action label="Добавить" keys={MOD === '⌘' ? '⌘↩' : 'Ctrl+Enter'} onClick={() => onAdd(item.key)}>
+                  <PlusIcon />
+                </Action>
+              )}
             </>
-          )}
-          {extra}
-          {staff.mode === 'manual' && onAdd && (
-            <Action label="Добавить" keys={MOD === '⌘' ? '⌘↩' : 'Ctrl+Enter'} onClick={onAdd}>
-              <PlusIcon />
-            </Action>
           )}
         </div>
       )}

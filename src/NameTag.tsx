@@ -100,7 +100,7 @@ export default function NameTag() {
   const makeBlank = fonts ? () => templateOf([PLACEHOLDER]) : undefined
   const templateOnly = useTemplateLink(makeBlank, 'UMO_name-tags_template.pdf', 'download_name_tag_template')
   /** «Добавить» in the item's column, ⌘↩ from anywhere (the manual list, wide screens) */
-  const addItem = () => staff.add()
+  const addItem = (after?: number) => staff.add(undefined, undefined, after)
   useAddKey(!phone && mode === 'manual' ? addItem : undefined)
   /** «Скачать шаблон» in the item's column */
   const templateIcon = (i: number) => <TemplateButton make={makeTemplate(i)} name="UMO_name-tags_template.pdf" goalId="download_name_tag_template" />

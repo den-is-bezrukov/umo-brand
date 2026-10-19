@@ -118,7 +118,7 @@ export default function Memo() {
   } : undefined
   const templateOnly = useTemplateLink(makeBlank, 'UMO_owner-memo_template.pdf', 'download_owner_memo_template')
   /** «Добавить» in the item's column, ⌘↩ from anywhere (the manual list, wide screens) */
-  const addItem = () => staff.add()
+  const addItem = (after?: number) => staff.add(undefined, undefined, after)
   useAddKey(!phone ? addItem : undefined)
 
   useEffect(() => {

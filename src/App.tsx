@@ -364,7 +364,7 @@ export default function App() {
   // A card's reset brings back its model's defaults (`frame`)
   // «Добавить» in the card's column, ⌘↩ from anywhere (wide screens): the next card starts as the last one, most
   // often the same model in another trim or at another price
-  const addCard = () => staff.add(plain(items[items.length - 1]))
+  const addCard = (after?: number) => staff.add(plain(items[items.length - 1]), undefined, after)
   useAddKey(!phone ? addCard : undefined)
 
   if (pdfOnly) return null
