@@ -284,7 +284,7 @@ export default function Memo() {
             <div className="relative">
               {/* The pages, 48 px wide, 8 px left of the page shown, from its top: a click shows that one */}
               {!phone && (
-                <div className="absolute top-0 right-full flex w-14 flex-col gap-2.5 pr-2">
+                <div className="absolute top-0 right-full flex w-14 flex-col gap-2 pr-2">
                   {([1, 2] as const).map(n => (
                     <button
                       key={n}
@@ -292,8 +292,8 @@ export default function Memo() {
                       aria-label={`Лист ${n}`}
                       aria-pressed={page === n}
                       onClick={() => setPage(n)}
-                      // The one shown clear in a ring at 40% black (the items' edge on hover) 2 px off it, the others dimmed as the items not selected
-                      className={`relative z-0 block w-12 cursor-pointer outline-1 transition-opacity duration-150 ${page === n ? 'outline-offset-2 outline-black/40' : 'outline-black/10 opacity-40 hover:opacity-100'}`}
+                      // The one shown clear in a ring at 40% black (the items' edge on hover) round its edge, the others dimmed as the items not selected
+                      className={`relative z-0 block w-12 cursor-pointer outline-1 transition-opacity duration-150 ${page === n ? 'outline-black/40' : 'outline-black/10 opacity-40 hover:opacity-100'}`}
                     >
                       {n === 1 ? <Sheet src={page1} /> : second}
                     </button>
