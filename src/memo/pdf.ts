@@ -123,11 +123,11 @@ export async function memosTemplate(blocks: Block[], fonts: MemoFonts): Promise<
   const doc = await PDFDocument.create()
   doc.setTitle('UMO_owner-memo_template.pdf')
   doc.registerFontkit(fontkit)
-  // Named as the font is, a subset's tag before it (pdf-lib would add a random suffix), so Illustrator and Acrobat
-  // find the installed CoFo Sans for it
-  const font = (name: string, tag: string) => fetch(`${import.meta.env.BASE_URL}fonts/CoFoSans-${name}.ttf`).then(r => r.arrayBuffer())
-    .then(b => doc.embedFont(b, { subset: true, customName: `${tag}+CoFoSans-${name}` }))
-  const [one, two, r, m] = await Promise.all([art(page1), art(page2), font('Regular', 'UMOAAA'), font('Medium', 'UMOAAB')])
+  // Whole and named as the font is (pdf-lib would add a random suffix), so Illustrator finds the installed CoFo Sans
+  // for it: a subset kept the text live in a page opened alone, but Illustrator's import of all pages outlined it
+  const font = (name: string) => fetch(`${import.meta.env.BASE_URL}fonts/CoFoSans-${name}.ttf`).then(r => r.arrayBuffer())
+    .then(b => doc.embedFont(b, { subset: false, customName: `CoFoSans-${name}` }))
+  const [one, two, r, m] = await Promise.all([art(page1), art(page2), font('Regular'), font('Medium')])
   const pdfFonts = { r, m }
   const [first, second] = [shared(doc, one.filter(s => !s.text)), shared(doc, two.filter(s => !s.text))]
   /** Each page's fixed texts, set once */
