@@ -156,8 +156,7 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
    */
   const ROOM = { top: 0, bottom: 0 }
   const room = useRef(ROOM)
-  const drum = useRef(false)
-  const roomFor = (canvas: HTMLElement, key: number | undefined, reset = !drum.current) => {
+  const roomFor = (canvas: HTMLElement, key: number | undefined) => {
     const el = key === undefined ? undefined : figures.current.get(key)
     const list = canvas.firstElementChild as HTMLElement | null
     const before = list?.getBoundingClientRect().top
@@ -167,20 +166,15 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
       canvas.style.paddingBottom = `${parseFloat(pad.paddingBottom) - room.current.bottom + r.bottom}px`
       room.current = r
     }
-    // A drum's room is the same whichever item is selected: given back only as the list or the screen changes (given
-    // back on every pick, the scroll lost its place for a moment and snapped to another item)
-    if (reset) set(ROOM)
-    // A drum (`useDrum`) keeps room for the first item over it and the last under it, whichever is selected, so each
-    // can come to the middle
-    const all = [...figures.current.values()].filter(f => canvas.contains(f)).sort((a, b) => a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING ? -1 : 1)
-    const [first, last] = drum.current ? [all[0], all[all.length - 1]] : [el, el]
+    set(ROOM)
     // Only on wide screens: a phone's canvas is its slides. The list centred in the canvas while it fits moves by half
     // of what's added over it, so the room is found in a few steps
-    if (first && last && matchMedia('(min-width: 768px)').matches) {
-      const want = (f: HTMLElement) => { const r = f.getBoundingClientRect(); return r.top - canvas.getBoundingClientRect().top + canvas.scrollTop + r.height / 2 - canvas.clientHeight / 2 }
+    if (el && matchMedia('(min-width: 768px)').matches) {
       for (let i = 0; i < 8; i++) {
-        const over = -want(first)
-        const under = want(last) - (canvas.scrollHeight - canvas.clientHeight)
+        const r = el.getBoundingClientRect()
+        const want = r.top - canvas.getBoundingClientRect().top + canvas.scrollTop + r.height / 2 - canvas.clientHeight / 2
+        const over = -want
+        const under = want - (canvas.scrollHeight - canvas.clientHeight)
         if (over < 1 && under < 1) break
         set({ top: room.current.top + Math.max(0, over), bottom: room.current.bottom + Math.max(0, under) })
       }
@@ -309,50 +303,6 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
   const isBlank = (p: P) => (Object.keys(blank) as (keyof P)[]).every(k => p[k] === blank[k])
 
   /**
-   * A drum (a trial, the name tag only): on wide screens, in the manual mode, the item the canvas stops at, snapped to
-   * its middle, is selected, its fields in the sidebar, once the scroll has stopped (not on the way: the form flickered
-   * through every item it passed). Not while a field has the caret, so a brush of the trackpad doesn't take the item
-   * being typed in away
-   */
-  const useDrumSettle = () => useEffect(() => {
-    let timer = 0
-    const settle = (canvas: HTMLElement) => {
-      if (mode !== 'manual' || !matchMedia('(min-width: 768px)').matches) return
-      if (document.activeElement?.closest('input, textarea, select, [contenteditable]')) return
-      const box = canvas.getBoundingClientRect()
-      const mid = box.top + box.height / 2
-      let best: number | undefined, gap = Infinity
-      for (const [key, el] of figures.current) {
-        if (!canvas.contains(el)) continue
-        const r = el.getBoundingClientRect()
-        const d = Math.abs(r.top + r.height / 2 - mid)
-        if (d < gap) { gap = d; best = key }
-      }
-      if (best !== undefined && best !== selected) { setSelected(best); setFlagged(null) }
-    }
-    // Scroll events don't bubble: caught on their way down to the canvas, and settled 150 ms after the last one
-    const onScroll = (e: Event) => {
-      const canvas = e.target
-      if (!(canvas instanceof HTMLElement) || canvas.tagName !== 'MAIN') return
-      clearTimeout(timer)
-      timer = window.setTimeout(() => settle(canvas), 150)
-    }
-    document.addEventListener('scroll', onScroll, true)
-    return () => { document.removeEventListener('scroll', onScroll, true); clearTimeout(timer) }
-  }, [mode, selected])
-  // The room for the ends, as the list or the screen changes
-  const useDrumRoom = () => useEffect(() => {
-    drum.current = true
-    const fit = () => { const c = [...figures.current.values()][0]?.closest('main'); if (c) roomFor(c, undefined, true) }
-    fit()
-    // The room changed under the selected item (one just added): it to the middle again
-    if (selected !== undefined) centreOn(selected)
-    window.addEventListener('resize', fit)
-    return () => window.removeEventListener('resize', fit)
-  }, [people.length])
-  const useDrum = () => { useDrumSettle(); useDrumRoom() }
-
-  /**
    * The list's keys, as on any canvas. Out of a field: Delete or Backspace removes the selected item (while there's more
    * than one, as «Удалить»), ↑ ↓ select the one before or after it, ⌘Z brings back the one just removed (in a field ⌘Z
    * undoes the typing). Anywhere: ⌘D duplicates the selected one, Esc leaves a field (unless a list in it took Esc) so
@@ -457,7 +407,7 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
 
   return {
     mode, setMode, people, items, file, current, selected, setSelected, tableError, dragging, dropTarget, loadFile,
-    showsMissing, form, figureRef, goTo, nextOf, inWork, pick, update, fill, remove, add, isBlank, paste, useKeys, useDrum,
+    showsMissing, form, figureRef, goTo, nextOf, inWork, pick, update, fill, remove, add, isBlank, paste, useKeys,
     duplicate, clear, removed, restore, dismiss: () => setRemoved(null), accept, uploadLabel, countWord,
   }
 }

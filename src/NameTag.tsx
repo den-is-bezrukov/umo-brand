@@ -65,7 +65,6 @@ export default function NameTag() {
   })
   const { mode, setMode, people, current, selected, setSelected, update } = staff
   staff.useKeys(false)
-  staff.useDrum()
 
   const [fonts, setFonts] = useState<Fonts>()
   const [exporting, setExporting] = useState(false)
