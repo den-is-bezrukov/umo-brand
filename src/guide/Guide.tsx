@@ -696,8 +696,8 @@ function BarLinks() {
     // 16px over and under (24 from md) kept in the scroller so the links' tap areas aren't clipped
     <nav aria-label="Быстрые ссылки" className="relative -my-4 -mr-4 -ml-2 flex min-w-0 gap-x-4 overflow-x-auto overscroll-x-contain py-4 pr-4 whitespace-nowrap [scrollbar-width:none] md:-my-6 md:-mr-6 md:-ml-4 md:gap-x-6 md:py-6 md:pr-6 [&::-webkit-scrollbar]:hidden">
       <a href="#brand" className={`${BAR_LINK} ${LINK_HOVER}`}>Платформа бренда</a>
-      {/* «Редактор» alone under 380px, where the two in full and the icon don't fit the bar */}
-      <Link to="/editor" className={`${BAR_LINK} ${LINK_HOVER}`}>Редактор<span className="max-[379px]:hidden"> материалов</span></Link>
+      <a href="#materials" className={`${BAR_LINK} ${LINK_HOVER}`}>Материалы</a>
+      <Link to="/editor" className={`${BAR_LINK} ${LINK_HOVER}`}>Редактор</Link>
     </nav>
   )
 }
@@ -1639,12 +1639,14 @@ export default function Guide() {
                 <p id="statement" className="text-[32px] font-medium leading-none tracking-[-0.01em] md:text-[48px] lg:mt-[calc(8px-0.164em+var(--umo-y-overhang,0px))] lg:max-w-[912px] lg:text-[min(60px,6.58cqw)]">
                   Автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
                 </p>
-                {/* Quick links: read (Платформа бренда), see (Материалы), make (Редактор, the constructors' window, titled
-                    «Редактор материалов»). They were Платформа and Материалы для дилеров, then Носители and Печатные материалы */}
+                {/* Quick links: read (Платформа бренда), see (Материалы, the templates there too), make (Редактор, the
+                    constructors' window, titled «Редактор материалов»; «Редактор» alone after Материалы, with no echo). They
+                    were Платформа and Материалы для дилеров, then Носители and Печатные материалы, then no Материалы */}
                 {/* From lg only: below it they stand in the bottom bar beside the menu icon (BarLinks) */}
                 <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex max-lg:hidden flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
                   <a href="#brand" className={LINK_HOVER}>Платформа бренда</a>
-                  <Link to="/editor" className={LINK_HOVER}>Редактор материалов</Link>
+                  <a href="#materials" className={LINK_HOVER}>Материалы</a>
+                  <Link to="/editor" className={LINK_HOVER}>Редактор</Link>
                 </nav>
               </div>
             </div>
