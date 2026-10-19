@@ -7,6 +7,7 @@ import { TAG, BAND, BAND_ART, type Tag } from './tag'
 import { DATA_KEY, type TagsData } from './read'
 import { writePdfData } from '@/ui/pdfDataWrite'
 import type { Cmd } from '@/livery/geometry'
+import { embedCoFo, textOps, type LiveFonts, type TextLine } from '@/ui/liveText'
 
 // Loaded only when the tags are downloaded, so the page doesn't carry pdf-lib until then.
 
@@ -55,6 +56,19 @@ export async function tagsPdf(tags: Tag[], data: TagsData): Promise<Blob> {
   // The dealer and the goods as typed, in the document's info, so the file dropped back on the page opens its list
   // (`readTagsFile`); nothing of it is printed
   writePdfData(doc, DATA_KEY, data)
+  return sheets(doc, tags.map(tag => ({ tag })))
+}
+
+/** The editable template (`UMO_price-tags_template.pdf`): the same sheets, the text live in CoFo Sans, the logos in outlines */
+export async function tagsTemplate(tags: { tag: Tag; lines: TextLine[] }[]): Promise<Blob> {
+  const doc = await PDFDocument.create()
+  doc.setTitle('UMO_price-tags_template.pdf')
+  return sheets(doc, tags, await embedCoFo(doc))
+}
+
+/** The sheets: the text as outlines, or, with `live`, the noted lines as text */
+async function sheets(doc: PDFDocument, all: { tag: Tag; lines?: TextLine[] }[], live?: LiveFonts): Promise<Blob> {
+  const tags = all.map(t => t.tag)
   for (let from = 0; from < tags.length; from += PER_PAGE) {
     const sheet = tags.slice(from, from + PER_PAGE)
     const p = doc.addPage([PAGE.w * PT, PAGE.h * PT])
@@ -68,8 +82,9 @@ export async function tagsPdf(tags: Tag[], data: TagsData): Promise<Blob> {
       const { x, y } = at(i)
       const { dealer = [], ...rest } = t.fields
       fill(BLACK, rect(0, 0, TAG.w, BAND), x, y)
-      fill(WHITE, [...BAND_ART, ...dealer], x, y)
-      fill(BLACK, Object.values(rest).flat(), x, y)
+      fill(WHITE, [...BAND_ART, ...(live ? [] : dealer)], x, y)
+      if (live) p.pushOperators(...textOps(p, live, all[from + i].lines ?? [], (lx, ly) => [(lx + x) * PT, (PAGE.h - ly - y) * PT], PT, BLACK))
+      else fill(BLACK, Object.values(rest).flat(), x, y)
     })
     // The lines: across the sheet at every row's edge, down it at every column's edge
     const rows = Math.ceil(sheet.length / COLS)

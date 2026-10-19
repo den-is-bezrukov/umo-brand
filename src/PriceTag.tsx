@@ -11,6 +11,8 @@ import { readTagsFile } from '@/pricetag/read'
 import { plural } from '@/ui/staff'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { linkParams, saveAndOpenPdf } from '@/ui/share'
+import { recordText } from '@/ui/liveText'
+import { TemplateButton, useTemplateLink } from '@/ui/template'
 
 // Price tag generator (Figma: UMO | Evrone, node 4202:4368): price tags for the small goods at a dealership, any
 // employee printing them on an office printer and cutting them out with scissors. The dealer is set once, the goods typed
@@ -107,13 +109,23 @@ export default function PriceTag() {
       ghost.add(field)
       return PLACEHOLDER[field]!
     }
-    const tag = buildTag(fonts, or('dealer', dealer), { name: or('name', it.name), code: it.code, caption: or('caption', it.caption), price: or('price', it.price) })
+    // Its lines noted too, for the editable template
+    const { result: tag, lines } = recordText(() => buildTag(fonts, or('dealer', dealer), { name: or('name', it.name), code: it.code, caption: or('caption', it.caption), price: or('price', it.price) }))
     const wrongPrice = it.price.trim() && !PRICE_FORMAT.test(it.price.trim())
       // A table's price over the largest, else one that isn't a number
       ? [{ field: 'price' as const, text: it.price.split(/[,.]/)[0].replace(/\D/g, '').length > 7 ? 'Цена больше 9 999 999,99' : 'Цена: проверьте число' }]
       : []
-    return { tag, ghost, issues: [...tag.issues.filter(i => !ghost.has(i.field)), ...wrongPrice] }
+    return { tag, lines, ghost, issues: [...tag.issues.filter(i => !ghost.has(i.field)), ...wrongPrice] }
   }) : undefined, [fonts, items, dealer])
+
+  /** The editable template: the tags as on the page, placeholders where nothing is typed */
+  const makeTemplate = tags ? () => import('@/pricetag/pdf').then(m => m.tagsTemplate(tags)) : undefined
+  /** The blank one a `template` link gives: a sheet of eight placeholder tags */
+  const makeBlank = fonts ? () => {
+    const one = recordText(() => buildTag(fonts, PLACEHOLDER.dealer!, { name: PLACEHOLDER.name!, code: 'Артикул', caption: PLACEHOLDER.caption!, price: PLACEHOLDER.price! }))
+    return import('@/pricetag/pdf').then(m => m.tagsTemplate(Array.from({ length: m.PER_PAGE }, () => ({ tag: one.result, lines: one.lines }))))
+  } : undefined
+  const templateOnly = useTemplateLink(makeBlank, 'UMO_price-tags_template.pdf', 'download_price_tag_template')
 
   const dealerMissing = !dealer.trim()
   const dealerIssues = [...(dealerMissing ? [MISSING.dealer!] : []), ...new Set(tags?.[0]?.issues.filter(i => i.field === 'dealer').map(i => i.text) ?? [])]
@@ -313,7 +325,7 @@ export default function PriceTag() {
   )
 
   // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
-  if (pdfOnly) return null
+  if (pdfOnly || templateOnly) return null
   if (phone) return <MobileEditor slides={mode === 'table' && !staff.file ? [{ key: 'upload', node: <UploadArea staff={staff} /> }] : items.map((it, i) => ({ key: it.key, item: it.key, label: it.name.replace(/\s+/g, ' ').trim(), ratio: TAG.h / TAG.w, node: renderItem(it, i) }))} sidebar={sidebar} download={download} staff={staff} />
 
   return (
@@ -336,7 +348,11 @@ export default function PriceTag() {
         <div className="m-auto grid w-full grid-cols-1 gap-8">
           {items.map(renderItem)}
           <Removed staff={staff} at={items.length} />
-          {mode === 'manual' && <AddTile onClick={() => staff.add()} />}
+          {/* «Скачать шаблон» and «Добавить» centred as a pair, 8 px apart */}
+          <div className="flex justify-center gap-2">
+            <TemplateButton make={makeTemplate} name="UMO_price-tags_template.pdf" goalId="download_price_tag_template" params={{ count: items.length }} />
+            {mode === 'manual' && <AddTile onClick={() => staff.add()} />}
+          </div>
         </div>
         )}
       </main>

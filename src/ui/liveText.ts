@@ -13,8 +13,8 @@ import fontkit from '@pdf-lib/fontkit'
 // kept it from the installed font. Glyphs a generator substitutes by hand (case forms, lining tabular figures) are
 // written as their plain letters: the template is for editing, the print file keeps them.
 
-/** A line as set: the font, its size and baseline, and each character's pen, in the generator's units */
-export interface TextLine { font: Font; size: number; baseline: number; chars: { ch: string; x: number }[] }
+/** A line as set: the font, its size and baseline, each character's pen, in the generator's units; `white` on a dark band */
+export interface TextLine { font: Font; size: number; baseline: number; chars: { ch: string; x: number }[]; white?: boolean }
 
 let sink: TextLine[] | null = null
 
@@ -34,11 +34,11 @@ export function recordText<T>(build: () => T): { result: T; lines: TextLine[] } 
  * Notes a line while `recordText` runs: `pens`, each glyph's pen, one a character (a ligature or a glyph missing one
  * leaves the line one run from its first pen)
  */
-export function noteLine(font: Font, size: number, baseline: number, text: string, pens: number[]) {
+export function noteLine(font: Font, size: number, baseline: number, text: string, pens: number[], white = false) {
   if (!sink || !text) return
   const chars = [...text]
   sink.push({
-    font, size, baseline,
+    font, size, baseline, white,
     chars: chars.length === pens.length ? chars.map((ch, i) => ({ ch, x: pens[i] })) : [{ ch: text, x: pens[0] ?? 0 }],
   })
 }
@@ -63,7 +63,7 @@ const psName = (font: Font) => {
 
 /**
  * The lines as text on a page: `toPage(x, y)` turns the generator's units into the page's points (y up), `scale`
- * its units into points; `cmyk` the fill
+ * its units into points; `cmyk` the fill (a `white` line, white)
  */
 export function textOps(page: PDFPage, fonts: LiveFonts, lines: TextLine[], toPage: (x: number, y: number) => [number, number], scale: number, cmyk: [number, number, number, number]): PDFOperator[] {
   if (!lines.length) return []
@@ -83,7 +83,7 @@ export function textOps(page: PDFPage, fonts: LiveFonts, lines: TextLine[], toPa
       if (Math.abs(gap) > 0.001) tj.push(PDFNumber.of(Math.round(-gap / size * 1000 * 100) / 100))
     })
     const [x, y] = toPage(line.chars[0].x, line.baseline)
-    ops.push(setFontAndSize(names.get(name)!, size), setTextMatrix(1, 0, 0, 1, x, y), PDFOperator.of(PDFOperatorNames.ShowTextAdjusted, [tj]))
+    ops.push(setFillingCmykColor(...(line.white ? [0, 0, 0, 0] as typeof cmyk : cmyk)), setFontAndSize(names.get(name)!, size), setTextMatrix(1, 0, 0, 1, x, y), PDFOperator.of(PDFOperatorNames.ShowTextAdjusted, [tj]))
   }
   ops.push(endText(), popGraphicsState())
   return ops

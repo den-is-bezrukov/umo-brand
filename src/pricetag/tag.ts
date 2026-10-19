@@ -1,6 +1,7 @@
 import type { Font, Glyph } from 'opentype.js'
 import type { Cmd } from '@/livery/geometry'
 import { caseMap, pathCmds } from '@/plate/frame'
+import { noteLine } from '@/ui/liveText'
 import { logo } from '@/card/card'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import type { Fonts } from '@/nametag/tag'
@@ -128,16 +129,18 @@ function setLine(font: Font, text: string, x: number, baseline: number, size: nu
   const glyphs: Glyph[] = font.stringToGlyphs(text).map(g => font.glyphs.get(maps.reduce((i, m) => m.get(i) ?? i, g.index)))
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const commands: any[] = []
+  const pens: number[] = []
   let right = x
   let pen = x
   glyphs.forEach((g, i) => {
+    pens.push(pen)
     const p = g.getPath(pen, baseline, size)
     commands.push(...p.commands)
     if (p.commands.length) right = Math.max(right, p.getBoundingBox().x2)
     pen += g.advanceWidth! * scale
     if (i < glyphs.length - 1) pen += font.getKerningValue(g, glyphs[i + 1]) * scale + track
   })
-  return { cmds: pathCmds(commands), width: right - x }
+  return { cmds: pathCmds(commands), width: right - x, pens }
 }
 
 /** Words of one or two characters (prepositions) stick to the next word */
@@ -203,6 +206,8 @@ export function buildTag(fonts: Fonts, dealer: string, item: Item): Tag {
   const line = (field: TagField, label: string, text: string, font: Font, x: number, baseline: number, size: number, width: number, feats: string[] = [], track = 0) => {
     const t = oneLine(text)
     const l = setLine(font, t, x, baseline, size, feats, track)
+    // Noted for the editable template; the dealer's name stands white on the band
+    noteLine(font, size, baseline, t, l.pens, field === 'dealer')
     if (l.width > width + 0.01) issues.push({ field, text: `${label} шире ${width} мм` })
     check(field, label, t, font)
     return l.cmds
@@ -213,6 +218,7 @@ export function buildTag(fonts: Fonts, dealer: string, item: Item): Tag {
   const name = wrap(fonts.medium, item.name, NAME.size, NAME.width)
   fields.name = name.flatMap((t, i) => {
     const l = setLine(fonts.medium, t, SIDE, NAME.top + DROP * NAME.size + i * NAME.size, NAME.size)
+    noteLine(fonts.medium, NAME.size, NAME.top + DROP * NAME.size + i * NAME.size, t, l.pens)
     if (l.width > NAME.width + 0.01) issues.push({ field: 'name', text: `Наименование шире ${NAME.width} мм` })
     return l.cmds
   })
