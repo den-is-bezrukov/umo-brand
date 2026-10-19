@@ -1118,9 +1118,9 @@ function PriceCardPreview({ variant, fullPrice, creditPrice, image, alt }: {
 
 /**
  * A file from public/downloads/ (the row shows its name and size), a page of this site (its title and path), or a file
- * a generator makes, `t` the link that makes it (a blank template: `?t`), `size` its size as measured
+ * a generator makes, `t` the link that makes it (a blank template: `?t`), named by `label` («Шаблон режимника»), `size` its size as measured
  */
-type Asset = { file: string } | { to: string; title: string } | { t: string; file: string; size: number }
+type Asset = { file: string } | { to: string; title: string } | { t: string; label: string; file: string; size: number }
 const sizeOf = (a: Asset) => ('size' in a ? a.size : 'file' in a ? downloadSizes[a.file] ?? 0 : 0)
 
 /** Size in КБ below 1000 КБ, else МБ. */
@@ -1170,7 +1170,7 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
           return (
             <a key={a.file} href={a.t} target="_blank" rel="noopener" className={row}>
               <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>
-              <span className={name}>{a.file}</span>
+              <span className={name}>{a.label}</span>
               <span className={meta}>{number.format(n)} {unit}</span>
             </a>
           )
@@ -1215,7 +1215,7 @@ function Previews({ className, children }: { className: string; children: ReactN
 }
 
 /** A constructor page's preview over its ↗ row; `flush` sets the row right under the preview, with no gap and no hairline. */
-function Constructor({ to, title, flush, templates = [], children }: { to: string; title: string; flush?: boolean; templates?: { file: string; size: number; query?: string }[]; children: ReactNode }) {
+function Constructor({ to, title, flush, templates = [], children }: { to: string; title: string; flush?: boolean; templates?: { label: string; file: string; size: number; query?: string }[]; children: ReactNode }) {
   return (
     <div className={`group/preview flex flex-col ${flush ? '' : 'gap-4 md:gap-6'}`}>
       <PreviewLink asset={{ to, title }} label={title}>{children}</PreviewLink>
