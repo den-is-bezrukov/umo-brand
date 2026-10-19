@@ -1231,7 +1231,7 @@ function Carriers({ items }: { items: typeof MEDIA }) {
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
       {items.map(c => (
         <div key={c.to} id={c.id} className={`scroll-mt-24 ${isWide(c) ? 'sm:col-span-2' : ''}`}>
-          <Constructor to={c.to} title={c.row} templates={GENERATORS.find(g => g.path === c.to)?.templates}>{c.picture}</Constructor>
+          <Constructor to={c.to} title={c.row} flush templates={GENERATORS.find(g => g.path === c.to)?.templates}>{c.picture}</Constructor>
         </div>
       ))}
     </div>
