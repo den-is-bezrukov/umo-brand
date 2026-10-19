@@ -4,7 +4,7 @@ import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, Generator
 import { useStaff, plain, pickTable, TableSource, UploadArea, useAddKey, fullNameField, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
-import { loadFonts, type Fonts } from '@/nametag/tag'
+import { loadFonts, type Fonts } from '@/ui/type'
 import { xlsxCells, pastedCells, byHeaders, FULL_NAME, fromFullName, type Cells } from '@/nametag/table'
 import { CARDS_KEY, CARD, QR, FACE, BACK_LOGO, DEALER_FIELDS, buildBack, siteFor, siteText, splitPhone, maskPhone, type CardField, type Dealer, type Person, type QrData } from '@/card/card'
 import CardArt from '@/card/CardArt'

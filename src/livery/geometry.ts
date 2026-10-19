@@ -1,9 +1,10 @@
-import { parse, type Font } from 'opentype.js'
+import type { Font } from 'opentype.js'
 import QRCode from 'qrcode'
 import { UMO, EIGHT } from './logo'
 import type { Surface, TextBlock, Obstacle, TextPart } from './layout'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { textLine, type TextLine } from '@/ui/liveText'
+import { missingChars, pathCmds, wrap as wrapLines } from '@/ui/type'
 
 // Everything on a livery sheet is a filled outline in millimetres: the shapes the plotter cuts. The preview draws them
 // as SVG, the export writes the same commands into the PDF.
@@ -34,15 +35,6 @@ export interface Sheet {
   dealer: TextResult
   tagline: TextResult
   issues: string[]
-}
-
-let fontPromise: Promise<Font> | undefined
-
-export function loadFont(): Promise<Font> {
-  fontPromise ??= fetch(`${import.meta.env.BASE_URL}fonts/CoFoSans-Medium.ttf`)
-    .then(r => r.arrayBuffer())
-    .then(buf => parse(buf))
-  return fontPromise
 }
 
 /** The deepest descender of CoFo Sans Cyrillic (р, у, д), in em */
@@ -141,16 +133,6 @@ export function qrOutline(url: string, x: number, y: number, size: number, error
   return cmds
 }
 
-/** Short words (prepositions, conjunctions, a separator bar) go to the next line together with the word after them */
-function bindShortWords(text: string): string {
-  let prev
-  do {
-    prev = text
-    text = text.replace(/(^|[\s ])([^\s ]{1,2}) +(?=\S)/g, '$1$2 ')
-  } while (text !== prev)
-  return text
-}
-
 function shape(font: Font, text: string, x: number, baseline: number, size: number) {
   const path = font.getPath(text.replace(/ /g, ' '), x, baseline, size)
   const b = path.getBoundingBox()
@@ -162,23 +144,8 @@ const inkWidth = (font: Font, text: string, size: number) => {
   return text.trim() ? ink.x2 - ink.x1 : 0
 }
 
-function wrap(font: Font, text: string, block: TextBlock): string[] {
-  const paragraphs = (block.oneLine ? text.replace(/\s*\n\s*/g, ' ') : text).split('\n')
-  const lines: string[] = []
-  for (const p of paragraphs) {
-    const words = bindShortWords(p.trim()).split(/ +/).filter(Boolean)
-    let line = ''
-    for (const w of words) {
-      const candidate = line ? `${line} ${w}` : w
-      if (line && inkWidth(font, candidate, block.size) > block.maxWidth) {
-        lines.push(line)
-        line = w
-      } else line = candidate
-    }
-    if (line) lines.push(line)
-  }
-  return lines
-}
+const wrap = (font: Font, text: string, block: TextBlock) =>
+  wrapLines((block.oneLine ? text.replace(/\s*\n\s*/g, ' ') : text).split('\n'), l => inkWidth(font, l, block.size) <= block.maxWidth)
 
 function seamX(o: Extract<Obstacle, { kind: 'seam' }>, y: number) {
   const t = (y - o.top[1]) / (o.bottom[1] - o.top[1])
@@ -227,27 +194,10 @@ function setText(font: Font, raw: string, block: TextBlock, name: string, surfac
     for (const l of bad.length ? bad : lines) l.issues.push(`${name}: ${PROFANITY.toLowerCase()}`)
   }
   const issues = [...new Set(lines.flatMap(l => l.issues))]
-  const missing = [...new Set([...text.replace(/\s/g, '')].filter(c => !font.hasChar(c)))]
+  const missing = missingChars(font, text)
   if (missing.length) issues.push(`${name}: нет в шрифте ${missing.map(c => `«${c}»`).join(', ')}`)
   if (lines.length > block.maxLines) issues.unshift(`${name} не помещается в ${block.maxLines === 1 ? 'одну строку' : `${block.maxLines} строки`}`)
   return { lines, issues }
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function pathCmds(commands: any[]): Cmd[] {
-  const cmds: Cmd[] = []
-  let cx = 0
-  let cy = 0
-  for (const c of commands) {
-    if (c.type === 'M' || c.type === 'L') { cmds.push([c.type, c.x, c.y]); cx = c.x; cy = c.y }
-    else if (c.type === 'C') { cmds.push(['C', c.x1, c.y1, c.x2, c.y2, c.x, c.y]); cx = c.x; cy = c.y }
-    else if (c.type === 'Q') {
-      // Quadratic to cubic
-      cmds.push(['C', cx + (2 / 3) * (c.x1 - cx), cy + (2 / 3) * (c.y1 - cy), c.x + (2 / 3) * (c.x1 - c.x), c.y + (2 / 3) * (c.y1 - c.y), c.x, c.y])
-      cx = c.x; cy = c.y
-    } else if (c.type === 'Z') cmds.push(['Z'])
-  }
-  return cmds
 }
 
 /** A spec label's outlines, its baseline at `y`, set from `x` to the side `align` says (the spec PDF's figures) */

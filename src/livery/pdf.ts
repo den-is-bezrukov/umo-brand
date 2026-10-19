@@ -3,7 +3,8 @@ import {
   moveTo, lineTo, appendBezierCurve, closePath, pushGraphicsState, popGraphicsState, setFillingCmykColor, setFillingRgbColor,
 } from 'pdf-lib'
 import { zipSync } from 'fflate'
-import { specMarks, labelCmds, loadFont, type Cmd, type Sheet } from './geometry'
+import { specMarks, labelCmds, type Cmd, type Sheet } from './geometry'
+import { loadFont } from '@/ui/type'
 import type { Surface } from './layout'
 import { embedCoFo, textOps } from '@/ui/liveTextPdf'
 

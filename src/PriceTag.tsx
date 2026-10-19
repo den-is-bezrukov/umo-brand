@@ -3,7 +3,7 @@ import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, Do
 import { useStaff, pickTable, TableSource, UploadArea, useAddKey, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, type Cmd } from '@/livery/geometry'
-import { loadFonts, type Fonts } from '@/nametag/tag'
+import { loadFonts, type Fonts } from '@/ui/type'
 import { xlsxCells, pastedCells, byHeaders, type Cells } from '@/nametag/table'
 import { TAG, BAND, BAND_ART, DEFAULT_CAPTION, buildTag, formatPrice, readPrice, PRICE_FORMAT, type Item, type TagField } from '@/pricetag/tag'
 import { DEALER_NAMES, dealerFilter, withoutUmo } from '@/data/dealers'

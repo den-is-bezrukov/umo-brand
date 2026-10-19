@@ -1,10 +1,9 @@
-import type { Font, Glyph } from 'opentype.js'
+import type { Font } from 'opentype.js'
 import type { Cmd } from '@/livery/geometry'
-import { caseMap, pathCmds } from '@/plate/frame'
+import { missingChars, oneLine, setLine, tidy, wrap as wrapLines, type Fonts } from '@/ui/type'
 import { noteLine } from '@/ui/liveText'
 import { logo } from '@/card/card'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
-import type { Fonts } from '@/nametag/tag'
 
 // A price tag for the small goods at a dealership (Figma: UMO | Evrone, node 4202:4368; the Word template in Yandex Disk
 // `02 UMO/Price Tag`): 90×60 mm, a black band 12 mm tall across the top with the UMO logo 15×3 mm, a hairline and the
@@ -65,10 +64,6 @@ export const BAND_ART: Cmd[] = [
   ['M', RULE_X - RULE_W / 2, SIDE], ['L', RULE_X + RULE_W / 2, SIDE], ['L', RULE_X + RULE_W / 2, SIDE + 3], ['L', RULE_X - RULE_W / 2, SIDE + 3], ['Z'],
 ]
 
-/** Every kind of space becomes a plain one, zero-width marks go; line breaks are kept */
-const tidy = (t: string) => t.replace(/[​-‍⁠﻿]/g, '').replace(/\r/g, '').split('\n').map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean)
-const oneLine = (t: string) => tidy(t).join(' ')
-
 /**
  * The price field as it's typed: the roubles set in threes (up to seven digits: 9 999 999,99 at most), then the kopecks after a comma (a typed
  * dot becomes one), two digits at most: «1290.5» → «1 290,5»
@@ -105,54 +100,6 @@ export function readPrice(raw: string): string | null {
   return priceText(formatPrice(`${Math.floor(kopecks / 100)},${String(kopecks % 100).padStart(2, '0')}`))
 }
 
-/** Single substitutions of a feature (`lnum`, `tnum`), glyph by glyph, as opentype.js doesn't apply them */
-const features = new WeakMap<Font, Map<string, Map<number, number>>>()
-export function featureMap(font: Font, tag: string): Map<number, number> {
-  let byTag = features.get(font)
-  if (!byTag) features.set(font, byTag = new Map())
-  let map = byTag.get(tag)
-  if (!map) {
-    map = new Map()
-    const single = (font.substitution as unknown as { getSingle(f: string, s: string, l: string): { sub: number; by: number }[] }).getSingle
-    for (const script of ['DFLT', 'cyrl', 'latn']) {
-      for (const { sub, by } of single.call(font.substitution, tag, script, 'dflt')) map.set(sub, by)
-    }
-    byTag.set(tag, map)
-  }
-  return map
-}
-
-/** One line from `x` on `baseline`: the features asked for, kerning, tracking */
-function setLine(font: Font, text: string, x: number, baseline: number, size: number, feats: string[] = [], track = 0) {
-  const scale = size / font.unitsPerEm
-  const maps = feats.map(f => f === 'case' ? caseMap(font) : featureMap(font, f))
-  const glyphs: Glyph[] = font.stringToGlyphs(text).map(g => font.glyphs.get(maps.reduce((i, m) => m.get(i) ?? i, g.index)))
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const commands: any[] = []
-  const pens: number[] = []
-  let right = x
-  let pen = x
-  glyphs.forEach((g, i) => {
-    pens.push(pen)
-    const p = g.getPath(pen, baseline, size)
-    commands.push(...p.commands)
-    if (p.commands.length) right = Math.max(right, p.getBoundingBox().x2)
-    pen += g.advanceWidth! * scale
-    if (i < glyphs.length - 1) pen += font.getKerningValue(g, glyphs[i + 1]) * scale + track
-  })
-  return { cmds: pathCmds(commands), width: right - x, pens }
-}
-
-/** Words of one or two characters (prepositions) stick to the next word */
-function bindShortWords(text: string): string {
-  let prev
-  do {
-    prev = text
-    text = text.replace(/(^|[\s ])([^\s ]{1,2}) +(?=\S)/g, '$1$2 ')
-  } while (text !== prev)
-  return text
-}
-
 /**
  * A word wider than the line, in pieces that fit: broken after its last hyphen or slash that fits («YNDX-00053/» |
  * «графитовый»), else between letters, as goods' names carry codes and models with no spaces
@@ -160,9 +107,9 @@ function bindShortWords(text: string): string {
 function splitWord(font: Font, word: string, size: number, width: number): string[] {
   const pieces: string[] = []
   let rest = word
-  while (setLine(font, rest, 0, 0, size).width > width) {
+  while (setLine(font, rest, 0, 0, size).right > width) {
     let fit = 1
-    while (fit < rest.length && setLine(font, rest.slice(0, fit + 1), 0, 0, size).width <= width) fit++
+    while (fit < rest.length && setLine(font, rest.slice(0, fit + 1), 0, 0, size).right <= width) fit++
     const soft = Math.max(rest.lastIndexOf('-', fit - 1), rest.lastIndexOf('/', fit - 1))
     const at = soft > 0 ? soft + 1 : fit
     pieces.push(rest.slice(0, at))
@@ -172,22 +119,8 @@ function splitWord(font: Font, word: string, size: number, width: number): strin
 }
 
 /** Lines within `width`, breaking where typed, between words and inside a word too long for a line */
-function wrap(font: Font, text: string, size: number, width: number): string[] {
-  const lines: string[] = []
-  for (const paragraph of tidy(text)) {
-    let line = ''
-    for (const w of bindShortWords(paragraph).split(/ +/).filter(Boolean)) {
-      const candidate = line ? `${line} ${w}` : w
-      if (setLine(font, candidate, 0, 0, size).width <= width) { line = candidate; continue }
-      if (line) lines.push(line)
-      const pieces = splitWord(font, w, size, width)
-      lines.push(...pieces.slice(0, -1))
-      line = pieces[pieces.length - 1]
-    }
-    if (line) lines.push(line)
-  }
-  return lines.map(l => l.replace(/ /g, ' '))
-}
+const wrap = (font: Font, text: string, size: number, width: number) =>
+  wrapLines(tidy(text), l => setLine(font, l, 0, 0, size).right <= width, w => splitWord(font, w, size, width)).map(l => l.replace(/\u00a0/g, ' '))
 
 /**
  * One tag. The texts come as shown: the page puts placeholders in empty fields, the same layout then holding them in
@@ -198,7 +131,7 @@ export function buildTag(fonts: Fonts, dealer: string, item: Item): Tag {
   const issues: Issue[] = []
 
   const check = (field: TagField, label: string, text: string, font: Font) => {
-    const absent = [...new Set([...text.replace(/\s/g, '')].filter(c => !font.hasChar(c)))]
+    const absent = missingChars(font, text)
     if (absent.length) issues.push({ field, text: `${label}: нет в шрифте ${absent.map(c => `«${c}»`).join(', ')}` })
     if (hasProfanity(text)) issues.push({ field, text: `${label}: ${PROFANITY.toLowerCase()}` })
   }
@@ -208,7 +141,7 @@ export function buildTag(fonts: Fonts, dealer: string, item: Item): Tag {
     const l = setLine(font, t, x, baseline, size, feats, track)
     // Noted for the editable template; the dealer's name stands white on the band
     noteLine(font, size, baseline, t, l.pens, field === 'dealer')
-    if (l.width > width + 0.01) issues.push({ field, text: `${label} шире ${width} мм` })
+    if (l.right > width + 0.01) issues.push({ field, text: `${label} шире ${width} мм` })
     check(field, label, t, font)
     return l.cmds
   }
@@ -219,7 +152,7 @@ export function buildTag(fonts: Fonts, dealer: string, item: Item): Tag {
   fields.name = name.flatMap((t, i) => {
     const l = setLine(fonts.medium, t, SIDE, NAME.top + DROP * NAME.size + i * NAME.size, NAME.size)
     noteLine(fonts.medium, NAME.size, NAME.top + DROP * NAME.size + i * NAME.size, t, l.pens)
-    if (l.width > NAME.width + 0.01) issues.push({ field: 'name', text: `Наименование шире ${NAME.width} мм` })
+    if (l.right > NAME.width + 0.01) issues.push({ field: 'name', text: `Наименование шире ${NAME.width} мм` })
     return l.cmds
   })
   if (name.length > NAME.lines) issues.push({ field: 'name', text: `Наименование — не больше ${NAME.lines} строк` })

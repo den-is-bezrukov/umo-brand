@@ -1,7 +1,6 @@
-import type { Font, Glyph } from 'opentype.js'
+import type { Font } from 'opentype.js'
 import type { Cmd } from '@/livery/geometry'
-import { caseMap, pathCmds } from '@/plate/frame'
-import { featureMap } from '@/pricetag/tag'
+import { missingChars, oneLine, setRuns as setType, wrapWords } from '@/ui/type'
 import { logo } from '@/card/card'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { noteLine } from '@/ui/liveText'
@@ -52,9 +51,6 @@ export interface Sign {
   issues: Issue[]
 }
 
-/** Every kind of space becomes a plain one, zero-width marks and line breaks go */
-export const oneLine = (t: string) => t.replace(/[​-‍⁠﻿]/g, '').replace(/\s+/g, ' ').trim()
-
 /** A time as typed («9», «900», «09.00», «21:00»), as the sign sets it, «9:00»; null if it isn't one */
 export function timeText(raw: string): string | null {
   const m = oneLine(raw).match(/^(\d{1,2})(?:[:.]?(\d{2}))?$/)
@@ -72,28 +68,8 @@ interface Run { field: SignField | 'fixed'; text: string }
  * tracking: the outlines per run, the line's advance width and each glyph's pen
  */
 function setRuns(font: Font, runs: Run[], x: number, baseline: number, size: number, feats: string[] = [], track = 0) {
-  const scale = size / font.unitsPerEm
-  const maps = feats.map(f => f === 'case' ? caseMap(font) : featureMap(font, f))
-  const glyphs: { g: Glyph; run: number }[] = runs.flatMap((r, run) =>
-    font.stringToGlyphs(r.text).map(g => ({ g: font.glyphs.get(maps.reduce((i, m) => m.get(i) ?? i, g.index)), run })))
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const commands: any[][] = runs.map(() => [])
-  const ink = { x1: Infinity, x2: -Infinity }
-  const pens: number[] = []
-  let pen = x
-  glyphs.forEach(({ g, run }, i) => {
-    pens.push(pen)
-    const p = g.getPath(pen, baseline, size)
-    commands[run].push(...p.commands)
-    if (p.commands.length) {
-      const b = p.getBoundingBox()
-      ink.x1 = Math.min(ink.x1, b.x1)
-      ink.x2 = Math.max(ink.x2, b.x2)
-    }
-    pen += g.advanceWidth! * scale
-    if (i < glyphs.length - 1) pen += font.getKerningValue(g, glyphs[i + 1].g) * scale + track * size
-  })
-  return { parts: runs.map((r, i) => ({ field: r.field, cmds: pathCmds(commands[i]) })), width: pen - x, ink, pens }
+  const set = setType(font, runs.map(r => r.text), x, baseline, size, feats, track * size)
+  return { ...set, parts: runs.map((r, i) => ({ field: r.field, cmds: set.parts[i] })) }
 }
 
 /** Sets the runs as `setRuns` and notes the line for the editable template */
@@ -129,14 +105,7 @@ function balanced(font: Font, words: string[], size: number): string[] | undefin
 
 /** A text after its fixed words, in lines within the column, breaking between words: the runs of each line */
 function wrapRuns(font: Font, prefix: string, field: SignField, text: string, size: number): Run[][] {
-  const lines: string[] = []
-  let line = ''
-  for (const w of `${prefix}${text}`.split(' ')) {
-    const candidate = line ? `${line} ${w}` : w
-    if (!line || width(font, candidate, size) <= COLUMN) line = candidate
-    else { lines.push(line); line = w }
-  }
-  lines.push(line)
+  const lines = wrapWords(`${prefix}${text}`.split(' '), l => width(font, l, size) <= COLUMN)
   const two = lines.length === 2 && balanced(font, `${prefix}${text}`.split(' '), size)
   if (two) lines.splice(0, 2, ...two)
   // The prefix stays fixed wherever the line breaks
@@ -161,7 +130,7 @@ export function buildSign(font: Font, input: Input): Sign {
   const parts: Sign['parts'] = []
   const issues: Issue[] = []
   const check = (field: SignField, label: string, text: string) => {
-    const absent = [...new Set([...text.replace(/\s/g, '')].filter(c => !font.hasChar(c)))]
+    const absent = missingChars(font, text)
     if (absent.length) issues.push({ field, text: `${label}: нет в шрифте ${absent.map(c => `«${c}»`).join(', ')}` })
     if (hasProfanity(text)) issues.push({ field, text: `${label}: ${PROFANITY.toLowerCase()}` })
   }

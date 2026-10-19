@@ -1,10 +1,9 @@
-import type { Font, Glyph } from 'opentype.js'
+import type { Font } from 'opentype.js'
 import { qrOutline, type Cmd } from '@/livery/geometry'
-import { caseMap, pathCmds } from '@/plate/frame'
+import { oneLine, setLine as setType, tidy, wrap as wrapLines, missingChars, type Fonts } from '@/ui/type'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { nameFault } from '@/ui/names'
 import { withListBreak } from '@/data/positions'
-import type { Fonts } from '@/nametag/tag'
 import { noteLine } from '@/ui/liveText'
 
 // A dealership employee's business card (Figma: UMO | Evrone, section 4021:2849): 90×50 mm, two sides. The face
@@ -94,60 +93,15 @@ export interface Back {
 
 const TYPE = 'Официальный дилер UMO'
 
-/** Every kind of space becomes a plain one, zero-width marks go; line breaks are kept */
-const tidy = (t: string) => t.replace(/[​-‍⁠﻿]/g, '').replace(/\r/g, '').split('\n').map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean)
-/** One line, typed line breaks as spaces */
-const oneLine = (t: string) => tidy(t).join(' ')
-
 /** One line from `x` on `baseline`: kerning, and the case-sensitive forms where `caseForms` (on in Figma for the Medium headings) */
 function setLine(font: Font, text: string, x: number, baseline: number, size: number, caseForms: boolean) {
-  const scale = size / font.unitsPerEm
-  const forms = caseForms ? caseMap(font) : new Map<number, number>()
-  const glyphs: Glyph[] = font.stringToGlyphs(text).map(g => font.glyphs.get(forms.get(g.index) ?? g.index))
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const commands: any[] = []
-  const pens: number[] = []
-  let right = x
-  let pen = x
-  glyphs.forEach((g, i) => {
-    pens.push(pen)
-    const p = g.getPath(pen, baseline, size)
-    commands.push(...p.commands)
-    if (p.commands.length) right = Math.max(right, p.getBoundingBox().x2)
-    pen += g.advanceWidth! * scale
-    if (i < glyphs.length - 1) pen += font.getKerningValue(g, glyphs[i + 1]) * scale
-  })
-  return { cmds: pathCmds(commands), width: right - x, end: pen, pens }
-}
-
-const inkWidth = (font: Font, text: string, size: number) => setLine(font, text, 0, 0, size, false).width
-
-/** Words of one or two characters (prepositions) stick to the next word */
-function bindShortWords(text: string): string {
-  let prev
-  do {
-    prev = text
-    text = text.replace(/(^|[\s ])([^\s ]{1,2}) +(?=\S)/g, '$1$2 ')
-  } while (text !== prev)
-  return text
+  const l = setType(font, text, x, baseline, size, caseForms ? ['case'] : [])
+  return { cmds: l.cmds, width: l.right, end: l.end, pens: l.pens }
 }
 
 /** Lines within `width`, breaking where typed and between words */
-function wrap(font: Font, text: string, size: number, width: number): string[] {
-  const lines: string[] = []
-  for (const paragraph of tidy(text)) {
-    let line = ''
-    for (const w of bindShortWords(paragraph).split(/ +/).filter(Boolean)) {
-      const candidate = line ? `${line} ${w}` : w
-      if (line && inkWidth(font, candidate, size) > width) {
-        lines.push(line)
-        line = w
-      } else line = candidate
-    }
-    if (line) lines.push(line)
-  }
-  return lines.map(l => l.replace(/ /g, ' '))
-}
+const wrap = (font: Font, text: string, size: number, width: number) =>
+  wrapLines(tidy(text), l => setLine(font, l, 0, 0, size, false).width <= width).map(l => l.replace(/\u00a0/g, ' '))
 
 /** An extension typed or pasted with the number («… доб. 204», «ext 204», «#204», «, 204»), split off; null without one */
 export function splitPhone(raw: string): { phone: string; ext: string } | null {
@@ -241,7 +195,7 @@ export function buildBack(fonts: Fonts, dealer: Dealer, person: Person, qr: QrDa
   const x = MARGIN
 
   const check = (field: CardField, label: string, text: string, font: Font) => {
-    const absent = [...new Set([...text.replace(/\s/g, '')].filter(c => !font.hasChar(c)))]
+    const absent = missingChars(font, text)
     if (absent.length) issues.push({ field, text: `${label}: нет в шрифте ${absent.map(c => `«${c}»`).join(', ')}` })
     if (hasProfanity(text)) issues.push({ field, text: `${label}: ${PROFANITY.toLowerCase()}` })
   }

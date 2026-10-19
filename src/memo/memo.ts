@@ -1,5 +1,5 @@
 import type { Cmd } from '@/livery/geometry'
-import { pathCmds } from '@/plate/frame'
+import { pathCmds } from '@/ui/type'
 import { formatPhone, siteText } from '@/card/card'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { nameFault } from '@/ui/names'

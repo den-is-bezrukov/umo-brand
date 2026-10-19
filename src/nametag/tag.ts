@@ -1,5 +1,6 @@
-import { parse, type Font } from 'opentype.js'
-import { loadFont, type Cmd } from '@/livery/geometry'
+import type { Font } from 'opentype.js'
+import type { Cmd } from '@/livery/geometry'
+import { oneLine, pathCmds, wrap as wrapLines, type Fonts } from '@/ui/type'
 import { withListBreak } from '@/data/positions'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { nameFault } from '@/ui/names'
@@ -45,7 +46,6 @@ export const LOGO = 'M61.6 6.55L64.5 6.55L64.5 5.445L61.6 5.45ZM64.499 4C65.512 
 
 export interface Person { name: string; surname: string; position: string }
 
-export interface Fonts { medium: Font; regular: Font }
 
 export type Field = keyof Person
 
@@ -69,49 +69,13 @@ function lineTop(font: Font, size: number, leading: number, baseline: number): n
   return baseline - (leading - ascent - descent) / 2 - ascent
 }
 
-let regularPromise: Promise<Font> | undefined
-export function loadFonts(): Promise<Fonts> {
-  regularPromise ??= fetch(`${import.meta.env.BASE_URL}fonts/CoFoSans-Regular.ttf`)
-    .then(r => r.arrayBuffer())
-    .then(buf => parse(buf))
-  return Promise.all([loadFont(), regularPromise]).then(([medium, regular]) => ({ medium, regular }))
-}
-
-/** Every kind of space becomes a plain one, zero-width marks and line breaks go */
-export function clean(text: string): string {
-  return text.replace(/[​-‍⁠﻿]/g, '').replace(/\s+/g, ' ').trim()
-}
-
-/** Words of one or two characters (prepositions) stick to the next word */
-function bindShortWords(text: string): string {
-  let prev
-  do {
-    prev = text
-    text = text.replace(/(^|[\s ])([^\s ]{1,2}) +(?=\S)/g, '$1$2 ')
-  } while (text !== prev)
-  return text
-}
-
 const inkWidth = (font: Font, text: string, size: number) => {
   const b = font.getPath(text.replace(/ /g, ' '), 0, 0, size).getBoundingBox()
   return text.trim() ? b.x2 - Math.min(b.x1, 0) : 0
 }
 
-function wrap(font: Font, text: string, block: Block): string[] {
-  const lines: string[] = []
-  for (const paragraph of text.split('\n').map(clean).filter(Boolean)) {
-    let line = ''
-    for (const w of bindShortWords(paragraph).split(/ +/).filter(Boolean)) {
-      const candidate = line ? `${line} ${w}` : w
-      if (line && inkWidth(font, candidate, block.size) > block.maxWidth) {
-        lines.push(line)
-        line = w
-      } else line = candidate
-    }
-    if (line) lines.push(line)
-  }
-  return lines
-}
+const wrap = (font: Font, text: string, block: Block) =>
+  wrapLines(text.split('\n').map(oneLine).filter(Boolean), l => inkWidth(font, l, block.size) <= block.maxWidth)
 
 function setLines(font: Font, lines: string[], block: Block, first: number, label: string, cmds: Cmd[], issues: string[]) {
   lines.forEach((t, i) => {
@@ -142,8 +106,8 @@ function splitAtHyphen(font: Font, text: string, maxWidth: number): string[] {
 
 export function buildTag(fonts: Fonts, person: Person): Tag {
   // A typed line break splits the name or surname; without one a long double one breaks after a hyphen
-  const typedName = person.name.split('\n').map(clean).filter(Boolean)
-  const typedSurname = person.surname.split('\n').map(clean).filter(Boolean)
+  const typedName = person.name.split('\n').map(oneLine).filter(Boolean)
+  const typedSurname = person.surname.split('\n').map(oneLine).filter(Boolean)
   const name = typedName.join(' ')
   const surname = typedSurname.join(' ')
   const position = withListBreak(person.position.replace(/\r/g, ''))
@@ -170,7 +134,7 @@ export function buildTag(fonts: Fonts, person: Person): Tag {
     issues.push(block.maxLines === 1 ? 'При имени и фамилии в три строки должность — в одну: сократите её' : 'Должность длиннее двух строк: сократите её')
   }
   const missing = (font: Font, t: string) => [...t.replace(/\s/g, '')].filter(c => !font.hasChar(c))
-  const absent = [...new Set([...missing(fonts.medium, name + surname), ...missing(fonts.regular, clean(position))])]
+  const absent = [...new Set([...missing(fonts.medium, name + surname), ...missing(fonts.regular, oneLine(position))])]
   for (const [label, t] of [['Имя', name], ['Фамилия', surname], ['Должность', position]]) {
     if (hasProfanity(t)) issues.push(`${label}: ${PROFANITY.toLowerCase()}`)
   }
@@ -190,20 +154,4 @@ export function buildTag(fonts: Fonts, person: Person): Tag {
     },
     issues: [...new Set(issues)],
   }
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function pathCmds(commands: any[]): Cmd[] {
-  const cmds: Cmd[] = []
-  let cx = 0
-  let cy = 0
-  for (const c of commands) {
-    if (c.type === 'M' || c.type === 'L') { cmds.push([c.type, c.x, c.y]); cx = c.x; cy = c.y }
-    else if (c.type === 'C') { cmds.push(['C', c.x1, c.y1, c.x2, c.y2, c.x, c.y]); cx = c.x; cy = c.y }
-    else if (c.type === 'Q') {
-      cmds.push(['C', cx + (2 / 3) * (c.x1 - cx), cy + (2 / 3) * (c.y1 - cy), c.x + (2 / 3) * (c.x1 - c.x), c.y + (2 / 3) * (c.y1 - c.y), c.x, c.y])
-      cx = c.x; cy = c.y
-    } else if (c.type === 'Z') cmds.push(['Z'])
-  }
-  return cmds
 }

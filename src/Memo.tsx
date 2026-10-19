@@ -3,7 +3,7 @@ import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, Do
 import { useStaff, plain, useAddKey, fullNameField, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, type Cmd } from '@/livery/geometry'
-import { loadFonts } from '@/nametag/tag'
+import { loadFonts } from '@/ui/type'
 import { siteFor, maskPhone } from '@/card/card'
 import { MEMOS_KEY, PAGE, DEALER_FIELDS, buildBlocks, type Dealer, type MemoField, type Person } from '@/memo/memo'
 import type { MemoFonts } from '@/memo/text'
