@@ -402,7 +402,7 @@ export default function App() {
       </aside>
 
       {/* ── The cards ── */}
-      <main ref={canvasRef} className="flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[88px] md:min-w-0 md:snap-y md:snap-proximity md:overflow-y-auto md:p-16">
+      <main ref={canvasRef} className="flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[88px] md:min-w-0 md:snap-y md:snap-mandatory md:overflow-y-auto md:p-16">
         {scale > 0 && (
           <div className="m-auto grid w-full grid-cols-1 gap-8">
             {items.map((c, i) => {

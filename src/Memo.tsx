@@ -458,7 +458,7 @@ export default function Memo() {
         ref={setCanvas}
         {...staff.dropTarget}
         onClick={e => { if (!(e.target as Element).closest('figure, [data-add], [data-template]')) staff.setSelected(null) }}
-        className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[88px] md:min-w-0 md:snap-y md:snap-proximity md:overflow-y-auto md:p-16 ${staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
+        className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[88px] md:min-w-0 md:snap-y md:snap-mandatory md:overflow-y-auto md:p-16 ${staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
       >
         <div className="m-auto grid w-full grid-cols-1 gap-8">
           {items.map((p, i) => renderItem(p, i))}
