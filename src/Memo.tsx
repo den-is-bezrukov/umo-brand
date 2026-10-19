@@ -223,13 +223,13 @@ export default function Memo() {
 
   const problemOf = (i: number) => personIssues(i)[0]?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!)) : undefined)
 
-  // Two pages always in view: the spread, or, where its pages would come out smaller, the business card's column (the
-  // first page once at the top, each consultant's second under it), its pages as wide as lets two of them stand in the
-  // canvas's height. `column`: the column's page width, none for the spread
-  // A state, not a ref: the canvas comes after the first render (the phone check, the fonts), and a ref's effect missed it
+  // One page at a time, as tall as the canvas (600 px wide at most), the pages beside it on the left to pick another;
+  // the second, the consultant's, to start with and whenever a field has the caret. A state, not a ref: the canvas comes
+  // after the first render (the phone check, the fonts), and a ref's effect missed it
   const [canvas, setCanvas] = useState<HTMLElement | null>(null)
-  const [column, setColumn] = useState<number>()
-  const spread = column === undefined
+  const [pageW, setPageW] = useState(PAGE_MAX)
+  const [page, setPage] = useState<1 | 2>(2)
+  useEffect(() => { if (editing) setPage(2) }, [editing])
   useEffect(() => {
     const el = canvas
     if (!el) return
@@ -237,10 +237,7 @@ export default function Memo() {
       const cs = getComputedStyle(el)
       const w = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
       const h = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
-      const inSpread = Math.min(PAGE_MAX, (w - 16) / 2)
-      // 32 px between the pages (the list's gap)
-      const inColumn = Math.floor(Math.min(PAGE_MAX, w, (h - 32) / 2 * PAGE.w / PAGE.h))
-      setColumn(inSpread >= inColumn ? undefined : inColumn)
+      setPageW(Math.floor(Math.min(PAGE_MAX, w, h * PAGE.w / PAGE.h)))
     }
     const ro = new ResizeObserver(fit)
     ro.observe(el)
@@ -259,10 +256,9 @@ export default function Memo() {
     const r = page.getBoundingClientRect(), m = main.getBoundingClientRect()
     const top = r.top + block.y1 / PAGE.h * r.height, bottom = r.top + block.y2 / PAGE.h * r.height
     if (top < m.top || bottom > m.bottom) main.scrollBy({ top: (top + bottom) / 2 - (m.top + m.bottom) / 2, behavior: 'smooth' })
-  }, [shownAt, !!block, spread]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [shownAt, !!block, page]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  /** `spread`: the memo as it prints, the first page beside the consultant's second, on wide screens */
-  const renderItem = (p: typeof items[number], i: number, spread = false) => {
+  const renderItem = (p: typeof items[number], i: number) => {
     const memo = memos?.[i]
     const active = mode === 'manual' && p.key === current?.key
     const dimmed = mode === 'manual' && !!current && !active && !phone
@@ -270,29 +266,54 @@ export default function Memo() {
     const paths = (only: (f: MemoField) => boolean) => memo
       ? (Object.entries(memo.block.fields) as [MemoField, Cmd[]][]).filter(([f]) => only(f)).flatMap(([, c]) => c)
       : []
+    const second = (
+      <Sheet
+        src={page2}
+        text={memo ? toD(paths(f => !memo.ghost.has(f) && !wrong.has(f))) : undefined}
+        alert={memo ? toD(paths(f => !memo.ghost.has(f) && wrong.has(f))) : undefined}
+        ghost={memo ? toD(paths(f => memo.ghost.has(f))) : undefined}
+      />
+    )
+    // On phones each slide is the second page (the first a slide of its own)
+    const shows = phone ? 2 : page
     return (
       <Fragment key={p.key}>
         <Removed staff={staff} at={i} />
         <figure ref={staff.figureRef(p.key)} onClick={() => staff.pick(p.key)} className="group/row flex cursor-pointer justify-center">
-          <div className={`flex w-full flex-col gap-3 ${spread ? 'max-w-[1216px]' : 'max-w-[600px]'}`} style={!spread && !phone && column ? { maxWidth: column } : undefined}>
-            <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>
-              <button
-                type="button"
-                aria-pressed={mode === 'manual' ? active : undefined}
-                className={`grid w-full cursor-pointer gap-4 ${spread ? 'grid-cols-2' : ''}`}
-              >
-                {/* The first page, everyone's, never dimmed */}
-                {spread && <div className={ITEM_EDGE}><Sheet src={page1} /></div>}
-                <div ref={i === shownAt ? shownPage : undefined} className={`${ITEM_EDGE} transition-opacity duration-150 ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}>
-                <Sheet
-                  src={page2}
-                  text={memo ? toD(paths(f => !memo.ghost.has(f) && !wrong.has(f))) : undefined}
-                  alert={memo ? toD(paths(f => !memo.ghost.has(f) && wrong.has(f))) : undefined}
-                  ghost={memo ? toD(paths(f => memo.ghost.has(f))) : undefined}
-                />
+          <div className="flex w-full max-w-[600px] flex-col gap-3" style={phone ? undefined : { maxWidth: pageW }}>
+            <div className="relative">
+              {/* The pages, 48 px wide, 8 px left of the page shown, from its top: a click shows that one */}
+              {!phone && (
+                <div className="absolute top-0 right-full flex w-14 flex-col gap-2 pr-2">
+                  {([1, 2] as const).map(n => (
+                    <button
+                      key={n}
+                      type="button"
+                      aria-label={`Лист ${n}`}
+                      aria-pressed={page === n}
+                      onClick={() => setPage(n)}
+                      className={`block w-12 cursor-pointer outline-1 -outline-offset-1 ${page === n ? 'outline-black' : 'outline-black/10 hover:outline-black/40'}`}
+                    >
+                      {n === 1 ? <Sheet src={page1} /> : second}
+                    </button>
+                  ))}
                 </div>
-              </button>
-            </ItemFrame>
+              )}
+              <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>
+                <button
+                  type="button"
+                  aria-pressed={mode === 'manual' ? active : undefined}
+                  className="block w-full cursor-pointer"
+                >
+                  {/* The first page, everyone's, never dimmed */}
+                  {shows === 1 ? <div className={ITEM_EDGE}><Sheet src={page1} /></div> : (
+                    <div ref={i === shownAt ? shownPage : undefined} className={`${ITEM_EDGE} transition-opacity duration-150 ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}>
+                      {second}
+                    </div>
+                  )}
+                </button>
+              </ItemFrame>
+            </div>
             {problems[i].length > 0 && <ItemAlert staff={staff} item={p.key}>{problems[i].join(' · ')}</ItemAlert>}
           </div>
         </figure>
@@ -383,9 +404,7 @@ export default function Memo() {
         className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16 ${staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
       >
         <div className="m-auto grid w-full grid-cols-1 gap-8">
-          {/* The first page, everyone's, once at the top and never dimmed */}
-          {!spread && <div className="flex justify-center"><div className="w-full" style={{ maxWidth: column }}>{first}</div></div>}
-          {items.map((p, i) => renderItem(p, i, spread))}
+          {items.map((p, i) => renderItem(p, i))}
           <Removed staff={staff} at={items.length} />
         </div>
       </main>
