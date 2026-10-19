@@ -42,9 +42,6 @@ type DealerInput = Omit<Dealer, 'site'> & { site: string | null }
 /** What the memos were made from, kept in their PDF (`MEMOS_KEY`) */
 interface MemosData { dealer: DealerInput; people: Person[] }
 
-/** «Добавить» and «Скачать шаблон» one width, the wider's and a little more */
-const BUTTON_W = 'w-[136px]'
-
 const NO_DEALER: DealerInput = { name: '', address: '', phone: '', email: '', site: null }
 const DEALER_OPTIONS = DEALER_NAMES.map(withoutUmo)
 const addressOf = (name: string) => dealerOf(name)?.address || undefined
@@ -325,15 +322,15 @@ export default function Memo() {
         <div className="m-auto grid w-full grid-cols-1 gap-8">
           {items.map((p, i) => renderItem(p, i, true))}
           <Removed staff={staff} at={items.length} />
-          {/* On the spread's two columns, 16 px apart as the pages: «Добавить» under the first page's edge, the template
-              under the second's, the gap between them under the gap between the pages */}
+          {/* On the spread's two columns, 16 px apart as the pages: the template ending under the first page's edge,
+              «Добавить» starting under the second's, the gap between them under the gap between the pages */}
           <div className="mx-auto grid w-full max-w-[1216px] grid-cols-2 gap-4">
-            <div className="flex justify-end"><AddTile onClick={() => staff.add()} className={BUTTON_W} /></div>
-            <div className="flex justify-start">
-              <button type="button" data-template onClick={handleTemplate} disabled={!memos || templating} className={`${outlined} flex-none ${BUTTON_W}`}>
+            <div className="flex justify-end">
+              <button type="button" data-template onClick={handleTemplate} disabled={!memos || templating} className={`${outlined} flex-none`}>
                 {templating ? 'Собираем…' : 'Скачать шаблон'}
               </button>
             </div>
+            <div className="flex justify-start"><AddTile onClick={() => staff.add()} /></div>
           </div>
         </div>
       </main>
