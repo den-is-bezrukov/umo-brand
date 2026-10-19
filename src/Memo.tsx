@@ -322,11 +322,16 @@ export default function Memo() {
         <div className="m-auto grid w-full grid-cols-1 gap-8">
           {items.map((p, i) => renderItem(p, i, true))}
           <Removed staff={staff} at={items.length} />
-          <AddTile onClick={() => staff.add()}>
-            <button type="button" data-template onClick={handleTemplate} disabled={!memos || templating} className={`${outlined} flex-none`}>
-              {templating ? 'Собираем…' : 'Скачать шаблон'}
-            </button>
-          </AddTile>
+          {/* On the spread's two columns, 16 px apart as the pages: «Добавить» under the first page's edge, the template
+              under the second's, the gap between them under the gap between the pages */}
+          <div className="mx-auto grid w-full max-w-[1216px] grid-cols-2 gap-4">
+            <div className="flex justify-end"><AddTile onClick={() => staff.add()} /></div>
+            <div className="flex justify-start">
+              <button type="button" data-template onClick={handleTemplate} disabled={!memos || templating} className={`${outlined} flex-none`}>
+                {templating ? 'Собираем…' : 'Скачать шаблон'}
+              </button>
+            </div>
+          </div>
         </div>
       </main>
     </div>
