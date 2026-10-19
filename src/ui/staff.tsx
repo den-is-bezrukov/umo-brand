@@ -475,9 +475,10 @@ export function UploadArea<P extends object>({ staff }: { staff: Staff<P> }) {
  * 480 px sheet hides whole behind it (outside, it showed at the sheet's sides as a line)
  */
 export const ITEM_EDGE = 'outline-1 -outline-offset-1 outline-black/10 group-hover/row:outline-black/40'
-/** `ITEM_EDGE` on a layer over the item, for an item whose art is positioned inside it (the price card's poster), which
- * would cover an edge on the item itself; the item is `relative` */
-export const ITEM_EDGE_OVER = "relative after:pointer-events-none after:absolute after:inset-0 after:content-[''] after:outline-1 after:-outline-offset-1 after:outline-black/10 group-hover/row:after:outline-black/40"
+/** `ITEM_EDGE` on a layer over the item, for an item whose art is positioned inside it (the price card's poster, the
+ * memo's pages), which would cover an edge on the item itself; the item is `relative`. 20% on hover: 40 is harsh round
+ * a page this big */
+export const ITEM_EDGE_OVER = "relative after:pointer-events-none after:absolute after:inset-0 after:content-[''] after:outline-1 after:-outline-offset-1 after:outline-black/10 group-hover/row:after:outline-black/20"
 
 /** ⌘↩ (Ctrl+Enter) adds an item from anywhere, a field too: one card done, the next one (⌘N is the browser's own) */
 export function useAddKey(add: (() => void) | undefined) {

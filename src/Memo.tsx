@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, LinkButtons, canShareFiles, unfilled, itemOf, ALERT_LABEL } from '@/ui/form'
-import { useStaff, plain, useAddKey, fullNameField, ItemFrame, Removed, ItemAlert } from '@/ui/staff'
+import { useStaff, plain, useAddKey, fullNameField, ItemFrame, Removed, ItemAlert, ITEM_EDGE_OVER } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, type Box, type Cmd } from '@/livery/geometry'
 import { loadFonts } from '@/ui/type'
@@ -80,9 +80,6 @@ function boxOf(cmds: Cmd[]): Box | undefined {
   }
   return b
 }
-
-/** The pages' edge, as `ITEM_EDGE` but 20% on hover (40 is harsh round a page this big), on a layer over the page: on the page itself the contacts, laid over the art, cover it */
-const PAGE_EDGE = "relative after:pointer-events-none after:absolute after:inset-0 after:content-[''] after:outline-1 after:-outline-offset-1 after:outline-black/10 group-hover/row:after:outline-black/20"
 
 /** A page of the memo: Figma's art under the contacts, `text` black, `alert` red, `ghost` grey */
 function Sheet({ src, text, alert, ghost }: { src: string; text?: string; alert?: string; ghost?: string }) {
@@ -329,7 +326,7 @@ export default function Memo() {
             {phone ? (
               <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>
                 <button type="button" aria-pressed={mode === 'manual' ? active : undefined} className="block w-full cursor-pointer">
-                  <div className={PAGE_EDGE}>{second}</div>
+                  <div className={ITEM_EDGE_OVER}>{second}</div>
                 </button>
               </ItemFrame>
             ) : (() => {
@@ -343,7 +340,7 @@ export default function Memo() {
                       data-page
                       ref={k === 1 && i === shownAt ? shownPage : undefined}
                       onClick={toPage}
-                      className={`shrink-0 snap-center ${PAGE_EDGE} transition-opacity duration-150 ${k > 0 && dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''} data-off:opacity-40 hover:opacity-100!`}
+                      className={`shrink-0 snap-center ${ITEM_EDGE_OVER} transition-opacity duration-150 ${k > 0 && dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''} data-off:opacity-40 hover:opacity-100!`}
                       style={{ width: pageW }}
                     >
                       {k === 0 ? <Sheet src={page1} /> : second}
