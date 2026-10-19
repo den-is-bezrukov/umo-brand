@@ -76,20 +76,17 @@ function boxOf(cmds: Cmd[]): Box | undefined {
   }
   return b
 }
-/** The edited field's lines */
-const EDITING = '#0066ff'
 
-/** A page of the memo: Figma's art under the contacts, `text` black, `alert` red, `ghost` grey, `focus` the edited field's lines blue */
-function Sheet({ src, text, alert, ghost, focus }: { src: string; text?: string; alert?: string; ghost?: string; focus?: string }) {
+/** A page of the memo: Figma's art under the contacts, `text` black, `alert` red, `ghost` grey */
+function Sheet({ src, text, alert, ghost }: { src: string; text?: string; alert?: string; ghost?: string }) {
   return (
     <div className="relative bg-white">
       <img src={src} alt="" className="block w-full" style={{ aspectRatio: `${PAGE.w} / ${PAGE.h}` }} draggable={false} />
-      {(text || alert || ghost || focus) && (
+      {(text || alert || ghost) && (
         <svg viewBox={`0 0 ${PAGE.w} ${PAGE.h}`} className="absolute inset-0 block size-full" aria-hidden>
           {ghost && <path d={ghost} fill="#a6a6a6" />}
           {text && <path d={text} fill="#000" />}
           {alert && <path d={alert} fill="#e30" />}
-          {focus && <path d={focus} fill={EDITING} />}
         </svg>
       )}
     </div>
@@ -306,11 +303,10 @@ export default function Memo() {
                   style={{ transform: zooms ? zoom : undefined }}
                 >
                 <Sheet
-                  focus={memo && zooms && editing && !wrong.has(editing) ? toD(paths(f => f === editing)) : undefined}
                   src={page2}
-                  text={memo ? toD(paths(f => !memo.ghost.has(f) && !wrong.has(f) && !(zooms && f === editing))) : undefined}
+                  text={memo ? toD(paths(f => !memo.ghost.has(f) && !wrong.has(f))) : undefined}
                   alert={memo ? toD(paths(f => !memo.ghost.has(f) && wrong.has(f))) : undefined}
-                  ghost={memo ? toD(paths(f => memo.ghost.has(f) && !(zooms && f === editing && !wrong.has(f)))) : undefined}
+                  ghost={memo ? toD(paths(f => memo.ghost.has(f))) : undefined}
                 />
                 </div>
               </button>
