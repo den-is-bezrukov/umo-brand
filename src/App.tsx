@@ -139,11 +139,10 @@ async function pdfOf(cards: Card[]) {
   return cardsPdf(pages, pdfName(cards))
 }
 
-/** The editable template of one card: its layout, model and prices' count, the texts and photo as placeholders */
-const TEMPLATE_FILE = 'UMO_price-card_template.pdf'
-async function templateOf(c: Card) {
-  const { cardsPdf } = await import('@/posters/pdf/cardsPdf')
-  return cardsPdf([{ variant: `${c.model}-${c.trim}` as Variant, fullPrice: c.full, creditPrice: c.creditOn ? c.credit : undefined, qrUrl: qrUrlOf(c), template: true }], TEMPLATE_FILE)
+/** A trim's card as it comes: at its price, no credit, the QR to the model's page */
+function defaultOf(model: Model, trim: Trim): Card {
+  const full = DEFAULTS[`${model}-${trim}`]
+  return { ...defaultCard(model), trim, full, credit: creditFor(full) }
 }
 
 /**
@@ -151,10 +150,7 @@ async function templateOf(c: Card) {
  * ready to print or edit (it was the blank template of the UMO 5 card; the card's own template stays in its column)
  */
 const DEFAULTS_FILE = 'UMO_price-cards.pdf'
-const allDefaults = () => (['umo5', 'umo8'] as Model[]).flatMap(m => TRIMS[m].map(trim => {
-  const full = DEFAULTS[`${m}-${trim}`]
-  return { ...defaultCard(m), trim, full, credit: creditFor(full) }
-}))
+const allDefaults = () => (['umo5', 'umo8'] as Model[]).flatMap(m => TRIMS[m].map(trim => defaultOf(m, trim)))
 async function defaultsPdf() {
   const { cardsPdf } = await import('@/posters/pdf/cardsPdf')
   const pages = allDefaults().map(c => ({ variant: `${c.model}-${c.trim}` as Variant, fullPrice: c.full, qrUrl: qrUrlOf(c) }))
@@ -390,7 +386,12 @@ export default function App() {
   const addCard = (after?: number) => staff.add(plain(items[items.length - 1]), undefined, after)
   useAddKey(!phone ? () => addCard(staff.selected) : undefined)
   /** «Скачать шаблон» in the card's column: that card's; `?t`, the default UMO 5 card's */
-  const templateIcon = (c: Card) => <TemplateButton make={() => templateOf(c)} name={TEMPLATE_FILE} goalId="download_price_card_template" />
+  // The template icon gives the card's model and trim as they come (`UMO-5-PRO.pdf`), whatever's typed (it was an
+  // editable template, the texts as placeholders: no one but the designer needed it)
+  const templateIcon = (c: Card) => {
+    const d = defaultOf(c.model, c.trim)
+    return <TemplateButton make={() => pdfOf([d])} name={pdfName([d])} goalId="download_price_card_template" title="Скачать прайс-карту по умолчанию" />
+  }
   const templateOnly = useTemplateLink(defaultsPdf, DEFAULTS_FILE, 'download_price_card_template')
 
   if (pdfOnly || templateOnly) return null
