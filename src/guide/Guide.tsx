@@ -932,8 +932,13 @@ function Text({ children, wide }: { children: ReactNode; wide?: boolean }) {
 function Caption({ children, cross, download }: { children: ReactNode; cross?: boolean; download?: boolean }) {
   return (
     <figcaption className="flex items-start gap-2 text-[14px] leading-[1.43] [font-feature-settings:'case'_1]">
-      {download && <span aria-hidden className="mt-[3px] w-[14px] shrink-0 border-b border-black pb-px text-center font-medium leading-none">↓</span>}
-      <span className={`flex-1 ${download ? `${UNDERLINE} group-hover:decoration-black/40 group-hover:duration-0` : ''}`}>{children}</span>
+      {/* A download's: no ↓ before it, as the rows; ↓ after it, 8 px off, while the picture or caption is pointed at */}
+      {download ? (
+        <span className="flex-1">
+          <span className={`${UNDERLINE} group-hover:decoration-black/40 group-hover:duration-0`}>{children}</span>
+          <span aria-hidden className="ml-2 hidden font-medium group-hover:inline">↓</span>
+        </span>
+      ) : <span className="flex-1">{children}</span>}
       {cross && <span aria-label="нельзя" className="w-4 text-center text-[20px] leading-[1.13] text-[#e30]">×</span>}
     </figcaption>
   )
