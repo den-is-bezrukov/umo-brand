@@ -1133,7 +1133,7 @@ function fileSize(bytes: number): [number, string] {
  * split into two, filled top to bottom so files of one item stay together. Sizes get one decimal in every
  * row as soon as one of them is under 10 (0,7 КБ), and none otherwise.
  */
-/** `early`: two columns from 560 px, rather than from `sm` (Леттеринг → Модели, whose pictures pair up from 520; narrower «umo-model-8-png.zip» wraps); `bare`: no hairline (Материалы, the row right under its picture) */
+/** `early`: two columns from 560 px, rather than from `sm` (Леттеринг → Модели, whose pictures pair up from 520; narrower «umo-model-8-png.zip» wraps); `bare`: no hairline over the first row (Материалы, the row right under its picture) */
 function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: string; early?: boolean; bare?: boolean }) {
   const pointed = useContext(PointedPreview)?.[0]
   const sizes = items.flatMap(a => ('file' in a ? [fileSize(sizeOf(a))] : []))
@@ -1147,8 +1147,9 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
         : 'grid grid-cols-1 gap-x-4 sm:grid-flow-col md:gap-x-6 sm:grid-cols-2 sm:grid-rows-[repeat(var(--rows),auto)]') : 'flex flex-col'}
       style={two ? ({ '--rows': Math.ceil(items.length / 2) } as CSSProperties) : undefined}
     >
-      {items.map(a => {
-        const row = `group flex items-center gap-2 ${bare ? '' : 'border-t border-[#e6e6e6]'} py-[14px] text-[16px] leading-none tracking-[-0.01em]`
+      {items.map((a, i) => {
+        // `bare` drops the hairline over the first row only (the one right under its picture)
+        const row = `group flex items-center gap-2 ${bare && i === 0 ? '' : 'border-t border-[#e6e6e6]'} py-[14px] text-[16px] leading-none tracking-[-0.01em]`
         // The row a preview above stands for lights up while the preview is pointed at
         const linked = preview === ('to' in a ? a.to : a.file)
         const lit = pointed !== undefined && pointed === ('to' in a ? a.to : a.file)
