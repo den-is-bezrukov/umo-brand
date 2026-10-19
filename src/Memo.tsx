@@ -255,6 +255,38 @@ export default function Memo() {
     el.scrollTo({ left: max / (n - 1), behavior })
   }
   /** A click on a page brings it to the canvas's middle */
+  /**
+   * The row dragged with a mouse, which has no way across otherwise (a trackpad's swipe or a phone's own still scroll it):
+   * past 5 px it follows the pointer, the snap off meanwhile; let go, the page nearest the middle comes there, and the
+   * click the drag ends in selects nothing
+   */
+  const dragRow = (e: React.PointerEvent<HTMLElement>) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return
+    const el = e.currentTarget, x0 = e.clientX, left0 = el.scrollLeft
+    let moved = false
+    const move = (m: PointerEvent) => {
+      const dx = m.clientX - x0
+      if (!moved && Math.abs(dx) < 5) return
+      if (!moved) { moved = true; el.style.scrollSnapType = 'none'; document.body.style.cursor = 'grabbing'; el.style.pointerEvents = 'none' }
+      el.scrollLeft = left0 - dx
+    }
+    const up = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      if (!moved) return
+      el.style.scrollSnapType = ''; el.style.pointerEvents = ''; document.body.style.cursor = ''
+      const mid = el.getBoundingClientRect().left + el.clientWidth / 2
+      const pages = [...el.querySelectorAll<HTMLElement>('[data-page]')]
+      const near = pages.reduce((a, b) => Math.abs(b.getBoundingClientRect().left + b.offsetWidth / 2 - mid) < Math.abs(a.getBoundingClientRect().left + a.offsetWidth / 2 - mid) ? b : a)
+      near?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+      // The click the drag ends in, if any, lands on nothing
+      const eat = (c: MouseEvent) => { c.stopPropagation(); c.preventDefault() }
+      window.addEventListener('click', eat, { capture: true, once: true })
+      setTimeout(() => window.removeEventListener('click', eat, { capture: true }), 0)
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+  }
   const toPage = (e: React.MouseEvent<HTMLElement>) => e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
   // A row put at the consultant's page as it comes, once the canvas is measured (before, its ends weren't set and it
   // stood at the last); the canvas resized, a row may now fit or not
@@ -355,7 +387,7 @@ export default function Memo() {
                 <div className="relative">
                   {/* Across the canvas's whole width, past its 64 px padding, which the row keeps as its own ends; let go,
                       it stands at a page, in the canvas's middle, never between them */}
-                  <div data-pages={p.key} onScroll={e => markPage(e.currentTarget)} className="-mx-16 snap-x snap-mandatory overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                  <div data-pages={p.key} onScroll={e => markPage(e.currentTarget)} onPointerDown={scrolls ? dragRow : undefined} className="-mx-16 snap-x snap-mandatory overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     {/* Its width set: the item's box is a size container, which `w-max` takes as nothing */}
                     <div className="mx-auto box-content" style={{ width: PAGES * pageW + (PAGES - 1) * PAGES_GAP, paddingInline: rowEnd }}>
                       {scrolls ? pages : frame(pages)}
