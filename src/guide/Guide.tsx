@@ -1171,7 +1171,7 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
         // A generator's file: its link makes and saves it, in a tab of its own so the guide stays
         if ('t' in a) {
           return (
-            <a key={a.file} href={a.t} target="_blank" rel="noopener" className={row}>
+            <a key={a.file} href={a.t} target="_blank" rel="noopener" title={`Скачать ${formatOf(a)}`} className={row}>
               {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>}
               <span className={name}>{a.label}</span>
               <span className={`${meta} ${format}`}>{formatOf(a)}</span>
@@ -1183,13 +1183,13 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
           // finger's target on phones), pointing at one lighting it alone
           return (
             <div key={a.file} className={`flex items-stretch ${bare && i === 0 ? '' : 'border-t border-[#e6e6e6]'}`}>
-              <a href={`/downloads/${a.file}`} download className={`${row.replace(/border-t border-\[#e6e6e6\]/, '')} min-w-0 flex-1`}>
+              <a href={`/downloads/${a.file}`} download title={`Скачать ${formatOf(a)}`} className={`${row.replace(/border-t border-\[#e6e6e6\]/, '')} min-w-0 flex-1`}>
                 {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>}
                 <span className={name}>{a.label ?? a.file}</span>
                 <span className={`${meta} ${format}`}>{formatOf(a)}</span>
               </a>
               {a.also.map(f => (
-                <a key={f.file} href={`/downloads/${f.file}`} download aria-label={`${a.label ?? a.file}, ${formatOf(f)}`} className="flex shrink-0 items-center pl-3 text-[16px] leading-none tracking-[-0.01em] text-[#808080] [font-feature-settings:'tnum'_1] hover:text-black group/format">
+                <a key={f.file} href={`/downloads/${f.file}`} download title={`Скачать ${formatOf(f)}`} aria-label={`${a.label ?? a.file}, ${formatOf(f)}`} className="flex shrink-0 items-center pl-3 text-[16px] leading-none tracking-[-0.01em] text-[#808080] [font-feature-settings:'tnum'_1] hover:text-black group/format">
                   <span className={`${UNDERLINE} group-hover/format:decoration-black/40 group-hover/format:duration-0`}>{formatOf(f)}</span>
                 </a>
               ))}
@@ -1197,7 +1197,7 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
           )
         }
         return (
-          <a key={a.file} href={`/downloads/${a.file}`} download className={row}>
+          <a key={a.file} href={`/downloads/${a.file}`} download title={`Скачать ${formatOf(a)}`} className={row}>
             {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>}
             <span className={name}>{a.label ?? a.file}</span>
             <span className={`${meta} ${format}`}>{formatOf(a)}</span>
