@@ -6,7 +6,7 @@ import { GENERATORS } from '@/data/generators'
 import HelpButton from './help'
 import Ring from './Ring'
 import { ChevronIcon } from './icons'
-import { InFoot, InSheet, SheetLayer } from './phone'
+import { InFoot, InSheet, SheetLayer, FOOT_BG } from './phone'
 import { MOD, withMod, otherLayout } from './keys'
 
 // Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag, business card). Light UI per the Figma layout
@@ -752,10 +752,11 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
       {shareOn && <div className="flex min-w-0">{links}</div>}
     </div>
   )
-  // Wide screens: 40 px off the form, sticking to the sidebar's foot; «Поделиться» over the download, as wide, so it
-  // has room to say the link is copied
+  // Wide screens: as far off the form as before (8 + 24 px), sticking to the sidebar's foot on the phones' gradients (`FOOT_BG`), 24 px in
+  // all round, as on phones (Figma 5098:5539); «Поделиться» over the download, as wide, so it has room to say the link
+  // is copied
   return (
-    <div className="sticky bottom-0 z-10 mt-8 flex flex-col gap-2 bg-white p-6 pt-0 tracking-normal">
+    <div style={{ background: FOOT_BG }} className="sticky bottom-0 z-10 mt-2 flex flex-col gap-2 p-6 tracking-normal">
       {shareOn && <div className="flex">{links}</div>}
       <div className="flex">{main}</div>
     </div>

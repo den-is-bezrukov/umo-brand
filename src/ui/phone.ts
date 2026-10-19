@@ -17,3 +17,8 @@ export const InSheet = createContext('')
 export const SheetLayer = createContext<{ el: HTMLElement | null; hidden: number }>({ el: null, hidden: 0 })
 /** The sheet's foot: the download is one button there, opening the sheet when it leads to a field */
 export const InFoot = createContext<null | (() => void)>(null)
+/**
+ * Under the download, on phones and wide screens alike: a white gradient the form fades under, the whole height, over a
+ * second one white by the button's top, 24 px down, so nothing of the form shows through under the button (Figma 5098:5539)
+ */
+export const FOOT_BG = 'linear-gradient(#fff0, #fff), linear-gradient(#fff0, #fff 24px)'

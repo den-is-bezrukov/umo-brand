@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ResetIcon, DuplicateIcon, TrashIcon, PlusIcon, Removed, type Staff } from '@/ui/staff'
-import { InSlide, InFoot, InSheet, SheetLayer } from '@/ui/phone'
+import { InSlide, InFoot, InSheet, SheetLayer, FOOT_BG } from '@/ui/phone'
 import { addTitle, itemName } from '@/data/generators'
 
 // A trial of the generators' phone layout (Figma 5098:5806, «Mobile Layout»): the canvas over a sheet holding the
@@ -680,12 +680,12 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
         <div ref={setLayerEl} data-sheet className="absolute inset-0 overflow-hidden rounded-t-[24px] empty:hidden" />
       </div>
 
-      {/* The download over the form's foot, on a white gradient the form fades under, 24 px in all round (Figma 5098:5539),
+      {/* The download over the form's foot, on two white gradients the form fades under (`FOOT_BG`), 24 px in all round (Figma 5098:5539),
           plus the screen's bottom safe area under it (`viewport-fit=cover` in index.html), so it clears the home
           indicator. Tried closer to Safari's bottom tab bar: 16, then on iOS alone 16, 0, 2 and 8 — touching the edge,
           the black button turned Safari 26's bar black, and 24 all round is what the sheet's sides have */}
       {!typing && (
-        <div ref={footEl} data-sheet style={footAt(edge[sheet])} className="fixed inset-x-0 bottom-0 mx-auto max-w-[480px] [:root:has([data-combo])_&]:hidden bg-gradient-to-b from-white/0 to-white px-6 pt-6 pb-[calc(24px+env(safe-area-inset-bottom))] tracking-normal">
+        <div ref={footEl} data-sheet style={{ ...footAt(edge[sheet]), background: FOOT_BG }} className="fixed inset-x-0 bottom-0 mx-auto max-w-[480px] [:root:has([data-combo])_&]:hidden px-6 pt-6 pb-[calc(24px+env(safe-area-inset-bottom))] tracking-normal">
           <InFoot.Provider value={() => { if (sheetRef.current === 'preview') move('half') }}>{download}</InFoot.Provider>
         </div>
       )}
