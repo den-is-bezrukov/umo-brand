@@ -1126,8 +1126,8 @@ function PriceCardPreview({ variant, fullPrice, creditPrice, image, alt }: {
  * page of this site (its title and path), or a file a generator makes, `t` the link that makes it (a blank template:
  * `?t`), named by `label` («Шаблон режимника»). `also`: the same item in other formats, on the right of its row after
  * the file's own: the row downloads the vector, its PNG the PNG («Логотип UMO  SVG  PNG»; they were a row each). A page's
- * `verb` stands on its right in place of its path, `template` a PDF link after it («Режимник  Редактор  PDF»: the
- * row opens the constructor, the template second to it; they were a row each, the constructor's named by what's done there)
+ * `verb`, if any, stands on its right in place of its path, `template` a PDF link after it («Указать часы работы  PDF»: the
+ * row opens the constructor, named by what's done there, the template second to it)
  */
 type Asset = { file: string; label?: string; also?: { file: string }[] } | { to: string; title: string; verb?: string; template?: { t: string; file: string } } | { t: string; label: string; file: string }
 
@@ -1191,7 +1191,7 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
                   <span aria-hidden className={`hidden font-medium group-hover:inline ${linked ? 'group-has-[[data-preview]:hover]/preview:inline' : ''}`}>↗</span>
                   <span aria-hidden className="hidden font-medium group-has-[[data-format]:hover]/row:inline">↓</span>
                 </span>
-                <span className={`${meta} ${format}`}>{a.verb ?? a.to}</span>
+                {a.verb && <span className={`${meta} ${format}`}>{a.verb}</span>}
               </Link>
               <a href={tpl.t} target="_blank" rel="noopener" data-format title={`Скачать ${formatOf(tpl)}`} aria-label={`${a.title}, шаблон ${formatOf(tpl)}`} className="group/format flex shrink-0 items-center pl-3 text-[16px] leading-none tracking-[-0.01em] text-[#808080] hover:text-black">
                 <span className={`${UNDERLINE} group-hover/format:decoration-black/40 group-hover/format:duration-0`}>{formatOf(tpl)}</span>
@@ -1280,8 +1280,8 @@ function Constructor({ to, title, label, flush, template, children }: { to: stri
   return (
     <div className={`group/preview flex flex-col ${flush ? '' : 'gap-4 md:gap-6'}`}>
       <PreviewLink asset={{ to, title }} label={label}>{children}</PreviewLink>
-      {/* The generator's row, its template (made by its `?t` link) a PDF after «Редактор» */}
-      <Assets items={[{ to, title, verb: 'Редактор', template: template && { t: `${to}?${template.query ? `${template.query}&` : ''}t`, file: template.file } }]} preview={to} bare={flush} />
+      {/* The generator's row, named by what's done there, its template (made by its `?t` link) a PDF after it */}
+      <Assets items={[{ to, title: label, template: template && { t: `${to}?${template.query ? `${template.query}&` : ''}t`, file: template.file } }]} preview={to} bare={flush} />
     </div>
   )
 }
