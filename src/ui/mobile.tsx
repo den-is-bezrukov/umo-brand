@@ -79,8 +79,6 @@ export interface Slide {
   label?: string
   /** Its reset, in «Сбросить»'s place, while there's something to reset */
   reset?: { onClick: () => void; label: string }
-  /** Its least room at the screen's sides, for what stands beside the picture (the memo's pages), never under the corners' */
-  side?: number
 }
 
 type Sheet = 'preview' | 'half' | 'full'
@@ -640,7 +638,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
             // move a copy 4 px down and cut its top edge); one taller than the screen's width scrolls. A sheet's caption
             // goes, its name in the row
             <div key={s.key} className={`flex h-full w-full shrink-0 snap-center ${s.ratio ? 'overflow-clip' : 'overflow-y-auto [scrollbar-width:none]'} ${s.label ? '[&_figcaption]:hidden' : ''}`}>
-              {box.w > 0 && <Fitted ratio={s.ratio} box={box} node={s.node} side={Math.max(s.side ?? 0, corners ? CORNER + (onAdd ? 30 : 0) : SIDE)} />}
+              {box.w > 0 && <Fitted ratio={s.ratio} box={box} node={s.node} side={corners ? CORNER + (onAdd ? 30 : 0) : SIDE} />}
             </div>
           ))}
         </div>

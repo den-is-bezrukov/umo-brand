@@ -37,8 +37,6 @@ const UNFILLED: Partial<Record<MemoField, string>> = {
 const PERSON_FIELDS: MemoField[] = ['position', 'name', 'surname', 'phone', 'email']
 const PERSON_REQUIRED = ['position', 'name', 'surname', 'phone'] as const
 const DEALER_REQUIRED = ['dealer', 'dealerPhone', 'address', 'site'] as const
-/** On a phone, the room at the screen's sides: the slide's 20 px and the pages' 50 beside the page */
-const THUMBS_SIDE = 70
 /** A page's widest on the canvas */
 const PAGE_MAX = 600
 
@@ -276,16 +274,16 @@ export default function Memo() {
         ghost={memo ? toD(paths(f => memo.ghost.has(f))) : undefined}
       />
     )
+    // On phones each slide is the second page (the first a slide of its own)
+    const shows = phone ? 2 : page
     return (
       <Fragment key={p.key}>
         <Removed staff={staff} at={i} />
         <figure ref={staff.figureRef(p.key)} onClick={() => staff.pick(p.key)} className="group/row flex cursor-pointer justify-center">
           <div className="flex w-full max-w-[600px] flex-col gap-3" style={phone ? undefined : { maxWidth: pageW }}>
             <div className="relative">
-              {/* The pages, 42 px wide, 8 px left of the page shown, from its top: a click shows that one (on every memo; on a
-                  phone it doesn't lower the sheet, as a tap on the picture does). A finger's hold takes the gaps round
-                  it too, to the page */}
-              {(
+              {/* The pages, 42 px wide, 8 px left of the page shown, from its top: a click shows that one */}
+              {!phone && (
                 <div className="absolute top-0 right-full flex w-[50px] flex-col gap-2 pr-2">
                   {([1, 2] as const).map(n => (
                     <button
@@ -293,9 +291,9 @@ export default function Memo() {
                       type="button"
                       aria-label={`Лист ${n}`}
                       aria-pressed={page === n}
-                      onClick={e => { e.stopPropagation(); setPage(n); if (!phone) staff.pick(p.key) }}
+                      onClick={() => setPage(n)}
                       // The one shown clear in a ring at 40% black (the items' edge on hover) round its edge, the others dimmed as the items not selected
-                      className={`relative z-0 block w-[42px] cursor-pointer outline-1 after:absolute after:-inset-y-1 after:-left-1 after:-right-2 after:content-[''] transition-opacity duration-150 ${page === n ? 'outline-black/40' : 'outline-black/10 opacity-40 hover:opacity-100'}`}
+                      className={`relative z-0 block w-[42px] cursor-pointer outline-1 transition-opacity duration-150 ${page === n ? 'outline-black/40' : 'outline-black/10 opacity-40 hover:opacity-100'}`}
                     >
                       {n === 1 ? <Sheet src={page1} /> : second}
                     </button>
@@ -309,7 +307,7 @@ export default function Memo() {
                   className="block w-full cursor-pointer"
                 >
                   {/* The first page, everyone's, never dimmed */}
-                  {page === 1 ? <div className={ITEM_EDGE}><Sheet src={page1} /></div> : (
+                  {shows === 1 ? <div className={ITEM_EDGE}><Sheet src={page1} /></div> : (
                     <div ref={i === shownAt ? shownPage : undefined} className={`${ITEM_EDGE} transition-opacity duration-150 ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}>
                       {second}
                     </div>
@@ -388,10 +386,11 @@ export default function Memo() {
     />
   )
 
+  const first = <div className="outline-1 outline-black/10"><Sheet src={page1} /></div>
 
 
   if (templateOnly) return null
-  if (phone) return <MobileEditor slides={items.map((p, i) => ({ key: p.key, item: p.key, label: `${p.name} ${p.surname}`.replace(/\s+/g, ' ').trim() || 'Памятка', ratio: PAGE.h / PAGE.w, node: renderItem(p, i), side: THUMBS_SIDE }))} onAdd={addItem} sidebar={sidebar} download={download} staff={staff} />
+  if (phone) return <MobileEditor slides={[{ key: 'first', number: 0, label: 'Первый лист', ratio: PAGE.h / PAGE.w, node: first }, ...items.map((p, i) => ({ key: p.key, item: p.key, number: i + 1, label: `${p.name} ${p.surname}`.replace(/\s+/g, ' ').trim() || 'Второй лист', ratio: PAGE.h / PAGE.w, node: renderItem(p, i) }))]} onAdd={addItem} sidebar={sidebar} download={download} staff={staff} />
 
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
