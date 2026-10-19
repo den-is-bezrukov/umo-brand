@@ -25,7 +25,7 @@ const RED = '#ff2a1a'
 /** The spec's dimensions: orange, apart from the red of text at fault */
 const DIMS = '#ee4400'
 
-function SheetPreview({ sheet, seams, dims, onReset, resetLabel }: { sheet: Sheet; seams: boolean; dims: boolean; onReset?: () => void; resetLabel?: string }) {
+function SheetPreview({ sheet, seams, dims, onReset, resetLabel, extra }: { sheet: Sheet; seams: boolean; dims: boolean; onReset?: () => void; resetLabel?: string; extra?: React.ReactNode }) {
   const s = sheet.surface
   const marks = specMarks(s)
   const [vx, vy, vw, vh] = s.photo.view
@@ -78,7 +78,7 @@ function SheetPreview({ sheet, seams, dims, onReset, resetLabel }: { sheet: Shee
       <figcaption className="mt-0.5 text-center text-[14px] leading-5 text-[#808080]">
         <span className="relative">
           {s.title}, {mm(s.w)}&nbsp;×&nbsp;{mm(s.h)}&nbsp;мм
-          {onReset && <CaptionReset onClick={onReset} label={resetLabel} />}
+          {(onReset || extra) && <CaptionReset onClick={onReset} label={resetLabel} extra={extra} />}
         </span>
       </figcaption>
       {sheet.issues.length > 0 && (
@@ -348,16 +348,13 @@ export default function Livery() {
 
       <main className="flex-1 bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
         <div className="mx-auto flex max-w-[1200px] flex-col gap-10">
-          {sheets.slice(0, 2).map(s => <SheetPreview key={s.surface.id} sheet={s} seams={seams} dims={dims} onReset={sidesAtDefaults ? undefined : resetSides} resetLabel="Вернуть борта по умолчанию" />)}
+          {/* «Скачать шаблон» by the first sheet's caption, before its reset: the template is all the sheets' */}
+          {sheets.slice(0, 2).map((s, i) => <SheetPreview key={s.surface.id} sheet={s} seams={seams} dims={dims} onReset={sidesAtDefaults ? undefined : resetSides} resetLabel="Вернуть борта по умолчанию" extra={i === 0 && <TemplateButton make={makeTemplate} name={templateName} goalId="download_livery_template" />} />)}
           {sheets[2] && (
             <div className="w-full md:w-1/2">
               <SheetPreview sheet={sheets[2]} seams={seams} dims={dims} onReset={rearAtDefaults ? undefined : resetRear} resetLabel="Вернуть стекло по умолчанию" />
             </div>
           )}
-          {/* «Скачать шаблон» centred under the sheets */}
-          <div className="flex justify-center">
-            <TemplateButton make={makeTemplate} name={templateName} goalId="download_livery_template" />
-          </div>
         </div>
       </main>
 

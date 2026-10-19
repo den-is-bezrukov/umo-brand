@@ -4,4 +4,4 @@ The dealer's line on a number plate frame (Figma: UMO | Evrone, node 4970:2419; 
 
 The PDF's title is its file name. A link with `pdf` saves `UMO_plate-frame_501x21.pdf` to the downloads and opens it with no editor; a line at fault opens the editor (see «Links with settings» in `docs/generators.md`).
 
-«Скачать шаблон», centred under the frame, `UMO_plate-frame_template.pdf`: the same page, the text live in CoFo Sans Medium in the same White spot colour over the same unprinted black (`stripTemplate`); `umo.autos/plate-frame?template` gives «UMO Центр» on the left (see «Editable templates» in `docs/generators.md`).
+«Скачать шаблон», an icon in the caption before its reset, `UMO_plate-frame_template.pdf`: the same page, the text live in CoFo Sans Medium in the same White spot colour over the same unprinted black (`stripTemplate`); `umo.autos/plate-frame?template` gives «UMO Центр» on the left (see «Editable templates» in `docs/generators.md`).

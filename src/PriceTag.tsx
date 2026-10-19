@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, LinkButtons, canShareFiles, unfilled, itemOf, Segments, SegBtn, ALERT_LABEL, outlined } from '@/ui/form'
-import { useStaff, pickTable, TableSource, UploadArea, AddTile, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
+import { useStaff, pickTable, TableSource, UploadArea, useAddKey, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/nametag/tag'
@@ -126,6 +126,11 @@ export default function PriceTag() {
     return import('@/pricetag/pdf').then(m => m.tagsTemplate(Array.from({ length: m.PER_PAGE }, () => ({ tag: one.result, lines: one.lines }))))
   } : undefined
   const templateOnly = useTemplateLink(makeBlank, 'UMO_price-tags_template.pdf', 'download_price_tag_template')
+  /** «Добавить» in the item's column, ⌘↩ from anywhere (the manual list, wide screens) */
+  const addItem = () => staff.add()
+  useAddKey(!phone && mode === 'manual' ? addItem : undefined)
+  /** «Скачать шаблон» in the item's column */
+  const templateIcon = <TemplateButton make={makeTemplate} name="UMO_price-tags_template.pdf" goalId="download_price_tag_template" params={{ count: items.length }} />
 
   const dealerMissing = !dealer.trim()
   const dealerIssues = [...(dealerMissing ? [MISSING.dealer!] : []), ...new Set(tags?.[0]?.issues.filter(i => i.field === 'dealer').map(i => i.text) ?? [])]
@@ -214,7 +219,7 @@ export default function PriceTag() {
               <Removed staff={staff} at={i} />
               <figure ref={staff.figureRef(it.key)} onClick={() => staff.pick(it.key)} className="group/row flex cursor-pointer justify-center">
                 <div className="flex w-full max-w-[480px] flex-col gap-3">
-                  <ItemFrame staff={staff} item={it} n={i + 1}>
+                  <ItemFrame staff={staff} item={it} n={i + 1} onAdd={addItem} extra={templateIcon}>
                   <button
                     type="button"
                     aria-pressed={mode === 'manual' ? active : undefined}
@@ -348,11 +353,6 @@ export default function PriceTag() {
         <div className="m-auto grid w-full grid-cols-1 gap-8">
           {items.map(renderItem)}
           <Removed staff={staff} at={items.length} />
-          {/* «Скачать шаблон» and «Добавить» centred as a pair, 8 px apart */}
-          <div className="flex justify-center gap-2">
-            <TemplateButton make={makeTemplate} name="UMO_price-tags_template.pdf" goalId="download_price_tag_template" params={{ count: items.length }} />
-            {mode === 'manual' && <AddTile onClick={() => staff.add()} />}
-          </div>
         </div>
         )}
       </main>

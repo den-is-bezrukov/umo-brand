@@ -142,7 +142,7 @@ export default function PlateFrame() {
             <span className="relative">
               Поле печати, {STRIP.w}&nbsp;×&nbsp;{STRIP.h}&nbsp;мм
               {/* The reset, by what it resets, as the livery's sheets and the cards' own */}
-              {!blank && <CaptionReset onClick={reset} label="Вернуть рамку по умолчанию" />}
+              <CaptionReset onClick={blank ? undefined : reset} label="Вернуть рамку по умолчанию" extra={<TemplateButton make={makeTemplate} name="UMO_plate-frame_template.pdf" goalId="download_plate_frame_template" />} />
             </span>
           </figcaption>
           {wrong && (
@@ -210,9 +210,8 @@ export default function PlateFrame() {
         {download}
       </aside>
 
-      <main className="flex flex-1 flex-col items-center justify-center gap-8 bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
+      <main className="flex flex-1 items-center bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
         {preview}
-        <TemplateButton make={makeTemplate} name="UMO_plate-frame_template.pdf" goalId="download_plate_frame_template" />
       </main>
 
     </div>

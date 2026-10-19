@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, LinkButtons, canShareFiles, unfilled, itemOf, ALERT_LABEL } from '@/ui/form'
-import { useStaff, plain, AddTile, fullNameField, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
+import { useStaff, plain, useAddKey, fullNameField, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, type Cmd } from '@/livery/geometry'
 import { loadFonts } from '@/nametag/tag'
@@ -117,6 +117,9 @@ export default function Memo() {
     return import('@/memo/pdf').then(m => m.memosTemplate(buildBlocks(fonts, dealer, [person]), fonts))
   } : undefined
   const templateOnly = useTemplateLink(makeBlank, 'UMO_owner-memo_template.pdf', 'download_owner_memo_template')
+  /** «Добавить» in the item's column, ⌘↩ from anywhere (the manual list, wide screens) */
+  const addItem = () => staff.add()
+  useAddKey(!phone ? addItem : undefined)
 
   useEffect(() => {
     const prev = document.title
@@ -197,6 +200,8 @@ export default function Memo() {
 
   /** The template takes what's typed, the placeholders where nothing is: it's edited anyway */
   const makeTemplate = memos && fonts ? () => import('@/memo/pdf').then(m => m.memosTemplate(memos.map(x => x.block), fonts)) : undefined
+  /** «Скачать шаблон» in the item's column */
+  const templateIcon = <TemplateButton make={makeTemplate} name="UMO_owner-memo_template.pdf" goalId="download_owner_memo_template" params={{ count: items.length }} />
 
   const problemOf = (i: number) => personIssues(i)[0]?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!)) : undefined)
 
@@ -214,7 +219,7 @@ export default function Memo() {
         <Removed staff={staff} at={i} />
         <figure ref={staff.figureRef(p.key)} onClick={() => staff.pick(p.key)} className="group/row flex cursor-pointer justify-center">
           <div className={`flex w-full flex-col gap-3 ${spread ? 'max-w-[1216px]' : 'max-w-[600px]'}`}>
-            <ItemFrame staff={staff} item={p} n={i + 1}>
+            <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon}>
               <button
                 type="button"
                 aria-pressed={mode === 'manual' ? active : undefined}
@@ -322,11 +327,6 @@ export default function Memo() {
         <div className="m-auto grid w-full grid-cols-1 gap-8">
           {items.map((p, i) => renderItem(p, i, true))}
           <Removed staff={staff} at={items.length} />
-          {/* The pair centred, 8 px apart */}
-          <div className="flex justify-center gap-2">
-            <TemplateButton make={makeTemplate} name="UMO_owner-memo_template.pdf" goalId="download_owner_memo_template" params={{ count: items.length }} />
-            <AddTile onClick={() => staff.add()} />
-          </div>
         </div>
       </main>
     </div>

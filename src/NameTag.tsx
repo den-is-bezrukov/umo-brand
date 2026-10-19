@@ -1,6 +1,6 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadBar, LinkButtons, canShareFiles, unfilled, itemOf, Segments, SegBtn, outlined } from '@/ui/form'
-import { useStaff, plain, pickTable, TableSource, UploadArea, AddTile, fullNameField, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
+import { useStaff, plain, pickTable, TableSource, UploadArea, useAddKey, fullNameField, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD } from '@/livery/geometry'
 import { TAG, TAGS_KEY, buildTag, loadFonts, type Field, type FieldBox, type Fonts, type Person } from '@/nametag/tag'
@@ -98,6 +98,11 @@ export default function NameTag() {
   /** The blank one a `template` link gives: one placeholder tag */
   const makeBlank = fonts ? () => templateOf([PLACEHOLDER]) : undefined
   const templateOnly = useTemplateLink(makeBlank, 'UMO_name-tags_template.pdf', 'download_name_tag_template')
+  /** «Добавить» in the item's column, ⌘↩ from anywhere (the manual list, wide screens) */
+  const addItem = () => staff.add()
+  useAddKey(!phone && mode === 'manual' ? addItem : undefined)
+  /** «Скачать шаблон» in the item's column */
+  const templateIcon = <TemplateButton make={makeTemplate} name="UMO_name-tags_template.pdf" goalId="download_name_tag_template" params={{ count: items.length }} />
 
   /** A tag needs a name, a surname and a position */
   const missing = items.map(({ person: p }) => [
@@ -175,7 +180,7 @@ export default function NameTag() {
               >
                 <div className="@container flex w-full max-w-[480px] flex-col gap-3">
                 {/* In the manual list a tag is picked for editing by clicking it; the picked one is outlined */}
-                <ItemFrame staff={staff} item={staff.items[i]} n={i + 1}>
+                <ItemFrame staff={staff} item={staff.items[i]} n={i + 1} onAdd={addItem} extra={templateIcon}>
                 <button
                   type="button"
                   aria-pressed={mode === 'manual' ? active : undefined}
@@ -293,11 +298,6 @@ export default function NameTag() {
         <div className="m-auto grid w-full grid-cols-1 gap-8">
           {items.map(renderItem)}
           <Removed staff={staff} at={items.length} />
-          {/* «Скачать шаблон» and «Добавить» centred as a pair, 8 px apart */}
-          <div className="flex justify-center gap-2">
-            <TemplateButton make={makeTemplate} name="UMO_name-tags_template.pdf" goalId="download_name_tag_template" params={{ count: items.length }} />
-            {mode === 'manual' && <AddTile onClick={() => staff.add()} />}
-          </div>
         </div>
         )}
       </main>

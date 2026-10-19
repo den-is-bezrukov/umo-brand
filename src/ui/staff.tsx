@@ -446,17 +446,8 @@ export const ITEM_EDGE = 'outline-1 -outline-offset-1 outline-black/10 group-hov
  * centred under the items. It was a tile in the item's shape, too large, the price card's above all
  */
 export function AddTile({ onClick }: { onClick: () => void }) {
-  // ⌘↩ (Ctrl+Enter) presses it from anywhere, a field too: one card done, the next one (⌘N is the browser's own)
   const button = useRef<HTMLButtonElement>(null)
-  useEffect(() => {
-    const key = (e: KeyboardEvent) => {
-      if (!withMod(e, 'Enter') || e.defaultPrevented) return
-      e.preventDefault()
-      button.current?.click()
-    }
-    document.addEventListener('keydown', key)
-    return () => document.removeEventListener('keydown', key)
-  }, [])
+  useAddKey(() => button.current?.click())
   return (
     <div className="flex justify-center">
       <button
@@ -474,6 +465,26 @@ export function AddTile({ onClick }: { onClick: () => void }) {
     </div>
   )
 }
+
+/** ⌘↩ (Ctrl+Enter) adds an item from anywhere, a field too: one card done, the next one (⌘N is the browser's own) */
+export function useAddKey(add: (() => void) | undefined) {
+  const latest = useRef(add)
+  latest.current = add
+  useEffect(() => {
+    const key = (e: KeyboardEvent) => {
+      if (!withMod(e, 'Enter') || e.defaultPrevented || !latest.current) return
+      e.preventDefault()
+      latest.current()
+    }
+    document.addEventListener('keydown', key)
+    return () => document.removeEventListener('keydown', key)
+  }, [])
+}
+
+/** Add, a plus in the canvas icons' 1 px stroke */
+export const PlusIcon = () => (
+  <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M8 2.5V13.5M2.5 8H13.5" /></svg>
+)
 
 /** The line over the download while items are in work: «1 из 4 в работе», or «4 в работе» when it's all of them */
 /** The table mode's upload, opened from «Загрузите таблицу» over the download */
@@ -508,19 +519,24 @@ export const ResetIcon = () => (
  * says the layout was changed). Put it in a `relative` span with the
  * caption's text
  */
-export function CaptionReset({ onClick, label = 'Сбросить' }: { onClick: () => void; label?: string }) {
+export function CaptionReset({ onClick, label = 'Сбросить', extra }: { onClick?: () => void; label?: string; extra?: React.ReactNode }) {
   // Hung after the caption's text, out of its flow, so the caption stays centred whether or not it shows; 1 px over
-  // the text's middle
+  // the text's middle. `extra` goes first («Скачать шаблон», always there), the reset after it, while there's one
   return (
-    <button
-      type="button"
-      title={label}
-      aria-label={label}
-      onClick={onClick}
-      className="absolute top-[calc(50%-1px)] left-full ml-1 flex size-[30px] -translate-y-1/2 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] hover:text-black"
-    >
-      <ResetIcon />
-    </button>
+    <span className="absolute top-[calc(50%-1px)] left-full ml-1 flex -translate-y-1/2">
+      {extra}
+      {onClick && (
+        <button
+          type="button"
+          title={label}
+          aria-label={label}
+          onClick={onClick}
+          className="flex size-[30px] cursor-pointer items-center justify-center rounded-[8px] text-[#808080] hover:text-black"
+        >
+          <ResetIcon />
+        </button>
+      )}
+    </span>
   )
 }
 
@@ -533,7 +549,7 @@ export const TrashIcon = () => (
 
 
 /** The item's actions (Figma 5030:11424): 30 px buttons (a phone's slide has its own, over the picture), the icon #808080, black on hover, no tile, as the other quiet controls */
-function Action({ label, keys, hidden, onClick, children }: { label: string; keys?: string; hidden?: boolean; onClick: () => void; children: React.ReactNode }) {
+export function Action({ label, keys, hidden, onClick, children }: { label: string; keys?: string; hidden?: boolean; onClick: () => void; children: React.ReactNode }) {
   if (hidden) return null
   return (
     <button
@@ -557,7 +573,14 @@ function Action({ label, keys, hidden, onClick, children }: { label: string; key
  * empty), «Удалить» (while there's another), the most used and harmless first, the bin furthest. A phone's slide
  * shows the item bare, its number and actions in the row over it. An action not offered leaves no gap: the next moves up.
  */
-export function ItemFrame<P extends object>({ staff, item, n, children }: { staff: Staff<P>; item: Row<P>; n: number; children: React.ReactNode }) {
+export function ItemFrame<P extends object>({ staff, item, n, onAdd, extra, children }: {
+  staff: Staff<P>; item: Row<P>; n: number
+  /** «Добавить» after the item's own actions, the manual list only (⌘↩ is the page's, `useAddKey`) */
+  onAdd?: () => void
+  /** The list's own actions after it, in either mode («Скачать шаблон») */
+  extra?: React.ReactNode
+  children: React.ReactNode
+}) {
   // On a phone's slide the item stands alone: its number is over the strip, its actions under it
   if (useContext(InSlide)) return <div className="@container relative">{children}</div>
   const active = staff.mode === 'manual' && item.key === staff.selected
@@ -573,17 +596,27 @@ export function ItemFrame<P extends object>({ staff, item, n, children }: { staf
       <div className="absolute top-0 left-full flex w-[38px] flex-col items-center pl-2">
       {/* A lone item has no number: a «1» there says nothing */}
       {staff.items.length > 1 && <span aria-hidden className="pointer-events-none pb-[5px] text-center text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1]">{n}</span>}
-      {staff.mode === 'manual' && (
+      {(staff.mode === 'manual' || extra) && (
         <div className={`flex-col ${active ? 'flex' : 'hidden'} ${hover}`}>
-          <Action label="Дублировать" keys={`${MOD}D`} onClick={() => staff.duplicate(item.key)}>
-            <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M3.5 6H2V14H10V12.5M6 2H14V10H6V2Z" /></svg>
-          </Action>
-          <Action label="Сбросить" hidden={staff.isBlank(item)} onClick={() => staff.clear(item.key)}>
-            <ResetIcon />
-          </Action>
-          <Action label="Удалить" hidden={staff.people.length < 2} onClick={() => staff.remove(item.key)}>
-            <TrashIcon />
-          </Action>
+          {staff.mode === 'manual' && (
+            <>
+              <Action label="Дублировать" keys={`${MOD}D`} onClick={() => staff.duplicate(item.key)}>
+                <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M3.5 6H2V14H10V12.5M6 2H14V10H6V2Z" /></svg>
+              </Action>
+              <Action label="Сбросить" hidden={staff.isBlank(item)} onClick={() => staff.clear(item.key)}>
+                <ResetIcon />
+              </Action>
+              <Action label="Удалить" hidden={staff.people.length < 2} onClick={() => staff.remove(item.key)}>
+                <TrashIcon />
+              </Action>
+            </>
+          )}
+          {extra}
+          {staff.mode === 'manual' && onAdd && (
+            <Action label="Добавить" keys={MOD === '⌘' ? '⌘↩' : 'Ctrl+Enter'} onClick={onAdd}>
+              <PlusIcon />
+            </Action>
+          )}
         </div>
       )}
       </div>

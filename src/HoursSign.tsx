@@ -307,14 +307,14 @@ export default function HoursSign() {
           {/* As tall as the canvas allows on wide screens, as wide as it on phones; on wide screens its width is the
               smaller of the canvas's and the one the height allows (12/17 of it, 480 × 680), so a narrow canvas shrinks
               the sign whole: a fixed height with the width capped stretched its white box past 480 × 680 */}
-          <svg viewBox={`0 0 ${SIGN.w} ${SIGN.h}`} className="block h-auto w-full max-w-[480px] bg-white md:w-[min(100%,calc((100dvh-128px-30px-72px)*12/17))] md:max-w-none" role="img" aria-label="Режимник">
+          <svg viewBox={`0 0 ${SIGN.w} ${SIGN.h}`} className="block h-auto w-full max-w-[480px] bg-white md:w-[min(100%,calc((100dvh-128px-30px)*12/17))] md:max-w-none" role="img" aria-label="Режимник">
             <path d={toD(LOGO)} fill="#000" fillRule="evenodd" />
             {[...byFill].map(([color, d]) => <path key={color} d={d} fill={color} />)}
           </svg>
           <figcaption className="mt-0.5 text-center text-[14px] leading-5 text-[#808080]">
             <span className="relative">
               Табличка, {SIGN.w}&nbsp;×&nbsp;{SIGN.h}&nbsp;мм
-              {!blank && <CaptionReset onClick={reset} label="Вернуть табличку по умолчанию" />}
+              <CaptionReset onClick={blank ? undefined : reset} label="Вернуть табличку по умолчанию" extra={<TemplateButton make={makeTemplate} name="UMO_hours-sign_template.pdf" goalId="download_hours_sign_template" />} />
             </span>
           </figcaption>
           {/* A warning in red, as the generators' faults under their pictures, but the download stays on, as a short day can be meant (a holiday) */}
@@ -402,9 +402,8 @@ export default function HoursSign() {
         {download}
       </aside>
 
-      <main className="flex flex-1 flex-col items-center justify-center gap-8 bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
+      <main className="flex flex-1 items-center justify-center bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
         {preview}
-        <TemplateButton make={makeTemplate} name="UMO_hours-sign_template.pdf" goalId="download_hours_sign_template" />
       </main>
 
     </div>
