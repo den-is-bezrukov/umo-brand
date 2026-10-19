@@ -4,6 +4,7 @@ import { goal } from './metrika'
 import Dialog from './Dialog'
 import { ChevronIcon, DuplicateIcon } from './icons'
 import { SUPPORT_BOT, TEXT_LINK } from './links'
+import { linkParams } from './share'
 
 /**
  * «Инструкция», the «?» at the end of the breadcrumbs (as Composter's): one panel for every generator, a tab each and
@@ -276,8 +277,8 @@ const MAKES: Record<string, string> = {
  * rest #bfbfbf; a pick shows that instruction from its top; the title again or Esc fold the list back (tried: a ring of
  * tabs under the title, a combobox's list over the text, «Все инструкции» at the foot)
  */
-function HelpPanel({ page, tabs, onClose }: { page: string; tabs: { path: string; title: string }[]; onClose: () => void }) {
-  const [tab, setTab] = useState(page)
+function HelpPanel({ page, tabs, onClose, initial = page }: { page: string; tabs: { path: string; title: string }[]; onClose: () => void; initial?: string }) {
+  const [tab, setTab] = useState(initial)
   const [menu, setMenu] = useState(false)
   const body = useRef<HTMLDivElement>(null)
   useTypograf(body)
@@ -312,7 +313,11 @@ function HelpPanel({ page, tabs, onClose }: { page: string; tabs: { path: string
               ? <button key={i.path} type="button" aria-current="true" onClick={() => setMenu(false)} className={`${name} cursor-pointer`}>{i.title}</button>
               : <button key={i.path} type="button" onClick={() => pick(i.path)} className={`${name} cursor-pointer text-[#bfbfbf] hover:text-[#808080] active:text-[#808080]`}>{i.title}</button>)}
           </nav>
-        ) : help ? <Generator help={help} /> : GENERAL.map(([q, a]) => <Part key={q} title={q}><p>{a}</p></Part>)}
+        ) : <>
+          {help ? <Generator help={help} /> : GENERAL.map(([q, a]) => <Part key={q} title={q}><p>{a}</p></Part>)}
+          {/* The instruction's own link, to send: the generator with it open (`?help`; «Общие вопросы» from this page) */}
+          <p>Ссылка на эту инструкцию: <CopyLink href={help ? `https://umo.autos${tab}?help` : `https://umo.autos${page}?help=general`}>{help ? `umo.autos${tab}?help` : `umo.autos${page}?help=general`}</CopyLink></p>
+        </>}
       </div>
     </Dialog>
   )
@@ -320,8 +325,19 @@ function HelpPanel({ page, tabs, onClose }: { page: string; tabs: { path: string
 
 /** The «?» at the end of the breadcrumbs, in their type */
 export default function HelpButton({ page, tabs }: { page: string; tabs: { path: string; title: string }[] }) {
-  const [open, setOpen] = useState(false)
-  const close = useCallback(() => setOpen(false), [])
+  // `help` in the link opens it at once, on this page's instruction (`help=general`: «Общие вопросы»)
+  const [initial] = useState(() => (linkParams().get('help') === 'general' ? 'general' : page))
+  const [open, setOpen] = useState(() => {
+    const has = linkParams().has('help')
+    if (has) goal('open_help', { page, via: 'link' })
+    return has
+  })
+  const close = useCallback(() => {
+    setOpen(false)
+    // Closed, it isn't opened again by a reload
+    const url = new URL(window.location.href)
+    if (url.searchParams.has('help')) { url.searchParams.delete('help'); window.history.replaceState(window.history.state, '', url) }
+  }, [])
   const toggle = () => { if (!open) goal('open_help', { page }); setOpen(!open) }
   return (
     <>
@@ -335,7 +351,7 @@ export default function HelpButton({ page, tabs }: { page: string; tabs: { path:
       >
         ?
       </button>
-      {open && <HelpPanel page={page} tabs={tabs} onClose={close} />}
+      {open && <HelpPanel page={page} tabs={tabs} onClose={close} initial={initial} />}
     </>
   )
 }
