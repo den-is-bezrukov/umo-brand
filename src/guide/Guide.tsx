@@ -50,7 +50,7 @@ const DRAWN: Medium[] = [
   },
   {
     // The 90×60 tag as the constructor sets it, as wide as the plate on the 444×333 grey
-    id: 'price-tag', to: '/price-tag', title: 'Ценник', row: 'Проставить цены', w: 444, h: 333,
+    id: 'price-tag', to: '/price-tag', title: 'Ценник', row: 'Сделать ценники', w: 444, h: 333,
     picture: (
       <div className="flex aspect-4/3 items-center justify-center bg-[#f5f5f5]">
         <svg viewBox={`0 0 ${TAG.w} ${TAG.h}`} className="block h-auto w-[58.8%]" role="img" aria-label="Ценник UMO">
