@@ -36,6 +36,12 @@ export const itemName = (path: string, n?: number, of = false) => {
   return [word, n].filter(Boolean).join(' ')
 }
 
+/** A link into the generator at `path`, its tooltip: «Редактировать визитку» */
+export const editTitle = (path: string) => {
+  const g = LIST.find(g => g.path === path)
+  return g ? `Редактировать ${g.one}` : 'Редактировать'
+}
+
 /** The plus's tooltip («Добавить») on the generator at `path`: «Добавить визитку» */
 export const addTitle = (path: string) => {
   const g = LIST.find(g => g.path === path)

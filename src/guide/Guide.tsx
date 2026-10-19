@@ -14,7 +14,7 @@ import tocIcons from '@/icons/toc'
 import { useTypograf } from './typograf'
 import Dialog from '@/ui/Dialog'
 import { TEXT_LINK, SUPPORT_BOT } from '@/ui/links'
-import { GENERATORS } from '@/data/generators'
+import { GENERATORS, editTitle } from '@/data/generators'
 import heroMp4 from '@/assets/guide/hero.mp4'
 import hero720Mp4 from '@/assets/guide/hero-720.mp4'
 
@@ -970,7 +970,7 @@ function Fig({ name, w, h, alt = '', eager, caption, cross, href, focus = 50, fl
       {caption && <Caption cross={cross} download={!!href}>{caption}</Caption>}
     </figure>
   )
-  return href ? <a href={href} download className={`group block ${className}`}>{figure}</a> : figure
+  return href ? <a href={href} download title={`Скачать ${formatOf({ file: href })}`} className={`group block ${className}`}>{figure}</a> : figure
 }
 
 /**
@@ -1179,7 +1179,7 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
             // After the name, 8 px off it, what a click does where the pointer is: ↗ over the card (its picture or row, the
             // constructor), ↓ over the PDF (the font's own arrows)
             <div key={a.to} className={`group/row flex items-stretch ${bare && i === 0 ? '' : 'border-t border-[#e6e6e6]'}`}>
-              <Link to={a.to} className={`${row.replace(/border-t border-\[#e6e6e6\]/, '')} min-w-0 flex-1`}>
+              <Link to={a.to} title={editTitle(a.to)} className={`${row.replace(/border-t border-\[#e6e6e6\]/, '')} min-w-0 flex-1`}>
                 {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 text-center font-medium">↗</span>}
                 <span className="flex min-w-0 flex-1 items-center gap-2">
                   <span className={name.replace('min-w-0 flex-1 ', 'min-w-0 ')}>{a.title}</span>
@@ -1196,7 +1196,7 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
         }
         if ('to' in a) {
           return (
-            <Link key={a.to} to={a.to} className={row}>
+            <Link key={a.to} to={a.to} title={editTitle(a.to)} className={row}>
               {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 text-center font-medium">↗</span>}
               <span className={name}>{a.title}</span>
               <span className={meta}>{a.to}</span>
@@ -1254,8 +1254,8 @@ function PreviewLink({ asset, label, children }: { asset: Asset; label: string; 
   const key = 'to' in asset ? asset.to : asset.file
   const hover = setPointed && { onPointerEnter: () => setPointed(key), onPointerLeave: () => setPointed(undefined) }
   return 'to' in asset
-    ? <Link to={asset.to} aria-label={label} data-preview={setPointed ? undefined : ''} className={className} {...hover}>{children}</Link>
-    : <a href={`/downloads/${asset.file}`} download aria-label={label} data-preview={setPointed ? undefined : ''} className={className} {...hover}>{children}</a>
+    ? <Link to={asset.to} aria-label={label} title={editTitle(asset.to)} data-preview={setPointed ? undefined : ''} className={className} {...hover}>{children}</Link>
+    : <a href={`/downloads/${asset.file}`} download aria-label={label} title={`Скачать ${formatOf(asset)}`} data-preview={setPointed ? undefined : ''} className={className} {...hover}>{children}</a>
 }
 
 /** The file or page whose picture is pointed at, inside a `Previews` group. */
@@ -1352,7 +1352,7 @@ function useWide() {
  */
 function EditorLinks() {
   return GENERATORS.map(m => (
-    <Link key={m.path} to={m.path} target="_blank" rel="noopener" className="group flex items-center gap-2 text-[24px] font-medium leading-6 tracking-[-0.01em]">
+    <Link key={m.path} to={m.path} target="_blank" rel="noopener" title={editTitle(m.path)} className="group flex items-center gap-2 text-[24px] font-medium leading-6 tracking-[-0.01em]">
       <span className={`${UNDERLINE} group-hover:decoration-black/40 group-hover:duration-0`}>{m.title}</span>
       <span aria-hidden className="opacity-0 group-hover:opacity-100">↗</span>
     </Link>
@@ -2126,7 +2126,7 @@ export default function Guide() {
                 <Text>
                   {/* Every generator, from the generators' list: in `INTRO_ORDER`, a new one after them */}
                   <p>Готовый дизайн, который встречает клиента у дилера UMO: {INTRO.map((g, i) => (
-                    <Fragment key={g.path}>{i === 0 ? '' : i === INTRO.length - 1 ? ' и\u00a0' : ', '}<Link to={g.path} className={TEXT_LINK}>{g.phrase}</Link></Fragment>
+                    <Fragment key={g.path}>{i === 0 ? '' : i === INTRO.length - 1 ? ' и\u00a0' : ', '}<Link to={g.path} title={editTitle(g.path)} className={TEXT_LINK}>{g.phrase}</Link></Fragment>
                   ))}.</p>
                 </Text>
                 <Text>
