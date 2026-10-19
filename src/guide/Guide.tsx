@@ -1164,13 +1164,19 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
         if ('to' in a && a.template) {
           const tpl = a.template
           return (
-            <div key={a.to} className={`flex items-stretch ${bare && i === 0 ? '' : 'border-t border-[#e6e6e6]'}`}>
+            // After the name, 8 px off it, what a click does where the pointer is: ↗ over the card (its picture or row, the
+            // constructor), ↓ over the PDF (the font's own arrows)
+            <div key={a.to} className={`group/row flex items-stretch ${bare && i === 0 ? '' : 'border-t border-[#e6e6e6]'}`}>
               <Link to={a.to} className={`${row.replace(/border-t border-\[#e6e6e6\]/, '')} min-w-0 flex-1`}>
                 {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 text-center font-medium">↗</span>}
-                <span className={name}>{a.title}</span>
+                <span className="flex min-w-0 flex-1 items-center gap-2">
+                  <span className={name.replace('min-w-0 flex-1 ', 'min-w-0 ')}>{a.title}</span>
+                  <span aria-hidden className={`hidden font-medium group-hover:inline ${linked ? 'group-has-[[data-preview]:hover]/preview:inline' : ''}`}>↗</span>
+                  <span aria-hidden className="hidden font-medium group-has-[[data-format]:hover]/row:inline">↓</span>
+                </span>
                 <span className={`${meta} ${format}`}>{a.verb ?? a.to}</span>
               </Link>
-              <a href={tpl.t} target="_blank" rel="noopener" title={`Скачать ${formatOf(tpl)}`} aria-label={`${a.title}, шаблон ${formatOf(tpl)}`} className="group/format flex shrink-0 items-center pl-3 text-[16px] leading-none tracking-[-0.01em] text-[#808080] hover:text-black">
+              <a href={tpl.t} target="_blank" rel="noopener" data-format title={`Скачать ${formatOf(tpl)}`} aria-label={`${a.title}, шаблон ${formatOf(tpl)}`} className="group/format flex shrink-0 items-center pl-3 text-[16px] leading-none tracking-[-0.01em] text-[#808080] hover:text-black">
                 <span className={`${UNDERLINE} group-hover/format:decoration-black/40 group-hover/format:duration-0`}>{formatOf(tpl)}</span>
               </a>
             </div>
