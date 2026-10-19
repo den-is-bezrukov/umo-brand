@@ -201,7 +201,8 @@ export default function Memo() {
 
   const problemOf = (i: number) => personIssues(i)[0]?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!)) : undefined)
 
-  const renderItem = (p: typeof items[number], i: number) => {
+  /** `spread`: the memo as it prints, the first page beside the consultant's second, on wide screens */
+  const renderItem = (p: typeof items[number], i: number, spread = false) => {
     const memo = memos?.[i]
     const active = mode === 'manual' && p.key === current?.key
     const dimmed = mode === 'manual' && !!current && !active && !phone
@@ -213,19 +214,23 @@ export default function Memo() {
       <Fragment key={p.key}>
         <Removed staff={staff} at={i} />
         <figure ref={staff.figureRef(p.key)} onClick={() => staff.pick(p.key)} className="group/row flex cursor-pointer justify-center">
-          <div className="flex w-full max-w-[600px] flex-col gap-3">
+          <div className={`flex w-full flex-col gap-3 ${spread ? 'max-w-[1216px]' : 'max-w-[600px]'}`}>
             <ItemFrame staff={staff} item={p} n={i + 1}>
               <button
                 type="button"
                 aria-pressed={mode === 'manual' ? active : undefined}
-                className={`block w-full cursor-pointer ${ITEM_EDGE} transition-opacity duration-150 ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
+                className={`grid w-full cursor-pointer gap-4 ${spread ? 'grid-cols-2' : ''}`}
               >
+                {/* The first page, everyone's, never dimmed */}
+                {spread && <div className={ITEM_EDGE}><Sheet src={page1} /></div>}
+                <div className={`${ITEM_EDGE} transition-opacity duration-150 ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}>
                 <Sheet
                   src={page2}
                   text={memo ? toD(paths(f => !memo.ghost.has(f) && !wrong.has(f))) : undefined}
                   alert={memo ? toD(paths(f => !memo.ghost.has(f) && wrong.has(f))) : undefined}
                   ghost={memo ? toD(paths(f => memo.ghost.has(f))) : undefined}
                 />
+                </div>
               </button>
             </ItemFrame>
             {problems[i].length > 0 && <ItemAlert staff={staff} item={p.key}>{problems[i].join(' · ')}</ItemAlert>}
@@ -317,11 +322,7 @@ export default function Memo() {
         className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16 ${staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
       >
         <div className="m-auto grid w-full grid-cols-1 gap-8">
-          {/* The first page, the same for everyone, once at the top */}
-          <div className="flex justify-center">
-            <div className={`w-full max-w-[600px] transition-opacity duration-150 ${current ? 'opacity-40' : ''}`}>{first}</div>
-          </div>
-          {items.map(renderItem)}
+          {items.map((p, i) => renderItem(p, i, true))}
           <Removed staff={staff} at={items.length} />
           <AddTile onClick={() => staff.add()}>
             <button type="button" data-template onClick={handleTemplate} disabled={!memos || templating} className={`${outlined} flex-none`}>
