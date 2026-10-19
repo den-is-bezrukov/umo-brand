@@ -590,7 +590,7 @@ export function Action({ label, name, keys, hidden, onClick, children }: { label
  */
 export function ItemFrame<P extends object>({ staff, item, n, label, onAdd, extra, children }: {
   staff: Staff<P>; item: Row<P>; n: number
-  /** Said in the number's place, a lone item's too (the memo's «1/2», its page in view) */
+  /** Said in the number's place, a lone item's too (the memo's «1.2», its page in view) */
   label?: string
   /** «Добавить», last in the column, the manual list only: a new item right after this one (⌘↩ is the page's, `useAddKey`, at the end) */
   onAdd?: (after: number) => void

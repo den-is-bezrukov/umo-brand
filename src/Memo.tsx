@@ -348,9 +348,9 @@ export default function Memo() {
                   ))}
                 </button>
               )
-              // Scrolling, the number says the memo and its page in view, «1/2», a lone memo's too
+              // Scrolling, the number says the memo and its page in view, «1.2», a lone memo's too
               const at = rowAt[p.key] ?? -1
-              const frame = (children: React.ReactNode) => <ItemFrame staff={staff} item={p} n={i + 1} label={scrolls && at >= 0 ? `${i + 1}/${at + 1}` : undefined} onAdd={addItem} extra={templateIcon(i)}>{children}</ItemFrame>
+              const frame = (children: React.ReactNode) => <ItemFrame staff={staff} item={p} n={i + 1} label={scrolls && at >= 0 ? `${i + 1}.${at + 1}` : undefined} onAdd={addItem} extra={templateIcon(i)}>{children}</ItemFrame>
               return (
                 <div className="relative">
                   {/* Across the canvas's whole width, past its 64 px padding, which the row keeps as its own ends; let go,
