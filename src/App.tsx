@@ -385,13 +385,8 @@ export default function App() {
   // often the same model in another trim or at another price
   const addCard = (after?: number) => staff.add(plain(items[items.length - 1]), undefined, after)
   useAddKey(!phone ? () => addCard(staff.selected) : undefined)
-  /** «Скачать шаблон» in the card's column: that card's; `?t`, the default UMO 5 card's */
-  // The template icon gives the card's model and trim as they come (`UMO-5-PRO.pdf`), whatever's typed (it was an
-  // editable template, the texts as placeholders: no one but the designer needed it)
-  const templateIcon = (c: Card) => {
-    const d = defaultOf(c.model, c.trim)
-    return <TemplateButton make={() => pdfOf([d])} name={pdfName([d])} goalId="download_price_card_template" title="Скачать прайс-карту по умолчанию" />
-  }
+  /** The template icon in the card's column: that card as it is, what's typed in it (`UMO-5-PRO.pdf`); `?t`, every trim's default */
+  const templateIcon = (c: Card) => <TemplateButton make={() => pdfOf([c])} name={pdfName([c])} goalId="download_price_card_template" title="Скачать прайс-карту" />
   const templateOnly = useTemplateLink(defaultsPdf, DEFAULTS_FILE, 'download_price_card_template')
 
   if (pdfOnly || templateOnly) return null
