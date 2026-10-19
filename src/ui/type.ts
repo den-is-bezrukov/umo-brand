@@ -26,12 +26,18 @@ export const tidy = (t: string) => t.replace(/[​-‍⁠﻿]/g, '').replace(/\r
 /** One line: every kind of space and line break becomes a plain space, zero-width marks go */
 export const oneLine = (t: string) => t.replace(/[​-‍⁠﻿]/g, '').replace(/\s+/g, ' ').trim()
 
-/** Words of one or two characters (prepositions, conjunctions, a separator bar) stick to the next word with a no-break space */
+/** An address's abbreviations that stand before a name or number («ул. Ленина», «стр. 2», «пр-т Мира») */
+const ADDRESS_ABBR = /(^|[\s ])((?:ул|просп|пр|пер|пл|наб|бул|ш|мкр|д|корп|стр|вл|кв|оф|пом|эт|г|пос|п|с|дер|обл|км)\.|пр-т|б-р|р-н) +(?=\S)/gi
+
+/**
+ * Words of one or two characters (prepositions, conjunctions, a separator bar) and an address's abbreviations stick to
+ * the next word with a no-break space
+ */
 export function bindShortWords(text: string): string {
   let prev
   do {
     prev = text
-    text = text.replace(/(^|[\s ])([^\s ]{1,2}) +(?=\S)/g, '$1$2 ')
+    text = text.replace(/(^|[\s ])([^\s ]{1,2}) +(?=\S)/g, '$1$2 ').replace(ADDRESS_ABBR, '$1$2 ')
   } while (text !== prev)
   return text
 }
