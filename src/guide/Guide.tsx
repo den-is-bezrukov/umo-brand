@@ -1,4 +1,4 @@
-import { createContext, isValidElement, lazy, Suspense, useContext, useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode, type RefObject } from 'react'
+import { createContext, Fragment, isValidElement, lazy, Suspense, useContext, useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode, type RefObject } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import PriceCard from '@/posters/PriceCard'
 import type { Variant } from '@/posters/cardData'
@@ -136,6 +136,10 @@ const MEDIA_LIST: Medium[] = [
   }),
 ]
 const MEDIA = packMedia(MEDIA_LIST)
+/** Материалы' first sentence: the generators in this order, the ones not in it after them */
+const INTRO_ORDER = ['/livery', '/business-card', '/name-tag', '/price-card', '/plate-frame', '/price-tag', '/hours-sign']
+const rank = (path: string) => { const i = INTRO_ORDER.indexOf(path); return i < 0 ? INTRO_ORDER.length : i }
+const INTRO = [...GENERATORS].sort((a, b) => rank(a.path) - rank(b.path))
 
 const NAV: NavItem[] = [
   {
@@ -2032,7 +2036,10 @@ export default function Guide() {
             <Section>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
                 <Text>
-                  <p>Готовый дизайн, который встречает клиента у дилера UMO: <Link to="/livery" className={TEXT_LINK}>ливрея демо-автомобиля</Link>, <Link to="/business-card" className={TEXT_LINK}>визитка</Link>, <Link to="/name-tag" className={TEXT_LINK}>бейдж сотрудника</Link>, <Link to="/price-card" className={TEXT_LINK}>прайс-карта</Link>, <Link to="/plate-frame" className={TEXT_LINK}>рамка номера</Link>, <Link to="/price-tag" className={TEXT_LINK}>ценник</Link> и <Link to="/hours-sign" className={TEXT_LINK}>режимник</Link>.</p>
+                  {/* Every generator, from the generators' list: in `INTRO_ORDER`, a new one after them */}
+                  <p>Готовый дизайн, который встречает клиента у дилера UMO: {INTRO.map((g, i) => (
+                    <Fragment key={g.path}>{i === 0 ? '' : i === INTRO.length - 1 ? ' и\u00a0' : ', '}<Link to={g.path} className={TEXT_LINK}>{g.phrase}</Link></Fragment>
+                  ))}.</p>
                 </Text>
                 <Text>
                   <p>Каждый материал собирается в редакторе: введите свои данные и получите файлы, готовые к печати или производству.</p>
