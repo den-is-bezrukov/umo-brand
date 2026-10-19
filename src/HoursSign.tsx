@@ -11,6 +11,8 @@ import { SIGN, SIGN_KEY, LOGO, buildSign, oneLine, timeText, type SignField, typ
 import { DEALER_NAMES, dealerFilter, withoutUmo, phoneOf } from '@/data/dealers'
 import { DEFAULT_HOURS_LINE, addressOf, hoursOf } from '@/data/hours'
 import { MobileEditor, usePhone } from '@/ui/mobile'
+import { recordText } from '@/ui/liveText'
+import { TemplateButton, useTemplateLink } from '@/ui/template'
 
 // The dealership's hours sign (Figma: UMO | Evrone, node 3819:4211): a 480×680 mm plate with the logo, the hours, a
 // line under them and the dealership at the bottom, as a PDF in outlines for the maker. A dealer picked from the list
@@ -179,7 +181,9 @@ export default function HoursSign() {
   const values: Record<Exclude<SignField, 'line'>, string> = { from: wholeTime(from), to: wholeTime(to), dealer, address, phone, site }
   const empty = ORDER.filter(f => !oneLine(values[f]))
   const shown: Input = { line, ...Object.fromEntries(ORDER.map(f => [f, oneLine(values[f]) ? values[f] : PLACEHOLDER[f]])) as Omit<Input, 'line'> }
-  const sign = useMemo(() => font ? buildSign(font, shown) : undefined, [font, JSON.stringify(shown)]) // eslint-disable-line react-hooks/exhaustive-deps
+  // Its lines noted too, for the editable template
+  const built = useMemo(() => font ? recordText(() => buildSign(font, shown)) : undefined, [font, JSON.stringify(shown)]) // eslint-disable-line react-hooks/exhaustive-deps
+  const sign = built?.result
   /** Faults of what's typed; a placeholder is never one */
   const issues = (sign?.issues ?? []).filter(i => !empty.includes(i.field as typeof ORDER[number]))
   const wrong = new Set(issues.map(i => i.field))
@@ -241,6 +245,15 @@ export default function HoursSign() {
     }
   }
 
+  /** The editable template: the sign as on the page, placeholders where nothing is typed */
+  const makeTemplate = built ? () => import('@/hours/pdf').then(m => m.signTemplate(built.result, built.lines)) : undefined
+  /** The blank one a `template` link gives: every field its placeholder, the line under the hours as by default */
+  const makeBlank = font ? () => {
+    const one = recordText(() => buildSign(font, { line: DEFAULT_HOURS_LINE, ...PLACEHOLDER }))
+    return import('@/hours/pdf').then(m => m.signTemplate(one.result, one.lines))
+  } : undefined
+  const templateOnly = useTemplateLink(makeBlank, 'UMO_hours-sign_template.pdf', 'download_hours_sign_template')
+
   // `pdf` in the link (a link made for the dealer) opens the sign's PDF itself, with no editor, once the font
   // is in; a sign at fault opens the editor instead, showing what's wrong
   const [pdfOnly, setPdfOnly] = useState(() => link.has('pdf'))
@@ -294,7 +307,7 @@ export default function HoursSign() {
           {/* As tall as the canvas allows on wide screens, as wide as it on phones; on wide screens its width is the
               smaller of the canvas's and the one the height allows (12/17 of it, 480 × 680), so a narrow canvas shrinks
               the sign whole: a fixed height with the width capped stretched its white box past 480 × 680 */}
-          <svg viewBox={`0 0 ${SIGN.w} ${SIGN.h}`} className="block h-auto w-full max-w-[480px] bg-white md:w-[min(100%,calc((100dvh-128px-30px)*12/17))] md:max-w-none" role="img" aria-label="Режимник">
+          <svg viewBox={`0 0 ${SIGN.w} ${SIGN.h}`} className="block h-auto w-full max-w-[480px] bg-white md:w-[min(100%,calc((100dvh-128px-30px-72px)*12/17))] md:max-w-none" role="img" aria-label="Режимник">
             <path d={toD(LOGO)} fill="#000" fillRule="evenodd" />
             {[...byFill].map(([color, d]) => <path key={color} d={d} fill={color} />)}
           </svg>
@@ -372,7 +385,7 @@ export default function HoursSign() {
         />
   )
 
-  if (pdfOnly) return null
+  if (pdfOnly || templateOnly) return null
   // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
   if (onPhone) return <MobileEditor slides={[{ key: 'sign', label: 'Табличка', ratio: SIGN.h / SIGN.w, node: preview, reset: blank ? undefined : { onClick: reset, label: 'Вернуть табличку по умолчанию' } }]} sidebar={sidebar} download={download} />
 
@@ -389,8 +402,9 @@ export default function HoursSign() {
         {download}
       </aside>
 
-      <main className="flex flex-1 items-center justify-center bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
+      <main className="flex flex-1 flex-col items-center justify-center gap-8 bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
         {preview}
+        <TemplateButton make={makeTemplate} name="UMO_hours-sign_template.pdf" goalId="download_hours_sign_template" />
       </main>
 
     </div>

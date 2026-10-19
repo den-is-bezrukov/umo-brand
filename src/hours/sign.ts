@@ -4,6 +4,7 @@ import { caseMap, pathCmds } from '@/plate/frame'
 import { featureMap } from '@/pricetag/tag'
 import { logo } from '@/card/card'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
+import { noteLine } from '@/ui/liveText'
 
 // The dealership's hours sign (Figma: UMO | Evrone, node 3819:4211; the source in Yandex Disk `02 UMO/Hours Sign`,
 // UMO_hours-sign.pdf): a 480×680 mm plate, the UMO logo at the top, the hours large in the middle with a line under
@@ -68,7 +69,7 @@ interface Run { field: SignField | 'fixed'; text: string }
 
 /**
  * Runs of text set one after another from `x` on `baseline`, the features asked for, kerning (across runs too) and
- * tracking: the outlines per run and the line's advance width
+ * tracking: the outlines per run, the line's advance width and each glyph's pen
  */
 function setRuns(font: Font, runs: Run[], x: number, baseline: number, size: number, feats: string[] = [], track = 0) {
   const scale = size / font.unitsPerEm
@@ -78,8 +79,10 @@ function setRuns(font: Font, runs: Run[], x: number, baseline: number, size: num
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const commands: any[][] = runs.map(() => [])
   const ink = { x1: Infinity, x2: -Infinity }
+  const pens: number[] = []
   let pen = x
   glyphs.forEach(({ g, run }, i) => {
+    pens.push(pen)
     const p = g.getPath(pen, baseline, size)
     commands[run].push(...p.commands)
     if (p.commands.length) {
@@ -90,7 +93,14 @@ function setRuns(font: Font, runs: Run[], x: number, baseline: number, size: num
     pen += g.advanceWidth! * scale
     if (i < glyphs.length - 1) pen += font.getKerningValue(g, glyphs[i + 1].g) * scale + track * size
   })
-  return { parts: runs.map((r, i) => ({ field: r.field, cmds: pathCmds(commands[i]) })), width: pen - x, ink }
+  return { parts: runs.map((r, i) => ({ field: r.field, cmds: pathCmds(commands[i]) })), width: pen - x, ink, pens }
+}
+
+/** Sets the runs as `setRuns` and notes the line for the editable template */
+function placeRuns(font: Font, runs: Run[], x: number, baseline: number, size: number, feats: string[] = [], track = 0) {
+  const set = setRuns(font, runs, x, baseline, size, feats, track)
+  noteLine(font, size, baseline, runs.map(r => r.text).join(''), set.pens)
+  return set
 }
 
 const width = (font: Font, text: string, size: number) => setRuns(font, [{ field: 'fixed', text }], 0, 0, size).ink.x2
@@ -164,7 +174,7 @@ export function buildSign(font: Font, input: Input): Sign {
     const k = size / spec.size
     // Centred by the ink, as the source's line sits
     const x = (SIGN.w - full * k) / 2 - probe.ink.x1 * k
-    parts.push(...setRuns(font, runs, x, spec.baseline, size, feats, spec.track).parts)
+    parts.push(...placeRuns(font, runs, x, spec.baseline, size, feats, spec.track).parts)
   }
 
   // The hours: always as wide as Figma's «9:00—21:00» at its size, so that one stands exactly as there, a longer range
@@ -195,7 +205,7 @@ export function buildSign(font: Font, input: Input): Sign {
   const addressLines = rows.length - 3
   if (addressLines > ADDRESS_LINES) issues.push({ field: 'address', text: `Адрес — не больше ${ADDRESS_LINES} строк` })
   rows.forEach((runs, i) => {
-    const set = setRuns(font, runs, MARGIN, INFO_LAST - (rows.length - 1 - i) * INFO.leading, INFO.size)
+    const set = placeRuns(font, runs, MARGIN, INFO_LAST - (rows.length - 1 - i) * INFO.leading, INFO.size)
     const field = runs[runs.length - 1].field as SignField
     if (set.ink.x2 - MARGIN > COLUMN + 0.01 && field !== 'address') {
       issues.push({ field, text: `${field === 'dealer' ? 'Название дилера' : field === 'phone' ? 'Телефон' : 'Сайт'} шире ${Math.round(COLUMN)} мм` })

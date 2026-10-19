@@ -5,12 +5,15 @@ import {
 import { SIGN, SIGN_KEY, LOGO, type Sign } from './sign'
 import type { Cmd } from '@/livery/geometry'
 import { writePdfData } from '@/ui/pdfDataWrite'
+import { embedCoFo, textOps, type LiveFonts, type TextLine } from '@/ui/liveText'
 
 // Loaded only when the PDF is downloaded, so the page doesn't carry pdf-lib until then.
 
 const PT = 72 / 25.4
 /** The file's name, also its title, which Chrome shows on the tab of a PDF opened from a link */
 export const SIGN_FILE = 'UMO_hours-sign.pdf'
+/** The editable template's name */
+export const SIGN_TEMPLATE = 'UMO_hours-sign_template.pdf'
 /** The source's colour, C60 M40 Y40 K100, as the livery's and the name tag's */
 const INK: [number, number, number, number] = [0.6, 0.4, 0.4, 1]
 
@@ -22,6 +25,18 @@ export async function signPdf(sign: Sign, data: unknown): Promise<Blob> {
   const doc = await PDFDocument.create()
   doc.setTitle(SIGN_FILE)
   writePdfData(doc, SIGN_KEY, data)
+  return signPage(doc, sign)
+}
+
+/** The editable template: the same page, the text live in CoFo Sans (`src/ui/liveText.ts`), the logo in outlines */
+export async function signTemplate(sign: Sign, lines: TextLine[]): Promise<Blob> {
+  const doc = await PDFDocument.create()
+  doc.setTitle(SIGN_TEMPLATE)
+  return signPage(doc, sign, lines, await embedCoFo(doc))
+}
+
+/** The page: the text as outlines, or, with `live`, the noted lines as text */
+async function signPage(doc: PDFDocument, sign: Sign, lines: TextLine[] = [], live?: LiveFonts): Promise<Blob> {
   const page = doc.addPage([SIGN.w * PT, SIGN.h * PT])
   const H = page.getHeight()
   const X = (x: number) => x * PT
@@ -37,10 +52,10 @@ export async function signPdf(sign: Sign, data: unknown): Promise<Blob> {
     // The logo's counters are cut out by even-odd, the glyphs' by their winding
     ...path(LOGO),
     PDFOperator.of(PDFOperatorNames.FillEvenOdd),
-    ...path(sign.parts.flatMap(p => p.cmds)),
-    PDFOperator.of(PDFOperatorNames.FillNonZero),
+    ...(live ? [] : [...path(sign.parts.flatMap(p => p.cmds)), PDFOperator.of(PDFOperatorNames.FillNonZero)]),
     popGraphicsState(),
   )
+  if (live) page.pushOperators(...textOps(page, live, lines, (x, y) => [X(x), Y(y)], PT, INK))
   const bytes = await doc.save({ useObjectStreams: false })
   return new Blob([bytes as BlobPart], { type: 'application/pdf' })
 }
