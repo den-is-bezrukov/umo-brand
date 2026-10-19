@@ -570,12 +570,13 @@ export function ItemFrame<P extends object>({ staff, item, n, onAdd, extra, chil
       {/* One column right of the item, 8 px off it, from its top (Figma 5030:11397): the number, then the actions. The
           8 px are its own padding, not a margin, so the pointer crossing them stays on the item: an item as wide as
           the canvas (the memo's spread) ends where its figure does, and the actions hid on the way to them */}
-      <div className="absolute top-0 left-full flex w-[38px] flex-col items-center pl-2">
+      <div className="absolute top-0 bottom-0 left-full flex w-[38px] flex-col items-center pl-2">
       {/* A lone item has no number: a «1» there says nothing */}
       {staff.items.length > 1 && <span aria-hidden className="pointer-events-none pb-[5px] text-center text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1]">{n}</span>}
       {(staff.mode === 'manual' || extra) && (
-        <div className={`flex-col ${active ? 'flex' : 'hidden'} ${hover}`}>
-          {/* Those always there first, so they never move: template, duplicate; then reset, remove, add */}
+        <div className={`flex-1 flex-col items-center ${active ? 'flex' : 'hidden'} ${hover}`}>
+          {/* Those always there first, so they never move: template, duplicate; then reset and add; the bin apart, at the
+              item's bottom edge (right after the rest when the item is too short for the gap) */}
           {extra}
           {staff.mode === 'manual' && (
             <Action label="Дублировать" keys={`${MOD}D`} onClick={() => staff.duplicate(item.key)}>
@@ -587,13 +588,17 @@ export function ItemFrame<P extends object>({ staff, item, n, onAdd, extra, chil
               <Action label="Сбросить" hidden={staff.isBlank(item)} onClick={() => staff.clear(item.key)}>
                 <ResetIcon />
               </Action>
-              <Action label="Удалить" hidden={staff.people.length < 2} onClick={() => staff.remove(item.key)}>
-                <TrashIcon />
-              </Action>
               {onAdd && (
                 <Action label="Добавить" keys={MOD === '⌘' ? '⌘↩' : 'Ctrl+Enter'} onClick={() => onAdd(item.key)}>
                   <PlusIcon />
                 </Action>
+              )}
+              {staff.people.length > 1 && (
+                <div className="mt-auto">
+                  <Action label="Удалить" onClick={() => staff.remove(item.key)}>
+                    <TrashIcon />
+                  </Action>
+                </div>
               )}
             </>
           )}
