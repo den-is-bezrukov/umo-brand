@@ -365,7 +365,7 @@ export default function App() {
   // «Добавить» in the card's column, ⌘↩ from anywhere (wide screens): the next card starts as the last one, most
   // often the same model in another trim or at another price
   const addCard = (after?: number) => staff.add(plain(items[items.length - 1]), undefined, after)
-  useAddKey(!phone ? addCard : undefined)
+  useAddKey(!phone ? () => addCard(staff.selected) : undefined)
 
   if (pdfOnly) return null
   if (phone) return <MobileEditor slides={items.map(c => ({ key: c.key, item: c.key, label: `UMO ${c.model === 'umo8' ? 8 : 5} ${c.trim.toUpperCase()}`, ratio: POSTER_H / POSTER_W, node: (w: number) => cardAt(c, w) }))} staff={frame} sidebar={sidebar} download={download} />

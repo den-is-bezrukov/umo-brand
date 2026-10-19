@@ -274,7 +274,7 @@ export default function BusinessCard() {
   const templateOnly = useTemplateLink(makeBlank, 'UMO_business-cards_template.pdf', 'download_business_card_template')
   /** «Добавить» in the item's column, ⌘↩ from anywhere (the manual list, wide screens) */
   const addItem = (after?: number) => { const p = salonPhone(dealer.name); if (p) staff.add({ ...BLANK, phone: p }, true, after); else staff.add(undefined, undefined, after) }
-  useAddKey(!phone && mode === 'manual' ? addItem : undefined)
+  useAddKey(!phone && mode === 'manual' ? () => addItem(staff.selected) : undefined)
   /** «Скачать шаблон» in the item's column */
   const templateIcon = (i: number) => <TemplateButton make={makeTemplate(i)} name="UMO_business-cards_template.pdf" goalId="download_business_card_template" />
 
