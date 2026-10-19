@@ -445,7 +445,8 @@ export const ITEM_EDGE = 'outline-1 -outline-offset-1 outline-black/10 group-hov
  * «Добавить» under the list: a secondary button as wide as its text («Поделиться»'s edge, 10% and 40% on hover),
  * centred under the items. It was a tile in the item's shape, too large, the price card's above all
  */
-export function AddTile({ onClick }: { onClick: () => void }) {
+/** `className`: more for the button (the memo's, as wide as «Скачать шаблон» beside it) */
+export function AddTile({ onClick, className = '' }: { onClick: () => void; className?: string }) {
   // ⌘↩ (Ctrl+Enter) presses it from anywhere, a field too: one card done, the next one (⌘N is the browser's own)
   const button = useRef<HTMLButtonElement>(null)
   useEffect(() => {
@@ -466,7 +467,7 @@ export function AddTile({ onClick }: { onClick: () => void }) {
         title={`Добавить ${MOD === '⌘' ? '⌘↩' : 'Ctrl+Enter'}`}
         aria-keyshortcuts={MOD === '⌘' ? 'Meta+Enter' : 'Control+Enter'}
         onClick={onClick}
-        className="flex cursor-pointer items-center gap-2 rounded-[8px] border border-black/10 px-3 py-[9px] text-[14px] font-medium leading-5 text-black hover:border-black/40"
+        className={`flex cursor-pointer items-center justify-center gap-2 rounded-[8px] border border-black/10 px-3 py-[9px] text-[14px] font-medium leading-5 text-black hover:border-black/40 ${className}`}
       >
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden><path d="M7 1V13M1 7H13" stroke="currentColor" strokeWidth="2" /></svg>
         Добавить
