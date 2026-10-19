@@ -36,6 +36,12 @@ export const itemName = (path: string, n?: number, of = false) => {
   return [word, n].filter(Boolean).join(' ')
 }
 
+/** Материалы' card row while its PDF is pointed at: «Скачать визитку» */
+export const downloadTitle = (path: string) => {
+  const g = LIST.find(g => g.path === path)
+  return g ? `Скачать ${g.one}` : 'Скачать'
+}
+
 /** A link into the generator at `path`, its tooltip: «Редактировать визитку» */
 export const editTitle = (path: string) => {
   const g = LIST.find(g => g.path === path)
