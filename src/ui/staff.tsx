@@ -5,6 +5,7 @@ import { MOD, withMod } from '@/ui/keys'
 import { outlined, flash } from '@/ui/form'
 import { splitFullName } from '@/nametag/table'
 import { ICON } from './icons'
+import { addTitle } from '@/data/generators'
 
 // A staff list, shared by the generators that make one item per person (name tags, business cards): two modes,
 // «Вручную», a list typed on the page with one person selected in the sidebar, and «Из таблицы», a filled-in template
@@ -623,7 +624,7 @@ export function ItemFrame<P extends object>({ staff, item, n, onAdd, extra, chil
                 <TrashIcon />
               </Action>
               {onAdd && (
-                <Action label="Добавить" keys={MOD === '⌘' ? '⌘↩' : 'Ctrl+Enter'} onClick={() => onAdd(item.key)}>
+                <Action label={addTitle(location.pathname)} keys={MOD === '⌘' ? '⌘↩' : 'Ctrl+Enter'} onClick={() => onAdd(item.key)}>
                   <PlusIcon />
                 </Action>
               )}

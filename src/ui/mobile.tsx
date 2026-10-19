@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { ResetIcon, DuplicateIcon, TrashIcon, PlusIcon, Removed, type Staff } from '@/ui/staff'
 import { InSlide, InFoot, InSheet, SheetLayer } from '@/ui/phone'
+import { addTitle } from '@/data/generators'
 
 // A trial of the generators' phone layout (Figma 5098:5806, «Mobile Layout»): the canvas over a sheet holding the
 // sidebar (header and form) with the download at its foot. A list's pictures are swiped one at a time, with a row over
@@ -391,7 +392,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
   const total = slides.filter(s => s.item !== undefined).length
   const resetBtn = <Btn label={reset?.label ?? 'Сбросить'} hidden={!reset} onClick={() => reset?.onClick()}><ResetIcon /></Btn>
   const copyBtn = <Btn label="Дублировать" hidden={!staff || !current} onClick={() => staff?.duplicate(current.key, false)}><DuplicateIcon /></Btn>
-  const addBtn = <Btn label="Добавить" hidden={!onAdd} onClick={() => onAdd?.(current?.key)}><PlusIcon /></Btn>
+  const addBtn = <Btn label={addTitle(location.pathname)} hidden={!onAdd} onClick={() => onAdd?.(current?.key)}><PlusIcon /></Btn>
   // The sheet is always as tall as over the whole screen and moved down out of it (its edge, the white under the form,
   // and the form each a layer moved and cut, which a phone draws without laying the form out again: a sheet changing its
   // height froze on an iPhone, the form laid out on every frame). At 60% the form has as much again under its end, so it
