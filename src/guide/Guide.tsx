@@ -67,7 +67,7 @@ const DRAWN: Medium[] = [
       </div>
     ),
   },
-  { id: 'business-card', to: '/business-card', title: 'Визитка', row: 'Сделать визитки', w: 444, h: 333, picture: <Fig name="business-card-card" w={444} h={333} alt="Визитка дилера UMO, обе стороны" /> },
+  { id: 'business-card', to: '/business-card', title: 'Визитка', row: 'Оформить визитки', w: 444, h: 333, picture: <Fig name="business-card-card" w={444} h={333} alt="Визитка дилера UMO, обе стороны" /> },
   { id: 'name-tag', to: '/name-tag', title: 'Бейдж', row: 'Подписать бейджи', w: 444, h: 333, picture: <Fig name="name-tag-card" w={444} h={333} alt="Бейдж UMO на рубашке сотрудника" /> },
   {
     // The 480×680 sign as tall as the price card on the 444×333 grey
