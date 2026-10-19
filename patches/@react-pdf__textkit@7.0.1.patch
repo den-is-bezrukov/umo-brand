@@ -1,9 +1,9 @@
 diff --git a/lib/textkit.js b/lib/textkit.js
-index 0b8b6fa636c48ef0ac9cecb27040d2bac9303ce8..c4ce5ae450dc2637be1eebf9a0e3e34dac85c96e 100644
+index 7bfe0d9a119a8bd1ec98ff0f4827bd6cb3a967a4..09ec995dfc4f1a9f3cd7c919b8bc8880ec78bd91 100644
 --- a/lib/textkit.js
 +++ b/lib/textkit.js
-@@ -1131,6 +1131,86 @@ const scalePositions = (run, positions) => {
-         });
+@@ -1187,6 +1187,86 @@ const scalePositions = (run, positions) => {
+         };
      });
  };
 +/**
@@ -89,10 +89,10 @@ index 0b8b6fa636c48ef0ac9cecb27040d2bac9303ce8..c4ce5ae450dc2637be1eebf9a0e3e34d
  /**
   * Create glyph run
   *
-@@ -1157,15 +1237,16 @@ const layoutRun = (string) => {
+@@ -1213,15 +1293,16 @@ const layoutRun = (string) => {
              throw new Error('Invalid font');
          // passing LTR To force fontkit to not reverse the string
-         const glyphRun = font[0].layout(runString, undefined, undefined, undefined, 'ltr');
+         const glyphRun = font[0].layout(runString, features, undefined, undefined, 'ltr');
 +        const glyphs = normalizeGlyphCodePoints(glyphRun.glyphs, runString);
          const positions = scalePositions(run, glyphRun.positions);
 -        const stringIndices = resolve$1(glyphRun.glyphs);
@@ -109,7 +109,7 @@ index 0b8b6fa636c48ef0ac9cecb27040d2bac9303ce8..c4ce5ae450dc2637be1eebf9a0e3e34d
          };
          return result;
      };
-@@ -2620,10 +2701,36 @@ const breakLines = (attributedString, nodes, breaks) => {
+@@ -2697,10 +2778,36 @@ const breakLines = (attributedString, nodes, breaks) => {
   * @param options - Layout options
   * @returns ?
   */
@@ -147,7 +147,7 @@ index 0b8b6fa636c48ef0ac9cecb27040d2bac9303ce8..c4ce5ae450dc2637be1eebf9a0e3e34d
      const hyphenPenalty = options.hyphenationPenalty || (align === 'justify' ? 100 : 600);
      const result = syllables.reduce((acc, s, index) => {
          const width = advanceWidthBetween(start, start + s.length, attributedString);
-@@ -2665,6 +2772,37 @@ const getAttributes = (attributedString) => {
+@@ -2742,6 +2849,37 @@ const getAttributes = (attributedString) => {
   *
   * @param options - Layout options
   */
@@ -185,7 +185,7 @@ index 0b8b6fa636c48ef0ac9cecb27040d2bac9303ce8..c4ce5ae450dc2637be1eebf9a0e3e34d
  const linebreaker = (options) => {
      /**
       * @param attributedString - Attributed string
-@@ -2672,18 +2810,9 @@ const linebreaker = (options) => {
+@@ -2749,18 +2887,9 @@ const linebreaker = (options) => {
       * @returns Attributed string
       */
      return (attributedString, availableWidths) => {

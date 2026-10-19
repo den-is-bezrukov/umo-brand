@@ -47,7 +47,8 @@ function PriceBlock({ label, value, large }: { label: string; value: string; lar
         {label}
       </Text>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: px(large ? 24 : 18) }}>
-        <Text style={price}>{value}</Text>
+        {/* Lining tabular figures, as in the preview */}
+        <Text style={{ ...price, fontFeatureSettings: ['lnum', 'tnum'] }}>{value}</Text>
         <Text style={price}>₽</Text>
       </View>
     </View>
