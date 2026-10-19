@@ -14,6 +14,7 @@ import tocIcons from '@/icons/toc'
 import { useTypograf } from './typograf'
 import Dialog from '@/ui/Dialog'
 import { TEXT_LINK, SUPPORT_BOT } from '@/ui/links'
+import { GENERATORS } from '@/data/generators'
 import downloadSizes from 'virtual:download-sizes'
 import heroMp4 from '@/assets/guide/hero.mp4'
 import hero720Mp4 from '@/assets/guide/hero-720.mp4'
@@ -1243,15 +1244,13 @@ function useWide() {
   return wide
 }
 
-/** The constructors as the editor lists them: by name, as the generators' own list */
-const EDITOR_ITEMS = [...MEDIA_LIST].sort((a, b) => a.title.localeCompare(b.title, 'ru'))
 
 function EditorDialog() {
   const close = useCloseEditor()
   return (
     <Dialog title="Редактор материалов" onClose={close}>
       <nav aria-label="Конструкторы" className="flex flex-col items-start gap-5">
-        {EDITOR_ITEMS.map(m => <Link key={m.to} to={m.to} className={`text-[24px] font-medium leading-6 tracking-[-0.01em] ${NAV_HOVER}`}>{m.title}</Link>)}
+        {GENERATORS.map(m => <Link key={m.path} to={m.path} className={`text-[24px] font-medium leading-6 tracking-[-0.01em] ${NAV_HOVER}`}>{m.title}</Link>)}
       </nav>
     </Dialog>
   )
@@ -1539,7 +1538,7 @@ export default function Guide() {
                 <div className="flex flex-col gap-6 pt-4 pb-4 md:pt-6 md:pb-6">
                   <p className="font-medium">Редактор материалов</p>
                   <nav aria-label="Конструкторы" className="flex flex-col items-start gap-5">
-                    {EDITOR_ITEMS.map(m => <Link key={m.to} to={m.to} className={`text-[24px] font-medium leading-6 tracking-[-0.01em] ${NAV_HOVER}`}>{m.title}</Link>)}
+                    {GENERATORS.map(m => <Link key={m.path} to={m.path} className={`text-[24px] font-medium leading-6 tracking-[-0.01em] ${NAV_HOVER}`}>{m.title}</Link>)}
                   </nav>
                 </div>
               ) : (

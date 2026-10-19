@@ -2,6 +2,7 @@ import { useContext, useEffect, useId, useLayoutEffect, useRef, useState } from 
 import { createPortal } from 'react-dom'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { goal } from './metrika'
+import { GENERATORS } from '@/data/generators'
 import HelpButton from './help'
 import Ring from './Ring'
 import { ChevronIcon } from './icons'
@@ -20,17 +21,6 @@ function Tick({ color = 'black' }: { color?: string }) {
   )
 }
 
-/** In alphabetical order, as the ring lists them */
-const GENERATORS = [
-  { path: '/name-tag', title: 'Бейдж' },
-  { path: '/business-card', title: 'Визитка' },
-  { path: '/livery', title: 'Ливрея' },
-  { path: '/memo', title: 'Памятка' },
-  { path: '/price-card', title: 'Прайс-карта' },
-  { path: '/plate-frame', title: 'Рамка номера' },
-  { path: '/hours-sign', title: 'Режимник' },
-  { path: '/price-tag', title: 'Ценник' },
-]
 
 /**
  * The breadcrumbs underline on hover as the guide's links do (Figma 4865:1061): black at 40%, fading out, 0.35 px (2.5%

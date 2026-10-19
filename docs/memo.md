@@ -10,4 +10,4 @@ The dealership is the whole list's, the consultants a list (`useStaff`, as the b
 
 A link, `umo.autos/memo?template`, saves the blank template to the downloads and opens it with no editor (`useTemplateLink`, as every generator's `template`, see «Editable templates» in `docs/generators.md`): every contact its placeholder («Название дилера», «Имя Фамилия», «Почта» for both emails), made from the memo as it is now, so the link never goes stale; Metrika `download_owner_memo_template` with `via: link`. The memo keeps no other settings in its address.
 
-Not yet: «Скачать шаблон» on phones (no «Добавить» there), the memo in the guide's «Редактор материалов» window (it needs its picture).
+Not yet: «Скачать шаблон» on phones, the memo's picture in the guide's grid of materials («Редактор материалов» lists it already).
