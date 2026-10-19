@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, LinkButtons, canShareFiles, unfilled, itemOf, ALERT_LABEL } from '@/ui/form'
 import { useStaff, plain, useAddKey, fullNameField, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
@@ -119,7 +119,7 @@ export default function Memo() {
   const [fonts, setFonts] = useState<MemoFonts>()
   const [exporting, setExporting] = useState(false)
   const phone = usePhone()
-  /** The field with the caret in the form: its memo comes up on the canvas, the second page's foot filling the item */
+  /** The field with the caret in the form: its memo's contacts come into view on the canvas */
   const [editing, setEditing] = useState<MemoField | null>(null)
   const fieldOf = (el: Element | null) => (el?.closest('[data-field]')?.getAttribute('data-field') as MemoField | null) ?? null
   // Off a field only once the focus has settled (a list's option, clicked, takes it on its way back to the field)
@@ -241,43 +241,24 @@ export default function Memo() {
   }, [phone, templateOnly])
 
   /** The memo the edited field is seen on: the consultant's, or for the dealership's fields the one selected or the first */
-  const zoomed = editing && !phone ? (current ?? items[0])?.key : undefined
-  const zoomedAt = items.findIndex(p => p.key === zoomed)
-  /** The contacts, in the page's px */
-  const zoomBlock = zoomedAt >= 0 && memos?.[zoomedAt] ? boxOf(Object.values(memos[zoomedAt].block.fields).flat() as Cmd[]) : undefined
-  const zoomItem = useRef<HTMLButtonElement>(null)
-  const zoomPage = useRef<HTMLDivElement>(null)
-  const [zoom, setZoom] = useState<string>()
-  // The second page scaled to the item's width, the contacts in its middle (in the column it's that wide already, and
-  // only moves into view); the item keeps its size, so nothing round it moves
-  useLayoutEffect(() => {
-    const box = zoomItem.current, page = zoomPage.current
-    if (!box || !page || !zoomBlock) { setZoom(undefined); return }
-    const fit = () => {
-      const W = box.clientWidth, H = page.offsetHeight
-      const k = W / page.offsetWidth
-      const mid = (zoomBlock.y1 + zoomBlock.y2) / 2 / PAGE.h
-      const y = Math.min(0, Math.max(H - H * k, H / 2 - mid * H * k))
-      setZoom(`translate(${-page.offsetLeft}px, ${y}px) scale(${k})`)
-      // The contacts in view on the canvas, at the middle if they weren't
-      const main = box.closest('main')
-      if (!main) return
-      const r = box.getBoundingClientRect(), m = main.getBoundingClientRect()
-      const top = r.top + y + zoomBlock.y1 / PAGE.h * H * k, bottom = r.top + y + zoomBlock.y2 / PAGE.h * H * k
-      if (top < m.top || bottom > m.bottom) main.scrollBy({ top: (top + bottom) / 2 - (m.top + m.bottom) / 2, behavior: 'smooth' })
-    }
-    fit()
-    const ro = new ResizeObserver(fit)
-    ro.observe(box)
-    return () => ro.disconnect()
-  }, [zoomed, !!zoomBlock, zoomBlock?.y1, zoomBlock?.y2, spread]) // eslint-disable-line react-hooks/exhaustive-deps
+  const shownAt = editing && !phone ? items.findIndex(p => p.key === (current ?? items[0])?.key) : -1
+  /** Its contacts, in the page's px */
+  const block = shownAt >= 0 && memos?.[shownAt] ? boxOf(Object.values(memos[shownAt].block.fields).flat() as Cmd[]) : undefined
+  const shownPage = useRef<HTMLDivElement>(null)
+  // The contacts brought to the canvas's middle when they're out of view
+  useEffect(() => {
+    const page = shownPage.current, main = page?.closest('main')
+    if (!page || !main || !block) return
+    const r = page.getBoundingClientRect(), m = main.getBoundingClientRect()
+    const top = r.top + block.y1 / PAGE.h * r.height, bottom = r.top + block.y2 / PAGE.h * r.height
+    if (top < m.top || bottom > m.bottom) main.scrollBy({ top: (top + bottom) / 2 - (m.top + m.bottom) / 2, behavior: 'smooth' })
+  }, [shownAt, !!block, spread]) // eslint-disable-line react-hooks/exhaustive-deps
 
   /** `spread`: the memo as it prints, the first page beside the consultant's second, on wide screens */
   const renderItem = (p: typeof items[number], i: number, spread = false) => {
     const memo = memos?.[i]
     const active = mode === 'manual' && p.key === current?.key
     const dimmed = mode === 'manual' && !!current && !active && !phone
-    const zooms = p.key === zoomed
     const wrong = new Set<MemoField>([...dealerWrong, ...(memo?.issues.map(x => x.field).filter((f): f is MemoField => !!f) ?? [])])
     const paths = (only: (f: MemoField) => boolean) => memo
       ? (Object.entries(memo.block.fields) as [MemoField, Cmd[]][]).filter(([f]) => only(f)).flatMap(([, c]) => c)
@@ -291,17 +272,11 @@ export default function Memo() {
               <button
                 type="button"
                 aria-pressed={mode === 'manual' ? active : undefined}
-                ref={zooms ? zoomItem : undefined}
-                // Zoomed, the item is edged as a whole, its page past it cut off
-                className={`relative grid w-full cursor-pointer gap-4 ${spread ? 'grid-cols-2' : ''} ${zooms ? `overflow-hidden ${ITEM_EDGE}` : ''}`}
+                className={`grid w-full cursor-pointer gap-4 ${spread ? 'grid-cols-2' : ''}`}
               >
                 {/* The first page, everyone's, never dimmed */}
                 {spread && <div className={ITEM_EDGE}><Sheet src={page1} /></div>}
-                <div
-                  ref={zooms ? zoomPage : undefined}
-                  className={`origin-top-left transition-[opacity,transform] duration-300 ease-out ${zooms && zoom ? '' : ITEM_EDGE} ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
-                  style={{ transform: zooms ? zoom : undefined }}
-                >
+                <div ref={i === shownAt ? shownPage : undefined} className={`${ITEM_EDGE} transition-opacity duration-150 ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}>
                 <Sheet
                   src={page2}
                   text={memo ? toD(paths(f => !memo.ghost.has(f) && !wrong.has(f))) : undefined}
