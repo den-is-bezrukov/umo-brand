@@ -257,15 +257,22 @@ export default function Memo() {
   /** A click on a page brings it to the canvas's middle */
   /**
    * The row dragged with a mouse, which has no way across otherwise (a trackpad's swipe or a phone's own still scroll it):
-   * past 5 px it follows the pointer, the snap off meanwhile; let go, the page nearest the middle comes there, and the
-   * click the drag ends in selects nothing
+   * past 5 px it follows the pointer, the snap off meanwhile; let go, the page nearest the middle comes there, the next
+   * one that way once it's dragged 60 px (it slid back to the page it left), and the click the drag ends in selects nothing
    */
   const dragRow = (e: React.PointerEvent<HTMLElement>) => {
     if (e.pointerType !== 'mouse' || e.button !== 0) return
     const el = e.currentTarget, x0 = e.clientX, left0 = el.scrollLeft
-    let moved = false
+    const pages = [...el.querySelectorAll<HTMLElement>('[data-page]')]
+    const nearest = () => {
+      const mid = el.getBoundingClientRect().left + el.clientWidth / 2
+      const off = (p: HTMLElement) => Math.abs(p.getBoundingClientRect().left + p.offsetWidth / 2 - mid)
+      return pages.indexOf(pages.reduce((a, b) => off(b) < off(a) ? b : a))
+    }
+    const from = nearest()
+    let moved = false, dx = 0
     const move = (m: PointerEvent) => {
-      const dx = m.clientX - x0
+      dx = m.clientX - x0
       if (!moved && Math.abs(dx) < 5) return
       if (!moved) { moved = true; el.style.scrollSnapType = 'none'; document.body.style.cursor = 'grabbing'; el.style.pointerEvents = 'none' }
       el.scrollLeft = left0 - dx
@@ -275,10 +282,10 @@ export default function Memo() {
       window.removeEventListener('pointerup', up)
       if (!moved) return
       el.style.scrollSnapType = ''; el.style.pointerEvents = ''; document.body.style.cursor = ''
-      const mid = el.getBoundingClientRect().left + el.clientWidth / 2
-      const pages = [...el.querySelectorAll<HTMLElement>('[data-page]')]
-      const near = pages.reduce((a, b) => Math.abs(b.getBoundingClientRect().left + b.offsetWidth / 2 - mid) < Math.abs(a.getBoundingClientRect().left + a.offsetWidth / 2 - mid) ? b : a)
-      near?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+      // Dragged 60 px or more, the row goes on to the next page that way, even if the one it left is still the nearest
+      let to = nearest()
+      if (to === from && Math.abs(dx) >= 60) to = Math.min(pages.length - 1, Math.max(0, from - Math.sign(dx)))
+      pages[to]?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
       // The click the drag ends in, if any, lands on nothing
       const eat = (c: MouseEvent) => { c.stopPropagation(); c.preventDefault() }
       window.addEventListener('click', eat, { capture: true, once: true })
