@@ -502,7 +502,8 @@ export default function BusinessCard() {
         <div className="m-auto grid w-full grid-cols-1 gap-8">
           {/* The face, the same for everyone, once at the top whatever the file's page order («Обложка у всех» is the file's) */}
           <div className="flex justify-center">
-            <div className="w-full max-w-[480px]">
+            {/* Dimmed with the cards not selected while there are several; with one card it's that card's own face, never dimmed */}
+            <div className={`w-full max-w-[480px] transition-opacity duration-150 ${mode === 'manual' && current && items.length > 1 ? 'opacity-40' : ''}`}>
               <div className="outline-1 outline-black/10"><CardArt text={face} /></div>
             </div>
           </div>
