@@ -1121,15 +1121,14 @@ function PriceCardPreview({ variant, fullPrice, creditPrice, image, alt }: {
  * `?t`), named by `label` («Шаблон режимника»). `also`: the same item in other formats, on the right of its row after
  * the file's own: the row downloads the vector, its PNG the PNG («Логотип UMO  SVG  PNG»; they were a row each)
  */
-type Asset = { file: string; label?: string; format?: string; also?: { file: string; format?: string }[] } | { to: string; title: string } | { t: string; label: string; file: string }
+type Asset = { file: string; label?: string; also?: { file: string }[] } | { to: string; title: string } | { t: string; label: string; file: string }
 
 /**
  * A file's format, on the right of its row in place of a size (every file here is small, so a size said nothing; the
- * format says what opens it): its extension, or for an archive what's in it («umo-logo-png.zip»: PNG); `format` where
- * the name doesn't say («SVG, PNG»)
+ * format says what opens it): its extension, or for an archive what's in it («umo-logo-png.zip»: PNG)
  */
-const formatOf = (a: { file: string; format?: string }) =>
-  (a.format ?? a.file.match(/-(png|svg)\.zip$/)?.[1] ?? a.file.split('.').pop() ?? '').toUpperCase()
+const formatOf = (a: { file: string }) =>
+  (a.file.match(/-(png|svg)\.zip$/)?.[1] ?? a.file.split('.').pop() ?? '').toUpperCase()
 
 /**
  * Asset list: a row per file or page, a hairline above each. Up to 3 rows stay in one column, 4 and more
@@ -1852,20 +1851,20 @@ export default function Guide() {
               </Head>
               <Previews className="flex flex-col gap-4 md:gap-6">
                 <div className="grid grid-cols-1 min-[520px]:grid-cols-2 gap-4 md:gap-6">
-                  <PreviewLink asset={{ file: 'umo-icon-white.zip' }} label="Скачать иконку, чёрный логотип на белом">
+                  <PreviewLink asset={{ file: 'umo-icon-white.svg' }} label="Скачать иконку, чёрный логотип на белом, SVG">
                     <Fig name="icon-userpic" w={444} h={333} caption="Юзерпик аккаунта соцсетей" />
                   </PreviewLink>
                   <PreviewLink asset={{ file: 'umo-favicon.svg' }} label="Скачать фавиконку, SVG">
                     <Fig name="icon-favicon-light" w={444} h={333} caption="Фавиконка и иконка закладок в браузере" alt="Фавиконка во вкладке светлого браузера" />
                   </PreviewLink>
-                  <PreviewLink asset={{ file: 'umo-icon-black.zip' }} label="Скачать иконку, белый логотип на чёрном">
+                  <PreviewLink asset={{ file: 'umo-icon-black.svg' }} label="Скачать иконку, белый логотип на чёрном, SVG">
                     <Fig name="icon-app" w={444} h={333} caption="Иконка мобильного приложения" />
                   </PreviewLink>
                   <PreviewLink asset={{ file: 'umo-favicon.svg' }} label="Скачать фавиконку, SVG">
                     <Fig name="icon-favicon" w={444} h={333} alt="Фавиконка во вкладке тёмного браузера" />
                   </PreviewLink>
                 </div>
-                <Assets items={[{ file: 'umo-icon-white.zip', label: 'Иконка UMO на белом', format: 'SVG, PNG' }, { file: 'umo-icon-black.zip', label: 'Иконка UMO на чёрном', format: 'SVG, PNG' }, { file: 'umo-favicon.svg', label: 'Фавиконка UMO', also: [{ file: 'umo-favicon.ico' }] }]} />
+                <Assets items={[{ file: 'umo-icon-white.svg', label: 'Иконка UMO на белом', also: [{ file: 'umo-icon-white.png' }] }, { file: 'umo-icon-black.svg', label: 'Иконка UMO на чёрном', also: [{ file: 'umo-icon-black.png' }] }, { file: 'umo-favicon.svg', label: 'Фавиконка UMO', also: [{ file: 'umo-favicon.ico' }] }]} />
               </Previews>
             </Section>
 
