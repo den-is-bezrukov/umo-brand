@@ -41,6 +41,8 @@ const DEALER_REQUIRED = ['dealer', 'dealerPhone', 'address', 'site'] as const
 const PAGE_MAX = 600
 /** Between the pages in a row: the item's actions' column (8 + 30 + 8), so a third page would clear them as the canvas's edge does */
 const PAGES_GAP = 46
+/** TEST: the pages on the canvas, the second copied as a third to try a longer row */
+const PAGES = 3
 
 /** The dealership as typed: the site follows the name until it's edited (null) */
 type DealerInput = Omit<Dealer, 'site'> & { site: string | null }
@@ -232,19 +234,33 @@ export default function Memo() {
   const [canvas, setCanvas] = useState<HTMLElement | null>(null)
   const [pageW, setPageW] = useState(PAGE_MAX)
   const [rowEnd, setRowEnd] = useState(64)
-  /** The page a row stands at, `data-at` (none while both are in view), the other dimmed */
+  const [measured, setMeasured] = useState(false)
+  /** The page a row stands at; the others dimmed (`data-off`), none while all are in view */
+  const pageAt = (el: HTMLElement) => {
+    const max = el.scrollWidth - el.clientWidth, pages = el.querySelectorAll('[data-page]')
+    return max < 1 ? -1 : Math.round(el.scrollLeft / (max / (pages.length - 1)))
+  }
   const markPage = (el: HTMLElement) => {
-    const max = el.scrollWidth - el.clientWidth
-    el.dataset.at = max < 1 ? '' : el.scrollLeft > max / 2 ? '2' : '1'
+    const at = pageAt(el)
+    el.querySelectorAll('[data-page]').forEach((p, k) => p.toggleAttribute('data-off', at >= 0 && k !== at))
+  }
+  /** A row put at a page, the consultant's (the second) */
+  const toConsultant = (el: HTMLElement, behavior: ScrollBehavior = 'auto') => {
+    const max = el.scrollWidth - el.clientWidth, n = el.querySelectorAll('[data-page]').length
+    el.scrollTo({ left: max / (n - 1), behavior })
   }
   /** A click on a page brings it to the canvas's middle */
   const toPage = (e: React.MouseEvent<HTMLElement>) => e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
-  /** A row put at its end as it comes; kept by reference, or every render would put it back */
-  const atEnd = useCallback((el: HTMLDivElement | null) => { if (el) { el.scrollLeft = el.scrollWidth; markPage(el) } }, [])
-  // The canvas resized, a row may now fit or not
-  useEffect(() => { canvas?.querySelectorAll<HTMLElement>('[data-pages]').forEach(markPage) }, [pageW, canvas])
+  // A row put at the consultant's page as it comes, once the canvas is measured (before, its ends weren't set and it
+  // stood at the last); the canvas resized, a row may now fit or not
   useEffect(() => {
-    if (editing) canvas?.querySelectorAll('[data-pages]').forEach(el => el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' }))
+    canvas?.querySelectorAll<HTMLElement>('[data-pages]').forEach(el => {
+      if (measured && !el.dataset.placed) { toConsultant(el); el.dataset.placed = '1' }
+      markPage(el)
+    })
+  }, [pageW, rowEnd, measured, canvas, items.length]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (editing) canvas?.querySelectorAll<HTMLElement>('[data-pages]').forEach(el => toConsultant(el, 'smooth'))
   }, [editing, canvas])
   useEffect(() => {
     const el = canvas
@@ -256,7 +272,8 @@ export default function Memo() {
       const pw = Math.floor(Math.min(PAGE_MAX, w, h * PAGE.w / PAGE.h))
       setPageW(pw)
       // The row's ends: the canvas's 64 px while it fits, else as much as centres a page at either end
-      setRowEnd(2 * pw + PAGES_GAP <= w ? 64 : Math.max(64, (el.clientWidth - pw) / 2))
+      setMeasured(true)
+      setRowEnd(PAGES * pw + (PAGES - 1) * PAGES_GAP <= w ? 64 : Math.max(64, (el.clientWidth - pw) / 2))
     }
     const ro = new ResizeObserver(fit)
     ro.observe(el)
@@ -308,21 +325,25 @@ export default function Memo() {
             ) : (
               // Across the canvas's whole width, past its 64 px padding, which the row keeps as its own ends (the actions in
               // the right one); let go, it stands at a page, in the canvas's middle, never between them
-              <div ref={atEnd} data-pages onScroll={e => markPage(e.currentTarget)} className="group/pages -mx-16 snap-x snap-mandatory overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div data-pages onScroll={e => markPage(e.currentTarget)} className="-mx-16 snap-x snap-mandatory overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {/* Its width set: the item's box is a size container, which `w-max` takes as nothing */}
-                <div className="mx-auto box-content" style={{ width: 2 * pageW + PAGES_GAP, paddingInline: rowEnd }}>
+                <div className="mx-auto box-content" style={{ width: PAGES * pageW + (PAGES - 1) * PAGES_GAP, paddingInline: rowEnd }}>
                   <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>
                     <button type="button" aria-pressed={mode === 'manual' ? active : undefined} className="flex cursor-pointer" style={{ gap: PAGES_GAP }}>
-                      {/* The first page, everyone's, dimmed only while the row stands at the second; a page out of the way, clear on hover */}
-                      <div onClick={toPage} className={`shrink-0 snap-center ${ITEM_EDGE} transition-opacity duration-150 group-data-[at=2]/pages:opacity-40 hover:opacity-100!`} style={{ width: pageW }}><Sheet src={page1} /></div>
-                      <div
-                        ref={i === shownAt ? shownPage : undefined}
-                        onClick={toPage}
-                        className={`shrink-0 snap-center ${ITEM_EDGE} transition-opacity duration-150 ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''} group-data-[at=1]/pages:opacity-40 hover:opacity-100!`}
-                        style={{ width: pageW }}
-                      >
-                        {second}
-                      </div>
+                      {/* A page the row doesn't stand at dimmed, clear on hover; the first, everyone's, only so, the
+                          consultant's also while another consultant is selected */}
+                      {Array.from({ length: PAGES }, (_, k) => (
+                        <div
+                          key={k}
+                          data-page
+                          ref={k === 1 && i === shownAt ? shownPage : undefined}
+                          onClick={toPage}
+                          className={`shrink-0 snap-center ${ITEM_EDGE} transition-opacity duration-150 ${k > 0 && dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''} data-off:opacity-40 hover:opacity-100!`}
+                          style={{ width: pageW }}
+                        >
+                          {k === 0 ? <Sheet src={page1} /> : second}
+                        </div>
+                      ))}
                     </button>
                   </ItemFrame>
                 </div>
