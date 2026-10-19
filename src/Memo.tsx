@@ -39,8 +39,8 @@ const PERSON_REQUIRED = ['position', 'name', 'surname', 'phone'] as const
 const DEALER_REQUIRED = ['dealer', 'dealerPhone', 'address', 'site'] as const
 /** A page's widest on the canvas */
 const PAGE_MAX = 600
-/** Between the pages in a row */
-const PAGES_GAP = 16
+/** Between the pages in a row: the item's actions' column (8 + 30 + 8), so a third page would clear them as the canvas's edge does */
+const PAGES_GAP = 46
 
 /** The dealership as typed: the site follows the name until it's edited (null) */
 type DealerInput = Omit<Dealer, 'site'> & { site: string | null }
@@ -225,10 +225,17 @@ export default function Memo() {
 
   const problemOf = (i: number) => personIssues(i)[0]?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!)) : undefined)
 
-  // Both pages in a row, as large as the canvas lets them stand whole (600 px wide at most). A state, not a ref: the
-  // canvas comes after the first render (the phone check, the fonts), and a ref's effect missed it
+  // The pages in a row as tall as the canvas (600 px wide at most), the item's actions after the last; a row wider than
+  // the canvas scrolls across the canvas's whole width, cut by its edges alone (the item's own edges cut it off
+  // awkwardly), standing at its end, the consultant's page, as it comes and whenever a field has the caret. A state,
+  // not a ref: the canvas comes after the first render (the phone check, the fonts), and a ref's effect missed it
   const [canvas, setCanvas] = useState<HTMLElement | null>(null)
   const [pageW, setPageW] = useState(PAGE_MAX)
+  /** A row put at its end as it comes; kept by reference, or every render would put it back */
+  const atEnd = useCallback((el: HTMLDivElement | null) => { if (el) el.scrollLeft = el.scrollWidth }, [])
+  useEffect(() => {
+    if (editing) canvas?.querySelectorAll('[data-pages]').forEach(el => el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' }))
+  }, [editing, canvas])
   useEffect(() => {
     const el = canvas
     if (!el) return
@@ -236,7 +243,7 @@ export default function Memo() {
       const cs = getComputedStyle(el)
       const w = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
       const h = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
-      setPageW(Math.floor(Math.min(PAGE_MAX, (w - PAGES_GAP) / 2, h * PAGE.w / PAGE.h)))
+      setPageW(Math.floor(Math.min(PAGE_MAX, w, h * PAGE.w / PAGE.h)))
     }
     const ro = new ResizeObserver(fit)
     ro.observe(el)
@@ -278,28 +285,35 @@ export default function Memo() {
       <Fragment key={p.key}>
         <Removed staff={staff} at={i} />
         <figure ref={staff.figureRef(p.key)} onClick={() => staff.pick(p.key)} className="group/row flex cursor-pointer justify-center">
-          <div className="flex w-full max-w-[600px] flex-col gap-3" style={phone ? undefined : { maxWidth: 2 * pageW + PAGES_GAP }}>
-            <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>
-              <button
-                type="button"
-                aria-pressed={mode === 'manual' ? active : undefined}
-                className="block w-full cursor-pointer"
-              >
-                {phone ? <div className={ITEM_EDGE}>{second}</div> : (
-                  <div className="flex" style={{ gap: PAGES_GAP }}>
-                    {/* The first page, everyone's, never dimmed */}
-                    <div className={`shrink-0 ${ITEM_EDGE}`} style={{ width: pageW }}><Sheet src={page1} /></div>
-                    <div
-                      ref={i === shownAt ? shownPage : undefined}
-                      className={`shrink-0 ${ITEM_EDGE} transition-opacity duration-150 ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
-                      style={{ width: pageW }}
-                    >
-                      {second}
-                    </div>
-                  </div>
-                )}
-              </button>
-            </ItemFrame>
+          <div className="flex w-full max-w-[600px] flex-col gap-3" style={phone ? undefined : { maxWidth: 'none' }}>
+            {phone ? (
+              <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>
+                <button type="button" aria-pressed={mode === 'manual' ? active : undefined} className="block w-full cursor-pointer">
+                  <div className={ITEM_EDGE}>{second}</div>
+                </button>
+              </ItemFrame>
+            ) : (
+              // Across the canvas's whole width, past its 64 px padding, which the row keeps as its own ends (the actions in
+              // the right one)
+              <div ref={atEnd} data-pages className="-mx-16 overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                {/* Its width set: the item's box is a size container, which `w-max` takes as nothing */}
+                <div className="mx-auto box-content px-16" style={{ width: 2 * pageW + PAGES_GAP }}>
+                  <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>
+                    <button type="button" aria-pressed={mode === 'manual' ? active : undefined} className="flex cursor-pointer" style={{ gap: PAGES_GAP }}>
+                      {/* The first page, everyone's, never dimmed */}
+                      <div className={`shrink-0 ${ITEM_EDGE}`} style={{ width: pageW }}><Sheet src={page1} /></div>
+                      <div
+                        ref={i === shownAt ? shownPage : undefined}
+                        className={`shrink-0 ${ITEM_EDGE} transition-opacity duration-150 ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
+                        style={{ width: pageW }}
+                      >
+                        {second}
+                      </div>
+                    </button>
+                  </ItemFrame>
+                </div>
+              </div>
+            )}
             {problems[i].length > 0 && <ItemAlert staff={staff} item={p.key}>{problems[i].join(' · ')}</ItemAlert>}
           </div>
         </figure>
