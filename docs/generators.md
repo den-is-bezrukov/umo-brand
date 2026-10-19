@@ -47,6 +47,7 @@ The price card, livery, plate frame and hours sign keep their settings in the pa
 - Plate frame: `name` (a leading «UMO» is dropped, as the prefix is fixed), `text` (the whole line, which also turns the free mode on), `align=center`, `pdf` (as the price card's: `UMO_plate-frame_501x21.pdf`, once the font is in; a line at fault opens the editor).
 - Hours sign: `from`, `to` (a listed dealer's umo.auto hours when left out), `name` (a leading «UMO» is dropped), `address` (once it isn't the dealer's), `phone` (once it isn't the dealer's; put through the field's mask, so bare digits do), `site` (once edited), `pdf` (as the price card's: `UMO_hours-sign.pdf`; a sign at fault opens the editor).
 
+- Owner's memo: `template` alone, the blank template (see `docs/memo.md`); nothing else is kept.
 - Price tag: read on load only, never written back (a list would make the address huge): `dealer`, then `n1`, `c1`, `p1`, `s1` (name, code, price, caption: `set` and `pack` for «за комплект», «за упаковку», else as written), `n2`… while there's a name; `pdf` as the price card's, `UMO_price-tags.pdf`.
 
 A `pdf` link saves and opens the file through `saveAndOpenPdf` in `src/ui/share.ts`; each PDF's title is its file name.

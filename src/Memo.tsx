@@ -13,6 +13,7 @@ import { POSITION_OPTIONS } from '@/data/positions'
 import { DEALER_NAMES, dealerFilter, dealerOf, withoutUmo, phoneOf } from '@/data/dealers'
 import { isPdf, readPdfData } from '@/ui/pdfData'
 import { MobileEditor, usePhone } from '@/ui/mobile'
+import { linkParams, saveAndOpenPdf } from '@/ui/share'
 
 // Owner's memo generator (Figma: UMO | Evrone, section 5222:5427): two A4 pages a dealership hands over with a car,
 // Figma's but for the contacts at the foot of the second, which are set here: the dealership once for the list, a
@@ -108,6 +109,23 @@ export default function Memo() {
   const [templating, setTemplating] = useState(false)
   const phone = usePhone()
   useEffect(() => { loadFonts().then(f => setFonts({ r: f.regular, m: f.medium })) }, [])
+
+  // `template` in the link (umo.autos/memo?template, a link that never goes stale) saves the blank template to the
+  // downloads and opens it, no editor: every field its placeholder, the emails too, made from the memo as it is now
+  const [templateOnly, setTemplateOnly] = useState(() => linkParams().has('template'))
+  const templateStarted = useRef(false)
+  useEffect(() => {
+    if (!templateOnly || !fonts || templateStarted.current) return
+    templateStarted.current = true
+    const dealer = { name: PLACEHOLDER.dealer!, address: PLACEHOLDER.address!, phone: PLACEHOLDER.dealerPhone!, email: 'Почта', site: PLACEHOLDER.site! }
+    const person = { position: BLANK.position, name: PLACEHOLDER.name!, surname: PLACEHOLDER.surname!, phone: PLACEHOLDER.phone!, email: 'Почта' }
+    import('@/memo/pdf')
+      .then(async ({ memosTemplate }) => {
+        saveAndOpenPdf(await memosTemplate(buildBlocks(fonts, dealer, [person]), fonts), 'UMO_owner-memo_template.pdf')
+        goal('download_owner_memo_template', { count: 1, via: 'link' })
+      })
+      .catch(() => setTemplateOnly(false))
+  }, [fonts]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     const prev = document.title
@@ -306,6 +324,7 @@ export default function Memo() {
 
   const first = <div className="outline-1 outline-black/10"><Sheet src={page1} /></div>
 
+  if (templateOnly) return null
   if (phone) return <MobileEditor slides={[{ key: 'first', number: 0, label: 'Первый лист', ratio: PAGE.h / PAGE.w, node: first }, ...items.map((p, i) => ({ key: p.key, item: p.key, number: i + 1, label: `${p.name} ${p.surname}`.replace(/\s+/g, ' ').trim() || 'Второй лист', ratio: PAGE.h / PAGE.w, node: renderItem(p, i) }))]} sidebar={sidebar} download={download} staff={staff} />
 
   return (
