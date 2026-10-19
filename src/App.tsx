@@ -5,7 +5,7 @@ import type { Variant } from '@/posters/cardData'
 import { goal } from '@/ui/metrika'
 import { isValidUrl, SegBtn, Field, OptionalField, Segments, TextInput, UrlField, GeneratorHeader, LinkButtons, DownloadBar, unfilled, itemOf } from '@/ui/form'
 import { linkParams, useLinkState, saveAndOpenPdf } from '@/ui/share'
-import { useStaff, ItemFrame, useAddKey, Removed, plain, ITEM_EDGE, type Row } from '@/ui/staff'
+import { useStaff, ItemFrame, useAddKey, Removed, plain, ITEM_EDGE_OVER, type Row } from '@/ui/staff'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
 
@@ -374,7 +374,7 @@ export default function App() {
   // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
   /** A card drawn at a width, on a phone's slide */
   const cardAt = (c: Row<Card>, w: number) => (
-    <div className={`relative overflow-hidden bg-white ${ITEM_EDGE}`} style={{ width: w, height: Math.round(POSTER_H * w / POSTER_W) }}>
+    <div className={`overflow-hidden bg-white ${ITEM_EDGE_OVER}`} style={{ width: w, height: Math.round(POSTER_H * w / POSTER_W) }}>
       <div style={{ transformOrigin: 'top left', transform: `scale(${w / POSTER_W})`, position: 'absolute', top: 0, left: 0 }}>
         <PriceCard variant={`${c.model}-${c.trim}` as Variant} fullPrice={c.full} creditPrice={c.creditOn ? c.credit : undefined} qrSvg={qrSvgs[qrUrlOf(c)]} />
       </div>
@@ -414,10 +414,10 @@ export default function App() {
                     <div className="w-full" style={{ maxWidth: cardW }}>
                       <ItemFrame staff={frame} item={c} n={i + 1} onAdd={addCard} extra={templateIcon(c)}>
                         {/* A plain box, not a button: a button's centred text shifted the card's own layout. Clipped to
-                            the card, so the photo doesn't run past its edge, and edged as every generator's items
-                            (`ITEM_EDGE`) */}
+                            the card, so the photo doesn't run past its edge, and edged as every generator's items,
+                            the edge on a layer over the poster, which covers one on the box (`ITEM_EDGE_OVER`) */}
                         <div
-                          className={`relative overflow-hidden bg-white ${ITEM_EDGE} transition-opacity duration-150
+                          className={`overflow-hidden bg-white ${ITEM_EDGE_OVER} transition-opacity duration-150
                             ${!active ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
                           style={{ width: cardW, height: Math.round(POSTER_H * scale) }}
                         >
