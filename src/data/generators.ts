@@ -10,7 +10,7 @@ export const GENERATORS: { path: string; title: string; phrase: string; row?: st
   { path: '/business-card', title: 'Визитка', phrase: 'визитка', template: { file: 'UMO_business-cards_template.pdf', size: 237707 } },
   { path: '/livery', title: 'Ливрея', phrase: 'ливрея демо-автомобиля', template: { file: 'UMO5_dealer-livery_template.pdf', size: 236923 } },
   { path: '/memo', title: 'Памятка', phrase: 'памятка владельца', row: 'Подготовить памятку', template: { file: 'UMO_owner-memo_template.pdf', size: 250603 } },
-  { path: '/price-card', title: 'Прайс-карта', phrase: 'прайс-карта', template: { file: 'UMO_price-card_template.pdf', size: 24260 } },
+  { path: '/price-card', title: 'Прайс-карта', phrase: 'прайс-карта', template: { file: 'UMO_price-card_template.pdf', size: 24814 } },
   { path: '/plate-frame', title: 'Рамка номера', phrase: 'рамка\u00a0номера', template: { file: 'UMO_plate-frame_template.pdf', size: 229800 } },
   { path: '/hours-sign', title: 'Режимник', phrase: 'режимник', template: { file: 'UMO_hours-sign_template.pdf', size: 235456 } },
   { path: '/price-tag', title: 'Ценник', phrase: 'ценник', template: { file: 'UMO_price-tags_template.pdf', size: 238578 } },

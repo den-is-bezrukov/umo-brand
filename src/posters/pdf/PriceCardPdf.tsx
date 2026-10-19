@@ -101,9 +101,16 @@ function PriceCardPage({ variant, fullPrice, creditPrice, qrUrl, template }: Pro
           </Svg>
         </View>
 
-        {/* Model number; in the template a light grey block of a digit's size in its place */}
+        {/* Model number; in the template both, 5 and 8, at 50%, 40 px apart as the digit from the logo */}
         {template ? (
-          <View style={{ position: 'absolute', left: px(540), top: px(100), width: px(92), height: px(80), backgroundColor: '#d9d9d9' }} />
+          <View style={{ position: 'absolute', left: px(540), top: px(100), flexDirection: 'row', gap: px(40), opacity: 0.5 }}>
+            <Svg width={px(92)} height={px(80)} viewBox="0 0 92 80">
+              <Path d={svgUmo5.pac8b300} fill="black" />
+            </Svg>
+            <Svg width={px(100)} height={px(80)} viewBox="0 0 100 80">
+              <Path d={svgUmo8.p1b67d8f0} fill="black" />
+            </Svg>
+          </View>
         ) : data.model === 'umo8' ? (
           <View style={{ position: 'absolute', left: px(540), top: px(100) }}>
             <Svg width={px(100)} height={px(80)} viewBox="0 0 100 80">
