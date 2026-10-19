@@ -6,6 +6,7 @@ import {
 import { CARD, FACE, BACK_LOGO, type Back } from './card'
 import type { Cmd } from '@/livery/geometry'
 import { writePdfData } from '@/ui/pdfDataWrite'
+import { embedCoFo, textOps, type LiveFonts, type TextLine } from '@/ui/liveText'
 import { CARDS_KEY } from './card'
 
 // Loaded only when the cards are downloaded, so the page doesn't carry pdf-lib until then.
@@ -46,8 +47,23 @@ export async function cardsPdf(backs: Back[], { faceEach, marks }: PageOptions, 
   doc.setTitle('UMO business cards 90×50')
   // What the cards were made from, so the PDF dropped back on the page opens them
   writePdfData(doc, CARDS_KEY, data)
+  return cardPages(doc, backs.map(b => ({ back: b })), { faceEach, marks })
+}
+
+/**
+ * The editable template (`UMO_business-cards_template.pdf`): the same pages, the text live in CoFo Sans
+ * (`src/ui/liveText.ts`), the logos and QR in outlines
+ */
+export async function cardsTemplate(backs: { back: Back; lines: TextLine[] }[], options: PageOptions): Promise<Blob> {
+  const doc = await PDFDocument.create()
+  doc.setTitle('UMO_business-cards_template.pdf')
+  return cardPages(doc, backs, options, await embedCoFo(doc))
+}
+
+/** The pages: the text as outlines, or, with `live`, the noted lines as text */
+async function cardPages(doc: PDFDocument, backs: { back: Back; lines?: TextLine[] }[], { faceEach, marks }: PageOptions, live?: LiveFonts): Promise<Blob> {
   const m = marks ? MARGIN : 0
-  const page = (art: Cmd[]) => {
+  const page = (art: Cmd[], text: TextLine[] = []) => {
     const p = doc.addPage([(CARD.w + 2 * m) * PT, (CARD.h + 2 * m) * PT])
     const H = p.getHeight()
     // The card's own box, for the printer's imposition
@@ -58,28 +74,29 @@ export async function cardsPdf(backs: Back[], { faceEach, marks }: PageOptions, 
       ...pathOps(at(art), H), PDFOperator.of(PDFOperatorNames.FillEvenOdd),
       popGraphicsState(),
     )
+    if (live) p.pushOperators(...textOps(p, live, text, (x, y) => [(x + m) * PT, H - (y + m) * PT], PT, BLACK))
     if (!marks) return
     // Two short lines at each corner, along the card's edges, in the margin
     const X = (x: number) => x * PT
     const Y = (y: number) => H - y * PT
     const [l, t, r, b] = [m, m, m + CARD.w, m + CARD.h]
     const [W, Hm] = [CARD.w + 2 * m, CARD.h + 2 * m]
-    const lines: [number, number, number, number][] = [
+    const cuts: [number, number, number, number][] = [
       [l, 0, l, t - MARK_OFF], [r, 0, r, t - MARK_OFF], [l, b + MARK_OFF, l, Hm], [r, b + MARK_OFF, r, Hm],
       [0, t, l - MARK_OFF, t], [0, b, l - MARK_OFF, b], [r + MARK_OFF, t, W, t], [r + MARK_OFF, b, W, b],
     ]
     p.pushOperators(
       pushGraphicsState(), setStrokingCmykColor(...REGISTRATION), setLineWidth(0.25),
-      ...lines.flatMap(([x1, y1, x2, y2]) => [moveTo(X(x1), Y(y1)), lineTo(X(x2), Y(y2))]), stroke(),
+      ...cuts.flatMap(([x1, y1, x2, y2]) => [moveTo(X(x1), Y(y1)), lineTo(X(x2), Y(y2))]), stroke(),
       popGraphicsState(),
     )
   }
-  const back = (b: Back) => [...BACK_LOGO, ...Object.values(b.fields).flat(), ...b.qr]
+  const back = ({ back: b, lines }: typeof backs[number]) => page([...BACK_LOGO, ...(live ? [] : Object.values(b.fields).flat()), ...b.qr], lines)
   if (!faceEach) {
     page(FACE)
-    backs.forEach(b => page(back(b)))
+    backs.forEach(back)
   } else {
-    backs.forEach(b => { page(FACE); page(back(b)) })
+    backs.forEach(b => { page(FACE); back(b) })
   }
   const bytes = await doc.save({ useObjectStreams: false })
   return new Blob([bytes as BlobPart], { type: 'application/pdf' })

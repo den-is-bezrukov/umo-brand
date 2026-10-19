@@ -5,6 +5,7 @@ import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { nameFault } from '@/ui/names'
 import { withListBreak } from '@/data/positions'
 import type { Fonts } from '@/nametag/tag'
+import { noteLine } from '@/ui/liveText'
 
 // A dealership employee's business card (Figma: UMO | Evrone, section 4021:2849): 90×50 mm, two sides. The face
 // (4456:5172) is the UMO logo 40×8 mm in the bottom left corner, the same for everyone. The back (4456:5175) has
@@ -105,16 +106,18 @@ function setLine(font: Font, text: string, x: number, baseline: number, size: nu
   const glyphs: Glyph[] = font.stringToGlyphs(text).map(g => font.glyphs.get(forms.get(g.index) ?? g.index))
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const commands: any[] = []
+  const pens: number[] = []
   let right = x
   let pen = x
   glyphs.forEach((g, i) => {
+    pens.push(pen)
     const p = g.getPath(pen, baseline, size)
     commands.push(...p.commands)
     if (p.commands.length) right = Math.max(right, p.getBoundingBox().x2)
     pen += g.advanceWidth! * scale
     if (i < glyphs.length - 1) pen += font.getKerningValue(g, glyphs[i + 1]) * scale
   })
-  return { cmds: pathCmds(commands), width: right - x, end: pen }
+  return { cmds: pathCmds(commands), width: right - x, end: pen, pens }
 }
 
 const inkWidth = (font: Font, text: string, size: number) => setLine(font, text, 0, 0, size, false).width
@@ -249,6 +252,7 @@ export function buildBack(fonts: Fonts, dealer: Dealer, person: Person, qr: QrDa
     const cmds: Cmd[] = []
     set.forEach((t, i) => {
       const l = setLine(font, t, x, baseline + i * LEADING, size, size === BIG)
+      noteLine(font, size, baseline + i * LEADING, t, l.pens)
       cmds.push(...l.cmds)
       if (l.width > width + 0.01) issues.push({ field, text: `${label} шире ${width} мм` })
     })
@@ -296,9 +300,11 @@ export function buildBack(fonts: Fonts, dealer: Dealer, person: Person, qr: QrDa
   const name = oneLine(person.name)
   const surname = oneLine(person.surname)
   const n = setLine(fonts.medium, name, x, y, BIG, true)
+  noteLine(fonts.medium, BIG, y, name, n.pens)
   const space = name ? fonts.medium.charToGlyph(' ').advanceWidth! * BIG / fonts.medium.unitsPerEm : 0
   const start = name ? n.end + space : x
   const s = setLine(fonts.medium, surname, start, y, BIG, true)
+  noteLine(fonts.medium, BIG, y, surname, s.pens)
   fields.name = n.cmds
   fields.surname = s.cmds
   const width = surname ? start - x + s.width : n.width

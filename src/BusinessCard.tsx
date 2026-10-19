@@ -13,6 +13,8 @@ import { DEALER_NAMES, dealerFilter, dealerOf, withoutUmo, phoneOf } from '@/dat
 import { isPdf, readPdfData } from '@/ui/pdfData'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { linkParams, saveAndOpenPdf } from '@/ui/share'
+import { recordText } from '@/ui/liveText'
+import { TemplateButton, useTemplateLink } from '@/ui/template'
 
 // Business card generator (Figma: UMO | Evrone, section 4021:2849): the dealership set once, its staff typed on the page
 // or loaded from the template, one PDF out with the face and a back per person. The staff list works as the name
@@ -162,10 +164,11 @@ export default function BusinessCard() {
       email: or('email', p.email), phone: or('phone', p.phone), ext: p.ext,
     }
     const qr = qrFor(p)
-    const back = buildBack(fonts, shownDealer, shownPerson, qr)
+    // Its lines noted too, for the editable template
+    const { result: back, lines } = recordText(() => buildBack(fonts, shownDealer, shownPerson, qr))
     // Without a link yet, a grey code stands in for it, as the placeholders do
     const ghostQr = qr ? [] : qrOutline(SAMPLE_LINK, QR.x, QR.y, QR.size)
-    return { back, ghost, ghostQr, issues: back.issues.filter(i => !i.field || !ghost.has(i.field)) }
+    return { back, lines, ghost, ghostQr, issues: back.issues.filter(i => !i.field || !ghost.has(i.field)) }
   }) : undefined, [fonts, items, dealer, link]) // eslint-disable-line react-hooks/exhaustive-deps
 
   /** The dealership's errors, the same on every card */
@@ -251,6 +254,20 @@ export default function BusinessCard() {
       })
       .catch(() => setPdfOnly(false))
   }, [cards]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** The editable template: the cards as on the page, placeholders where nothing is typed */
+  const makeTemplate = cards ? () => import('@/card/pdf').then(m => m.cardsTemplate(cards, { faceEach, marks })) : undefined
+  /** The blank one a `template` link gives: every field its placeholder, the QR the sample one */
+  const makeBlank = fonts ? () => {
+    const { result: back, lines } = recordText(() => buildBack(
+      fonts,
+      { name: PLACEHOLDER.dealer, address: PLACEHOLDER.address, site: PLACEHOLDER.site },
+      { name: PLACEHOLDER.name, surname: PLACEHOLDER.surname, position: PLACEHOLDER.position, email: PLACEHOLDER.email, phone: PLACEHOLDER.phone, ext: '' },
+      { text: SAMPLE_LINK, level: 'M' },
+    ))
+    return import('@/card/pdf').then(m => m.cardsTemplate([{ back, lines }], { faceEach: false, marks: false }))
+  } : undefined
+  const templateOnly = useTemplateLink(makeBlank, 'UMO_business-cards_template.pdf', 'download_business_card_template')
 
   const face = toD(FACE)
   /** The QR, the whole list's: with the dealership, under «Изменить» after the site it follows */
@@ -453,7 +470,7 @@ export default function BusinessCard() {
   )
 
   // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
-  if (pdfOnly) return null
+  if (pdfOnly || templateOnly) return null
   if (phone) return <MobileEditor slides={mode === 'table' && !staff.file ? [{ key: 'upload', node: <UploadArea staff={staff} /> }] : [{ key: 'face', number: 0, label: 'Обложка', ratio: CARD.h / CARD.w, node: <div className="outline-1 outline-black/10"><CardArt text={face} /></div> }, ...items.map((p, i) => ({ key: p.key, item: p.key, number: i + 1, label: `${p.name} ${p.surname}`.replace(/\s+/g, ' ').trim(), ratio: CARD.h / CARD.w, node: renderItem(p, i) }))]} sidebar={sidebar} download={download} staff={staff} />
 
   return (
@@ -466,7 +483,7 @@ export default function BusinessCard() {
 
       <main
         {...staff.dropTarget}
-        onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure, [data-add]')) staff.setSelected(null) }}
+        onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure, [data-add], [data-template]')) staff.setSelected(null) }}
         className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16
           ${mode === 'table' && staff.file && staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
       >
@@ -482,7 +499,11 @@ export default function BusinessCard() {
           </div>
           {items.map(renderItem)}
           <Removed staff={staff} at={items.length} />
-          {mode === 'manual' && <AddTile onClick={() => { const p = salonPhone(dealer.name); if (p) staff.add({ ...BLANK, phone: p }, true); else staff.add() }} />}
+          {/* «Скачать шаблон» and «Добавить» centred as a pair, 8 px apart */}
+          <div className="flex justify-center gap-2">
+            <TemplateButton make={makeTemplate} name="UMO_business-cards_template.pdf" goalId="download_business_card_template" params={{ count: items.length }} />
+            {mode === 'manual' && <AddTile onClick={() => { const p = salonPhone(dealer.name); if (p) staff.add({ ...BLANK, phone: p }, true); else staff.add() }} />}
+          </div>
         </div>
         )}
       </main>
