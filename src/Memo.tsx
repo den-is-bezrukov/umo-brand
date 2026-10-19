@@ -37,8 +37,8 @@ const UNFILLED: Partial<Record<MemoField, string>> = {
 const PERSON_FIELDS: MemoField[] = ['position', 'name', 'surname', 'phone', 'email']
 const PERSON_REQUIRED = ['position', 'name', 'surname', 'phone'] as const
 const DEALER_REQUIRED = ['dealer', 'dealerPhone', 'address', 'site'] as const
-/** A page's least width in the spread; narrower, the pages go in a column */
-const SPREAD_PAGE = 400
+/** A page's widest on the canvas */
+const PAGE_MAX = 600
 
 /** The dealership as typed: the site follows the name until it's edited (null) */
 type DealerInput = Omit<Dealer, 'site'> & { site: string | null }
@@ -223,18 +223,24 @@ export default function Memo() {
 
   const problemOf = (i: number) => personIssues(i)[0]?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!)) : undefined)
 
-  // The spread while each page has room for SPREAD_PAGE px, else the business card's column: the first page once at
-  // the top, each consultant's second under it
+  // Two pages always in view: the spread, or, where its pages would come out smaller, the business card's column (the
+  // first page once at the top, each consultant's second under it), its pages as wide as lets two of them stand in the
+  // canvas's height. `column`: the column's page width, none for the spread
   // A state, not a ref: the canvas comes after the first render (the phone check, the fonts), and a ref's effect missed it
   const [canvas, setCanvas] = useState<HTMLElement | null>(null)
-  const [spread, setSpread] = useState(true)
+  const [column, setColumn] = useState<number>()
+  const spread = column === undefined
   useEffect(() => {
     const el = canvas
     if (!el) return
     const fit = () => {
       const cs = getComputedStyle(el)
       const w = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
-      setSpread((w - 16) / 2 >= SPREAD_PAGE)
+      const h = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
+      const inSpread = Math.min(PAGE_MAX, (w - 16) / 2)
+      // 32 px between the pages (the list's gap)
+      const inColumn = Math.floor(Math.min(PAGE_MAX, w, (h - 32) / 2 * PAGE.w / PAGE.h))
+      setColumn(inSpread >= inColumn ? undefined : inColumn)
     }
     const ro = new ResizeObserver(fit)
     ro.observe(el)
@@ -268,7 +274,7 @@ export default function Memo() {
       <Fragment key={p.key}>
         <Removed staff={staff} at={i} />
         <figure ref={staff.figureRef(p.key)} onClick={() => staff.pick(p.key)} className="group/row flex cursor-pointer justify-center">
-          <div className={`flex w-full flex-col gap-3 ${spread ? 'max-w-[1216px]' : 'max-w-[600px]'}`}>
+          <div className={`flex w-full flex-col gap-3 ${spread ? 'max-w-[1216px]' : 'max-w-[600px]'}`} style={!spread && !phone && column ? { maxWidth: column } : undefined}>
             <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>
               <button
                 type="button"
@@ -378,7 +384,7 @@ export default function Memo() {
       >
         <div className="m-auto grid w-full grid-cols-1 gap-8">
           {/* The first page, everyone's, once at the top and never dimmed */}
-          {!spread && <div className="flex justify-center"><div className="w-full max-w-[600px]">{first}</div></div>}
+          {!spread && <div className="flex justify-center"><div className="w-full" style={{ maxWidth: column }}>{first}</div></div>}
           {items.map((p, i) => renderItem(p, i, spread))}
           <Removed staff={staff} at={items.length} />
         </div>
