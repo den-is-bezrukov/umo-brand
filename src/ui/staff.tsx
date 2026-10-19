@@ -575,7 +575,7 @@ export function ItemFrame<P extends object>({ staff, item, n, onAdd, extra, chil
       {staff.items.length > 1 && <span aria-hidden className="pointer-events-none pb-[5px] text-center text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1]">{n}</span>}
       {(staff.mode === 'manual' || extra) && (
         <div className={`flex-1 flex-col items-center ${active ? 'flex' : 'hidden'} ${hover}`}>
-          {/* Those always there first, so they never move: duplicate, template; then reset and add; the bin apart, at the
+          {/* Those always there at the top, so they never move: duplicate, template, add; reset and the bin apart, at the
               item's bottom edge (right after the rest when the item is too short for the gap) */}
           {staff.mode === 'manual' && (
             <Action label="Дублировать" keys={`${MOD}D`} onClick={() => staff.duplicate(item.key)}>
@@ -585,21 +585,20 @@ export function ItemFrame<P extends object>({ staff, item, n, onAdd, extra, chil
           {extra}
           {staff.mode === 'manual' && (
             <>
-              <Action label="Сбросить" hidden={staff.isBlank(item)} onClick={() => staff.clear(item.key)}>
-                <ResetIcon />
-              </Action>
               {onAdd && (
                 <Action label="Добавить" keys={MOD === '⌘' ? '⌘↩' : 'Ctrl+Enter'} onClick={() => onAdd(item.key)}>
                   <PlusIcon />
                 </Action>
               )}
-              {staff.people.length > 1 && (
-                <div className="mt-auto">
-                  <Action label="Удалить" onClick={() => staff.remove(item.key)}>
-                    <TrashIcon />
-                  </Action>
-                </div>
-              )}
+              {/* What undoes the work, apart at the item's bottom edge: reset, then the bin */}
+              <div className="mt-auto flex flex-col">
+                <Action label="Сбросить" hidden={staff.isBlank(item)} onClick={() => staff.clear(item.key)}>
+                  <ResetIcon />
+                </Action>
+                <Action label="Удалить" hidden={staff.people.length < 2} onClick={() => staff.remove(item.key)}>
+                  <TrashIcon />
+                </Action>
+              </div>
             </>
           )}
         </div>
