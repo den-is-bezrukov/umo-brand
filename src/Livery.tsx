@@ -233,11 +233,10 @@ export default function Livery() {
     }
   }
 
-  /** The editable template: the sheets as on the page */
   const prefix = model === 'umo8' ? 'UMO8' : 'UMO5'
   const templateName = `${prefix}_dealer-livery_template.pdf`
-  const makeTemplate = sheets.length ? () => import('@/livery/pdf').then(m => m.liveryTemplate(prefix, sheets)) : undefined
-  /** The blank one a `template` link gives: the model's sheets at their defaults, the rear window too */
+  /** The editable template, the icon's and a `template` link's alike: the model's sheets at their defaults, the rear
+   * window too, whatever's typed or switched off on the page (it was the sheets as on the page, without the window) */
   const makeBlank = font ? () => {
     const text = { dealer: DEFAULT_TOP, tagline: DEFAULT_TAGLINE[model], url: DEFAULT_URL[model] }
     const blank = SURFACES.map(id => buildSheet(font, layout[id], text))
@@ -349,7 +348,7 @@ export default function Livery() {
       <main className="flex-1 bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
         <div className="mx-auto flex max-w-[1200px] flex-col gap-10">
           {/* «Скачать шаблон» by the first sheet's caption, before its reset: the template is all the sheets' */}
-          {sheets.slice(0, 2).map((s, i) => <SheetPreview key={s.surface.id} sheet={s} seams={seams} dims={dims} onReset={sidesAtDefaults ? undefined : resetSides} resetLabel="Вернуть борта по умолчанию" extra={i === 0 && <TemplateButton make={makeTemplate} name={templateName} goalId="download_livery_template" />} />)}
+          {sheets.slice(0, 2).map((s, i) => <SheetPreview key={s.surface.id} sheet={s} seams={seams} dims={dims} onReset={sidesAtDefaults ? undefined : resetSides} resetLabel="Вернуть борта по умолчанию" extra={i === 0 && <TemplateButton make={makeBlank} name={templateName} goalId="download_livery_template" />} />)}
           {sheets[2] && (
             <div className="w-full md:w-1/2">
               <SheetPreview sheet={sheets[2]} seams={seams} dims={dims} onReset={rearAtDefaults ? undefined : resetRear} resetLabel="Вернуть стекло по умолчанию" />
