@@ -35,7 +35,7 @@ const UNFILLED: Partial<Record<MemoField, string>> = {
 }
 const PERSON_FIELDS: MemoField[] = ['position', 'name', 'phone', 'email']
 const PERSON_REQUIRED = ['position', 'name', 'phone'] as const
-const DEALER_REQUIRED = ['dealer', 'address', 'dealerPhone', 'site'] as const
+const DEALER_REQUIRED = ['dealer', 'dealerPhone', 'address', 'site'] as const
 
 /** The dealership as typed: the site follows the name until it's edited (null) */
 type DealerInput = Omit<Dealer, 'site'> & { site: string | null }
@@ -251,8 +251,8 @@ export default function Memo() {
             <p className={`text-[14px] leading-4 text-[#808080] ${ALERT_LABEL}`}>Дилер</p>
             <ComboField value={dealer.name} onChange={pickDealer} options={DEALER_OPTIONS} filter={dealerFilter} singleLine placeholder="Название дилера" label="Дилеры UMO" invalid={dealerWrong.has('dealer')} />
           </div>
-            {field('address', 'Адрес', <TextArea value={input.address} onChange={v => setDealer(d => ({ ...d, address: v }))} placeholder="Адрес" invalid={dealerWrong.has('address')} />)}
             {field('dealerPhone', 'Телефон дилера', <TextInput value={input.phone} onChange={v => phoneChange(v, text => setDealer(d => ({ ...d, phone: text })))} placeholder="+7 987 654 32 10" inputMode="tel" invalid={dealerWrong.has('dealerPhone')} />)}
+            {field('address', 'Адрес', <TextArea value={input.address} onChange={v => setDealer(d => ({ ...d, address: v }))} placeholder="Адрес" invalid={dealerWrong.has('address')} />)}
             {field('dealerEmail', 'Почта дилера', <TextInput value={input.email} onChange={v => setDealer(d => ({ ...d, email: v }))} placeholder="Почта дилера" inputMode="email" invalid={dealerWrong.has('dealerEmail')} />)}
             {field('site', 'Сайт', <TextInput value={dealer.site} onChange={v => setDealer(d => ({ ...d, site: v }))} placeholder="Сайт" invalid={dealerWrong.has('site')} />)}
         </div>

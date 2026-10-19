@@ -22,6 +22,8 @@ export const PAGE = { w: 2100, h: 2970 }
 export const MEMO_TEXTS = TEXTS as MemoText[]
 
 const TOP = 2520
+/** Where the dealership's column ends, as in Figma (its five lines from `TOP`): it grows up from there */
+const BOTTOM = 2820
 const COLUMNS = [150, 1050]
 /** Each column's measure: 50 px clear of the next, as the second page's two columns of features */
 const MEASURE = 850
@@ -33,7 +35,7 @@ export interface Dealer { name: string; address: string; phone: string; email: s
 export interface Person { position: string; name: string; phone: string; email: string }
 
 export type MemoField = 'dealer' | 'address' | 'dealerPhone' | 'dealerEmail' | 'site' | 'position' | 'name' | 'phone' | 'email'
-export const DEALER_FIELDS: MemoField[] = ['dealer', 'address', 'dealerPhone', 'dealerEmail', 'site']
+export const DEALER_FIELDS: MemoField[] = ['dealer', 'dealerPhone', 'address', 'dealerEmail', 'site']
 
 export interface Issue { field: MemoField | null; text: string }
 
@@ -68,17 +70,22 @@ export function buildBlock(fonts: MemoFonts, dealer: Dealer, person: Person): Bl
   const set: FieldLines[] = []
   const issues: Issue[] = []
 
-  const column = (x: number, items: [MemoField, string, string, number][]) => {
-    let y = TOP
-    items.forEach(([field, label, raw, max], i) => {
+  /** A column hanging from `TOP`, or, `up`, standing on `BOTTOM` and growing up as its lines grow */
+  const column = (x: number, items: [MemoField, string, string, number][], up = false) => {
+    const shown = items.map(([field, label, raw, max], i) => {
       const style = i ? BODY : HEAD
       const text = max > 1 ? lines(raw) : oneLine(raw)
-      if (!text) return
-      const t: MemoText = {
-        page: 1, id: field, x, y, w: MEASURE, size: style.size, lineHeight: style.lineHeight,
-        paragraphSpacing: 0, listSpacing: 0, align: 'left', text, runs: [[0, text.length, style.font]],
-      }
-      const l = layoutText(fonts, t)
+      return { field, label, max, style, text }
+    }).filter(it => it.text)
+    const at = (y: number, it: typeof shown[number]): MemoText => ({
+      page: 1, id: it.field, x, y, w: MEASURE, size: it.style.size, lineHeight: it.style.lineHeight,
+      paragraphSpacing: 0, listSpacing: 0, align: 'left', text: it.text, runs: [[0, it.text.length, it.style.font]],
+    })
+    const height = shown.reduce((h, it, i) => h + (i ? GAP : 0) + layoutText(fonts, at(0, it)).length * it.style.lineHeight, 0)
+    let y = up ? BOTTOM - height : TOP
+    shown.forEach(it => {
+      const { field, label, max, style, text } = it
+      const l = layoutText(fonts, at(y, it))
       if (l.length > max) issues.push({ field, text: `${label} — не больше ${max === 1 ? 'одной строки' : `${max} строк`}` })
       const font = fonts[style.font]
       const absent = [...new Set([...text.replace(/\s/g, '')].filter(c => !font.hasChar(c)))]
@@ -105,13 +112,15 @@ export function buildBlock(fonts: MemoFonts, dealer: Dealer, person: Person): Bl
     return e
   }
 
+  // The phone over the address, level with the consultant's name, so an address of two or three lines (on 4,5 mm
+  // lines, against 6 mm between the lines) comes after the rows the columns share
   column(COLUMNS[0], [
     ['dealer', 'Название', dealer.name, 1],
-    ['address', 'Адрес', dealer.address, 2],
     ['dealerPhone', 'Телефон дилера', phone('dealerPhone', dealer.phone), 1],
+    ['address', 'Адрес', dealer.address, 3],
     ['dealerEmail', 'Почта дилера', email('dealerEmail', dealer.email), 1],
     ['site', 'Сайт', siteText(dealer.site), 1],
-  ])
+  ], true)
   column(COLUMNS[1], [
     ['position', 'Должность', person.position, 2],
     ['name', 'Имя', person.name, 1],
