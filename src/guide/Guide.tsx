@@ -1153,6 +1153,8 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
         const linked = preview === ('to' in a ? a.to : a.file)
         const lit = pointed !== undefined && pointed === ('to' in a ? a.to : a.file)
         const name = `min-w-0 flex-1 font-medium ${UNDERLINE} group-hover:decoration-black/40 group-hover:duration-0 ${linked ? 'group-has-[[data-preview]:hover]/preview:decoration-black/40 group-has-[[data-preview]:hover]/preview:duration-0' : ''} ${lit ? 'decoration-black/40 duration-0' : ''}`
+        // A format pointed at itself is underlined as the name is, the link it stands for
+        const format = `${UNDERLINE} hover:decoration-black/40 hover:duration-0`
         const meta = `shrink-0 text-[#808080] [font-feature-settings:"tnum"_1] group-hover:text-black ${linked ? 'group-has-[[data-preview]:hover]/preview:text-black' : ''} ${lit ? 'text-black' : ''}`
         if ('to' in a) {
           return (
@@ -1169,7 +1171,7 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
             <a key={a.file} href={a.t} target="_blank" rel="noopener" className={row}>
               <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>
               <span className={name}>{a.label}</span>
-              <span className={meta}>{formatOf(a)}</span>
+              <span className={`${meta} ${format}`}>{formatOf(a)}</span>
             </a>
           )
         }
@@ -1181,11 +1183,11 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
               <a href={`/downloads/${a.file}`} download className={`${row.replace(/border-t border-\[#e6e6e6\]/, '')} min-w-0 flex-1`}>
                 <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>
                 <span className={name}>{a.label ?? a.file}</span>
-                <span className={meta}>{formatOf(a)}</span>
+                <span className={`${meta} ${format}`}>{formatOf(a)}</span>
               </a>
               {a.also.map(f => (
-                <a key={f.file} href={`/downloads/${f.file}`} download aria-label={`${a.label ?? a.file}, ${formatOf(f)}`} className="flex shrink-0 items-center pl-3 text-[16px] leading-none tracking-[-0.01em] text-[#808080] [font-feature-settings:'tnum'_1] hover:text-black">
-                  {formatOf(f)}
+                <a key={f.file} href={`/downloads/${f.file}`} download aria-label={`${a.label ?? a.file}, ${formatOf(f)}`} className="flex shrink-0 items-center pl-3 text-[16px] leading-none tracking-[-0.01em] text-[#808080] [font-feature-settings:'tnum'_1] hover:text-black group/format">
+                  <span className={`${UNDERLINE} group-hover/format:decoration-black/40 group-hover/format:duration-0`}>{formatOf(f)}</span>
                 </a>
               ))}
             </div>
@@ -1195,7 +1197,7 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
           <a key={a.file} href={`/downloads/${a.file}`} download className={row}>
             <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>
             <span className={name}>{a.label ?? a.file}</span>
-            <span className={meta}>{formatOf(a)}</span>
+            <span className={`${meta} ${format}`}>{formatOf(a)}</span>
           </a>
         )
       })}
