@@ -231,8 +231,15 @@ export default function Memo() {
   // not a ref: the canvas comes after the first render (the phone check, the fonts), and a ref's effect missed it
   const [canvas, setCanvas] = useState<HTMLElement | null>(null)
   const [pageW, setPageW] = useState(PAGE_MAX)
+  /** The page a row stands at, `data-at` (none while both are in view), the other dimmed */
+  const markPage = (el: HTMLElement) => {
+    const max = el.scrollWidth - el.clientWidth
+    el.dataset.at = max < 1 ? '' : el.scrollLeft > max / 2 ? '2' : '1'
+  }
   /** A row put at its end as it comes; kept by reference, or every render would put it back */
-  const atEnd = useCallback((el: HTMLDivElement | null) => { if (el) el.scrollLeft = el.scrollWidth }, [])
+  const atEnd = useCallback((el: HTMLDivElement | null) => { if (el) { el.scrollLeft = el.scrollWidth; markPage(el) } }, [])
+  // The canvas resized, a row may now fit or not
+  useEffect(() => { canvas?.querySelectorAll<HTMLElement>('[data-pages]').forEach(markPage) }, [pageW, canvas])
   useEffect(() => {
     if (editing) canvas?.querySelectorAll('[data-pages]').forEach(el => el.scrollTo({ left: el.scrollWidth, behavior: 'smooth' }))
   }, [editing, canvas])
@@ -295,16 +302,16 @@ export default function Memo() {
             ) : (
               // Across the canvas's whole width, past its 64 px padding, which the row keeps as its own ends (the actions in
               // the right one); let go, it stands at a page, 64 px off the canvas's edge, never between them
-              <div ref={atEnd} data-pages className="-mx-16 snap-x snap-mandatory scroll-px-16 overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              <div ref={atEnd} data-pages onScroll={e => markPage(e.currentTarget)} className="group/pages -mx-16 snap-x snap-mandatory scroll-px-16 overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {/* Its width set: the item's box is a size container, which `w-max` takes as nothing */}
                 <div className="mx-auto box-content px-16" style={{ width: 2 * pageW + PAGES_GAP }}>
                   <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>
                     <button type="button" aria-pressed={mode === 'manual' ? active : undefined} className="flex cursor-pointer" style={{ gap: PAGES_GAP }}>
-                      {/* The first page, everyone's, never dimmed */}
-                      <div className={`shrink-0 snap-start ${ITEM_EDGE}`} style={{ width: pageW }}><Sheet src={page1} /></div>
+                      {/* The first page, everyone's, dimmed only while the row stands at the second; a page out of the way, clear on hover */}
+                      <div className={`shrink-0 snap-start ${ITEM_EDGE} transition-opacity duration-150 group-data-[at=2]/pages:opacity-40 hover:opacity-100!`} style={{ width: pageW }}><Sheet src={page1} /></div>
                       <div
                         ref={i === shownAt ? shownPage : undefined}
-                        className={`shrink-0 snap-end ${ITEM_EDGE} transition-opacity duration-150 ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
+                        className={`shrink-0 snap-end ${ITEM_EDGE} transition-opacity duration-150 ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''} group-data-[at=1]/pages:opacity-40 hover:opacity-100!`}
                         style={{ width: pageW }}
                       >
                         {second}
