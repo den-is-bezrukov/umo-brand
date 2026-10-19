@@ -235,6 +235,8 @@ export default function Memo() {
   const [pageW, setPageW] = useState(PAGE_MAX)
   const [rowEnd, setRowEnd] = useState(64)
   const [measured, setMeasured] = useState(false)
+  /** The row wider than the canvas, scrolling across */
+  const [scrolls, setScrolls] = useState(false)
   /** The page a row stands at; the others dimmed (`data-off`), none while all are in view */
   const pageAt = (el: HTMLElement) => {
     const max = el.scrollWidth - el.clientWidth, pages = el.querySelectorAll('[data-page]')
@@ -273,7 +275,9 @@ export default function Memo() {
       setPageW(pw)
       // The row's ends: the canvas's 64 px while it fits, else as much as centres a page at either end
       setMeasured(true)
-      setRowEnd(PAGES * pw + (PAGES - 1) * PAGES_GAP <= w ? 64 : Math.max(64, (el.clientWidth - pw) / 2))
+      const fits = PAGES * pw + (PAGES - 1) * PAGES_GAP <= w
+      setScrolls(!fits)
+      setRowEnd(fits ? 64 : Math.max(64, (el.clientWidth - pw) / 2))
     }
     const ro = new ResizeObserver(fit)
     ro.observe(el)
@@ -322,33 +326,46 @@ export default function Memo() {
                   <div className={ITEM_EDGE}>{second}</div>
                 </button>
               </ItemFrame>
-            ) : (
-              // Across the canvas's whole width, past its 64 px padding, which the row keeps as its own ends (the actions in
-              // the right one); let go, it stands at a page, in the canvas's middle, never between them
-              <div data-pages onScroll={e => markPage(e.currentTarget)} className="-mx-16 snap-x snap-mandatory overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-                {/* Its width set: the item's box is a size container, which `w-max` takes as nothing */}
-                <div className="mx-auto box-content" style={{ width: PAGES * pageW + (PAGES - 1) * PAGES_GAP, paddingInline: rowEnd }}>
-                  <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>
-                    <button type="button" aria-pressed={mode === 'manual' ? active : undefined} className="flex cursor-pointer" style={{ gap: PAGES_GAP }}>
-                      {/* A page the row doesn't stand at dimmed, clear on hover; the first, everyone's, only so, the
-                          consultant's also while another consultant is selected */}
-                      {Array.from({ length: PAGES }, (_, k) => (
-                        <div
-                          key={k}
-                          data-page
-                          ref={k === 1 && i === shownAt ? shownPage : undefined}
-                          onClick={toPage}
-                          className={`shrink-0 snap-center ${ITEM_EDGE} transition-opacity duration-150 ${k > 0 && dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''} data-off:opacity-40 hover:opacity-100!`}
-                          style={{ width: pageW }}
-                        >
-                          {k === 0 ? <Sheet src={page1} /> : second}
-                        </div>
-                      ))}
-                    </button>
-                  </ItemFrame>
+            ) : (() => {
+              const pages = (
+                <button type="button" aria-pressed={mode === 'manual' ? active : undefined} className="flex cursor-pointer" style={{ gap: PAGES_GAP }}>
+                  {/* A page the row doesn't stand at dimmed, clear on hover; the first, everyone's, only so, the
+                      consultant's also while another consultant is selected */}
+                  {Array.from({ length: PAGES }, (_, k) => (
+                    <div
+                      key={k}
+                      data-page
+                      ref={k === 1 && i === shownAt ? shownPage : undefined}
+                      onClick={toPage}
+                      className={`shrink-0 snap-center ${ITEM_EDGE} transition-opacity duration-150 ${k > 0 && dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''} data-off:opacity-40 hover:opacity-100!`}
+                      style={{ width: pageW }}
+                    >
+                      {k === 0 ? <Sheet src={page1} /> : second}
+                    </div>
+                  ))}
+                </button>
+              )
+              const frame = (children: React.ReactNode) => <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>{children}</ItemFrame>
+              return (
+                <div className="relative">
+                  {/* Across the canvas's whole width, past its 64 px padding, which the row keeps as its own ends; let go,
+                      it stands at a page, in the canvas's middle, never between them */}
+                  <div data-pages onScroll={e => markPage(e.currentTarget)} className="-mx-16 snap-x snap-mandatory overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {/* Its width set: the item's box is a size container, which `w-max` takes as nothing */}
+                    <div className="mx-auto box-content" style={{ width: PAGES * pageW + (PAGES - 1) * PAGES_GAP, paddingInline: rowEnd }}>
+                      {scrolls ? pages : frame(pages)}
+                    </div>
+                  </div>
+                  {/* Scrolling, the actions stay in view: beside the page in the middle, in the gap the next page leaves
+                      them, not going with the row */}
+                  {scrolls && (
+                    <div className="pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2 [&_button]:pointer-events-auto" style={{ width: pageW }}>
+                      {frame(<div style={{ aspectRatio: `${PAGE.w} / ${PAGE.h}` }} />)}
+                    </div>
+                  )}
                 </div>
-              </div>
-            )}
+              )
+            })()}
             {problems[i].length > 0 && <ItemAlert staff={staff} item={p.key}>{problems[i].join(' · ')}</ItemAlert>}
           </div>
         </figure>
