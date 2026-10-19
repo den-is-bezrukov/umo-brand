@@ -198,10 +198,10 @@ export default function Memo() {
     }
   }
 
-  /** The template takes what's typed, the placeholders where nothing is: it's edited anyway */
-  const makeTemplate = memos && fonts ? () => import('@/memo/pdf').then(m => m.memosTemplate(memos.map(x => x.block), fonts)) : undefined
+  /** One consultant's template, by its icon: what's typed, the placeholders where nothing is (it's edited anyway) */
+  const makeTemplate = (i: number) => memos?.[i] && fonts ? () => import('@/memo/pdf').then(m => m.memosTemplate([memos[i].block], fonts)) : undefined
   /** «Скачать шаблон» in the item's column */
-  const templateIcon = <TemplateButton make={makeTemplate} name="UMO_owner-memo_template.pdf" goalId="download_owner_memo_template" params={{ count: items.length }} />
+  const templateIcon = (i: number) => <TemplateButton make={makeTemplate(i)} name="UMO_owner-memo_template.pdf" goalId="download_owner_memo_template" />
 
   const problemOf = (i: number) => personIssues(i)[0]?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!)) : undefined)
 
@@ -219,7 +219,7 @@ export default function Memo() {
         <Removed staff={staff} at={i} />
         <figure ref={staff.figureRef(p.key)} onClick={() => staff.pick(p.key)} className="group/row flex cursor-pointer justify-center">
           <div className={`flex w-full flex-col gap-3 ${spread ? 'max-w-[1216px]' : 'max-w-[600px]'}`}>
-            <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon}>
+            <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>
               <button
                 type="button"
                 aria-pressed={mode === 'manual' ? active : undefined}

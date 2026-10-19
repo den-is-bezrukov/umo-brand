@@ -85,7 +85,7 @@ export default function NameTag() {
     surname: p.surname.trim() ? '' : PLACEHOLDER.surname,
     position: p.position.trim() ? '' : PLACEHOLDER.position,
   })) : undefined, [fonts, items])
-  /** The editable template: the tags as on the page, placeholders where nothing is typed */
+  /** The editable template: the tags given, placeholders where nothing is typed */
   const templateOf = (people: Person[]) => {
     const all = people.map(p => recordText(() => buildTag(fonts!, {
       name: p.name.trim() ? p.name : PLACEHOLDER.name,
@@ -94,7 +94,8 @@ export default function NameTag() {
     })))
     return import('@/nametag/pdf').then(m => m.tagsTemplate(all.map(t => ({ tag: t.result, lines: t.lines }))))
   }
-  const makeTemplate = fonts && items.length ? () => templateOf(items.map(it => it.person)) : undefined
+  /** One tag's, by its icon: what's typed, placeholders where nothing is */
+  const makeTemplate = (i: number) => fonts ? () => templateOf([items[i].person]) : undefined
   /** The blank one a `template` link gives: one placeholder tag */
   const makeBlank = fonts ? () => templateOf([PLACEHOLDER]) : undefined
   const templateOnly = useTemplateLink(makeBlank, 'UMO_name-tags_template.pdf', 'download_name_tag_template')
@@ -102,7 +103,7 @@ export default function NameTag() {
   const addItem = () => staff.add()
   useAddKey(!phone && mode === 'manual' ? addItem : undefined)
   /** «Скачать шаблон» in the item's column */
-  const templateIcon = <TemplateButton make={makeTemplate} name="UMO_name-tags_template.pdf" goalId="download_name_tag_template" params={{ count: items.length }} />
+  const templateIcon = (i: number) => <TemplateButton make={makeTemplate(i)} name="UMO_name-tags_template.pdf" goalId="download_name_tag_template" />
 
   /** A tag needs a name, a surname and a position */
   const missing = items.map(({ person: p }) => [
@@ -180,7 +181,7 @@ export default function NameTag() {
               >
                 <div className="@container flex w-full max-w-[480px] flex-col gap-3">
                 {/* In the manual list a tag is picked for editing by clicking it; the picked one is outlined */}
-                <ItemFrame staff={staff} item={staff.items[i]} n={i + 1} onAdd={addItem} extra={templateIcon}>
+                <ItemFrame staff={staff} item={staff.items[i]} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>
                 <button
                   type="button"
                   aria-pressed={mode === 'manual' ? active : undefined}

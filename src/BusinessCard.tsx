@@ -255,8 +255,12 @@ export default function BusinessCard() {
       .catch(() => setPdfOnly(false))
   }, [cards]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  /** The editable template: the cards as on the page, placeholders where nothing is typed */
-  const makeTemplate = cards ? () => import('@/card/pdf').then(m => m.cardsTemplate(cards, { faceEach, marks })) : undefined
+  /** The editable template, one card's by its icon (its face too): as on the page, placeholders where nothing is typed */
+  const makeTemplate = (i: number) => {
+    const c = cards?.[i]
+    // Without a link yet, the grey sample code stands in, as on the page
+    return c ? () => import('@/card/pdf').then(m => m.cardsTemplate([{ back: { ...c.back, qr: c.back.qr.length ? c.back.qr : c.ghostQr }, lines: c.lines }], { faceEach, marks })) : undefined
+  }
   /** The blank one a `template` link gives: every field its placeholder, the QR the sample one */
   const makeBlank = fonts ? () => {
     const { result: back, lines } = recordText(() => buildBack(
@@ -272,7 +276,7 @@ export default function BusinessCard() {
   const addItem = () => { const p = salonPhone(dealer.name); if (p) staff.add({ ...BLANK, phone: p }, true); else staff.add() }
   useAddKey(!phone && mode === 'manual' ? addItem : undefined)
   /** «Скачать шаблон» in the item's column */
-  const templateIcon = <TemplateButton make={makeTemplate} name="UMO_business-cards_template.pdf" goalId="download_business_card_template" params={{ count: items.length }} />
+  const templateIcon = (i: number) => <TemplateButton make={makeTemplate(i)} name="UMO_business-cards_template.pdf" goalId="download_business_card_template" />
 
   const face = toD(FACE)
   /** The QR, the whole list's: with the dealership, under «Изменить» after the site it follows */
@@ -301,7 +305,7 @@ export default function BusinessCard() {
               <Removed staff={staff} at={i} />
               <figure ref={staff.figureRef(p.key)} onClick={() => staff.pick(p.key)} className="group/row flex cursor-pointer justify-center">
                 <div className="flex w-full max-w-[480px] flex-col gap-3">
-                  <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon}>
+                  <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>
                   <button
                     type="button"
                     aria-pressed={mode === 'manual' ? active : undefined}

@@ -118,8 +118,8 @@ export default function PriceTag() {
     return { tag, lines, ghost, issues: [...tag.issues.filter(i => !ghost.has(i.field)), ...wrongPrice] }
   }) : undefined, [fonts, items, dealer])
 
-  /** The editable template: the tags as on the page, placeholders where nothing is typed */
-  const makeTemplate = tags ? () => import('@/pricetag/pdf').then(m => m.tagsTemplate(tags)) : undefined
+  /** The editable template, one tag's by its icon: as on the page, placeholders where nothing is typed */
+  const makeTemplate = (i: number) => tags?.[i] ? () => import('@/pricetag/pdf').then(m => m.tagsTemplate([tags[i]])) : undefined
   /** The blank one a `template` link gives: a sheet of eight placeholder tags */
   const makeBlank = fonts ? () => {
     const one = recordText(() => buildTag(fonts, PLACEHOLDER.dealer!, { name: PLACEHOLDER.name!, code: 'Артикул', caption: PLACEHOLDER.caption!, price: PLACEHOLDER.price! }))
@@ -130,7 +130,7 @@ export default function PriceTag() {
   const addItem = () => staff.add()
   useAddKey(!phone && mode === 'manual' ? addItem : undefined)
   /** «Скачать шаблон» in the item's column */
-  const templateIcon = <TemplateButton make={makeTemplate} name="UMO_price-tags_template.pdf" goalId="download_price_tag_template" params={{ count: items.length }} />
+  const templateIcon = (i: number) => <TemplateButton make={makeTemplate(i)} name="UMO_price-tags_template.pdf" goalId="download_price_tag_template" />
 
   const dealerMissing = !dealer.trim()
   const dealerIssues = [...(dealerMissing ? [MISSING.dealer!] : []), ...new Set(tags?.[0]?.issues.filter(i => i.field === 'dealer').map(i => i.text) ?? [])]
@@ -219,7 +219,7 @@ export default function PriceTag() {
               <Removed staff={staff} at={i} />
               <figure ref={staff.figureRef(it.key)} onClick={() => staff.pick(it.key)} className="group/row flex cursor-pointer justify-center">
                 <div className="flex w-full max-w-[480px] flex-col gap-3">
-                  <ItemFrame staff={staff} item={it} n={i + 1} onAdd={addItem} extra={templateIcon}>
+                  <ItemFrame staff={staff} item={it} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>
                   <button
                     type="button"
                     aria-pressed={mode === 'manual' ? active : undefined}
