@@ -5,7 +5,7 @@ import { goal } from '@/ui/metrika'
 import { toD, type Cmd } from '@/livery/geometry'
 import { loadFonts } from '@/nametag/tag'
 import { siteFor, maskPhone } from '@/card/card'
-import { MEMOS_KEY, PAGE, DEALER_FIELDS, buildBlock, type Dealer, type MemoField, type Person } from '@/memo/memo'
+import { MEMOS_KEY, PAGE, DEALER_FIELDS, buildBlocks, type Dealer, type MemoField, type Person } from '@/memo/memo'
 import type { MemoFonts } from '@/memo/text'
 import page1 from '@/assets/memo/page-1.svg'
 import page2 from '@/assets/memo/page-2.svg'
@@ -130,11 +130,14 @@ export default function Memo() {
     }
   }
 
-  const memos = useMemo(() => fonts ? items.map(p => {
-    const s = shown(p)
-    const block = buildBlock(fonts, s.dealer, s.person)
-    return { block, ghost: s.ghost, issues: block.issues.filter(i => !i.field || !s.ghost.has(i.field)) }
-  }) : undefined, [fonts, items, input]) // eslint-disable-line react-hooks/exhaustive-deps
+  // One layout for the whole list (`buildBlocks`: eight and four columns for a long address); the dealer's
+  // placeholders are the same for everyone
+  const memos = useMemo(() => {
+    if (!fonts) return undefined
+    const s = items.map(shown)
+    const blocks = buildBlocks(fonts, s[0]?.dealer ?? shown(BLANK).dealer, s.map(x => x.person))
+    return blocks.map((block, i) => ({ block, ghost: s[i].ghost, issues: block.issues.filter(x => !x.field || !s[i].ghost.has(x.field)) }))
+  }, [fonts, items, input]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const dealerMissing = DEALER_REQUIRED.filter(f => !(f === 'dealer' ? dealer.name : f === 'dealerPhone' ? dealer.phone : dealer[f]).trim())
   const dealerFaults = memos?.[0]?.issues.filter(i => i.field && DEALER_FIELDS.includes(i.field)) ?? []

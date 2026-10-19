@@ -3,7 +3,7 @@ import { pathCmds } from '@/plate/frame'
 import { formatPhone, siteText } from '@/card/card'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { nameFault } from '@/ui/names'
-import { layoutText, glyphRuns, type Line, type MemoFonts, type MemoText } from './text'
+import { layoutText, glyphRuns, advance, type Line, type MemoFonts, type MemoText } from './text'
 import TEXTS from './texts.json'
 
 // The owner's memo (Figma: UMO | Evrone, section 5222:5427): two A4 pages a dealership hands over with a car. Everything
@@ -23,9 +23,15 @@ export const MEMO_TEXTS = TEXTS as MemoText[]
 
 /** Where the dealership's column ends, as in Figma (its five lines from 2520): it grows up from there */
 const BOTTOM = 2820
-const COLUMNS = [150, 1050]
-/** Each column's measure: 50 px clear of the next, as the second page's two columns of features */
-const MEASURE = 850
+/**
+ * The columns, [x, measure], on twelve of 150 px across the 1800 px text: six and six (the dealer's measure 50 px
+ * clear of the consultant, as the second page's two columns of features), or, `wide`, eight and four, for an address
+ * that takes a third line in six
+ */
+const COLUMNS = {
+  even: { dealer: [150, 850], person: [1050, 850] },
+  wide: { dealer: [150, 1150], person: [1350, 600] },
+} as const
 const GAP = 15
 const HEAD = { size: 45, lineHeight: 59.85, font: 'm' as const }
 const BODY = { size: 36, lineHeight: 45, font: 'r' as const }
@@ -46,6 +52,8 @@ export interface Block {
   fields: Partial<Record<MemoField, Cmd[]>>
   set: FieldLines[]
   issues: Issue[]
+  /** The fields with more lines than they may have */
+  over: MemoField[]
 }
 
 const oneLine = (t: string) => t.replace(/[​-‍⁠﻿]/g, '').replace(/\s+/g, ' ').trim()
@@ -64,23 +72,25 @@ export function outlines(fonts: MemoFonts, size: number, set: Line[]): Cmd[] {
  * The contacts for one consultant. The texts come as shown: the page puts placeholders in empty fields, the same
  * layout then holding them in grey
  */
-export function buildBlock(fonts: MemoFonts, dealer: Dealer, person: Person): Block {
+export function buildBlock(fonts: MemoFonts, dealer: Dealer, person: Person, wide = false): Block {
   const fields: Block['fields'] = {}
   const set: FieldLines[] = []
   const issues: Issue[] = []
+  const over: MemoField[] = []
+  const columns = COLUMNS[wide ? 'wide' : 'even']
 
   /**
    * A column hanging from `top`, or, with none, standing on `BOTTOM` and growing up as its lines grow; returns its top.
    * An item: field, label, text, most lines and, for a line of two fields, where the second's characters start and which it is
    */
-  const column = (x: number, items: [MemoField, string, string, number, [number, MemoField]?][], top?: number) => {
+  const column = ([x, measure]: readonly [number, number], items: [MemoField, string, string, number, [number, MemoField]?][], top?: number) => {
     const shown = items.map(([field, label, raw, max, split], i) => {
       const style = i ? BODY : HEAD
       const text = max > 1 ? lines(raw) : split ? raw : oneLine(raw)
       return { field, label, max, style, text, split }
     }).filter(it => it.text)
     const at = (y: number, it: typeof shown[number]): MemoText => ({
-      page: 1, id: it.field, x, y, w: MEASURE, size: it.style.size, lineHeight: it.style.lineHeight,
+      page: 1, id: it.field, x, y, w: measure, size: it.style.size, lineHeight: it.style.lineHeight,
       paragraphSpacing: 0, listSpacing: 0, align: 'left', text: it.text, runs: [[0, it.text.length, it.style.font]],
     })
     const height = shown.reduce((h, it, i) => h + (i ? GAP : 0) + layoutText(fonts, at(0, it)).length * it.style.lineHeight, 0)
@@ -89,7 +99,14 @@ export function buildBlock(fonts: MemoFonts, dealer: Dealer, person: Person): Bl
     shown.forEach(it => {
       const { field, label, max, style, text, split } = it
       const l = layoutText(fonts, at(y, it))
+      if (l.length > max) over.push(field)
       if (l.length > max) issues.push({ field, text: `${label} — не больше ${max === 1 ? 'одной строки' : `${max} строк`}` })
+      // A word wider than the column (an email has no spaces to break at) stays on its line and runs past it
+      const past = l.some(line => { const last = line.segs[line.segs.length - 1]; return last.x + advance(fonts[last.font], last.text, style.size).end - x > measure + 0.01 })
+      if (past) {
+        over.push(field)
+        issues.push({ field, text: `${label} шире ${measure / 10} мм` })
+      }
       const font = fonts[style.font]
       const absent = [...new Set([...text.replace(/\s/g, '')].filter(c => !font.hasChar(c)))]
       if (absent.length) issues.push({ field, text: `${label}: нет в шрифте ${absent.map(c => `«${c}»`).join(', ')}` })
@@ -126,14 +143,14 @@ export function buildBlock(fonts: MemoFonts, dealer: Dealer, person: Person): Bl
   // lines, against 6 mm between the lines) comes after the rows the columns share
   // The dealership stands on `BOTTOM` and grows up; the consultant hangs from its top, the dealer's name and the
   // position always on one line
-  const top = column(COLUMNS[0], [
+  const top = column(columns.dealer, [
     ['dealer', 'Название', dealer.name, 1],
     ['dealerPhone', 'Телефон дилера', phone('dealerPhone', dealer.phone), 1],
     ['address', 'Адрес', dealer.address, 3],
     ['dealerEmail', 'Почта дилера', email('dealerEmail', dealer.email), 1],
     ['site', 'Сайт', siteText(dealer.site), 1],
   ])
-  column(COLUMNS[1], [
+  column(columns.person, [
     ['position', 'Должность', person.position, 2],
     // Name and surname on one line, the name first, as the business card has them
     ['name', 'Имя и фамилия', `${oneLine(person.name)} ${oneLine(person.surname)}`.trim(), 1, [oneLine(person.name).length + 1, 'surname']],
@@ -147,7 +164,19 @@ export function buildBlock(fonts: MemoFonts, dealer: Dealer, person: Person): Bl
   // The line too long is the surname's fault too
   for (const i of issues.filter(i => i.field === 'name' && i.text.startsWith('Имя и фамилия'))) issues.push({ ...i, field: 'surname' })
 
-  return { fields, set, issues: issues.filter((v, i) => issues.findIndex(o => o.text === v.text && o.field === v.field) === i) }
+  return { fields, set, over, issues: issues.filter((v, i) => issues.findIndex(o => o.text === v.text && o.field === v.field) === i) }
+}
+
+/**
+ * The whole list's contacts, in one layout for all: six and six, or eight and four where the address takes a third
+ * line in six and every consultant fits in four (the position in two lines, the rest in one)
+ */
+export function buildBlocks(fonts: MemoFonts, dealer: Dealer, people: Person[]): Block[] {
+  const even = people.map(p => buildBlock(fonts, dealer, p))
+  const lines = even[0]?.set.find(s => s.field === 'address')?.lines.length ?? 0
+  if (lines < 3) return even
+  const wide = people.map(p => buildBlock(fonts, dealer, p, true))
+  return wide.every(b => !b.over.some(f => !DEALER_FIELDS.includes(f))) ? wide : even
 }
 
 /** A shape of Figma's pages: a path (or a rounded rectangle) filled black or white, or stroked; `text` marks text outlines */
