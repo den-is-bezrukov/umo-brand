@@ -8,6 +8,8 @@ export type Goal =
   | 'download_livery'
   | 'download_plate_frame'
   | 'download_name_tag'
+  | 'download_owner_memo'
+  | 'download_owner_memo_template'
   | 'download_business_card'
   | 'download_price_tag'
   | 'download_hours_sign'

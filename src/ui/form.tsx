@@ -25,6 +25,7 @@ const GENERATORS = [
   { path: '/name-tag', title: 'Бейдж' },
   { path: '/business-card', title: 'Визитка' },
   { path: '/livery', title: 'Ливрея' },
+  { path: '/memo', title: 'Памятка' },
   { path: '/price-card', title: 'Прайс-карта' },
   { path: '/plate-frame', title: 'Рамка номера' },
   { path: '/hours-sign', title: 'Режимник' },
@@ -46,7 +47,7 @@ const crumb = 'underline decoration-transparent decoration-[0.35px] underline-of
  * name or Esc fold it. Not a menu icon by the crumbs: the generators are an app of their own, where a burger promised the
  * whole app's menu and opened only the generators' list
  */
-export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' | '/price-tag' | '/hours-sign' }) {
+export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' | '/price-tag' | '/hours-sign' | '/memo' }) {
   const [menu, setMenu] = useState(false)
   const toggle = () => { if (!menu) goal('open_menu', { page: location.pathname }); setMenu(!menu) }
   // While it's open the rest of the form and the download step aside (`html[data-menu]` in index.css)

@@ -16,6 +16,7 @@ const NameTag = lazy(() => import('./NameTag'))
 const BusinessCard = lazy(() => import('./BusinessCard'))
 const PriceTag = lazy(() => import('./PriceTag'))
 const HoursSign = lazy(() => import('./HoursSign'))
+const Memo = lazy(() => import('./Memo'))
 // A `pdf=1` link may name the dealer loosely; the page finds it, asking which when there are several
 const LinkDealer = lazy(() => import('./ui/LinkDealer'))
 
@@ -54,6 +55,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <Route path="/price-tag" element={<LinkDealer param="dealer"><PriceTag /></LinkDealer>} />
           <Route path="/editor" element={<Guide />} />
           <Route path="/hours-sign" element={<LinkDealer param="name"><HoursSign /></LinkDealer>} />
+          <Route path="/memo" element={<Memo />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

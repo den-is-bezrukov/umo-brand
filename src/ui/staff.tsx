@@ -1,4 +1,4 @@
-import { useContext, useEffect, useRef, useState } from 'react'
+import { useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { flushSync } from 'react-dom'
 import { InSlide } from '@/ui/phone'
 import { MOD, withMod } from '@/ui/keys'
@@ -445,7 +445,8 @@ export const ITEM_EDGE = 'outline-1 -outline-offset-1 outline-black/10 group-hov
  * «Добавить» under the list: a secondary button as wide as its text («Поделиться»'s edge, 10% and 40% on hover),
  * centred under the items. It was a tile in the item's shape, too large, the price card's above all
  */
-export function AddTile({ onClick }: { onClick: () => void }) {
+/** `children`: what stands beside it, 8 px off (the memo's «Скачать шаблон») */
+export function AddTile({ onClick, children }: { onClick: () => void; children?: ReactNode }) {
   // ⌘↩ (Ctrl+Enter) presses it from anywhere, a field too: one card done, the next one (⌘N is the browser's own)
   const button = useRef<HTMLButtonElement>(null)
   useEffect(() => {
@@ -458,7 +459,7 @@ export function AddTile({ onClick }: { onClick: () => void }) {
     return () => document.removeEventListener('keydown', key)
   }, [])
   return (
-    <div className="flex justify-center">
+    <div className="flex justify-center gap-2">
       <button
         ref={button}
         type="button"
@@ -471,6 +472,7 @@ export function AddTile({ onClick }: { onClick: () => void }) {
         <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden><path d="M7 1V13M1 7H13" stroke="currentColor" strokeWidth="2" /></svg>
         Добавить
       </button>
+      {children}
     </div>
   )
 }
