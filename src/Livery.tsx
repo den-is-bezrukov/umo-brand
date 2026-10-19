@@ -9,6 +9,7 @@ import { DEFAULT_TAGLINE, TAGLINES } from '@/data/taglines'
 import { LIVERIES, SURFACES, withoutQr, smallQr, type Model } from '@/livery/layout'
 import { loadFont, buildSheet, specMarks, toD, mm, type Sheet, type Line } from '@/livery/geometry'
 import { MobileEditor, usePhone } from '@/ui/mobile'
+import { TemplateButton, useTemplateLink } from '@/ui/template'
 
 // Dealer livery generator: lettering for both sides and the rear window of a dealer's demo car (Figma: UMO | Evrone,
 // node 4021:2908). The preview puts the sheets on photos of the car, with the door seam and handle marked, so a
@@ -232,6 +233,18 @@ export default function Livery() {
     }
   }
 
+  /** The editable template: the sheets as on the page */
+  const prefix = model === 'umo8' ? 'UMO8' : 'UMO5'
+  const templateName = `${prefix}_dealer-livery_template.pdf`
+  const makeTemplate = sheets.length ? () => import('@/livery/pdf').then(m => m.liveryTemplate(prefix, sheets)) : undefined
+  /** The blank one a `template` link gives: the model's sheets at their defaults, the rear window too */
+  const makeBlank = font ? () => {
+    const text = { dealer: DEFAULT_TOP, tagline: DEFAULT_TAGLINE[model], url: DEFAULT_URL[model] }
+    const blank = SURFACES.map(id => buildSheet(font, layout[id], text))
+    return import('@/livery/pdf').then(m => m.liveryTemplate(prefix, blank))
+  } : undefined
+  const templateOnly = useTemplateLink(makeBlank, templateName, 'download_livery_template')
+
   // `pdf` in the link (a link made for the dealer) downloads the ZIP once the font is in, the editor staying
   // with the car in it, as the name tag's (a ZIP doesn't open in the browser); sheets at fault only show what's wrong
   const zipStarted = useRef(false)
@@ -320,6 +333,7 @@ export default function Livery() {
         />
   )
 
+  if (templateOnly) return null
   // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
   if (phone) return <MobileEditor slides={sheets.map((s, i) => ({ key: s.surface.id, ratio: s.surface.photo.view[3] / s.surface.photo.view[2], node: <SheetPreview sheet={s} seams={seams} dims={dims} />, label: s.surface.title, reset: i < 2 ? (sidesAtDefaults ? undefined : { onClick: resetSides, label: 'Вернуть борта по умолчанию' }) : (rearAtDefaults ? undefined : { onClick: resetRear, label: 'Вернуть стекло по умолчанию' }) }))} sidebar={sidebar} download={download} />
 
@@ -340,6 +354,10 @@ export default function Livery() {
               <SheetPreview sheet={sheets[2]} seams={seams} dims={dims} onReset={rearAtDefaults ? undefined : resetRear} resetLabel="Вернуть стекло по умолчанию" />
             </div>
           )}
+          {/* «Скачать шаблон» centred under the sheets */}
+          <div className="flex justify-center">
+            <TemplateButton make={makeTemplate} name={templateName} goalId="download_livery_template" />
+          </div>
         </div>
       </main>
 

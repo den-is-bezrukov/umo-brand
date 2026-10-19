@@ -5,6 +5,7 @@ import {
 import { zipSync } from 'fflate'
 import { specMarks, labelCmds, loadFont, type Cmd, type Sheet } from './geometry'
 import type { Surface } from './layout'
+import { embedCoFo, textOps } from '@/ui/liveTextPdf'
 
 const PT = 72 / 25.4
 // The livery colour of the Illustrator sources: rich black, C60 M40 Y40 K100.
@@ -37,6 +38,25 @@ async function cutFile(sheets: Sheet[], title: string): Promise<Uint8Array> {
     fillShapes(page, s.shapes, PT, 0, 0, 'ink')
   }
   return doc.save()
+}
+
+/**
+ * The editable template (`UMO8_dealer-livery_template.pdf`): the decals' pages as in the cut file, the dealer and
+ * tagline live in CoFo Sans (`src/ui/liveTextPdf.ts`), the QR and lettering in outlines; for editing the text only,
+ * the plotter cuts the outlines
+ */
+export async function liveryTemplate(prefix: string, sheets: Sheet[]): Promise<Blob> {
+  const doc = await PDFDocument.create()
+  doc.setTitle(`${prefix}_dealer-livery_template.pdf`)
+  const fonts = await embedCoFo(doc)
+  for (const s of sheets) {
+    const page = doc.addPage([s.surface.w * PT, s.surface.h * PT])
+    const H = page.getHeight()
+    fillShapes(page, s.fixed, PT, 0, 0, 'ink')
+    const lines = [...s.dealer.lines, ...s.tagline.lines].filter(l => !l.extra).map(l => l.live)
+    page.pushOperators(...textOps(page, fonts, lines, (x, y) => [x * PT, H - y * PT], PT, INK))
+  }
+  return new Blob([await doc.save() as BlobPart], { type: 'application/pdf' })
 }
 
 /** The car photo flattened onto its background, as a JPEG the PDF can carry */

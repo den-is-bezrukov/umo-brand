@@ -3,6 +3,7 @@ import QRCode from 'qrcode'
 import { UMO, EIGHT } from './logo'
 import type { Surface, TextBlock, Obstacle, TextPart } from './layout'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
+import { textLine, type TextLine } from '@/ui/liveText'
 
 // Everything on a livery sheet is a filled outline in millimetres: the shapes the plotter cuts. The preview draws them
 // as SVG, the export writes the same commands into the PDF.
@@ -19,6 +20,8 @@ export interface Line {
   issues: string[]
   /** Over the block's line limit: the top lines when the block grows upwards, the bottom ones when it grows down */
   extra: boolean
+  /** The line as text, for the editable template */
+  live: TextLine
 }
 
 export interface TextResult { lines: Line[]; issues: string[] }
@@ -208,11 +211,15 @@ function setText(font: Font, raw: string, block: TextBlock, name: string, surfac
     const width = font.getAdvanceWidth(t.replace(/ /g, ' '), block.size)
     const x = block.align === 'left' ? block.x : block.align === 'center' ? block.x - width / 2 : block.x - width
     const { path, ink } = shape(font, t, x, baseline, block.size)
+    // Each glyph at the pen `getPath` gives it, for the editable template
+    const plain = t.replace(/\u00a0/g, ' ')
+    const pens: number[] = []
+    font.forEachGlyph(plain, x, baseline, block.size, {}, (_g, gx) => { pens.push(gx) })
     const issues: string[] = []
     if (ink.x2 - ink.x1 > block.maxWidth) issues.push(`${name} шире ${block.maxWidth} мм`)
     for (const o of surface.obstacles) if (hits(ink, o, surface.clearance)) issues.push(`${name} задевает ${o.label}`)
     const extra = firstBaseline === undefined ? i < wrapped.length - block.maxLines : i >= block.maxLines
-    return { text: t, cmds: pathCmds(path.commands), ink, issues, extra }
+    return { text: t, cmds: pathCmds(path.commands), ink, issues, extra, live: textLine(font, block.size, baseline, plain, pens) }
   })
   // The lines with an obscene word turn red; a word spaced out across lines turns them all
   if (hasProfanity(text)) {
@@ -292,6 +299,7 @@ export function buildSheet(font: Font, base: Surface, input: { dealer: string | 
     for (const l of [...dealer.lines, ...tagline.lines]) {
       l.cmds = moveCmds(l.cmds, dx, dy)
       l.ink = { ...l.ink, x1: l.ink.x1 + dx, x2: l.ink.x2 + dx, y1: l.ink.y1 + dy, y2: l.ink.y2 + dy }
+      l.live = { ...l.live, baseline: l.live.baseline + dy, chars: l.live.chars.map(c => ({ ...c, x: c.x + dx })) }
     }
     sheetSurface = { ...sized(surface, height, shrink), dims: stackDims(sized(surface, height, shrink), 0, height, !!last) }
   }
