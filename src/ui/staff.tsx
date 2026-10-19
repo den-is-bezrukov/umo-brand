@@ -575,14 +575,14 @@ export function ItemFrame<P extends object>({ staff, item, n, onAdd, extra, chil
       {staff.items.length > 1 && <span aria-hidden className="pointer-events-none pb-[5px] text-center text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1]">{n}</span>}
       {(staff.mode === 'manual' || extra) && (
         <div className={`flex-1 flex-col items-center ${active ? 'flex' : 'hidden'} ${hover}`}>
-          {/* Those always there first, so they never move: template, duplicate; then reset and add; the bin apart, at the
+          {/* Those always there first, so they never move: duplicate, template; then reset and add; the bin apart, at the
               item's bottom edge (right after the rest when the item is too short for the gap) */}
-          {extra}
           {staff.mode === 'manual' && (
             <Action label="Дублировать" keys={`${MOD}D`} onClick={() => staff.duplicate(item.key)}>
               <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M3.5 6H2V14H10V12.5M6 2H14V10H6V2Z" /></svg>
             </Action>
           )}
+          {extra}
           {staff.mode === 'manual' && (
             <>
               <Action label="Сбросить" hidden={staff.isBlank(item)} onClick={() => staff.clear(item.key)}>
