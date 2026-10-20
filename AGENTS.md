@@ -33,7 +33,7 @@ Start with task-relevant files below. Only follow imports or inspect other files
 
 - `src/main.tsx` - React entrypoint and router: `/` → `src/guide/Guide.tsx`, `/price-card` → `src/App.tsx`, `/livery` → `src/Livery.tsx`, `/plate-frame` → `src/PlateFrame.tsx`, `/name-tag` → `src/NameTag.tsx`, `/business-card` → `src/BusinessCard.tsx`, `/price-tag` → `src/PriceTag.tsx`, `/hours-sign` → `src/HoursSign.tsx`, `/memo` → `src/Memo.tsx`, `/editor` → the guide with the Редактор window (every generator) open (all lazy-loaded), anything else redirects to `/`. `MetrikaHits` here sends a Metrika view per page path
 - `src/guide/` - The brand guide (`Guide.tsx`, `UmoLogo.tsx`); UMO Sans, the font tried on it, lives in its own project (`../umo-sans`), not here
-- `src/App.tsx` - The price card generator; its posters in `src/posters/` (`PriceCard.tsx` web preview, `pdf/PriceCardPdf.tsx` PDF, loaded on the first download through `pdf/cardsPdf.tsx`, data from `cardData.ts`)
+- `src/App.tsx` - The price card generator; `src/pricecard/`: the card, its fixed texts and prices (`card.ts`: `CARD`, `TRIMS`, `buildCard`), the A3 PDF (`pdf.ts`), the preview (`CardArt.tsx`). `src/posters/PriceCard.tsx` is the old card, left only for the guide's picture
 - `src/Livery.tsx` - The livery generator; `src/livery/`: surfaces in mm (`layout.ts`: `UMO8`, `UMO5`, `LIVERIES`), outlines (`geometry.ts`), the wordmark with the 8 and the 5 (`logo.ts`), the PDF/zip (`pdf.ts`)
 - `src/PlateFrame.tsx` - The plate frame generator; `src/plate/`: the print strip (`frame.ts`: `STRIP`, `buildStrip`), its PDF (`pdf.ts`), the plate in its frame (`PlateArt.tsx`, also the guide's picture)
 - `src/NameTag.tsx` - The name tag generator; `src/nametag/`: the tag (`tag.ts`: `TAG`, `LOGO`, `buildTag`), the spreadsheet reader (`table.ts`; `xlsxCells` / `pastedCells` and `byHeaders` read any columns, which the other lists use), its zip (`pdf.ts`), the preview (`TagArt.tsx`)
@@ -52,7 +52,7 @@ Start with task-relevant files below. Only follow imports or inspect other files
 
 ## Dependencies
 
-- Runtime: React 19 and React DOM 19; `@react-pdf/renderer` and `pdf-lib` for PDF (`@pdf-lib/fontkit` to embed CoFo Sans in the memo's template), `opentype.js` for text in outlines, `qrcode`, `fflate` for .xlsx and zips, `typograf`
+- Runtime: React 19 and React DOM 19; `pdf-lib` for PDF (`@pdf-lib/fontkit` to embed CoFo Sans in the memo's template), `opentype.js` for text in outlines, `qrcode`, `fflate` for .xlsx and zips, `typograf`
 - Styling: Tailwind CSS v4 with the `@tailwindcss/vite` plugin
 - Build tooling: Vite 8, TypeScript 5.7, and `@vitejs/plugin-react`
 - Formatting: oxfmt

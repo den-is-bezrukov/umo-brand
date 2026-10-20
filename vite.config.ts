@@ -26,14 +26,7 @@ export default defineConfig(({ mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
-        buffer: 'buffer/',
       },
-    },
-    define: {
-      global: 'globalThis',
-    },
-    optimizeDeps: {
-      include: ['@react-pdf/renderer', 'buffer'],
     },
     server: {
       host: '0.0.0.0',

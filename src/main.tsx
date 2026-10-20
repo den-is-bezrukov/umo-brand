@@ -1,6 +1,3 @@
-import { Buffer } from 'buffer'
-if (!globalThis.Buffer) (globalThis as any).Buffer = Buffer
-
 import React, { lazy, Suspense, useEffect } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'

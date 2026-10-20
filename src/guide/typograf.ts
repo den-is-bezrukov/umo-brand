@@ -32,6 +32,13 @@ typograf.disableRule(['common/nbsp/replaceNbsp', 'common/nbsp/nowrap'])
 // Words of up to 3 letters (в, на, для, все…) never end a line: they're tied to the word after them.
 typograf.setSetting('common/nbsp/afterShortWord', 'lengthShortWord', 3)
 
+/**
+ * A paragraph as the guide sets it, for text that isn't in the DOM (the price card's fine print, set in outlines): the
+ * same rules, the last word tied to the one before it. CoFo Sans has no narrow no-break space, so it's a plain one
+ */
+export const typografText = (text: string) =>
+  typograf.execute(text).replace(/ (\S+\s*)$/, `${NBSP}$1`).replace(/\u202f/g, NBSP)
+
 const INLINE = new Set(['A', 'SPAN', 'STRONG', 'EM', 'B', 'I', 'SMALL', 'ABBR', 'CODE', 'SUP', 'SUB'])
 
 /** Whether no text follows `node` up to the end of its block or a line break — the node holds the last line. */
