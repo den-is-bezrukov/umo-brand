@@ -5,7 +5,7 @@ import { logo } from '@/card/card'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { noteLine } from '@/ui/liveText'
 
-// The dealership's hours sign (Figma: UMO | Evrone, node 3819:4211; the source in Yandex Disk `02 UMO/Hours Sign`,
+// The dealership's hours sign (the source in Yandex Disk `02 UMO/Hours Sign`,
 // UMO_hours-sign.pdf): a 480×680 mm plate, the UMO logo at the top, the hours large in the middle with a line under
 // them, and the dealership at the bottom: its marketing name («UMO АГАТ Владимир»), address, phone and site. Figma's frame is 2400×3400, 5 px a
 // millimetre; the margins and the column are sevenths of the width, the logo as wide as the column. All in CoFo Sans

@@ -5,7 +5,7 @@
 export const COBRAND = true
 
 /**
- * UMO with the Y cobrand (Figma 5156:543), in Figma's units: the wordmark 300×60, the lockup 500×100, a unit `--u`
+ * UMO with the Y cobrand, in Figma's units: the wordmark 300×60, the lockup 500×100, a unit `--u`
  * (0.4px by default, so UMO is 24 high). Built of separate HTML layers — the wordmark, the cobrand's clip, the divider
  * and the Y — so the fold moves layers, which Safari runs on the scroll's own thread in step with a finger, where moving
  * parts inside one SVG redrew it on the main thread and lagged (index.css; `setUmoY` without scroll timelines). Folding,

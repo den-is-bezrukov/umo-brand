@@ -15,7 +15,7 @@ import { isPdf, readPdfData } from '@/ui/pdfData'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
 
-// Owner's memo generator (Figma: UMO | Evrone, section 5222:5427): two A4 pages a dealership hands over with a car,
+// Owner's memo generator: two A4 pages a dealership hands over with a car,
 // Figma's but for the contacts at the foot of the second, which are set here: the dealership once for the list, a
 // consultant per memo, as the business card's staff (`useStaff`). «Скачать PDF» gives the memos in outlines,
 // «Скачать шаблон», beside «Добавить», the same with every text live in CoFo Sans, to be edited where the font is.

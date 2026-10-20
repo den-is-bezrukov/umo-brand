@@ -14,7 +14,7 @@ import { linkParams } from '@/ui/share'
 import { recordText } from '@/ui/liveText'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
 
-// Name tag generator (Figma: UMO | Evrone, node 4021:2878): a dealership's staff list in, one zip out with the tags
+// Name tag generator: a dealership's staff list in, one zip out with the tags
 // in outlines, a page each, and the maker's requirements. Two modes: «Вручную», a list typed on the page, and «Из
 // таблицы», the template filled in and loaded as .xlsx (or its rows pasted), shown as it is. Editing it means taking it
 // to «Вручную». Rows copied from a spreadsheet can be pasted into the manual list too.
@@ -275,7 +275,7 @@ export default function NameTag() {
   )
 
   if (templateOnly) return null
-  // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
+  // Phones: the canvas over a sheet with the form (trial)
   if (phone) return <MobileEditor slides={mode === 'table' && !staff.file ? [{ key: 'upload', node: <UploadArea staff={staff} /> }] : items.map((it, i) => ({ key: it.key, item: it.key, label: `${it.person.name} ${it.person.surname}`.replace(/\s+/g, ' ').trim(), ratio: TAG.h / TAG.w, node: renderItem(it, i) }))} onAdd={mode === 'manual' ? addItem : undefined} sidebar={sidebar} download={download} staff={staff} />
 
   return (

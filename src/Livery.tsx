@@ -12,9 +12,9 @@ import { loadFont } from '@/ui/type'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
 
-// Dealer livery generator: lettering for both sides and the rear window of a dealer's demo car (Figma: UMO | Evrone,
-// node 4021:2908). The preview puts the sheets on photos of the car, with the door seam and handle marked, so a
-// dealer name or tagline that would run onto them shows up before the files go to the wrap shop.
+// Dealer livery generator: lettering for both sides and the rear window of a dealer's demo car. The preview puts the sheets on
+// photos of the car, with the door seam and handle marked, so a dealer name or tagline that would run onto them shows
+// up before the files go to the wrap shop.
 
 /** The QR leads to the model's own page unless another link is set, as on the price card */
 const DEFAULT_URL: Record<Model, string> = { umo8: 'https://umo.auto/umo8', umo5: 'https://umo.auto/umo5' }
@@ -335,13 +335,13 @@ export default function Livery() {
   )
 
   if (templateOnly) return null
-  // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
+  // Phones: the canvas over a sheet with the form (trial)
   if (phone) return <MobileEditor slides={sheets.map((s, i) => ({ key: s.surface.id, ratio: s.surface.photo.view[3] / s.surface.photo.view[2], node: <SheetPreview sheet={s} seams={seams} dims={dims} />, label: s.surface.title, reset: i < 2 ? (sidesAtDefaults ? undefined : { onClick: resetSides, label: 'Вернуть борта по умолчанию' }) : (rearAtDefaults ? undefined : { onClick: resetRear, label: 'Вернуть стекло по умолчанию' }) }))} sidebar={sidebar} download={download} />
 
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
 
-      {/* Sidebar per Figma 4900:4588, as the price card's */}
+      {/* Sidebar as the price card's */}
       <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
         {sidebar}
         {download}

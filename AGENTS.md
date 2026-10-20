@@ -11,7 +11,7 @@ This file holds only what every task needs. The details live in `docs/`, one fil
 - `docs/guide.md` — the brand guide: grid and rhythm, chapters, first screen, navigation, downloads, favicon
 - `docs/generators.md` — what all generators share: the form, the phone layout, item lists, links with settings, files dropped back, name checks, obscene words, Metrika goals. Read it for any generator task
 - `BACKLOG.md` — what's parked for later, in Russian; when a task from it is done, remove its line in the same commit
-- `docs/price-card.md`, `docs/livery.md`, `docs/plate-frame.md`, `docs/name-tag.md`, `docs/business-card.md`, `docs/price-tag.md`, `docs/hours-sign.md`, `docs/memo.md` — each generator's layout in mm, its Figma nodes, texts, limits and file
+- `docs/price-card.md`, `docs/livery.md`, `docs/plate-frame.md`, `docs/name-tag.md`, `docs/business-card.md`, `docs/price-tag.md`, `docs/hours-sign.md`, `docs/memo.md` — each generator's layout in mm, its texts, limits and file
 
 ## Development Server
 

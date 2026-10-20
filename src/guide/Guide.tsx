@@ -18,7 +18,7 @@ import { GENERATORS, editTitle } from '@/data/generators'
 import heroMp4 from '@/assets/guide/hero.mp4'
 import hero720Mp4 from '@/assets/guide/hero-720.mp4'
 
-// Figures are exported from Figma (UMO | Evrone, node 4810:686) at 2x and
+// Figures are exported from Figma at 2x and
 // cropped per frame — see "Brand guide" in AGENTS.md for how to refresh them.
 // Vector schemes (clear space, co-branding, type specimens, lettering) are SVG, photos are WebP.
 const images = import.meta.glob<string>('../assets/guide/*.{webp,svg}', { eager: true, import: 'default' })
@@ -27,7 +27,7 @@ const img = (name: string) => images[`../assets/guide/${name}.svg`] ?? images[`.
 type NavItem = { id: string; title: string; children?: NavItem[] }
 
 /**
- * The media of Материалы (Figma 4844:6695, the order since rearranged on the site). A wide picture (2:1 and wider) takes a whole row of
+ * The media of Материалы. A wide picture (2:1 and wider) takes a whole row of
  * the overview grid, narrow ones pair up, and a narrow one moves up next to an unpaired one before it (what CSS
  * `grid-auto-flow: dense` would do). `MEDIA` is that packed order, so the grid and the sidebar's sub-items list the
  * media as they actually stand.
@@ -38,7 +38,7 @@ type Medium = { id: string; to: string; title: string; row: string; w: number; h
 const DRAWN: Medium[] = [
   { id: 'livery', to: '/livery', title: 'Ливрея', row: 'Редактировать ливрею', w: 912, h: 456, picture: <Fig name="livery-umo5" flat="#f6f6f6" w={912} h={456} alt="UMO 5 с ливреей дилера" /> },
   {
-    // Figma 4985:10019: the 210×297 card centred on the 444×333 grey
+    // The 210×297 card centred on the 444×333 grey
     id: 'price-card', to: '/price-card', title: 'Прайс-карта', row: 'Обновить прайс-карту', w: 444, h: 333,
     picture: (
       <div className="flex aspect-4/3 items-center justify-center bg-[#f5f5f5]">
@@ -89,7 +89,7 @@ const DRAWN: Medium[] = [
     ),
   },
   {
-    // Figma 5008:10482: the 261×66 plate in its frame centred on the 444×333 grey
+    // The 261×66 plate in its frame centred on the 444×333 grey
     id: 'plate-frame', to: '/plate-frame', title: 'Рамка номера', row: 'Сделать рамку номера', w: 444, h: 333,
     picture: (
       <div className="flex aspect-4/3 items-center justify-center bg-[#f5f5f5]">
@@ -256,7 +256,7 @@ const NAV_HOVER = 'transition-[color] duration-350 ease-[ease] hover:text-[#8080
 
 /**
  * Links in the page (the quick links, download rows and captions) stay black and get a hairline underline as set in
- * Figma (4865:1061): black at 40%, 2.5% of the type size thick, 25% of it under the baseline, through the descenders.
+ * Black at 40%, 2.5% of the type size thick, 25% of it under the baseline, through the descenders.
  * It shows at once and fades over 0.25s: it's always there, transparent until hovered. `UNDERLINE` is the line;
  * `LINK_HOVER` shows it on the link's own hover, rows show it on the row's (`group-hover`).
  */
@@ -265,7 +265,7 @@ const LINK_HOVER = `${UNDERLINE} hover:decoration-black/40 hover:duration-0`
 
 /**
  * `active`: you're inside this item (medium weight); `current`: its own heading is the one on screen (the bullet).
- * The space between items is the links' own padding (`pad`), not gaps, so the whole list is clickable (Figma 4865:1031).
+ * The space between items is the links' own padding (`pad`), not gaps, so the whole list is clickable.
  */
 /**
  * A chapter title stuck at the top of the sheet's list, 8px under its edge where its text stands as on the first line.
@@ -568,7 +568,7 @@ function useHeroSnap(bodyRef: RefObject<HTMLElement | null>) {
  * Height of the first screen's white strip (`--strip` on the page), from lg. The statement's capitals stand level with
  * the top of the logo (the body's 16px on top plus CoFo Sans's 0.164em above the caps at leading 1 make the logo's 24),
  * and the quick links under it share a line with the toggle row at the bottom of the screen (the row's 20px line starts
- * 24px into its 68), however many lines the statement wraps to (Figma 4893:3846).
+ * 24px into its 68), however many lines the statement wraps to.
  */
 function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObject<HTMLElement | null>, bodyRef: RefObject<HTMLElement | null>) {
   useEffect(() => {
@@ -1289,7 +1289,7 @@ function Constructor({ to, title, label, flush, template, children }: { to: stri
   )
 }
 
-/** The Материалы overview (Figma 4844:6695): each medium's picture right over its ↗ row to the constructor, carrying its anchor; in `MEDIA` order. */
+/** The Материалы overview: each medium's picture right over its ↗ row to the constructor, carrying its anchor; in `MEDIA` order. */
 function Carriers({ items }: { items: typeof MEDIA }) {
   return (
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
@@ -1406,7 +1406,7 @@ const DICTIONARY: Rule[] = [
 ]
 
 /**
- * Коммуникация → Примеры (Figma 5030:11343): the voice as it reads in the brand's own messages — chat-like grey bubbles
+ * Коммуникация → Примеры: the voice as it reads in the brand's own messages — chat-like grey bubbles
  * (round but the top-left corner), photos with a line over them. Three columns from `md`, each a stack; in the
  * middle and right ones the photo takes what's left, so the columns end level. On phones they stack in one column,
  * the photos 3:4.
@@ -1608,8 +1608,7 @@ export default function Guide() {
       {/* The hero is the top of the page: the logo leads here, and it isn't in the contents. On a phone it's the first
           picture, above the header, and covers the header's upward white (z-30). From lg it's fixed behind the page,
           which starts a strip above the bottom of the screen (`--strip`, see useHeroStrip; 252px for a three-line
-          statement), so the first screen shows the logo, the row and the statement, then slides up over the photo
-          (Figma 4893:3846, prototype 4921:2352). */}
+          statement), so the first screen shows the logo, the row and the statement, then slides up over the photo. */}
       <Hero bodyRef={bodyRef} />
 
       <div ref={bodyRef} data-guide-body className="bg-white lg:relative lg:z-10 lg:mt-[calc(100vh-var(--strip,286px))] lg:flex lg:items-start">
@@ -1945,7 +1944,7 @@ export default function Guide() {
                   </Text>
                 </div>
               </Head>
-              {/* Figma 4818:1328: two columns, a scheme over its example; the columns stack below 640 px */}
+              {/* Two columns, a scheme over its example; the columns stack below 640 px */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
                 <div className="group/preview flex flex-col gap-4 md:gap-6">
                   <Zoom label="Схема кобрендинга с квадратным логотипом">

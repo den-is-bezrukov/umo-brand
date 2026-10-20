@@ -9,10 +9,10 @@ import { ChevronIcon } from './icons'
 import { InFoot, InSheet, SheetLayer, FOOT_BG } from './phone'
 import { MOD, withMod, otherLayout } from './keys'
 
-// Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag, business card). Light UI per the Figma layout
-// (UMO | Evrone, nodes 4844:6865 and 4900:4588), matching the brand guide.
+// Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag, business card). Light UI per the Figma layout,
+// matching the brand guide.
 
-/** The tick of checkboxes and of a good link (Figma 4900:4657, 5015:11196): a 2 px stroke with square ends and bevelled corners, as every icon here */
+/** The tick of checkboxes and of a good link: a 2 px stroke with square ends and bevelled corners, as every icon here */
 function Tick({ color = 'black' }: { color?: string }) {
   return (
     <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
@@ -23,17 +23,17 @@ function Tick({ color = 'black' }: { color?: string }) {
 
 
 /**
- * The breadcrumbs underline on hover as the guide's links do (Figma 4865:1061): black at 40%, fading out, 0.35 px (2.5%
+ * The breadcrumbs underline on hover as the guide's links do: black at 40%, fading out, 0.35 px (2.5%
  * of their 14 px). The generators' names don't: they are navigation, as the guide's contents, and only darken
  */
 const crumb = 'underline decoration-transparent decoration-[0.35px] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 hover:decoration-black/40 hover:duration-0'
 
 /**
- * The top of a generator's form, the same on every screen (Figma 5098:5487, the phone's, carried over to wide screens):
+ * The top of a generator's form, the same on every screen (the phone's, carried over to wide screens):
  * the breadcrumbs in Medium, 16 px tall, «Бренд UMO · Редактор материалов», as the guide's quick link names it; the generators' line under them
  * (`GeneratorRing`). «Редактор материалов», the app itself, opens every generator in place, nothing in the row moving
  * (a chevron after it was tried, and only cluttered the row), and the line and everything after it in the form give
- * way to every generator, 24 px Medium 16 px apart, the current one black (Figma 5103:6083). The crumb again, the current
+ * way to every generator, 24 px Medium 16 px apart, the current one black. The crumb again, the current
  * name or Esc fold it. Not a menu icon by the crumbs: the generators are an app of their own, where a burger promised the
  * whole app's menu and opened only the generators' list
  */
@@ -69,7 +69,7 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
   )
 }
 
-/** The breadcrumbs' type: Medium (Regular in Figma 5110:9105), on 16 px lines, with no tracking, as the form's labels */
+/** The breadcrumbs' type: Medium (Regular in Figma), on 16 px lines, with no tracking, as the form's labels */
 const CRUMBS = "text-[14px] font-medium leading-4 tracking-normal [font-feature-settings:'case'_1]"
 
 /**
@@ -144,8 +144,8 @@ export function SegBtn({ active, onClick, disabled, title, children }: { active:
   )
 }
 
-// Spacing per Figma (UMO | Evrone, node 4900:4595): 8 px from a label to its control, labels on 16 px lines (5008:10789;
-// a checkbox's row too, as tall as its box, and the words at the end of a label row), 16 px between groups — the gap
+// Spacing: 8 px from a label to its control, labels on 16 px lines (a
+// checkbox's row too, as tall as its box, and the words at the end of a label row), 16 px between groups — the gap
 // of the column the groups sit in.
 
 /**
@@ -164,7 +164,7 @@ export function Field({ label, children }: { label: string; children: React.Reac
 }
 
 export function Segments({ children }: { children: React.ReactNode }) {
-  // The picked one a white tile edged at 10% on the grey, the others grey text; no hover (Figma 5015:11137)
+  // The picked one a white tile edged at 10% on the grey, the others grey text; no hover
   return <div className="flex rounded-[8px] bg-[#f5f5f5]">{children}</div>
 }
 
@@ -370,7 +370,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
         aria-label={label}
         onMouseDown={e => e.preventDefault()}
         // White, 2 px inside its edge, a soft shadow and no line; rows 8 px round, the pointed one grey, the picked one
-        // medium with a tick (Figma 5015:11234)
+        // medium with a tick
         className="max-h-[288px] overflow-y-auto rounded-[8px] bg-white p-[2px] text-[14px] leading-5 text-black shadow-[0_10px_15px_rgba(0,0,0,0.1)]"
         // The popover's own styles centre it on the screen (inset 0, margin auto): undone here, then put under the field
         style={{
@@ -478,7 +478,7 @@ export function UrlField({ value, onChange }: { value: string; onChange: (v: str
   )
 }
 
-/** A grey 16 px box with a black tick, 8 px from its label (Figma: UMO | Evrone, node 4900:4656), on a native checkbox for keyboard and screen readers */
+/** A grey 16 px box with a black tick, 8 px from its label, on a native checkbox for keyboard and screen readers */
 export function Checkbox({ checked, onChange, children, className = '' }: { checked: boolean; onChange: (v: boolean) => void; children: React.ReactNode; className?: string }) {
   return (
     // In the phone's sheet the row takes a finger's 48 px, 16 px over and under it given back by margins, so it looks as before
@@ -505,7 +505,7 @@ export function OptionalField({ label, on, onChange, extra, children }: { label:
   )
 }
 
-// Grey #808080, black on hover, the icon with it (Figma 5017:11279)
+// Grey #808080, black on hover, the icon with it
 export const rowAction = 'flex shrink-0 cursor-pointer items-center gap-2 text-[14px] leading-4 text-[#808080] transition-colors hover:text-black'
 
 /** Corners for the size switch, on the 16 grid with the ticks' 2 px stroke and square ends: at the outer corners to grow, turned in to shrink */
@@ -520,7 +520,7 @@ function SizeIcon({ grow }: { grow: boolean }) {
 }
 
 /**
- * Size at the end of a field's label row (Figma: UMO | Evrone, node 4900:4662), the same words for the text and the QR,
+ * Size at the end of a field's label row, the same words for the text and the QR,
  * naming what a press does: «Крупнее» while it's small, «Мельче» once it's large, each followed by its corners. Shown only where
  * the other size is available.
  */
@@ -539,7 +539,7 @@ export function SizeSwitch({ large, onChange, label }: { large: boolean; onChang
   )
 }
 
-// Edged at 10%, at 40% on hover (Figma 5015:11171)
+// Edged at 10%, at 40% on hover
 export const outlined = 'flex min-w-16 flex-1 items-center justify-center rounded-[8px] border border-black/10 px-3 py-[9px] in-[[data-sheet]]:py-[13px]! text-[14px] font-medium leading-5 text-black cursor-pointer hover:border-black/40 disabled:cursor-default disabled:text-[#999] disabled:hover:border-black/10'
 
 /** A word the download bar's line says for a moment («В файле нет режимника») */
@@ -548,7 +548,7 @@ const flashes = new Set<(text: string) => void>()
 export const flash = (text: string) => flashes.forEach(f => f(text))
 
 /**
- * «Поделиться» (Figma 4939:3762): sends a link to the file, `pdf=1` added to the page address (the settings are in it),
+ * «Поделиться»: sends a link to the file, `pdf=1` added to the page address (the settings are in it),
  * as it's mostly sent to a dealer, who wants the file, not the editor; with Alt (Option) held the address as it is, the
  * editor with these settings, for the team, the button saying «Ссылка на редактор» while Alt is down. On phones through
  * the system's share sheet, elsewhere copied, the button itself saying what was copied for two seconds. Off while the
@@ -701,7 +701,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
     const t = setTimeout(() => setSaid(''), 2000)
     return () => clearTimeout(t)
   }, [said])
-  // One button, in the phone's sheet (Figma 5098:5806) and on wide screens alike: while the download is off, what's in
+  // One button, in the phone's sheet and on wide screens alike: while the download is off, what's in
   // the way and in which item («Указать имя 3/8»), leading there (the phone's sheet opening first); else the
   // download, «Поделиться» with it. The bright button stays the next step, so it's pressed even unread, and the press
   // teaches what to do (on wide screens a secondary button saying the step stood over a greyed-out download)
@@ -753,7 +753,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
     </div>
   )
   // Wide screens: as far off the form as before (8 + 24 px), sticking to the sidebar's foot on the phones' gradients (`FOOT_BG`), 24 px in
-  // all round, as on phones (Figma 5098:5539); «Поделиться» over the download, as wide, so it has room to say the link
+  // all round, as on phones; «Поделиться» over the download, as wide, so it has room to say the link
   // is copied
   return (
     <div style={{ background: FOOT_BG }} className="sticky bottom-0 z-10 mt-2 flex flex-col gap-2 p-6 tracking-normal">

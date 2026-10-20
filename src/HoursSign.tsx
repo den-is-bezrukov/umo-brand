@@ -15,7 +15,7 @@ import { MobileEditor, usePhone } from '@/ui/mobile'
 import { recordText } from '@/ui/liveText'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
 
-// The dealership's hours sign (Figma: UMO | Evrone, node 3819:4211): a 480×680 mm plate with the logo, the hours, a
+// The dealership's hours sign: a 480×680 mm plate with the logo, the hours, a
 // line under them and the dealership at the bottom, as a PDF in outlines for the maker. A dealer picked from the list
 // puts in its address and hours from umo.auto and its site, all of them edited freely; the phone from the hand-kept list.
 
@@ -387,7 +387,7 @@ export default function HoursSign() {
   )
 
   if (pdfOnly || templateOnly) return null
-  // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
+  // Phones: the canvas over a sheet with the form (trial)
   if (onPhone) return <MobileEditor slides={[{ key: 'sign', label: 'Табличка', ratio: SIGN.h / SIGN.w, node: preview, reset: blank ? undefined : { onClick: reset, label: 'Вернуть табличку по умолчанию' } }]} sidebar={sidebar} download={download} />
 
   return (

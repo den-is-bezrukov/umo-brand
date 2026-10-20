@@ -4,7 +4,7 @@ import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { noteLine } from '@/ui/liveText'
 import { missingChars, oneLine, setLine as setType } from '@/ui/type'
 
-// The print strip of a number plate frame (Figma: UMO | Evrone, node 4970:2419): the 501×21 mm field under the plate of
+// The print strip of a number plate frame: the 501×21 mm field under the plate of
 // a standard 522×132 frame, where the frame maker prints in white on the black plastic. One line of CoFo Sans Medium,
 // 18 mm with −1% tracking and the case-sensitive forms, its capitals 2.5 mm under the top of the field, set from the left edge or centred. The PDF has
 // the field at 1:1 with the text in outlines, no bleed.

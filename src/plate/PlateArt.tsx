@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { STRIP } from './frame'
 
-// The number plate in its frame, as drawn in Figma (UMO | Evrone, node 4970:2287): a 522×132 mm frame round a
+// The number plate in its frame, as drawn in Figma: a 522×132 mm frame round a
 // 520×112 mm plate, У 358 МО 50 RUS. Coordinates are the Figma ones, 1 px = 1 mm, with the frame at (195, 86) on the
 // guide's 912×304 picture, so the paths are those of the SVG export. The strip under the plate is left to `children`.
 

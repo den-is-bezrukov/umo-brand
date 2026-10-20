@@ -327,7 +327,7 @@ export default function App() {
               </Segments>
             </Field>
 
-            {/* The link before the prices, as in Figma 4844:6865 */}
+            {/* The link before the prices */}
             <div data-field="url" className="col-span-full">
               <Field label="Ссылка QR-кода">
                 <UrlField value={card.url} onChange={url => set({ url })} />
@@ -371,7 +371,7 @@ export default function App() {
         />
   )
 
-  // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
+  // Phones: the canvas over a sheet with the form (trial)
   /** A card drawn at a width, on a phone's slide */
   const cardAt = (c: Row<Card>, w: number) => (
     <div className={`overflow-hidden bg-white ${ITEM_EDGE_OVER}`} style={{ width: w, height: Math.round(POSTER_H * w / POSTER_W) }}>
@@ -395,7 +395,7 @@ export default function App() {
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
 
-      {/* ── Sidebar: 320px plus the 1px outside stroke from Figma (4844:6865), which shows only on the right ── */}
+      {/* ── Sidebar: 320px plus the 1px outside stroke, which shows only on the right ── */}
       <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
         {sidebar}
         {download}

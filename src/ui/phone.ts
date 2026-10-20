@@ -19,6 +19,6 @@ export const SheetLayer = createContext<{ el: HTMLElement | null; hidden: number
 export const InFoot = createContext<null | (() => void)>(null)
 /**
  * Under the download, on phones and wide screens alike: a white gradient the form fades under, the whole height, over a
- * second one white by the button's top, 24 px down, so nothing of the form shows through under the button (Figma 5098:5539)
+ * second one white by the button's top, 24 px down, so nothing of the form shows through under the button
  */
 export const FOOT_BG = 'linear-gradient(#fff0, #fff), linear-gradient(#fff0, #fff 24px)'

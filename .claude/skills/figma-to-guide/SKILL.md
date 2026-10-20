@@ -10,7 +10,6 @@ description: Bring a Figma block of the UMO brand guide (file i6PdEDo72Vab0cAixG
 ## 1. Read the node, not just the picture
 
 - `get_screenshot` of the node to see it, `get_metadata` / `use_figma` to walk children for exact x/y/w/h, paddings, strokes and effects (load `/figma-use` before `use_figma`). Take numbers from the nodes; a screenshot hides clipping, half-transparent borders and which side a stroke is on.
-- Note the node id: commit messages and `docs/guide.md` cite it (`Figma 4865:1025`).
 - If the layout disagrees with what's already built, or a number looks off, say so before building. The user sometimes says the mock is wrong («это я ошибся в макете»). Where there's no mock, their numbers are a guess: confirm.
 
 ## 2. Illustrations

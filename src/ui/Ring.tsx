@@ -14,7 +14,7 @@ type Item = { key: string; title: string }
  * still; a tap picks one too. It goes round as the ring did: the items in their order three times over, the current
  * one of the middle copy at the edge, so there's a whole turn to scroll either way; after a pick the line comes back to
  * the middle copy, looking the same, and a turn's worth of scrolling to the same name puts it back there unseen.
- * 24 px Medium, 20 px apart (16 in Figma 5098:5496), the one nearest the edge black as it goes, the rest #bfbfbf;
+ * 24 px Medium, 20 px apart (16 in Figma), the one nearest the edge black as it goes, the rest #bfbfbf;
  * the edges shaded white, so the names run off into it. It stands 24 px out to either side, over its parent's padding
  *
  * `href` makes the names links (the generators, pages of their own); `heading` makes the current one an h1; `focus`
@@ -157,7 +157,7 @@ export default function Ring({ label, items, current, onPick, href, heading, foc
           )
         })}
       </nav>
-      {/* The shades over the edges, as the ring's (Figma 5062:671, 5061:539) */}
+      {/* The shades over the edges, as the ring's */}
       <div aria-hidden className="pointer-events-none absolute -inset-y-2 left-0 w-6" style={{ background: 'linear-gradient(90deg, #ffffff80 25%, #fff0), linear-gradient(90deg, #fff 25%, #fff0)' }} />
       <div aria-hidden className="pointer-events-none absolute -inset-y-2 right-0 w-12" style={{ background: 'linear-gradient(90deg, #fff0, #ffffff80), linear-gradient(90deg, #fff0, #fff)' }} />
     </div>

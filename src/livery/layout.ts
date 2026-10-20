@@ -90,7 +90,7 @@ export interface Surface {
   taglineLarge?: TextBlock
   /**
    * The sheet without the QR, either laid out anew or cut down:
-   * - `layout` (the sides, Figma: UMO | Evrone, node 4920:39): its own lettering, text blocks, size and spec; the sheet
+   * - `layout` (the sides): its own lettering, text blocks, size and spec; the sheet
    *   keeps its front edge on the body, its origin moving `shift` along it;
    * - `cut` (the rear window): the QR's column (the code and the gap after it) is cut out at the `side` it sits on,
    *   the lettering moving into its place; `centre` keeps the narrower sheet centred where the full one was and
@@ -145,7 +145,7 @@ const sideBottom = (w: number, front: 'start' | 'end'): Surface['dims']['cols'] 
     : [{ from: w - 1600, to: 0, ...rest }, { from: 0, to: w, ...sheet }, { from: w, to: w + 125, label: '~125', y }]
 }
 
-// The QR-less side (Figma: UMO | Evrone, node 4920:39): the lettering a third larger, 160 mm, its 1100 mm from the front
+// The QR-less side: the lettering a third larger, 160 mm, its 1100 mm from the front
 // edge making the sheet; the texts as before, the tagline 40 mm in three lines or 60 mm in two, under the lettering.
 const BARE_W = 1100
 const bareLettering = { y: 140, h: 160 }
@@ -370,7 +370,7 @@ export function withoutQr(s: Surface): Surface {
   }
 }
 
-// The small QR (Figma: UMO | Evrone, nodes 4991:10211 for UMO 8, 4985:10180 for UMO 5): the QR-less side with a QR as
+// The small QR: the QR-less side with a QR as
 // tall as its lettering, 160, `SMALL_QR_GAP` behind the model number, at the rear end of the sheet
 const SMALL_QR = 160
 const SMALL_QR_GAP = 100
@@ -432,8 +432,7 @@ export function smallQr(s: Surface): Surface {
 export const SURFACES: SurfaceId[] = ['left', 'right', 'rear']
 
 // ─── UMO 5 ───────────────────────────────────────────────────────────────────
-// Figma: UMO | Evrone, node 3532:454 (the sides with the QR and the rear window) and 4934:3338 (the sides without the
-// QR). Laid out like UMO 8 with its own numbers: the lettering column is 830 (UMO 600, 90, the 5 140), the QR column
+// Laid out like UMO 8 with its own numbers: the lettering column is 830 (UMO 600, 90, the 5 140), the QR column
 // 360 after a 120 gap, so the side is 1310 × 500. Text is 40 mm on 42 mm lines. The car is white, so the side decals
 // are black; on the rear window they stay white.
 
@@ -472,13 +471,13 @@ const side5Qr = (x: number): Surface['dims']['rows'] => [
   { from: 140, to: 500, label: '360', x },
 ]
 
-// Without the QR (node 4934:3338): the lettering 160 high (UMO 800, 100, the 5 186,67), the sheet as wide, the dealer
-// name over its front end, 40 mm in two lines or one centred on them and the tagline under it: 40 mm in three lines (node 4934:3341) or, with
+// Without the QR: the lettering 160 high (UMO 800, 100, the 5 186,67), the sheet as wide, the dealer
+// name over its front end, 40 mm in two lines or one centred on them and the tagline under it: 40 mm in three lines or, with
 // the size switch, 60 mm in two. The sheet keeps its height and moves along the body: on the right side 183,33 back
 // from the front, on the left 40.
 const BARE5_W = 800 + 100 + FIVE.w * (160 / FIVE.h)
 const bare5Lettering = { y: 140, h: 160 }
-// Two lines filling the 80 over the lettering, or one in the middle of them (node 4934:3325)
+// Two lines filling the 80 over the lettering, or one in the middle of them
 const bare5Dealer = { baseline: 74, size: 40, leading: 40, maxWidth: DEALER5_W, maxLines: 2, centred: true }
 const bare5Tagline = { baseline: 486, size: 40, leading: 40, maxWidth: 420, maxLines: 3 }
 const bare5TaglineLarge = { baseline: 483, size: 60, leading: 60, maxWidth: 850, maxLines: 2 }

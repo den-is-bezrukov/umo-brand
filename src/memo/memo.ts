@@ -6,8 +6,8 @@ import { nameFault } from '@/ui/names'
 import { layoutText, glyphRuns, advance, type Line, type MemoFonts, type MemoText } from './text'
 import TEXTS from './texts.json'
 
-// The owner's memo (Figma: UMO | Evrone, section 5222:5427): two A4 pages a dealership hands over with a car. Everything
-// but the contacts at the foot of the second page (5222:6042) is Figma's, taken out by scripts/fetch-memo.mjs into
+// The owner's memo: two A4 pages a dealership hands over with a car. Everything
+// but the contacts at the foot of the second page is Figma's, taken out by scripts/fetch-memo.mjs into
 // src/assets/memo (outlines) and texts.json (the texts, for the template's live text). The contacts are two columns
 // 90 mm apart from 15 mm in and 252 mm down: the dealership (its name, then address, phone, email and site) and the
 // consultant (position, then name, phone and email), the first line CoFo Sans Medium 4,5 mm on 5,985 mm lines, the

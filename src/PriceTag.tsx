@@ -14,7 +14,7 @@ import { linkParams, saveAndOpenPdf } from '@/ui/share'
 import { recordText } from '@/ui/liveText'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
 
-// Price tag generator (Figma: UMO | Evrone, node 4202:4368): price tags for the small goods at a dealership, any
+// Price tag generator: price tags for the small goods at a dealership, any
 // employee printing them on an office printer and cutting them out with scissors. The dealer is set once, the goods typed
 // on the page or loaded from the template; one PDF out, eight tags to an A4 sheet. The list works as the name tag's and
 // the business card's (`useStaff`).
@@ -329,7 +329,7 @@ export default function PriceTag() {
         />
   )
 
-  // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
+  // Phones: the canvas over a sheet with the form (trial)
   if (pdfOnly || templateOnly) return null
   if (phone) return <MobileEditor slides={mode === 'table' && !staff.file ? [{ key: 'upload', node: <UploadArea staff={staff} /> }] : items.map((it, i) => ({ key: it.key, item: it.key, label: it.name.replace(/\s+/g, ' ').trim(), ratio: TAG.h / TAG.w, node: renderItem(it, i) }))} onAdd={mode === 'manual' ? addItem : undefined} sidebar={sidebar} download={download} staff={staff} />
 

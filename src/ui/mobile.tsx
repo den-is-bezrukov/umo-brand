@@ -3,7 +3,7 @@ import { ResetIcon, DuplicateIcon, TrashIcon, PlusIcon, Removed, type Staff } fr
 import { InSlide, InFoot, InSheet, SheetLayer, FOOT_BG } from '@/ui/phone'
 import { addTitle, itemName } from '@/data/generators'
 
-// A trial of the generators' phone layout (Figma 5098:5806, «Mobile Layout»): the canvas over a sheet holding the
+// A trial of the generators' phone layout: the canvas over a sheet holding the
 // sidebar (header and form) with the download at its foot. A list's pictures are swiped one at a time, with a row over
 // them: delete (its place kept empty while «Удаляем · Вернуть» has its own bin), «‹ ↺ n/total ⧉ ›» (a slide that isn't an item: its name), add; one portrait picture has its reset, copy and add in the canvas's top corners instead, a landscape one a row with its name. A tap on
 // a picture that would grow by it, or a swipe down, lowers the sheet to its header (a portrait one: a landscape one is
@@ -27,12 +27,12 @@ export function usePhone() {
 const TURN_MS = 500
 /** The sheet's share of the screen under the picture */
 const HALF_SHARE = 0.6
-/** A picture's inset in the canvas: 10 px of padding and 10 more beside it, over and under it (Figma 5105:8456) */
+/** A picture's inset in the canvas: 10 px of padding and 10 more beside it, over and under it */
 const SIDE = 20
 const INSET = 10
 /** Off the sides with the controls in the canvas's top corners: past them (10 + 30) and 10 more; 30 more with copy and add both in the right one */
 const CORNER = 50
-/** The canvas's padding and its rows' height (Figma 5105:8488) */
+/** The canvas's padding and its rows' height */
 const ROW = 30
 const PAD = 10
 /** A field lifted for typing stands this far under the sheet's top: its group's 24 px padding, label and 12 px to it */
@@ -334,7 +334,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
   /** The row over the picture: a list's, or a removal's «Вернуть» right after the last but one went */
   const row = many || !!staff?.removed
   /** One portrait picture (the price card, the sign) has its reset and copy in the canvas's top corners, no row over it,
-   * so it takes the canvas's height (Figma 5105:8373); a landscape one keeps the row, the corners being over its edge */
+   * so it takes the canvas's height; a landscape one keeps the row, the corners being over its edge */
   const corners = !row && (slide?.ratio ?? 0) > 1
 
   // The page's size, everything laid out by: the page's own box, not the window's (on iOS 26 the page runs on under
@@ -567,7 +567,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
     // the screen's foot over the sheet; clipped, not hidden, so nothing scrolls it (a focused control in the sheet
     // scrolled it by 83 px, the canvas off its place)
     <div ref={root} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchCancel} className="fixed inset-0 overflow-clip bg-[#f5f5f5] font-sans text-black">
-      {/* The canvas, 10 px in (Figma 5105:8488): above the sheet at 60%, the whole screen with the picture alone. The
+      {/* The canvas, 10 px in: above the sheet at 60%, the whole screen with the picture alone. The
           sheet over the whole screen slides over it, leaving it as it is (it shrank under the sheet, the picture refitted
           as it went and jerked) */}
       <div
@@ -575,7 +575,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
         className="relative flex flex-col p-[10px]"
         style={{ height: laidH }}
       >
-      {/* A list's row over the picture (Figma 5105:7604): delete on the left, add on the right, at the row's ends; between
+      {/* A list's row over the picture: delete on the left, add on the right, at the row's ends; between
           them the number between the arrows, the reset before it and copy after it, what acts on the item shown round
           its number (none kept in place: the number and copy centred together while there's nothing to reset); for a
           moment after a removal «Удаляем · Вернуть» in the middle. Over the whole-screen form it's all there is of the
@@ -601,7 +601,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
       )}
 
       {/* One picture: a row over it as a list's, the reset before its name, copy after it, add on the right (in the
-          canvas's top corners over the strip, Figma 5105:8373, they covered a landscape item's edge, and the name stood
+          canvas's top corners over the strip, they covered a landscape item's edge, and the name stood
           in a caption under the picture, unlike a list's) */}
       {/* Only with something in it: empty (a table's upload), it stood over it as a strip of the canvas */}
       {!row && !corners && ((slide?.label && slide.item === undefined) || reset || (staff && current)) && (
@@ -647,7 +647,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
       </div>
 
       {/* The sheet: the sidebar scrolling, 24 px in, as the sidebar on wide screens (Figma has 16; 20 was tried); its top
-          corners 24 px round, as its padding (Figma has none), a shadow over it (Figma 5098:5487). Always as tall as over
+          corners 24 px round, as its padding (Figma has none), a shadow over it. Always as tall as over
           the whole screen and moved down out of it, never resized: a sheet changing its height froze on an iPhone, laying
           the form out on every frame. The form painted within it: iOS drew the generators' line, a scroll of its own, and
           its fades over the sheet's edge */}
@@ -680,7 +680,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
         <div ref={setLayerEl} data-sheet className="absolute inset-0 overflow-hidden rounded-t-[24px] empty:hidden" />
       </div>
 
-      {/* The download over the form's foot, on two white gradients the form fades under (`FOOT_BG`), 24 px in all round (Figma 5098:5539),
+      {/* The download over the form's foot, on two white gradients the form fades under (`FOOT_BG`), 24 px in all round,
           plus the screen's bottom safe area under it (`viewport-fit=cover` in index.html), so it clears the home
           indicator. Tried closer to Safari's bottom tab bar: 16, then on iOS alone 16, 0, 2 and 8 — touching the edge,
           the black button turned Safari 26's bar black, and 24 all round is what the sheet's sides have */}

@@ -556,13 +556,13 @@ export function CaptionReset({ onClick, label = 'Сбросить', extra }: { o
 
 export { DuplicateIcon } from './icons'
 
-/** Delete, a bin (Figma 5105:8492, its outline as exported), the canvas icons' 1 px stroke; on wide screens and phones alike */
+/** Delete, a bin (its outline as exported from Figma), the canvas icons' 1 px stroke; on wide screens and phones alike */
 export const TrashIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" {...ICON} aria-hidden><path d="M3.5 5.5V10.5C3.5 12.3856 3.5 13.3284 4.08579 13.9142C4.67157 14.5 5.61438 14.5 7.5 14.5H8.5C10.3856 14.5 11.3284 14.5 11.9142 13.9142C12.5 13.3284 12.5 12.3856 12.5 10.5V5.5M2.5 3.5H13.5M5.5 3V1.5H10.5V3M9.5 6.5V11.5M6.5 6.5V11.5" /></svg>
 )
 
 
-/** The item's actions (Figma 5030:11424): 30 px buttons (a phone's slide has its own, over the picture), the icon #808080, black on hover, no tile, as the other quiet controls */
+/** The item's actions: 30 px buttons (a phone's slide has its own, over the picture), the icon #808080, black on hover, no tile, as the other quiet controls */
 /** The number of the item whose column an action stands in, while there are several, for its screen readers' name */
 export const ItemNumber = createContext<number | undefined>(undefined)
 
@@ -587,7 +587,7 @@ export function Action({ label, name, keys, hidden, onClick, children }: { label
 
 /**
  * An item on the canvas with its number (from 1, as the table's rows; wide screens only) and its actions in one column
- * to its right (Figma 5030:11397; they were the number left and the actions right, 5008:10960), shown while the pointer is in its row (or the focus in it), on any item, acting on it
+ * to its right (they were the number left and the actions right), shown while the pointer is in its row (or the focus in it), on any item, acting on it
  * without selecting it; with no pointer to hover (touch screens), under the selected one only. The actions: «Дублировать», «Сбросить» (while there's something to
  * empty), «Удалить» (while there's another), the most used and harmless first, then «Добавить», a new item rather than an action on this one, last. A phone's slide
  * shows the item bare, its number and actions in the row over it. An action not offered leaves no gap: the next moves up.
@@ -613,7 +613,7 @@ export function ItemFrame<P extends object>({ staff, item, n, label, onAdd, extr
     <div className="relative">
       {/* The item's own box, a container for what's set in its units (the name tag's corners, text edited in place) */}
       <div className="@container relative">{children}</div>
-      {/* One column right of the item, 8 px off it, from its top (Figma 5030:11397): the number, then the actions. The
+      {/* One column right of the item, 8 px off it, from its top: the number, then the actions. The
           8 px are its own padding, not a margin, so the pointer crossing them stays on the item: an item as wide as
           the canvas (the memo's spread) ends where its figure does, and the actions hid on the way to them */}
       <div className="absolute top-0 bottom-0 left-full flex w-[38px] flex-col items-center pl-2">

@@ -16,7 +16,7 @@ import { linkParams, saveAndOpenPdf } from '@/ui/share'
 import { recordText } from '@/ui/liveText'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
 
-// Business card generator (Figma: UMO | Evrone, section 4021:2849): the dealership set once, its staff typed on the page
+// Business card generator: the dealership set once, its staff typed on the page
 // or loaded from the template, one PDF out with the face and a back per person. The staff list works as the name
 // tag's (`useStaff`); the dealership and the QR are the whole list's.
 
@@ -413,7 +413,7 @@ export default function BusinessCard() {
                       })()}
                     </Labelled>
                     <Labelled label="Телефон">
-                      {/* One field of two parts with no line between them (Figma 5077:45), each 8 px round, so a focused part
+                      {/* One field of two parts with no line between them, each 8 px round, so a focused part
                           is edged on its own. The number is a live mask, set
                           as the card sets it while it's typed, the caret staying after the same digit; a whole one pasted
                           with its extension splits. The extension follows «Доб.», grey, its placeholder and prefix both */}
@@ -478,7 +478,7 @@ export default function BusinessCard() {
         />
   )
 
-  // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
+  // Phones: the canvas over a sheet with the form (trial)
   if (pdfOnly || templateOnly) return null
   if (phone) return <MobileEditor slides={mode === 'table' && !staff.file ? [{ key: 'upload', node: <UploadArea staff={staff} /> }] : [{ key: 'face', number: 0, label: 'Обложка', ratio: CARD.h / CARD.w, node: <div className="outline-1 outline-black/10"><CardArt text={face} /></div> }, ...items.map((p, i) => ({ key: p.key, item: p.key, number: i + 1, label: `${p.name} ${p.surname}`.replace(/\s+/g, ' ').trim(), ratio: CARD.h / CARD.w, node: renderItem(p, i) }))]} onAdd={mode === 'manual' ? addItem : undefined} sidebar={sidebar} download={download} staff={staff} />
 

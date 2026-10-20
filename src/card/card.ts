@@ -6,8 +6,8 @@ import { nameFault } from '@/ui/names'
 import { withListBreak } from '@/data/positions'
 import { noteLine } from '@/ui/liveText'
 
-// A dealership employee's business card (Figma: UMO | Evrone, section 4021:2849): 90×50 mm, two sides. The face
-// (4456:5172) is the UMO logo 40×8 mm in the bottom left corner, the same for everyone. The back (4456:5175) has
+// A dealership employee's business card: 90×50 mm, two sides. The face
+// is the UMO logo 40×8 mm in the bottom left corner, the same for everyone. The back has
 // two blocks within 5 mm margins: the dealership at the top, set once for the whole list — its name in CoFo Sans
 // Medium 4 mm, then «Официальный дилер UMO», the address and the site in Regular 3 mm, with the logo 15×3 mm in the
 // top right corner — and the person at the bottom — name and surname in Medium 4 mm, then position, email and phone

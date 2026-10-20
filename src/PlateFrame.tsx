@@ -13,7 +13,7 @@ import { MobileEditor, usePhone } from '@/ui/mobile'
 import { recordText } from '@/ui/liveText'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
 
-// Number plate frame generator (Figma: UMO | Evrone, node 4970:2419): the dealer's line printed under the plate, as a
+// Number plate frame generator: the dealer's line printed under the plate, as a
 // 501×21 mm PDF with the text in outlines, for the frame maker. The line is the dealer's marketing name as umo.auto
 // lists it («UMO АГАТ Владимир»): the «UMO » is fixed, so only the name is typed or picked from the suggestions.
 // A link with `text` (even empty: /plate-frame?text) opens a hidden mode where the whole line is free, for the odd case
@@ -200,7 +200,7 @@ export default function PlateFrame() {
   )
 
   if (pdfOnly || templateOnly) return null
-  // Phones: the canvas over a sheet with the form (trial, Figma 5098:5806)
+  // Phones: the canvas over a sheet with the form (trial)
   if (phone) return <MobileEditor slides={[{ key: 'frame', label: 'Поле печати', node: preview, reset: blank ? undefined : { onClick: reset, label: 'Вернуть рамку по умолчанию' } }]} sidebar={sidebar} download={download} />
 
   return (

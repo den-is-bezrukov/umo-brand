@@ -5,7 +5,7 @@ import { noteLine } from '@/ui/liveText'
 import { logo } from '@/card/card'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 
-// A price tag for the small goods at a dealership (Figma: UMO | Evrone, node 4202:4368; the Word template in Yandex Disk
+// A price tag for the small goods at a dealership (the Word template in Yandex Disk
 // `02 UMO/Price Tag`): 90×60 mm, a black band 12 mm tall across the top with the UMO logo 15×3 mm, a hairline and the
 // dealer's name in white, then on white the goods' name from the top, its code under it, and at the bottom the price's
 // caption and the price. The layout is fixed, as in Figma: a longer name takes more lines down to the code, never
