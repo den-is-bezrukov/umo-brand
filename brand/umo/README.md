@@ -5,7 +5,6 @@ UMO's site is [umo.autos](https://umo.autos), the brand's own [umo.auto](https:/
 ## Where things come from
 
 - The type: CoFo Sans Regular and Medium (`fonts.ts`, `theme.css`); Alice's mark is Alice Okniks, Denis's own icon font (below).
-- The memo's pages and texts were taken out of its Figma by `scripts/fetch-memo.mjs` (`FIGMA_TOKEN=figd_… node brand/umo/scripts/fetch-memo.mjs`); run it again only after the memo is redesigned in Figma, as it overwrites `assets/memo` and `memo/texts.json`, and review with `git diff`.
 
 ## Dealers
 
