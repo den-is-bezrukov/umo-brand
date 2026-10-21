@@ -43,7 +43,7 @@ export default defineConfig(({ mode }) => {
       port: parseInt(process.env.PORT || '5588'),
       strictPort: true,
       // The check's builds (scripts/check.mjs) would reload the open page
-      watch: { ignored: ['**/.check/**'] },
+      watch: { ignored: ['**/.check.nosync/**'] },
     },
     preview: {
       host: '0.0.0.0',

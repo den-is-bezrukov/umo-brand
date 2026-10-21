@@ -4,15 +4,15 @@
 // from a table, edge cases), saves the files they download, the page text and screenshots on a phone (350×622) and a
 // wide screen. PDFs are compared as pictures of their pages (their bytes carry the date they were made).
 //
-//   node scripts/check.mjs --baseline   the baseline, from the site as it is now (.check/baseline)
-//   node scripts/check.mjs              the site now against it: .check/report.txt, pictures of the differences in .check/diff
+//   node scripts/check.mjs --baseline   the baseline, from the site as it is now (.check.nosync/baseline)
+//   node scripts/check.mjs              the site now against it: .check.nosync/report.txt, pictures of the differences in .check.nosync/diff
 //   BRAND=demo node scripts/check.mjs   … the site built with another brand (a run of its own, no baseline to match)
 //   --only=livery,guide                 just the scenarios whose name starts with these
 //   --compare-only                      the last run compared again, nothing captured
-//   --baseline --baseline-from=87b0d0a  the baseline from that commit's code (a worktree of it in .check), for scenarios
+//   --baseline --baseline-from=87b0d0a  the baseline from that commit's code (a worktree of it in .check.nosync), for scenarios
 //                                       added after the code moved on
 //
-// It builds the site into .check/build and serves it itself (no dev server needed). Needs Chrome (Playwright's
+// It builds the site into .check.nosync/build and serves it itself (no dev server needed). Needs Chrome (Playwright's
 // headless shell when it's there, as it doesn't update itself between runs), pdftoppm and ImageMagick (Homebrew).
 
 import { spawn, execFileSync } from 'node:child_process'
@@ -24,7 +24,7 @@ import zlib from 'node:zlib'
 import { zipSync, unzipSync, strToU8 } from 'fflate'
 
 const ROOT = path.resolve(import.meta.dirname, '..')
-const OUT = path.join(ROOT, '.check')
+const OUT = path.join(ROOT, '.check.nosync')
 const args = process.argv.slice(2)
 const BASELINE = args.includes('--baseline')
 const ONLY = args.find(a => a.startsWith('--only='))?.slice(7).split(',')
