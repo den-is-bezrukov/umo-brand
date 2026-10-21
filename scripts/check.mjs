@@ -153,6 +153,20 @@ const SCENARIOS = [
 
   { name: 'link-dealer/choices', url: `/business-card?${q({ dealer: 'агат', pdf: 1 })}`, phone: true },
 
+  // What a person does by hand: picks, clicks, a downloaded file brought back, the template icon, the phone's contents
+  { name: 'by-hand/guide-toc', url: '/', click: ['Содержание'], phone: true },
+  { name: 'by-hand/price-card-umo8-ultra', url: '/price-card', click: ['UMO 8', 'ULTRA'], download: true },
+  { name: 'by-hand/price-card-template-icon', url: '/price-card?model=umo8', download: 'template' },
+  { name: 'by-hand/livery-umo8', url: '/livery', click: ['UMO 8'], download: true, phone: true },
+  { name: 'by-hand/hours-sign-pick', url: '/hours-sign', fill: [['[data-field="dealer"]', 'агат влад', 'down']], download: true },
+  { name: 'by-hand/business-card-pick', url: `/business-card?${q({ name: 'Анна', surname: 'Иванова', position: 'Менеджер', phone: '+79123456789', email: 'anna@example.ru' })}`, fill: [['[data-field="dealer"]', 'агат влад', 'down']], download: true },
+  { name: 'by-hand/price-tag-pick', url: `/price-tag?${q({ n1: 'Коврики', p1: '4990' })}`, fill: [['Название дилера', 'агат влад', 'down']], download: true },
+  { name: 'by-hand/plate-frame-pick', url: '/plate-frame', fill: [['Центр', 'агат влад', 'down']], download: true },
+  { name: 'by-hand/name-tag-template-icon', url: `/name-tag?${q({ name: 'Анна', surname: 'Иванова', position: 'Менеджер' })}`, download: 'template' },
+  { name: 'by-hand/business-card-back', url: '/business-card', upload: 'business-card/table/files/UMO_business-cards.pdf', download: true },
+  { name: 'by-hand/price-tag-back', url: '/price-tag', upload: 'price-tag/table/files/UMO_price-tags.pdf', download: true },
+  { name: 'by-hand/name-tag-back', url: '/name-tag', upload: 'name-tag/table/files/UMO_name-tags.zip', download: true },
+
   // «Инструкция»: every generator's, and the general one
   ...['price-card', 'livery', 'plate-frame', 'name-tag', 'business-card', 'price-tag', 'hours-sign', 'memo'].map(g => ({ name: `help/${g}`, url: `/${g}?help` })),
   { name: 'help/general', url: '/hours-sign?help=general', phone: true },
@@ -378,17 +392,45 @@ async function capture() {
         } else process.stdout.write('[нет поля файла] ')
       }
       for (const [placeholder, text, pick, nth = 0] of sc.fill ?? []) {
-        const ok = await page.evaluate(`(() => { const el = [...document.querySelectorAll('input, textarea')].filter(e => e.placeholder === ${JSON.stringify(placeholder)})[${nth}]; if (!el) return false; el.focus(); el.select?.(); return true })()`)
+        // A field by its placeholder, or by a selector of what holds it («[data-field="dealer"]»)
+        const find = placeholder.startsWith('[')
+          ? `[...document.querySelectorAll(${JSON.stringify(placeholder)})].map(e => e.querySelector('input, textarea'))`
+          : `[...document.querySelectorAll('input, textarea')].filter(e => e.placeholder === ${JSON.stringify(placeholder)})`
+        const ok = await page.evaluate(`(() => { const el = ${find}[${nth}]; if (!el) return false; el.focus(); el.select?.(); return true })()`)
         if (!ok) { process.stdout.write(`[нет поля «${placeholder}»] `); continue }
         await page.s('Input.insertText', { text })
         await sleep(150)
         if (pick) {
+          // 'down': the first suggestion lit by ↓ first, as a person picks one from what's typed in part
+          if (pick === 'down') {
+            await page.s('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'ArrowDown', code: 'ArrowDown', windowsVirtualKeyCode: 40 })
+            await page.s('Input.dispatchKeyEvent', { type: 'keyUp', key: 'ArrowDown', code: 'ArrowDown', windowsVirtualKeyCode: 40 })
+            await sleep(150)
+          }
           await page.s('Input.dispatchKeyEvent', { type: 'rawKeyDown', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 })
           await page.s('Input.dispatchKeyEvent', { type: 'keyUp', key: 'Enter', code: 'Enter', windowsVirtualKeyCode: 13 })
           await sleep(150)
         }
       }
       if (sc.fill) { await page.evaluate('document.activeElement?.blur()'); await page.idle(400) }
+      // Clicks on buttons and links by their text or screen readers' name, as a person would press them
+      for (const text of sc.click ?? []) {
+        const ok = await page.evaluate(`(() => { const t = ${JSON.stringify(text)}; const el = [...document.querySelectorAll('button, a, [role=tab]')].find(e => e.textContent.trim() === t || e.getAttribute('aria-label') === t); if (!el) return false; el.click(); return true })()`)
+        if (!ok) process.stdout.write(`[нет кнопки «${text}»] `)
+        await page.idle(500)
+        // A click may set the page scrolling smoothly: wait till it stands still
+        await page.evaluate(`new Promise(r => { let y = scrollY, still = 0; const t = setInterval(() => { still = scrollY === y ? still + 1 : 0; y = scrollY; if (still >= 5) { clearInterval(t); r(1) } }, 100) })`)
+      }
+      // A file this run downloaded earlier, dropped back into the generator (its own PDF or ZIP brings the list back)
+      if (sc.upload) {
+        const file = path.join(RUN, sc.upload)
+        await page.evaluate(`[...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Из таблицы')?.click()`)
+        await sleep(300)
+        const { root } = await page.s('DOM.getDocument', { depth: -1, pierce: true })
+        const { nodeId } = await page.s('DOM.querySelector', { nodeId: root.nodeId, selector: 'input[type="file"]' })
+        if (nodeId && fs.existsSync(file)) { await page.s('DOM.setFileInputFiles', { nodeId, files: [file] }); await page.idle(1000) }
+        else process.stdout.write(fs.existsSync(file) ? '[нет поля файла] ' : `[нет файла ${sc.upload}] `)
+      }
       if (sc.guide) await guideShots(page, v, dir, label)
       else {
         await sleep(300)
@@ -399,7 +441,10 @@ async function capture() {
       fs.writeFileSync(path.join(dir, `${label}.txt`), text)
       if (sc.download && label === 'wide') {
         page.events.length = 0
-        const pressed = await page.evaluate(`(() => { const b = [...document.querySelectorAll('button')].find(b => /^Скачать (PDF|ZIP)/.test(b.textContent.trim())); if (!b) return null; b.click(); return b.textContent.trim() })()`)
+        // The download, or the first item's template icon
+        const pressed = await page.evaluate(sc.download === 'template'
+          ? `(() => { const b = document.querySelector('button[data-template]'); if (!b || b.disabled) return null; b.click(); return 'template' })()`
+          : `(() => { const b = [...document.querySelectorAll('button')].find(b => /^Скачать (PDF|ZIP)/.test(b.textContent.trim())); if (!b) return null; b.click(); return b.textContent.trim() })()`)
         if (pressed) {
           const files = await collect(page, downloads, path.join(dir, 'files'), 60000)
           process.stdout.write(files.length ? `[${files.join(', ')}] ` : '[нет файла] ')
