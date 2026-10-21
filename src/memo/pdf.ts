@@ -51,7 +51,7 @@ function shapeContent(s: Shape): string {
 
 /**
  * Shapes drawn once into a form XObject, compressed (pdf-lib leaves page contents as they are: a page of Figma's
- * outlines was 1,7 MB), placed on every page that has them
+ * outlines is 1,7 MB), placed on every page that has them
  */
 function shared(doc: PDFDocument, shapes: Shape[]): PDFRef {
   const content = shapes.map(shapeContent).join('\n')

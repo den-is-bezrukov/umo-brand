@@ -28,7 +28,7 @@ const Y0 = (PAGE.h - ROWS * TAG.h) / 2
 
 const BLACK: [number, number, number, number] = [0, 0, 0, 1]
 const WHITE: [number, number, number, number] = [0, 0, 0, 0]
-/** The cut lines: K25 (#BFBFBF), light, so a hair of one left on a tag's edge doesn't show, yet printed by an office printer (K10 and K20 were too faint) */
+/** The cut lines: K25 (#BFBFBF), light, so a hair of one left on a tag's edge doesn't show, yet printed by an office printer (K10 and K20 are too faint) */
 const LINE: [number, number, number, number] = [0, 0, 0, 0.25]
 
 function pathOps(cmds: Cmd[], dx: number, dy: number): PDFOperator[] {

@@ -246,7 +246,7 @@ export default function PriceTag() {
         <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
           <GeneratorHeader current="/price-tag" />
 
-          {/* The form under the header in one rhythm, 16 px apart as any fields (the list's «Данные» stood 24 off the person's fields) */}
+          {/* The form under the header in one rhythm, 16 px apart as any fields */}
           <div className="flex flex-col gap-4">
           {/* The dealer first: the whole list's, set once */}
           <div ref={dealerField} className="group/field flex flex-col gap-3 tracking-normal">
@@ -363,8 +363,8 @@ export default function PriceTag() {
 
 /**
  * The price, one field with the kopecks it doesn't have yet shown after it in grey: «1 290» reads «1 290,00», «1 290,5»
- * reads «1 290,50», so it's plain there are kopecks without typing them (a field of two parts, roubles and kopecks, as
- * the business card's phone, was tried). The grey tail is a copy of the text laid under the field, transparent but for
+ * reads «1 290,50», so it's plain there are kopecks without typing them (not two parts, roubles and kopecks, as the
+ * business card's phone). The grey tail is a copy of the text laid under the field, transparent but for
  * the tail, in the same type and padding
  */
 function PriceField({ value, onChange, invalid }: { value: string; onChange: (v: string) => void; invalid?: boolean }) {

@@ -59,7 +59,7 @@ interface Photo {
   px: { w: number; h: number }
 }
 
-// The photos are cut to the band and 3 mm (21.2 px) round it, at their own resolution (Figma's boxes were larger:
+// The photos are cut to the band and 3 mm (21.2 px) round it, at their own resolution (Figma's boxes are larger:
 // UMO 8 Max (−30, −350) 2560×1440, Ultra (−200, −330) 2400×1200, UMO 5 (−30, −350) 2250×1181); the boxes are the cut's
 // UMO 5 Max is cut 3 px lower than Pro, so its car, that much lower in the photo, stands where Pro's does
 const UMO5_BOX = { x: -21.76, y: -21.52, w: 2143.43, h: 763 }

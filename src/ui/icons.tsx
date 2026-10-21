@@ -1,8 +1,7 @@
 /**
  * The generators' quiet icons' stroke: 1 px, finer than the sidebar's 2 px icons, as the item's action column stands
  * quietly beside it; `staff.tsx` draws its icons with it. Here, apart, what's used outside the lists.
- * The pointer goes through them to their button: Chrome showed no `title` over an SVG inside a button, so no icon on
- * the canvas had its tooltip
+ * The pointer goes through them to their button: Chrome shows no `title` over an SVG inside a button
  */
 export const ICON = { fill: 'none', stroke: 'currentColor', strokeWidth: 1, strokeLinecap: 'square' as const, strokeLinejoin: 'bevel' as const, pointerEvents: 'none' as const }
 

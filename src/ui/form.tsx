@@ -32,10 +32,10 @@ const crumb = 'underline decoration-transparent decoration-[0.35px] underline-of
  * The top of a generator's form, the same on every screen (the phone's, carried over to wide screens):
  * the breadcrumbs in Medium, 16 px tall, «Бренд UMO · Редактор материалов», as the guide's quick link names it; the generators' line under them
  * (`GeneratorRing`). «Редактор материалов», the app itself, opens every generator in place, nothing in the row moving
- * (a chevron after it was tried, and only cluttered the row), and the line and everything after it in the form give
+ * (no chevron after it: it only clutters the row), and the line and everything after it in the form give
  * way to every generator, 24 px Medium 16 px apart, the current one black. The crumb again, the current
- * name or Esc fold it. Not a menu icon by the crumbs: the generators are an app of their own, where a burger promised the
- * whole app's menu and opened only the generators' list
+ * name or Esc fold it. Not a menu icon by the crumbs: the generators are an app of their own, where a burger promises the
+ * whole app's menu and opens only the generators' list
  */
 export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' | '/price-tag' | '/hours-sign' | '/memo' }) {
   const [menu, setMenu] = useState(false)
@@ -75,7 +75,7 @@ const CRUMBS = "text-[14px] font-medium leading-4 tracking-normal [font-feature-
 /**
  * The breadcrumbs, set apart from the form's tighter tracking so they don't shift when the list opens: the way back to
  * the guide (UMO's logo leads to umo.auto, so it isn't here) and Редактор материалов, the app itself, which shows
- * every generator (Материалы, the guide's chapter, stood between them)
+ * every generator (not Материалы, the guide's chapter, between them)
  */
 function PhoneCrumbs({ open, onEditor }: { open: boolean; onEditor: () => void }) {
   return (
@@ -262,7 +262,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
   const shown = all || !typed || hit || !matching.length ? options : matching
   const id = useId()
   // In the phone's sheet the list is a screen of its own, as a search: the field over it with «Готово», the list filling
-  // the rest, within the sheet as it stands (it was over the whole screen, wider and taller than the sheet). It opens
+  // the rest, within the sheet as it stands. It opens
   // with no keyboard, the list in full view for a pick; a tap on its field brings the keyboard to type, the sheet going
   // over the whole screen with it as for any field
   const inSheet = !!useContext(InSheet)
@@ -274,7 +274,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
     setScreen(true)
   }
   const closeScreen = () => { setScreen(false); setAll(false) }
-  // A tap over the sheet (the picture) closes it, as «Готово», and does nothing else there (it lowered the sheet); a drag
+  // A tap over the sheet (the picture) closes it, as «Готово», and does nothing else there; a drag
   // there still takes the sheet, as its click goes nowhere
   useEffect(() => {
     const sheet = layer.el?.parentElement
@@ -398,7 +398,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
       </div>
       {screen && layer.el && createPortal(
         <div role="dialog" aria-label={label} data-combo className="absolute inset-0 flex flex-col bg-white font-sans text-black" style={{ paddingBottom: layer.hidden }}>
-          {/* «Готово» in the field, where the closed one has its chevron (it stood after the field) */}
+          {/* «Готово» in the field, where the closed one has its chevron */}
           <div ref={screenField} className="relative shrink-0 px-6 pt-6 pb-2">
             <TextArea
               value={value}
@@ -552,8 +552,8 @@ export const flash = (text: string) => flashes.forEach(f => f(text))
  * as it's mostly sent to a dealer, who wants the file, not the editor; with Alt (Option) held the address as it is, the
  * editor with these settings, for the team, the button saying «Ссылка на редактор» while Alt is down. On phones through
  * the system's share sheet, elsewhere copied, the button itself saying what was copied for two seconds. Off while the
- * result isn't ready (`incomplete`, as «Скачать»): a link is sent for what it makes, not a draft. «Сбросить» stood beside
- * it until resets moved onto the canvas, by what they reset
+ * result isn't ready (`incomplete`, as «Скачать»): a link is sent for what it makes, not a draft. «Сбросить» isn't beside
+ * it: resets are on the canvas, by what they reset
  */
 /**
  * Sends the link: on phones through the system's share sheet (the chat a link goes to in a tap or two, «Скопировать»
@@ -584,7 +584,7 @@ const sendable = (files: File[]) => (navigator.canShare({ files }) ? files : nav
 
 /**
  * The file itself where the browser can send one (phones, Safari, Chrome): made ahead, a moment after the settings
- * last changed, as the share sheet opens only straight from the click (Safari refused it after the second the PDF
+ * last changed, as the share sheet opens only straight from the click (Safari refuses it after the second the PDF
  * takes); none while it's being made or can't be sent (a ZIP), when the link goes as before
  */
 function useReadyFile(make: (() => Promise<File | File[]>) | undefined, off: boolean) {
@@ -659,23 +659,21 @@ export function LinkButtons({ incomplete, file: make, fileOnly }: {
 /**
  * The empty fields said in the download button, in the form's order, as what to do there, in the infinitive, a
  * button's verb («Выбрать дилера», «Указать цену»), going on as they're filled in. A wholly empty form says its first
- * field too: it's the first step (it said «Не хватает данных» while the fields were said as states, «Дилер не выбран»;
- * then every one was «Нужно …», then imperative, «Добавьте…», then the first with «Нужно» for the context)
+ * field too: it's the first step (not «Не хватает данных»)
  */
 export const unfilled = (said: string[]) => said[0]
 
 /**
  * Which item the note over the download is about, after it: «3/8», its number (as beside it in the list) of all; none
- * for one item or a note about what they share (the dealer). It was «1/5», the first of all the empty and wrong fields
- * left, which never moved on and read as a stuck progress
+ * for one item or a note about what they share (the dealer). Not «1/5», the first of all the empty and wrong fields
+ * left, which never moves on and reads as a stuck progress
  */
 export const itemOf = (index: number, total: number) => (total > 1 && index >= 0 ? `${index + 1}/${total}` : undefined)
 
 /**
  * The download, at the foot of the sidebar (in the phone's sheet): one black button saying the next step while
  * something's in the way («Указать имя 3/8», «Цена слишком низкая») and leading there, «Скачать PDF» once nothing
- * is. It was always «Скачать», greyed out, with a secondary button over it saying the step (and before that a black
- * line, under the button for a while)
+ * is. Not a greyed-out «Скачать» with the step said apart from it
  */
 export function DownloadBar({ format, onClick, busy, disabled, note, count, onNote, links }: {
   format: 'PDF' | 'ZIP'
@@ -704,7 +702,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   // One button, in the phone's sheet and on wide screens alike: while the download is off, what's in
   // the way and in which item («Указать имя 3/8»), leading there (the phone's sheet opening first); else the
   // download, «Поделиться» with it. The bright button stays the next step, so it's pressed even unread, and the press
-  // teaches what to do (on wide screens a secondary button saying the step stood over a greyed-out download)
+  // teaches what to do
   const foot = useContext(InFoot)
   // ⌘S presses it, as «Скачать» or the step in the way (the browser would save the page's HTML); the first bar to hear
   // it takes it, should a page hold two
@@ -727,8 +725,8 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
       type="button"
       title={lead || busy || said ? undefined : `Скачать ${format} ${MOD}S`}
       aria-keyshortcuts={MOD === '⌘' ? 'Meta+S' : 'Control+S'}
-      // The field focused in the tap itself: iOS raises the keyboard only for a focus within the gesture (it was 350 ms later,
-      // after the sheet opened, and the field only lit up)
+      // The field focused in the tap itself: iOS raises the keyboard only for a focus within the gesture (focused after the sheet
+      // opens, the field only lights up)
       onClick={leads ? () => { foot?.(); onNote!() } : onClick}
       disabled={busy || (disabled && !leads)}
       className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] in-[[data-sheet]]:py-[14px]! text-[14px] leading-5 hover:enabled:bg-[#333] disabled:cursor-default
@@ -744,8 +742,8 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
         : busy ? 'Генерация…' : `Скачать ${format}`)}
     </button>
   )
-  // Phones: «Поделиться» right of the download, half each, once the download is on (tried: an icon left of the
-  // download, «Поделиться» left of it, as wide as its word on the right)
+  // Phones: «Поделиться» right of the download, half each, once the download is on (not an icon,
+  // not on its left)
   if (foot) return (
     <div className="grid auto-cols-fr grid-flow-col gap-2">
       {main}

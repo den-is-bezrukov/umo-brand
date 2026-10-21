@@ -54,9 +54,9 @@ const sameCard = (a: Card, b: Card) => (Object.keys(b) as (keyof Card)[]).every(
 const MAX_CARDS = 20
 
 /**
- * The cards the page was opened with. The first card's settings have no suffix, as links from when there was one card;
+ * The cards the page was opened with. The first card's settings have no suffix, so links made for a single card open as they are;
  * the next ones carry their number (`model2`, `legal3`), and `cards` says how many there are. `full`, seven digits,
- * is the full cost (old links' `credit` is left)
+ * is the full cost (a `credit` in a link is ignored)
  */
 function fromLink(): Card[] {
   const link = linkParams()
@@ -184,7 +184,7 @@ export default function App() {
     ...Object.fromEntries(items.flatMap((c, i) => {
       const n = i === 0 ? '' : String(i + 1)
       return [
-        // UMO 5 by default (it was UMO 8, so links from then without `model` now open UMO 5)
+        // UMO 5 by default, so a link without `model` opens UMO 5
         [`model${n}`, c.model === 'umo5' ? null : c.model],
         [`trim${n}`, c.trim === TRIMS[c.model][0] ? null : c.trim],
         [`full${n}`, c.fullSet ? c.full.replace(/\D/g, '') : null],
@@ -199,7 +199,7 @@ export default function App() {
   const arts = useMemo(() => new Map(fonts ? items.map(c => [c.key, artOf(fonts, c)]) : []), [fonts, items])
   const [exporting, setExporting] = useState(false)
   const phone = usePhone()
-  // The cards' width on the canvas: each card fits its height, as the one card did (phones draw it at their slide's width)
+  // The cards' width on the canvas: each card fits its height (phones draw it at their slide's width)
   const [cardW, setCardW] = useState(0)
 
   useEffect(() => {

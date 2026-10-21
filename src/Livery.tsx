@@ -136,7 +136,7 @@ export default function Livery() {
   // The rear window's own slogan, once edited apart from the sides'
   const ownRearOn = on.rear && on.tagline && on.rearTagline && rearTagline !== undefined && rearTagline !== tagline
   useLinkState({
-    // UMO 5 by default (it was UMO 8, so links from then without `model` now open UMO 5)
+    // UMO 5 by default, so a link without `model` opens UMO 5
     model: model === 'umo5' ? null : model,
     link: url.trim() === DEFAULT_URL[model] ? null : url.trim(),
     top: dealer === DEFAULT_TOP ? null : dealer,
@@ -237,7 +237,7 @@ export default function Livery() {
   const prefix = model === 'umo8' ? 'UMO8' : 'UMO5'
   const templateName = `${prefix}_dealer-livery_template.pdf`
   /** The editable template, the icon's and a `template` link's alike: the model's sheets at their defaults, the rear
-   * window too, whatever's typed or switched off on the page (it was the sheets as on the page, without the window) */
+   * window too, whatever's typed or switched off on the page */
   const makeBlank = font ? () => {
     const text = { dealer: DEFAULT_TOP, tagline: DEFAULT_TAGLINE[model], url: DEFAULT_URL[model] }
     const blank = SURFACES.map(id => buildSheet(font, layout[id], text))

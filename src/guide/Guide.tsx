@@ -32,8 +32,8 @@ type NavItem = { id: string; title: string; children?: NavItem[] }
  * `grid-auto-flow: dense` would do). `MEDIA` is that packed order, so the grid and the sidebar's sub-items list the
  * media as they actually stand.
  */
-// `row`: the ↗ row under the picture, named for what a dealer does there, so it reads as a tool to click into (it was
-// the medium's name alone, as the contents list it, then «Редактор ливреи»…)
+// `row`: the ↗ row under the picture, named for what a dealer does there, so it reads as a tool to click into (not
+// the medium's name alone, as the contents list it)
 type Medium = { id: string; to: string; title: string; row: string; w: number; h: number; picture: ReactNode }
 const DRAWN: Medium[] = [
   { id: 'livery', to: '/livery', title: 'Ливрея', row: 'Редактировать ливрею', w: 912, h: 456, picture: <Fig name="livery-umo5" flat="#f6f6f6" w={912} h={456} alt="UMO 5 с ливреей дилера" /> },
@@ -680,8 +680,8 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
  * Below lg the quick links, as on wide screens, stand in the bottom bar beside the menu icon (on any phone: «Платформа»
  * without «бренда» under 420px, where it wouldn't fit), spaced as its edges (16px, from md 24), in
  * place of their own line under the statement, which leaves the film more of the first screen. They stand there until
- * the first section's heading is lit, and the section's name takes their place at once (they faded out over the first
- * 160px of scroll, leaving the bar a stretch with the icon alone).
+ * the first section's heading is lit, and the section's name takes their place at once (not a fade over the first
+ * 160px of scroll, which leaves the bar a stretch with the icon alone).
  */
 /**
  * A quick link's tap area in the bar: the bar's whole height (its 16px over and under, 24 from md) and half the gap to
@@ -696,7 +696,7 @@ function BarLinks() {
     // 16px over and under (24 from md) kept in the scroller so the links' tap areas aren't clipped
     <nav aria-label="Быстрые ссылки" className="relative -my-4 -mr-4 -ml-2 flex min-w-0 gap-x-4 overflow-x-auto overscroll-x-contain py-4 pr-4 whitespace-nowrap [scrollbar-width:none] md:-my-6 md:-mr-6 md:-ml-4 md:gap-x-6 md:py-6 md:pr-6 [&::-webkit-scrollbar]:hidden">
       <a href="#brand" className={`${BAR_LINK} ${LINK_HOVER}`}>Платформа бренда</a>
-      {/* Not under 380px, where the three and the icon don't fit the bar (it scrolled sideways, «Редактор» cut off) */}
+      {/* Not under 380px, where the three and the icon don't fit the bar (it scrolls sideways, «Редактор» cut off) */}
       <a href="#materials" className={`${BAR_LINK} ${LINK_HOVER} max-[379px]:hidden`}>Материалы</a>
       <Link to="/editor" className={`${BAR_LINK} ${LINK_HOVER}`}>Редактор</Link>
     </nav>
@@ -736,7 +736,7 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, list: RefO
     return {
       bar, dim, sheet, place,
       // The list scrolled to the chapter you're reading, as the sheet comes into view: its title at the top, standing
-      // as the first chapter's does (the chapter before it showed a cut-off tail above when the item was centred), or,
+      // as the first chapter's does (centred, it shows the chapter before as a cut-off tail above), or,
       // where the chapter runs past the sheet before the item you're at, that item in the middle.
       reveal: () => {
         const el = list.current
@@ -949,7 +949,7 @@ const isWidePhoto = (name: string, w: number, h: number) => w / h >= 2 && !img(n
 
 /**
  * One exported Figma frame. `w`/`h` are the frame's 1x size in the 1440px layout and set the aspect ratio. Below 640 px
- * (`sm`; it was `md`) a landscape photo (`isWidePhoto`) is cropped to 4:3, as a 2:1 strip 343px wide is too thin; `focus` is the crop's
+ * (`sm`) a landscape photo (`isWidePhoto`) is cropped to 4:3, as a 2:1 strip 343px wide is too thin; `focus` is the crop's
  * horizontal point in % (default the centre). An object on a flat background (`flat`, that background's colour) isn't
  * cropped — it is fitted into the 4:3 frame whole, the frame filled with its colour. `href` makes the whole figure a download link, its caption led by ↓
  * like the rows of `Assets`.
@@ -1125,7 +1125,7 @@ function PriceCardPreview({ variant, fullPrice, creditPrice, image, alt }: {
  * A file from public/downloads/, its row named in Russian by `label` (the file's own name, as saved, stays English), a
  * page of this site (its title and path), or a file a generator makes, `t` the link that makes it (a blank template:
  * `?t`), named by `label` («Шаблон режимника»). `also`: the same item in other formats, on the right of its row after
- * the file's own: the row downloads the vector, its PNG the PNG («Логотип UMO  SVG  PNG»; they were a row each). A page's
+ * the file's own: the row downloads the vector, its PNG the PNG («Логотип UMO  SVG  PNG»). A page's
  * `verb`, if any, stands on its right in place of its path, `template` a PDF link after it («Указать часы работы  PDF»: the
  * row opens the constructor, named by what's done there, the template second to it; `download`, the name while the PDF is
  * pointed at, «Шаблон визитки»)
@@ -1355,8 +1355,8 @@ function useWide() {
 
 /**
  * The constructors as the window and the phone's sheet list them: each opens in a tab of its own, the guide staying
- * where it was; pointed at, the name gets the page links' hairline underline and a ↗ after it, 8 px off (it turned grey,
- * as the contents do)
+ * where it was; pointed at, the name gets the page links' hairline underline and a ↗ after it, 8 px off (not grey,
+ * as the contents)
  */
 function EditorLinks() {
   return GENERATORS.map(m => (
@@ -1476,11 +1476,11 @@ const MISUSE: [string, string][] = [
 ]
 
 function Dictionary({ rows }: { rows: Rule[] }) {
-  // Fixed tracks: each row is a grid of its own, and with plain 1fr a long unbreakable phrase widened its column in
-  // its row only, so the columns jumped from row to row
+  // Fixed tracks: each row is a grid of its own, and with plain 1fr a long unbreakable phrase widens its column in
+  // its row only, so the columns jump from row to row
   const cols = 'md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)]'
   // A list breaks after its commas: as separate text nodes, the typograph doesn't tie its last item to the one before
-  // («Инновационный, революционный» was one unbreakable line, wider than its column)
+  // (else «Инновационный, революционный» is one unbreakable line, wider than its column)
   const list = (s: ReactNode) => (typeof s === 'string' ? s.split(/(?<=, )/) : s)
   const mark = (m: string) => <span className="w-[30px] [font-feature-settings:'case'_1]">{m}</span>
   return (
@@ -1647,8 +1647,8 @@ export default function Guide() {
             its bottom: iOS 26 Safari draws the page under its floating toolbar, and while that slides the bar's bottom
             edge lets the page show through. The white below and the list above both overlap the bar by 2px, so no seam
             opens on a fractional pixel. */}
-        {/* A white border as tall as the bar runs on under it, past the screen's bottom, where the page showed through
-            under iOS 26 Safari's floating toolbar as it slid. */}
+        {/* A white border as tall as the bar runs on under it, past the screen's bottom, where the page would show through
+            under iOS 26 Safari's floating toolbar as it slides. */}
         <div className="fixed inset-x-0 -bottom-[52px] z-40 border-b-[52px] border-white md:-bottom-[68px] md:border-b-[68px]">
           <div ref={toc.sheet} inert={!menuOpen || undefined} className={`invisible absolute inset-x-0 bottom-[calc(100%-2px)] flex flex-col overflow-hidden rounded-t-2xl bg-white ${sheetEditor ? 'max-h-[calc(80dvh-52px)] md:max-h-[calc(80dvh-68px)]' : 'h-(--toc-h)'}`}>
             {/* The list's top padding is inside it, so a stuck title is measured from the sheet's edge in every browser. */}
@@ -1778,7 +1778,7 @@ export default function Guide() {
             <Section>
               <Head>
                 <H2 id="descriptors">Дескрипторы</H2>
-                {/* One text in two columns, as Имена (it had a heading per brand and models) */}
+                {/* One text in two columns, as Имена */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
                   <Text>
                     <p>Дескриптор поясняет имя и, в отличие от слогана, не меняется от кампании к кампании.</p>
@@ -2126,7 +2126,7 @@ export default function Guide() {
             */}
           </Chapter>
 
-          {/* ── Материалы ── (they were Носители) */}
+          {/* ── Материалы ── */}
           <Chapter id="materials" title="Материалы">
             <Section>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">

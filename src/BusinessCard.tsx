@@ -332,7 +332,7 @@ export default function BusinessCard() {
         <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
           <GeneratorHeader current="/business-card" />
 
-          {/* The form under the header in one rhythm, 16 px apart as any fields (the list's «Данные» stood 24 off the person's fields) */}
+          {/* The form under the header in one rhythm, 16 px apart as any fields */}
           <div className="flex flex-col gap-4">
           <Labelled label="Данные">
             {/* The table mode's template (then its file) right under the switch, 8 px off it, as a pair: the mode's first step */}
@@ -451,7 +451,7 @@ export default function BusinessCard() {
             })()}
 
 
-            {/* The whole file's, in the form's rhythm (24 px more, setting them apart, read as a slip) */}
+            {/* The whole file's, in the form's rhythm (not 24 px more: set apart, they read as a slip) */}
             <div className="flex flex-col gap-4">
               {/* With one card the face goes once either way */}
               {items.length > 1 && <Checkbox checked={faceEach} onChange={setFaceEach}>Обложка у всех</Checkbox>}

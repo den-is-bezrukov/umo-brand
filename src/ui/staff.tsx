@@ -149,7 +149,7 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
   /** Each item's row on the canvas, to scroll to */
   const figures = useRef(new Map<number, HTMLElement>())
   /**
-   * The item to the middle of the canvas. The first and the last ones had no room over or under them to get there, so
+   * The item to the middle of the canvas. The first and the last ones have no room over or under them to get there, so
    * the canvas grows at its top or foot by just what's missing, nothing more, so there's no scrolling off into the empty
    * (and gives it back once a middle one is centred, or none is selected). The list doesn't jump as it grows or shrinks:
    * the scroll makes up for it where it can, and what's left glides back into place
@@ -203,7 +203,7 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
 
   // Going to an item with an error: select it for editing and bring it into view, its first field at fault taking the
   // focus once the errors show. Rendered at once (flushSync) and focused in the tap itself: iOS raises the keyboard
-  // only for a focus within the gesture (it came a tick later, and the field only lit up)
+  // only for a focus within the gesture (a tick later, the field only lights up)
   const goTo = (key: number) => {
     flushSync(() => {
       setSelected(key)
@@ -213,7 +213,7 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
     const wide = matchMedia('(min-width: 768px)').matches
     if (wide) centreOn(key)
     // On phones a plain focus, so the browser brings the field above the keyboard as it does for a tap (scrolled by
-    // script to the middle before the keyboard was up, it ended under it)
+    // script to the middle before the keyboard is up, it ends under it)
     form.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus(wide ? { preventScroll: true } : undefined)
   }
   /** The next item of `keys` after the selected one, round the list */
@@ -262,8 +262,8 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
   }
   /**
    * A copy right after the item, selected, its first field focused: the colleague with the same position and phone. On
-   * a phone (`focus` false) the copy is only shown: the keyboard coming up over it hid what had happened, and errors
-   * pouring over a copy of an unfinished item said more than it did
+   * a phone (`focus` false) the copy is only shown: the keyboard coming up over it hides what happened, and errors
+   * pouring over a copy of an unfinished item say more than it does
    */
   const duplicate = (key: number, focus = true) => {
     const i = people.findIndex(p => p.key === key)
@@ -471,8 +471,8 @@ export function UploadArea<P extends object>({ staff }: { staff: Staff<P> }) {
 
 /**
  * An item's edge on the canvas, the same on every generator: 1 px inside it at 10% black, 40% while the pointer is in
- * its row (the secondary buttons' edge; it was black, too loud for a poster). Inside, so an item as wide as the phone's
- * 480 px sheet hides whole behind it (outside, it showed at the sheet's sides as a line)
+ * its row (the secondary buttons' edge; not black, too loud for a poster). Inside, so an item as wide as the phone's
+ * 480 px sheet hides whole behind it (outside, it shows at the sheet's sides as a line)
  */
 export const ITEM_EDGE = 'outline-1 -outline-offset-1 outline-black/10 group-hover/row:outline-black/40'
 /** `ITEM_EDGE` on a layer over the item, for an item whose art is positioned inside it (the price card's poster, the
@@ -587,7 +587,7 @@ export function Action({ label, name, keys, hidden, onClick, children }: { label
 
 /**
  * An item on the canvas with its number (from 1, as the table's rows; wide screens only) and its actions in one column
- * to its right (they were the number left and the actions right), shown while the pointer is in its row (or the focus in it), on any item, acting on it
+ * to its right, shown while the pointer is in its row (or the focus in it), on any item, acting on it
  * without selecting it; with no pointer to hover (touch screens), under the selected one only. The actions: «Дублировать», «Сбросить» (while there's something to
  * empty), «Удалить» (while there's another), the most used and harmless first, then «Добавить», a new item rather than an action on this one, last. A phone's slide
  * shows the item bare, its number and actions in the row over it. An action not offered leaves no gap: the next moves up.
@@ -663,8 +663,8 @@ export function ItemAlert<P extends object>({ staff, item, children }: { staff: 
 }
 
 /**
- * In place of an item just removed, for four seconds, 40 px tall as the buttons (it was as tall as the item):
- * «Удаляем · Вернуть» led by the bin (was «Удалено · Вернуть ×»), the bin closing it at once for one sure of the removal. A ring
+ * In place of an item just removed, for four seconds, 40 px tall as the buttons:
+ * «Удаляем · Вернуть» led by the bin, the bin closing it at once for one sure of the removal. A ring
  * round the bin runs out over the four seconds, first in the line as Telegram's undo, so it shows how long is left
  * (none with reduced motion)
  */

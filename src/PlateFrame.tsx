@@ -32,7 +32,7 @@ export default function PlateFrame() {
   const [link] = useState(linkParams)
   // The free line: on while the link has `text`, so it stays on as the address keeps it
   const [custom] = useState(() => link.has('text'))
-  // Empty at first, as the name tag's fields: «Центр» stood in as a value and read as filled in
+  // Empty at first, as the name tag's fields: «Центр» as a value reads as filled in
   // A name with «UMO» (a link made by hand) loses it, as the prefix is fixed
   const [name, setName] = useState(() => withoutUmo(link.get('name') ?? ''))
   const [text, setText] = useState(link.get('text') ?? '')

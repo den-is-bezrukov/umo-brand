@@ -258,11 +258,11 @@ export default function Memo() {
   /**
    * The row dragged with a mouse, which has no way across otherwise (a trackpad's swipe or a phone's own still scroll it):
    * past 5 px it follows the pointer, the snap off meanwhile; let go, the page nearest the middle comes there, the next
-   * one that way however short the drag (it slid back to the page it left), and the click the drag ends in selects nothing
+   * one that way however short the drag, and the click the drag ends in selects nothing
    */
   const dragRow = (e: React.PointerEvent<HTMLElement>) => {
     if (e.pointerType !== 'mouse' || e.button !== 0) return
-    // No selection or the browser's own drag, which cancelled the pointer and left the row hanging
+    // No selection or the browser's own drag, which cancels the pointer and leaves the row hanging
     e.preventDefault()
     const el = e.currentTarget, x0 = e.clientX, left0 = el.scrollLeft
     const pages = [...el.querySelectorAll<HTMLElement>('[data-page]')]
@@ -289,7 +289,7 @@ export default function Memo() {
       let to = nearest()
       if (to === from) to = Math.min(pages.length - 1, Math.max(0, from - Math.sign(dx)))
       pages[to]?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
-      // The snap back once the row is there: back at once, it jumped to the nearest page before gliding on
+      // The snap back once the row is there: back at once, it jumps to the nearest page before gliding on
       const snap = () => { el.style.scrollSnapType = ''; clearTimeout(late) }
       const late = setTimeout(snap, 800)
       el.addEventListener('scrollend', snap, { once: true })
@@ -303,8 +303,8 @@ export default function Memo() {
     window.addEventListener('pointercancel', up)
   }
   const toPage = (e: React.MouseEvent<HTMLElement>) => e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
-  // A row put at the consultant's page as it comes, once the canvas is measured (before, its ends weren't set and it
-  // stood at the last); the canvas resized, a row may now fit or not
+  // A row put at the consultant's page as it comes, once the canvas is measured (before that its ends aren't set and it
+  // stands at the last); the canvas resized, a row may now fit or not
   useEffect(() => {
     canvas?.querySelectorAll<HTMLElement>('[data-pages]').forEach(el => {
       if (measured && !el.dataset.placed) { toConsultant(el); el.dataset.placed = '1' }

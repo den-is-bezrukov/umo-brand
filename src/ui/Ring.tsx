@@ -8,10 +8,10 @@ type Item = { key: string; title: string }
 
 /**
  * A line of names to pick one from: the generators' line in their form's header. Scrolled
- * natively, as a phone's tabs, by a finger, a trackpad or the wheel (the ring turned by script ran on and came back
+ * natively, as a phone's tabs, by a finger, a trackpad or the wheel (not turned by script, which runs on and comes back
  * round on its own, unlike anything else under a finger), and picked as a drum: the name the line comes to rest on,
- * 24 px from the edge where the ring had the current one, is picked the instant the finger is off and the line is
- * still; a tap picks one too. It goes round as the ring did: the items in their order three times over, the current
+ * 24 px from the edge, is picked the instant the finger is off and the line is
+ * still; a tap picks one too. It goes round: the items in their order three times over, the current
  * one of the middle copy at the edge, so there's a whole turn to scroll either way; after a pick the line comes back to
  * the middle copy, looking the same, and a turn's worth of scrolling to the same name puts it back there unseen.
  * 24 px Medium, 20 px apart (16 in Figma), the one nearest the edge black as it goes, the rest #bfbfbf;
@@ -89,8 +89,8 @@ export default function Ring({ label, items, current, onPick, href, heading, foc
     }
     const settle = () => { clearTimeout(timer); if (!ends) timer = window.setTimeout(pick, 150) }
     // The keys turn it without picking anything (one stray arrow left a page and its unsaved list): ← → by one name
-    // each, counted from the one the last press went to, so quick presses add up (the browser's own arrow scroll took
-    // one press while the line was still moving), Enter or Space picks that name, Esc turns it home, as does the focus
+    // each, counted from the one the last press went to, so quick presses add up (the browser's own arrow scroll takes
+    // one press while the line is still moving), Enter or Space picks that name, Esc turns it home, as does the focus
     // leaving it. A finger's or the wheel's scroll still picks where it rests
     const turnTo = (i: number) => { target = i; n.scrollTo({ left: item(i)!.offsetLeft - 24, behavior: 'smooth' }) }
     const home = () => turnTo(middle)

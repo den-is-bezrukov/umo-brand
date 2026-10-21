@@ -26,7 +26,7 @@ const NAMES = DEALER_NAMES.map(withoutUmo)
 const PLACEHOLDER: Record<Exclude<SignField, 'line'>, string> = {
   from: '9:00', to: '21:00', dealer: 'Название дилера', address: 'Адрес', phone: '+7 495 000 00 00', site: 'Сайт',
 }
-/** What an empty field asks for in the download button, in the form's order (the first was with «Нужно» for a while) */
+/** What an empty field asks for in the download button, in the form's order */
 const MISSING: Record<Exclude<SignField, 'line'>, string> = {
   from: 'Указать время', to: 'Указать время', dealer: 'Выбрать дилера', address: 'Указать адрес', phone: 'Указать телефон', site: 'Указать сайт',
 }

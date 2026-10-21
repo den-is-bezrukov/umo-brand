@@ -27,7 +27,7 @@ interface Block { size: number; leading: number; baseline: number; maxWidth: num
 
 /**
  * The name and surname: every line in the column left of the logo, 2 mm clear of it (40 mm: half the 4 mm margin, so
- * Преображенский, 39.6 mm, fits). Lines running on under the logo were tried and looked broken; a double name or
+ * Преображенский, 39.6 mm, fits). Not running on under the logo, which looks broken: a double name or
  * surname breaks after its hyphen instead, and one too long without a hyphen is an error (Александровская, 40.3 mm),
  * as the type size can't be reduced
  */

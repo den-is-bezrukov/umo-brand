@@ -25,7 +25,7 @@ export const DROP = 0.844
 export const BAND = 12
 /**
  * The logo, its hairline and the dealer's name: the logo 4.5 mm in and 3 mm (30 px) before the hairline, as Figma; the
- * name 2.625 mm after it (Figma has 3; 2.25 was a touch close) and free to run to the tag's right edge, with no padding there, so the longest
+ * name 2.625 mm after it (Figma has 3; 2.25 is a touch close) and free to run to the tag's right edge, with no padding there, so the longest
  * dealers on umo.auto («АВТОПОЛЕ Санкт-Петербург», 61.1 mm) fit, the type staying as in Figma
  */
 const LOGO_W = 15

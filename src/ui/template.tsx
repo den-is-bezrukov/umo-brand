@@ -25,7 +25,7 @@ const TemplateIcon = () => (
 /**
  * «Скачать шаблон», an icon with its name as the tooltip, by the canvas's other icons: on the lists, in the column
  * after the item's own and before «Добавить» (`ItemFrame`'s `extra`); on the others in the caption under the picture,
- * before its reset (`CaptionReset`'s `extra`). A text button under the canvas was the first thing clicked, before the real download. `make`
+ * before its reset (`CaptionReset`'s `extra`). Not a text button under the canvas: it gets clicked first, before the real download. `make`
  * gives what's on the page, placeholders where nothing is
  */
 export function TemplateButton({ make, name, goalId, params, title: own }: { make: (() => Promise<Blob>) | undefined; name: string; goalId: Goal; params?: Record<string, string | number | boolean>; title?: string }) {
@@ -64,7 +64,7 @@ export function TemplateButton({ make, name, goalId, params, title: own }: { mak
 }
 
 /**
- * `t` in the link (umo.autos/<generator>?t; `template`, as the first links had it, too) saves the blank template to the downloads and opens it, no
+ * `t` in the link (umo.autos/<generator>?t; or `template`, which older links carry) saves the blank template to the downloads and opens it, no
  * editor, as the `pdf` links do: true while that's under way, the page rendering nothing. `make` is undefined until
  * the fonts are in
  */

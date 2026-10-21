@@ -34,7 +34,7 @@ export const INFO_LAST = 3104.571 / 5 - INFO.leading + (INFO.leading - INFO.size
 /** The address takes two lines at most, as umo.auto's longest run to twice the column */
 const ADDRESS_LINES = 2
 
-/** The dealer's marketing name as umo.auto has it, «UMO АГАТ Владимир» (it was «Официальный дилер …», as in Figma) */
+/** The dealer's marketing name as umo.auto has it, «UMO АГАТ Владимир» (not Figma's «Официальный дилер …») */
 export const DEALER_PREFIX = 'UMO '
 export const ADDRESS_PREFIX = 'Адрес: '
 export const PHONE_PREFIX = 'Телефон: '

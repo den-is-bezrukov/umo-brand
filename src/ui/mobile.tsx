@@ -95,7 +95,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
   sidebar: React.ReactNode
   download: React.ReactNode
 }) {
-  // Another generator picked on the line opens with the sheet where it stood (it opened at 60% each time)
+  // Another generator picked on the line opens with the sheet where it stood
   const [sheet, setSheet] = useState<Sheet>(() => keptSheet)
   useEffect(() => { keptSheet = sheet }, [sheet])
   const scroller = useRef<HTMLDivElement>(null)
@@ -111,7 +111,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
   }
   const [arrows] = useState(arrowsOn)
   // A text field in the form has the focus, so the keyboard is up: the download steps aside, as a phone's own forms do,
-  // or it covered the field the keyboard had just brought above it
+  // or it covers the field the keyboard had just brought above it
   const [typing, setTyping] = useState(false)
   const types = (el: EventTarget | null) => el instanceof HTMLTextAreaElement ? !el.readOnly : el instanceof HTMLInputElement && !el.readOnly && !['checkbox', 'radio', 'button', 'submit', 'file'].includes(el.type)
 
@@ -120,7 +120,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
   const [at, setAt] = useState(Math.max(0, selectedAt))
   const shown = Math.min(at, slides.length - 1)
   const item = slides[shown]?.item
-  // A loaded table is only looked through, as on wide screens: a swipe selects nothing (selecting took the list to
+  // A loaded table is only looked through, as on wide screens: a swipe selects nothing (selecting would take the list to
   // «Вручную»), and its items have no actions
   const browsing = staff?.mode === 'table'
   const current = browsing ? undefined : staff?.items.find((it: { key: number }) => it.key === item)
@@ -186,9 +186,8 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
   // The form's header (menu, crumbs, the generators' line; no grabber) takes the sheet along with the finger, as a
   // phone's own sheets: let go, it goes on to the place nearest to where it was let go (no flick); past the
   // last place it gives only a little, as a spring. Over the whole screen only a form longer than the sheet goes.
-  // Was a pull past the form's edge (it rode on the form's own spring, which pulled it off the sheet's edge), the
-  // scroll reaching the end opening it, an icon in the header, a grabber on the sheet's edge before it, and the sheet
-  // following a finger anywhere on the form, which jerked and moved the picture
+  // Not a pull past the form's edge, the scroll reaching the end, an icon in the header, a grabber on the sheet's
+  // edge, or the sheet following a finger anywhere on the form, which jerks and moves the picture
   /** Whether the form is longer than the sheet, when the finger came down */
   const pull = useRef<{ long: boolean } | null>(null)
   /** The sheet under the finger: where it started and is, where the finger started, and which way it went first */
@@ -259,7 +258,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
   /** A finger or the mouse coming down: on the canvas or the header it takes the sheet, on the form at its edge maybe */
   const grab = (x: number, y: number, mouse: boolean) => {
     // The whole canvas and the header, to 20 px under the generators' line: nothing on the canvas is scrolled up or
-    // down (the header alone was too small a hold, then 50 px of the canvas over the sheet's edge)
+    // down (the header alone is too small a hold)
     const head = scroller.current?.querySelector('[data-head]')?.getBoundingClientRect()
     const el = scroller.current
     pull.current = { long: !!el && el.scrollHeight - el.clientHeight > 1 }
@@ -270,9 +269,8 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
       const at = take.current()
       drag.current = { base: at, at, x, y }
     } else if (el && !mouse) {
-      // The form at its top: a pull down takes the sheet, as a phone's own sheets (its spring gave instead); decided on
-      // the first move, so the sheet isn't stopped by a scroll. Not a pull up at its end, tried with the finger and as
-      // a pull past the end set going once let go
+      // The form at its top: a pull down takes the sheet, as a phone's own sheets; decided on
+      // the first move, so the sheet isn't stopped by a scroll. Not a pull up at its end
       if (el.scrollTop <= 0) drag.current = { base: 0, at: 0, x, y, down: true }
     }
   }
@@ -309,7 +307,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
     const d = drag.current
     drag.current = null
     if (d?.way === 'y' && p) {
-      // Where it was let go, its speed not carrying it on (a flick went on to the next place)
+      // Where it was let go, its speed not carrying it on (no flick on to the next place)
       const aim = d.at
       const to = reach(p.long).reduce((a, b) => (Math.abs(edge[b] - aim) < Math.abs(edge[a] - aim) ? b : a))
       if (to !== sheetRef.current) move(to, d.at)
@@ -351,7 +349,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
     return () => o.disconnect()
   }, [])
   // Lowered, the sheet shows its header alone: the crumbs and the generators' line, 24 px under them as over them,
-  // over the screen's bottom safe area (the shrink icon under the picture went)
+  // over the screen's bottom safe area
   const [peek, setPeek] = useState(140)
   useLayoutEffect(() => {
     const head = scroller.current?.querySelector('[data-head]') as HTMLElement | null
@@ -397,14 +395,14 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
   const addBtn = <Btn label={addTitle(location.pathname)} hidden={!onAdd} onClick={() => onAdd?.(current?.key)}><PlusIcon /></Btn>
   // The sheet is always as tall as over the whole screen and moved down out of it (its edge, the white under the form,
   // and the form each a layer moved and cut, which a phone draws without laying the form out again: a sheet changing its
-  // height froze on an iPhone, the form laid out on every frame). At 60% the form has as much again under its end, so it
+  // height freezes on an iPhone, the form laid out on every frame). At 60% the form has as much again under its end, so it
   // scrolls to its end in view
   const tall = Math.max(0, screen.h - (row ? ROW + 2 * PAD : 0))
   const below = Math.max(0, Math.round(tall - screen.h * HALF_SHARE))
   const edge = { preview: tall - peek, half: below, full: 0 }
   // Typing on a phone opens the form over the screen and lifts the field to its top, under its label, so the keyboard
-  // coming up finds it in view and iOS leaves the page where it is (it moved the whole page up, the picture and the
-  // sheet's top off the screen; following iOS's pan with the page, tried, shrank the picture); the keyboard gone, the
+  // coming up finds it in view and iOS leaves the page where it is (else it moves the whole page up, the picture and the
+  // sheet's top off the screen; following iOS's pan with the page shrinks the picture); the keyboard gone, the
   // sheet goes back where it was. Room enough under the form while typing to lift its last field
   const before = useRef<Sheet | null>(null)
   const lift = useRef<HTMLElement | null>(null)
@@ -425,8 +423,8 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
     }
     typed.current = { field: e.target as HTMLElement, top: 0 }
     if (before.current === null) before.current = sheetRef.current
-    // From field to field the sheet is open already and nothing renders: lifted here, then (it stayed low, and iOS
-    // moved the page for it)
+    // From field to field the sheet is open already and nothing renders: lifted here, then (else it stays low, and iOS
+    // moves the page for it)
     if (sheetRef.current === 'full' && typing) { liftField(e.target as HTMLElement); return }
     lift.current = e.target as HTMLElement
     // At once: iOS looks where the field is as the keyboard comes, and found it low, the sheet still on its way
@@ -434,7 +432,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
   }
   const liftField = (field: HTMLElement) => {
     const el = scroller.current
-    // At once, as the sheet: a field still on its way read as low too
+    // At once, as the sheet: a field still on its way reads as low too
     if (el) el.scrollTop += field.getBoundingClientRect().top - el.getBoundingClientRect().top - LIFT
   }
   const onBlur = (e: React.FocusEvent) => {
@@ -479,11 +477,11 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
   const [layerEl, setLayerEl] = useState<HTMLDivElement | null>(null)
   const canvasEl = useRef<HTMLDivElement>(null)
   /** The canvas over the sheet: down to its 60% place it grows as the sheet goes, the picture with it, at the
-   * sheet's own pace under a finger or not (it grew after, in a move of its own); above it it stays (the sheet over the
-   * whole screen slides over it: it shrank under the sheet, the picture refitted as it went and jerked) */
+   * sheet's own pace under a finger or not; above it it stays (the sheet over the whole screen slides over it: shrinking
+   * under the sheet, the picture refits as it goes and jerks) */
   const canvasH = (at: number) => screen.h - tall + Math.min(Math.max(at, edge.half), edge.preview)
   // The canvas is laid out once, as large as the sheet ever leaves it (lowered to its header), and its pictures are scaled to their size for where the sheet is, standing or on its way: drawn anew at
-  // every step they shook, and laid out for one place, scaled up past it, they were cut off at the canvas's foot
+  // every step they shake, and laid out for one place, scaled up past it, they're cut off at the canvas's foot
   const laidH = canvasH(edge.preview)
   /** A picture's scale and shift for the sheet at `at`, from its size laid out */
   const fitAt = (el: HTMLElement, at: number) => {
@@ -492,10 +490,10 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
     const grow = canvasH(at) - (canvasEl.current?.offsetHeight ?? laidH)
     if (!s) return {}
     // One with no shape of its own (the plate frame's strip, a table's upload) takes what's in view, the upload
-    // filling it, the strip in its middle: laid out large, the upload stood its least height and ran under the sheet
+    // filling it, the strip in its middle: laid out large, the upload stands its least height and runs under the sheet
     // Above its 60% place, as the sheet rises over the picture, the picture goes down to the screen's middle with it,
     // standing there behind the sheet over the whole screen: past the sheet's 480 px it shows at its sides, even, and
-    // not as its top over the sheet's edge (the canvas cut at the sheet's edge, tried, was taken out)
+    // not as its top over the sheet's edge (the canvas isn't cut at the sheet's edge)
     const rise = edge.half > 0 ? Math.min(1, Math.max(0, (edge.half - at) / edge.half)) : 0
     const middle = rise && (screen.h / 2 - (s.getBoundingClientRect().top + (s.clientHeight + grow) / 2)) * rise
     if (!ratio) return { height: `${Math.max(0, s.clientHeight + grow - 2 * INSET)}px`, transform: `translateY(${middle}px)` }
@@ -506,7 +504,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
   }
   const fits = () => [...(canvasEl.current?.querySelectorAll<HTMLElement>('[data-fit]') ?? [])]
   /** The sheet at a place, and the pictures with it */
-  /** The download goes down with the sheet under its 60% place, at half its pace, out of sight lowered (it went at once) */
+  /** The download goes down with the sheet under its 60% place, at half its pace, out of sight lowered */
   const footEl = useRef<HTMLDivElement>(null)
   const footAt = (at: number) => ({ transform: `translateY(${Math.max(0, at - edge.half) * FOOT_PACE}px)` })
   const place = (at: number) => {
@@ -603,7 +601,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
       {/* One picture: a row over it as a list's, the reset before its name, copy after it, add on the right (in the
           canvas's top corners over the strip, they covered a landscape item's edge, and the name stood
           in a caption under the picture, unlike a list's) */}
-      {/* Only with something in it: empty (a table's upload), it stood over it as a strip of the canvas */}
+      {/* Only with something in it: empty (a table's upload), it stands over it as a strip of the canvas */}
       {!row && !corners && ((slide?.label && slide.item === undefined) || reset || (staff && current)) && (
         <div className="flex h-[30px] shrink-0 items-center justify-between">
           <Btn label="" hidden onClick={() => {}}>{null}</Btn>
@@ -646,17 +644,17 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
 
       </div>
 
-      {/* The sheet: the sidebar scrolling, 24 px in, as the sidebar on wide screens (Figma has 16; 20 was tried); its top
+      {/* The sheet: the sidebar scrolling, 24 px in, as the sidebar on wide screens (Figma has 16); its top
           corners 24 px round, as its padding (Figma has none), a shadow over it. Always as tall as over
-          the whole screen and moved down out of it, never resized: a sheet changing its height froze on an iPhone, laying
-          the form out on every frame. The form painted within it: iOS drew the generators' line, a scroll of its own, and
+          the whole screen and moved down out of it, never resized: a sheet changing its height freezes on an iPhone, laying
+          the form out on every frame. The form painted within it: else iOS draws the generators' line, a scroll of its own, and
           its fades over the sheet's edge */}
       <div
         ref={sheetEl}
-        // Its shadow off while it's at the page's top, over the whole screen with no list row: it had nowhere to fall and
-        // read as cut off. Fixed to the screen of its own, its foot always at the screen's bottom, so Safari 26 carries
-        // its white under its floating bar (it carried the page's grey, the page being the fixed box there). At most 480 px
-        // wide, centred: wider, on a folded-out phone or an iPad mini, its fields ran to 700 px for a name
+        // Its shadow off while it's at the page's top, over the whole screen with no list row: it has nowhere to fall and
+        // reads as cut off. Fixed to the screen of its own, its foot always at the screen's bottom, so Safari 26 carries
+        // its white under its floating bar (else it carries the page's grey, the page being the fixed box there). At most 480 px
+        // wide, centred: wider, on a folded-out phone or an iPad mini, its fields run to 700 px for a name
         className={`fixed inset-x-0 bottom-0 mx-auto flex max-w-[480px] flex-col rounded-t-[24px] bg-white ${full && !row ? '' : 'shadow-[0_10px_30px_rgba(0,0,0,0.1)]'}`}
         style={{ height: tall, transform: `translateY(${edge[sheet]}px)` }}
       >
@@ -664,8 +662,8 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
             not it): a quarter of the sheet wide and 2 px thick, 8 px over the edge, on the canvas, going with the sheet (it was in it, under the edge); none
             over the whole screen */}
         {!full && <span aria-hidden className="pointer-events-none absolute -top-2.5 left-1/2 h-0.5 w-1/4 -translate-x-1/2 rounded-full bg-black/10" />}
-        <div ref={scroller} data-sheet onFocus={onFocus} onBlur={onBlur} // Always a scroll: switched off lowered, iOS laid the form's layers anew as the finger let go, and the generators'
-          // line's fades went for a frame (lowered, a finger on the header takes the sheet anyway)
+        <div ref={scroller} data-sheet onFocus={onFocus} onBlur={onBlur} // Always a scroll: switched off lowered, iOS lays the form's layers anew as the finger lets go, and the generators'
+          // line's fades go for a frame (lowered, a finger on the header takes the sheet anyway)
           className="min-h-0 flex-1 overflow-y-auto rounded-t-[24px] [contain:paint]">
           {/* Groups 24 px apart (`src/index.css`, as on wide screens), so from one 48 px control to the next is 48 (16 + 8
               for a label + 24); at 60% as much again under the form's end as is under the screen, to scroll it into view */}
@@ -718,6 +716,6 @@ function Fitted({ ratio, box, node, side }: { ratio?: number; box: { w: number; 
     return () => o.disconnect()
   }, [w, ratio])
   // With no shape of its own, at the top of what's in view, as tall as it (set by `fitAt`), its content in the middle and
-  // no taller than it: the upload's least height (240) ran past it on a shorter screen, its edge under the status bar
+  // no taller than it: else the upload's least height (240) runs past it on a shorter screen, its edge under the status bar
   return <div ref={ref} data-fit data-ratio={ratio ?? 0} data-side={side} className={ratio ? 'm-auto' : 'mx-auto mt-[10px] flex shrink-0 flex-col justify-center *:min-h-0!'} style={{ width: w }}>{typeof node === 'function' ? node(w) : node}</div>
 }
