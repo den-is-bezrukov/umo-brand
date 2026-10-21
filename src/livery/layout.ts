@@ -1,7 +1,7 @@
-import sideImg from '@/assets/livery/umo8-side.webp'
-import rearImg from '@/assets/livery/umo8-rear.webp'
-import side5Img from '@/assets/livery/umo5-side.webp'
-import rear5Img from '@/assets/livery/umo5-rear.webp'
+import sideImg from '@brand/assets/livery/umo8-side.webp'
+import rearImg from '@brand/assets/livery/umo8-rear.webp'
+import side5Img from '@brand/assets/livery/umo5-side.webp'
+import rear5Img from '@brand/assets/livery/umo5-rear.webp'
 import { FIVE } from './logo'
 
 // Dealer livery surfaces, in millimetres, from 00_UMO8_dealer-livery_spec.pdf and the Illustrator sources next to it

@@ -1,5 +1,5 @@
-import page1 from '@/assets/memo/page-1.svg'
-import page2 from '@/assets/memo/page-2.svg'
+import page1 from '@brand/assets/memo/page-1.svg'
+import page2 from '@brand/assets/memo/page-2.svg'
 import { PAGE } from './memo'
 
 // The memo's card in the guide's grid until a picture of its own is made: its two pages as the generator draws them,

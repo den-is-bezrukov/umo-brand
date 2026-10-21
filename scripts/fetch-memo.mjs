@@ -1,4 +1,4 @@
-// Takes the owner's memo (Figma: UMO | Evrone, section 5222:5427) out of Figma into src/assets/memo and src/memo.
+// Takes the owner's memo (Figma: UMO | Evrone, section 5222:5427) out of Figma into brand/umo/assets/memo and src/memo.
 // Its two A4 pages (5228:2, 5228:40) come as SVG with the text in outlines, the dealership's contacts on the second
 // page (5222:6042, drawn by the generator) taken out, numbers rounded to 0,01 px, every path that is text marked
 // `data-text`, so the editable template leaves those out and sets the text live. The texts themselves, with their
@@ -58,7 +58,7 @@ for (const [p, id] of PAGES.entries()) {
     .replace(/<rect [^>]*fill="white"[^>]*\/>/g, "")
     .replace(/-?\d+\.\d{3,}/g, n => String(Math.round(+n * 100) / 100))
     .replace(/>\s+</g, "><")
-  writeFileSync(new URL(`../src/assets/memo/page-${p + 1}.svg`, import.meta.url), svg)
+  writeFileSync(new URL(`../brand/umo/assets/memo/page-${p + 1}.svg`, import.meta.url), svg)
 
   for (const n of textNodes) {
     if (inBlock.has(n.id)) continue

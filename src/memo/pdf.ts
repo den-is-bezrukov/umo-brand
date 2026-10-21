@@ -9,8 +9,8 @@ import { embedFaces } from '@/ui/liveTextPdf'
 import { FONTS } from '@brand/fonts'
 import { MEMOS_KEY, PAGE, MEMO_TEXTS, parseArt, type Block, type Shape } from './memo'
 import { layoutText, advance, type FontKey, type Line, type MemoFonts } from './text'
-import page1 from '@/assets/memo/page-1.svg'
-import page2 from '@/assets/memo/page-2.svg'
+import page1 from '@brand/assets/memo/page-1.svg'
+import page2 from '@brand/assets/memo/page-2.svg'
 
 // Loaded only when a memo is downloaded, so the page doesn't carry pdf-lib until then. Two files: the memos to print,
 // everything in outlines (Figma's own for its parts), and the template, the same pages with every text live in CoFo
