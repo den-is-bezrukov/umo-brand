@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, LinkButtons, canShareFiles, unfilled, itemOf, Segments, SegBtn, ALERT_LABEL, outlined } from '@/ui/form'
+import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, LinkButtons, canShareFiles, unfilled, itemOf, Segments, SegBtn, ALERT_LABEL } from '@/ui/form'
 import { useStaff, pickTable, TableSource, UploadArea, useAddKey, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD, type Cmd } from '@/livery/geometry'
@@ -73,7 +73,7 @@ export default function PriceTag() {
     columns: { name: 'Наименование', code: 'Артикул', price: 'Цена', caption: 'Подпись' },
     blank: BLANK,
     initial: initial.items,
-    // The tags' own PDF (or Word file, while its download is off still read when dropped) brings its dealer and goods
+    // The tags' own PDF brings its dealer and goods
     // back, to fix a price and download again; else a table
     readFile: data => {
       const own = readTagsFile(data)
@@ -147,8 +147,6 @@ export default function PriceTag() {
   const dealerField = useRef<HTMLDivElement>(null)
   const toDealer = () => dealerField.current?.querySelector<HTMLElement>('textarea, input')?.focus()
 
-  /** The PDF, or the same tags as a Word document from the brand team's template, for those who print from Word */
-  const [exportingWord, setExportingWord] = useState(false)
   const save = (blob: Blob, name: string) => {
     const a = document.createElement('a')
     a.href = URL.createObjectURL(blob)
@@ -190,17 +188,6 @@ export default function PriceTag() {
       })
       .catch(() => setPdfOnly(false))
   }, [tags]) // eslint-disable-line react-hooks/exhaustive-deps
-  const handleWord = async () => {
-    if (!ok) return
-    setExportingWord(true)
-    try {
-      const { tagsDocx } = await import('@/pricetag/docx')
-      save(await tagsDocx(dealer, items.map(({ key: _, ...it }) => it)), 'UMO_price-tags.docx')
-      goal('download_price_tag', { count: items.length, format: 'docx' })
-    } finally {
-      setExportingWord(false)
-    }
-  }
 
   /** A tag's first fault: a wrong value said as it is, else its first empty field by name */
   const problemOf = (i: number) => ownIssues(i)[0]?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!)) : undefined)
@@ -319,13 +306,6 @@ export default function PriceTag() {
           count={!dealerIssues.length && failing.length ? itemOf(staff.inWork(failing).index, items.length) : undefined}
           onNote={dealerIssues.length ? toDealer : items.length ? () => staff.nextOf(failing) : pickTable}
           links={canShareFiles && <LinkButtons incomplete={!ok} file={shareFile} fileOnly />}
-          // The Word file is off for now: CoFo Sans shows only in Word for Windows, elsewhere it's swapped for Arial, and the
-          // layout breaks easily there; fixing a price is done by dropping the PDF back. To bring it back, uncomment:
-          // links={ (with «Поделиться» above, in a fragment)
-          //   <button type="button" onClick={handleWord} disabled={!ok || exportingWord} className={`${outlined} w-full bg-white`}>
-          //     {exportingWord ? 'Генерация…' : 'Скачать Word'}
-          //   </button>
-          // }
         />
   )
 

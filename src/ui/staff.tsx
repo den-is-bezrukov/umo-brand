@@ -38,7 +38,7 @@ export interface StaffOptions<P> {
   readPasted: (text: string) => P[]
   /** The list the page opens with (the price cards from a link); one blank item otherwise */
   initial?: P[]
-  /** The files the upload takes, an .xlsx by default (the price tags take their own PDF and Word files back too) */
+  /** The files the upload takes, an .xlsx by default (the price tags take their own PDF back too) */
   accept?: string
   /** What the upload says */
   uploadLabel?: string
@@ -117,7 +117,7 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
       if (!rows.length) throw new Error('В таблице нет строк')
       loadRows(rows, f.name)
     } catch (err) {
-      setTableError(err instanceof Error && /xlsx|лист|строк|PDF|Word/.test(err.message) ? err.message : 'Не получилось прочитать файл: нужен .xlsx')
+      setTableError(err instanceof Error && /xlsx|лист|строк|PDF/.test(err.message) ? err.message : 'Не получилось прочитать файл: нужен .xlsx')
     }
   }
 
