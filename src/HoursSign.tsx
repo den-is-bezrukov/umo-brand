@@ -14,6 +14,7 @@ import { DEFAULT_HOURS_LINE, addressOf, hoursOf } from '@/data/hours'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { recordText } from '@/ui/liveText'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
+import { SITE } from '@/site'
 
 // The dealership's hours sign: a 480×680 mm plate with the logo, the hours, a
 // line under them and the dealership at the bottom, as a PDF in outlines for the maker. A dealer picked from the list
@@ -175,7 +176,7 @@ export default function HoursSign() {
 
   useEffect(() => {
     const prev = document.title
-    document.title = 'Режимник UMO'
+    document.title = `Режимник ${SITE.name}`
     return () => { document.title = prev }
   }, [])
 
@@ -253,7 +254,7 @@ export default function HoursSign() {
     const one = recordText(() => buildSign(font, { line: DEFAULT_HOURS_LINE, ...PLACEHOLDER }))
     return import('@/hours/pdf').then(m => m.signTemplate(one.result, one.lines))
   } : undefined
-  const templateOnly = useTemplateLink(makeBlank, 'UMO_hours-sign_template.pdf', 'download_hours_sign_template')
+  const templateOnly = useTemplateLink(makeBlank, `${SITE.file}_hours-sign_template.pdf`, 'download_hours_sign_template')
 
   // `pdf` in the link (a link made for the dealer) opens the sign's PDF itself, with no editor, once the font
   // is in; a sign at fault opens the editor instead, showing what's wrong
@@ -315,7 +316,7 @@ export default function HoursSign() {
           <figcaption className="mt-0.5 text-center text-[14px] leading-5 text-caption">
             <span className="relative">
               Табличка, {SIGN.w}&nbsp;×&nbsp;{SIGN.h}&nbsp;мм
-              <CaptionReset onClick={blank ? undefined : reset} label="Вернуть табличку по умолчанию" extra={<TemplateButton make={makeTemplate} name="UMO_hours-sign_template.pdf" goalId="download_hours_sign_template" />} />
+              <CaptionReset onClick={blank ? undefined : reset} label="Вернуть табличку по умолчанию" extra={<TemplateButton make={makeTemplate} name={`${SITE.file}_hours-sign_template.pdf`} goalId="download_hours_sign_template" />} />
             </span>
           </figcaption>
           {/* A warning in red, as the generators' faults under their pictures, but the download stays on, as a short day can be meant (a holiday) */}
@@ -341,7 +342,7 @@ export default function HoursSign() {
               <div data-field="line"><ComboField value={line} onChange={setLine} options={HOURS_LINES} label="Подписи" singleLine invalid={wrong.has('line')} /></div>
             </Field> */}
             <Field label="Дилер">
-              <div data-field="dealer"><ComboField value={dealer} onChange={pickDealer} options={NAMES} filter={dealerFilter} placeholder={PLACEHOLDER.dealer} label="Дилеры UMO" singleLine invalid={wrong.has('dealer')} /></div>
+              <div data-field="dealer"><ComboField value={dealer} onChange={pickDealer} options={NAMES} filter={dealerFilter} placeholder={PLACEHOLDER.dealer} label={`Дилеры ${SITE.name}`} singleLine invalid={wrong.has('dealer')} /></div>
             </Field>
             <Field label="Адрес">
               {/* A plain field, as the business card's: the dealer's address put in as it's picked, edited by hand (a list of

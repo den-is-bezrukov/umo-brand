@@ -4,6 +4,7 @@ import type { Art } from '@/pricecard/card'
 import UmoLogo from '@brand/Wordmark'
 import { images } from '@brand/guide/images'
 import { editTitle } from '@/data/generators'
+import { SITE } from '@/site'
 
 // The guide's building blocks: a chapter and its sections, text, figures, the download rows, the colour tiles, the
 // dictionary. The core's; the brand's guide (`@brand/guide`) is written with them.
@@ -145,7 +146,7 @@ export function LogoPlate({ w, h, logo, bg, dark, caption, phone43, className = 
         style={{ ...(phone43 ? { '--ratio': `${w} / ${h}` } : { aspectRatio: `${w} / ${h}` }), background: bg } as CSSProperties}
       >
         <div style={{ width: `${(logo / w) * 100}%` }}>
-          <UmoLogo title={`Логотип UMO, ${dark ? 'белый' : 'чёрный'}`} className="w-full" />
+          <UmoLogo title={`Логотип ${SITE.name}, ${dark ? 'белый' : 'чёрный'}`} className="w-full" />
         </div>
       </div>
       {caption && <Caption>{caption}</Caption>}

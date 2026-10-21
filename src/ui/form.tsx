@@ -8,6 +8,7 @@ import Ring from './Ring'
 import { ChevronIcon } from './icons'
 import { InFoot, InSheet, SheetLayer, FOOT_BG } from './phone'
 import { MOD, withMod, otherLayout } from './keys'
+import { SITE } from '@/site'
 
 // Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag, business card). Light UI per the Figma layout,
 // matching the brand guide.
@@ -80,7 +81,7 @@ const CRUMBS = "text-[14px] font-medium leading-4 tracking-normal [font-feature-
 function PhoneCrumbs({ open, onEditor }: { open: boolean; onEditor: () => void }) {
   return (
     <nav className={`flex min-w-0 flex-1 items-center gap-2 whitespace-nowrap ${CRUMBS}`}>
-      <Link to="/" className={crumb}>Бренд UMO</Link>
+      <Link to="/" className={crumb}>Бренд {SITE.name}</Link>
       <span aria-hidden>·</span>
       <button type="button" onClick={onEditor} aria-expanded={open} aria-label="Редактор материалов: все конструкторы" className={`${crumb} cursor-pointer`}>Редактор материалов</button>
     </nav>

@@ -11,6 +11,7 @@ import { buildSheet, specMarks, toD, mm, type Sheet, type Line } from '@/livery/
 import { loadFont } from '@/ui/type'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
+import { SITE } from '@/site'
 
 // Dealer livery generator: lettering for both sides and the rear window of a dealer's demo car. The preview puts the sheets on
 // photos of the car, with the door seam and handle marked, so a dealer name or tagline that would run onto them shows
@@ -18,7 +19,7 @@ import { TemplateButton, useTemplateLink } from '@/ui/template'
 
 /** The QR leads to the model's own page unless another link is set, as on the price card */
 const DEFAULT_URL: Record<Model, string> = { umo8: 'https://umo.auto/umo8', umo5: 'https://umo.auto/umo5' }
-const DEFAULT_TOP = 'Центр UMO'
+const DEFAULT_TOP = `Центр ${SITE.name}`
 
 // The parts that can be left out, as the `off` link parameter names them
 const PARTS = { qr: 'qr', dealer: 'top', tagline: 'bottom', rear: 'rear', rearDealer: 'rdealer', rearTagline: 'rslogan' } as const
@@ -157,7 +158,7 @@ export default function Livery() {
 
   useEffect(() => {
     const prev = document.title
-    document.title = 'Ливрея UMO'
+    document.title = `Ливрея ${SITE.name}`
     return () => { document.title = prev }
   }, [])
 

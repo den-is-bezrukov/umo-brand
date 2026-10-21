@@ -13,13 +13,14 @@ import { MobileEditor, usePhone } from '@/ui/mobile'
 import { linkParams } from '@/ui/share'
 import { recordText } from '@/ui/liveText'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
+import { SITE } from '@/site'
 
 // Name tag generator: a dealership's staff list in, one zip out with the tags
 // in outlines, a page each, and the maker's requirements. Two modes: «Вручную», a list typed on the page, and «Из
 // таблицы», the template filled in and loaded as .xlsx (or its rows pasted), shown as it is. Editing it means taking it
 // to «Вручную». Rows copied from a spreadsheet can be pasted into the manual list too.
 
-const TEMPLATE = `${import.meta.env.BASE_URL}downloads/UMO_name-tags_template.xlsx`
+const TEMPLATE = `${import.meta.env.BASE_URL}downloads/${SITE.file}_name-tags_template.xlsx`
 
 /** Shown grey on the tag in place of an empty field, as the fields' placeholders; never in the PDF */
 const PLACEHOLDER: Person = { name: 'Имя', surname: 'Фамилия', position: 'Должность' }
@@ -73,7 +74,7 @@ export default function NameTag() {
 
   useEffect(() => {
     const prev = document.title
-    document.title = 'Бейдж UMO'
+    document.title = `Бейдж ${SITE.name}`
     return () => { document.title = prev }
   }, [])
 
@@ -99,12 +100,12 @@ export default function NameTag() {
   const makeTemplate = (i: number) => fonts ? () => templateOf([items[i].person]) : undefined
   /** The blank one a `template` link gives: one placeholder tag */
   const makeBlank = fonts ? () => templateOf([PLACEHOLDER]) : undefined
-  const templateOnly = useTemplateLink(makeBlank, 'UMO_name-tags_template.pdf', 'download_name_tag_template')
+  const templateOnly = useTemplateLink(makeBlank, `${SITE.file}_name-tags_template.pdf`, 'download_name_tag_template')
   /** «Добавить» in the item's column, ⌘↩ from anywhere (the manual list, wide screens) */
   const addItem = (after?: number) => staff.add(undefined, undefined, after)
   useAddKey(!phone && mode === 'manual' ? () => addItem(staff.selected) : undefined)
   /** «Скачать шаблон» in the item's column */
-  const templateIcon = (i: number) => <TemplateButton make={makeTemplate(i)} name="UMO_name-tags_template.pdf" goalId="download_name_tag_template" />
+  const templateIcon = (i: number) => <TemplateButton make={makeTemplate(i)} name={`${SITE.file}_name-tags_template.pdf`} goalId="download_name_tag_template" />
 
   /** A tag needs a name, a surname and a position */
   const missing = items.map(({ person: p }) => [
@@ -134,7 +135,7 @@ export default function NameTag() {
       const blob = await tagsZip(tags, staff.items.map(plain))
       const a = document.createElement('a')
       a.href = URL.createObjectURL(blob)
-      a.download = 'UMO_name-tags.zip'
+      a.download = `${SITE.file}_name-tags.zip`
       a.click()
       goal('download_name_tag', { count: tags.length })
       URL.revokeObjectURL(a.href)
@@ -153,7 +154,7 @@ export default function NameTag() {
     import('@/nametag/pdf').then(async ({ tagsZip }) => {
       const a = document.createElement('a')
       a.href = URL.createObjectURL(await tagsZip(tags, staff.items.map(plain)))
-      a.download = 'UMO_name-tags.zip'
+      a.download = `${SITE.file}_name-tags.zip`
       a.click()
       goal('download_name_tag', { count: tags.length, via: 'link' })
       setTimeout(() => URL.revokeObjectURL(a.href), 1000)

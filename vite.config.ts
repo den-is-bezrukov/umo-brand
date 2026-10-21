@@ -4,7 +4,6 @@ import tailwindcss from '@tailwindcss/vite'
 import fs from 'node:fs'
 import path from 'node:path'
 
-import siteConfiguration from './site.config.json'
 import { GENERATORS } from './src/data/generators'
 
 // The brand the site is built with: `brand/<BRAND>`, UMO unless `BRAND` says otherwise (`BRAND=demo pnpm dev:demo`).
@@ -12,6 +11,7 @@ import { GENERATORS } from './src/data/generators'
 // `public/` (404.html) added to it
 const BRAND = process.env.BRAND || 'umo'
 const brandDir = path.resolve(__dirname, 'brand', BRAND)
+const siteConfiguration: SiteConfiguration = JSON.parse(fs.readFileSync(path.join(brandDir, 'site.json'), 'utf8'))
 
 // Vite config — https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -53,6 +53,10 @@ export default defineConfig(({ mode }) => {
 })
 
 type SiteConfiguration = {
+  /** Where the site lives: the Metrika counter counts there only */
+  domain?: string
+  /** Yandex.Metrika's counter, none for no counter */
+  metrika?: number
   title?: string
   description?: string
   language?: string
@@ -81,7 +85,7 @@ type SiteConfiguration = {
   }
 }
 
-/** Applies site.config.json to the generated document shell. */
+/** Applies the brand's site.json to the generated document shell. */
 function siteMetaPlugin(config: SiteConfiguration): Plugin {
   function sanitizeHtmlValue(value: string | undefined): string {
     return value?.replace(/[^a-zA-Z0-9_-]/g, '') || ''
@@ -130,6 +134,10 @@ function siteMetaPlugin(config: SiteConfiguration): Plugin {
       order: 'pre',
       handler(html) {
         let result = html
+        // The Metrika counter, the brand's, or nothing
+        result = config.metrika
+          ? result.replace(/<!-- metrika:start[^>]*-->|<!-- metrika:end -->/g, '').replace(/%METRIKA%/g, String(config.metrika)).replace(/%DOMAIN%/g, config.domain ?? '')
+          : result.replace(/ *<!-- metrika:start[\s\S]*?<!-- metrika:end -->\n?/g, '')
         result = replaceHtmlCommentSlot(result, 'site:lang', language)
         result = replaceHtmlCommentSlot(result, 'site:title', escapeHtmlText(title))
         result = replaceHtmlCommentSlot(result, 'site:head-start', headStart)

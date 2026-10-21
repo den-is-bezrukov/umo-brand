@@ -1,7 +1,8 @@
-// Yandex.Metrika (the counter is in index.html, loaded on umo.autos only, so elsewhere these do nothing).
+// Yandex.Metrika (the brand's counter, `SITE.metrika`, is in index.html, loaded on its domain only, so elsewhere these do nothing).
+import { SITE } from '@/site'
 // Goals are JavaScript events set up in Metrika by these ids. Parameters say what was made, never what was typed:
 // the generators hold staff names, phones and emails.
-export const COUNTER = 113514674
+export const COUNTER = SITE.metrika
 
 export type Goal =
   | 'download_price_card'

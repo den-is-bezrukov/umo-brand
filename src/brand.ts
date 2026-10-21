@@ -41,3 +41,22 @@ export interface SalesPoint { name: string; city: string; address: string; hours
  * write it, which doesn't tell points apart
  */
 export interface BrandPoints { lists: Partial<SalesPoint>[][]; prefix: string; words: string[] }
+
+/**
+ * `@brand/site.json`: the site's settings. The core reads these; vite.config.ts also the HTML's (title, description,
+ * icons, social image, robots, language)
+ */
+export interface BrandSite {
+  /** The brand's name as the pages write it: «Бренд UMO», «Ценник UMO» */
+  name: string
+  /** What the files' names start with: UMO_price-tags.pdf */
+  file: string
+  /** Where this site lives (umo.autos): the links the instructions give, the Metrika counter's host */
+  domain: string
+  /** The brand's own site (https://umo.auto): a QR's default, the dealers' sites under it */
+  home: string
+  /** Where people ask: the guide's Контакты and the generators' «Инструкция» */
+  support: string
+  /** Yandex.Metrika's counter, none for no counter */
+  metrika?: number
+}

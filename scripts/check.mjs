@@ -9,6 +9,8 @@
 //   BRAND=demo node scripts/check.mjs   … the site built with another brand (a run of its own, no baseline to match)
 //   --only=livery,guide                 just the scenarios whose name starts with these
 //   --compare-only                      the last run compared again, nothing captured
+//   --baseline --baseline-from=87b0d0a  the baseline from that commit's code (a worktree of it in .check), for scenarios
+//                                       added after the code moved on
 //
 // It builds the site into .check/build and serves it itself (no dev server needed). Needs Chrome (Playwright's
 // headless shell when it's there, as it doesn't update itself between runs), pdftoppm and ImageMagick (Homebrew).
@@ -29,6 +31,7 @@ const ONLY = args.find(a => a.startsWith('--only='))?.slice(7).split(',')
 const BRAND = process.env.BRAND || 'umo'
 const RUN = path.join(OUT, BASELINE ? 'baseline' : BRAND === 'umo' ? 'current' : `current-${BRAND}`)
 const BUILD = path.join(OUT, 'build')
+const FROM = args.find(a => a.startsWith('--baseline-from='))?.slice(16)
 
 // ---------------------------------------------------------------------------------------------------------------------
 // What's checked
@@ -149,6 +152,10 @@ const SCENARIOS = [
   { name: 'memo/template', url: '/memo?t', expect: true },
 
   { name: 'link-dealer/choices', url: `/business-card?${q({ dealer: 'агат', pdf: 1 })}`, phone: true },
+
+  // «Инструкция»: every generator's, and the general one
+  ...['price-card', 'livery', 'plate-frame', 'name-tag', 'business-card', 'price-tag', 'hours-sign', 'memo'].map(g => ({ name: `help/${g}`, url: `/${g}?help` })),
+  { name: 'help/general', url: '/hours-sign?help=general', phone: true },
 ]
 
 const WIDE = { width: 1440, height: 900, mobile: false }
@@ -175,9 +182,18 @@ function chromePath() {
 }
 
 function build() {
-  log(`Сборка (${BRAND})…`)
+  log(`Сборка (${FROM ?? BRAND})…`)
   rm(BUILD)
-  execFileSync('pnpm', ['exec', 'vite', 'build', '--outDir', BUILD, '--emptyOutDir', '--logLevel', 'warn'], { cwd: ROOT, stdio: 'inherit', env: { ...process.env, BRAND } })
+  let cwd = ROOT
+  if (FROM) {
+    // The code of that commit in a worktree of its own, the dependencies shared
+    cwd = path.join(OUT, `src-${FROM}`)
+    if (!fs.existsSync(cwd)) {
+      execFileSync('git', ['worktree', 'add', '--detach', cwd, FROM], { cwd: ROOT, stdio: 'inherit' })
+      fs.symlinkSync(path.join(ROOT, 'node_modules'), path.join(cwd, 'node_modules'))
+    }
+  }
+  execFileSync('pnpm', ['exec', 'vite', 'build', '--outDir', BUILD, '--emptyOutDir', '--logLevel', 'warn'], { cwd, stdio: 'inherit', env: { ...process.env, BRAND } })
 }
 
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.ico': 'image/x-icon', '.woff': 'font/woff', '.woff2': 'font/woff2', '.ttf': 'font/ttf', '.otf': 'font/otf', '.mp4': 'video/mp4', '.webm': 'video/webm', '.pdf': 'application/pdf', '.zip': 'application/zip', '.xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', '.txt': 'text/plain' }

@@ -14,6 +14,7 @@ import { DEALER_NAMES, dealerFilter, dealerOf, withoutBrand, phoneOf } from '@/d
 import { isPdf, readPdfData } from '@/ui/pdfData'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
+import { SITE } from '@/site'
 
 // Owner's memo generator: two A4 pages a dealership hands over with a car,
 // Figma's but for the contacts at the foot of the second, which are set here: the dealership once for the list, a
@@ -138,14 +139,14 @@ export default function Memo() {
     const person = { position: BLANK.position, name: PLACEHOLDER.name!, surname: PLACEHOLDER.surname!, phone: PLACEHOLDER.phone!, email: 'Почта' }
     return import('@/memo/pdf').then(m => m.memosTemplate(buildBlocks(fonts, dealer, [person]), fonts))
   } : undefined
-  const templateOnly = useTemplateLink(makeBlank, 'UMO_owner-memo_template.pdf', 'download_owner_memo_template')
+  const templateOnly = useTemplateLink(makeBlank, `${SITE.file}_owner-memo_template.pdf`, 'download_owner_memo_template')
   /** «Добавить» in the item's column, ⌘↩ from anywhere (the manual list, wide screens) */
   const addItem = (after?: number) => staff.add(undefined, undefined, after)
   useAddKey(!phone ? () => addItem(staff.selected) : undefined)
 
   useEffect(() => {
     const prev = document.title
-    document.title = 'Памятка владельца UMO'
+    document.title = `Памятка владельца ${SITE.name}`
     return () => { document.title = prev }
   }, [])
 
@@ -205,7 +206,7 @@ export default function Memo() {
 
   const shareFile = useCallback(async () => {
     const { memosPdf } = await import('@/memo/pdf')
-    return new File([await memosPdf(memos!.map(m => m.block), data())], 'UMO_owner-memo.pdf', { type: 'application/pdf' })
+    return new File([await memosPdf(memos!.map(m => m.block), data())], `${SITE.file}_owner-memo.pdf`, { type: 'application/pdf' })
   }, [memos]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleExport = async () => {
@@ -213,7 +214,7 @@ export default function Memo() {
     setExporting(true)
     try {
       const { memosPdf } = await import('@/memo/pdf')
-      save(await memosPdf(memos.map(m => m.block), data()), 'UMO_owner-memo.pdf')
+      save(await memosPdf(memos.map(m => m.block), data()), `${SITE.file}_owner-memo.pdf`)
       goal('download_owner_memo', { count: memos.length })
     } finally {
       setExporting(false)
@@ -223,7 +224,7 @@ export default function Memo() {
   /** One consultant's template, by its icon: what's typed, the placeholders where nothing is (it's edited anyway) */
   const makeTemplate = (i: number) => memos?.[i] && fonts ? () => import('@/memo/pdf').then(m => m.memosTemplate([memos[i].block], fonts)) : undefined
   /** «Скачать шаблон» in the item's column */
-  const templateIcon = (i: number) => <TemplateButton make={makeTemplate(i)} name="UMO_owner-memo_template.pdf" goalId="download_owner_memo_template" />
+  const templateIcon = (i: number) => <TemplateButton make={makeTemplate(i)} name={`${SITE.file}_owner-memo_template.pdf`} goalId="download_owner_memo_template" />
 
   const problemOf = (i: number) => personIssues(i)[0]?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!)) : undefined)
 
@@ -437,7 +438,7 @@ export default function Memo() {
         <div ref={dealerForm} className="flex flex-col gap-4">
           <div data-field="dealer" className="group/field flex flex-col gap-3">
             <p className={`text-[14px] leading-4 text-caption ${ALERT_LABEL}`}>Дилер</p>
-            <ComboField value={dealer.name} onChange={pickDealer} options={DEALER_OPTIONS} filter={dealerFilter} singleLine placeholder="Название дилера" label="Дилеры UMO" invalid={dealerWrong.has('dealer')} />
+            <ComboField value={dealer.name} onChange={pickDealer} options={DEALER_OPTIONS} filter={dealerFilter} singleLine placeholder="Название дилера" label={`Дилеры ${SITE.name}`} invalid={dealerWrong.has('dealer')} />
           </div>
             {field('dealerPhone', 'Телефон дилера', <TextInput value={input.phone} onChange={v => phoneChange(v, text => setDealer(d => ({ ...d, phone: text })))} placeholder="+7 987 654 32 10" inputMode="tel" invalid={dealerWrong.has('dealerPhone')} />)}
             {field('address', 'Адрес', <TextArea value={input.address} onChange={v => setDealer(d => ({ ...d, address: v }))} placeholder="Адрес" invalid={dealerWrong.has('address')} />)}

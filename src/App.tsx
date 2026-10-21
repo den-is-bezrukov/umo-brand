@@ -8,6 +8,7 @@ import { TemplateButton, useTemplateLink } from '@/ui/template'
 import { loadFonts } from '@/ui/type'
 import { CARD, buildCard, loadAlice, trimOf, type CardFonts, type Model, type Trim } from '@/pricecard/card'
 import CardArt from '@/pricecard/CardArt'
+import { SITE } from '@/site'
 
 const POSTER_W = CARD.w
 const POSTER_H = CARD.h
@@ -113,7 +114,7 @@ const defaultOf = (model: Model, trim: Trim): Card => ({ ...defaultCard(model), 
  * What the guide's PDF link (`?t`) gives: every model's every trim as it comes, UMO 5 first, an A3 page each, ready to
  * print (the card's own file stays in its column)
  */
-const DEFAULTS_FILE = 'UMO_price-cards.pdf'
+const DEFAULTS_FILE = `${SITE.file}_price-cards.pdf`
 const allDefaults = () => (['umo5', 'umo8'] as Model[]).flatMap(m => TRIMS[m].map(trim => defaultOf(m, trim)))
 const defaultsPdf = () => pdfOf(allDefaults(), DEFAULTS_FILE)
 
@@ -133,7 +134,7 @@ function downloadGoal(cards: Card[], extra?: Record<string, unknown>) {
 /** One card's file is named for it, several are «UMO_price-cards» */
 function pdfName(cards: Card[]) {
   const one = cards.length === 1 ? cards[0] : null
-  return one ? `UMO-${one.model === 'umo8' ? '8' : '5'}-${one.trim.toUpperCase()}.pdf` : 'UMO_price-cards.pdf'
+  return one ? `UMO-${one.model === 'umo8' ? '8' : '5'}-${one.trim.toUpperCase()}.pdf` : `${SITE.file}_price-cards.pdf`
 }
 
 export default function App() {
@@ -204,7 +205,7 @@ export default function App() {
 
   useEffect(() => {
     const prev = document.title
-    document.title = 'Прайс-карта UMO'
+    document.title = `Прайс-карта ${SITE.name}`
     return () => { document.title = prev }
   }, [])
 

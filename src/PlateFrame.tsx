@@ -12,6 +12,7 @@ import { DEALER_NAMES, dealerFilter, withoutBrand } from '@/data/points'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { recordText } from '@/ui/liveText'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
+import { SITE } from '@/site'
 
 // Number plate frame generator: the dealer's line printed under the plate, as a
 // 501×21 mm PDF with the text in outlines, for the frame maker. The line is the dealer's marketing name as umo.auto
@@ -19,7 +20,7 @@ import { TemplateButton, useTemplateLink } from '@/ui/template'
 // A link with `text` (even empty: /plate-frame?text) opens a hidden mode where the whole line is free, for the odd case
 // the prefix doesn't fit; nothing on the page leads there.
 
-const PREFIX = 'UMO '
+const PREFIX = `${SITE.name} `
 /** The name field's placeholder, standing grey on the frame while it's empty; never in the PDF */
 const PLACEHOLDER_NAME = 'Центр'
 const PLACEHOLDER_TEXT = PREFIX + PLACEHOLDER_NAME
@@ -54,7 +55,7 @@ export default function PlateFrame() {
 
   useEffect(() => {
     const prev = document.title
-    document.title = 'Рамка номера UMO'
+    document.title = `Рамка номера ${SITE.name}`
     return () => { document.title = prev }
   }, [])
 
@@ -114,7 +115,7 @@ export default function PlateFrame() {
   const makeTemplate = font ? () => templateOf(shown) : undefined
   /** The blank one a `template` link gives: «UMO Центр» */
   const makeBlank = font ? () => templateOf(PREFIX + PLACEHOLDER_NAME) : undefined
-  const templateOnly = useTemplateLink(makeBlank, 'UMO_plate-frame_template.pdf', 'download_plate_frame_template')
+  const templateOnly = useTemplateLink(makeBlank, `${SITE.file}_plate-frame_template.pdf`, 'download_plate_frame_template')
 
   // `pdf` in the link (a link made for the dealer) opens the strip's PDF itself, with no editor, once the font
   // is in; a line at fault opens the editor instead, showing what's wrong
@@ -143,7 +144,7 @@ export default function PlateFrame() {
             <span className="relative">
               Поле печати, {STRIP.w}&nbsp;×&nbsp;{STRIP.h}&nbsp;мм
               {/* The reset, by what it resets, as the livery's sheets and the cards' own */}
-              <CaptionReset onClick={blank ? undefined : reset} label="Вернуть рамку по умолчанию" extra={<TemplateButton make={makeTemplate} name="UMO_plate-frame_template.pdf" goalId="download_plate_frame_template" />} />
+              <CaptionReset onClick={blank ? undefined : reset} label="Вернуть рамку по умолчанию" extra={<TemplateButton make={makeTemplate} name={`${SITE.file}_plate-frame_template.pdf`} goalId="download_plate_frame_template" />} />
             </span>
           </figcaption>
           {wrong && (

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { findDealers, knowsEveryWord, withoutBrand, type SalesPoint as Dealer } from '@/data/points'
 import { outlined } from './form'
 import { goal } from './metrika'
+import { POINTS } from '@brand/points'
 import { linkParams } from './share'
 
 /**
@@ -47,7 +48,7 @@ export default function LinkDealer({ param, withUmo, children }: { param: string
       <div className="flex flex-col gap-2">
         {choices.map(d => (
           <button key={d.name} type="button" onClick={() => pick(d)} className={`${outlined} flex-col items-start! gap-0.5 text-left`}>
-            <span>UMO {withoutBrand(d.name)}</span>
+            <span>{`${POINTS.prefix} `}{withoutBrand(d.name)}</span>
             {d.address && <span className="font-normal text-caption">{d.address}</span>}
           </button>
         ))}

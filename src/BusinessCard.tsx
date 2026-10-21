@@ -15,12 +15,13 @@ import { MobileEditor, usePhone } from '@/ui/mobile'
 import { linkParams, saveAndOpenPdf } from '@/ui/share'
 import { recordText } from '@/ui/liveText'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
+import { SITE } from '@/site'
 
 // Business card generator: the dealership set once, its staff typed on the page
 // or loaded from the template, one PDF out with the face and a back per person. The staff list works as the name
 // tag's (`useStaff`); the dealership and the QR are the whole list's.
 
-const TEMPLATE = `${import.meta.env.BASE_URL}downloads/UMO_business-cards_template.xlsx`
+const TEMPLATE = `${import.meta.env.BASE_URL}downloads/${SITE.file}_business-cards_template.xlsx`
 
 const BLANK: Person = { name: '', surname: '', position: '', email: '', phone: '', ext: '' }
 /** Shown grey on the card in place of an empty required field; never in the PDF */
@@ -62,7 +63,7 @@ const addressOf = (name: string) => dealerOf(name)?.address || undefined
 const DEALER_OPTIONS = DEALER_NAMES.map(withoutBrand)
 
 /** What the grey stand-in QR holds */
-const SAMPLE_LINK = 'https://umo.auto'
+const SAMPLE_LINK = SITE.home
 
 /** What the cards were made from, kept in their PDF (`CARDS_KEY`) */
 interface CardsData { dealer: Omit<Dealer, 'site'> & { site: string | null }; qrLink: string | null; faceEach: boolean; marks: boolean; people: Person[] }
@@ -138,7 +139,7 @@ export default function BusinessCard() {
 
   useEffect(() => {
     const prev = document.title
-    document.title = 'Визитка UMO'
+    document.title = `Визитка ${SITE.name}`
     return () => { document.title = prev }
   }, [])
 
@@ -215,7 +216,7 @@ export default function BusinessCard() {
   const shareFile = useCallback(async () => {
     const { cardsPdf } = await import('@/card/pdf')
     const data: CardsData = { dealer: input, qrLink, faceEach, marks, people: items.map(plain) }
-    return new File([await cardsPdf(cards!.map(c => c.back), { faceEach, marks }, data)], 'UMO_business-cards.pdf', { type: 'application/pdf' })
+    return new File([await cardsPdf(cards!.map(c => c.back), { faceEach, marks }, data)], `${SITE.file}_business-cards.pdf`, { type: 'application/pdf' })
   }, [cards, input, qrLink, faceEach, marks, items]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleExport = async () => {
@@ -227,7 +228,7 @@ export default function BusinessCard() {
       const blob = await cardsPdf(cards.map(c => c.back), { faceEach, marks }, data)
       const a = document.createElement('a')
       a.href = URL.createObjectURL(blob)
-      a.download = 'UMO_business-cards.pdf'
+      a.download = `${SITE.file}_business-cards.pdf`
       a.click()
       // The QR link goes along when it isn't the site made up from the dealer's name: what dealers put there
       const ownLink = link.trim() !== `https://${siteText(siteFor(dealer.name))}`
@@ -249,7 +250,7 @@ export default function BusinessCard() {
     import('@/card/pdf')
       .then(async ({ cardsPdf }) => {
         const data: CardsData = { dealer: input, qrLink, faceEach, marks, people: items.map(plain) }
-        saveAndOpenPdf(await cardsPdf(cards.map(c => c.back), { faceEach, marks }, data), 'UMO_business-cards.pdf')
+        saveAndOpenPdf(await cardsPdf(cards.map(c => c.back), { faceEach, marks }, data), `${SITE.file}_business-cards.pdf`)
         goal('download_business_card', { count: cards.length, faceEach, marks, via: 'link' })
       })
       .catch(() => setPdfOnly(false))
@@ -271,12 +272,12 @@ export default function BusinessCard() {
     ))
     return import('@/card/pdf').then(m => m.cardsTemplate([{ back, lines }], { faceEach: false, marks: false }))
   } : undefined
-  const templateOnly = useTemplateLink(makeBlank, 'UMO_business-cards_template.pdf', 'download_business_card_template')
+  const templateOnly = useTemplateLink(makeBlank, `${SITE.file}_business-cards_template.pdf`, 'download_business_card_template')
   /** «Добавить» in the item's column, ⌘↩ from anywhere (the manual list, wide screens) */
   const addItem = (after?: number) => { const p = salonPhone(dealer.name); if (p) staff.add({ ...BLANK, phone: p }, true, after); else staff.add(undefined, undefined, after) }
   useAddKey(!phone && mode === 'manual' ? () => addItem(staff.selected) : undefined)
   /** «Скачать шаблон» in the item's column */
-  const templateIcon = (i: number) => <TemplateButton make={makeTemplate(i)} name="UMO_business-cards_template.pdf" goalId="download_business_card_template" />
+  const templateIcon = (i: number) => <TemplateButton make={makeTemplate(i)} name={`${SITE.file}_business-cards_template.pdf`} goalId="download_business_card_template" />
 
   const face = toD(FACE)
   /** The QR, the whole list's: with the dealership, under «Изменить» after the site it follows */
@@ -362,7 +363,7 @@ export default function BusinessCard() {
                     options={DEALER_OPTIONS} filter={dealerFilter}
                     singleLine
                     placeholder="Название дилера"
-                    label="Дилеры UMO"
+                    label={`Дилеры ${SITE.name}`}
                     invalid={dealerWrong.has('dealer')}
                   />
               </div>

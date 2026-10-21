@@ -13,13 +13,14 @@ import { MobileEditor, usePhone } from '@/ui/mobile'
 import { linkParams, saveAndOpenPdf } from '@/ui/share'
 import { recordText } from '@/ui/liveText'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
+import { SITE } from '@/site'
 
 // Price tag generator: price tags for the small goods at a dealership, any
 // employee printing them on an office printer and cutting them out with scissors. The dealer is set once, the goods typed
 // on the page or loaded from the template; one PDF out, eight tags to an A4 sheet. The list works as the name tag's and
 // the business card's (`useStaff`).
 
-const TEMPLATE = `${import.meta.env.BASE_URL}downloads/UMO_price-tags_template.xlsx`
+const TEMPLATE = `${import.meta.env.BASE_URL}downloads/${SITE.file}_price-tags_template.xlsx`
 
 const BLANK: Item = { name: '', code: '', caption: DEFAULT_CAPTION, price: '' }
 /** Shown grey on the tag in place of an empty required field; never in the PDF */
@@ -96,7 +97,7 @@ export default function PriceTag() {
 
   useEffect(() => {
     const prev = document.title
-    document.title = 'Ценник UMO'
+    document.title = `Ценник ${SITE.name}`
     return () => { document.title = prev }
   }, [])
 
@@ -125,12 +126,12 @@ export default function PriceTag() {
     const one = recordText(() => buildTag(fonts, PLACEHOLDER.dealer!, { name: PLACEHOLDER.name!, code: 'Артикул', caption: PLACEHOLDER.caption!, price: PLACEHOLDER.price! }))
     return import('@/pricetag/pdf').then(m => m.tagsTemplate(Array.from({ length: m.PER_PAGE }, () => ({ tag: one.result, lines: one.lines }))))
   } : undefined
-  const templateOnly = useTemplateLink(makeBlank, 'UMO_price-tags_template.pdf', 'download_price_tag_template')
+  const templateOnly = useTemplateLink(makeBlank, `${SITE.file}_price-tags_template.pdf`, 'download_price_tag_template')
   /** «Добавить» in the item's column, ⌘↩ from anywhere (the manual list, wide screens) */
   const addItem = (after?: number) => staff.add(undefined, undefined, after)
   useAddKey(!phone && mode === 'manual' ? () => addItem(staff.selected) : undefined)
   /** «Скачать шаблон» in the item's column */
-  const templateIcon = (i: number) => <TemplateButton make={makeTemplate(i)} name="UMO_price-tags_template.pdf" goalId="download_price_tag_template" />
+  const templateIcon = (i: number) => <TemplateButton make={makeTemplate(i)} name={`${SITE.file}_price-tags_template.pdf`} goalId="download_price_tag_template" />
 
   const dealerMissing = !dealer.trim()
   const dealerIssues = [...(dealerMissing ? [MISSING.dealer!] : []), ...new Set(tags?.[0]?.issues.filter(i => i.field === 'dealer').map(i => i.text) ?? [])]
@@ -244,7 +245,7 @@ export default function PriceTag() {
               options={DEALER_OPTIONS} filter={dealerFilter}
               singleLine
               placeholder="Название дилера"
-              label="Дилеры UMO"
+              label={`Дилеры ${SITE.name}`}
               invalid={dealerIssues.length > 0 && !dealerMissing}
             />
           </div>

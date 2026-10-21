@@ -6,6 +6,8 @@ import { nameFault } from '@/ui/names'
 import { withListBreak } from '@/data/positions'
 import { noteLine } from '@/ui/liveText'
 import { LOGO } from '@brand/logo'
+import { SITE } from '@/site'
+import { withoutBrand } from '@/data/points'
 
 // A dealership employee's business card: 90×50 mm, two sides. The face
 // is the UMO logo 40×8 mm in the bottom left corner, the same for everyone. The back has
@@ -172,9 +174,9 @@ const TRANSLIT: Record<string, string> = {
  * exist yet; it's a suggestion, typed over freely
  */
 export function siteFor(dealer: string): string {
-  const slug = [...oneLine(dealer).replace(/^UMO\s+/i, '').toLowerCase()].map(c => TRANSLIT[c] ?? c).join('')
+  const slug = [...withoutBrand(oneLine(dealer)).toLowerCase()].map(c => TRANSLIT[c] ?? c).join('')
     .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-  return slug ? `${slug}.umo.auto` : ''
+  return slug ? `${slug}.${new URL(SITE.home).host}` : ''
 }
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
