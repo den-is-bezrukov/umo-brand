@@ -22,7 +22,3 @@ The core is written as if every brand were a client: no brand's name, font, site
 - `Wordmark.tsx`, `HeaderLogo.tsx`, `CobrandLockup.tsx` — the guide's logo: the wordmark on plates, the header's lockup that folds with the scroll (`COBRAND` turns the partner off; `setLogoFold` folds it by script, its layers' moves in the brand's `theme.css`), the co-branding lockup.
 - `check.mjs` — the check's scenarios on the brand's data (`SCENARIOS`, `TABLES`, read by `scripts/check.mjs`).
 - `README.md` — the brand's own notes: its numbers and how its parts were made.
-
-## Checking
-
-Moving something into the brand changes nothing people see: `pnpm check` against a baseline taken before (see «Checking that nothing changed» in `AGENTS.md`). The baseline is from 87b0d0a, the code before the brand moved; a scenario added since takes its baseline from there too: `node scripts/check.mjs --baseline --baseline-from=87b0d0a --only=<scenario>`.

@@ -4,7 +4,7 @@ The web version of a brand's guide page from its Figma, in three parts: the page
 
 To refresh an illustration, re-export that frame at 2x and overwrite the file with the same name. Export the whole section Block and crop the frame out of it: frames that stretch inside a grid/flex parent come out of Figma's direct export at the wrong size (a mostly empty canvas).
 
-Vector schemes (clear space, minimum size, co-branding, type specimens, model lettering) are SVG files in the same folder — `img()` prefers `<name>.svg` over `<name>.webp`. They are cut out of Figma SVG exports of the parent Body nodes by `scripts/split-figma-svg.py` (how: the `figma-to-guide` skill). Text inside them is outlined by Figma. The lettering pictures (`lettering-model8` / `lettering-model5`: MODEL lettering over its number plate) were laid out by the script's `assemble()` from separate layer exports, as those frames export stretched. Photos, logo misuse examples, app/social icons and model posters stay WebP.
+Vector schemes (clear space, minimum size, co-branding, type specimens, model lettering) are SVG files in the same folder — `img()` prefers `<name>.svg` over `<name>.webp`. How they're exported: the `figma-to-guide` skill. Text inside them is outlined by Figma. Photos, logo misuse examples, app/social icons and model posters stay WebP.
 
 ## Structure and rhythm
 

@@ -20,7 +20,7 @@ description: Bring a block of a brand's guide from Figma into the site — layou
 
 Overwrite the file with the same name; `import.meta.glob` picks it up. Keep every image under 2.5 MB (CI fails otherwise).
 
-**Vector schemes → `<name>.svg`** (`img()` prefers it over WebP): export the parent Body node as SVG with outlined text, add a `make()` line for the figure (the export, the frame to keep, its crop box) at the bottom of `scripts/split-figma-svg.py`, and run `python3 scripts/split-figma-svg.py <exports> brand/<name>/guide/images`. Frames that export stretched are laid out from layer exports with `assemble()`. The lines are for this run only: once the SVG is in the brand's folder, take them out again.
+**Vector schemes → `<name>.svg`** (`img()` prefers it over WebP): the frame as SVG with outlined text (`use_figma`: `exportAsync({ format: 'SVG_STRING', svgOutlineText: true })`); a frame that exports stretched inside a grid/flex parent: export the parent and set the SVG's `viewBox`, `width` and `height` to the frame's box in it.
 
 **Icons for the UI (`src/icons/`)**: `exportAsync({ format: 'SVG_STRING', svgOutlineText: true })` on the node, keep the path data, use `currentColor`. Keep hairlines as filled rects, not zero-width stroked paths.
 
