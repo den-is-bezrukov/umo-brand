@@ -6,7 +6,7 @@ import { zipSync, strToU8 } from 'fflate'
 import { TAG, LOGO, TAGS_KEY, type Tag } from './tag'
 import { writePdfData } from '@/ui/pdfDataWrite'
 import type { Cmd } from '@/livery/geometry'
-import { embedCoFo, textOps, type LiveFonts } from '@/ui/liveTextPdf'
+import { embedFonts, textOps, type LiveFonts } from '@/ui/liveTextPdf'
 import type { TextLine } from '@/ui/liveText'
 
 // Loaded only when the files are downloaded, so the page doesn't carry pdf-lib until then.
@@ -72,7 +72,7 @@ async function tagsPdf(tags: Tag[], people: unknown): Promise<Uint8Array> {
 export async function tagsTemplate(tags: { tag: Tag; lines: TextLine[] }[]): Promise<Blob> {
   const doc = await PDFDocument.create()
   doc.setTitle('UMO_name-tags_template.pdf')
-  await tagPages(doc, tags, await embedCoFo(doc))
+  await tagPages(doc, tags, await embedFonts(doc))
   const bytes = await doc.save({ useObjectStreams: false })
   return new Blob([bytes as BlobPart], { type: 'application/pdf' })
 }

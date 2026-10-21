@@ -12,6 +12,7 @@ import umo8MaxPreview from '@/assets/umo8-car-preview.webp'
 import umo8UltraPreview from '@/assets/umo8-ultra-car-preview.webp'
 import umo5ProPreview from '@/assets/umo5-car-preview.webp'
 import umo5MaxPreview from '@/assets/umo5-max-car-preview.webp'
+import { ALICE } from '@brand/fonts'
 
 // The price card, an A3 poster (Figma «Price Cards», 2100×2970 px, 7.07 px a millimetre; everything here in its px,
 // y down): the car's photo across the top 720 px with the wordmark and «от … ₽» on it in white; under it a 150 px
@@ -143,9 +144,9 @@ function fromD(d: string, dx: number, dy: number): Cmd[] {
   return cmds
 }
 
-/** Alice Okniks (`public/fonts`, the site's): Alice's mark on @, a thin no-break space */
+/** Alice Okniks (`@brand/fonts`, the site's): Alice's mark on @, a thin no-break space */
 let alicePromise: Promise<Font> | undefined
-export const loadAlice = () => alicePromise ??= fetch(`${import.meta.env.BASE_URL}fonts/AliceOkniks.woff`).then(r => r.arrayBuffer()).then(buf => parse(buf))
+export const loadAlice = () => alicePromise ??= fetch(`${import.meta.env.BASE_URL}${ALICE}`).then(r => r.arrayBuffer()).then(buf => parse(buf))
 
 export interface CardFonts extends Fonts { alice: Font }
 

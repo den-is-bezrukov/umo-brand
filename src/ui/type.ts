@@ -1,25 +1,27 @@
 import { parse, type Font, type Glyph } from 'opentype.js'
 import type { Cmd } from '@/livery/geometry'
+import type { BrandFont } from '@/brand'
+import { FONTS } from '@brand/fonts'
 
-// Text in outlines, as the generators share it: CoFo Sans loaded once, texts tidied, lines set glyph by glyph with
+// Text in outlines, as the generators share it: the brand's type (`@brand/fonts`) loaded once, texts tidied, lines set glyph by glyph with
 // kerning, tracking and the features opentype.js doesn't apply itself, lines wrapped between words. Sizes and
 // positions are in the generator's units (mm), y down.
 
 export interface Fonts { medium: Font; regular: Font }
 
 const fontPromises = new Map<string, Promise<Font>>()
-const loadCoFo = (face: 'Medium' | 'Regular') => {
-  let p = fontPromises.get(face)
+const load = (face: BrandFont) => {
+  let p = fontPromises.get(face.file)
   if (!p) {
-    p = fetch(`${import.meta.env.BASE_URL}fonts/CoFoSans-${face}.ttf`).then(r => r.arrayBuffer()).then(buf => parse(buf))
-    fontPromises.set(face, p)
+    p = fetch(`${import.meta.env.BASE_URL}${face.file}`).then(r => r.arrayBuffer()).then(buf => parse(buf))
+    fontPromises.set(face.file, p)
   }
   return p
 }
 
-/** CoFo Sans Medium, the face most generators set everything in */
-export const loadFont = () => loadCoFo('Medium')
-export const loadFonts = (): Promise<Fonts> => Promise.all([loadCoFo('Medium'), loadCoFo('Regular')]).then(([medium, regular]) => ({ medium, regular }))
+/** The brand's Medium, the face most generators set everything in */
+export const loadFont = () => load(FONTS.medium)
+export const loadFonts = (): Promise<Fonts> => Promise.all([load(FONTS.medium), load(FONTS.regular)]).then(([medium, regular]) => ({ medium, regular }))
 
 /** Paragraphs as typed: every kind of space becomes a plain one, zero-width marks go, empty lines too */
 export const tidy = (t: string) => t.replace(/[​-‍⁠﻿]/g, '').replace(/\r/g, '').split('\n').map(l => l.replace(/\s+/g, ' ').trim()).filter(Boolean)

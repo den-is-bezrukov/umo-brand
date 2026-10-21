@@ -4,30 +4,34 @@ import {
   pushGraphicsState, popGraphicsState, setFillingCmykColor, beginText, endText, setTextMatrix, setFontAndSize,
 } from 'pdf-lib'
 import type { TextLine } from './liveText'
+import { FONTS } from '@brand/fonts'
 
 // The noted lines (`liveText.ts`) written into a template's pages, loaded with the PDF only: each letter at its pen
 // (kerning and tracking as TJ adjustments), so nothing moves. The font goes in whole and under its own name:
 // Illustrator, importing a PDF's pages, outlined text set in a subset, and pdf-lib's random suffix kept it from the
 // installed font.
 
-/** The fonts a template writes in: CoFo Sans Regular and Medium, whole */
+/** The fonts a template writes in, by their PostScript names: the brand's Regular and Medium (`@brand/fonts`), whole */
 export type LiveFonts = Map<string, PDFFont>
 
 /** fontkit (some 320 KB) loads here, with the template only: the files to print are in outlines and don't need it */
-export async function embedCoFo(doc: PDFDocument): Promise<LiveFonts> {
+export async function embedFonts(doc: PDFDocument): Promise<LiveFonts> {
   doc.registerFontkit((await import('@pdf-lib/fontkit')).default)
-  const one = async (name: string) => {
-    const bytes = await fetch(`${import.meta.env.BASE_URL}fonts/CoFoSans-${name}.ttf`).then(r => r.arrayBuffer())
-    return [`CoFoSans-${name}`, await doc.embedFont(bytes, { subset: false, customName: `CoFoSans-${name}` })] as const
-  }
-  return new Map(await Promise.all([one('Regular'), one('Medium')]))
+  return new Map(await Promise.all([FONTS.regular, FONTS.medium].map(async face => [face.name, await embedFace(doc, face.file, face.name)] as const)))
 }
 
-/** The font's own name: opentype.js 2 keeps it per platform */
+/** A font whole and under its own name (pdf-lib would add a random suffix), so Illustrator finds the installed one; fontkit registered */
+export const embedFace = async (doc: PDFDocument, file: string, name: string) =>
+  doc.embedFont(await fetch(`${import.meta.env.BASE_URL}${file}`).then(r => r.arrayBuffer()), { subset: false, customName: name })
+
+/** The font's own name, as the brand's Medium or Regular: opentype.js 2 keeps it per platform */
 const psName = (font: Font) => {
   const n = font.names as unknown as Record<string, { postScriptName?: { en?: string } } | undefined>
-  return (n.windows?.postScriptName?.en ?? n.macintosh?.postScriptName?.en ?? '').includes('Medium') ? 'CoFoSans-Medium' : 'CoFoSans-Regular'
+  return (n.windows?.postScriptName?.en ?? n.macintosh?.postScriptName?.en ?? '') === FONTS.medium.name ? FONTS.medium.name : FONTS.regular.name
 }
+
+/** A face's name in a page's resources: CoFoRegular for CoFoSans-Regular */
+const resourceName = (name: string) => FONTS.short + (name === FONTS.medium.name ? 'Medium' : 'Regular')
 
 /**
  * The lines as text on a page: `toPage(x, y)` turns the generator's units into the page's points (y up), `scale`
@@ -35,7 +39,7 @@ const psName = (font: Font) => {
  */
 export function textOps(page: PDFPage, fonts: LiveFonts, lines: TextLine[], toPage: (x: number, y: number) => [number, number], scale: number, fill: [number, number, number, number] | PDFOperator[]): PDFOperator[] {
   if (!lines.length) return []
-  const names = new Map([...fonts].map(([n, f]) => [n, page.node.newFontDictionary(n.replace('CoFoSans-', 'CoFo'), f.ref)]))
+  const names = new Map([...fonts].map(([n, f]) => [n, page.node.newFontDictionary(resourceName(n), f.ref)]))
   const cmyk = typeof fill[0] === 'number' ? fill as [number, number, number, number] : undefined
   const ops: PDFOperator[] = [pushGraphicsState(), ...(cmyk ? [setFillingCmykColor(...cmyk)] : fill as PDFOperator[]), beginText()]
   for (const line of lines) {

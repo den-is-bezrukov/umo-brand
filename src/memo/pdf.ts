@@ -5,6 +5,9 @@ import {
 } from 'pdf-lib'
 import type { Cmd } from '@/livery/geometry'
 import { writePdfData } from '@/ui/pdfDataWrite'
+import { embedFace } from '@/ui/liveTextPdf'
+import type { BrandFont } from '@/brand'
+import { FONTS } from '@brand/fonts'
 import { MEMOS_KEY, PAGE, MEMO_TEXTS, parseArt, type Block, type Shape } from './memo'
 import { layoutText, advance, type FontKey, type Line, type MemoFonts } from './text'
 import page1 from '@/assets/memo/page-1.svg'
@@ -91,7 +94,7 @@ export async function memosPdf(blocks: Block[], data: unknown): Promise<Blob> {
  * stands where Figma sets it. A line is one text object, as Illustrator opens it
  */
 function textOps(page: PDFPage, pdfFonts: Record<FontKey, PDFFont>, fonts: MemoFonts, sets: { size: number; lines: Line[] }[]): PDFOperator[] {
-  const names = { r: page.node.newFontDictionary('CoFoR', pdfFonts.r.ref), m: page.node.newFontDictionary('CoFoM', pdfFonts.m.ref) }
+  const names = { r: page.node.newFontDictionary(`${FONTS.short}R`, pdfFonts.r.ref), m: page.node.newFontDictionary(`${FONTS.short}M`, pdfFonts.m.ref) }
   const ops: PDFOperator[] = [pushGraphicsState(), setFillingCmykColor(...K(1)), beginText()]
   for (const { size, lines } of sets) for (const l of lines) {
     for (const s of l.segs) {
@@ -121,13 +124,12 @@ function textOps(page: PDFPage, pdfFonts: Record<FontKey, PDFFont>, fonts: MemoF
 export async function memosTemplate(blocks: Block[], fonts: MemoFonts): Promise<Blob> {
   const doc = await PDFDocument.create()
   doc.setTitle('UMO_owner-memo_template.pdf')
-  // fontkit loads with the template only, as in `embedCoFo`
+  // fontkit loads with the template only, as in `embedFonts`
   doc.registerFontkit((await import('@pdf-lib/fontkit')).default)
-  // Whole and named as the font is (pdf-lib would add a random suffix), so Illustrator finds the installed CoFo Sans
-  // for it: a subset kept the text live in a page opened alone, but Illustrator's import of all pages outlined it
-  const font = (name: string) => fetch(`${import.meta.env.BASE_URL}fonts/CoFoSans-${name}.ttf`).then(r => r.arrayBuffer())
-    .then(b => doc.embedFont(b, { subset: false, customName: `CoFoSans-${name}` }))
-  const [one, two, r, m] = await Promise.all([art(page1), art(page2), font('Regular'), font('Medium')])
+  // Whole and named as the font is, so Illustrator finds the installed one for it: a subset kept the text live in a
+  // page opened alone, but Illustrator's import of all pages outlined it
+  const font = (face: BrandFont) => embedFace(doc, face.file, face.name)
+  const [one, two, r, m] = await Promise.all([art(page1), art(page2), font(FONTS.regular), font(FONTS.medium)])
   const pdfFonts = { r, m }
   const [first, second] = [shared(doc, one.filter(s => !s.text)), shared(doc, two.filter(s => !s.text))]
   /** Each page's fixed texts, set once */

@@ -6,7 +6,7 @@ import {
 import { CARD, FACE, BACK_LOGO, type Back } from './card'
 import type { Cmd } from '@/livery/geometry'
 import { writePdfData } from '@/ui/pdfDataWrite'
-import { embedCoFo, textOps, type LiveFonts } from '@/ui/liveTextPdf'
+import { embedFonts, textOps, type LiveFonts } from '@/ui/liveTextPdf'
 import type { TextLine } from '@/ui/liveText'
 import { CARDS_KEY } from './card'
 
@@ -58,7 +58,7 @@ export async function cardsPdf(backs: Back[], { faceEach, marks }: PageOptions, 
 export async function cardsTemplate(backs: { back: Back; lines: TextLine[] }[], options: PageOptions): Promise<Blob> {
   const doc = await PDFDocument.create()
   doc.setTitle('UMO_business-cards_template.pdf')
-  return cardPages(doc, backs, options, await embedCoFo(doc))
+  return cardPages(doc, backs, options, await embedFonts(doc))
 }
 
 /** The pages: the text as outlines, or, with `live`, the noted lines as text */

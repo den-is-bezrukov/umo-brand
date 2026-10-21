@@ -6,7 +6,7 @@ import { zipSync } from 'fflate'
 import { specMarks, labelCmds, type Cmd, type Sheet } from './geometry'
 import { loadFont } from '@/ui/type'
 import type { Surface } from './layout'
-import { embedCoFo, textOps } from '@/ui/liveTextPdf'
+import { embedFonts, textOps } from '@/ui/liveTextPdf'
 
 const PT = 72 / 25.4
 // The livery colour of the Illustrator sources: rich black, C60 M40 Y40 K100.
@@ -49,7 +49,7 @@ async function cutFile(sheets: Sheet[], title: string): Promise<Uint8Array> {
 export async function liveryTemplate(prefix: string, sheets: Sheet[]): Promise<Blob> {
   const doc = await PDFDocument.create()
   doc.setTitle(`${prefix}_dealer-livery_template.pdf`)
-  const fonts = await embedCoFo(doc)
+  const fonts = await embedFonts(doc)
   for (const s of sheets) {
     const page = doc.addPage([s.surface.w * PT, s.surface.h * PT])
     const H = page.getHeight()

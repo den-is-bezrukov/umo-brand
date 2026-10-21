@@ -1,10 +1,17 @@
 import { defineConfig, type HtmlTagDescriptor, type Plugin } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
+import fs from 'node:fs'
 import path from 'node:path'
 
 import siteConfiguration from './site.config.json'
 import { GENERATORS } from './src/data/generators'
+
+// The brand the site is built with: `brand/<BRAND>`, UMO unless `BRAND` says otherwise (`BRAND=demo pnpm dev:demo`).
+// The code takes everything of the brand from there through `@brand`; its `public/` is the site's root, the core's own
+// `public/` (404.html) added to it
+const BRAND = process.env.BRAND || 'umo'
+const brandDir = path.resolve(__dirname, 'brand', BRAND)
 
 // Vite config — https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -12,6 +19,7 @@ export default defineConfig(({ mode }) => {
 
   return {
     base: '/',
+    publicDir: path.join(brandDir, 'public'),
     build: {
       sourcemap: emitSourcemaps ? 'inline' : false,
       minify: !emitSourcemaps,
@@ -21,10 +29,12 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       siteMetaPlugin(siteConfiguration),
       routePages([...GENERATORS.map(g => g.path), '/editor']),
+      corePublic(path.resolve(__dirname, 'public')),
       reactRefreshBoundaryFallback(),
     ],
     resolve: {
       alias: {
+        '@brand': brandDir,
         '@': path.resolve(__dirname, './src'),
       },
     },
@@ -32,6 +42,8 @@ export default defineConfig(({ mode }) => {
       host: '0.0.0.0',
       port: parseInt(process.env.PORT || '5477'),
       strictPort: true,
+      // The check's builds (scripts/check.mjs) would reload the open page
+      watch: { ignored: ['**/.check/**'] },
     },
     preview: {
       host: '0.0.0.0',
@@ -239,6 +251,17 @@ function routePages(paths: string[]): Plugin {
       for (const p of paths) {
         this.emitFile({ type: 'asset', fileName: `${p.slice(1)}.html`, source: index.source })
       }
+    },
+  }
+}
+
+/** The core's own files at the site's root (404.html), beside the brand's `public/`, which Vite serves as the root */
+function corePublic(dir: string): Plugin {
+  return {
+    name: 'core-public',
+    apply: 'build',
+    generateBundle() {
+      for (const file of fs.readdirSync(dir)) this.emitFile({ type: 'asset', fileName: file, source: fs.readFileSync(path.join(dir, file)) })
     },
   }
 }

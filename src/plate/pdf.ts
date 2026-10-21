@@ -3,7 +3,7 @@ import {
   moveTo, lineTo, appendBezierCurve, closePath, pushGraphicsState, popGraphicsState, rectangle, fill, setFillingCmykColor,
 } from 'pdf-lib'
 import { STRIP, type Strip } from './frame'
-import { embedCoFo, textOps } from '@/ui/liveTextPdf'
+import { embedFonts, textOps } from '@/ui/liveTextPdf'
 import type { TextLine } from '@/ui/liveText'
 
 // Loaded only when the PDF is downloaded, so the guide and the constructor page don't carry pdf-lib.
@@ -30,7 +30,7 @@ export async function stripTemplate(strip: Strip, lines: TextLine[]): Promise<Bl
 async function stripPage(strip: Strip, title: string, lines?: TextLine[]): Promise<Blob> {
   const doc = await PDFDocument.create()
   doc.setTitle(title)
-  const live = lines && await embedCoFo(doc)
+  const live = lines && await embedFonts(doc)
   const page = doc.addPage([STRIP.w * PT, STRIP.h * PT])
   const tint = doc.context.obj({ FunctionType: 2, Domain: [0, 1], C0: [0, 0, 0, 0], C1: [0, 0, 0, 0], N: 1 })
   const white = doc.context.register(doc.context.obj([PDFName.of('Separation'), PDFName.of('White'), PDFName.of('DeviceCMYK'), tint]))

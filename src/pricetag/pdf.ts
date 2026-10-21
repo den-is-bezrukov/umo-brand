@@ -7,7 +7,7 @@ import { TAG, BAND, BAND_ART, type Tag } from './tag'
 import { DATA_KEY, type TagsData } from './read'
 import { writePdfData } from '@/ui/pdfDataWrite'
 import type { Cmd } from '@/livery/geometry'
-import { embedCoFo, textOps, type LiveFonts } from '@/ui/liveTextPdf'
+import { embedFonts, textOps, type LiveFonts } from '@/ui/liveTextPdf'
 import type { TextLine } from '@/ui/liveText'
 
 // Loaded only when the tags are downloaded, so the page doesn't carry pdf-lib until then.
@@ -64,7 +64,7 @@ export async function tagsPdf(tags: Tag[], data: TagsData): Promise<Blob> {
 export async function tagsTemplate(tags: { tag: Tag; lines: TextLine[] }[]): Promise<Blob> {
   const doc = await PDFDocument.create()
   doc.setTitle('UMO_price-tags_template.pdf')
-  return sheets(doc, tags, await embedCoFo(doc))
+  return sheets(doc, tags, await embedFonts(doc))
 }
 
 /** The sheets: the text as outlines, or, with `live`, the noted lines as text */

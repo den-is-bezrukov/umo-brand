@@ -9,6 +9,7 @@ This file describes the project as it is now. The history of decisions (what was
 This file holds only what every task needs. The details live in `docs/`, one file per area; read the ones your task touches before changing anything, and keep them up to date as you go (describe what you changed, as it is now, in the file it belongs to):
 
 - `docs/guide.md` — the brand guide: grid and rhythm, chapters, first screen, navigation, downloads, favicon
+- `docs/brand.md` — where the brand lives (`brand/umo/`), what the code takes from it and how; read it before touching anything UMO's own: logo, fonts, texts, dealers, models, photos
 - `docs/generators.md` — what all generators share: the form, the phone layout, item lists, links with settings, files dropped back, name checks, obscene words, Metrika goals. Read it for any generator task
 - `BACKLOG.md` — what's parked for later, in Russian; when a task from it is done, remove its line in the same commit
 - `docs/price-card.md`, `docs/livery.md`, `docs/plate-frame.md`, `docs/name-tag.md`, `docs/business-card.md`, `docs/price-tag.md`, `docs/hours-sign.md`, `docs/memo.md` — each generator's layout in mm, its texts, limits and file
@@ -35,8 +36,9 @@ Releases are [GitHub Releases](https://github.com/den-is-bezrukov/umo-brand/rele
 
 Start with task-relevant files below. Only follow imports or inspect other files when required, when a documented path is missing, or when the repository contradicts this guide.
 
+- `brand/umo/` - Everything UMO's own, which the code takes through `@brand/…` (see `docs/brand.md`): the site's root files (`public/`: fonts, downloads, icons), the type (`theme.css`, `fonts.ts`), the logo (`logo.ts`, the guide's `Wordmark.tsx`, `HeaderLogo.tsx`, `CobrandLockup.tsx`). `src/brand.ts` says what each part holds; `brand/<name>/` for another brand, `BRAND=<name>` to build with it
 - `src/main.tsx` - React entrypoint and router: `/` → `src/guide/Guide.tsx`, `/price-card` → `src/App.tsx`, `/livery` → `src/Livery.tsx`, `/plate-frame` → `src/PlateFrame.tsx`, `/name-tag` → `src/NameTag.tsx`, `/business-card` → `src/BusinessCard.tsx`, `/price-tag` → `src/PriceTag.tsx`, `/hours-sign` → `src/HoursSign.tsx`, `/memo` → `src/Memo.tsx`, `/editor` → the guide with the Редактор window (every generator) open (all lazy-loaded), anything else redirects to `/`. `MetrikaHits` here sends a Metrika view per page path
-- `src/guide/` - The brand guide (`Guide.tsx`, `UmoLogo.tsx`); UMO Sans, the font tried on it, lives in its own project (`../umo-sans`), not here
+- `src/guide/` - The brand guide (`Guide.tsx`); UMO Sans, the font tried on it, lives in its own project (`../umo-sans`), not here
 - `src/App.tsx` - The price card generator; `src/pricecard/`: the card, its fixed texts and prices (`card.ts`: `CARD`, `TRIMS`, `buildCard`), the A3 PDF (`pdf.ts`), the preview (`CardArt.tsx`, also the guide's picture)
 - `src/Livery.tsx` - The livery generator; `src/livery/`: surfaces in mm (`layout.ts`: `UMO8`, `UMO5`, `LIVERIES`), outlines (`geometry.ts`), the wordmark with the 8 and the 5 (`logo.ts`), the PDF/zip (`pdf.ts`)
 - `src/PlateFrame.tsx` - The plate frame generator; `src/plate/`: the print strip (`frame.ts`: `STRIP`, `buildStrip`), its PDF (`pdf.ts`), the plate in its frame (`PlateArt.tsx`, also the guide's picture)
@@ -49,14 +51,14 @@ Start with task-relevant files below. Only follow imports or inspect other files
 - `src/data/` - Every generator's path and name (`generators.ts`: the ring, «Инструкция», the guide's «Редактор материалов», its Материалы cards and first sentence, the template icon's tooltip; add a new generator there); the texts the generators suggest: the livery's taglines (`taglines.ts`), the positions (`positions.ts`), the dealers (`dealers.ts`: `dealers.json` and the hand-kept `dealers-own.json` merged, and `findDealers`, which finds one by any spelling; see «Dealers» in `docs/generators.md`), the hours sign's lines and umo.auto's hours (`hours.ts`)
 - `src/data/dealers.json` - UMO dealers as umo.auto lists them (name, city, short address, coordinates, hours, models); their marketing names («UMO АГАТ Владимир», `DEALER_NAMES`) are the dealer suggestions. Collected by `node scripts/fetch-dealers.mjs`, which opens a booking draft per model on umo.auto and switches it through every city (the page's `updateFormValues` server action, its id found in the page's scripts); run it by hand and review the changes with `git diff`
 - `src/icons/` - SVG path data for the UMO logo and small UI icons, imported directly by component name
-- `src/index.css` - Global CSS entrypoint, Tailwind CSS v4 import, fonts
+- `src/index.css` - Global CSS entrypoint, Tailwind CSS v4 import, the brand's `theme.css`
 - `index.html` - Vite HTML shell. On iOS only, a script adds `maximum-scale=1` to the viewport: iOS Safari zooms into any field under 16px on focus and doesn't zoom back, while still allowing a pinch zoom; on Android the same setting would block pinching. It also holds the Yandex.Metrika counter (113514674), loaded on umo.autos only, `defer`
 - `site.config.json` - Site title/description/favicon/OG-image/robots, applied to the built HTML by the `site-meta` Vite plugin (the icons: see `docs/guide.md`)
-- `vite.config.ts` - Vite configuration: React, Tailwind CSS v4, the `@` alias for `src`, the `site-meta` plugin and `route-pages`, which copies `index.html` to each generator's path (`memo.html`, from `src/data/generators.ts`, and `editor.html`) so GitHub Pages answers them with a 200 rather than `public/404.html`'s redirect, which link previews and search engines read as a missing page
+- `vite.config.ts` - Vite configuration: React, Tailwind CSS v4, the `@` alias for `src` and `@brand` for the brand's folder (its `public/` the site's root, the core's `public/`, 404.html, added by `core-public`), the `site-meta` plugin and `route-pages`, which copies `index.html` to each generator's path (`memo.html`, from `src/data/generators.ts`, and `editor.html`) so GitHub Pages answers them with a 200 rather than `public/404.html`'s redirect, which link previews and search engines read as a missing page
 
 ## Dependencies
 
-- Runtime: React 19 and React DOM 19; `pdf-lib` for PDF (`@pdf-lib/fontkit` to embed CoFo Sans in the editable templates, loaded with a template only), `opentype.js` for text in outlines, `qrcode`, `fflate` for .xlsx and zips, `typograf`
+- Runtime: React 19 and React DOM 19; `pdf-lib` for PDF (`@pdf-lib/fontkit` to embed the brand's type in the editable templates, loaded with a template only), `opentype.js` for text in outlines, `qrcode`, `fflate` for .xlsx and zips, `typograf`
 - Styling: Tailwind CSS v4 with the `@tailwindcss/vite` plugin
 - Build tooling: Vite 8, TypeScript 5.7, and `@vitejs/plugin-react`
 - Formatting: oxfmt
@@ -65,7 +67,7 @@ Start with task-relevant files below. Only follow imports or inspect other files
 
 This project uses **Tailwind CSS v4** through the `@tailwindcss/vite` plugin configured in `vite.config.ts`. `src/index.css` imports Tailwind with `@import 'tailwindcss';`. Use Tailwind utility classes directly in JSX and put global CSS or Tailwind v4 theme customization in `src/index.css`. No Tailwind config file or PostCSS config.
 
-`src/main.tsx` imports `src/index.css`, so global font wiring belongs in `src/index.css`. Keep CSS `@import` statements first, then any `@font-face` rules and font-family defaults.
+`src/main.tsx` imports `src/index.css`, which imports the brand's `theme.css`: the brand's `@font-face` rules and `--font-sans` belong there. Keep CSS `@import` statements first.
 
 ## Code quality
 
