@@ -17,3 +17,6 @@ logs/
 
 # macOS folder settings
 .DS_Store
+
+# The check against a baseline (scripts/check.mjs): builds, files, screenshots
+.check/

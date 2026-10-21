@@ -19,6 +19,10 @@ One server is always running at `http://localhost:5477` (port set in `vite.confi
 
 `pnpm dev:follow` (`scripts/dev-follow.mjs`) does the same and also pulls the current branch every 10 seconds (fast-forward only, reinstalling dependencies when the lockfile changes), so changes pushed to it show up in the open page.
 
+## Checking that nothing changed
+
+`pnpm check` (`scripts/check.mjs`) shows a change of code changed nothing people see: it builds the site into `.check/build`, serves it itself, and a headless Chrome (Playwright's headless shell when it's there, as it doesn't update itself) goes through the guide and every generator on set data (defaults, `?t`, `pdf=1` links, a long dealer's name, lists from tables it makes itself, cases the checks stop), saving each page's text, screenshots at 1440×900 and 350×622 (the guide screen by screen) and the files downloaded. Against the baseline (`pnpm check:baseline`, from the code as it is before the change) it writes `.check/report.txt`, «Совпало» or what differs where, with pictures of the differences in `.check/diff`. PDFs count as the same when their content is, dates aside, else page by page as pictures (`pdftoppm`, ImageMagick's `compare`). `--only=livery,guide` takes a part. `.check/` stays out of git.
+
 ## Deploy and releases
 
 Every push to `main` builds the site and publishes it to GitHub Pages (`.github/workflows/deploy.yml`), so a push to `main` is a production deploy. CI (`.github/workflows/ci.yml`) checks types and the build. Both fail on any image under `src/` or `public/` over 2.5 MB and any `.mp4`/`.webm` over 15 MB.
