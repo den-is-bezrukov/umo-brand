@@ -28,7 +28,7 @@ const RED = '#ff2a1a'
 /** The spec's dimensions: orange, apart from the red of text at fault */
 const DIMS = '#ee4400'
 
-function SheetPreview({ sheet, seams, dims, onReset, resetLabel, extra }: { sheet: Sheet; seams: boolean; dims: boolean; onReset?: () => void; resetLabel?: string; extra?: React.ReactNode }) {
+function SheetPreview({ sheet, dims, onReset, resetLabel, extra }: { sheet: Sheet; dims: boolean; onReset?: () => void; resetLabel?: string; extra?: React.ReactNode }) {
   const s = sheet.surface
   const marks = specMarks(s)
   const [vx, vy, vw, vh] = s.photo.view
@@ -54,15 +54,6 @@ function SheetPreview({ sheet, seams, dims, onReset, resetLabel, extra }: { shee
           {lines.map((l, i) => (
             <path key={`t${i}`} d={toD(l.cmds)} fill={bad(l) || l.extra ? RED : decal} fillRule="evenodd" />
           ))}
-          {seams && (
-            <g stroke={RED} opacity={0.9}>
-              {s.obstacles.map((o, i) =>
-                o.kind === 'seam'
-                  ? <line key={i} x1={o.top[0]} y1={o.top[1]} x2={o.bottom[0]} y2={o.bottom[1]} {...hairline} strokeWidth={2} />
-                  : <rect key={i} x={o.x} y={o.y} width={o.w} height={o.h} rx={o.h / 2} {...hairline} strokeWidth={2} />,
-              )}
-            </g>
-          )}
           {/* The spec's dimensions */}
           {dims && (
             <g>
@@ -111,10 +102,6 @@ export default function Livery() {
   })
   const toggle = (key: keyof typeof on) => (v: boolean) => setOn(o => ({ ...o, [key]: v }))
   const show = (link.get('show') ?? '').split(',')
-  // The «Швы» overlay is hidden for now: the limits keep text off the seam and handle, and a sheet that touches them
-  // says so under it. Off, and links with `show=seams` open without it, as there'd be no way to turn it off.
-  // const [seams, setSeams] = useState(show.includes('seams'))
-  const seams = false
   const [dims, setDims] = useState(show.includes('dims'))
   // The bottom text larger, 60 mm in two lines; the QR-less sides have room for it
   const [large, setLarge] = useState(link.get('size') === 'large')
@@ -147,7 +134,7 @@ export default function Livery() {
     off: (Object.keys(PARTS) as (keyof typeof PARTS)[]).filter(k => k !== 'rear' && !on[k]).map(k => PARTS[k]).join(','),
     rear: on.rear ? 'on' : null,
     rbottom: ownRearOn ? rearTagline : null,
-    show: [...(dims ? ['dims'] : []), ...(seams ? ['seams'] : [])].join(','),
+    show: dims ? 'dims' : '',
     size: large ? 'large' : null,
     qr: qrSmall ? 'small' : null,
   })
@@ -314,7 +301,6 @@ export default function Livery() {
 
             {/* Overlays on the preview only */}
             <Checkbox checked={dims} onChange={setDims}>Показать размеры</Checkbox>
-            {/* <Checkbox checked={seams} onChange={setSeams}>Швы</Checkbox> */}
           </div>
 
         </div>
@@ -337,7 +323,7 @@ export default function Livery() {
 
   if (templateOnly) return null
   // Phones: the canvas over a sheet with the form (trial)
-  if (phone) return <MobileEditor slides={sheets.map((s, i) => ({ key: s.surface.id, ratio: s.surface.photo.view[3] / s.surface.photo.view[2], node: <SheetPreview sheet={s} seams={seams} dims={dims} />, label: s.surface.title, reset: i < 2 ? (sidesAtDefaults ? undefined : { onClick: resetSides, label: 'Вернуть борта по умолчанию' }) : (rearAtDefaults ? undefined : { onClick: resetRear, label: 'Вернуть стекло по умолчанию' }) }))} sidebar={sidebar} download={download} />
+  if (phone) return <MobileEditor slides={sheets.map((s, i) => ({ key: s.surface.id, ratio: s.surface.photo.view[3] / s.surface.photo.view[2], node: <SheetPreview sheet={s} dims={dims} />, label: s.surface.title, reset: i < 2 ? (sidesAtDefaults ? undefined : { onClick: resetSides, label: 'Вернуть борта по умолчанию' }) : (rearAtDefaults ? undefined : { onClick: resetRear, label: 'Вернуть стекло по умолчанию' }) }))} sidebar={sidebar} download={download} />
 
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
@@ -352,10 +338,10 @@ export default function Livery() {
         <div className="mx-auto flex max-w-[1200px] flex-col gap-10">
           {/* «Скачать шаблон» by every sheet's caption, before its reset, each the same file of all the sheets: sought
               by the one in hand (it stood by the left side's only and read as that side's) */}
-          {sheets.slice(0, 2).map(s => <SheetPreview key={s.surface.id} sheet={s} seams={seams} dims={dims} onReset={sidesAtDefaults ? undefined : resetSides} resetLabel="Вернуть борта по умолчанию" extra={templateIcon} />)}
+          {sheets.slice(0, 2).map(s => <SheetPreview key={s.surface.id} sheet={s} dims={dims} onReset={sidesAtDefaults ? undefined : resetSides} resetLabel="Вернуть борта по умолчанию" extra={templateIcon} />)}
           {sheets[2] && (
             <div className="w-full md:w-1/2">
-              <SheetPreview sheet={sheets[2]} seams={seams} dims={dims} onReset={rearAtDefaults ? undefined : resetRear} resetLabel="Вернуть стекло по умолчанию" extra={templateIcon} />
+              <SheetPreview sheet={sheets[2]} dims={dims} onReset={rearAtDefaults ? undefined : resetRear} resetLabel="Вернуть стекло по умолчанию" extra={templateIcon} />
             </div>
           )}
         </div>

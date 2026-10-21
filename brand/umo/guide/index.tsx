@@ -640,19 +640,6 @@ export function Chapters() {
               </Text>
               <Fig name="dealer" w={912} h={456} alt="Дилерский центр UMO и Яндекса" />
             </Section>
-
-            {/* Дилерский центр, on hold: back as a section with { id: 'dealer', title: 'Дилерский центр' } in NAV,
-                and drop `dealer` from OLD_ANCHORS.
-            <Section>
-              <Head>
-                <H2 id="dealer">Дилерский центр</H2>
-                <Text>
-                  <p>Первое место, где UMO можно потрогать.</p>
-                  <p>Салоны собраны по единой системе, поэтому UMO узнаётся с порога в любом городе и на любой площадке.</p>
-                </Text>
-              </Head>
-            </Section>
-            */}
           </Chapter>
     </>
   )

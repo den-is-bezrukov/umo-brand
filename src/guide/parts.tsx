@@ -255,9 +255,6 @@ export type Asset = { file: string; label?: string; also?: { file: string }[] } 
 export const formatOf = (a: { file: string }) =>
   (a.file.match(/-(png|svg)\.zip$/)?.[1] ?? a.file.split('.').pop() ?? '').toUpperCase()
 
-/** The rows' ↗ and ↓ before the name: off (a trial), the right column saying it already (a path, a format) */
-export const ROW_ARROWS = false
-
 /**
  * Asset list: a row per file or page, a hairline above each. Up to 3 rows stay in one column, 4 and more
  * split into two, filled top to bottom so files of one item stay together.
@@ -302,7 +299,6 @@ export function Assets({ items, preview, early, bare }: { items: Asset[]; previe
             // constructor), ↓ over the PDF (the font's own arrows)
             <div key={a.to} className={`group/row flex items-stretch ${bare && i === 0 ? '' : 'border-t border-line'}`}>
               <Link to={a.to} title={editTitle(a.to)} className={`${row.replace(/border-t border-line/, '')} min-w-0 flex-1`}>
-                {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 text-center font-medium">↗</span>}
                 <span className="flex min-w-0 flex-1 items-center gap-2">
                   {/* Over the PDF the verb gives way to the template's name («Шаблон визитки»), the name saying what that click does */}
                   <span className={`${name.replace('min-w-0 flex-1 ', 'min-w-0 ')} ${a.download ? 'group-has-[[data-format]:hover]/row:hidden' : ''}`}>{a.title}</span>
@@ -321,7 +317,6 @@ export function Assets({ items, preview, early, bare }: { items: Asset[]; previe
         if ('to' in a) {
           return (
             <Link key={a.to} to={a.to} title={editTitle(a.to)} className={row}>
-              {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 text-center font-medium">↗</span>}
               <span className={name}>{a.title}</span>
               <span className={meta}>{a.to}</span>
             </Link>
@@ -331,7 +326,6 @@ export function Assets({ items, preview, early, bare }: { items: Asset[]; previe
         if ('t' in a) {
           return (
             <a key={a.file} href={a.t} target="_blank" rel="noopener" title={`Скачать ${formatOf(a)}`} className={row}>
-              {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>}
               {named(a.label, pointedRow)}
               <span className={`${meta} ${format}`}>{formatOf(a)}</span>
             </a>
@@ -343,7 +337,6 @@ export function Assets({ items, preview, early, bare }: { items: Asset[]; previe
           return (
             <div key={a.file} className={`group/row flex items-stretch ${bare && i === 0 ? '' : 'border-t border-line'}`}>
               <a href={`/downloads/${a.file}`} download title={`Скачать ${formatOf(a)}`} className={`${row.replace(/border-t border-line/, '')} min-w-0 flex-1`}>
-                {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>}
                 {named(a.label ?? a.file, `${pointedRow} group-has-[[data-format]:hover]/row:inline`)}
                 <span className={`${meta} ${format}`}>{formatOf(a)}</span>
               </a>
@@ -357,7 +350,6 @@ export function Assets({ items, preview, early, bare }: { items: Asset[]; previe
         }
         return (
           <a key={a.file} href={`/downloads/${a.file}`} download title={`Скачать ${formatOf(a)}`} className={row}>
-            {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>}
             {named(a.label ?? a.file, pointedRow)}
             <span className={`${meta} ${format}`}>{formatOf(a)}</span>
           </a>

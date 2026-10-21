@@ -146,9 +146,7 @@ export default function HoursSign() {
   // A listed dealer's hours from the brand's site stand in for the times a link leaves out, as its address does
   const [from, setFrom] = useState(() => maskTime(link.get('from') ?? hoursOf(link.get('name') ?? '')?.from ?? ''))
   const [to, setTo] = useState(() => maskTime(link.get('to') ?? hoursOf(link.get('name') ?? '')?.to ?? ''))
-  // The line under the hours is fixed, «Работаем без выходных», its field commented out below: nothing a dealer needs to
-  // change there, and nothing wider fits the sign's look. `line` and `off=line` in a link are ignored while it's out
-  // const [line, setLine] = useState(link.get('off') === 'line' ? '' : link.get('line') ?? DEFAULT_HOURS_LINE)
+  // The line under the hours is fixed, «Работаем без выходных»: nothing a dealer needs to change there
   const line = DEFAULT_HOURS_LINE
   // A name with the brand's name (a link made by hand) loses it, as the sign puts it before the name; a phone takes the field's mask
   const [dealer, setDealer] = useState(() => withoutBrand(link.get('name') ?? ''))
@@ -161,8 +159,6 @@ export default function HoursSign() {
   const site = ownSite ?? siteFor(dealer)
   useLinkState({
     from, to,
-    // line: line === DEFAULT_HOURS_LINE ? null : line,
-    // off: line.trim() ? null : 'line',
     name: dealer,
     address: address === addressOf(dealer) ? null : address,
     phone: phone === dealerPhone(dealer) ? null : phone,
@@ -337,10 +333,6 @@ export default function HoursSign() {
                 <div data-field="to"><TimeField value={to} onChange={setTo} onCommit={commitTo} placeholder={PLACEHOLDER.to} label="Закрытие" invalid={wrong.has('to')} min={STEP} max={DAY} /></div>
               </div>
             </Field>
-            {/* The line under the hours, fixed for now (see `line` above)
-            <Field label="Подпись">
-              <div data-field="line"><ComboField value={line} onChange={setLine} options={HOURS_LINES} label="Подписи" singleLine invalid={wrong.has('line')} /></div>
-            </Field> */}
             <Field label="Дилер">
               <div data-field="dealer"><ComboField value={dealer} onChange={pickDealer} options={NAMES} filter={dealerFilter} placeholder={PLACEHOLDER.dealer} label={`Дилеры ${SITE.name}`} singleLine invalid={wrong.has('dealer')} /></div>
             </Field>

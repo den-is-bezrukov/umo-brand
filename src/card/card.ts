@@ -274,30 +274,3 @@ export function buildBack(fonts: Fonts, dealer: Dealer, person: Person, qr: QrDa
     issues: issues.filter((v, i) => issues.findIndex(o => o.text === v.text && o.field === v.field) === i),
   }
 }
-
-/** vCard text: commas, semicolons and backslashes escaped */
-const esc = (t: string) => t.replace(/[\\;,]/g, m => '\\' + m)
-
-/**
- * The person as a contact (vCard 3.0), for the QR: scanned, a phone offers to save it with the name, position,
- * dealership, phone (the extension after a comma, dialled after a pause), email and site filled in. No address: it's
- * printed beside the code, and a long one made the code too fine to print at 15 mm (81 modules, 0,19 mm each, against
- * 57–65 without it)
- */
-export function vcard(dealer: Dealer, p: Person): string {
-  const main = formatPhone(p.phone)
-  const ext = p.ext.trim()
-  const site = siteText(dealer.site)
-  return [
-    'BEGIN:VCARD',
-    'VERSION:3.0',
-    `N:${esc(oneLine(p.surname))};${esc(oneLine(p.name))};;;`,
-    `FN:${esc(`${oneLine(p.name)} ${oneLine(p.surname)}`.trim())}`,
-    dealer.name.trim() && `ORG:${esc(oneLine(dealer.name))}`,
-    p.position.trim() && `TITLE:${esc(oneLine(p.position))}`,
-    main && `TEL;TYPE=WORK,VOICE:${main.replace(/[^\d+]/g, '')}${ext ? `,${ext}` : ''}`,
-    p.email.trim() && `EMAIL;TYPE=WORK:${oneLine(p.email)}`,
-    site && `URL:https://${site}`,
-    'END:VCARD',
-  ].filter(Boolean).join('\r\n')
-}

@@ -99,9 +99,6 @@ export default function BusinessCard() {
   const dealer: Dealer = { ...input, site: input.site ?? siteFor(input.name) }
   /** The address and the site, under «Изменить»: a dealer picked from the list fills them in */
   const [dealerOpen, setDealerOpen] = useState(false)
-  // The QR as a contact (a vCard per person, `vcard` in card.ts) is off for now: the QR is a link only. To bring it
-  // back, restore this state, the branch in `qrFor` and the «Ссылка / Контакт» segments in `qrField`
-  // const [qrMode, setQrMode] = useState<'link' | 'contact'>('link')
   /** The QR's link, following the site until it's edited */
   const [qrLink, setQrLink] = useState<string | null>(initial.qrLink)
   // The face before every back (else once, before all of them), and crop marks around each card
@@ -147,7 +144,7 @@ export default function BusinessCard() {
   /** The domain the email field suggests: the site's, without a path */
   const mailDomain = siteText(dealer.site).split('/')[0]
   const link = qrLink ?? siteLink
-  const qrFor = (_p: Person): QrData | null => /* qrMode === 'contact' ? { text: vcard(dealer, _p), level: 'L' } : */
+  const qrFor = (_p: Person): QrData | null =>
     isValidUrl(link) ? { text: link.trim(), level: 'M' } : null
 
   const items = staff.items
@@ -283,10 +280,6 @@ export default function BusinessCard() {
   /** The QR, the whole list's: with the dealership, under «Изменить» after the site it follows */
   const qrField = (
     <Labelled label="QR-код">
-      {/* <Segments>
-        <SegBtn active={qrMode === 'link'} onClick={() => setQrMode('link')}>Ссылка</SegBtn>
-        <SegBtn active={qrMode === 'contact'} onClick={() => setQrMode('contact')}>Контакт</SegBtn>
-      </Segments> */}
       <UrlField value={link} onChange={setQrLink} />
     </Labelled>
   )
