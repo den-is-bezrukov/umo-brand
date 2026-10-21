@@ -1,7 +1,6 @@
 import { createContext, Fragment, isValidElement, lazy, Suspense, useContext, useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode, type RefObject } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import PriceCard from '@/posters/PriceCard'
-import type { Variant } from '@/posters/cardData'
+import type { Art } from '@/pricecard/card'
 import UmoLogo from './UmoLogo'
 import UmoYLayers, { COBRAND, setUmoY } from './UmoYLogo'
 import UmoYandexLockup from './UmoYandexLockup'
@@ -43,7 +42,7 @@ const DRAWN: Medium[] = [
     picture: (
       <div className="flex aspect-4/3 items-center justify-center bg-[#f5f5f5]">
         <div className="w-[47.3%]">
-          <PriceCardPreview variant="umo5-max" fullPrice="3 715 000" creditPrice="2 790 000" image={img('pricecard-umo5-car')} alt="Прайс-карта UMO 5" />
+          <PriceCardPreview alt="Прайс-карта UMO 5" />
         </div>
       </div>
     ),
@@ -1094,29 +1093,25 @@ function Photo({ name }: { name: string }) {
   )
 }
 
-const POSTER_W = 1754
-const POSTER_H = 2480
-
-/** A live PriceCard (the same component the constructor renders) scaled down to fit its column. */
-function PriceCardPreview({ variant, fullPrice, creditPrice, image, alt }: {
-  variant: Variant; fullPrice: string; creditPrice: string; image: string; alt: string
-}) {
-  const ref = useRef<HTMLDivElement>(null)
-  const [scale, setScale] = useState(0)
+/**
+ * The price card as the generator sets it for UMO 5 Max by default, the generator's own outlines (`CardArt`), with
+ * its fonts and photo loaded once the guide is up; the white card meanwhile
+ */
+function PriceCardPreview({ alt }: { alt: string }) {
+  const [card, setCard] = useState<{ art: Art; Draw: typeof import('@/pricecard/CardArt').default }>()
   useEffect(() => {
-    const el = ref.current
-    if (!el) return
-    const observer = new ResizeObserver(([entry]) => setScale(entry.contentRect.width / POSTER_W))
-    observer.observe(el)
-    return () => observer.disconnect()
+    let on = true
+    Promise.all([import('@/pricecard/card'), import('@/pricecard/CardArt'), import('@/ui/type')])
+      .then(([c, a, t]) => Promise.all([t.loadFonts(), c.loadAlice()]).then(([fonts, alice]) => {
+        const trim = c.trimOf('umo5', 'max')
+        const art = c.buildCard({ ...fonts, alice }, { model: 'umo5', trim: 'max', full: trim.full, legal: trim.legal, url: 'https://umo.auto/umo5' })
+        if (on) setCard({ art, Draw: a.default })
+      }))
+    return () => { on = false }
   }, [])
   return (
-    <div ref={ref} role="img" aria-label={alt} className="relative overflow-hidden bg-white" style={{ aspectRatio: `${POSTER_W} / ${POSTER_H}` }}>
-      {scale > 0 && (
-        <div aria-hidden className="absolute left-0 top-0 origin-top-left" style={{ transform: `scale(${scale})` }}>
-          <PriceCard variant={variant} fullPrice={fullPrice} creditPrice={creditPrice} image={image} />
-        </div>
-      )}
+    <div role="img" aria-label={alt} className="bg-white" style={{ aspectRatio: '210 / 297' }}>
+      {card && <card.Draw art={card.art} />}
     </div>
   )
 }
