@@ -26,4 +26,4 @@ Each trim has its own, two files: the full JPEG for the PDF and a 1600 px WebP f
 
 The template icon in the card's column, «Скачать прайс-карту», gives that card as it is (`UMO-5-PRO.pdf`). `umo.autos/price-card?t`, the guide's PDF in Материалы, gives `UMO_price-cards.pdf`, every trim as it comes, UMO 5 first (`defaultsPdf`) (see «Editable templates» in `docs/generators.md`).
 
-The guide's picture of the card (Материалы, `PriceCardPreview` in `src/guide/Guide.tsx`) is the generator's own `CardArt`: UMO 5 Max at its defaults, built once the guide has loaded the fonts.
+The guide's picture of the card (Материалы, `PriceCardPreview` in `src/guide/parts.tsx`) is the generator's own `CardArt`: UMO 5 Max at its defaults, built once the guide has loaded the fonts.

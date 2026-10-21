@@ -3,7 +3,7 @@ Cut the guide's vector figures out of Figma SVG exports.
 
 Figma exports a frame that stretches inside a grid/flex parent at the wrong size, so export the parent
 Body node instead (Figma MCP download_assets, format svg) and cut each figure out of it here.
-Usage: python3 scripts/split-figma-svg.py <dir with exports> src/assets/guide
+Usage: python3 scripts/split-figma-svg.py <dir with exports> brand/umo/guide/images
 Exports expected in <dir>, named after the Figma node: b552.svg = Body 4818:552, f1961.svg = Frame 4818:1961.
 """
 import xml.etree.ElementTree as ET, sys, re, os

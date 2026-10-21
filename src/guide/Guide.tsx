@@ -1,28 +1,16 @@
-import { createContext, Fragment, isValidElement, lazy, Suspense, useContext, useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode, type RefObject } from 'react'
+import { Fragment, lazy, Suspense, useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode, type RefObject } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import type { Art } from '@/pricecard/card'
-import UmoLogo from '@brand/Wordmark'
 import UmoYLayers, { COBRAND, setUmoY } from '@brand/HeaderLogo'
-import UmoYandexLockup from '@brand/CobrandLockup'
-import { COLORS } from '@brand/colors'
-import PlateArt from '@/plate/PlateArt'
-import { BASELINE as STRIP_BASELINE } from '@/plate/frame'
-import { toD } from '@/livery/geometry'
-import { TAG, BAND, BAND_ART, DEFAULT_CAPTION, SIDE as TAG_SIDE, CAP as TAG_CAP, DROP as TAG_DROP, DEALER as TAG_DEALER, NAME as TAG_NAME, SMALL as TAG_SMALL, TRACK as TAG_TRACK, CAPTION_TOP as TAG_CAPTION_TOP, PRICE as TAG_PRICE } from '@/pricetag/tag'
-import { SIGN, LOGO as SIGN_LOGO, MARGIN as SIGN_MARGIN, TIME as SIGN_TIME, LINE as SIGN_LINE, INFO as SIGN_INFO, INFO_LAST as SIGN_INFO_LAST } from '@/hours/sign'
+import { CHAPTERS, OLD_ANCHORS, HERO, STATEMENT, MATERIALS_LEAD, INTRO_ORDER, DRAWN, Chapters, Contact, FOOTER } from '@brand/guide'
 import tocIcons from '@/icons/toc'
 import { useTypograf } from './typograf'
 import Dialog from '@/ui/Dialog'
-import { TEXT_LINK, SUPPORT_BOT } from '@/ui/links'
+import { TEXT_LINK } from '@/ui/links'
 import { GENERATORS, editTitle } from '@/data/generators'
-import heroMp4 from '@/assets/guide/hero.mp4'
-import hero720Mp4 from '@/assets/guide/hero-720.mp4'
+import { Chapter, Section, Text, Constructor, UNDERLINE, LINK_HOVER, img, type Medium } from './parts'
 
-// Figures are exported from Figma at 2x and
-// cropped per frame — see "Brand guide" in AGENTS.md for how to refresh them.
-// Vector schemes (clear space, co-branding, type specimens, lettering) are SVG, photos are WebP.
-const images = import.meta.glob<string>('../assets/guide/*.{webp,svg}', { eager: true, import: 'default' })
-const img = (name: string) => images[`../assets/guide/${name}.svg`] ?? images[`../assets/guide/${name}.webp`]
+// The guide's page: the first screen, the contents (the sidebar, the phone's bottom bar and its sheet), the brand's
+// chapters (`@brand/guide`), Материалы with every generator, the editor's window, Контакты.
 
 type NavItem = { id: string; title: string; children?: NavItem[] }
 
@@ -34,72 +22,6 @@ type NavItem = { id: string; title: string; children?: NavItem[] }
  */
 // `row`: the ↗ row under the picture, named for what a dealer does there, so it reads as a tool to click into (not
 // the medium's name alone, as the contents list it)
-type Medium = { id: string; to: string; title: string; row: string; w: number; h: number; picture: ReactNode }
-const DRAWN: Medium[] = [
-  { id: 'livery', to: '/livery', title: 'Ливрея', row: 'Редактировать ливрею', w: 912, h: 456, picture: <Fig name="livery-umo5" flat="#f6f6f6" w={912} h={456} alt="UMO 5 с ливреей дилера" /> },
-  {
-    // The 210×297 card centred on the 444×333 grey
-    id: 'price-card', to: '/price-card', title: 'Прайс-карта', row: 'Обновить прайс-карту', w: 444, h: 333,
-    picture: (
-      <div className="flex aspect-4/3 items-center justify-center bg-surface">
-        <div className="w-[47.3%]">
-          <PriceCardPreview alt="Прайс-карта UMO 5" />
-        </div>
-      </div>
-    ),
-  },
-  {
-    // The 90×60 tag as the constructor sets it, as wide as the plate on the 444×333 grey
-    id: 'price-tag', to: '/price-tag', title: 'Ценник', row: 'Сделать ценники', w: 444, h: 333,
-    picture: (
-      <div className="flex aspect-4/3 items-center justify-center bg-surface">
-        <svg viewBox={`0 0 ${TAG.w} ${TAG.h}`} className="block h-auto w-[58.8%]" role="img" aria-label="Ценник UMO">
-          <rect width={TAG.w} height={TAG.h} fill="white" />
-          <rect width={TAG.w} height={BAND} fill="black" />
-          <path d={toD(BAND_ART)} fill="white" fillRule="evenodd" />
-          <g fontFamily="CoFo Sans" fontWeight={500}>
-            <text x={TAG_DEALER.x} y={TAG_SIDE + TAG_CAP * TAG_DEALER.size} fontSize={TAG_DEALER.size} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Название дилера</text>
-            {['Коврики в салон', 'UMO 5, комплект'].map((t, i) => <text key={t} x={TAG_SIDE} y={TAG_NAME.top + TAG_DROP * TAG_NAME.size + i * TAG_NAME.size} fontSize={TAG_NAME.size}>{t}</text>)}
-            <text x={TAG_SIDE} y={TAG_CAPTION_TOP + TAG_DROP * TAG_SMALL} fontSize={TAG_SMALL} fontWeight={400} letterSpacing={TAG_TRACK}>{DEFAULT_CAPTION}</text>
-            <text x={TAG_SIDE} y={TAG_PRICE.top + TAG_DROP * TAG_PRICE.size} fontSize={TAG_PRICE.size} style={{ fontVariantNumeric: 'lining-nums tabular-nums' }}>4 990 ₽</text>
-          </g>
-        </svg>
-      </div>
-    ),
-  },
-  { id: 'business-card', to: '/business-card', title: 'Визитка', row: 'Оформить визитки', w: 444, h: 333, picture: <Fig name="business-card-card" w={444} h={333} alt="Визитка дилера UMO, обе стороны" /> },
-  { id: 'name-tag', to: '/name-tag', title: 'Бейдж', row: 'Подписать бейджи', w: 444, h: 333, picture: <Fig name="name-tag-card" w={444} h={333} alt="Бейдж UMO на рубашке сотрудника" /> },
-  {
-    // The 480×680 sign as tall as the price card on the 444×333 grey
-    id: 'hours-sign', to: '/hours-sign', title: 'Режимник', row: 'Указать часы работы', w: 444, h: 333,
-    picture: (
-      <div className="flex aspect-4/3 items-center justify-center bg-surface">
-        <svg viewBox={`0 0 ${SIGN.w} ${SIGN.h}`} className="block h-auto w-[47.3%]" role="img" aria-label="Режимник UMO">
-          <rect width={SIGN.w} height={SIGN.h} fill="white" />
-          <path d={toD(SIGN_LOGO)} fill="black" fillRule="evenodd" />
-          <g fontFamily="CoFo Sans" fontWeight={500} style={{ fontFeatureSettings: "'case' 1" }}>
-            <text x={SIGN.w / 2} y={SIGN_TIME.baseline} fontSize={SIGN_TIME.size} letterSpacing={SIGN_TIME.track * SIGN_TIME.size} textAnchor="middle" style={{ fontVariantNumeric: 'lining-nums tabular-nums' }}>9:00—21:00</text>
-            <text x={SIGN.w / 2} y={SIGN_LINE.baseline} fontSize={SIGN_LINE.size} letterSpacing={SIGN_LINE.track * SIGN_LINE.size} textAnchor="middle">Работаем без выходных</text>
-            {['UMO Название дилера', 'Адрес: Москва, ул. Примерная, 1', 'Телефон: +7 495 000 00 00', 'umo.auto'].map((t, i, rows) => (
-              <text key={t} x={SIGN_MARGIN} y={SIGN_INFO_LAST - (rows.length - 1 - i) * SIGN_INFO.leading} fontSize={SIGN_INFO.size}>{t}</text>
-            ))}
-          </g>
-        </svg>
-      </div>
-    ),
-  },
-  {
-    // The 261×66 plate in its frame centred on the 444×333 grey
-    id: 'plate-frame', to: '/plate-frame', title: 'Рамка номера', row: 'Сделать рамку номера', w: 444, h: 333,
-    picture: (
-      <div className="flex aspect-4/3 items-center justify-center bg-surface">
-        <PlateArt className="w-[58.8%]!">
-          <text y={STRIP_BASELINE} fontFamily="CoFo Sans" fontWeight={500} fontSize={18} letterSpacing={-0.18} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Центр UMO | Название дилера</text>
-        </PlateArt>
-      </div>
-    ),
-  },
-]
 const isWide = (m: { w: number; h: number }) => m.w / m.h >= 2
 function packMedia<T extends { w: number; h: number }>(items: T[]): T[] {
   const packed: T[] = []
@@ -135,72 +57,14 @@ const MEDIA_LIST: Medium[] = [
   }),
 ]
 const MEDIA = packMedia(MEDIA_LIST)
-/** Материалы' first sentence: the generators in this order, the ones not in it after them */
-const INTRO_ORDER = ['/livery', '/business-card', '/name-tag', '/price-card', '/plate-frame', '/price-tag', '/hours-sign']
 const rank = (path: string) => { const i = INTRO_ORDER.indexOf(path); return i < 0 ? INTRO_ORDER.length : i }
 const INTRO = [...GENERATORS].sort((a, b) => rank(a.path) - rank(b.path))
 
 const NAV: NavItem[] = [
-  {
-    id: 'brand',
-    title: 'Платформа бренда',
-    children: [
-      { id: 'positioning', title: 'Позиционирование' },
-      { id: 'vision', title: 'Видение' },
-      { id: 'mission', title: 'Миссия' },
-      { id: 'audience', title: 'Аудитория' },
-    ],
-  },
-  {
-    id: 'communication',
-    title: 'Коммуникация',
-    children: [
-      { id: 'name', title: 'Имена' },
-      { id: 'descriptors', title: 'Дескрипторы' },
-      { id: 'tone', title: 'Тон голоса' },
-      { id: 'dictionary', title: 'Словарь' },
-      { id: 'examples', title: 'Примеры' },
-    ],
-  },
-  {
-    id: 'logo',
-    title: 'Логотип',
-    children: [
-      { id: 'placement', title: 'Размещение на продукте' },
-      { id: 'clearspace', title: 'Отступы и размер' },
-      { id: 'logo-color', title: 'Цвет логотипа' },
-      { id: 'misuse', title: 'Ограничения' },
-      { id: 'icons', title: 'Логотип на иконках' },
-      { id: 'cobranding', title: 'Кобрендинг' },
-    ],
-  },
-  { id: 'typography', title: 'Типографика', children: [{ id: 'type-styles', title: 'Стили и иерархия' }] },
-  {
-    id: 'lettering',
-    title: 'Леттеринг',
-    children: [
-      { id: 'lettering-models', title: 'Модели' },
-      { id: 'made-in-moscow', title: 'Сделано в Москве' },
-    ],
-  },
-  { id: 'color', title: 'Цвет' },
-  {
-    id: 'photography',
-    title: 'Фотография',
-    children: [
-      { id: 'photo-umo5', title: 'UMO 5' },
-      { id: 'photo-umo8', title: 'UMO 8' },
-    ],
-  },
-  { id: 'spaces', title: 'Пространства' },
+  ...CHAPTERS,
   { id: 'materials', title: 'Материалы', children: MEDIA.map(({ id, title }) => ({ id, title })) },
   { id: 'contact', title: 'Контакты' },
 ]
-
-/** Chapter anchors that were renamed after the guide went out, mapped to their current ids. */
-const OLD_ANCHORS: Record<string, string> = {
-  voice: 'tone', message: 'communication', dealer: 'spaces', retail: 'spaces', print: 'materials', fonts: 'typography', about: 'brand', intro: 'top',
-}
 
 const flatItems = (items: NavItem[]): NavItem[] => items.flatMap(i => [i, ...flatItems(i.children ?? [])])
 const ALL_IDS = flatItems(NAV).map(i => i.id)
@@ -254,14 +118,6 @@ function useActiveSection() {
  */
 const NAV_HOVER = 'transition-[color] duration-350 ease-[ease] hover:text-caption hover:duration-0'
 
-/**
- * Links in the page (the quick links, download rows and captions) stay black and get a hairline underline as set in
- * Black at 40%, 2.5% of the type size thick, 25% of it under the baseline, through the descenders.
- * It shows at once and fades over 0.25s: it's always there, transparent until hovered. `UNDERLINE` is the line;
- * `LINK_HOVER` shows it on the link's own hover, rows show it on the row's (`group-hover`).
- */
-const UNDERLINE = 'underline decoration-transparent decoration-[2.5%] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 ease-[ease]'
-const LINK_HOVER = `${UNDERLINE} hover:decoration-black/40 hover:duration-0`
 
 /**
  * `active`: you're inside this item (medium weight); `current`: its own heading is the one on screen (the bullet).
@@ -627,14 +483,14 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
   const [src, setSrc] = useState(() => {
     // The connection type only: Chrome's `downlink` is guessed from the first few requests and reads far too low then
     const type = (navigator as Navigator & { connection?: { effectiveType?: string } }).connection?.effectiveType ?? ''
-    return ['slow-2g', '2g', '3g'].includes(type) ? hero720Mp4 : heroMp4
+    return ['slow-2g', '2g', '3g'].includes(type) ? HERO.small : HERO.video
   })
   // Still not enough buffered to play after 3 s: the lighter film instead
   useEffect(() => {
-    if (still || src !== heroMp4) return
+    if (still || src !== HERO.video) return
     const t = setTimeout(() => {
       const video = videoRef.current
-      if (video && video.readyState < HTMLMediaElement.HAVE_FUTURE_DATA) setSrc(hero720Mp4)
+      if (video && video.readyState < HTMLMediaElement.HAVE_FUTURE_DATA) setSrc(HERO.small)
     }, 3000)
     return () => clearTimeout(t)
   }, [still, src])
@@ -668,9 +524,9 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
   return (
     <div ref={ref} style={{ '--umo-y-gap': `${UMO_Y_GAP}px` } as CSSProperties} className="relative z-30 h-[calc(100svh-var(--mstrip,260px)-68px-var(--umo-y-gap))] max-lg:mb-[var(--umo-y-gap)] md:h-[calc(100svh-var(--mstrip,360px)-92px-var(--umo-y-gap))] max-lg:[[data-hero-full]_&]:h-[calc(100svh-52px)] md:max-lg:[[data-hero-full]_&]:h-[calc(100svh-68px)] lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:h-[calc(100vh-var(--strip,286px))]">
       {still ? (
-        <img src={img('hero')} alt="Женщина у UMO 8 на горной дороге" width={1824} height={912} fetchPriority="high" decoding="async" className={`${fill} object-[50%_40%]`} />
+        <img src={img(HERO.still)} alt={HERO.stillAlt} width={1824} height={912} fetchPriority="high" decoding="async" className={`${fill} object-[50%_40%]`} />
       ) : (
-        <video ref={videoRef} src={src} poster={img('hero-poster')} autoPlay muted loop playsInline preload="auto" aria-hidden className={fill} />
+        <video ref={videoRef} src={src} poster={img(HERO.poster)} autoPlay muted loop playsInline preload="auto" aria-hidden className={fill} />
       )}
     </div>
   )
@@ -873,416 +729,6 @@ function toTop(e: MouseEvent<HTMLAnchorElement>) {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-// ─── Typography ──────────────────────────────────────────────────────────────
-
-/**
- * Chapter: the title, then the chapter's sections. The title is 8 of 12 columns wide, `full` lets it span the whole
- * grid. The anchor `id` sits on an empty marker above the title, so links land on the chapter's very start and the
- * active-chapter tracking sees it begin there.
- * `loose` puts section spacing between title and content, for chapters whose title isn't followed by body copy.
- */
-function Chapter({ id, title, full, loose, children }: {
-  id: string; title: ReactNode; full?: boolean; loose?: boolean; children: ReactNode
-}) {
-  return (
-    // The page list is spaced by sections, so a chapter adds the difference on top.
-    <div className="pt-[calc(var(--spacing-chapter)-var(--spacing-section))]">
-      <div id={id} className="scroll-mt-24" />
-      <h2 className={`${full ? '' : 'max-w-[600px]'} text-[32px] md:text-[48px] font-medium leading-none tracking-[-0.01em]`}>
-        {title}
-      </h2>
-      <div className={`${loose ? 'mt-8 md:mt-12' : 'mt-6'} flex flex-col gap-section`}>{children}</div>
-    </div>
-  )
-}
-
-function H2({ id, children }: { id?: string; children: ReactNode }) {
-  return (
-    <h3 id={id} className="scroll-mt-24 text-[24px] md:text-[32px] font-medium leading-none tracking-[-0.01em]">
-      {children}
-    </h3>
-  )
-}
-
-/** Characters of text in a React tree. */
-function textLength(node: ReactNode): number {
-  if (typeof node === 'string' || typeof node === 'number') return String(node).length
-  if (Array.isArray(node)) return node.reduce((n: number, c: ReactNode) => n + textLength(c), 0)
-  if (isValidElement<{ children?: ReactNode }>(node)) return textLength(node.props.children)
-  return 0
-}
-
-/**
- * Body copy. Its width on the 12-column Figma grid follows from how much text there is: up to 150 characters
- * (a line or two) 6 columns, up to 300 — 8, longer — 9, so short notes don't stretch thin and long copy doesn't
- * stand as a tall column. Texts paired side by side (Кобрендинг, Фотография) fill their grid cells instead —
- * their grid sets `*:max-w-none`.
- */
-/** `wide`: 9 columns whatever the length (Контакты: three lines instead of four) */
-function Text({ children, wide }: { children: ReactNode; wide?: boolean }) {
-  const n = textLength(children)
-  const width = wide || n > 300 ? 'max-w-[678px]' : n <= 150 ? 'max-w-[432px]' : 'max-w-[600px]'
-  return (
-    <div className={`${width} flex flex-col gap-3 text-[18px] md:text-[20px] leading-[1.25] tracking-[-0.01em]`}>
-      {children}
-    </div>
-  )
-}
-
-function Caption({ children, cross, download }: { children: ReactNode; cross?: boolean; download?: boolean }) {
-  return (
-    <figcaption className="flex items-start gap-2 text-[14px] leading-[1.43] [font-feature-settings:'case'_1]">
-      {/* A download's: no ↓ before it, as the rows; ↓ after it, 8 px off, while the picture or caption is pointed at */}
-      {download ? (
-        <span className="flex-1">
-          <span className={`${UNDERLINE} group-hover:decoration-black/40 group-hover:duration-0`}>{children}</span>
-          <span aria-hidden className="ml-2 hidden font-medium group-hover:inline">↓</span>
-        </span>
-      ) : <span className="flex-1">{children}</span>}
-      {cross && <span aria-label="нельзя" className="w-4 text-center text-[20px] leading-[1.13] text-[#e30]">×</span>}
-    </figcaption>
-  )
-}
-
-/** Whether a picture is a landscape photo that goes 4:3 on phones: 2:1 and wider, raster (schemes are SVG and stay whole). */
-const isWidePhoto = (name: string, w: number, h: number) => w / h >= 2 && !img(name)?.endsWith('.svg')
-
-/**
- * One exported Figma frame. `w`/`h` are the frame's 1x size in the 1440px layout and set the aspect ratio. Below 640 px
- * (`sm`) a landscape photo (`isWidePhoto`) is cropped to 4:3, as a 2:1 strip 343px wide is too thin; `focus` is the crop's
- * horizontal point in % (default the centre). An object on a flat background (`flat`, that background's colour) isn't
- * cropped — it is fitted into the 4:3 frame whole, the frame filled with its colour. `href` makes the whole figure a download link, its caption led by ↓
- * like the rows of `Assets`.
- */
-function Fig({ name, w, h, alt = '', eager, caption, cross, href, focus = 50, flat, phone43, className = '' }: {
-  name: string; w: number; h: number; alt?: string; eager?: boolean; caption?: ReactNode; cross?: boolean; href?: string; focus?: number; flat?: string
-  /** A scheme fitted whole into 4:3 on phones, on its grey, as the logo plate above it (the clear space) */
-  phone43?: boolean; className?: string
-}) {
-  const wide = isWidePhoto(name, w, h) || !!phone43
-  const figure = (
-    <figure className={`flex flex-col gap-3 ${href ? '' : className}`}>
-      <img
-        src={img(name)}
-        alt={alt}
-        width={w * 2}
-        height={h * 2}
-        loading={eager ? 'eager' : 'lazy'}
-        decoding="async"
-        className={`block h-auto w-full bg-surface ${wide ? `aspect-4/3 ${flat || phone43 ? 'object-contain' : 'object-cover'} min-[520px]:aspect-(--ratio)` : ''}`}
-        style={wide ? ({ '--ratio': `${w} / ${h}`, objectPosition: `${focus}% 50%`, ...(flat && { background: flat }) } as CSSProperties) : { aspectRatio: `${w} / ${h}` }}
-      />
-      {caption && <Caption cross={cross} download={!!href}>{caption}</Caption>}
-    </figure>
-  )
-  return href ? <a href={href} download title={`Скачать ${formatOf({ file: href })}`} className={`group block ${className}`}>{figure}</a> : figure
-}
-
-/**
- * Flat background with the wordmark centred on it — built from the logo SVG rather than an exported picture.
- * `w`/`h` set the aspect ratio (1x frame size in Figma), `logo` is the wordmark width in the same units.
- */
-/**
- * Model ad banner: photo background (WebP) with live CoFo Sans text and the vector UMO | Я lockup on top.
- * Sizes and offsets are Figma pixels in a `w`-wide frame, converted to container-width units so the
- * layout scales with the banner and stays sharp at any size.
- */
-function Poster({ bg, w, h, title, subtitle, center, alt }: {
-  bg: string; w: number; h: number; title: string; subtitle: ReactNode; center?: boolean; alt: string
-}) {
-  const u = (px: number) => `${(px / w) * 100}cqw`
-  const x = center ? { left: '50%', transform: 'translateX(-50%)', textAlign: 'center' as const } : { left: u(24) }
-  return (
-    <figure
-      role="img"
-      aria-label={alt}
-      className="relative overflow-hidden bg-black text-white [container-type:inline-size]"
-      style={{ aspectRatio: `${w} / ${h}` }}
-    >
-      <img src={img(bg)} alt="" loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover" />
-      <p className="absolute whitespace-nowrap font-medium leading-none tracking-[-0.01em]" style={{ ...x, top: u(24), fontSize: u(24) }}>
-        {title}
-      </p>
-      <p className="absolute whitespace-nowrap font-medium leading-none tracking-[-0.01em]" style={{ ...x, top: u(56), fontSize: u(8) }}>
-        {subtitle}
-      </p>
-      <div className="absolute" style={{ ...x, bottom: u(20), width: u(100) }}>
-        <UmoYandexLockup className="w-full" />
-      </div>
-    </figure>
-  )
-}
-
-function LogoPlate({ w, h, logo, bg, dark, caption, phone43, className = '' }: {
-  w: number; h: number; logo: number; bg: string; dark?: boolean; caption?: ReactNode
-  /** 4:3 on phones, the logo keeping its share of the width (the Логотип figure) */
-  phone43?: boolean; className?: string
-}) {
-  return (
-    <figure className={`flex flex-col gap-3 ${className}`}>
-      <div
-        className={`flex items-center justify-center ${dark ? 'text-white' : 'text-black'} ${phone43 ? 'aspect-4/3 min-[520px]:aspect-(--ratio)' : ''}`}
-        style={{ ...(phone43 ? { '--ratio': `${w} / ${h}` } : { aspectRatio: `${w} / ${h}` }), background: bg } as CSSProperties}
-      >
-        <div style={{ width: `${(logo / w) * 100}%` }}>
-          <UmoLogo title={`Логотип UMO, ${dark ? 'белый' : 'чёрный'}`} className="w-full" />
-        </div>
-      </div>
-      {caption && <Caption>{caption}</Caption>}
-    </figure>
-  )
-}
-
-/**
- * A brand colour (`@brand/colors`) as a tile with its values printed on it, as the logo schemes carry their measures: the name at the
- * top, each value at the bottom on one line with a short label (where it's used), as the download rows. Codes copy on a click. `dark` sets the text
- * white; a white tile gets a hairline edge, or it would vanish into the page.
- */
-function Swatch({ color, name, values, dark, className = '' }: {
-  color: string; name: string; values: [string, string][]; dark?: boolean; className?: string
-}) {
-  return (
-    <div
-      className={`flex flex-col justify-between gap-3 p-6 text-[16px] leading-[1.25] tracking-[-0.01em] ${dark ? 'text-white' : 'text-black'} ${color === '#ffffff' ? 'shadow-[inset_0_0_0_1px_rgb(0_0_0/0.1)]' : ''} ${className}`}
-      style={{ background: color }}
-    >
-      <p className="text-[18px] md:text-[20px] font-medium leading-[1.25]">{name}</p>
-      <div className="flex flex-col gap-2">
-        {values.map(([use, value]) => /^(#|C\d|K\d)/.test(value)
-          ? <CopyRow key={use} use={use} value={value} />
-          : (
-            <div key={use} className="flex justify-between gap-1 sm:gap-4">
-              <p>{use}</p>
-              <p className="text-right">{value}</p>
-            </div>
-          ))}
-      </div>
-    </div>
-  )
-}
-
-/**
- * A swatch row with a colour code: the whole row, label and code, copies the code on a click and says so in the
- * label's place for a moment, the code staying in view as what was copied.
- */
-function CopyRow({ use, value }: { use: string; value: string }) {
-  const [copied, setCopied] = useState(false)
-  useEffect(() => {
-    if (!copied) return
-    const t = setTimeout(() => setCopied(false), 500)
-    return () => clearTimeout(t)
-  }, [copied])
-  const text = `${UNDERLINE} group-hover:decoration-current/40 group-hover:duration-0`
-  return (
-    <button
-      type="button"
-      onClick={() => navigator.clipboard.writeText(value).then(() => setCopied(true), () => {})}
-      className="group flex cursor-pointer justify-between gap-1 sm:gap-4 text-left"
-    >
-      <span className={text}>{copied ? 'Скопировано' : use}</span>
-      <span className={`whitespace-nowrap text-right tabular-nums ${text}`}>{value}</span>
-    </button>
-  )
-}
-
-/** 210×280 colour example that still needs its photo background, exported from Figma with the logo baked in. */
-function Photo({ name }: { name: string }) {
-  return (
-    <img src={img(name)} alt="" width={420} height={560} loading="lazy" decoding="async" className="block h-auto w-full" style={{ aspectRatio: '210 / 280' }} />
-  )
-}
-
-/**
- * The price card as the generator sets it for UMO 5 Max by default, the generator's own outlines (`CardArt`), with
- * its fonts and photo loaded once the guide is up; the white card meanwhile
- */
-function PriceCardPreview({ alt }: { alt: string }) {
-  const [card, setCard] = useState<{ art: Art; Draw: typeof import('@/pricecard/CardArt').default }>()
-  useEffect(() => {
-    let on = true
-    Promise.all([import('@/pricecard/card'), import('@/pricecard/CardArt'), import('@/ui/type')])
-      .then(([c, a, t]) => Promise.all([t.loadFonts(), c.loadAlice()]).then(([fonts, alice]) => {
-        const trim = c.trimOf('umo5', 'max')
-        const art = c.buildCard({ ...fonts, alice }, { model: 'umo5', trim: 'max', full: trim.full, legal: trim.legal, url: 'https://umo.auto/umo5' })
-        if (on) setCard({ art, Draw: a.default })
-      }))
-    return () => { on = false }
-  }, [])
-  return (
-    <div role="img" aria-label={alt} className="bg-white" style={{ aspectRatio: '210 / 297' }}>
-      {card && <card.Draw art={card.art} />}
-    </div>
-  )
-}
-
-/**
- * A file from public/downloads/, its row named in Russian by `label` (the file's own name, as saved, stays English), a
- * page of this site (its title and path), or a file a generator makes, `t` the link that makes it (a blank template:
- * `?t`), named by `label` («Шаблон режимника»). `also`: the same item in other formats, on the right of its row after
- * the file's own: the row downloads the vector, its PNG the PNG («Логотип UMO  SVG  PNG»). A page's
- * `verb`, if any, stands on its right in place of its path, `template` a PDF link after it («Указать часы работы  PDF»: the
- * row opens the constructor, named by what's done there, the template second to it; `download`, the name while the PDF is
- * pointed at, «Шаблон визитки»)
- */
-type Asset = { file: string; label?: string; also?: { file: string }[] } | { to: string; title: string; verb?: string; download?: string; template?: { t: string; file: string } } | { t: string; label: string; file: string }
-
-/**
- * A file's format, on the right of its row in place of a size (every file here is small, so a size said nothing; the
- * format says what opens it): its extension, or for an archive what's in it («umo-logo-png.zip»: PNG)
- */
-const formatOf = (a: { file: string }) =>
-  (a.file.match(/-(png|svg)\.zip$/)?.[1] ?? a.file.split('.').pop() ?? '').toUpperCase()
-
-/** The rows' ↗ and ↓ before the name: off (a trial), the right column saying it already (a path, a format) */
-const ROW_ARROWS = false
-
-/**
- * Asset list: a row per file or page, a hairline above each. Up to 3 rows stay in one column, 4 and more
- * split into two, filled top to bottom so files of one item stay together.
- */
-/** `early`: two columns from 560 px, rather than from `sm` (Леттеринг → Модели, whose pictures pair up from 520); `bare`: no hairline over the first row (Материалы, the row right under its picture) */
-function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: string; early?: boolean; bare?: boolean }) {
-  const pointed = useContext(PointedPreview)?.[0]
-  const two = items.length > 3
-  return (
-    <div
-      className={two ? (early
-        ? 'grid grid-cols-1 gap-x-4 min-[560px]:grid-flow-col md:gap-x-6 min-[560px]:grid-cols-2 min-[560px]:grid-rows-[repeat(var(--rows),auto)]'
-        : 'grid grid-cols-1 gap-x-4 sm:grid-flow-col md:gap-x-6 sm:grid-cols-2 sm:grid-rows-[repeat(var(--rows),auto)]') : 'flex flex-col'}
-      style={two ? ({ '--rows': Math.ceil(items.length / 2) } as CSSProperties) : undefined}
-    >
-      {items.map((a, i) => {
-        // `bare` drops the hairline over the first row only (the one right under its picture)
-        const row = `group flex items-center gap-2 ${bare && i === 0 ? '' : 'border-t border-line'} py-[14px] text-[16px] leading-none tracking-[-0.01em]`
-        // The row a preview above stands for lights up while the preview is pointed at
-        const linked = preview === ('to' in a ? a.to : a.file)
-        const lit = pointed !== undefined && pointed === ('to' in a ? a.to : a.file)
-        // Underlined while pointed at itself, as a format is, or while its picture is, which this row stands for (the row
-        // pointed at elsewhere shows the arrow after it)
-        const name = `min-w-0 flex-1 font-medium ${UNDERLINE} hover:decoration-black/40 hover:duration-0 ${linked ? 'group-has-[[data-preview]:hover]/preview:decoration-black/40 group-has-[[data-preview]:hover]/preview:duration-0' : ''} ${lit ? 'decoration-black/40 duration-0' : ''}`
-        // The name with the arrow after it, 8 px off, shown while what it stands for is pointed at (`show`: the classes
-        // that show it; the font's ↗ and ↓)
-        const named = (text: ReactNode, show: string, arrow = '↓') => (
-          <span className="flex min-w-0 flex-1 items-center gap-2">
-            <span className={name.replace('min-w-0 flex-1 ', 'min-w-0 ')}>{text}</span>
-            <span aria-hidden className={`hidden font-medium ${show}`}>{arrow}</span>
-          </span>
-        )
-        // The row's own link pointed at, or its picture
-        const pointedRow = `group-hover:inline ${linked ? 'group-has-[[data-preview]:hover]/preview:inline' : ''} ${lit ? 'inline' : ''}`
-        // A format pointed at itself is underlined as the name is, the link it stands for
-        const format = `${UNDERLINE} hover:decoration-black/40 hover:duration-0`
-        const meta = `shrink-0 text-caption [font-feature-settings:"tnum"_1] group-hover:text-black ${linked ? 'group-has-[[data-preview]:hover]/preview:text-black' : ''} ${lit ? 'text-black' : ''}`
-        if ('to' in a && a.template) {
-          const tpl = a.template
-          return (
-            // After the name, 8 px off it, what a click does where the pointer is: ↗ over the card (its picture or row, the
-            // constructor), ↓ over the PDF (the font's own arrows)
-            <div key={a.to} className={`group/row flex items-stretch ${bare && i === 0 ? '' : 'border-t border-line'}`}>
-              <Link to={a.to} title={editTitle(a.to)} className={`${row.replace(/border-t border-line/, '')} min-w-0 flex-1`}>
-                {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 text-center font-medium">↗</span>}
-                <span className="flex min-w-0 flex-1 items-center gap-2">
-                  {/* Over the PDF the verb gives way to the template's name («Шаблон визитки»), the name saying what that click does */}
-                  <span className={`${name.replace('min-w-0 flex-1 ', 'min-w-0 ')} ${a.download ? 'group-has-[[data-format]:hover]/row:hidden' : ''}`}>{a.title}</span>
-                  {a.download && <span aria-hidden className={`hidden ${name.replace('min-w-0 flex-1 ', 'min-w-0 ')} group-has-[[data-format]:hover]/row:inline`}>{a.download}</span>}
-                  <span aria-hidden className={`hidden font-medium group-hover:inline ${linked ? 'group-has-[[data-preview]:hover]/preview:inline' : ''}`}>↗</span>
-                  <span aria-hidden className="hidden font-medium group-has-[[data-format]:hover]/row:inline">↓</span>
-                </span>
-                {a.verb && <span className={`${meta} ${format}`}>{a.verb}</span>}
-              </Link>
-              <a href={tpl.t} target="_blank" rel="noopener" data-format title={`Скачать ${formatOf(tpl)}`} aria-label={`${a.title}, шаблон ${formatOf(tpl)}`} className="group/format flex shrink-0 items-center pl-3 text-[16px] leading-none tracking-[-0.01em] text-caption hover:text-black">
-                <span className={`${UNDERLINE} group-hover/format:decoration-black/40 group-hover/format:duration-0`}>{formatOf(tpl)}</span>
-              </a>
-            </div>
-          )
-        }
-        if ('to' in a) {
-          return (
-            <Link key={a.to} to={a.to} title={editTitle(a.to)} className={row}>
-              {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 text-center font-medium">↗</span>}
-              <span className={name}>{a.title}</span>
-              <span className={meta}>{a.to}</span>
-            </Link>
-          )
-        }
-        // A generator's file: its link makes and saves it, in a tab of its own so the guide stays
-        if ('t' in a) {
-          return (
-            <a key={a.file} href={a.t} target="_blank" rel="noopener" title={`Скачать ${formatOf(a)}`} className={row}>
-              {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>}
-              {named(a.label, pointedRow)}
-              <span className={`${meta} ${format}`}>{formatOf(a)}</span>
-            </a>
-          )
-        }
-        if (a.also?.length) {
-          // The row is the file's link, its other formats links of their own after it, each the row's height (a
-          // finger's target on phones), pointing at one lighting it alone
-          return (
-            <div key={a.file} className={`group/row flex items-stretch ${bare && i === 0 ? '' : 'border-t border-line'}`}>
-              <a href={`/downloads/${a.file}`} download title={`Скачать ${formatOf(a)}`} className={`${row.replace(/border-t border-line/, '')} min-w-0 flex-1`}>
-                {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>}
-                {named(a.label ?? a.file, `${pointedRow} group-has-[[data-format]:hover]/row:inline`)}
-                <span className={`${meta} ${format}`}>{formatOf(a)}</span>
-              </a>
-              {a.also.map(f => (
-                <a key={f.file} href={`/downloads/${f.file}`} download data-format title={`Скачать ${formatOf(f)}`} aria-label={`${a.label ?? a.file}, ${formatOf(f)}`} className="flex shrink-0 items-center pl-3 text-[16px] leading-none tracking-[-0.01em] text-caption [font-feature-settings:'tnum'_1] hover:text-black group/format">
-                  <span className={`${UNDERLINE} group-hover/format:decoration-black/40 group-hover/format:duration-0`}>{formatOf(f)}</span>
-                </a>
-              ))}
-            </div>
-          )
-        }
-        return (
-          <a key={a.file} href={`/downloads/${a.file}`} download title={`Скачать ${formatOf(a)}`} className={row}>
-            {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>}
-            {named(a.label ?? a.file, pointedRow)}
-            <span className={`${meta} ${format}`}>{formatOf(a)}</span>
-          </a>
-        )
-      })}
-    </div>
-  )
-}
-
-/**
- * A picture that does what one row of the `Assets` under it does: opens the page or downloads the file. Pointing at
- * the picture marks that row as hovered, so the two read as one link. Put both inside a `group/preview` element and
- * pass the row's file or path to `Assets` as `preview`.
- */
-function PreviewLink({ asset, label, children }: { asset: Asset; label: string; children: ReactNode }) {
-  const className = 'block'
-  const setPointed = useContext(PointedPreview)?.[1]
-  const key = 'to' in asset ? asset.to : asset.file
-  const hover = setPointed && { onPointerEnter: () => setPointed(key), onPointerLeave: () => setPointed(undefined) }
-  return 'to' in asset
-    ? <Link to={asset.to} aria-label={label} title={editTitle(asset.to)} data-preview={setPointed ? undefined : ''} className={className} {...hover}>{children}</Link>
-    : <a href={`/downloads/${asset.file}`} download aria-label={label} title={`Скачать ${formatOf(asset)}`} data-preview={setPointed ? undefined : ''} className={className} {...hover}>{children}</a>
-}
-
-/** The file or page whose picture is pointed at, inside a `Previews` group. */
-const PointedPreview = createContext<[string | undefined, (key: string | undefined) => void] | null>(null)
-
-/**
- * A group where pictures lead to different rows of the `Assets` under them (Логотип на иконках: the favicon, the app
- * icon, the userpic), so pointing at one lights its own row rather than the single `preview` one.
- */
-function Previews({ className, children }: { className: string; children: ReactNode }) {
-  const pointed = useState<string>()
-  return <PointedPreview.Provider value={pointed}><div className={className}>{children}</div></PointedPreview.Provider>
-}
-
-/** A constructor page's preview over its ↗ row; `flush` sets the row right under the preview, with no gap and no hairline. */
-function Constructor({ to, title, label, flush, template, children }: { to: string; title: string; label: string; flush?: boolean; template?: { file: string; label?: string; query?: string }; children: ReactNode }) {
-  return (
-    <div className={`group/preview flex flex-col ${flush ? '' : 'gap-4 md:gap-6'}`}>
-      <PreviewLink asset={{ to, title }} label={label}>{children}</PreviewLink>
-      {/* The generator's row, named by what's done there, its template (made by its `?t` link) a PDF after it */}
-      <Assets items={[{ to, title: label, download: template?.label, template: template && { t: `${to}?${template.query ? `${template.query}&` : ''}t`, file: template.file } }]} preview={to} bare={flush} />
-    </div>
-  )
-}
-
 /** The Материалы overview: each medium's picture right over its ↗ row to the constructor, carrying its anchor; in `MEDIA` order. */
 function Carriers({ items }: { items: typeof MEDIA }) {
   return (
@@ -1293,31 +739,6 @@ function Carriers({ items }: { items: typeof MEDIA }) {
         </div>
       ))}
     </div>
-  )
-}
-
-/** A picture that opens large over the page on a click (a lightbox); a click anywhere or Esc closes it. */
-function Zoom({ label, children }: { label: string; children: ReactNode }) {
-  const [open, setOpen] = useState(false)
-  useEffect(() => {
-    if (!open) return
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setOpen(false) }
-    const overflow = document.documentElement.style.overflow
-    document.documentElement.style.overflow = 'hidden'
-    window.addEventListener('keydown', onKey)
-    return () => { window.removeEventListener('keydown', onKey); document.documentElement.style.overflow = overflow }
-  }, [open])
-  return (
-    <>
-      <button type="button" aria-label={label} onClick={() => setOpen(true)} className="block w-full cursor-zoom-in">
-        {children}
-      </button>
-      {open && (
-        <div role="dialog" aria-label={label} onClick={() => setOpen(false)} className="fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-white p-4 md:p-12">
-          <div className="w-[min(100%,calc((100dvh-2rem)*4/3))] md:w-[min(100%,calc((100dvh-6rem)*4/3))]">{children}</div>
-        </div>
-      )}
-    </>
   )
 }
 
@@ -1369,129 +790,6 @@ function EditorDialog() {
         <EditorLinks />
       </nav>
     </Dialog>
-  )
-}
-
-/** A heading + text group. Sections are separated by 144px; a Chapter adds 72px on top of its first one. */
-function Section({ children }: { children: ReactNode }) {
-  return <section className="flex flex-col gap-8 md:gap-12">{children}</section>
-}
-
-function Head({ children }: { children: ReactNode }) {
-  return <div className="flex flex-col gap-6">{children}</div>
-}
-
-// ─── Content ─────────────────────────────────────────────────────────────────
-
-// Vercel's own release: Google Fonts has no direct download link any more, only its specimen page.
-const GEIST_ZIP = 'https://github.com/vercel/geist-font/releases/download/v1.7.2/geist-font-v1.7.2.zip'
-
-const UMO5_SUBTITLE = <>Электромобиль с Алисой на борту<br />от 2,5 млн ₽</>
-const UMO8_SUBTITLE = <>Гибридный кроссовер<br />с Алисой на борту от 5 млн ₽</>
-
-type Rule = { good: ReactNode; bad: ReactNode; why: string }
-
-const DICTIONARY: Rule[] = [
-  { good: 'Технологичный', bad: 'Инновационный, революционный', why: 'Мы избегаем затертых маркетинговых штампов, лишенных конкретного смысла' },
-  { good: 'Рациональный, честный', bad: 'Доступный, бюджетный', why: 'Слово «доступный» часто считывается как «дешевый», что искажает суть нашего технологического премиума' },
-  { good: 'Электромобиль, электрокар, гибрид, кроссовер', bad: 'Тачка, машинка, электричка', why: 'Придерживаемся грамотной терминологии, не допускаем панибратства' },
-  { good: 'Выразительный взгляд, удобная посадка', bad: 'Агрессивный дизайн, лаконичные линии, хищный оскал', why: 'Избегаем профессиональные штампы и устоявшиеся клише' },
-  { good: 'Заголовки без точек в конце, точки в конце предложений', bad: 'Заголовки с точкой, нет знаков препинания, эмодзи в тексте', why: 'Пунктуация и оформление текстовых стилей по правилам русского языка' },
-]
-
-/**
- * Коммуникация → Примеры: the voice as it reads in the brand's own messages — chat-like grey bubbles
- * (round but the top-left corner), photos with a line over them. Three columns from `md`, each a stack; in the
- * middle and right ones the photo takes what's left, so the columns end level. On phones they stack in one column,
- * the photos 3:4.
- */
-function Bubble({ title, children }: { title?: ReactNode; children?: ReactNode }) {
-  return (
-    <div className="flex flex-col gap-2 rounded-tr-2xl rounded-b-2xl bg-surface p-4 leading-[1.25]">
-      {title && <p className="text-[20px] font-medium tracking-[-0.01em]">{title}</p>}
-      {children && <p className="text-[16px]">{children}</p>}
-    </div>
-  )
-}
-
-/** `focus`: the crop's vertical point in % on phones, where the 4:3 crop would cut the subject (the runner's head) */
-function PhotoCard({ name, title, children, grow, focus }: { name: string; title: ReactNode; children?: ReactNode; grow?: boolean; focus?: number }) {
-  return (
-    // 4:3 on phones, to save the one column's height; 3:4 from md, as in Figma. Shaped as the bubbles, a message too
-    <div className={`relative aspect-4/3 overflow-hidden rounded-tr-2xl rounded-b-2xl bg-surface sm:aspect-3/4 ${grow ? 'sm:aspect-auto sm:min-h-0 sm:flex-1' : ''}`}>
-      <img src={img(name)} alt="" loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover sm:object-center!" style={focus !== undefined ? { objectPosition: `50% ${focus}%` } : undefined} />
-      <div className="absolute inset-x-4 top-4 flex flex-col gap-2 leading-[1.25] text-white">
-        {/* A line alone over a photo is 240 wide, as in Figma, so it breaks the same way on any card */}
-        <p className={`text-[20px] font-medium tracking-[-0.01em] ${children ? '' : 'max-w-[240px]'}`}>{title}</p>
-        {children && <p className="text-[16px]">{children}</p>}
-      </div>
-    </div>
-  )
-}
-
-function Examples() {
-  return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 md:gap-6">
-      <div className="flex flex-col gap-4 md:gap-6">
-        <PhotoCard name="voice-alice" title="Проще — говоря">Управляйте голосом с помощью Алисы</PhotoCard>
-        <Bubble title="Умный">Оснащён технологиями Яндекса</Bubble>
-        <Bubble title="Просторный">Найдётся место для всего на свете</Bubble>
-        <Bubble title="Тихий">Не создает шума<br />на дорогах</Bubble>
-      </div>
-      <div className="flex flex-col gap-4 md:gap-6">
-        {/* On phones, in one column, after the runner: so the three bubbles before it don't run into a fourth */}
-        <div className="max-sm:order-1">
-          <Bubble title={<>Электромобиль с <span className="font-['Alice_Okniks'] [font-feature-settings:'ss02']">@</span> Алисой и сервисами Яндекса. Запас хода до 420 км, разгон до 100 км/ч за 8,7 секунды</>} />
-        </div>
-        {/* As «Запоминающиеся фары»: the last word not tied to «город», so «сделать» doesn't stand alone in a narrow card */}
-        <PhotoCard name="voice-runner" grow focus={20} title={<>Практичный и инновационный UMO поможет сделать город{' '}комфортнее</>} />
-      </div>
-      <div className="flex flex-col gap-4 md:gap-6">
-        <PhotoCard name="voice-charging" grow title="Послушаем, как поют птицы в парке, пока заряжается UMO" />
-        {/* Separate text nodes, so the typograph doesn't tie the last word to this long one: in three columns at
-            640–767 px the pair is wider than its bubble */}
-        <Bubble title={<>Запоминающиеся{' '}фары</>}>Светодиодная оптика даёт яркий ровный свет<br />и не слепит встречных водителей</Bubble>
-        <Bubble title="Удобная посадка">Угол раскрытия дверей на 90° обеспечивает лёгкую посадку даже с крупным багажом в руках</Bubble>
-      </div>
-    </div>
-  )
-}
-
-const MISUSE: [string, string][] = [
-  ['misuse-proportions', 'Изменение расположения и размеров элементов'],
-  ['misuse-effects', 'Применение эффектов: градиент, тень, обводка и т.п.'],
-  ['misuse-clearspace', 'Несоблюдение охранной зоны, имя бренда не считывается'],
-  ['misuse-distortion', 'Искажение, перспектива, деформация'],
-  ['misuse-background', 'Фон перегружен деталями, недостаточный контраст'],
-  ['misuse-lettering', 'Набор логотипа шрифтом, произвольный леттеринг'],
-  ['misuse-photo', 'Детали фото мешают считыванию, недостаточный контраст'],
-  ['misuse-rotation', 'Перевод в контур, поворот, отражение'],
-  ['misuse-color', 'Некорректный выбор цвета, недостаточный контраст'],
-]
-
-function Dictionary({ rows }: { rows: Rule[] }) {
-  // Fixed tracks: each row is a grid of its own, and with plain 1fr a long unbreakable phrase widens its column in
-  // its row only, so the columns jump from row to row
-  const cols = 'md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)]'
-  // A list breaks after its commas: as separate text nodes, the typograph doesn't tie its last item to the one before
-  // (else «Инновационный, революционный» is one unbreakable line, wider than its column)
-  const list = (s: ReactNode) => (typeof s === 'string' ? s.split(/(?<=, )/) : s)
-  const mark = (m: string) => <span className="w-[30px] [font-feature-settings:'case'_1]">{m}</span>
-  return (
-    <div className="text-[16px] leading-[1.25] tracking-[-0.01em]">
-      <div className={`hidden md:grid ${cols} gap-x-6 py-4 font-medium`}>
-        <p className="flex gap-2">Стандарт бренда {mark('✓')}</p>
-        <p className="flex gap-2">Ошибка {mark('✗')}</p>
-        <p>Мотивация</p>
-      </div>
-      {rows.map((row, i) => (
-        <div key={i} className={`grid grid-cols-1 ${cols} gap-x-6 gap-y-2 border-t border-line py-4`}>
-          <p className="font-medium"><span className="md:hidden">✓&nbsp;</span>{list(row.good)}</p>
-          <p><span className="md:hidden">✗&nbsp;</span>{list(row.bad)}</p>
-          <p className="text-caption md:text-black">{row.why}</p>
-        </div>
-      ))}
-    </div>
   )
 }
 
@@ -1691,7 +989,7 @@ export default function Guide() {
                   the logo: the body's 16px on top, plus 8px less CoFo Sans's 0.164em above the caps. */}
               <div className="flex flex-col gap-8 md:gap-12 lg:[container-type:inline-size]">
                 <p id="statement" className="text-[32px] font-medium leading-none tracking-[-0.01em] md:text-[48px] lg:mt-[calc(8px-0.164em+var(--umo-y-overhang,0px))] lg:max-w-[912px] lg:text-[min(60px,6.58cqw)]">
-                  Автомобильный бренд, созданный в технологическом партнёрстве с Яндексом
+                  {STATEMENT}
                 </p>
                 {/* Quick links: read (Платформа бренда), see (Материалы, the templates there too), make (Редактор, the
                     constructors' window, titled «Редактор материалов»; «Редактор» alone after Материалы, with no echo). They
@@ -1706,414 +1004,7 @@ export default function Guide() {
             </div>
           </div>
 
-          {/* ── Платформа бренда ── */}
-          <Chapter id="brand" title="Платформа бренда">
-              <Section>
-                {/* Picture above the heading; the anchor sits on it so links land on the picture */}
-                <div id="positioning" className="scroll-mt-24 lg:scroll-mt-6"><Fig name="positioning" w={912} h={456} alt="" /></div>
-                <Head>
-                  <H2>Позиционирование</H2>
-                  <Text>
-                    <p>UMO — это и есть ты. Больше, чем машина, это гаджет для человека.</p>
-                    <p>Для мамы с детьми это безопасное пространство в городе. Для айтишника — утилитарный и технологичный транспорт. Для водителя такси — рабочий инструмент.</p>
-                    <p>Для отца, который раз в месяц уезжает на рыбалку за сотню километров — машина с бардачком под блёсны и возможностью зарядить аккумулятор от обычной розетки на даче.</p>
-                    <p>UMO не диктует сценарий, а подстраивается под тот, что есть сейчас.</p>
-                  </Text>
-                </Head>
-              </Section>
-
-              <Section>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-10">
-                  <Head>
-                    <H2 id="vision">Видение</H2>
-                    <Text><p>Сделать электромобильность новой, доступной и естественной нормой жизни для миллионов людей уже сегодня.</p></Text>
-                  </Head>
-                  <Head>
-                    <H2 id="mission">Миссия</H2>
-                    <Text><p>Через умный транспорт трансформировать культуру повседневных поездок.</p></Text>
-                  </Head>
-                </div>
-                <Fig name="umo5-kv" focus={72} w={912} h={456} />
-              </Section>
-
-              <Section>
-                <Head>
-                  <H2 id="audience">Аудитория</H2>
-                  <Text><p>Современные люди, лояльные к технологиям — им важны персонализация и комфорт, а не статус ради статуса.</p></Text>
-                </Head>
-                <Fig name="audience" w={912} h={456} />
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-8">
-                  <Head>
-                    <p className="text-[24px] font-medium leading-none tracking-[-0.01em]">UMO 5</p>
-                    <Text><p>Молодые городские — те, кто живёт в ритме и выбирает машину под свою мобильность здесь и сейчас.</p></Text>
-                  </Head>
-                  <Head>
-                    <p className="text-[24px] font-medium leading-none tracking-[-0.01em]">UMO 8</p>
-                    <Text><p>Семейный и представительский сегмент — те, для кого машина должна одинаково подходить и для путешествия с детьми, и для деловой поездки.</p></Text>
-                  </Head>
-                </div>
-              </Section>
-          </Chapter>
-
-          {/* ── Коммуникация ── */}
-          <Chapter id="communication" title="Коммуникация" loose>
-            <Section>
-              <Head>
-                <H2 id="name">Имена</H2>
-                <Text>
-                  <p>UMO — Urban Mobility Object, объект городской мобильности. Читается «Умо», с ударением на первый слог.</p>
-                  <p>Имя набирается латиницей, прописными и без точек: UMO. Имя модели складывается из имени бренда и цифры через пробел: UMO 5, UMO 8.</p>
-                  <p>Написания «УМО», «Umo», «U.M.O.» и «UMO5» ошибочны.</p>
-                  <p>Имя не обыгрывается: «Умка», «Умочка», «UMOпомрачительно» неуместны в рекламе и у блогеров. «Умка» остаётся сленгом владельцев.</p>
-                </Text>
-              </Head>
-            </Section>
-
-            <Section>
-              <Head>
-                <H2 id="descriptors">Дескрипторы</H2>
-                {/* One text in two columns, as Имена */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
-                  <Text>
-                    <p>Дескриптор поясняет имя и, в отличие от слогана, не меняется от кампании к кампании.</p>
-                    <p>Дескриптор бренда: «Автомобильный бренд, созданный в технологическом партнёрстве с Яндексом».</p>
-                  </Text>
-                  <Text>
-                    <p>Дескриптор модели складывается из её типа и слов «с технологиями Яндекса»:</p>
-                    <p>UMO 5: электромобиль с технологиями Яндекса.</p>
-                    <p>UMO 8: гибрид с технологиями Яндекса.</p>
-                  </Text>
-                </div>
-              </Head>
-            </Section>
-
-            <Section>
-              <Head>
-                <H2 id="tone">Тон голоса</H2>
-                <Text>
-                  <p>Голос UMO — вдумчивый, искренний, партнёрский. Обращаемся на «вы». Говорим на языке людей, без пафоса и сложных метафор — наш язык живой и человечный.</p>
-                  <p>Выстраиваем диалог с пользователем в каждой точке контакта. Там где позволяет формат, вместо констатации сухих технических терминов раскрываем их на примерах.</p>
-                  <p>Рекламные клише категории и агрессивные восклицания не используем.</p>
-                </Text>
-              </Head>
-              <Fig name="voice" w={912} h={456} />
-            </Section>
-
-            <Section>
-              <H2 id="dictionary">Словарь</H2>
-              <Dictionary rows={DICTIONARY} />
-            </Section>
-
-            <Section>
-              <Head>
-                <H2 id="examples">Примеры</H2>
-                <Text><p>Лучше один раз увидеть: UMO говорит по-человечески и уважительно на вы.</p></Text>
-              </Head>
-              <Examples />
-            </Section>
-          </Chapter>
-
-          {/* ── Логотип ── */}
-          <Chapter id="logo" title="Логотип">
-            <Section>
-              <Text>
-                <p>Логотип UMO не буквы, а модули.</p>
-                <p>Словесный знак собран из элементов, как из конструктора — чистая геометрия и инженерия. Это визуальный эквивалент главной идеи бренда — город как система, а автомобиль как её умный, технологичный элемент.</p>
-              </Text>
-              <div className="group/preview flex flex-col gap-4 md:gap-6">
-                <PreviewLink asset={{ file: 'umo-logo.svg' }} label="Скачать логотип, SVG">
-                  <LogoPlate w={912} h={456} logo={480} bg="#f5f5f5" phone43 />
-                </PreviewLink>
-                <Assets items={[{ file: 'umo-logo.svg', label: 'Логотип UMO', also: [{ file: 'umo-logo-png.zip' }] }]} preview="umo-logo.svg" />
-              </div>
-            </Section>
-
-            <Section>
-              <Head>
-                <H2 id="placement">Размещение на продукте</H2>
-                <Text>
-                  <p>Логотип остаётся собой в любом масштабе и материале.</p>
-                  <p>В экстерьере это метка бренда и деталь, которая читается на ходу. В салоне — присутствие в ежедневной рутине.</p>
-                  <p>Единый модуль для любого контекста.</p>
-                </Text>
-              </Head>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                <Fig name="placement-exterior" w={912} h={456} className="sm:col-span-2" alt="Логотип на передней части UMO 8" />
-                <Fig name="placement-interior" w={444} h={333} alt="Логотип на руле" />
-                <Fig name="placement-badge" w={444} h={333} alt="Шильдик UMO на кузове" />
-              </div>
-            </Section>
-
-            <Section>
-              <Head>
-                <H2 id="clearspace">Отступы и размер</H2>
-                <Text>
-                  <p>Минимальный отступ вокруг логотипа равен одной базовой единице: высоте логотипа (U). В пределах отступа нельзя размещать другие элементы.</p>
-                  <p>Чтобы сохранить узнаваемость и четкость не уменьшайте размеры логотипа ниже рекомендуемых.</p>
-                </Text>
-              </Head>
-              <div className="flex flex-col gap-4 md:gap-6">
-                <Fig name="clearspace" w={912} h={456} phone43 alt="Схема охранного поля логотипа: U со всех сторон" />
-                <Fig name="minsize" w={912} h={304} alt="Минимальный размер: аналоговый ≥20 мм, цифровой ≥40 px" />
-              </div>
-            </Section>
-
-            <Section>
-              <Head>
-                <H2 id="logo-color">Цвет логотипа</H2>
-                <Text><p>Цвет логотипа подбирается по контрасту, яркости и тону фона: белый или черный.</p></Text>
-              </Head>
-              <div className="flex flex-col gap-4 md:gap-6">
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
-                  <LogoPlate w={444} h={333} logo={240} bg="#000" dark caption="Белый для тёмного фона" />
-                  <LogoPlate w={444} h={333} logo={240} bg="#f5f5f5" caption="Чёрный для светлого фона" />
-                </div>
-                <figure className="flex flex-col gap-3">
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-4 md:gap-6">
-                    <Photo name="color-photo" />
-                    <LogoPlate w={210} h={280} logo={120} bg="#fc3f1d" dark />
-                    <LogoPlate w={210} h={280} logo={120} bg="#ffea00" />
-                    <Photo name="color-light" />
-                  </div>
-                  <Caption>Примеры подбора цвета. Фоны здесь только для наглядности, это не цвета бренда</Caption>
-                </figure>
-              </div>
-            </Section>
-
-            <Section>
-              <Head>
-                <H2 id="misuse">Ограничения</H2>
-                <Text><p>Необходимо сохранять оригинальные пропорции и дизайн логотипа, чтобы избежать потери узнаваемости и искажений восприятия.</p></Text>
-              </Head>
-              <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:gap-6">
-                {MISUSE.map(([name, text]) => (
-                  <Fig key={name} name={name} w={288} h={216} caption={text} cross alt={text} />
-                ))}
-              </div>
-            </Section>
-
-            <Section>
-              <Head>
-                <H2 id="icons">Логотип на иконках</H2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
-                  <Text>
-                    <p>Размещая логотип на мелких форматах рекомендуется учитывать минимальные размеры и отступы.</p>
-                    <p>Иконка сайта — исключение.</p>
-                  </Text>
-                  <Text>
-                    <p>Иконка подходит для аватарки (юзерпика) дилера в соцсетях и мессенджерах, оформления профиля на площадках объявлений и карточки организации на картах.</p>
-                  </Text>
-                </div>
-              </Head>
-              <Previews className="flex flex-col gap-4 md:gap-6">
-                <div className="grid grid-cols-1 min-[520px]:grid-cols-2 gap-4 md:gap-6">
-                  <PreviewLink asset={{ file: 'umo-icon-white.svg' }} label="Скачать иконку, чёрный логотип на белом, SVG">
-                    <Fig name="icon-userpic" w={444} h={333} caption="Юзерпик аккаунта соцсетей" />
-                  </PreviewLink>
-                  <PreviewLink asset={{ file: 'umo-favicon.svg' }} label="Скачать фавиконку, SVG">
-                    <Fig name="icon-favicon-light" w={444} h={333} caption="Фавиконка и иконка закладок в браузере" alt="Фавиконка во вкладке светлого браузера" />
-                  </PreviewLink>
-                  <PreviewLink asset={{ file: 'umo-icon-black.svg' }} label="Скачать иконку, белый логотип на чёрном, SVG">
-                    <Fig name="icon-app" w={444} h={333} caption="Иконка мобильного приложения" />
-                  </PreviewLink>
-                  <PreviewLink asset={{ file: 'umo-favicon.svg' }} label="Скачать фавиконку, SVG">
-                    <Fig name="icon-favicon" w={444} h={333} alt="Фавиконка во вкладке тёмного браузера" />
-                  </PreviewLink>
-                </div>
-                <Assets items={[{ file: 'umo-icon-white.svg', label: 'Иконка UMO на белом', also: [{ file: 'umo-icon-white.png' }] }, { file: 'umo-icon-black.svg', label: 'Иконка UMO на чёрном', also: [{ file: 'umo-icon-black.png' }] }, { file: 'umo-favicon.svg', label: 'Фавиконка UMO', also: [{ file: 'umo-favicon.ico' }] }]} />
-              </Previews>
-            </Section>
-
-            <Section>
-              <Head>
-                <H2 id="cobranding">Кобрендинг</H2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
-                  <Text>
-                    <p>Для совместного брендинга с логотипом UMO используйте квадратный или горизонтальный логотип (словесный знак) другой компании.</p>
-                    <p>Следите за размерами логотипов, их расположением и правилами отступов.</p>
-                  </Text>
-                  <Text>
-                    <p>Высота разделительной линии между логотипами равна высоте логотипа UMO, ширина 1/30 высоты.</p>
-                    <p>Любой кобрендинг требует одобрения от команды бренда и юридической команды.</p>
-                  </Text>
-                </div>
-              </Head>
-              {/* Two columns, a scheme over its example; the columns stack below 640 px */}
-              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
-                <div className="group/preview flex flex-col gap-4 md:gap-6">
-                  <Zoom label="Схема кобрендинга с квадратным логотипом">
-                    <Fig name="cobrand-square" w={444} h={333} alt="Схема кобрендинга с квадратным логотипом" />
-                  </Zoom>
-                  <PreviewLink asset={{ file: 'umo-yandex.svg' }} label="Скачать логотип UMO | Яндекс, SVG">
-                    <Fig name="cobrand-square-example" w={444} h={333} alt="UMO и Яндекс" />
-                  </PreviewLink>
-                  <Assets items={[{ file: 'umo-yandex.svg', label: 'Лок-ап UMO | Яндекс', also: [{ file: 'umo-yandex-png.zip' }] }]} preview="umo-yandex.svg" />
-                </div>
-                <div className="flex flex-col gap-4 md:gap-6">
-                  <Zoom label="Схема кобрендинга с горизонтальным логотипом">
-                    <Fig name="cobrand-horizontal" w={444} h={333} alt="Схема кобрендинга с горизонтальным логотипом" />
-                  </Zoom>
-                  <Fig name="cobrand-horizontal-example" w={444} h={333} alt="UMO и EVM" />
-                </div>
-              </div>
-            </Section>
-          </Chapter>
-
-          {/* ── Типографика ── */}
-          <Chapter id="typography" title="Типографика">
-            <Section>
-              <Text>
-                <p>Гарнитура CoFo Sans — основа визуальной идентификации и стиля бренда UMO. Функциональный и разборчивый, он имеет несколько весов для полной свободы выражения.</p>
-                <p>Когда использование CoFo Sans невозможно, допускается применение альтернатив, доступных в популярных рабочих пространствах.</p>
-              </Text>
-              <div className="flex flex-col gap-4 md:gap-6">
-                <figure className="flex flex-col gap-3">
-                  <div className="flex aspect-4/3 min-[520px]:aspect-2/1 items-center justify-center bg-surface">
-                    <p className="text-[48px] sm:text-[72px] md:text-[96px] font-medium leading-none tracking-[-0.01em]">CoFo Sans</p>
-                  </div>
-                  <Caption>Базовая гарнитура</Caption>
-                </figure>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6">
-                  <Fig name="font-geist" w={288} h={216} caption="Альтернатива для Google" alt="Geist" href={GEIST_ZIP} />
-                  <Fig name="font-helvetica" w={288} h={216} caption="Альтернатива для MacOS" alt="Helvetica Neue" />
-                  <Fig name="font-arial" w={288} h={216} caption="Альтернатива для Windows" alt="Arial" />
-                </div>
-              </div>
-            </Section>
-
-            <Section>
-              <Head>
-                <H2 id="type-styles">Стили и иерархия</H2>
-                <Text>
-                  <p>CoFo Sans подходит для оформления любых маркетинговых материалов в цифровой и аналоговой среде.</p>
-                  <p>Среди доступных весов гарнитуры, рекомендуется использовать пару:</p>
-                  <ul className="list-disc pl-[30px] flex flex-col gap-2">
-                    <li>CoFo Sans Medium для заголовков и акциденции</li>
-                    <li>CoFo Sans Regular для набора основного массива текста</li>
-                  </ul>
-                </Text>
-              </Head>
-              <Fig name="type-styles" w={912} h={456} alt="Заголовок 3 rem, подзаголовок 1.5 rem, основной текст 1 rem" />
-            </Section>
-          </Chapter>
-
-          {/* ── Леттеринг ── */}
-          <Chapter id="lettering" title="Леттеринг" loose>
-            <Section>
-              <H2 id="lettering-models">Модели</H2>
-              <div className="flex flex-col gap-4 md:gap-6">
-                <div className="grid grid-cols-1 min-[520px]:grid-cols-2 gap-4 md:gap-6">
-                  <Fig name="lettering-model8" w={444} h={333} alt="Леттеринг MODEL 8 и номерная плашка UMO 8" />
-                  <Fig name="lettering-model5" w={444} h={333} alt="Леттеринг MODEL 5 и номерная плашка UMO 5" />
-                  <Fig name="lettering-umo8" w={444} h={333} alt="Леттеринг на UMO 8" />
-                  <Fig name="lettering-umo5" w={444} h={333} alt="Леттеринг на кузове UMO 5" />
-                </div>
-                {/* Columns follow the pictures: UMO 8 on the left, UMO 5 on the right. */}
-                <Assets
-                  early
-                  items={[
-                    { file: 'umo-model-8.svg', label: 'Леттеринг MODEL 8', also: [{ file: 'umo-model-8-png.zip' }] }, { file: 'umo-plate-8-svg.zip', label: 'Номерная плашка UMO 8' },
-                    { file: 'umo-model-5.svg', label: 'Леттеринг MODEL 5', also: [{ file: 'umo-model-5-png.zip' }] }, { file: 'umo-plate-5-svg.zip', label: 'Номерная плашка UMO 5' },
-                  ]}
-                />
-              </div>
-            </Section>
-
-            <Section>
-              <H2 id="made-in-moscow">Сделано в Москве</H2>
-              <div className="grid grid-cols-1 min-[520px]:grid-cols-2 gap-4 md:gap-6">
-                <Fig name="moscow-umo5" w={444} h={333} alt="Шильдик «Сделано в Москве» на UMO 5" />
-                <Fig name="moscow-umo8" w={444} h={333} alt="Шильдик «Сделано в Москве» на UMO 8" />
-              </div>
-            </Section>
-          </Chapter>
-
-          {/* ── Цвет ── */}
-          <Chapter id="color" title="Цвет">
-            <Section>
-              <Text>
-                <p>У UMO два цвета — чёрный и белый. Яркого цвета у бренда нет: его приносят автомобиль, фотография и среда, а чёрно-белая графика не спорит с ними и узнаётся на любом фоне.</p>
-                <p>В печати чёрный двух видов: глубокий составной для плёнки, вывесок и больших плашек, чистый K100 для текста и мелких деталей. Серые — служебные: фон, линии и подписи.</p>
-                <p>Как выбрать между чёрным и белым логотипом — в разделе <a href="#logo-color" className={TEXT_LINK}>Цвет логотипа</a>.</p>
-              </Text>
-              <div className="flex flex-col gap-4 md:gap-6">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                  {COLORS.main.map((c, i) => <Swatch key={c.name} {...c} className={`aspect-4/3 ${i === COLORS.main.length - 1 ? 'min-[520px]:max-sm:hidden' : ''}`} />)}
-                </div>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6">
-                  {/* From 520 px to sm the last main colour (white) is one of the small tiles, two by two under the
-                      first; narrower, its rows («На тёмном белая краска») don't fit a small tile, and it stays large */}
-                  {[COLORS.main[COLORS.main.length - 1]].map(c => <Swatch key={c.name} {...c} className="aspect-4/3 hidden max-sm:p-4 min-[520px]:max-sm:flex" />)}
-                  {COLORS.service.map(c => <Swatch key={c.name} {...c} className="aspect-4/3 max-sm:p-4" />)}
-                </div>
-              </div>
-            </Section>
-          </Chapter>
-
-          {/* ── Фотография ── */}
-          <Chapter id="photography" title="Фотография">
-            <Section>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
-                <Text><p>Без излишней постановочности и драмы. Изображение захватывает взгляд, потому что все, что видит зритель, происходит здесь и сейчас.</p></Text>
-                <Text><p>Автомобили становятся частью мира аудитории, но показаны в выгодном ракурсе, который подчеркивает преимущества или рассказывает историю за счет окружения.</p></Text>
-              </div>
-              <Fig name="keyvisual" w={912} h={456} />
-            </Section>
-
-            <Section>
-              <Head>
-                <H2 id="photo-umo5">UMO 5</H2>
-                <Text><p>Снимки UMO Model 5 и пример их применения в рекламе</p></Text>
-              </Head>
-              <div className="flex flex-col gap-4 md:gap-6">
-                <Fig name="umo5-kv" focus={72} w={912} h={456} alt="UMO 5" />
-                <div className="grid grid-cols-1 sm:grid-cols-[600fr_288fr] gap-4 md:gap-6">
-                  <Poster bg="umo5-banner-bg" w={600} h={368} title="Новый UMO 5" subtitle={UMO5_SUBTITLE} alt="Горизонтальный баннер UMO 5" />
-                  <Poster bg="umo5-square-bg" w={288} h={368} title="Новый UMO 5" subtitle={UMO5_SUBTITLE} center alt="Вертикальный баннер UMO 5" />
-                </div>
-              </div>
-            </Section>
-
-            <Section>
-              <Head>
-                <H2 id="photo-umo8">UMO 8</H2>
-                <Text><p>Снимки UMO Model 8 и пример их применения в рекламе</p></Text>
-              </Head>
-              <div className="flex flex-col gap-4 md:gap-6">
-                <div className="grid grid-cols-1 sm:grid-cols-[288fr_600fr] gap-4 md:gap-6">
-                  <div className="order-2 sm:order-none">
-                    <Poster bg="umo8-square-bg" w={288} h={368} title="Новый UMO 8" subtitle={UMO8_SUBTITLE} center alt="Вертикальный баннер UMO 8" />
-                  </div>
-                  <Poster bg="umo8-banner-bg" w={600} h={368} title="Новый UMO 8" subtitle={UMO8_SUBTITLE} alt="Горизонтальный баннер UMO 8" />
-                </div>
-                <Fig name="umo8-kv" w={912} h={456} alt="UMO 8" />
-              </div>
-            </Section>
-          </Chapter>
-
-          {/* ── Пространства ── */}
-          <Chapter id="spaces" title="Пространства">
-            <Section>
-              <Text>
-                <p>Пространства продолжают бренд за пределами экрана и бумаги.</p>
-                <p>Здесь работают те же принципы: спокойная геометрия, понятная навигация и ничего лишнего вокруг автомобиля.</p>
-              </Text>
-              <Fig name="dealer" w={912} h={456} alt="Дилерский центр UMO и Яндекса" />
-            </Section>
-
-            {/* Дилерский центр, on hold: back as a section with { id: 'dealer', title: 'Дилерский центр' } in NAV,
-                and drop `dealer` from OLD_ANCHORS.
-            <Section>
-              <Head>
-                <H2 id="dealer">Дилерский центр</H2>
-                <Text>
-                  <p>Первое место, где UMO можно потрогать.</p>
-                  <p>Салоны собраны по единой системе, поэтому UMO узнаётся с порога в любом городе и на любой площадке.</p>
-                </Text>
-              </Head>
-            </Section>
-            */}
-          </Chapter>
+          <Chapters />
 
           {/* ── Материалы ── */}
           <Chapter id="materials" title="Материалы">
@@ -2121,7 +1012,7 @@ export default function Guide() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
                 <Text>
                   {/* Every generator, from the generators' list: in `INTRO_ORDER`, a new one after them */}
-                  <p>Готовый дизайн, который встречает клиента у дилера UMO: {INTRO.map((g, i) => (
+                  <p>{MATERIALS_LEAD} {INTRO.map((g, i) => (
                     <Fragment key={g.path}>{i === 0 ? '' : i === INTRO.length - 1 ? ' и\u00a0' : ', '}<Link to={g.path} title={editTitle(g.path)} className={TEXT_LINK}>{g.phrase}</Link></Fragment>
                   ))}.</p>
                 </Text>
@@ -2140,14 +1031,11 @@ export default function Guide() {
           <div className="flex min-h-[calc(66.7svh+8px-68px+var(--spacing-chapter)-var(--spacing-section))] flex-col gap-section md:min-h-[calc(66.7svh+8px-92px+var(--spacing-chapter)-var(--spacing-section))] lg:min-h-[calc(66.7svh+8px-24px+var(--spacing-chapter)-var(--spacing-section))]">
             <Chapter id="contact" title="Контакты">
               <Section>
-                <Text wide>
-                  <p>Если ответа нет в стандартах или макет вывески, рекламы или другого носителя нужно согласовать, <a href={SUPPORT_BOT} target="_blank" rel="noopener" className={TEXT_LINK}>напишите боту поддержки</a>. Приложите макет и расскажите, где он будет размещён, — разберёмся вместе.</p>
-                  <p>Спасибо, что делаете UMO вместе с нами.</p>
-                </Text>
+                <Contact />
               </Section>
             </Chapter>
 
-            <footer className="mt-auto text-[16px] leading-[1.25] tracking-[-0.01em] text-caption">© 2026 ООО «ЭМ РУС». Стандарты бренда UMO</footer>
+            <footer className="mt-auto text-[16px] leading-[1.25] tracking-[-0.01em] text-caption">{FOOTER}</footer>
           </div>
         </div>
       </main>

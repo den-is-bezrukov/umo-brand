@@ -25,3 +25,6 @@ export interface Swatch { name: string; color: string; dark?: boolean; values: [
  * The site's own greys are tokens in `theme.css` (`--color-surface`, `--color-line`, `--color-caption`)
  */
 export interface BrandColors { main: Swatch[]; service: Swatch[] }
+
+/** A chapter of the guide in its contents, with its sections; `id` its anchor */
+export interface GuideChapter { id: string; title: string; children?: GuideChapter[] }

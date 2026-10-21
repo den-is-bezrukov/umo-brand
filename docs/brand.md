@@ -9,6 +9,7 @@ Everything UMO's own lives in `brand/umo/`; the rest of the code is the core, wh
 - `colors.ts` — `COLORS`, the guide's Цвет: the main colours in large tiles, the service ones in small, each with its values (screen, print).
 - `fonts.ts` — `FONTS`, the type the generators set their files in (in outlines, `src/ui/type.ts`) and their editable templates in (live, `src/ui/liveTextPdf.ts`, the memo's `src/memo/pdf.ts`): the TrueType file and PostScript name of the Regular and the Medium, and `short`, which names them in a PDF's resources. UMO's also has `ALICE`, Alice's mark for the price card.
 - `logo.ts` — the wordmark in outlines for the generators: `LOGO` (480×96, the business card, price tag, hours sign) and `NAME_TAG_LOGO`, the name tag's source drawing in the tag's millimetres.
+- `guide/` — the guide's content: `index.tsx` holds the chapters in the contents (`CHAPTERS`, before the core's Материалы and Контакты), old anchors, the first screen (`HERO`, `STATEMENT`), Материалы' lead, order and pictures (`MATERIALS_LEAD`, `INTRO_ORDER`, `DRAWN`), the chapters themselves (`Chapters`, written with `src/guide/parts.tsx`), Контакты' text and the footer; `images/` the pictures and the film, `images.ts` their list for `img()`.
 - `Wordmark.tsx`, `HeaderLogo.tsx`, `CobrandLockup.tsx` — the guide's logo: the wordmark on plates, the header's lockup that folds with the scroll (`COBRAND` turns the partner off), the co-branding lockup.
 
 ## Checking
