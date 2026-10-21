@@ -424,16 +424,18 @@ const walk = dir => fs.existsSync(dir) ? fs.readdirSync(dir, { recursive: true }
 
 /** Differing pixels of two pictures, the picture of the difference saved where they differ */
 function compareImages(a, b, diff) {
+  if (fs.readFileSync(a).equals(fs.readFileSync(b))) return 0
   try {
     execFileSync('magick', ['compare', '-metric', 'AE', a, b, diff], { stdio: 'pipe' })
     return 0
   } catch (e) {
     const n = parseFloat(String(e.stderr))
-    if (Number.isNaN(n)) return `другой размер: ${size(a)} → ${size(b)}`
-    return n
+    if (!Number.isNaN(n)) return n
+    const [sa, sb] = [size(a), size(b)]
+    return sa && sb ? `другой размер: ${sa} → ${sb}` : `не картинка: ${sa ? 'стал' : 'был'} битым (${fs.statSync(sa ? b : a).size} байт)`
   }
 }
-const size = f => execFileSync('magick', ['identify', '-format', '%wx%h', f]).toString()
+const size = f => { try { return execFileSync('magick', ['identify', '-format', '%wx%h', f], { stdio: 'pipe' }).toString() } catch { return '' } }
 
 /**
  * A PDF without what changes every time it's made, its dates and id, its streams unpacked (the dates may sit in a
@@ -529,6 +531,7 @@ function compare() {
   const base = path.join(OUT, 'baseline')
   const diffRoot = path.join(OUT, 'diff')
   rm(diffRoot)
+  rm(path.join(OUT, 'report.txt'))
   const lines = []
   const scenarios = SCENARIOS.filter(sc => !ONLY || ONLY.some(o => sc.name.startsWith(o)))
   let same = 0
@@ -553,6 +556,8 @@ function compare() {
 }
 
 if (!fs.existsSync(chromePath())) { console.error('Нет Chrome'); process.exit(2) }
+// A run that fails leaves no report of an earlier one behind
+rm(path.join(OUT, 'report.txt'))
 if (!args.includes('--compare-only')) await capture()
 if (BASELINE) log(`\nЭталон снят: ${path.relative(ROOT, RUN)}`)
 else if (BRAND !== 'umo') log(`\nСнято: ${path.relative(ROOT, RUN)}`)

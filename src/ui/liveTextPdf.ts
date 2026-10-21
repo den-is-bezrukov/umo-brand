@@ -17,12 +17,20 @@ export type LiveFonts = Map<string, PDFFont>
 /** fontkit (some 320 KB) loads here, with the template only: the files to print are in outlines and don't need it */
 export async function embedFonts(doc: PDFDocument): Promise<LiveFonts> {
   doc.registerFontkit((await import('@pdf-lib/fontkit')).default)
-  return new Map(await Promise.all([FONTS.regular, FONTS.medium].map(async face => [face.name, await embedFace(doc, face.file, face.name)] as const)))
+  const [regular, medium] = await embedFaces(doc, [FONTS.regular, FONTS.medium])
+  return new Map([[FONTS.regular.name, regular], [FONTS.medium.name, medium]])
 }
 
-/** A font whole and under its own name (pdf-lib would add a random suffix), so Illustrator finds the installed one; fontkit registered */
-export const embedFace = async (doc: PDFDocument, file: string, name: string) =>
-  doc.embedFont(await fetch(`${import.meta.env.BASE_URL}${file}`).then(r => r.arrayBuffer()), { subset: false, customName: name })
+/**
+ * Faces whole and under their own names (pdf-lib would add a random suffix), so Illustrator finds the installed ones;
+ * fontkit registered. Fetched at once, embedded in the order given, so the file comes out the same every time
+ */
+export async function embedFaces(doc: PDFDocument, faces: { file: string; name: string }[]) {
+  const bytes = await Promise.all(faces.map(f => fetch(`${import.meta.env.BASE_URL}${f.file}`).then(r => r.arrayBuffer())))
+  const fonts: PDFFont[] = []
+  for (const [i, f] of faces.entries()) fonts.push(await doc.embedFont(bytes[i], { subset: false, customName: f.name }))
+  return fonts
+}
 
 /** The font's own name, as the brand's Medium or Regular: opentype.js 2 keeps it per platform */
 const psName = (font: Font) => {

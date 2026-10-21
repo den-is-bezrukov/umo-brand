@@ -5,8 +5,7 @@ import {
 } from 'pdf-lib'
 import type { Cmd } from '@/livery/geometry'
 import { writePdfData } from '@/ui/pdfDataWrite'
-import { embedFace } from '@/ui/liveTextPdf'
-import type { BrandFont } from '@/brand'
+import { embedFaces } from '@/ui/liveTextPdf'
 import { FONTS } from '@brand/fonts'
 import { MEMOS_KEY, PAGE, MEMO_TEXTS, parseArt, type Block, type Shape } from './memo'
 import { layoutText, advance, type FontKey, type Line, type MemoFonts } from './text'
@@ -128,8 +127,7 @@ export async function memosTemplate(blocks: Block[], fonts: MemoFonts): Promise<
   doc.registerFontkit((await import('@pdf-lib/fontkit')).default)
   // Whole and named as the font is, so Illustrator finds the installed one for it: a subset kept the text live in a
   // page opened alone, but Illustrator's import of all pages outlined it
-  const font = (face: BrandFont) => embedFace(doc, face.file, face.name)
-  const [one, two, r, m] = await Promise.all([art(page1), art(page2), font(FONTS.regular), font(FONTS.medium)])
+  const [one, two, [r, m]] = await Promise.all([art(page1), art(page2), embedFaces(doc, [FONTS.regular, FONTS.medium])])
   const pdfFonts = { r, m }
   const [first, second] = [shared(doc, one.filter(s => !s.text)), shared(doc, two.filter(s => !s.text))]
   /** Each page's fixed texts, set once */

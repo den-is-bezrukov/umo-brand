@@ -1012,7 +1012,7 @@ export default function Guide() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-3 *:max-w-none">
                 <Text>
                   {/* Every generator, from the generators' list: in `INTRO_ORDER`, a new one after them */}
-                  <p>{MATERIALS_LEAD} {INTRO.map((g, i) => (
+                  <p>{`${MATERIALS_LEAD} `}{INTRO.map((g, i) => (
                     <Fragment key={g.path}>{i === 0 ? '' : i === INTRO.length - 1 ? ' и\u00a0' : ', '}<Link to={g.path} title={editTitle(g.path)} className={TEXT_LINK}>{g.phrase}</Link></Fragment>
                   ))}.</p>
                 </Text>

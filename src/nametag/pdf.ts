@@ -8,11 +8,11 @@ import { writePdfData } from '@/ui/pdfDataWrite'
 import type { Cmd } from '@/livery/geometry'
 import { embedFonts, textOps, type LiveFonts } from '@/ui/liveTextPdf'
 import type { TextLine } from '@/ui/liveText'
+// How the tag should look, for the maker: the guide's photo of the tag on a shirt
+import REFERENCE from '@brand/guide/images/name-tag.webp'
 
 // Loaded only when the files are downloaded, so the page doesn't carry pdf-lib until then.
 
-/** How the tag should look, for the maker: the guide's photo of the tag on a shirt */
-const REFERENCE = new URL('../assets/guide/name-tag.webp', import.meta.url).href
 
 const PT = 72 / 25.4
 /** The source's colour, C60 M40 Y40 K100: nominal, the material decides the real one */
