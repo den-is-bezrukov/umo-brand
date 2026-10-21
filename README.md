@@ -19,4 +19,4 @@
 
 ## Стек
 
-React 19, Vite 8, Tailwind CSS v4, TypeScript; `@react-pdf/renderer` и `pdf-lib` для PDF, `opentype.js` для перевода текста в кривые, `qrcode` для QR, `fflate` для таблиц Excel и архивов, `typograf` для типографики текстов. Бэкенда нет — всё генерируется в браузере.
+React 19, Vite 8, Tailwind CSS v4, TypeScript; `pdf-lib` для PDF, `opentype.js` для перевода текста в кривые, `qrcode` для QR, `fflate` для таблиц Excel и архивов, `typograf` для типографики текстов. Бэкенда нет — всё генерируется в браузере.

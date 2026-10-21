@@ -20,7 +20,7 @@ description: Bring a Figma block of the UMO brand guide (file i6PdEDo72Vab0cAixG
 
 Overwrite the file with the same name; `import.meta.glob` picks it up. Keep every image under 2.5 MB (CI fails otherwise).
 
-**Vector schemes → `<name>.svg`** (`img()` prefers it over WebP): export the parent Body node as SVG with outlined text and add the node id and crop box at the bottom of `scripts/split-figma-svg.py`; run `python3 scripts/split-figma-svg.py <exports> brand/umo/assets/guide`. Frames that export stretched are assembled from layer exports in `assemble()`.
+**Vector schemes → `<name>.svg`** (`img()` prefers it over WebP): export the parent Body node as SVG with outlined text and add the node id and crop box at the bottom of `scripts/split-figma-svg.py`; run `python3 scripts/split-figma-svg.py <exports> brand/umo/guide/images`. Frames that export stretched are assembled from layer exports in `assemble()`.
 
 **Icons for the UI (`src/icons/`)**: `exportAsync({ format: 'SVG_STRING', svgOutlineText: true })` on the node, keep the path data, use `currentColor`. Keep hairlines as filled rects, not zero-width stroked paths.
 
