@@ -1005,7 +1005,7 @@ function Poster({ bg, w, h, title, subtitle, center, alt }: {
       <p className="absolute whitespace-nowrap font-medium leading-none tracking-[-0.01em]" style={{ ...x, top: u(56), fontSize: u(8) }}>
         {subtitle}
       </p>
-      <div className="absolute" style={{ ...x, bottom: u(20), width: u(104) }}>
+      <div className="absolute" style={{ ...x, bottom: u(20), width: u(100) }}>
         <UmoYandexLockup className="w-full" />
       </div>
     </figure>
