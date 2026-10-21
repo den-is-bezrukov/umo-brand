@@ -3,8 +3,8 @@ Cut the guide's vector figures out of Figma SVG exports.
 
 Figma exports a frame that stretches inside a grid/flex parent at the wrong size, so export the parent
 Body node instead (Figma MCP download_assets, format svg) and cut each figure out of it here.
-Usage: python3 scripts/split-figma-svg.py <dir with exports> brand/umo/guide/images
-Exports expected in <dir>, named after the Figma node: b552.svg = Body 4818:552, f1961.svg = Frame 4818:1961.
+Usage: python3 scripts/split-figma-svg.py <dir with exports> brand/<name>/guide/images
+Add a make() or assemble() line per figure at the bottom for the run, and take it out once the SVG is in the brand's folder.
 """
 import xml.etree.ElementTree as ET, sys, re, os
 SVG='http://www.w3.org/2000/svg'; XL='http://www.w3.org/1999/xlink'
@@ -39,16 +39,6 @@ def make(src, name, keep, box, drop=()):
     open(os.path.join(OUT,name+'.svg'),'w').write(s)
     print(name, len(s))
 
-make('b552.svg','clearspace','Frame 53',(0,0,912,456))
-make('b552.svg','minsize','Frame 51',(0,480,912,304))
-# cobrand-square(-example) and cobrand-horizontal(-example) are the 444×333 cards of Figma 4818:1328 (4818:1480,
-# 4818:1514, 4995:10273, 4995:10305), exported as SVG one by one: they export 684 wide with the content centred, so
-# their viewBox is shifted by 120 (as the lettering ones below).
-make('b1845.svg','type-styles',None,(0,0,912,456))
-make('b1784.svg','font-geist','Frame 47',(0,512,288,216),drop=('Frame 39_2',))
-make('b1784.svg','font-helvetica','Frame 48',(312,512,288,216),drop=('Frame 39_3',))
-make('b1784.svg','font-arial','Frame 49',(624,512,288,216),drop=('Frame 39_4',))
-
 def assemble(name, size, bg, parts):
     """A figure laid out from separate layer exports: [(file, x, y)] over a flat background."""
     w,h=size
@@ -63,7 +53,4 @@ def assemble(name, size, bg, parts):
     open(os.path.join(OUT,name+'.svg'),'w').write(s)
     print(name, len(s))
 
-# Lettering frames 4818:1969 / 4818:1961 (444×333) export stretched, so they're laid out from their layers:
-# n<id>.svg = the MODEL lettering (Vector 4870:3450 / 4818:1963) and the number plate (4870:3498 / 4870:3522).
-assemble('lettering-model8',(444,333),'#000',[('n4870-3450.svg',78,100),('n4870-3498.svg',54.997,183)])
-assemble('lettering-model5',(444,333),'#f5f5f5',[('n4818-1963.svg',77.9985,100),('n4870-3522.svg',54.997,183)])
+# The figures for this run: make(export, name, frame to keep, (x, y, w, h)) or assemble(name, (w, h), background, [(export, x, y)])
