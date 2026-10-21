@@ -1,5 +1,5 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadBar, LinkButtons, canShareFiles, unfilled, itemOf, Segments, SegBtn, outlined } from '@/ui/form'
+import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadBar, LinkButtons, canShareFiles, unfilled, itemOf, Segments, SegBtn } from '@/ui/form'
 import { useStaff, plain, pickTable, TableSource, UploadArea, useAddKey, fullNameField, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
 import { goal } from '@/ui/metrika'
 import { toD } from '@/livery/geometry'
@@ -63,7 +63,7 @@ export default function NameTag() {
     accept: '.xlsx,.zip,.pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/zip,application/pdf',
     uploadLabel: 'Загрузить таблицу или ZIP',
   })
-  const { mode, setMode, people, current, selected, setSelected, update } = staff
+  const { mode, setMode, people, current, setSelected, update } = staff
   staff.useKeys(false)
 
   const [fonts, setFonts] = useState<Fonts>()

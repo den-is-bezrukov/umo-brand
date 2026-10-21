@@ -131,11 +131,6 @@ export function layoutText(fonts: MemoFonts, t: MemoText, start = t.start ?? 1):
   return lines
 }
 
-/** The texts' lines in their page's order, numbering a list on from the text before it until a heading */
-export function layoutPage(fonts: MemoFonts, texts: MemoText[]): Line[] {
-  return texts.flatMap(t => layoutText(fonts, t))
-}
-
 /** A line's segments as glyphs, for outlines: each glyph's path at its pen */
 export function glyphRuns(fonts: MemoFonts, size: number, seg: Seg, baseline: number): { glyph: Glyph; x: number; y: number }[] {
   const { glyphs, pens } = advance(fonts[seg.font], seg.text, size)

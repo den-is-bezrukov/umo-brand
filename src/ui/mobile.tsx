@@ -326,7 +326,6 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
 
   const many = slides.length > 1
   const full = sheet === 'full'
-  const preview = sheet === 'preview'
   const slide = slides[shown]
   const reset = slide?.reset ?? (staff && current && !staff.isBlank(current) ? { onClick: () => staff.clear(current.key), label: 'Сбросить' } : undefined)
   /** The row over the picture: a list's, or a removal's «Вернуть» right after the last but one went */

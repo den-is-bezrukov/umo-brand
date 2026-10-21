@@ -128,7 +128,7 @@ export default function BusinessCard() {
     accept: '.xlsx,.pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf',
     uploadLabel: 'Загрузить таблицу или PDF',
   })
-  const { mode, setMode, people, current, update } = staff
+  const { mode, setMode, current, update } = staff
   staff.useKeys(false)
 
   const [fonts, setFonts] = useState<Fonts>()

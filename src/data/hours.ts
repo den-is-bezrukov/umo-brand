@@ -1,4 +1,4 @@
-import { DEALERS, dealerOf } from './dealers'
+import { dealerOf } from './dealers'
 
 // The hours sign's texts: the line under the hours, and what umo.auto says of a dealer
 
