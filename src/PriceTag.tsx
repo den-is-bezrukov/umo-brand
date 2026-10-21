@@ -6,7 +6,7 @@ import { toD, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/ui/type'
 import { xlsxCells, pastedCells, byHeaders, type Cells } from '@/nametag/table'
 import { TAG, BAND, BAND_ART, DEFAULT_CAPTION, buildTag, formatPrice, readPrice, PRICE_FORMAT, type Item, type TagField } from '@/pricetag/tag'
-import { DEALER_NAMES, dealerFilter, withoutUmo } from '@/data/dealers'
+import { DEALER_NAMES, dealerFilter, withoutBrand } from '@/data/points'
 import { readTagsFile } from '@/pricetag/read'
 import { plural } from '@/ui/staff'
 import { MobileEditor, usePhone } from '@/ui/mobile'
@@ -60,11 +60,11 @@ function fromLink(): { dealer: string; items: Item[] } {
     const p = link.get(`p${i}`) ?? ''
     items.push({ name: link.get(`n${i}`) ?? '', code: link.get(`c${i}`) ?? '', caption: LINK_CAPTIONS[s] ?? (s || DEFAULT_CAPTION), price: readPrice(p) ?? p })
   }
-  return { dealer: withoutUmo(link.get('dealer')?.trim() ?? ''), items }
+  return { dealer: withoutBrand(link.get('dealer')?.trim() ?? ''), items }
 }
 
 /** The dealers as the band names them: without «UMO», as the logo stands right by the name */
-const DEALER_OPTIONS = DEALER_NAMES.map(withoutUmo)
+const DEALER_OPTIONS = DEALER_NAMES.map(withoutBrand)
 
 export default function PriceTag() {
   const [initial] = useState(fromLink)

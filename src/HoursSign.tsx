@@ -9,7 +9,7 @@ import { toD } from '@/livery/geometry'
 import { maskPhone, siteFor } from '@/card/card'
 import { SIGN, SIGN_KEY, LOGO, buildSign, timeText, type SignField, type Input } from '@/hours/sign'
 import { loadFont, oneLine } from '@/ui/type'
-import { DEALER_NAMES, dealerFilter, withoutUmo, phoneOf } from '@/data/dealers'
+import { DEALER_NAMES, dealerFilter, withoutBrand, phoneOf } from '@/data/points'
 import { DEFAULT_HOURS_LINE, addressOf, hoursOf } from '@/data/hours'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { recordText } from '@/ui/liveText'
@@ -20,7 +20,7 @@ import { TemplateButton, useTemplateLink } from '@/ui/template'
 // puts in its address and hours from umo.auto and its site, all of them edited freely; the phone from the hand-kept list.
 
 /** The dealers' names without «UMO», which the sign puts before them, fixed */
-const NAMES = DEALER_NAMES.map(withoutUmo)
+const NAMES = DEALER_NAMES.map(withoutBrand)
 
 /** Empty fields stand grey on the sign as these; never in the PDF */
 const PLACEHOLDER: Record<Exclude<SignField, 'line'>, string> = {
@@ -150,7 +150,7 @@ export default function HoursSign() {
   // const [line, setLine] = useState(link.get('off') === 'line' ? '' : link.get('line') ?? DEFAULT_HOURS_LINE)
   const line = DEFAULT_HOURS_LINE
   // A name with «UMO» (a link made by hand) loses it, as the sign puts it before the name; a phone takes the field's mask
-  const [dealer, setDealer] = useState(() => withoutUmo(link.get('name') ?? ''))
+  const [dealer, setDealer] = useState(() => withoutBrand(link.get('name') ?? ''))
   const [address, setAddress] = useState(() => link.get('address') ?? addressOf(link.get('name') ?? '') ?? '')
   const [phone, setPhone] = useState(() => maskPhone(link.get('phone') ?? phoneOf(link.get('name') ?? '') ?? '').text)
   /** A dealer's phone as the field writes it */

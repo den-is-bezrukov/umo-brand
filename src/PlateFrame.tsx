@@ -8,7 +8,7 @@ import { toD } from '@/livery/geometry'
 import { loadFont } from '@/ui/type'
 import { STRIP, buildStrip, lineStart, type Align } from '@/plate/frame'
 import PlateArt from '@/plate/PlateArt'
-import { DEALER_NAMES, dealerFilter, withoutUmo } from '@/data/dealers'
+import { DEALER_NAMES, dealerFilter, withoutBrand } from '@/data/points'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { recordText } from '@/ui/liveText'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
@@ -25,7 +25,7 @@ const PLACEHOLDER_NAME = 'Центр'
 const PLACEHOLDER_TEXT = PREFIX + PLACEHOLDER_NAME
 const GHOST = '#808080'
 /** The dealers' names for the suggestions, without the fixed «UMO » */
-const NAMES = DEALER_NAMES.map(withoutUmo)
+const NAMES = DEALER_NAMES.map(withoutBrand)
 const RED = '#ff2a1a'
 
 export default function PlateFrame() {
@@ -34,7 +34,7 @@ export default function PlateFrame() {
   const [custom] = useState(() => link.has('text'))
   // Empty at first, as the name tag's fields: «Центр» as a value reads as filled in
   // A name with «UMO» (a link made by hand) loses it, as the prefix is fixed
-  const [name, setName] = useState(() => withoutUmo(link.get('name') ?? ''))
+  const [name, setName] = useState(() => withoutBrand(link.get('name') ?? ''))
   const [text, setText] = useState(link.get('text') ?? '')
   const [align, setAlign] = useState<Align>(link.get('align') === 'center' ? 'center' : 'left')
   useLinkState({

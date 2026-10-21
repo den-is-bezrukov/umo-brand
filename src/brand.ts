@@ -28,3 +28,16 @@ export interface BrandColors { main: Swatch[]; service: Swatch[] }
 
 /** A chapter of the guide in its contents, with its sections; `id` its anchor */
 export interface GuideChapter { id: string; title: string; children?: GuideChapter[] }
+
+/**
+ * A point of sale (a dealer) as the generators know it: its name as the brand writes it, city, short address, hours
+ * («ежедневно, 09:00–21:00»), phone, and the names it's also called by (`aka`)
+ */
+export interface SalesPoint { name: string; city: string; address: string; hours: string; phone: string; aka: string[] }
+
+/**
+ * `@brand/points`: the points of sale, lists merged in order (a later one adds to or corrects an earlier one, by name),
+ * `prefix` the brand's name every point's name starts with («UMO АГАТ Владимир»), `words` the brand's name as people
+ * write it, which doesn't tell points apart
+ */
+export interface BrandPoints { lists: Partial<SalesPoint>[][]; prefix: string; words: string[] }

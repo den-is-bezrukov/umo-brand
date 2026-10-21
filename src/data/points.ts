@@ -1,20 +1,17 @@
-import site from './dealers.json'
-import own from './dealers-own.json'
+import type { SalesPoint } from '@/brand'
+import { POINTS } from '@brand/points'
+
+// The brand's points of sale (its dealers; `@brand/points`), as the generators find and fill them in
+
+export type { SalesPoint }
 
 /**
- * A dealer as the generators know it: umo.auto's data, the hand-kept names it's also called by (`aka`), and its UMO
- * showroom's phone (hand-kept: umo.auto has none)
+ * Every point of sale, the brand's lists merged in order: a later one adds a point or, by the name of one already
+ * there, what it's also called (`aka`), its phone, or what an earlier list has wrong
  */
-export interface Dealer { name: string; city: string; address: string; hours: string; phone: string; aka: string[] }
-
-/**
- * Every dealer: umo.auto's (dealers.json, parsed by scripts/fetch-dealers.mjs) and the hand-kept ones (dealers-own.json):
- * a dealer signed but not on umo.auto yet, with its city and address, or, by the name of one already there, only the
- * names it's also called by («Мажор» for Major), or anything umo.auto has wrong
- */
-export function mergeDealers(fromSite: Partial<Dealer>[], fromHand: Partial<Dealer>[]): Dealer[] {
-  const all = new Map<string, Dealer>()
-  for (const d of [...fromSite, ...fromHand]) {
+export function mergePoints(lists: Partial<SalesPoint>[][]): SalesPoint[] {
+  const all = new Map<string, SalesPoint>()
+  for (const d of lists.flat()) {
     if (!d.name) continue
     const was = all.get(d.name)
     all.set(d.name, { name: d.name, city: d.city ?? was?.city ?? '', address: d.address ?? was?.address ?? '', hours: d.hours ?? was?.hours ?? '', phone: d.phone ?? was?.phone ?? '', aka: [...(was?.aka ?? []), ...(d.aka ?? [])] })
@@ -22,16 +19,17 @@ export function mergeDealers(fromSite: Partial<Dealer>[], fromHand: Partial<Deal
   return [...all.values()].sort((a, b) => a.name.localeCompare(b.name, 'ru'))
 }
 
-export const DEALERS = mergeDealers(site, own)
+export const DEALERS = mergePoints(POINTS.lists)
 
-/** Dealers' marketing names («UMO АГАТ Владимир»), alphabetical: suggestions for the dealer fields */
+/** The points' names as the brand writes them («UMO АГАТ Владимир»), alphabetical: suggestions for the dealer fields */
 export const DEALER_NAMES = DEALERS.map(d => d.name)
 
-/** The same without the «UMO » they all start with («АГАТ Владимир») */
-export const withoutUmo = (name: string) => name.replace(/^UMO\s+/, '')
+/** The same without the brand's name they all start with (`POINTS.prefix`: «АГАТ Владимир») */
+const PREFIX = new RegExp(`^${POINTS.prefix}\\s+`)
+export const withoutBrand = (name: string) => name.replace(PREFIX, '')
 
 /** A dealer by its name, with «UMO» or without */
-export const dealerOf = (name: string) => DEALERS.find(d => withoutUmo(d.name) === withoutUmo(name.trim()))
+export const dealerOf = (name: string) => DEALERS.find(d => withoutBrand(d.name) === withoutBrand(name.trim()))
 
 // Finding a dealer by what people write: «агат во владимире», «мажор питер», «автодом алтуфьево», «Major Олимп»
 
@@ -41,7 +39,7 @@ const CITY_AKA: Record<string, string[]> = {
   'Екатеринбург': ['екб'], 'Ростов-на-Дону': ['ростов'],
 }
 /** Words that don't tell dealers apart */
-const STOP = new Set(['umo', 'умо', 'юмо', 'салон', 'автосалон', 'дилер', 'дилерский', 'дилерство', 'центр', 'дц', 'г', 'город', 'в', 'во', 'на', 'из', 'и', 'у', 'ооо', 'ул', 'улица', 'пр', 'просп', 'проспект', 'д', 'дом', 'стр', 'корп', 'вл', 'й'])
+const STOP = new Set([...POINTS.words, 'салон', 'автосалон', 'дилер', 'дилерский', 'дилерство', 'центр', 'дц', 'г', 'город', 'в', 'во', 'на', 'из', 'и', 'у', 'ооо', 'ул', 'улица', 'пр', 'просп', 'проспект', 'д', 'дом', 'стр', 'корп', 'вл', 'й'])
 const LATIN: [RegExp, string][] = [
   [/sh/g, 'ш'], [/ch/g, 'ч'], [/zh/g, 'ж'], [/kh/g, 'х'], [/ts/g, 'ц'], [/ya/g, 'я'], [/yu/g, 'ю'],
   ...'а б к д е ф г х и й к л м н о п к р с т у в в кс ы з'.split(' ').map((ru, i): [RegExp, string] => [new RegExp('abcdefghijklmnopqrstuvwxyz'[i], 'g'), ru]),
@@ -78,15 +76,15 @@ function same(q: string, t: string) {
 
 /** A dealer's words: its name, city, what they're also called, and its address without the region */
 const WORDS = new Map(DEALERS.map(d => [d, {
-  name: words(withoutUmo(d.name)),
-  all: words([withoutUmo(d.name), d.city, ...(CITY_AKA[d.city] ?? []), ...d.aka, d.address.replace(/[а-яё-]+\s+(область|обл\.?|край|район|муниципальный округ|городской округ|поселение)/gi, ' ')].join(' ')),
+  name: words(withoutBrand(d.name)),
+  all: words([withoutBrand(d.name), d.city, ...(CITY_AKA[d.city] ?? []), ...d.aka, d.address.replace(/[а-яё-]+\s+(область|обл\.?|край|район|муниципальный округ|городской округ|поселение)/gi, ' ')].join(' ')),
 }]))
 
 /**
  * The dealers a text may mean, best first: the one whose name it is, else those with every word written (a word no
  * dealer has, «салон», doesn't count), else those with the most. None when no word is any dealer's
  */
-export function findDealers(text: string): Dealer[] {
+export function findDealers(text: string): SalesPoint[] {
   const typed = words(text)
   const exact = DEALERS.filter(d => { const n = WORDS.get(d)!.name; return n.length === typed.length && n.every((w, i) => w === typed[i]) })
   if (exact.length) return exact
@@ -103,11 +101,11 @@ export function findDealers(text: string): Dealer[] {
 /** Whether every word written is some dealer's: else a word was dropped, and a single dealer found may not be the one meant («Рольф Сити») */
 export const knowsEveryWord = (text: string) => words(text).every(q => DEALERS.some(d => WORDS.get(d)!.all.some(t => same(q, t))))
 
-/** Dealer names (from `options`, with «UMO» or without) a dealer field shows for what's typed, as `findDealers` finds them */
+/** SalesPoint names (from `options`, with «UMO» or without) a dealer field shows for what's typed, as `findDealers` finds them */
 export const dealerFilter = (typed: string, options: string[]) => {
-  const found = new Set(findDealers(typed).map(d => withoutUmo(d.name)))
-  return options.filter(o => found.has(withoutUmo(o)))
+  const found = new Set(findDealers(typed).map(d => withoutBrand(d.name)))
+  return options.filter(o => found.has(withoutBrand(o)))
 }
 
-/** The UMO showroom's phone of a dealer, as written (the fields put it through their mask) */
+/** A point's phone, as written (the fields put it through their mask) */
 export const phoneOf = (name: string) => dealerOf(name)?.phone || undefined

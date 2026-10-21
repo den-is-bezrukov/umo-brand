@@ -10,7 +10,7 @@ import type { MemoFonts } from '@/memo/text'
 import page1 from '@brand/assets/memo/page-1.svg'
 import page2 from '@brand/assets/memo/page-2.svg'
 import { POSITION_OPTIONS } from '@/data/positions'
-import { DEALER_NAMES, dealerFilter, dealerOf, withoutUmo, phoneOf } from '@/data/dealers'
+import { DEALER_NAMES, dealerFilter, dealerOf, withoutBrand, phoneOf } from '@/data/points'
 import { isPdf, readPdfData } from '@/ui/pdfData'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
@@ -50,7 +50,7 @@ type DealerInput = Omit<Dealer, 'site'> & { site: string | null }
 interface MemosData { dealer: DealerInput; people: Person[] }
 
 const NO_DEALER: DealerInput = { name: '', address: '', phone: '', email: '', site: null }
-const DEALER_OPTIONS = DEALER_NAMES.map(withoutUmo)
+const DEALER_OPTIONS = DEALER_NAMES.map(withoutBrand)
 const addressOf = (name: string) => dealerOf(name)?.address || undefined
 const salonPhone = (name: string) => { const p = phoneOf(name); return p ? maskPhone(p).text : undefined }
 

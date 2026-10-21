@@ -1,12 +1,12 @@
-import { dealerOf } from './dealers'
+import { dealerOf } from './points'
 
-// The hours sign's texts: the line under the hours, and what umo.auto says of a dealer
+// The hours sign's texts: the line under the hours, and what the points of sale say of a dealer
 
 /** The line under the hours: the default, as the source has it, then the other suggestions */
 export const DEFAULT_HOURS_LINE = 'Работаем без выходных'
 export const HOURS_LINES = [DEFAULT_HOURS_LINE, 'Ежедневно', 'Без выходных и перерывов']
 
-/** The address umo.auto (or dealers-own.json) gives a dealer */
+/** The address the brand's points of sale (`@brand/points`) give a dealer */
 export const addressOf = (name: string) => dealerOf(name)?.address
 
 /**

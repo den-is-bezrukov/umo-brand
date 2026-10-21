@@ -4,7 +4,7 @@ import { goal } from '@/ui/metrika'
 import { Field, OptionalField, Segments, SegBtn, ComboField, UrlField, Checkbox, SizeSwitch, GeneratorHeader, LinkButtons, DownloadBar, isValidUrl } from '@/ui/form'
 import { CaptionReset } from '@/ui/staff'
 import { linkParams, useLinkState } from '@/ui/share'
-import { DEALER_NAMES, dealerFilter, withoutUmo } from '@/data/dealers'
+import { DEALER_NAMES, dealerFilter, withoutBrand } from '@/data/points'
 import { DEFAULT_TAGLINE, TAGLINES } from '@/data/taglines'
 import { LIVERIES, SURFACES, withoutQr, smallQr, type Model } from '@/livery/layout'
 import { buildSheet, specMarks, toD, mm, type Sheet, type Line } from '@/livery/geometry'
@@ -278,7 +278,7 @@ export default function Livery() {
             </OptionalField>
 
             <OptionalField label="Дилер" on={on.dealer} onChange={toggle('dealer')}>
-              <ComboField value={dealer} onChange={setDealer} options={DEALER_NAMES} filter={dealerFilter} shownAs={withoutUmo} label="Дилеры" invalid={sheets.some(s => s.dealer.issues.length > 0) || !dealer.trim()} />
+              <ComboField value={dealer} onChange={setDealer} options={DEALER_NAMES} filter={dealerFilter} shownAs={withoutBrand} label="Дилеры" invalid={sheets.some(s => s.dealer.issues.length > 0) || !dealer.trim()} />
             </OptionalField>
 
             <OptionalField

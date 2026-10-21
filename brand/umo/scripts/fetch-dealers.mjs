@@ -1,4 +1,4 @@
-// Collects UMO dealers from the umo.auto booking pages into src/data/dealers.json.
+// Collects UMO dealers from the umo.auto booking pages into brand/umo/points/site.json.
 // The booking page carries the dealers of one city in its data; the city lives in
 // the booking draft and is switched by the page's updateFormValues server action,
 // so the script opens a draft per model, switches it through every city and reads
@@ -9,7 +9,7 @@ import { writeFileSync } from "node:fs"
 
 const SITE = "https://umo.auto"
 const MODELS = ["umo8", "umo5"]
-const OUT = new URL("../src/data/dealers.json", import.meta.url)
+const OUT = new URL("../points/site.json", import.meta.url)
 
 const cookies = new Map()
 
@@ -138,4 +138,4 @@ const sorted = [...dealers.values()].sort(
     a.city.localeCompare(b.city, "ru") || a.name.localeCompare(b.name, "ru"),
 )
 writeFileSync(OUT, JSON.stringify(sorted, null, 2) + "\n")
-console.log(`${sorted.length} dealers → src/data/dealers.json`)
+console.log(`${sorted.length} dealers → brand/umo/points/site.json`)

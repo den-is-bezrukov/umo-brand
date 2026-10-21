@@ -4,11 +4,11 @@ import { formatPhone, siteText } from '@/card/card'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { nameFault } from '@/ui/names'
 import { layoutText, glyphRuns, advance, type Line, type MemoFonts, type MemoText } from './text'
-import TEXTS from './texts.json'
+import TEXTS from '@brand/memo/texts.json'
 
 // The owner's memo: two A4 pages a dealership hands over with a car. Everything
 // but the contacts at the foot of the second page is Figma's, taken out by scripts/fetch-memo.mjs into
-// src/assets/memo (outlines) and texts.json (the texts, for the template's live text). The contacts are two columns
+// brand/umo/assets/memo (outlines) and texts.json (the texts, for the template's live text). The contacts are two columns
 // 90 mm apart from 15 mm in and 252 mm down: the dealership (its name, then address, phone, email and site) and the
 // consultant (position, then name, phone and email), the first line CoFo Sans Medium 4,5 mm on 5,985 mm lines, the
 // rest Regular 3,6 mm on 4,5, each 1,5 mm under the one before; a line left out closes up. Figma px, 10 a millimetre.

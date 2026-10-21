@@ -9,7 +9,7 @@ import { xlsxCells, pastedCells, byHeaders, FULL_NAME, fromFullName, type Cells 
 import { CARDS_KEY, CARD, QR, FACE, BACK_LOGO, DEALER_FIELDS, buildBack, siteFor, siteText, splitPhone, maskPhone, type CardField, type Dealer, type Person, type QrData } from '@/card/card'
 import CardArt from '@/card/CardArt'
 import { POSITION_OPTIONS } from '@/data/positions'
-import { DEALER_NAMES, dealerFilter, dealerOf, withoutUmo, phoneOf } from '@/data/dealers'
+import { DEALER_NAMES, dealerFilter, dealerOf, withoutBrand, phoneOf } from '@/data/points'
 import { isPdf, readPdfData } from '@/ui/pdfData'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { linkParams, saveAndOpenPdf } from '@/ui/share'
@@ -52,14 +52,14 @@ const toPeople = (rows: Cells[]): Person[] => byHeaders(rows, { ...HEADERS, full
   return split ? { ...p, ...split } : p
 })
 
-/** The address umo.auto (or dealers-own.json) gives a dealer, put in when the dealer is picked */
+/** The address the points of sale (`@brand/points`) give a dealer, put in when the dealer is picked */
 const addressOf = (name: string) => dealerOf(name)?.address || undefined
 
 /**
  * The dealers as the card names them: without the «UMO» of their marketing names («АГАТ Владимир»), as the logo and
  * «Официальный дилер UMO» stand right by the name. For the full names, offer `DEALER_NAMES` as it is
  */
-const DEALER_OPTIONS = DEALER_NAMES.map(withoutUmo)
+const DEALER_OPTIONS = DEALER_NAMES.map(withoutBrand)
 
 /** What the grey stand-in QR holds */
 const SAMPLE_LINK = 'https://umo.auto'
@@ -77,7 +77,7 @@ const PERSON_FIELDS: CardField[] = ['name', 'surname', 'position', 'email', 'pho
 function fromLink(): { dealer: Omit<Dealer, 'site'> & { site: string | null }; qrLink: string | null; marks: boolean; people: Person[] } {
   const link = linkParams()
   const get = (k: string) => link.get(k)?.trim() ?? ''
-  const name = withoutUmo(get('dealer'))
+  const name = withoutBrand(get('dealer'))
   const person = { ...BLANK, name: get('name'), surname: get('surname'), position: get('position'), email: get('email'), phone: maskPhone(get('phone')).text, ext: get('ext').replace(/\D/g, '').slice(0, 6) }
   // A person with no phone takes the salon's, as when the dealer is picked
   if (!person.phone && Object.values(person).some(Boolean)) person.phone = maskPhone(phoneOf(name) ?? '').text

@@ -1,6 +1,6 @@
 import type { Font, Glyph } from 'opentype.js'
 
-// The memo's texts as Figma sets them, line by line, for the editable template's live text (src/memo/texts.json,
+// The memo's texts as Figma sets them, line by line, for the editable template's live text (brand/umo/memo/texts.json,
 // written by scripts/fetch-memo.mjs; the PDF in outlines takes Figma's own outlines instead). Figma px, 10 a
 // millimetre, y down. Figma centres the font's height (hhea, 974 + 286 of 1000) in each line's box, breaks lines
 // between words (a no-break space holds two together), puts `paragraphSpacing` after a paragraph and `listSpacing`

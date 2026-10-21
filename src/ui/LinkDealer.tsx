@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { findDealers, knowsEveryWord, withoutUmo, type Dealer } from '@/data/dealers'
+import { findDealers, knowsEveryWord, withoutBrand, type SalesPoint as Dealer } from '@/data/points'
 import { outlined } from './form'
 import { goal } from './metrika'
 import { linkParams } from './share'
@@ -47,7 +47,7 @@ export default function LinkDealer({ param, withUmo, children }: { param: string
       <div className="flex flex-col gap-2">
         {choices.map(d => (
           <button key={d.name} type="button" onClick={() => pick(d)} className={`${outlined} flex-col items-start! gap-0.5 text-left`}>
-            <span>UMO {withoutUmo(d.name)}</span>
+            <span>UMO {withoutBrand(d.name)}</span>
             {d.address && <span className="font-normal text-caption">{d.address}</span>}
           </button>
         ))}
@@ -69,6 +69,6 @@ function toEditor() {
 /** The link with the dealer's name in place of what was said, for the generator to read */
 function put(param: string, d: Dealer, withUmo?: boolean) {
   const url = new URL(location.href)
-  url.searchParams.set(param, withUmo ? d.name : withoutUmo(d.name))
+  url.searchParams.set(param, withUmo ? d.name : withoutBrand(d.name))
   history.replaceState(history.state, '', url)
 }
