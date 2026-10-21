@@ -1,13 +1,5 @@
 /* UMO's type on the site: CoFo Sans for everything (the generators set their files in it too, `fonts.ts`), Alice
-   Okniks for Alice's mark, Geist Y as the typography chapter's alternative. Files in `public/fonts`. */
-
-@font-face {
-  font-family: 'Geist Y';
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-  src: url('/fonts/Geist_Y-Medium.woff2') format('woff2');
-}
+   Okniks for Alice's mark. Files in `public/fonts`. */
 
 /* Alice Okniks: Denis's icon font for the Alice mark (repo alice-okniks, dist/Alice Okniks.ttf, shipped whole as
    WOFF): the mark on @ * ^, a thin no-break space on U+00A0, weight 400–700 and X/Y/Z axes, ss01 solid, ss02 drop
