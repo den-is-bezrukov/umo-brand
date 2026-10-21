@@ -67,8 +67,8 @@ async function tagsPdf(tags: Tag[], people: unknown): Promise<Uint8Array> {
 }
 
 /**
- * The editable template (`UMO_name-tags_template.pdf`, a file of its own, not in the ZIP): the same pages, the text
- * live in CoFo Sans (`src/ui/liveTextPdf.ts`), the logo in outlines
+ * The editable template (`<Brand>_name-tags_template.pdf`, a file of its own, not in the ZIP): the same pages, the text
+ * live in the brand font (`src/ui/liveTextPdf.ts`), the logo in outlines
  */
 export async function tagsTemplate(tags: { tag: Tag; lines: TextLine[] }[]): Promise<Blob> {
   const doc = await PDFDocument.create()
@@ -96,7 +96,7 @@ async function tagPages(doc: PDFDocument, tags: { tag: Tag; lines?: TextLine[] }
   }
 }
 
-/** The requirements of the source's `UMO_name-tag_spec_ТТ.txt`, the text now coming in outlines */
+/** The requirements of the source's spec, the text now coming in outlines */
 function spec(count: number): string {
   return `БЕЙДЖ СОТРУДНИКА ДЦ ${SITE.name}
 Требования к изготовлению

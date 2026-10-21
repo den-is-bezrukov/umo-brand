@@ -1,5 +1,5 @@
-// What a brand gives the core. A brand is a folder, `brand/<name>/` (UMO's is `brand/umo`), and the code imports its
-// parts as `@brand/<part>` (the alias in vite.config.ts picks the folder, `BRAND`, UMO by default): its `public/` is
+// What a brand gives the core. A brand is a folder, `brand/<name>/`, and the code imports its
+// parts as `@brand/<part>` (the alias in vite.config.ts picks the folder, `BRAND`): its `public/` is
 // the site's root (fonts, downloads, icons), `theme.css` the site's type, and each part below a module of its own, so
 // a page loads only what it uses. The types here are what each part has to hold.
 
@@ -8,7 +8,9 @@ export interface BrandFont { file: string; name: string }
 
 /** `@brand/fonts`: the type the generators set their files in, in outlines, and their editable templates in, live */
 export interface BrandFonts {
-  /** A short name for the type, naming its fonts in a PDF's resources («CoFo»: CoFoRegular, CoFoR) */
+  /** The type's name as people know it, which a template's editor needs installed */
+  family: string
+  /** A short name for the type, naming its fonts in a PDF's resources (`Brand`: BrandRegular, BrandR) */
   short: string
   regular: BrandFont
   medium: BrandFont
@@ -37,7 +39,7 @@ export interface SalesPoint { name: string; city: string; address: string; hours
 
 /**
  * `@brand/points`: the points of sale, lists merged in order (a later one adds to or corrects an earlier one, by name),
- * `prefix` the brand's name every point's name starts with («UMO АГАТ Владимир»), `words` the brand's name as people
+ * `prefix` the brand's name every point's name starts with («<Бренд> Дилер Город»), `words` the brand's name as people
  * write it, which doesn't tell points apart
  */
 export interface BrandPoints { lists: Partial<SalesPoint>[][]; prefix: string; words: string[] }
@@ -47,13 +49,13 @@ export interface BrandPoints { lists: Partial<SalesPoint>[][]; prefix: string; w
  * icons, social image, robots, language)
  */
 export interface BrandSite {
-  /** The brand's name as the pages write it: «Бренд UMO», «Ценник UMO» */
+  /** The brand's name as the pages write it: «Бренд <Бренд>», «Ценник <Бренд>» */
   name: string
-  /** What the files' names start with: UMO_price-tags.pdf */
+  /** What the files' names start with: <Brand>_price-tags.pdf */
   file: string
-  /** Where this site lives (umo.autos): the links the instructions give, the Metrika counter's host */
+  /** Where this site lives (its domain): the links the instructions give, the Metrika counter's host */
   domain: string
-  /** The brand's own site (https://umo.auto): a QR's default, the dealers' sites under it */
+  /** The brand's own site (https://…): a QR's default, the dealers' sites under it */
   home: string
   /** Where people ask: the guide's Контакты and the generators' «Инструкция» */
   support: string
@@ -61,5 +63,5 @@ export interface BrandSite {
   metrika?: number
 }
 
-/** A model of the brand: its id in links and data (`umo5`), its name as written («UMO 5»), its page on the brand's site */
+/** A model of the brand: its id in links and data (`brand5`), its name as written («<Бренд> 5»), its page on the brand's site */
 export interface BrandModel { id: string; name: string; page: string }

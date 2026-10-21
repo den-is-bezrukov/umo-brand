@@ -64,7 +64,7 @@ function fromLink(): { dealer: string; items: Item[] } {
   return { dealer: withoutBrand(link.get('dealer')?.trim() ?? ''), items }
 }
 
-/** The dealers as the band names them: without «UMO», as the logo stands right by the name */
+/** The dealers as the band names them: without the brand's name, as the logo stands right by the name */
 const DEALER_OPTIONS = DEALER_NAMES.map(withoutBrand)
 
 export default function PriceTag() {

@@ -2,7 +2,7 @@ import { unzipSync, strFromU8 } from 'fflate'
 import type { Person } from './tag'
 
 // The staff list from a spreadsheet: an .xlsx file (Excel, Google Sheets' «Скачать → .xlsx», Numbers' export) or rows
-// copied from one. Columns: name, surname, position, as in the template `public/downloads/UMO_name-tags_template.xlsx`;
+// copied from one. Columns: name, surname, position, as in the template `public/downloads/<Brand>_name-tags_template.xlsx` (the brand's);
 // a header row is found by its titles and may put the columns in any order. A line break in a cell (Alt+Enter) is kept,
 // so it breaks the position where it's typed.
 

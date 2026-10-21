@@ -1,6 +1,6 @@
 import { Fragment, lazy, Suspense, useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode, type RefObject } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import UmoYLayers, { COBRAND, setUmoY } from '@brand/HeaderLogo'
+import HeaderLogo, { COBRAND, setLogoFold } from '@brand/HeaderLogo'
 import { CHAPTERS, OLD_ANCHORS, HERO, STATEMENT, MATERIALS_LEAD, INTRO_ORDER, DRAWN, Chapters, Contact, FOOTER } from '@brand/guide'
 import tocIcons from '@/icons/toc'
 import { useTypograf } from './typograf'
@@ -258,23 +258,23 @@ function useActiveInView(asideRef: RefObject<HTMLElement | null>, active: string
 }
 
 /**
- * Trial: the sidebar wordmark's height with the Y cobrand on the first screen, in the statement's em (CoFo Sans's
- * capitals are 0.68 em, so UMO stands as high as them as the statement's size follows the screen), and in px alone
+ * Trial: the sidebar wordmark's height with the Y cobrand on the first screen, in the statement's em (the brand
+ * font's capitals are 0.68 em, so the wordmark stands as high as them as the statement's size follows the screen), and in px alone
  * once folded.
  */
-const UMO_Y_HEIGHT = { open: 0.68, folded: 24 }
+const LOGO_HEIGHT = { open: 0.68, folded: 24 }
 
 /**
  * Trial: what the first screen adds to the sidebar's 24 px on top, left and bottom for the Y's circle, which overhangs
- * UMO by a third of its height (10–14 px); none without the cobrand.
+ * the wordmark by a third of its height (10–14 px); none without the cobrand.
  */
-const UMO_Y_PAD = COBRAND ? 12 : 0
+const LOGO_PAD = COBRAND ? 12 : 0
 
 /**
- * Trial: below lg, white between the film and the header for the Y's circle, which overhangs UMO by 8 px there, so it
+ * Trial: below lg, white between the film and the header for the Y's circle, which overhangs the wordmark by 8 px there, so it
  * stands as far from the film as the header's padding; it scrolls away with the film, the stuck header keeps its own.
  */
-const UMO_Y_GAP = COBRAND ? 8 : 0
+const LOGO_GAP = COBRAND ? 8 : 0
 
 /**
  * While the page slides up over the hero, the sidebar's toggle row stays fixed at the bottom of the screen, while the
@@ -299,17 +299,17 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
       const aside = asideRef.current
       if (!body || !aside) return
       const fold = `${body.offsetTop}px`
-      if (body.style.getPropertyValue('--umo-y-fold') !== fold) body.style.setProperty('--umo-y-fold', fold)
-      const overhang = `${UMO_Y_PAD}px`
-      if (body.style.getPropertyValue('--umo-y-overhang') !== overhang) body.style.setProperty('--umo-y-overhang', overhang)
+      if (body.style.getPropertyValue('--logo-fold') !== fold) body.style.setProperty('--logo-fold', fold)
+      const overhang = `${LOGO_PAD}px`
+      if (body.style.getPropertyValue('--logo-overhang') !== overhang) body.style.setProperty('--logo-overhang', overhang)
       // From lg the sidebar's wordmark starts as high as the statement's capitals, or lower where the unfolded lockup
       // (5/3 of it, 5 times its height wide; without the cobrand, the wordmark alone) wouldn't fit the sidebar, and
       // folds to 24. It's drawn at that starting size (the unit `--u`) and scaled down, so it stays sharp.
       const statement = document.getElementById('statement')
-      const caps = UMO_Y_HEIGHT.open * (statement ? parseFloat(getComputedStyle(statement).fontSize) : 60)
+      const caps = LOGO_HEIGHT.open * (statement ? parseFloat(getComputedStyle(statement).fontSize) : 60)
       open = Math.round(Math.min(caps, (aside.clientWidth - 48) * (COBRAND ? 0.6 : 1) / 5) * 100) / 100
       aside.style.setProperty('--u', `${open / 60}px`)
-      const css = umoYKeyframes(open)
+      const css = logoKeyframes(open)
       if (keyframes.textContent !== css) keyframes.textContent = css
     }
     const update = () => {
@@ -324,15 +324,15 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
       if (SCROLL_TIMELINE) return
       // Without scroll timelines the script makes the moves of index.css frame by frame.
       const t = 1 - Math.min(1, Math.max(0, body.getBoundingClientRect().top) / Math.max(1, body.offsetTop))
-      document.querySelectorAll<HTMLElement>('[data-umo-y-layers]').forEach(el => setUmoY(el, t))
-      const pad = UMO_Y_PAD * (1 - t)
+      document.querySelectorAll<HTMLElement>('[data-logo-layers]').forEach(el => setLogoFold(el, t))
+      const pad = LOGO_PAD * (1 - t)
       const move = (selector: string, transform: string) => {
         const el = aside.querySelector<HTMLElement>(selector)
         if (el) el.style.transform = transform
       }
-      move('[data-umo-y-desk]', `translate(${pad}px, ${pad}px) scale(${1 + (UMO_Y_HEIGHT.folded / open - 1) * t})`)
-      move('[data-umo-y-nav]', `translate(${pad}px, ${(open + UMO_Y_PAD - UMO_Y_HEIGHT.folded) * (1 - t)}px)`)
-      move('[data-umo-y-toggle]', `translate(${pad}px, ${-pad}px)`)
+      move('[data-logo-desk]', `translate(${pad}px, ${pad}px) scale(${1 + (LOGO_HEIGHT.folded / open - 1) * t})`)
+      move('[data-logo-nav]', `translate(${pad}px, ${(open + LOGO_PAD - LOGO_HEIGHT.folded) * (1 - t)}px)`)
+      move('[data-logo-toggle]', `translate(${pad}px, ${-pad}px)`)
       if (nav) nav.style.opacity = String(opacity)
     }
     const onScroll = () => { if (!frame) frame = requestAnimationFrame(update) }
@@ -352,15 +352,15 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
 
 /**
  * The sidebar's fold from lg, for a wordmark starting `open` px high: it scales down to 24, and the logo, the contents
- * and their toggle row come in from the first screen's extra UMO_Y_PAD to the usual 24 — the contents also rising by
+ * and their toggle row come in from the first screen's extra LOGO_PAD to the usual 24 — the contents also rising by
  * what the logo loses in height. All moves, no layout, so the browser runs them on the scroll (see index.css).
  */
-function umoYKeyframes(open: number) {
-  const p = UMO_Y_PAD
+function logoKeyframes(open: number) {
+  const p = LOGO_PAD
   return [
-    `@keyframes umo-y-desk { from { transform: translate(${p}px, ${p}px) scale(1) } to { transform: translate(0px, 0px) scale(${UMO_Y_HEIGHT.folded / open}) } }`,
-    `@keyframes umo-y-nav { from { transform: translate(${p}px, ${open + p - UMO_Y_HEIGHT.folded}px) } to { transform: translate(0px, 0px) } }`,
-    `@keyframes umo-y-toggle { from { transform: translate(${p}px, ${-p}px) } to { transform: translate(0px, 0px) } }`,
+    `@keyframes logo-desk { from { transform: translate(${p}px, ${p}px) scale(1) } to { transform: translate(0px, 0px) scale(${LOGO_HEIGHT.folded / open}) } }`,
+    `@keyframes logo-nav { from { transform: translate(${p}px, ${open + p - LOGO_HEIGHT.folded}px) } to { transform: translate(0px, 0px) } }`,
+    `@keyframes logo-toggle { from { transform: translate(${p}px, ${-p}px) } to { transform: translate(0px, 0px) } }`,
   ].join('\n')
 }
 
@@ -423,7 +423,7 @@ function useHeroSnap(bodyRef: RefObject<HTMLElement | null>) {
 
 /**
  * Height of the first screen's white strip (`--strip` on the page), from lg. The statement's capitals stand level with
- * the top of the logo (the body's 16px on top plus CoFo Sans's 0.164em above the caps at leading 1 make the logo's 24),
+ * the top of the logo (the body's 16px on top plus the brand font's 0.164em above the caps at leading 1 make the logo's 24),
  * and the quick links under it share a line with the toggle row at the bottom of the screen (the row's 20px line starts
  * 24px into its 68), however many lines the statement wraps to.
  */
@@ -444,10 +444,10 @@ function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObjec
       // Where that would leave the film less than half the width or 40% of the height (a phone held sideways, a short
       // window), the film takes the whole first screen down to the bar instead, so the bar doesn't cut the statement.
       const md = window.matchMedia('(min-width: 48rem)').matches
-      const film = window.innerHeight - mstrip - (md ? 92 : 68) - UMO_Y_GAP
+      const film = window.innerHeight - mstrip - (md ? 92 : 68) - LOGO_GAP
       page.toggleAttribute('data-hero-full', !window.matchMedia('(min-width: 64rem)').matches && film < Math.min(window.innerWidth / 2, window.innerHeight * 0.4))
       // The toggle row's bottom padding grows by the Y's overhang on the first screen (see useHeroReveal), lifting its line.
-      const overhang = parseFloat(body.style.getPropertyValue('--umo-y-overhang')) || 0
+      const overhang = parseFloat(body.style.getPropertyValue('--logo-overhang')) || 0
       const strip = `${Math.round(16 + quick.offsetTop - block.offsetTop + 68 - 24 + overhang)}px`
       if (page.style.getPropertyValue('--strip') === strip) return
       page.style.setProperty('--strip', strip)
@@ -464,7 +464,7 @@ function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObjec
 }
 
 /**
- * The hero: the UMO test-drive film, looped and muted — the source MP4s as they came (H.264, no re-encoding: they're
+ * The hero: the brand's film, looped and muted — the source MP4s as they came (H.264, no re-encoding: they're
  * already set up for the web); the poster is their first frame, so nothing jumps when it starts. The 1080p film (12 MB)
  * by default, the 720p one (6.2 MB) on a slow connection: at once where the browser tells the speed (Chrome, Edge,
  * Android: 3G or slower), and in any browser when the 1080p hasn't buffered enough to play within
@@ -523,7 +523,7 @@ function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
   }, [bodyRef])
   const fill = 'block size-full bg-black object-cover'
   return (
-    <div ref={ref} style={{ '--umo-y-gap': `${UMO_Y_GAP}px` } as CSSProperties} className="relative z-30 h-[calc(100svh-var(--mstrip,260px)-68px-var(--umo-y-gap))] max-lg:mb-[var(--umo-y-gap)] md:h-[calc(100svh-var(--mstrip,360px)-92px-var(--umo-y-gap))] max-lg:[[data-hero-full]_&]:h-[calc(100svh-52px)] md:max-lg:[[data-hero-full]_&]:h-[calc(100svh-68px)] lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:h-[calc(100vh-var(--strip,286px))]">
+    <div ref={ref} style={{ '--logo-gap': `${LOGO_GAP}px` } as CSSProperties} className="relative z-30 h-[calc(100svh-var(--mstrip,260px)-68px-var(--logo-gap))] max-lg:mb-[var(--logo-gap)] md:h-[calc(100svh-var(--mstrip,360px)-92px-var(--logo-gap))] max-lg:[[data-hero-full]_&]:h-[calc(100svh-52px)] md:max-lg:[[data-hero-full]_&]:h-[calc(100svh-68px)] lg:fixed lg:inset-x-0 lg:top-0 lg:z-0 lg:h-[calc(100vh-var(--strip,286px))]">
       {still ? (
         <img src={img(HERO.still)} alt={HERO.stillAlt} width={1824} height={912} fetchPriority="high" decoding="async" className={`${fill} object-[50%_40%]`} />
       ) : (
@@ -701,7 +701,7 @@ function useTocSheet(open: boolean, setOpen: (open: boolean) => void, list: RefO
   return api
 }
 
-const EXPAND_KEY = 'umo-guide-toc-expanded'
+const EXPAND_KEY = 'guide-toc-expanded'
 
 /** Remembers the expand-all choice per browser; storage may be unavailable, so every access is guarded. */
 function useExpandAll() {
@@ -879,7 +879,7 @@ export default function Guide() {
       return to
     }
     // The page is lazy-loaded, so the browser's own jump to #hash on load finds nothing yet.
-    // Jump again once CoFo Sans has loaded: the swap from the fallback font changes text heights above the target.
+    // Jump again once the brand font has loaded: the swap from the fallback font changes text heights above the target.
     const id = current()
     if (id) {
       const jump = () => document.getElementById(id)?.scrollIntoView()
@@ -909,13 +909,13 @@ export default function Guide() {
           changes the list's height, and sticks there when the list is taller than the screen, cutting the list off —
           enough of a hint that it scrolls, so the scrollbar, far from the text at this width, is hidden. */}
       <aside ref={asideRef} className="hidden lg:flex sticky top-0 h-screen w-[320px] xl:w-1/3 shrink-0 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-        {/* The logo's box is the folded UMO, 120 by 24; the lockup is drawn larger over it and scaled (useHeroReveal). */}
-        <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" onClick={toTop} aria-label="В начало" data-logo className="block h-6 w-[120px]"><div data-umo-y-desk className="origin-top-left will-change-transform"><UmoYLayers title={SITE.name} /></div></a></div>
+        {/* The logo's box is the folded wordmark, 120 by 24; the lockup is drawn larger over it and scaled (useHeroReveal). */}
+        <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" onClick={toTop} aria-label="В начало" data-logo className="block h-6 w-[120px]"><div data-logo-desk className="origin-top-left will-change-transform"><HeaderLogo title={SITE.name} /></div></a></div>
         {/* The row is fixed to the bottom of the screen — not moved there by script, which lags the scroll a frame and
             makes it shake — so the list keeps its height free at the end. */}
-        <div data-umo-y-nav className="px-6 pb-[68px] will-change-transform"><Nav active={active} expandAll={expandAll} /></div>
+        <div data-logo-nav className="px-6 pb-[68px] will-change-transform"><Nav active={active} expandAll={expandAll} /></div>
         <div className="fixed bottom-0 left-0 z-10 w-[320px] bg-white xl:w-1/3">
-          <div data-umo-y-toggle className="will-change-transform">
+          <div data-logo-toggle className="will-change-transform">
             <TocToggle expanded={expandAll && tocShown} onClick={onTocToggle} className="w-full p-6" />
           </div>
         </div>
@@ -924,7 +924,7 @@ export default function Guide() {
       {/* Mobile top bar. iOS 26 browsers draw the page under their translucent top bar and stick `top: 0` below it,
           so the white is extended a screen upwards to hide content scrolling above the header. */}
       <header className="lg:hidden sticky top-0 z-20 bg-white p-4 md:p-6 before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-screen before:bg-white before:content-['']">
-        <a href="#top" onClick={toTop} aria-label="В начало" className="block w-fit"><UmoYLayers title={SITE.name} /></a>
+        <a href="#top" onClick={toTop} aria-label="В начало" className="block w-fit"><HeaderLogo title={SITE.name} /></a>
       </header>
 
       {/* Mobile table of contents: a bar at the bottom names the heading you're reading and stands in for the
@@ -987,9 +987,9 @@ export default function Guide() {
             <div className="flex flex-col">
               {/* From lg the statement is 60px in the 912px Figma column and scales with the column below that
                   (6.58cqw), so it wraps the same three lines at any width. Its capitals stand level with the top of
-                  the logo: the body's 16px on top, plus 8px less CoFo Sans's 0.164em above the caps. */}
+                  the logo: the body's 16px on top, plus 8px less the brand font's 0.164em above the caps. */}
               <div className="flex flex-col gap-8 md:gap-12 lg:[container-type:inline-size]">
-                <p id="statement" className="text-[32px] font-medium leading-none tracking-[-0.01em] md:text-[48px] lg:mt-[calc(8px-0.164em+var(--umo-y-overhang,0px))] lg:max-w-[912px] lg:text-[min(60px,6.58cqw)]">
+                <p id="statement" className="text-[32px] font-medium leading-none tracking-[-0.01em] md:text-[48px] lg:mt-[calc(8px-0.164em+var(--logo-overhang,0px))] lg:max-w-[912px] lg:text-[min(60px,6.58cqw)]">
                   {STATEMENT}
                 </p>
                 {/* Quick links: read (Платформа бренда), see (Материалы, the templates there too), make (Редактор, the

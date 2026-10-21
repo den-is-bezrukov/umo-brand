@@ -1,5 +1,5 @@
 /**
- * Obscene words, so a generator never sets one on an official UMO layout («Центр UMO | <мат>» on umo.autos).
+ * Obscene words, so a generator never sets one on the brand's official layout («Центр <Бренд> | <мат>» on its site).
  * The obscene vocabulary (мат), vulgar words (жопа, говно, срать…) and a few English ones; jokes and insults pass.
  * Text is checked word by word after normalising disguises: case, ё, Latin and digit look-alikes, letters spaced
  * or dotted apart («х у й», «х.у.й»), a star in place of a letter («х*й»). Roots that occur inside ordinary words

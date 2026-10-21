@@ -1,6 +1,6 @@
 /**
  * The guide's logo with the Yandex cobrand (true) or UMO alone (false). Off, the logo is the wordmark and shrinks with
- * the scroll as before, and the first screen's extra room for the Y (UMO_Y_PAD in Guide) goes.
+ * the scroll as before, and the first screen's extra room for the Y (LOGO_PAD in Guide) goes.
  */
 export const COBRAND = true
 
@@ -8,15 +8,15 @@ export const COBRAND = true
  * UMO with the Y cobrand, in Figma's units: the wordmark 300×60, the lockup 500×100, a unit `--u`
  * (0.4px by default, so UMO is 24 high). Built of separate HTML layers — the wordmark, the cobrand's clip, the divider
  * and the Y — so the fold moves layers, which Safari runs on the scroll's own thread in step with a finger, where moving
- * parts inside one SVG redrew it on the main thread and lagged (index.css; `setUmoY` without scroll timelines). Folding,
+ * parts inside one SVG redrew it on the main thread and lagged (theme.css; `setLogoFold` without scroll timelines). Folding,
  * the cobrand slides 70 left into the O's right wall, the Y turns a quarter and shrinks to 0.46 behind the cobrand's
  * clip, and the divider steps 2 left between 0.3 and 0.7 of the way; the moves are in percent of each layer, so they
  * hold at any unit. The box is the wordmark's height and the lockup's width; the Y's circle overhangs it 20 above and
  * below.
  */
-export default function UmoYLayers({ title }: { title?: string }) {
+export default function HeaderLogo({ title }: { title?: string }) {
   return (
-    <div role={title ? 'img' : undefined} aria-label={title} className={`relative h-[calc(var(--u,0.4px)*60)] ${COBRAND ? 'w-[calc(var(--u,0.4px)*500)]' : 'w-[calc(var(--u,0.4px)*300)]'}`} data-umo-y-layers>
+    <div role={title ? 'img' : undefined} aria-label={title} className={`relative h-[calc(var(--u,0.4px)*60)] ${COBRAND ? 'w-[calc(var(--u,0.4px)*500)]' : 'w-[calc(var(--u,0.4px)*300)]'}`} data-logo-layers>
       <svg viewBox="0 0 300 60" fill="currentColor" aria-hidden className="absolute top-0 left-0 h-full w-[calc(var(--u,0.4px)*300)]">
         <path d="M136.5 21.75H113.999V60H91.5V21.6716C91.5 6.27761 98.8099 0 113.999 0H136.5V21.75ZM181.499 0C196.683 0 204 6.26866 204 21.6716V60H181.499V21.75H159V60H136.5V21.75H159V0H181.499Z" />
         <path d="M61.5 38.25H22.5V0H0V38.3284C0 53.7313 7.32523 60 22.5188 60H61.479C76.6837 60 84 53.7224 84 38.3284V0H61.5V38.25Z" />
@@ -32,8 +32,8 @@ export default function UmoYLayers({ title }: { title?: string }) {
   )
 }
 
-/** The fold by `t` from 0 to 1 by script, for browsers without scroll timelines (the same moves as index.css). */
-export function setUmoY(el: HTMLElement, t: number) {
+/** The fold by `t` from 0 to 1 by script, for browsers without scroll timelines (the same moves as theme.css). */
+export function setLogoFold(el: HTMLElement, t: number) {
   const k = Math.min(1, Math.max(0, t))
   const d = Math.min(1, Math.max(0, (t - 0.3) / 0.4))
   const set = (name: string, transform: string) => {

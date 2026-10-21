@@ -3,14 +3,13 @@ import { qrOutline, type Cmd } from '@/livery/geometry'
 import { missingChars, setRuns, tidy, wrap, type Fonts } from '@/ui/type'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { typografText } from '@/guide/typograf'
-import { ALICE } from '@brand/fonts'
 import { PRICE_CARD } from '@brand/price-card'
 
 // The price card, an A3 poster (Figma «Price Cards», 2100×2970 px, 7.07 px a millimetre; everything here in its px,
 // y down): the car's photo across the top 720 px with the wordmark and «от … ₽» on it in white; under it a 150 px
 // headline, the trim's name and its list, and at the bottom, standing on the 100 px margin, the fine print with the
-// prices and the QR over it, so a longer text lifts them. All in CoFo Sans Medium but the fine print (Regular), Alice's
-// mark in Alice Okniks. Figma's text boxes put a baseline (lh − 1.26 em) / 2 + 0.974 em under a line's top.
+// prices and the QR over it, so a longer text lifts them. All in the brand font's Medium but the fine print (Regular),
+// a partner's mark in its own font (`mark`). Figma's text boxes put a baseline (lh − 1.26 em) / 2 + 0.974 em under a line's top.
 
 export const CARD = { w: 2100, h: 2970 }
 const SIDE = 125
@@ -23,8 +22,8 @@ const BOTTOM_BARE = CARD.h - SIDE
 export type Model = string
 export type Trim = string
 
-/** A run of a fixed line: Alice's mark comes from Alice Okniks */
-export interface Run { text: string; alice?: boolean }
+/** A run of a fixed line: `mark`, a partner's mark, in the mark's font and colour (`BrandPriceCard.mark`) */
+export interface Run { text: string; mark?: boolean }
 
 /** A trim's photo across the band */
 export interface Photo {
@@ -61,6 +60,8 @@ export interface BrandPriceCard {
   headlines: Record<Model, Run[][]>
   lettering: Record<Model, string>
   trims: Record<Model, TrimData[]>
+  /** A partner's mark in the headlines: its font under the brand's `public/` and its colour */
+  mark?: { file: string; color: string }
 }
 
 /** A model's trims, the first its default */
@@ -85,15 +86,17 @@ function fromD(d: string, dx: number, dy: number): Cmd[] {
   return cmds
 }
 
-/** Alice Okniks (`@brand/fonts`, the site's): Alice's mark on @, a thin no-break space */
-let alicePromise: Promise<Font> | undefined
-export const loadAlice = () => alicePromise ??= fetch(`${import.meta.env.BASE_URL}${ALICE}`).then(r => r.arrayBuffer()).then(buf => parse(buf))
+/** The mark's font (`PRICE_CARD.mark`), none without a mark */
+let markPromise: Promise<Font | undefined> | undefined
+export const loadMark = () => markPromise ??= PRICE_CARD.mark
+  ? fetch(`${import.meta.env.BASE_URL}${PRICE_CARD.mark.file}`).then(r => r.arrayBuffer()).then(buf => parse(buf))
+  : Promise.resolve(undefined)
 
-export interface CardFonts extends Fonts { alice: Font }
+export interface CardFonts extends Fonts { mark?: Font }
 
 /** What the card is drawn in */
-export type Ink = 'black' | 'white' | 'grey' | 'alice'
-export const INKS: Record<Ink, string> = { black: '#000000', white: '#ffffff', grey: '#808080', alice: '#7a55ff' }
+export type Ink = 'black' | 'white' | 'grey' | 'mark'
+export const INKS: Record<Ink, string> = { black: '#000000', white: '#ffffff', grey: '#808080', mark: PRICE_CARD.mark?.color ?? '#000000' }
 
 export interface Art {
   photo: Photo
@@ -123,7 +126,7 @@ const NUMS = ['lnum', 'tnum']
 
 export function buildCard(fonts: CardFonts, input: Input): Art {
   const trim = trimOf(input.model, input.trim)
-  const parts: Record<Ink, Cmd[]> = { black: [], white: [], grey: [], alice: [] }
+  const parts: Record<Ink, Cmd[]> = { black: [], white: [], grey: [], mark: [] }
   const issues: string[] = []
 
   /** Runs one after another on a baseline, each in its font, ink and features; the pen after them */
@@ -146,7 +149,7 @@ export function buildCard(fonts: CardFonts, input: Input): Art {
   // The headline, Figma's lines
   let top = 820
   for (const line of PRICE_CARD.headlines[input.model]) {
-    const end = runs(line.map(r => r.alice ? { text: r.text, font: fonts.alice, ink: 'alice' as Ink } : { text: r.text }), SIDE, baseline(top, HEADLINE), HEADLINE)
+    const end = runs(line.map(r => r.mark && fonts.mark ? { text: r.text, font: fonts.mark, ink: 'mark' as Ink } : { text: r.text }), SIDE, baseline(top, HEADLINE), HEADLINE)
     if (end - SIDE > COLUMN + 0.5) issues.push('Заголовок не помещается')
     top += HEADLINE
   }

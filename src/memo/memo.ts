@@ -9,9 +9,9 @@ import { SITE } from '@/site'
 
 // The owner's memo: two A4 pages a dealership hands over with a car. Everything
 // but the contacts at the foot of the second page is Figma's, taken out by scripts/fetch-memo.mjs into
-// brand/umo/assets/memo (outlines) and texts.json (the texts, for the template's live text). The contacts are two columns
+// the brand's assets/memo (outlines) and texts.json (the texts, for the template's live text). The contacts are two columns
 // 90 mm apart from 15 mm in and 252 mm down: the dealership (its name, then address, phone, email and site) and the
-// consultant (position, then name, phone and email), the first line CoFo Sans Medium 4,5 mm on 5,985 mm lines, the
+// consultant (position, then name, phone and email), the first line the brand font's Medium 4,5 mm on 5,985 mm lines, the
 // rest Regular 3,6 mm on 4,5, each 1,5 mm under the one before; a line left out closes up. Figma px, 10 a millimetre.
 
 /** The PDF info entry holding what the memos were made from (`writePdfData`), read back when the PDF is dropped */

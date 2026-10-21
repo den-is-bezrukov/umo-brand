@@ -1,9 +1,9 @@
 ---
 name: ship
-description: Commit and deploy umo-brand to production (umo.autos) the way the user expects — descriptive commits, AGENTS.md and docs/ kept in sync, trials as separate revertible commits; before a push gather all unpushed work across branches and worktrees, check other chats and conflicts with prod, then push to main, watch the deploy, offer cleanup. Use when the user says «пушим», «пуш», «пушь на прод», «комитим и пушим», «давай в прод», «выкатываемся», «собираем всё и пушим», «что не запушено», «проверь конфликты», «откати», «верни как было», or asks to try a variant they may roll back.
+description: Commit and deploy the site to production (the brand's `SITE.domain`) the way the user expects — descriptive commits, AGENTS.md and docs/ kept in sync, trials as separate revertible commits; before a push gather all unpushed work across branches and worktrees, check other chats and conflicts with prod, then push to main, watch the deploy, offer cleanup. Use when the user says «пушим», «пуш», «пушь на прод», «комитим и пушим», «давай в прод», «выкатываемся», «собираем всё и пушим», «что не запушено», «проверь конфликты», «откати», «верни как было», or asks to try a variant they may roll back.
 ---
 
-# Ship to umo.autos
+# Ship to production
 
 A push to `main` is a production deploy (`.github/workflows/deploy.yml` → GitHub Pages). «Пушим» is the go-ahead for exactly that: commit, push to `main`, confirm the deploy. It covers the work discussed up to now, not later changes.
 
@@ -13,17 +13,17 @@ Never push without that word. Commit finished pieces locally as you go (commits 
 
 1. `pnpm build` passes (tsc + vite). No image over 2.5 MB, no video over 15 MB under `src/` or `public/`: CI and the deploy fail on them.
 2. **The docs describe what you changed, as it is now**, in the file it belongs to: `docs/guide.md`, `docs/generators.md` for what the generators share, `docs/<generator>.md` for one of them, AGENTS.md only for what every task needs (structure, deploy, rules): new behaviour, numbers, a short why where a choice isn't obvious. Rewrite the old description in place; no history («it was…», «tried…»): that goes in the commit message.
-3. Downloads touched? The sizes come from `virtual:download-sizes` automatically. Copies such as `public/downloads/umo-favicon.*` match their sources.
+3. Downloads touched? The sizes come from `virtual:download-sizes` automatically. Copies such as the favicon among the brand's downloads match their sources.
 4. Stage only your files. `.claude/settings.local.json` and scratch screenshots stay out (a test screenshot was once committed by mistake).
 
 ## Commit style
 
-Subject: `Area: what changed, in plain words`, e.g. `Guide contents: -8px margins tuck the first and last items' padding under the logo and the toggle row`. Areas: `Guide`, `Guide contents`, `Guide hero`, `Livery`, `Livery UMO 5`, `Price card`, `Favicon`. Body: short bullets on the why, when it isn't obvious. End with the attribution line from the system reminder.
+Subject: `Area: what changed, in plain words`, e.g. `Guide contents: -8px margins tuck the first and last items' padding under the logo and the toggle row`. Areas: `Guide`, `Guide contents`, `Guide hero`, `Livery`, `Livery <model>`, `Price card`, `Favicon`. Body: short bullets on the why, when it isn't obvious. End with the attribution line from the system reminder.
 
 ## Trials and rollbacks
 
 - An experimental variant (a colour, a hover, a motion) goes in **its own commit**, marked `(a trial)` or `(a trial; revert this commit to go back)`. «Откатывай» then becomes one `git revert`, and «далеко откатил, я имел в виду только последний ран» can't happen.
-- When the user says to go back to what's in production, diff against `origin/main` or look at https://umo.autos rather than reconstructing it from memory.
+- When the user says to go back to what's in production, diff against `origin/main` or look at the live site rather than reconstructing it from memory.
 
 ## Gather everything before a push
 

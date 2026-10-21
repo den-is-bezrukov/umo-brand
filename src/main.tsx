@@ -17,9 +17,9 @@ const Memo = lazy(() => import('./Memo'))
 // A `pdf=1` link may name the dealer loosely; the page finds it, asking which when there are several
 const LinkDealer = lazy(() => import('./ui/LinkDealer'))
 
-// Yandex.Metrika (index.html, umo.autos only) is set to `defer`, as Metrika asks of a single-page site: a view is
+// Yandex.Metrika (index.html, the brand's domain only) is set to `defer`, as Metrika asks of a single-page site: a view is
 // sent here, once per page. Only a new path counts: the generators rewrite the query with every setting changed, the
-// guide the hash with every section scrolled to. Sent a tick later, so a redirect (an unknown path, /umo-sans among them) counts once.
+// guide the hash with every section scrolled to. Sent a tick later, so a redirect (an unknown path) counts once.
 let lastHit = ''
 let lastHref: string = (window as any).siteReferrer ?? document.referrer
 function MetrikaHits() {
@@ -45,7 +45,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Routes>
           <Route path="/" element={<Guide />} />
           <Route path="/price-card" element={<App />} />
-          <Route path="/livery" element={<LinkDealer param="top" withUmo><Livery /></LinkDealer>} />
+          <Route path="/livery" element={<LinkDealer param="top" withPrefix><Livery /></LinkDealer>} />
           <Route path="/plate-frame" element={<LinkDealer param="name"><PlateFrame /></LinkDealer>} />
           <Route path="/name-tag" element={<NameTag />} />
           <Route path="/business-card" element={<LinkDealer param="dealer"><BusinessCard /></LinkDealer>} />

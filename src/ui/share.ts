@@ -39,7 +39,7 @@ export function useLinkState(params: Record<string, string | null | undefined>) 
     Object.entries(params).filter((e): e is [string, string] => e[1] !== null && e[1] !== undefined && e[1] !== ''),
   )
     .toString()
-    // Allowed as they are in a query, and easier to read: link=https://umo.auto/&off=qr,rear
+    // Allowed as they are in a query, and easier to read: link=https://example.com/&off=qr,rear
     .replace(/%3A/g, ':').replace(/%2F/g, '/').replace(/%2C/g, ',')
   useEffect(() => {
     const { pathname, search, hash } = window.location

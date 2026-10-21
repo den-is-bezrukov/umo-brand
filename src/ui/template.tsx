@@ -5,7 +5,7 @@ import { linkParams, saveAndOpenPdf } from './share'
 import { templateTitle, itemName } from '@/data/generators'
 import { ItemNumber } from '@/ui/staff'
 
-// «Скачать шаблон»: every generator's editable template (the print file's pages, the text live in CoFo Sans,
+// «Скачать шаблон»: every generator's editable template (the print file's pages, the text live in the brand font,
 // `liveText.ts`), as a button under the canvas and as a link that never goes stale, `?t` (`?template`, the first one, still works), the blank one.
 
 /** Saves a template under its name */
@@ -64,7 +64,7 @@ export function TemplateButton({ make, name, goalId, params, title: own }: { mak
 }
 
 /**
- * `t` in the link (umo.autos/<generator>?t; or `template`, which older links carry) saves the blank template to the downloads and opens it, no
+ * `t` in the link (<site>/<generator>?t; or `template`, which older links carry) saves the blank template to the downloads and opens it, no
  * editor, as the `pdf` links do: true while that's under way, the page rendering nothing. `make` is undefined until
  * the fonts are in
  */

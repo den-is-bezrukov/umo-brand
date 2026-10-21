@@ -15,8 +15,8 @@ import { TemplateButton, useTemplateLink } from '@/ui/template'
 import { SITE } from '@/site'
 
 // Number plate frame generator: the dealer's line printed under the plate, as a
-// 501×21 mm PDF with the text in outlines, for the frame maker. The line is the dealer's marketing name as umo.auto
-// lists it («UMO АГАТ Владимир»): the «UMO » is fixed, so only the name is typed or picked from the suggestions.
+// 501×21 mm PDF with the text in outlines, for the frame maker. The line is the dealer's marketing name as the brand
+// lists it («<Бренд> Дилер Город»): the brand's name before it is fixed, so only the name is typed or picked from the suggestions.
 // A link with `text` (even empty: /plate-frame?text) opens a hidden mode where the whole line is free, for the odd case
 // the prefix doesn't fit; nothing on the page leads there.
 
@@ -25,7 +25,7 @@ const PREFIX = `${SITE.name} `
 const PLACEHOLDER_NAME = 'Центр'
 const PLACEHOLDER_TEXT = PREFIX + PLACEHOLDER_NAME
 const GHOST = '#808080'
-/** The dealers' names for the suggestions, without the fixed «UMO » */
+/** The dealers' names for the suggestions, without the fixed brand's name */
 const NAMES = DEALER_NAMES.map(withoutBrand)
 const RED = '#ff2a1a'
 
@@ -34,7 +34,7 @@ export default function PlateFrame() {
   // The free line: on while the link has `text`, so it stays on as the address keeps it
   const [custom] = useState(() => link.has('text'))
   // Empty at first, as the name tag's fields: «Центр» as a value reads as filled in
-  // A name with «UMO» (a link made by hand) loses it, as the prefix is fixed
+  // A name with the brand's name (a link made by hand) loses it, as the prefix is fixed
   const [name, setName] = useState(() => withoutBrand(link.get('name') ?? ''))
   const [text, setText] = useState(link.get('text') ?? '')
   const [align, setAlign] = useState<Align>(link.get('align') === 'center' ? 'center' : 'left')
@@ -113,7 +113,7 @@ export default function PlateFrame() {
     return import('@/plate/pdf').then(m => m.stripTemplate(one.result, one.lines))
   }
   const makeTemplate = font ? () => templateOf(shown) : undefined
-  /** The blank one a `template` link gives: «UMO Центр» */
+  /** The blank one a `template` link gives: «<Бренд> Центр» */
   const makeBlank = font ? () => templateOf(PREFIX + PLACEHOLDER_NAME) : undefined
   const templateOnly = useTemplateLink(makeBlank, `${SITE.file}_plate-frame_template.pdf`, 'download_plate_frame_template')
 
@@ -135,7 +135,7 @@ export default function PlateFrame() {
         <figure className="group/sheet mx-auto flex w-full max-w-[1200px] flex-col gap-2">
           <div>
             <PlateArt>
-              {/* Empty, the placeholder grey, the fixed «UMO » white over it */}
+              {/* Empty, the placeholder grey, the fixed brand's name white over it */}
               {strip && <path d={toD(strip.cmds)} fill={noName ? GHOST : wrong ? RED : 'white'} />}
               {strip && noName && start && <path d={toD(start.cmds)} fill="white" />}
             </PlateArt>

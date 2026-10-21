@@ -38,7 +38,7 @@ const psName = (font: Font) => {
   return (n.windows?.postScriptName?.en ?? n.macintosh?.postScriptName?.en ?? '') === FONTS.medium.name ? FONTS.medium.name : FONTS.regular.name
 }
 
-/** A face's name in a page's resources: CoFoRegular for CoFoSans-Regular */
+/** A face's name in a page's resources: BrandRegular for BrandSans-Regular (`FONTS.short`) */
 const resourceName = (name: string) => FONTS.short + (name === FONTS.medium.name ? 'Medium' : 'Regular')
 
 /**

@@ -20,5 +20,5 @@
     "strict": true,
     "noFallthroughCasesInSwitch": true
   },
-  "include": ["src", "brand/umo", "vite.config.ts"]
+  "include": ["src", "brand", "vite.config.ts"]
 }

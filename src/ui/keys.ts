@@ -12,7 +12,7 @@ const EN = "qwertyuiop[]asdfghjkl;'zxcvbnm,.`"
 const RU = 'йцукенгшщзхъфывапролджэячсмитьбюё'
 
 /**
- * A text typed in the other layout, key for key: «fufn» → «агат», «гьщ» → «umo». The suggestions read it too, so a
+ * A text typed in the other layout, key for key: «lbkth» → «дилер», «ифтв» → «brand». The suggestions read it too, so a
  * dealer or a position is found with the layout left wrong; what's typed stays as it is until a suggestion is picked
  */
 export const otherLayout = (text: string) =>

@@ -1,7 +1,7 @@
 import type { Font } from 'opentype.js'
 
 // Live text for the generators' editable templates («Скачать шаблон»): the same lines their PDFs draw in outlines,
-// as text in CoFo Sans a print shop can edit where the font is installed. A generator's line setter notes each line it
+// as text in the brand font a print shop can edit where the font is installed. A generator's line setter notes each line it
 // sets (`noteLine`) while a build runs under `recordText`; the template then writes those lines where the outlines
 // stand (`liveTextPdf.ts`, loaded with the PDF only). Glyphs a generator substitutes by hand (case forms, lining
 // tabular figures) are written as their plain letters: the template is for editing, the print file keeps them.

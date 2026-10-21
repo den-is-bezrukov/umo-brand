@@ -57,8 +57,8 @@ const toPeople = (rows: Cells[]): Person[] => byHeaders(rows, { ...HEADERS, full
 const addressOf = (name: string) => dealerOf(name)?.address || undefined
 
 /**
- * The dealers as the card names them: without the «UMO» of their marketing names («АГАТ Владимир»), as the logo and
- * «Официальный дилер UMO» stand right by the name. For the full names, offer `DEALER_NAMES` as it is
+ * The dealers as the card names them: without the brand's name their marketing names start with («Дилер Город»), as the logo
+ * and «Официальный дилер <Бренд>» stand right by the name. For the full names, offer `DEALER_NAMES` as it is
  */
 const DEALER_OPTIONS = DEALER_NAMES.map(withoutBrand)
 
@@ -71,7 +71,7 @@ interface CardsData { dealer: Omit<Dealer, 'site'> & { site: string | null }; qr
 const PERSON_FIELDS: CardField[] = ['name', 'surname', 'position', 'email', 'phone']
 
 /**
- * One person's card a link brings (a link made for the dealer): `dealer` (its umo.auto address and site follow,
+ * One person's card a link brings (a link made for the dealer): `dealer` (its address from the brand's site and its site follow,
  * as when picked; `address`, `site` and `qr` override them; `marks` adds crop marks), then `name`, `surname`, `position`, `phone`, `ext`,
  * `email`. Read on load only, never written back: a whole staff list is made here, not sent as a link
  */
@@ -400,7 +400,7 @@ export default function BusinessCard() {
                       <ComboField key={p.key} value={p.position} onChange={v => update(p.key, { position: v })} options={POSITION_OPTIONS} placeholder="Должность" label="Типовые должности" invalid={bad('position', 'Должность')} />
                     </Labelled>
                     <Labelled label="Почта">
-                      {/* The browser's own suggestions: what's typed before the @ at the card's site first (agat-vladimir.umo.auto
+                      {/* The browser's own suggestions: what's typed before the @ at the card's site first (dealer-city.<brand site>
                           follows the dealer's name, or the site as edited), then the common mail services; the browser
                           narrows them as the domain is typed */}
                       <TextInput value={p.email} onChange={v => update(p.key, { email: v })} placeholder="Почта" invalid={bad('email', 'Почта')} inputMode="email" list="mail-domains" />

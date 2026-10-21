@@ -10,7 +10,7 @@ export const HOURS_LINES = [DEFAULT_HOURS_LINE, 'Ежедневно', 'Без в
 export const addressOf = (name: string) => dealerOf(name)?.address
 
 /**
- * A dealer's hours as the sign sets them, «9:00», from umo.auto's «ежедневно, 09:00–21:00»; none for the few open
+ * A dealer's hours as the sign sets them, «9:00», from the brand's site's «ежедневно, 09:00–21:00»; none for the few open
  * different hours on different days, as the sign has one range
  */
 export function hoursOf(name: string): { from: string; to: string } | undefined {

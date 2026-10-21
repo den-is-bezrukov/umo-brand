@@ -42,8 +42,8 @@ async function cutFile(sheets: Sheet[], title: string): Promise<Uint8Array> {
 }
 
 /**
- * The editable template (`UMO8_dealer-livery_template.pdf`): the decals' pages as in the cut file, the dealer and
- * tagline live in CoFo Sans (`src/ui/liveTextPdf.ts`), the QR and lettering in outlines; for editing the text only,
+ * The editable template (`<Brand>8_dealer-livery_template.pdf`): the decals' pages as in the cut file, the dealer and
+ * tagline live in the brand font (`src/ui/liveTextPdf.ts`), the QR and lettering in outlines; for editing the text only,
  * the plotter cuts the outlines
  */
 export async function liveryTemplate(prefix: string, sheets: Sheet[]): Promise<Blob> {
@@ -78,13 +78,13 @@ async function photoJpeg(surface: Surface): Promise<Uint8Array> {
 }
 
 /**
- * The spec: each surface on the car with its dimensions in orange, like 00_UMO8_dealer-livery_spec.pdf. One point on these
+ * The spec: each surface on the car with its dimensions in orange, like the brand's own spec. One point on these
  * pages is a millimetre on the car, so the numbers can be checked with a ruler in Illustrator.
  */
 async function specFile(sheets: Sheet[], title: string): Promise<Uint8Array> {
   const doc = await PDFDocument.create()
   doc.setTitle(title)
-  // The figures in CoFo Sans Medium, as on the page, in outlines
+  // The figures in the brand font's Medium, as on the page, in outlines
   const font = await loadFont()
   for (const s of sheets) {
     const { photo } = s.surface
@@ -95,7 +95,7 @@ async function specFile(sheets: Sheet[], title: string): Promise<Uint8Array> {
     page.drawImage(jpg, { x: -vx, y: vh - (photo.h - vy), width: photo.w, height: photo.h })
     const ox = photo.x - vx
     const oy = photo.y - vy
-    // The decals as they look on the car: white, or black on the white UMO 5's sides
+    // The decals as they look on the car: white, or black on a white car's sides
     fillShapes(page, s.shapes, 1, ox, oy, s.surface.decal === '#000000' ? 'black' : 'white')
 
     // Dimensions, as in the preview
@@ -112,7 +112,7 @@ async function specFile(sheets: Sheet[], title: string): Promise<Uint8Array> {
 
 /**
  * A dealer livery in one zip: the decals (left side, right side, rear window — one page each, every page at its own
- * size), the spec, named as in the Livery folder on Yandex Disk, and the editable template (the model's defaults, as
+ * size), the spec, and the editable template (the model's defaults, as
  * the icon gives it), so whoever gets the zip has all of it
  */
 export async function liveryZip(prefix: string, sheets: Sheet[], template: Blob): Promise<Blob> {

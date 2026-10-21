@@ -1,7 +1,7 @@
 import { createContext, isValidElement, useContext, useEffect, useState, type CSSProperties, type ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import type { Art } from '@/pricecard/card'
-import UmoLogo from '@brand/Wordmark'
+import Wordmark from '@brand/Wordmark'
 import { images } from '@brand/guide/images'
 import { editTitle } from '@/data/generators'
 import { SITE } from '@/site'
@@ -147,7 +147,7 @@ export function LogoPlate({ w, h, logo, bg, dark, caption, phone43, className = 
         style={{ ...(phone43 ? { '--ratio': `${w} / ${h}` } : { aspectRatio: `${w} / ${h}` }), background: bg } as CSSProperties}
       >
         <div style={{ width: `${(logo / w) * 100}%` }}>
-          <UmoLogo title={`Логотип ${SITE.name}, ${dark ? 'белый' : 'чёрный'}`} className="w-full" />
+          <Wordmark title={`Логотип ${SITE.name}, ${dark ? 'белый' : 'чёрный'}`} className="w-full" />
         </div>
       </div>
       {caption && <Caption>{caption}</Caption>}
@@ -223,9 +223,9 @@ export function PriceCardPreview({ model, trim, alt }: { model: string; trim: st
   useEffect(() => {
     let on = true
     Promise.all([import('@/pricecard/card'), import('@/pricecard/CardArt'), import('@/ui/type')])
-      .then(([c, a, t]) => Promise.all([t.loadFonts(), c.loadAlice()]).then(([fonts, alice]) => {
+      .then(([c, a, t]) => Promise.all([t.loadFonts(), c.loadMark()]).then(([fonts, mark]) => {
         const data = c.trimOf(model, trim)
-        const art = c.buildCard({ ...fonts, alice }, { model, trim, full: data.full, legal: data.legal, url: modelOf(model).page })
+        const art = c.buildCard({ ...fonts, mark }, { model, trim, full: data.full, legal: data.legal, url: modelOf(model).page })
         if (on) setCard({ art, Draw: a.default })
       }))
     return () => { on = false }
@@ -241,7 +241,7 @@ export function PriceCardPreview({ model, trim, alt }: { model: string; trim: st
  * A file from public/downloads/, its row named in Russian by `label` (the file's own name, as saved, stays English), a
  * page of this site (its title and path), or a file a generator makes, `t` the link that makes it (a blank template:
  * `?t`), named by `label` («Шаблон режимника»). `also`: the same item in other formats, on the right of its row after
- * the file's own: the row downloads the vector, its PNG the PNG («Логотип UMO  SVG  PNG»). A page's
+ * the file's own: the row downloads the vector, its PNG the PNG («Логотип  SVG  PNG»). A page's
  * `verb`, if any, stands on its right in place of its path, `template` a PDF link after it («Указать часы работы  PDF»: the
  * row opens the constructor, named by what's done there, the template second to it; `download`, the name while the PDF is
  * pointed at, «Шаблон визитки»)
@@ -250,7 +250,7 @@ export type Asset = { file: string; label?: string; also?: { file: string }[] } 
 
 /**
  * A file's format, on the right of its row in place of a size (every file here is small, so a size said nothing; the
- * format says what opens it): its extension, or for an archive what's in it («umo-logo-png.zip»: PNG)
+ * format says what opens it): its extension, or for an archive what's in it («logo-png.zip»: PNG)
  */
 export const formatOf = (a: { file: string }) =>
   (a.file.match(/-(png|svg)\.zip$/)?.[1] ?? a.file.split('.').pop() ?? '').toUpperCase()

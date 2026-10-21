@@ -6,11 +6,10 @@ import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { noteLine } from '@/ui/liveText'
 import { SITE } from '@/site'
 
-// The dealership's hours sign (the source in Yandex Disk `02 UMO/Hours Sign`,
-// UMO_hours-sign.pdf): a 480×680 mm plate, the UMO logo at the top, the hours large in the middle with a line under
-// them, and the dealership at the bottom: its marketing name («UMO АГАТ Владимир»), address, phone and site. Figma's frame is 2400×3400, 5 px a
-// millimetre; the margins and the column are sevenths of the width, the logo as wide as the column. All in CoFo Sans
-// Medium. Figma's text boxes are «leading-none», so a baseline is 0.844 of the size under a box's top.
+// The dealership's hours sign: a 480×680 mm plate, the brand's logo at the top, the hours large in the middle with a line under
+// them, and the dealership at the bottom: its marketing name («<Бренд> Дилер Город»), address, phone and site. Figma's frame is 2400×3400, 5 px a
+// millimetre; the margins and the column are sevenths of the width, the logo as wide as the column. All in the brand
+// font's Medium. Figma's text boxes are «leading-none», so a baseline is 0.844 of the size under a box's top.
 
 /** The key of the fields as typed in the PDF's info (`writePdfData`) */
 export const SIGN_KEY = `${SITE.file}HoursSign`
@@ -32,10 +31,10 @@ export const LINE = { size: 155.429 / 5, track: -0.008, baseline: 1816 / 5 + DRO
 /** The dealership: 45.714 px on 1.5 lines, the block standing on its last line (its box's bottom at 3104.571 px) */
 export const INFO = { size: 45.714 / 5, leading: 1.5 * 45.714 / 5 }
 export const INFO_LAST = 3104.571 / 5 - INFO.leading + (INFO.leading - INFO.size) / 2 + DROP * INFO.size
-/** The address takes two lines at most, as umo.auto's longest run to twice the column */
+/** The address takes two lines at most, as the longest the brand lists run to twice the column */
 const ADDRESS_LINES = 2
 
-/** The dealer's marketing name as umo.auto has it, «UMO АГАТ Владимир» (not Figma's «Официальный дилер …») */
+/** The dealer's marketing name as the brand lists it, «<Бренд> Дилер Город» (not Figma's «Официальный дилер …») */
 export const DEALER_PREFIX = `${SITE.name} `
 export const ADDRESS_PREFIX = 'Адрес: '
 export const PHONE_PREFIX = 'Телефон: '

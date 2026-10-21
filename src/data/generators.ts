@@ -2,7 +2,7 @@
 // «Редактор материалов» window, and the guide's grid of Материалы, which draws a card of its own for a generator it
 // has no picture for (`row`, the ↗ row under it; the picture its generator's `GENERATED` one in `Guide.tsx`), and the
 // list in Материалы' first sentence (`phrase`, what it makes, as that sentence names it). `templates`: the blank
-// templates its `?t` link saves (`query` before it for another one, the livery's UMO 8; `file` its name after the
+// templates its `?t` link saves (`query` before it for another one, the livery's second model; `file` its name after the
 // brand's `SITE.file`, as vite.config.ts imports this file and nothing of the brand may be here), under its card in Материалы as
 // `label` (the file's own name, with its «_template», stays apart from the print file's), PDF on its right
 type Template = { label: string; file: string; query?: string }

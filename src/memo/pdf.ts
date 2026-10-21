@@ -14,7 +14,7 @@ import page2 from '@brand/assets/memo/page-2.svg'
 import { SITE } from '@/site'
 
 // Loaded only when a memo is downloaded, so the page doesn't carry pdf-lib until then. Two files: the memos to print,
-// everything in outlines (Figma's own for its parts), and the template, the same pages with every text live in CoFo
+// everything in outlines (Figma's own for its parts), and the template, the same pages with every text live in the
 // Sans (embedded for viewing and printing only, as the font allows: it's edited in Illustrator or Acrobat where the
 // font is installed). Each consultant gets both pages; the parts every memo shares are drawn once and placed on each
 // page (a form XObject), so ten memos weigh little more than one. 100% K, white where Figma has white.
@@ -120,7 +120,7 @@ function textOps(page: PDFPage, pdfFonts: Record<FontKey, PDFFont>, fonts: MemoF
   return ops
 }
 
-/** The template: the same pages, every text live in CoFo Sans, the rest as in `memosPdf` */
+/** The template: the same pages, every text live in the brand font, the rest as in `memosPdf` */
 export async function memosTemplate(blocks: Block[], fonts: MemoFonts): Promise<Blob> {
   const doc = await PDFDocument.create()
   doc.setTitle(`${SITE.file}_owner-memo_template.pdf`)

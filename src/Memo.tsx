@@ -19,7 +19,7 @@ import { SITE } from '@/site'
 // Owner's memo generator: two A4 pages a dealership hands over with a car,
 // Figma's but for the contacts at the foot of the second, which are set here: the dealership once for the list, a
 // consultant per memo, as the business card's staff (`useStaff`). «Скачать PDF» gives the memos in outlines,
-// «Скачать шаблон», beside «Добавить», the same with every text live in CoFo Sans, to be edited where the font is.
+// «Скачать шаблон», beside «Добавить», the same with every text live in the brand font, to be edited where the font is.
 
 const BLANK: Person = { position: 'Мастер-консультант', name: '', surname: '', phone: '', email: '' }
 /** Shown grey on the page in place of an empty required field; in the template as they are */
@@ -132,7 +132,7 @@ export default function Memo() {
   const onFormBlur = () => setTimeout(() => setEditing(fieldOf(document.activeElement)), 100)
   useEffect(() => { loadFonts().then(f => setFonts({ r: f.regular, m: f.medium })) }, [])
 
-  // `t` in the link (umo.autos/memo?t, or ?template, a link that never goes stale): every field its placeholder, the
+  // `t` in the link (<site>/memo?t, or ?template, a link that never goes stale): every field its placeholder, the
   // emails too, made from the memo as it is now
   const makeBlank = fonts ? () => {
     const dealer = { name: PLACEHOLDER.dealer!, address: PLACEHOLDER.address!, phone: PLACEHOLDER.dealerPhone!, email: 'Почта', site: PLACEHOLDER.site! }

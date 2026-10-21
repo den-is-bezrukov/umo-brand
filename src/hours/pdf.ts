@@ -30,7 +30,7 @@ export async function signPdf(sign: Sign, data: unknown): Promise<Blob> {
   return signPage(doc, sign)
 }
 
-/** The editable template: the same page, the text live in CoFo Sans (`src/ui/liveTextPdf.ts`), the logo in outlines */
+/** The editable template: the same page, the text live in the brand font (`src/ui/liveTextPdf.ts`), the logo in outlines */
 export async function signTemplate(sign: Sign, lines: TextLine[]): Promise<Blob> {
   const doc = await PDFDocument.create()
   doc.setTitle(SIGN_TEMPLATE)

@@ -6,10 +6,11 @@ import path from 'node:path'
 
 import { GENERATORS } from './src/data/generators'
 
-// The brand the site is built with: `brand/<BRAND>`, UMO unless `BRAND` says otherwise (`BRAND=demo pnpm dev:demo`).
+// The brand the site is built with: `brand/<BRAND>`, the default one package.json's `brand` names (and tsconfig.json's `@brand`) unless
+// `BRAND` says otherwise (`BRAND=demo pnpm dev`).
 // The code takes everything of the brand from there through `@brand`; its `public/` is the site's root, the core's own
 // `public/` (404.html) added to it
-const BRAND = process.env.BRAND || 'umo'
+const BRAND = process.env.BRAND || JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json'), 'utf8')).brand
 const brandDir = path.resolve(__dirname, 'brand', BRAND)
 const siteConfiguration: SiteConfiguration = JSON.parse(fs.readFileSync(path.join(brandDir, 'site.json'), 'utf8'))
 
@@ -97,7 +98,7 @@ function siteMetaPlugin(config: SiteConfiguration): Plugin {
     return html.replace(`<!-- ${slotName} -->`, content)
   }
 
-  const title = config.title ?? "umo-brand"
+  const title = config.title ?? ''
   const description = config.description ?? ''
   const favicon = config.icons?.icon ?? ''
   const faviconIco = config.icons?.ico ?? ''

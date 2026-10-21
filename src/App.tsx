@@ -6,7 +6,7 @@ import { useStaff, ItemFrame, useAddKey, Removed, plain, ITEM_EDGE_OVER, type Ro
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
 import { loadFonts } from '@/ui/type'
-import { CARD, TRIMS as CARD_TRIMS, buildCard, loadAlice, trimOf, type CardFonts, type Model, type Trim } from '@/pricecard/card'
+import { CARD, TRIMS as CARD_TRIMS, buildCard, loadMark, trimOf, type CardFonts, type Model, type Trim } from '@/pricecard/card'
 import { MODELS, DEFAULT_MODEL, modelFrom, modelOf, fileName } from '@/data/models'
 import CardArt from '@/pricecard/CardArt'
 import { SITE } from '@/site'
@@ -101,7 +101,7 @@ function firstIssue(fonts: CardFonts | undefined, c: Card): { field: 'url' | 'fu
   return said ? { field: 'legal', text: said } : null
 }
 
-const fontsPromise = () => Promise.all([loadFonts(), loadAlice()]).then(([f, alice]) => ({ ...f, alice }))
+const fontsPromise = () => Promise.all([loadFonts(), loadMark()]).then(([f, mark]) => ({ ...f, mark }))
 
 /** The cards' PDF, an A3 page each; the PDF code comes in on the first call */
 async function pdfOf(cards: Card[], name = pdfName(cards)) {
@@ -113,7 +113,7 @@ async function pdfOf(cards: Card[], name = pdfName(cards)) {
 const defaultOf = (model: Model, trim: Trim): Card => ({ ...defaultCard(model), trim, full: trimOf(model, trim).full, legal: trimOf(model, trim).legal })
 
 /**
- * What the guide's PDF link (`?t`) gives: every model's every trim as it comes, UMO 5 first, an A3 page each, ready to
+ * What the guide's PDF link (`?t`) gives: every model's every trim as it comes, the first model first, an A3 page each, ready to
  * print (the card's own file stays in its column)
  */
 const DEFAULTS_FILE = `${SITE.file}_price-cards.pdf`
@@ -133,7 +133,7 @@ function downloadGoal(cards: Card[], extra?: Record<string, unknown>) {
   })
 }
 
-/** One card's file is named for it, several are «UMO_price-cards» */
+/** One card's file is named for it, several are «<Brand>_price-cards» */
 function pdfName(cards: Card[]) {
   const one = cards.length === 1 ? cards[0] : null
   return one ? `${fileName(one.model)}-${one.trim.toUpperCase()}.pdf` : `${SITE.file}_price-cards.pdf`
@@ -168,8 +168,8 @@ export default function App() {
   }
 
   const switchModel = (m: Model) => {
-    // The link follows the model while it's still the old model's own page; the fine print is the model's own (UMO 8's
-    // has its credit terms), edited or not
+    // The link follows the model while it's still the old model's own page; the fine print is the model's own (one may
+    // have its credit terms), edited or not
     const url = card.url.trim() === DEFAULT_URL[card.model] ? DEFAULT_URL[m] : card.url
     set({ ...defaultCard(m), url })
   }
@@ -187,7 +187,7 @@ export default function App() {
     ...Object.fromEntries(items.flatMap((c, i) => {
       const n = i === 0 ? '' : String(i + 1)
       return [
-        // UMO 5 by default, so a link without `model` opens UMO 5
+        // The first model by default, so a link without `model` opens it
         [`model${n}`, c.model === DEFAULT_MODEL ? null : c.model],
         [`trim${n}`, c.trim === TRIMS[c.model][0] ? null : c.trim],
         [`full${n}`, c.fullSet ? c.full.replace(/\D/g, '') : null],
@@ -330,7 +330,7 @@ export default function App() {
   // often the same model in another trim or at another price
   const addCard = (after?: number) => staff.add(plain(items[items.length - 1]), undefined, after)
   useAddKey(!phone ? () => addCard(staff.selected) : undefined)
-  /** The template icon in the card's column: that card as it is, what's typed in it (`UMO-5-PRO.pdf`); `?t`, every trim's default */
+  /** The template icon in the card's column: that card as it is, what's typed in it (`<Brand>-5-PRO.pdf`); `?t`, every trim's default */
   const templateIcon = (c: Card) => <TemplateButton make={() => pdfOf([c])} name={pdfName([c])} goalId="download_price_card_template" title="Скачать прайс-карту" />
   const templateOnly = useTemplateLink(defaultsPdf, DEFAULTS_FILE, 'download_price_card_template')
 

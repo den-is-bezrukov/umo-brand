@@ -36,3 +36,34 @@
   --color-line: #e6e6e6;
   --color-caption: #808080;
 }
+
+/* The guide's logo with the Y cobrand (`HeaderLogo.tsx`) folds with the scroll as the core folds the sidebar
+   (src/index.css, --logo-fold): the cobrand slides into the O, the divider steps left, the Y turns and shrinks. The
+   moves in percent of each layer (the layer's own width), so they hold at any size; `setLogoFold` makes them by script
+   where there are no scroll timelines. */
+@supports (animation-timeline: scroll()) {
+  [data-logo-layers] [data-layer] {
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: scroll(root);
+    animation-range: 0px var(--logo-fold, 300px);
+  }
+  [data-logo-layers] [data-layer='cobrand'] { animation-name: logo-cobrand; }
+  [data-logo-layers] [data-layer='divider'] { animation-name: logo-divider; }
+  [data-logo-layers] [data-layer='y'] { animation-name: logo-y; }
+}
+
+@keyframes logo-cobrand {
+  from { transform: translateX(231.126%); }
+  to { transform: translateX(184.768%); }
+}
+
+@keyframes logo-divider {
+  0%, 30% { transform: translateX(50%); }
+  70%, 100% { transform: translateX(-50%); }
+}
+
+@keyframes logo-y {
+  from { transform: translateX(51%) rotate(0deg) scale(1); }
+  to { transform: translateX(-60%) rotate(-90deg) scale(0.46); }
+}

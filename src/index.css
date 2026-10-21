@@ -15,63 +15,44 @@ body {
   overscroll-behavior-y: none;
 }
 
-/* Trial: the guide's UMO × Y lockups (src/guide/UmoYLogo.tsx) fold with the page's scroll over the film's height
-   (--umo-y-fold, set by Guide), run by the browser on the scroll's own thread, in step with a finger: only transforms
-   of layers move. From lg the sidebar comes in too (umo-y-desk, -nav, -toggle: Guide writes them for the screen; these
-   are for a 60px statement until it does), and its contents fade in over the first 160px. Without scroll timelines
-   Guide's script makes the same moves. */
+/* Trial: the guide's logo (`@brand/HeaderLogo`) folds with the page's scroll over the film's height (--logo-fold, set
+   by Guide), run by the browser on the scroll's own thread, in step with a finger: only transforms of layers move (the
+   logo's own layers are the brand's, its `theme.css`). From lg the sidebar comes in too (logo-desk, -nav, -toggle:
+   Guide writes them for the screen; these are for a 60px statement until it does), and its contents fade in over the
+   first 160px. Without scroll timelines Guide's script makes the same moves. */
 @supports (animation-timeline: scroll()) {
-  :is([data-umo-y-layers] [data-layer], [data-umo-y-desk], [data-umo-y-nav], [data-umo-y-toggle]) {
+  :is([data-logo-desk], [data-logo-nav], [data-logo-toggle]) {
     animation-timing-function: linear;
     animation-fill-mode: both;
     animation-timeline: scroll(root);
-    animation-range: 0px var(--umo-y-fold, 300px);
+    animation-range: 0px var(--logo-fold, 300px);
   }
-  [data-umo-y-layers] [data-layer='cobrand'] { animation-name: umo-y-cobrand; }
-  [data-umo-y-layers] [data-layer='divider'] { animation-name: umo-y-divider; }
-  [data-umo-y-layers] [data-layer='y'] { animation-name: umo-y-y; }
-  [data-umo-y-desk] { animation-name: umo-y-desk; }
-  [data-umo-y-nav] { animation-name: umo-y-nav; }
-  [data-umo-y-toggle] { animation-name: umo-y-toggle; }
-  [data-umo-y-nav] nav {
-    animation: umo-y-fade linear both;
+  [data-logo-desk] { animation-name: logo-desk; }
+  [data-logo-nav] { animation-name: logo-nav; }
+  [data-logo-toggle] { animation-name: logo-toggle; }
+  [data-logo-nav] nav {
+    animation: logo-fade linear both;
     animation-timeline: scroll(root);
     animation-range: 0px 160px;
   }
 }
 
-/* The moves in percent of each layer (the layer's own width), so they hold at any size. */
-@keyframes umo-y-cobrand {
-  from { transform: translateX(231.126%); }
-  to { transform: translateX(184.768%); }
-}
-
-@keyframes umo-y-divider {
-  0%, 30% { transform: translateX(50%); }
-  70%, 100% { transform: translateX(-50%); }
-}
-
-@keyframes umo-y-y {
-  from { transform: translateX(51%) rotate(0deg) scale(1); }
-  to { transform: translateX(-60%) rotate(-90deg) scale(0.46); }
-}
-
-@keyframes umo-y-desk {
+@keyframes logo-desk {
   from { transform: translate(12px, 12px) scale(1); }
   to { transform: translate(0px, 0px) scale(0.588); }
 }
 
-@keyframes umo-y-nav {
+@keyframes logo-nav {
   from { transform: translate(12px, 28.8px); }
   to { transform: translate(0px, 0px); }
 }
 
-@keyframes umo-y-toggle {
+@keyframes logo-toggle {
   from { transform: translate(12px, -12px); }
   to { transform: translate(0px, 0px); }
 }
 
-@keyframes umo-y-fade {
+@keyframes logo-fade {
   from { opacity: 0; }
   to { opacity: 1; }
 }

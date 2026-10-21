@@ -22,7 +22,7 @@ export async function stripPdf(strip: Strip): Promise<Blob> {
   return stripPage(strip, STRIP_FILE)
 }
 
-/** The editable template: the same page, the text live in CoFo Sans (`src/ui/liveTextPdf.ts`), in the same White */
+/** The editable template: the same page, the text live in the brand font (`src/ui/liveTextPdf.ts`), in the same White */
 export async function stripTemplate(strip: Strip, lines: TextLine[]): Promise<Blob> {
   return stripPage(strip, `${SITE.file}_plate-frame_template.pdf`, lines)
 }

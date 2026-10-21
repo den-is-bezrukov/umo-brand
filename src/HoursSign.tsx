@@ -18,9 +18,9 @@ import { SITE } from '@/site'
 
 // The dealership's hours sign: a 480×680 mm plate with the logo, the hours, a
 // line under them and the dealership at the bottom, as a PDF in outlines for the maker. A dealer picked from the list
-// puts in its address and hours from umo.auto and its site, all of them edited freely; the phone from the hand-kept list.
+// puts in its address and hours from the brand's site and its site, all of them edited freely; the phone from the hand-kept list.
 
-/** The dealers' names without «UMO», which the sign puts before them, fixed */
+/** The dealers' names without the brand's name, which the sign puts before them, fixed */
 const NAMES = DEALER_NAMES.map(withoutBrand)
 
 /** Empty fields stand grey on the sign as these; never in the PDF */
@@ -143,14 +143,14 @@ const ALERT = '#e30'
 
 export default function HoursSign() {
   const [link] = useState(linkParams)
-  // A listed dealer's umo.auto hours stand in for the times a link leaves out, as its address does
+  // A listed dealer's hours from the brand's site stand in for the times a link leaves out, as its address does
   const [from, setFrom] = useState(() => maskTime(link.get('from') ?? hoursOf(link.get('name') ?? '')?.from ?? ''))
   const [to, setTo] = useState(() => maskTime(link.get('to') ?? hoursOf(link.get('name') ?? '')?.to ?? ''))
   // The line under the hours is fixed, «Работаем без выходных», its field commented out below: nothing a dealer needs to
   // change there, and nothing wider fits the sign's look. `line` and `off=line` in a link are ignored while it's out
   // const [line, setLine] = useState(link.get('off') === 'line' ? '' : link.get('line') ?? DEFAULT_HOURS_LINE)
   const line = DEFAULT_HOURS_LINE
-  // A name with «UMO» (a link made by hand) loses it, as the sign puts it before the name; a phone takes the field's mask
+  // A name with the brand's name (a link made by hand) loses it, as the sign puts it before the name; a phone takes the field's mask
   const [dealer, setDealer] = useState(() => withoutBrand(link.get('name') ?? ''))
   const [address, setAddress] = useState(() => link.get('address') ?? addressOf(link.get('name') ?? '') ?? '')
   const [phone, setPhone] = useState(() => maskPhone(link.get('phone') ?? phoneOf(link.get('name') ?? '') ?? '').text)
@@ -294,7 +294,7 @@ export default function HoursSign() {
     setSite(typeof d.site === 'string' ? d.site : null)
   }
 
-  /** A day under 8 hours, the shortest any dealer on umo.auto works (10:00–18:00): likely a typo, said under the sign */
+  /** A day under 8 hours, the shortest any dealer works (10:00–18:00): likely a typo, said under the sign */
   const short = !empty.includes('from') && !empty.includes('to') && !!timeText(values.from) && !!timeText(values.to)
     && minutesOf(timeText(values.to)!) - minutesOf(timeText(values.from)!) < SHORT_DAY
 

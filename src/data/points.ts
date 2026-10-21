@@ -21,17 +21,17 @@ export function mergePoints(lists: Partial<SalesPoint>[][]): SalesPoint[] {
 
 export const DEALERS = mergePoints(POINTS.lists)
 
-/** The points' names as the brand writes them («UMO АГАТ Владимир»), alphabetical: suggestions for the dealer fields */
+/** The points' names as the brand writes them («<Бренд> Дилер Город»), alphabetical: suggestions for the dealer fields */
 export const DEALER_NAMES = DEALERS.map(d => d.name)
 
-/** The same without the brand's name they all start with (`POINTS.prefix`: «АГАТ Владимир») */
+/** The same without the brand's name they all start with (`POINTS.prefix`: «Дилер Город») */
 const PREFIX = new RegExp(`^${POINTS.prefix}\\s+`)
 export const withoutBrand = (name: string) => name.replace(PREFIX, '')
 
-/** A dealer by its name, with «UMO» or without */
+/** A dealer by its name, with the brand's name or without */
 export const dealerOf = (name: string) => DEALERS.find(d => withoutBrand(d.name) === withoutBrand(name.trim()))
 
-// Finding a dealer by what people write: «агат во владимире», «мажор питер», «автодом алтуфьево», «Major Олимп»
+// Finding a dealer by what people write: «дилер во владимире», «дилер питер», «дилер алтуфьево», «Dealer Центр»
 
 /** What cities are also called */
 const CITY_AKA: Record<string, string[]> = {
@@ -101,7 +101,7 @@ export function findDealers(text: string): SalesPoint[] {
 /** Whether every word written is some dealer's: else a word was dropped, and a single dealer found may not be the one meant («Рольф Сити») */
 export const knowsEveryWord = (text: string) => words(text).every(q => DEALERS.some(d => WORDS.get(d)!.all.some(t => same(q, t))))
 
-/** SalesPoint names (from `options`, with «UMO» or without) a dealer field shows for what's typed, as `findDealers` finds them */
+/** SalesPoint names (from `options`, with the brand's name or without) a dealer field shows for what's typed, as `findDealers` finds them */
 export const dealerFilter = (typed: string, options: string[]) => {
   const found = new Set(findDealers(typed).map(d => withoutBrand(d.name)))
   return options.filter(o => found.has(withoutBrand(o)))

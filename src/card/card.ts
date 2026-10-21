@@ -10,9 +10,9 @@ import { SITE } from '@/site'
 import { withoutBrand } from '@/data/points'
 
 // A dealership employee's business card: 90×50 mm, two sides. The face
-// is the UMO logo 40×8 mm in the bottom left corner, the same for everyone. The back has
-// two blocks within 5 mm margins: the dealership at the top, set once for the whole list — its name in CoFo Sans
-// Medium 4 mm, then «Официальный дилер UMO», the address and the site in Regular 3 mm, with the logo 15×3 mm in the
+// is the brand's logo 40×8 mm in the bottom left corner, the same for everyone. The back has
+// two blocks within 5 mm margins: the dealership at the top, set once for the whole list — its name in the brand
+// font's Medium 4 mm, then «Официальный дилер <Бренд>», the address and the site in Regular 3 mm, with the logo 15×3 mm in the
 // top right corner — and the person at the bottom — name and surname in Medium 4 mm, then position, email and phone
 // in Regular 3 mm, with the QR code 15×15 mm in the bottom right corner. The dealership block hangs from the top
 // margin, the person's stands on the bottom one, so a line left out or a second one closes up towards the edge.
@@ -169,8 +169,8 @@ const TRANSLIT: Record<string, string> = {
 }
 
 /**
- * The site offered for a dealership: its name without «UMO», transliterated, as a subdomain of umo.auto, as the
- * Figma card has it («dealername.umo.auto»): «UMO АГАТ Владимир» → agat-vladimir.umo.auto. Such subdomains don't
+ * The site offered for a dealership: its name without the brand's name, transliterated, as a subdomain of the
+ * brand's site (`SITE.home`), as the Figma card has it: «<Бренд> Дилер Город» → dealer-city.<brand site>. Such subdomains don't
  * exist yet; it's a suggestion, typed over freely
  */
 export function siteFor(dealer: string): string {

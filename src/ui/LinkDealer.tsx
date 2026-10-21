@@ -7,8 +7,8 @@ import { linkParams } from './share'
 
 /**
  * The dealer a `pdf=1` link brings found by the page, so whoever made the link needn't spell it exactly: it may carry
- * the dealer's words as said («агат во владимире»), and before the generator reads the link they become the dealer's
- * name («АГАТ Владимир»): `findDealers` by any spelling, city or street. One found with every word known: put in. One
+ * the dealer's words as said («дилер во владимире»), and before the generator reads the link they become the dealer's
+ * name («Дилер Город»): `findDealers` by any spelling, city or street. One found with every word known: put in. One
  * found with a word no dealer has («Рольф Сити»), or several: the person picks here, before the file. None, or «Моего
  * салона нет в списке»: the editor opens instead of the file, the words in the dealer's field, for the person to write
  * the name as on the sign: the link's maker can't tell the dealer wasn't found, and a card or frame goes to its maker. A link
@@ -16,14 +16,14 @@ import { linkParams } from './share'
  * `dealer_link` says how it went: `found`, `picked` (of `choices`), `none` with the words, to add the dealers and names
  * missing
  */
-export default function LinkDealer({ param, withUmo, children }: { param: string; /** The name with «UMO», as the livery puts it on the car */ withUmo?: boolean; children: React.ReactNode }) {
+export default function LinkDealer({ param, withPrefix, children }: { param: string; /** The name with the brand's prefix (`POINTS.prefix`), as the livery puts it on the car */ withPrefix?: boolean; children: React.ReactNode }) {
   const [state, setState] = useState<{ said: string; choices: Dealer[] } | null>(() => {
     const params = linkParams()
     const said = params.get(param)?.trim()
     if (!said || !params.has('pdf')) return null
     const found = findDealers(said)
     if (found.length === 1 && knowsEveryWord(said)) {
-      put(param, found[0], withUmo)
+      put(param, found[0], withPrefix)
       goal('dealer_link', { result: 'found' })
       return null
     }
@@ -37,7 +37,7 @@ export default function LinkDealer({ param, withUmo, children }: { param: string
   if (!state) return children
   const { said, choices } = state
   const pick = (d?: Dealer) => {
-    if (d) put(param, d, withUmo)
+    if (d) put(param, d, withPrefix)
     else toEditor()
     goal('dealer_link', d ? { result: 'picked', choices: choices.length } : { result: 'none', choices: choices.length, said: said.slice(0, 100) })
     setState(null)
@@ -68,8 +68,8 @@ function toEditor() {
 }
 
 /** The link with the dealer's name in place of what was said, for the generator to read */
-function put(param: string, d: Dealer, withUmo?: boolean) {
+function put(param: string, d: Dealer, withPrefix?: boolean) {
   const url = new URL(location.href)
-  url.searchParams.set(param, withUmo ? d.name : withoutBrand(d.name))
+  url.searchParams.set(param, withPrefix ? d.name : withoutBrand(d.name))
   history.replaceState(history.state, '', url)
 }

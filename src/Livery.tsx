@@ -36,7 +36,7 @@ function SheetPreview({ sheet, seams, dims, onReset, resetLabel, extra }: { shee
   const lines = [...sheet.dealer.lines, ...sheet.tagline.lines]
   const hairline = { vectorEffect: 'non-scaling-stroke' as const, strokeWidth: 1, fill: 'none' }
   const anchor = { left: 'start', center: 'middle', right: 'end' } as const
-  // White decals on UMO 8 and on glass, black on the white UMO 5's sides
+  // White decals, or black on a white car's sides (`Surface.decal`)
   const decal = s.decal ?? '#fff'
   return (
     <figure className="group/sheet flex min-w-0 flex-col gap-2">
@@ -68,7 +68,7 @@ function SheetPreview({ sheet, seams, dims, onReset, resetLabel, extra }: { shee
             <g>
               {/* Half a pixel on Retina screens, one device pixel; a whole one elsewhere, as half would only turn pale */}
               {marks.lines.map(([x1, y1, x2, y2], i) => <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={DIMS} {...hairline} strokeWidth={devicePixelRatio >= 2 ? 0.5 : 1} />)}
-              {/* The page's CoFo Sans Medium with tabular figures (the spec PDF keeps Helvetica Bold) */}
+              {/* The brand font's Medium with tabular figures (the spec PDF keeps Helvetica Bold) */}
               {marks.labels.map((l, i) => (
                 <text key={i} x={l.x} y={l.y} textAnchor={anchor[l.align]} fontSize={marks.size} fontWeight={500} fill={DIMS} className="font-sans [font-variant-numeric:tabular-nums]">{l.text}</text>
               ))}
@@ -138,7 +138,7 @@ export default function Livery() {
   // The rear window's own slogan, once edited apart from the sides'
   const ownRearOn = on.rear && on.tagline && on.rearTagline && rearTagline !== undefined && rearTagline !== tagline
   useLinkState({
-    // UMO 5 by default, so a link without `model` opens UMO 5
+    // The first model by default, so a link without `model` opens it
     model: model === DEFAULT_MODEL ? null : model,
     link: url.trim() === DEFAULT_URL[model] ? null : url.trim(),
     top: dealer === DEFAULT_TOP ? null : dealer,

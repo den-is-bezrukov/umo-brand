@@ -8,9 +8,8 @@ import { noteLine } from '@/ui/liveText'
 import { NAME_TAG_LOGO } from '@brand/logo'
 import { SITE } from '@/site'
 
-// A dealership employee's name tag, as in the hand-made Illustrator source in
-// Yandex Disk `02 UMO/Name Tag`: a 70×25 mm plate with 4 mm rounded corners, the name and surname in CoFo Sans Medium
-// 14 pt on 12 pt lines, the position in Regular 9 pt on 10.8 pt lines, both from the left margin of 4 mm, and the UMO
+// A dealership employee's name tag, as in the hand-made source: a 70×25 mm plate with 4 mm rounded corners, the name and surname in the brand font's Medium
+// 14 pt on 12 pt lines, the position in Regular 9 pt on 10.8 pt lines, both from the left margin of 4 mm, and the brand's
 // logo 20×4 mm in the top right corner, 4 mm from the edges. Every number here was measured off that PDF.
 
 const PT = 25.4 / 72

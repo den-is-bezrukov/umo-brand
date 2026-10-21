@@ -29,7 +29,7 @@ export interface TextResult { lines: Line[]; issues: string[] }
 
 export interface Sheet {
   surface: Surface
-  /** Everything to cut: `fixed` (the QR and the UMO 8 lettering), then the text lines */
+  /** Everything to cut: `fixed` (the QR and the model's lettering), then the text lines */
   shapes: Cmd[][]
   fixed: Cmd[][]
   dealer: TextResult
@@ -37,7 +37,7 @@ export interface Sheet {
   issues: string[]
 }
 
-/** The deepest descender of CoFo Sans Cyrillic (р, у, д), in em */
+/** The deepest descender of the brand font's Cyrillic (р, у, д), in em */
 const DESCENDER = 0.194
 
 function moveCmds(cmds: Cmd[], dx: number, dy: number): Cmd[] {
@@ -162,7 +162,7 @@ function hits(ink: Box, o: Obstacle, c: number): boolean {
 /**
  * Text as typed or pasted, made safe to set: every kind of space (no-break, narrow, thin — Figma and typographers
  * leave them in) becomes a plain one, so wrapping sees the words and short ones get bound again; zero-width marks go.
- * The narrow no-break space in particular has no glyph in CoFo Sans and would glue words together.
+ * The narrow no-break space in particular may have no glyph in the brand font and would glue words together.
  */
 function clean(text: string): string {
   return text.replace(/[\u200b-\u200d\u2060\ufeff]/g, '').replace(/[^\S\n]+/g, ' ')
@@ -212,7 +212,7 @@ export function buildSheet(font: Font, base: Surface, input: { dealer: string | 
   // The larger tagline where the sheet has one
   const chosen = input.large && base.taglineLarge ? { ...base, tagline: base.taglineLarge } : base
   const surface = chosen.stack ? chosen : trimmed(chosen, input)
-  const { qr, umo, num, stack } = surface
+  const { qr, wordmark, num, stack } = surface
   const none: TextResult = { lines: [], issues: [] }
   const dealer = input.dealer === null ? none
     : setText(font, input.dealer, surface.dealer, 'Имя дилера', surface, stack && surface.dealer.baseline)
@@ -228,15 +228,15 @@ export function buildSheet(font: Font, base: Surface, input: { dealer: string | 
     : setText(font, input.tagline, taglineBlock, 'Слоган', surface, stack && afterDealer)
   let sheetSurface = surface
   const digit = surface.numGlyph
-  let lettering = [fromD(LIVERY.wordmark.d, umo.h / LIVERY.wordmark.h, umo.x, umo.y), fromD(digit.d, num.h / digit.h, num.x, num.y)]
+  let lettering = [fromD(LIVERY.wordmark.d, wordmark.h / LIVERY.wordmark.h, wordmark.x, wordmark.y), fromD(digit.d, num.h / digit.h, num.x, num.y)]
   if (stack) {
     // Centre the column (lettering and text) on the sheet's height: from the top of the lettering to the deepest
     // descender of the last line
     const last = [...dealer.lines, ...tagline.lines].length
       ? (tagline.lines.length ? { block: surface.tagline, n: tagline.lines.length, first: afterDealer } : { block: surface.dealer, n: dealer.lines.length, first: surface.dealer.baseline })
       : null
-    const top = Math.min(umo.y, num.y)
-    const bottom = last ? last.first + (last.n - 1) * last.block.leading + last.block.size * DESCENDER : Math.max(umo.y + umo.h, num.y + num.h)
+    const top = Math.min(wordmark.y, num.y)
+    const bottom = last ? last.first + (last.n - 1) * last.block.leading + last.block.size * DESCENDER : Math.max(wordmark.y + wordmark.h, num.y + num.h)
     // The sheet is cut down to the column, centred where the full sheet was. A QR there is as tall as the column, so
     // with less text it shrinks with it (with all the text the column fills its 250 and nothing changes); it stays at
     // the start, the column keeping its gap after it, and the sheet narrows by as much, centred too.
@@ -283,7 +283,7 @@ function sized(s: Surface, height: number, shrink: number): Surface {
     w,
     h: height,
     qr: { x: s.qr.x, y: 0, size: s.qr.size - shrink },
-    umo: { ...s.umo, x: x(s.umo.x) },
+    wordmark: { ...s.wordmark, x: x(s.wordmark.x) },
     num: { ...s.num, x: x(s.num.x) },
     photo: { ...s.photo, x: s.photo.x + shrink / 2, y: s.photo.y + (s.h - height) / 2 },
     dims: {
@@ -332,8 +332,8 @@ function trimmed(s: Surface, input: { dealer: string | null; tagline: string | n
   const off = new Set<TextPart>([...(input.dealer === null ? ['dealer' as const] : []), ...(input.tagline === null ? ['tagline' as const] : [])])
   const parts = off.size ? withoutParts(s.dims, off) : s.dims
   const qr = input.url !== null
-  const top = input.dealer !== null ? 0 : Math.min(...(qr ? [s.qr.y] : []), s.umo.y, s.num.y)
-  const bottom = input.tagline !== null ? s.h : Math.max(...(qr ? [s.qr.y + s.qr.size] : []), s.umo.y + s.umo.h, s.num.y + s.num.h)
+  const top = input.dealer !== null ? 0 : Math.min(...(qr ? [s.qr.y] : []), s.wordmark.y, s.num.y)
+  const bottom = input.tagline !== null ? s.h : Math.max(...(qr ? [s.qr.y + s.qr.size] : []), s.wordmark.y + s.wordmark.h, s.num.y + s.num.h)
   if (top === 0 && bottom === s.h) return { ...s, dims: parts }
   const h = bottom - top
   const rows = parts.rows.flatMap(r => {
@@ -355,7 +355,7 @@ function trimmed(s: Surface, input: { dealer: string | null; tagline: string | n
     ...s,
     h,
     qr: { ...s.qr, y: s.qr.y - top },
-    umo: { ...s.umo, y: s.umo.y - top },
+    wordmark: { ...s.wordmark, y: s.wordmark.y - top },
     num: { ...s.num, y: s.num.y - top },
     dealer: { ...s.dealer, baseline: s.dealer.baseline - top },
     tagline: { ...s.tagline, baseline: s.tagline.baseline - top },
@@ -372,11 +372,11 @@ function trimmed(s: Surface, input: { dealer: string | null; tagline: string | n
  * and under it are given too, from the QR's edges. Columns and the vertical lines stay as in the layout.
  */
 function stackDims(surface: Surface, top: number, bottom: number, text: boolean): Surface['dims'] {
-  const { umo, num, h, dims, stack } = surface
-  const x1 = umo.x
+  const { wordmark, num, h, dims, stack } = surface
+  const x1 = wordmark.x
   const digit = surface.numGlyph
   const x2 = num.x + num.h * (digit.w / digit.h)
-  const column = [top, top + umo.h, ...(text ? [top + stack!.textTop, bottom] : [])]
+  const column = [top, top + wordmark.h, ...(text ? [top + stack!.textTop, bottom] : [])]
   const end = column[column.length - 1]
   const steps = [...(top > 1 ? [0] : []), ...column, ...(h - end > 1 ? [h] : [])]
   // Rounded to half a millimetre, the last one taking up the rounding so the rows add up to what they span

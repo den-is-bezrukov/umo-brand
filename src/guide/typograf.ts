@@ -9,20 +9,20 @@ import { SITE } from '@/site'
 const NBSP = ' '
 
 // Gaps in Typograf's rules for this guide's copy.
-// The brand's name and a model's number stay together («UMO 5»)
+// The brand's name and a model's number stay together («<Бренд> 5»)
 const MODEL = new RegExp(`\\b(${SITE.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}) (\\d)\\b`, 'g')
-Typograf.addRule({ name: 'common/nbsp/umoModel', handler: text => text.replace(MODEL, `$1${NBSP}$2`) })
+Typograf.addRule({ name: 'common/nbsp/brandModel', handler: text => text.replace(MODEL, `$1${NBSP}$2`) })
 Typograf.addRule({
-  name: 'common/nbsp/umoUnits',
+  name: 'common/nbsp/brandUnits',
   handler: text => text.replace(/(\d) (мм|см|px|pt|rem|млн|млрд|тыс)(?=[\s.,;:!?)»]|$)/g, `$1${NBSP}$2`),
 })
-// A sentence's first word doesn't hang at the end of a line after the previous sentence («…Яндекса. Запас /
+// A sentence's first word doesn't hang at the end of a line after the previous sentence («…города. Запас /
 // хода…»): it's tied to the word after it.
 Typograf.addRule({
-  name: 'common/nbsp/umoSentenceStart',
+  name: 'common/nbsp/brandSentenceStart',
   handler: text => text.replace(/([.!?…]) (\p{Lu}[\p{L}\d-]*) /gu, `$1 $2${NBSP}`),
 })
-Typograf.addRule({ name: 'ru/nbsp/umoRuble', handler: text => text.replace(/ ₽/g, `${NBSP}₽`) })
+Typograf.addRule({ name: 'ru/nbsp/brandRuble', handler: text => text.replace(/ ₽/g, `${NBSP}₽`) })
 
 // Only spacing rules: the copy already has proper quotes, dashes and ellipses, and a per-node pass
 // can't pair quotes reliably anyway.
@@ -37,7 +37,7 @@ typograf.setSetting('common/nbsp/afterShortWord', 'lengthShortWord', 3)
 
 /**
  * A paragraph as the guide sets it, for text that isn't in the DOM (the price card's fine print, set in outlines): the
- * same rules, the last word tied to the one before it. CoFo Sans has no narrow no-break space, so it's a plain one
+ * same rules, the last word tied to the one before it. The brand font may have no narrow no-break space, so it's a plain one
  */
 export const typografText = (text: string) =>
   typograf.execute(text).replace(/ (\S+\s*)$/, `${NBSP}$1`).replace(/\u202f/g, NBSP)

@@ -5,8 +5,8 @@ import { noteLine } from '@/ui/liveText'
 import { logo } from '@/card/card'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 
-// A price tag for the small goods at a dealership (the Word template in Yandex Disk
-// `02 UMO/Price Tag`): 90×60 mm, a black band 12 mm tall across the top with the UMO logo 15×3 mm, a hairline and the
+// A price tag for the small goods at a dealership: 90×60 mm, a black band 12 mm tall across the top with the brand's
+// logo 15×3 mm, a hairline and the
 // dealer's name in white, then on white the goods' name from the top, its code under it, and at the bottom the price's
 // caption and the price. The layout is fixed, as in Figma: a longer name takes more lines down to the code, never
 // moving it. Figma's frame is 900×600, 10 px a millimetre. Text boxes there are «leading-none» (the line as tall as the
@@ -26,7 +26,7 @@ export const BAND = 12
 /**
  * The logo, its hairline and the dealer's name: the logo 4.5 mm in and 3 mm (30 px) before the hairline, as Figma; the
  * name 2.625 mm after it (Figma has 3; 2.25 is a touch close) and free to run to the tag's right edge, with no padding there, so the longest
- * dealers on umo.auto («АВТОПОЛЕ Санкт-Петербург», 61.1 mm) fit, the type staying as in Figma
+ * dealers the brand lists (61.1 mm) fit, the type staying as in Figma
  */
 const LOGO_W = 15
 const RULE_X = 22.5

@@ -5,7 +5,7 @@ import { noteLine } from '@/ui/liveText'
 import { missingChars, oneLine, setLine as setType } from '@/ui/type'
 
 // The print strip of a number plate frame: the 501×21 mm field under the plate of
-// a standard 522×132 frame, where the frame maker prints in white on the black plastic. One line of CoFo Sans Medium,
+// a standard 522×132 frame, where the frame maker prints in white on the black plastic. One line of the brand font's Medium,
 // 18 mm with −1% tracking and the case-sensitive forms, its capitals 2.5 mm under the top of the field, set from the left edge or centred. The PDF has
 // the field at 1:1 with the text in outlines, no bleed.
 
@@ -14,7 +14,7 @@ export const STRIP = { x: 10.5, y: 110, w: 501, h: 21 }
 
 export const SIZE = 18
 export const TRACKING = -0.01
-/** CoFo Sans cap height, 680 of 1000 units */
+/** The brand font's cap height, 680 of 1000 units */
 const CAP = 0.68
 /**
  * The capitals' top 2.5 mm under the strip's top: half a millimetre above Figma's 3, as the line is mostly lowercase

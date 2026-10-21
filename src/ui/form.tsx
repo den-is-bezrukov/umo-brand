@@ -31,7 +31,7 @@ const crumb = 'underline decoration-transparent decoration-[0.35px] underline-of
 
 /**
  * The top of a generator's form, the same on every screen (the phone's, carried over to wide screens):
- * the breadcrumbs in Medium, 16 px tall, «Бренд UMO · Редактор материалов», as the guide's quick link names it; the generators' line under them
+ * the breadcrumbs in Medium, 16 px tall, «Бренд <Бренд> · Редактор материалов», as the guide's quick link names it; the generators' line under them
  * (`GeneratorRing`). «Редактор материалов», the app itself, opens every generator in place, nothing in the row moving
  * (no chevron after it: it only clutters the row), and the line and everything after it in the form give
  * way to every generator, 24 px Medium 16 px apart, the current one black. The crumb again, the current
@@ -75,7 +75,7 @@ const CRUMBS = "text-[14px] font-medium leading-4 tracking-normal [font-feature-
 
 /**
  * The breadcrumbs, set apart from the form's tighter tracking so they don't shift when the list opens: the way back to
- * the guide (UMO's logo leads to umo.auto, so it isn't here) and Редактор материалов, the app itself, which shows
+ * the guide (the brand's logo leads to the brand's site, so it isn't here) and Редактор материалов, the app itself, which shows
  * every generator (not Материалы, the guide's chapter, between them)
  */
 function PhoneCrumbs({ open, onEditor }: { open: boolean; onEditor: () => void }) {
@@ -255,7 +255,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
   const [active, setActive] = useState(-1)
   const typed = value.replace(/\s+/g, ' ').trim().toLowerCase()
   const hit = options.find(t => oneLine(t) === typed)
-  // Typed in the wrong layout too («fufn» finds АГАТ), after what's found as typed
+  // Typed in the wrong layout too («lbkth» finds Дилер), after what's found as typed
   const swapped = otherLayout(typed)
   const find = (q: string) => (filter ? filter(q, options) : options.filter(t => oneLine(t).includes(q)))
   const found = find(typed)

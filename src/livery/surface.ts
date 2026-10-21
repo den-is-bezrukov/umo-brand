@@ -38,7 +38,7 @@ export interface Surface {
   h: number
   qr: { x: number; y: number; size: number }
   /** The wordmark and the model number, by their top left corner and height */
-  umo: { x: number; y: number; h: number }
+  wordmark: { x: number; y: number; h: number }
   num: { x: number; y: number; h: number }
   /** The model number's outline */
   numGlyph: Mark
@@ -94,7 +94,7 @@ export interface Surface {
    *   centres the text on it.
    */
   noQr:
-    | { kind: 'layout'; shift: number } & Pick<Surface, 'w' | 'umo' | 'num' | 'dealer' | 'tagline' | 'taglineLarge' | 'dims'>
+    | { kind: 'layout'; shift: number } & Pick<Surface, 'w' | 'wordmark' | 'num' | 'dealer' | 'tagline' | 'taglineLarge' | 'dims'>
     | { kind: 'cut'; side: 'start' | 'end'; width: number; centre?: boolean; dims: Surface['dims'] }
 }
 
@@ -130,7 +130,7 @@ export function withoutQr(s: Surface): Surface {
   return {
     ...s,
     w: s.w - width,
-    umo: { ...s.umo, x: shift(s.umo.x) },
+    wordmark: { ...s.wordmark, x: shift(s.wordmark.x) },
     num: { ...s.num, x: shift(s.num.x) },
     dealer: centre ? { ...s.dealer, align: 'center', x: (s.w - width) / 2 } : { ...s.dealer, x: shift(s.dealer.x) },
     tagline: centre ? { ...s.tagline, align: 'center', x: (s.w - width) / 2 } : { ...s.tagline, x: shift(s.tagline.x) },
@@ -181,8 +181,8 @@ export function smallQr(s: Surface): Surface {
   return {
     ...bare,
     w: w + add,
-    qr: { x: frontStart ? w + SMALL_QR_GAP : 0, y: bare.umo.y, size: SMALL_QR },
-    umo: shiftX(bare.umo),
+    qr: { x: frontStart ? w + SMALL_QR_GAP : 0, y: bare.wordmark.y, size: SMALL_QR },
+    wordmark: shiftX(bare.wordmark),
     num: shiftX(bare.num),
     dealer: shiftX(bare.dealer),
     tagline: shiftX(bare.tagline),

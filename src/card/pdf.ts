@@ -53,7 +53,7 @@ export async function cardsPdf(backs: Back[], { faceEach, marks }: PageOptions, 
 }
 
 /**
- * The editable template (`UMO_business-cards_template.pdf`): the same pages, the text live in CoFo Sans
+ * The editable template (`<Brand>_business-cards_template.pdf`): the same pages, the text live in the brand font
  * (`src/ui/liveTextPdf.ts`), the logos and QR in outlines
  */
 export async function cardsTemplate(backs: { back: Back; lines: TextLine[] }[], options: PageOptions): Promise<Blob> {

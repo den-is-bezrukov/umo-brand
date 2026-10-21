@@ -61,7 +61,7 @@ export async function tagsPdf(tags: Tag[], data: TagsData): Promise<Blob> {
   return sheets(doc, tags.map(tag => ({ tag })))
 }
 
-/** The editable template (`UMO_price-tags_template.pdf`): the same sheets, the text live in CoFo Sans, the logos in outlines */
+/** The editable template (`<Brand>_price-tags_template.pdf`): the same sheets, the text live in the brand font, the logos in outlines */
 export async function tagsTemplate(tags: { tag: Tag; lines: TextLine[] }[]): Promise<Blob> {
   const doc = await PDFDocument.create()
   doc.setTitle(`${SITE.file}_price-tags_template.pdf`)
