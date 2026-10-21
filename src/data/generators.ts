@@ -14,7 +14,7 @@ type Generator = { path: string; title: string; phrase: string; of: string; one:
 const LIST: Generator[] = [
   { path: '/name-tag', title: 'Бейдж', phrase: 'бейдж сотрудника', of: 'бейджа', one: 'бейдж', templates: [{ file: 'name-tags_template.pdf' }] },
   { path: '/business-card', title: 'Визитка', phrase: 'визитка', of: 'визитки', one: 'визитку', templates: [{ file: 'business-cards_template.pdf' }] },
-  { path: '/livery', title: 'Ливрея', phrase: 'ливрея демо-автомобиля', of: 'ливреи', one: 'ливрею', templates: [{ file: 'UMO5_dealer-livery_template.pdf' }] },
+  { path: '/livery', title: 'Ливрея', phrase: 'ливрея демо-автомобиля', of: 'ливреи', one: 'ливрею', templates: [{ file: 'dealer-livery_template.pdf' }] },
   { path: '/memo', title: 'Памятка', phrase: 'памятка владельца', of: 'памятки', one: 'памятку', row: 'Подготовить памятку', templates: [{ file: 'owner-memo_template.pdf' }] },
   { path: '/price-card', title: 'Прайс-карта', phrase: 'прайс-карта', of: 'прайс-карты', one: 'прайс-карту', templates: [{ file: 'price-cards.pdf' }] },
   { path: '/plate-frame', title: 'Рамка номера', phrase: 'рамка\u00a0номера', of: 'рамки номера', one: 'рамку номера', templates: [{ file: 'plate-frame_template.pdf' }] },

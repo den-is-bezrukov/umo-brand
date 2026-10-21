@@ -98,7 +98,7 @@ export const DRAWN: Medium[] = [
     picture: (
       <div className="flex aspect-4/3 items-center justify-center bg-surface">
         <div className="w-[47.3%]">
-          <PriceCardPreview alt="Прайс-карта UMO 5" />
+          <PriceCardPreview model="umo5" trim="max" alt="Прайс-карта UMO 5" />
         </div>
       </div>
     ),

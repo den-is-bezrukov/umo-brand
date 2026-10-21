@@ -5,7 +5,8 @@ import { Field, OptionalField, Segments, SegBtn, ComboField, UrlField, Checkbox,
 import { CaptionReset } from '@/ui/staff'
 import { linkParams, useLinkState } from '@/ui/share'
 import { DEALER_NAMES, dealerFilter, withoutBrand } from '@/data/points'
-import { DEFAULT_TAGLINE, TAGLINES } from '@/data/taglines'
+import { DEFAULT_TAGLINE, TAGLINES } from '@brand/taglines'
+import { MODELS, DEFAULT_MODEL, modelFrom, fileName } from '@/data/models'
 import { LIVERIES, SURFACES, withoutQr, smallQr, type Model } from '@/livery/layout'
 import { buildSheet, specMarks, toD, mm, type Sheet, type Line } from '@/livery/geometry'
 import { loadFont } from '@/ui/type'
@@ -18,7 +19,7 @@ import { SITE } from '@/site'
 // up before the files go to the wrap shop.
 
 /** The QR leads to the model's own page unless another link is set, as on the price card */
-const DEFAULT_URL: Record<Model, string> = { umo8: 'https://umo.auto/umo8', umo5: 'https://umo.auto/umo5' }
+const DEFAULT_URL = Object.fromEntries(MODELS.map(m => [m.id, m.page])) as Record<Model, string>
 const DEFAULT_TOP = `Центр ${SITE.name}`
 
 // The parts that can be left out, as the `off` link parameter names them
@@ -95,7 +96,7 @@ function SheetPreview({ sheet, seams, dims, onReset, resetLabel, extra }: { shee
 export default function Livery() {
   // Settings come from the link the page was opened with (see `useLinkState` below), defaults for the rest
   const [link] = useState(linkParams)
-  const [model, setModel] = useState<Model>(link.get('model') === 'umo8' ? 'umo8' : 'umo5')
+  const [model, setModel] = useState<Model>(modelFrom(link.get('model')) as Model)
   const [dealer, setDealer] = useState(link.get('top') ?? DEFAULT_TOP)
   const [tagline, setTagline] = useState(() => link.get('bottom') ?? DEFAULT_TAGLINE[model])
   // The rear window's slogan follows the sides' until it's edited (as the price card's credit price follows the full
@@ -138,7 +139,7 @@ export default function Livery() {
   const ownRearOn = on.rear && on.tagline && on.rearTagline && rearTagline !== undefined && rearTagline !== tagline
   useLinkState({
     // UMO 5 by default, so a link without `model` opens UMO 5
-    model: model === 'umo5' ? null : model,
+    model: model === DEFAULT_MODEL ? null : model,
     link: url.trim() === DEFAULT_URL[model] ? null : url.trim(),
     top: dealer === DEFAULT_TOP ? null : dealer,
     bottom: tagline === DEFAULT_TAGLINE[model] ? null : tagline,
@@ -213,7 +214,7 @@ export default function Livery() {
     setExporting(true)
     try {
       const { liveryZip } = await import('@/livery/pdf')
-      const prefix = model === 'umo8' ? 'UMO8' : 'UMO5'
+      const prefix = fileName(model, '')
       const blob = await liveryZip(prefix, sheets, await makeBlank!())
       const link = document.createElement('a')
       link.href = URL.createObjectURL(blob)
@@ -235,7 +236,7 @@ export default function Livery() {
     }
   }
 
-  const prefix = model === 'umo8' ? 'UMO8' : 'UMO5'
+  const prefix = fileName(model, '')
   const templateName = `${prefix}_dealer-livery_template.pdf`
   /** The editable template, the icon's and a `template` link's alike: the model's sheets at their defaults, the rear
    * window too, whatever's typed or switched off on the page */
@@ -264,8 +265,7 @@ export default function Livery() {
           <div className="flex flex-col gap-4 tracking-normal">
             <Field label="Модель">
               <Segments>
-                <SegBtn active={model === 'umo5'} onClick={() => chooseModel('umo5')}>UMO 5</SegBtn>
-                <SegBtn active={model === 'umo8'} onClick={() => chooseModel('umo8')}>UMO 8</SegBtn>
+                {MODELS.map(m => <SegBtn key={m.id} active={model === m.id} onClick={() => chooseModel(m.id as Model)}>{m.name}</SegBtn>)}
               </Segments>
             </Field>
 

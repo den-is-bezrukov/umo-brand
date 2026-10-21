@@ -6,16 +6,18 @@ import { useStaff, ItemFrame, useAddKey, Removed, plain, ITEM_EDGE_OVER, type Ro
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
 import { loadFonts } from '@/ui/type'
-import { CARD, buildCard, loadAlice, trimOf, type CardFonts, type Model, type Trim } from '@/pricecard/card'
+import { CARD, TRIMS as CARD_TRIMS, buildCard, loadAlice, trimOf, type CardFonts, type Model, type Trim } from '@/pricecard/card'
+import { MODELS, DEFAULT_MODEL, modelFrom, modelOf, fileName } from '@/data/models'
 import CardArt from '@/pricecard/CardArt'
 import { SITE } from '@/site'
 
 const POSTER_W = CARD.w
 const POSTER_H = CARD.h
 /** The QR leads to the model's own page unless another link is set */
-const DEFAULT_URL: Record<Model, string> = { umo8: 'https://umo.auto/umo8', umo5: 'https://umo.auto/umo5' }
+const DEFAULT_URL: Record<Model, string> = Object.fromEntries(MODELS.map(m => [m.id, m.page]))
 
-const TRIMS: Record<Model, Trim[]> = { umo8: ['max', 'ultra'], umo5: ['pro', 'max'] }
+/** Each model's trims' ids, the first its default */
+const TRIMS: Record<Model, Trim[]> = Object.fromEntries(MODELS.map(m => [m.id, CARD_TRIMS[m.id].map(t => t.id)]))
 
 const MAX_PRICE = 9_999_999
 
@@ -64,7 +66,7 @@ function fromLink(): Card[] {
   const count = Math.min(Math.max(Number(link.get('cards')) || 1, 1), MAX_CARDS)
   return Array.from({ length: count }, (_, i) => {
     const n = i === 0 ? '' : String(i + 1)
-    const model: Model = link.get(`model${n}`) === 'umo8' ? 'umo8' : 'umo5'
+    const model: Model = modelFrom(link.get(`model${n}`))
     const asked = link.get(`trim${n}`) as Trim | null
     const trim = asked && TRIMS[model].includes(asked) ? asked : TRIMS[model][0]
     const legal = link.get(`legal${n}`)
@@ -115,7 +117,7 @@ const defaultOf = (model: Model, trim: Trim): Card => ({ ...defaultCard(model), 
  * print (the card's own file stays in its column)
  */
 const DEFAULTS_FILE = `${SITE.file}_price-cards.pdf`
-const allDefaults = () => (['umo5', 'umo8'] as Model[]).flatMap(m => TRIMS[m].map(trim => defaultOf(m, trim)))
+const allDefaults = () => MODELS.flatMap(m => TRIMS[m.id].map(trim => defaultOf(m.id, trim)))
 const defaultsPdf = () => pdfOf(allDefaults(), DEFAULTS_FILE)
 
 function downloadGoal(cards: Card[], extra?: Record<string, unknown>) {
@@ -134,7 +136,7 @@ function downloadGoal(cards: Card[], extra?: Record<string, unknown>) {
 /** One card's file is named for it, several are «UMO_price-cards» */
 function pdfName(cards: Card[]) {
   const one = cards.length === 1 ? cards[0] : null
-  return one ? `UMO-${one.model === 'umo8' ? '8' : '5'}-${one.trim.toUpperCase()}.pdf` : `${SITE.file}_price-cards.pdf`
+  return one ? `${fileName(one.model)}-${one.trim.toUpperCase()}.pdf` : `${SITE.file}_price-cards.pdf`
 }
 
 export default function App() {
@@ -153,7 +155,7 @@ export default function App() {
   }, [])
   // The cards are a list as the business cards are: one selected and edited in the sidebar, each with its number and
   // actions beside it, «Добавить» under them. There's no table mode, and one card is always selected
-  const staff = useStaff<Card>({ blank: defaultCard('umo5'), readFile: () => [], readPasted: () => [], initial })
+  const staff = useStaff<Card>({ blank: defaultCard(DEFAULT_MODEL), readFile: () => [], readPasted: () => [], initial })
   const { items, update } = staff
   const card: Row<Card> = staff.current ?? items[0]
   const set = (patch: Partial<Card>) => update(card.key, patch)
@@ -186,7 +188,7 @@ export default function App() {
       const n = i === 0 ? '' : String(i + 1)
       return [
         // UMO 5 by default, so a link without `model` opens UMO 5
-        [`model${n}`, c.model === 'umo5' ? null : c.model],
+        [`model${n}`, c.model === DEFAULT_MODEL ? null : c.model],
         [`trim${n}`, c.trim === TRIMS[c.model][0] ? null : c.trim],
         [`full${n}`, c.fullSet ? c.full.replace(/\D/g, '') : null],
         [`legal${n}`, c.legalSet ? c.legal : null],
@@ -249,9 +251,7 @@ export default function App() {
     }
   }
 
-  const trims8: { value: Trim; label: string }[] = [{ value: 'max', label: 'MAX' }, { value: 'ultra', label: 'ULTRA' }]
-  const trims5: { value: Trim; label: string }[] = [{ value: 'pro', label: 'PRO' }, { value: 'max', label: 'MAX' }]
-  const trimOptions = card.model === 'umo8' ? trims8 : trims5
+  const trimOptions = TRIMS[card.model].map(t => ({ value: t, label: t.toUpperCase() }))
 
   const sidebar = (
     <>
@@ -262,8 +262,7 @@ export default function App() {
           <div ref={form} className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-x-3 gap-y-4 md:grid-cols-1 tracking-normal">
             <Field label="Модель">
               <Segments>
-                <SegBtn active={card.model === 'umo5'} onClick={() => switchModel('umo5')}>UMO 5</SegBtn>
-                <SegBtn active={card.model === 'umo8'} onClick={() => switchModel('umo8')}>UMO 8</SegBtn>
+                {MODELS.map(m => <SegBtn key={m.id} active={card.model === m.id} onClick={() => switchModel(m.id)}>{m.name}</SegBtn>)}
               </Segments>
             </Field>
 
@@ -336,7 +335,7 @@ export default function App() {
   const templateOnly = useTemplateLink(defaultsPdf, DEFAULTS_FILE, 'download_price_card_template')
 
   if (pdfOnly || templateOnly) return null
-  if (phone) return <MobileEditor slides={items.map(c => ({ key: c.key, item: c.key, label: `UMO ${c.model === 'umo8' ? 8 : 5} ${c.trim.toUpperCase()}`, ratio: POSTER_H / POSTER_W, node: (w: number) => cardAt(c, w) }))} staff={frame} onAdd={addCard} sidebar={sidebar} download={download} />
+  if (phone) return <MobileEditor slides={items.map(c => ({ key: c.key, item: c.key, label: `${modelOf(c.model).name} ${c.trim.toUpperCase()}`, ratio: POSTER_H / POSTER_W, node: (w: number) => cardAt(c, w) }))} staff={frame} onAdd={addCard} sidebar={sidebar} download={download} />
 
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">

@@ -60,3 +60,6 @@ export interface BrandSite {
   /** Yandex.Metrika's counter, none for no counter */
   metrika?: number
 }
+
+/** A model of the brand: its id in links and data (`umo5`), its name as written («UMO 5»), its page on the brand's site */
+export interface BrandModel { id: string; name: string; page: string }

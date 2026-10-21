@@ -1,5 +1,6 @@
 import { useEffect, type RefObject } from 'react'
 import Typograf from 'typograf'
+import { SITE } from '@/site'
 
 // Keeps prepositions, conjunctions and other short words from dangling at line ends. The layout is fluid,
 // so non-breaking spaces can't be placed by hand for one width — instead every text node under the root
@@ -8,7 +9,9 @@ import Typograf from 'typograf'
 const NBSP = ' '
 
 // Gaps in Typograf's rules for this guide's copy.
-Typograf.addRule({ name: 'common/nbsp/umoModel', handler: text => text.replace(/\bUMO (\d)\b/g, `UMO${NBSP}$1`) })
+// The brand's name and a model's number stay together («UMO 5»)
+const MODEL = new RegExp(`\\b(${SITE.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}) (\\d)\\b`, 'g')
+Typograf.addRule({ name: 'common/nbsp/umoModel', handler: text => text.replace(MODEL, `$1${NBSP}$2`) })
 Typograf.addRule({
   name: 'common/nbsp/umoUnits',
   handler: text => text.replace(/(\d) (мм|см|px|pt|rem|млн|млрд|тыс)(?=[\s.,;:!?)»]|$)/g, `$1${NBSP}$2`),

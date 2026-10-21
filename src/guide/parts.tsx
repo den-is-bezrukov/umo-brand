@@ -5,6 +5,7 @@ import UmoLogo from '@brand/Wordmark'
 import { images } from '@brand/guide/images'
 import { editTitle } from '@/data/generators'
 import { SITE } from '@/site'
+import { modelOf } from '@/data/models'
 
 // The guide's building blocks: a chapter and its sections, text, figures, the download rows, the colour tiles, the
 // dictionary. The core's; the brand's guide (`@brand/guide`) is written with them.
@@ -214,17 +215,17 @@ export function Photo({ name }: { name: string }) {
 }
 
 /**
- * The price card as the generator sets it for UMO 5 Max by default, the generator's own outlines (`CardArt`), with
+ * The price card as the generator sets it for a model's trim by default, the generator's own outlines (`CardArt`), with
  * its fonts and photo loaded once the guide is up; the white card meanwhile
  */
-export function PriceCardPreview({ alt }: { alt: string }) {
+export function PriceCardPreview({ model, trim, alt }: { model: string; trim: string; alt: string }) {
   const [card, setCard] = useState<{ art: Art; Draw: typeof import('@/pricecard/CardArt').default }>()
   useEffect(() => {
     let on = true
     Promise.all([import('@/pricecard/card'), import('@/pricecard/CardArt'), import('@/ui/type')])
       .then(([c, a, t]) => Promise.all([t.loadFonts(), c.loadAlice()]).then(([fonts, alice]) => {
-        const trim = c.trimOf('umo5', 'max')
-        const art = c.buildCard({ ...fonts, alice }, { model: 'umo5', trim: 'max', full: trim.full, legal: trim.legal, url: 'https://umo.auto/umo5' })
+        const data = c.trimOf(model, trim)
+        const art = c.buildCard({ ...fonts, alice }, { model, trim, full: data.full, legal: data.legal, url: modelOf(model).page })
         if (on) setCard({ art, Draw: a.default })
       }))
     return () => { on = false }

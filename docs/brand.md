@@ -13,6 +13,9 @@ Everything UMO's own lives in `brand/umo/`; the rest of the code is the core, wh
 - `assets/` — the generators' pictures: the cars for the price card, the livery's sides, the memo's pages (taken out of Figma by `scripts/fetch-memo.mjs`, with the memo's texts, `memo/texts.json`).
 - `points.ts` — `POINTS`, the points of sale (dealers): lists merged in order (`points/site.json` from umo.auto by `scripts/fetch-dealers.mjs`, the hand-kept `points/own.json`), the prefix every name starts with («UMO»), the brand's name as people write it; `src/data/points.ts` merges and searches them.
 - `site.json` — the site's settings, `SITE` (`src/site.ts`): `name` («Бренд UMO», «Ценник UMO»), `file` (the files' prefix, UMO_price-tags.pdf), `domain` (where the site lives: the instructions' links, Metrika's host), `home` (the brand's own site: a QR's default, the dealers' sites under it), `support` (the bot), `metrika` (the counter, none for none), and the HTML's title, description, language, robots, icons and social image, which `vite.config.ts` reads.
+- `models.ts` — `MODELS`, the models: id (in links and data), name («UMO 5», also on files: UMO-5-PRO.pdf, UMO5_dealer-livery.zip), page (a QR's default); the first is the default; `src/data/models.ts` reads them.
+- `price-card.ts` — `PRICE_CARD`, what the price card says per model: the headline (with Alice's mark), the wordmark with the model's number, the trims with their photos, prices, lists and fine print; `src/pricecard/card.ts` lays it out.
+- `taglines.ts` — the livery's slogans per model, the default first.
 - `Wordmark.tsx`, `HeaderLogo.tsx`, `CobrandLockup.tsx` — the guide's logo: the wordmark on plates, the header's lockup that folds with the scroll (`COBRAND` turns the partner off), the co-branding lockup.
 
 ## Checking
