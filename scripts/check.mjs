@@ -561,7 +561,8 @@ function compare() {
       if (!fs.existsSync(fb)) { out.push(`${rel}: пропал`); continue }
       out.push(...compareFile(rel, fa, fb, path.join(diffRoot, sc.name)))
     }
-    if (out.length) lines.push(`✗ ${sc.name}`, ...out.map(l => `    ${l}`))
+    // A page that broke loses every screen: the first few say enough
+    if (out.length) lines.push(`✗ ${sc.name}`, ...out.slice(0, 8).map(l => `    ${l}`), ...(out.length > 8 ? [`    … и ещё ${out.length - 8}`] : []))
     else same++
   }
   const head = lines.length ? `Отличается: ${scenarios.length - same} из ${scenarios.length}` : `Совпало: все ${scenarios.length}`

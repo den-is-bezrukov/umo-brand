@@ -1,4 +1,4 @@
-import type { Model } from '@/livery/layout'
+import type { Model } from '@/livery/surface'
 
 // The livery's bottom text: what each model is, offered in the field's suggestions. Entries match across the models by
 // their place in the list, so switching models swaps a picked one for the other model's

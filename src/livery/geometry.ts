@@ -1,6 +1,6 @@
 import type { Font } from 'opentype.js'
 import QRCode from 'qrcode'
-import { UMO, EIGHT } from './logo'
+import { LIVERY } from '@brand/livery'
 import type { Surface, TextBlock, Obstacle, TextPart } from './layout'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { textLine, type TextLine } from '@/ui/liveText'
@@ -227,8 +227,8 @@ export function buildSheet(font: Font, base: Surface, input: { dealer: string | 
   const tagline = input.tagline === null ? none
     : setText(font, input.tagline, taglineBlock, 'Слоган', surface, stack && afterDealer)
   let sheetSurface = surface
-  const digit = surface.numGlyph ?? EIGHT
-  let lettering = [fromD(UMO.d, umo.h / UMO.h, umo.x, umo.y), fromD(digit.d, num.h / digit.h, num.x, num.y)]
+  const digit = surface.numGlyph
+  let lettering = [fromD(LIVERY.wordmark.d, umo.h / LIVERY.wordmark.h, umo.x, umo.y), fromD(digit.d, num.h / digit.h, num.x, num.y)]
   if (stack) {
     // Centre the column (lettering and text) on the sheet's height: from the top of the lettering to the deepest
     // descender of the last line
@@ -374,7 +374,7 @@ function trimmed(s: Surface, input: { dealer: string | null; tagline: string | n
 function stackDims(surface: Surface, top: number, bottom: number, text: boolean): Surface['dims'] {
   const { umo, num, h, dims, stack } = surface
   const x1 = umo.x
-  const digit = surface.numGlyph ?? EIGHT
+  const digit = surface.numGlyph
   const x2 = num.x + num.h * (digit.w / digit.h)
   const column = [top, top + umo.h, ...(text ? [top + stack!.textTop, bottom] : [])]
   const end = column[column.length - 1]

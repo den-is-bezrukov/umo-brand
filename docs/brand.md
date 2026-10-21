@@ -16,6 +16,7 @@ Everything UMO's own lives in `brand/umo/`; the rest of the code is the core, wh
 - `models.ts` — `MODELS`, the models: id (in links and data), name («UMO 5», also on files: UMO-5-PRO.pdf, UMO5_dealer-livery.zip), page (a QR's default); the first is the default; `src/data/models.ts` reads them.
 - `price-card.ts` — `PRICE_CARD`, what the price card says per model: the headline (with Alice's mark), the wordmark with the model's number, the trims with their photos, prices, lists and fine print; `src/pricecard/card.ts` lays it out.
 - `taglines.ts` — the livery's slogans per model, the default first.
+- `livery.ts`, `lettering.ts` — `LIVERY`, the livery's cars: the wordmark (600×120) and per model the surfaces in mm (sides and rear window, QR, lettering, text zones, obstacles, photos, spec dimensions), the model numbers' outlines in `lettering.ts`; `src/livery/surface.ts` holds the mechanics and the types they're written in.
 - `Wordmark.tsx`, `HeaderLogo.tsx`, `CobrandLockup.tsx` — the guide's logo: the wordmark on plates, the header's lockup that folds with the scroll (`COBRAND` turns the partner off), the co-branding lockup.
 
 ## Checking
