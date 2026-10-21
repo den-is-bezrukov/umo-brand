@@ -9,7 +9,7 @@ This file describes the project as it is now. The history of decisions (what was
 This file holds only what every task needs. The details live in `docs/`, one file per area; read the ones your task touches before changing anything, and keep them up to date as you go (describe what you changed, as it is now, in the file it belongs to):
 
 - `docs/guide.md` — the brand guide: grid and rhythm, chapters, first screen, navigation, downloads, favicon
-- `docs/brand.md` — where the brand lives (`brand/<name>/`), what the code takes from it and how, and why the core names no brand; read it before touching anything a brand's own: logo, fonts, texts, dealers, models, photos. The brand's own notes (its numbers, sources, how its parts were made) are its `README.md`
+- `docs/brand.md` — where the brand lives (`brand/<name>/`), what the code takes from it and how, and why the core names no brand; read it before touching anything a brand's own: logo, fonts, texts, dealers, models, photos. The brand's own notes (its numbers, how its parts were made) are its `README.md`
 - `docs/generators.md` — what all generators share: the form, the phone layout, item lists, links with settings, files dropped back, name checks, obscene words, Metrika goals. Read it for any generator task
 - `BACKLOG.md` — what's parked for later, in Russian; when a task from it is done, remove its line in the same commit
 - `docs/price-card.md`, `docs/livery.md`, `docs/plate-frame.md`, `docs/name-tag.md`, `docs/business-card.md`, `docs/price-tag.md`, `docs/hours-sign.md`, `docs/memo.md` — each generator's layout in mm, its texts, limits and file

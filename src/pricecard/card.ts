@@ -8,8 +8,8 @@ import { PRICE_CARD } from '@brand/price-card'
 // The price card, an A3 poster (Figma «Price Cards», 2100×2970 px, 7.07 px a millimetre; everything here in its px,
 // y down): the car's photo across the top 720 px with the wordmark and «от … ₽» on it in white; under it a 150 px
 // headline, the trim's name and its list, and at the bottom, standing on the 100 px margin, the fine print with the
-// prices and the QR over it, so a longer text lifts them. All in the brand font's Medium but the fine print (Regular),
-// a partner's mark in its own font (`mark`). Figma's text boxes put a baseline (lh − 1.26 em) / 2 + 0.974 em under a line's top.
+// prices and the QR over it, so a longer text lifts them. All in the brand font's Medium but the fine print (Regular)
+// and a headline's run in a font of its own. Figma's text boxes put a baseline (lh − 1.26 em) / 2 + 0.974 em under a line's top.
 
 export const CARD = { w: 2100, h: 2970 }
 const SIDE = 125
@@ -22,8 +22,8 @@ const BOTTOM_BARE = CARD.h - SIDE
 export type Model = string
 export type Trim = string
 
-/** A run of a fixed line: `mark`, a partner's mark, in the mark's font and colour (`BrandPriceCard.mark`) */
-export interface Run { text: string; mark?: boolean }
+/** A run of a fixed line, as in a Figma text layer: its own font (a file under the brand's `public/`) and colour if set */
+export interface Run { text: string; font?: string; color?: string }
 
 /** A trim's photo across the band */
 export interface Photo {
@@ -60,8 +60,6 @@ export interface BrandPriceCard {
   headlines: Record<Model, Run[][]>
   lettering: Record<Model, string>
   trims: Record<Model, TrimData[]>
-  /** A partner's mark in the headlines: its font under the brand's `public/` and its colour */
-  mark?: { file: string; color: string }
 }
 
 /** A model's trims, the first its default */
@@ -86,21 +84,25 @@ function fromD(d: string, dx: number, dy: number): Cmd[] {
   return cmds
 }
 
-/** The mark's font (`PRICE_CARD.mark`), none without a mark */
-let markPromise: Promise<Font | undefined> | undefined
-export const loadMark = () => markPromise ??= PRICE_CARD.mark
-  ? fetch(`${import.meta.env.BASE_URL}${PRICE_CARD.mark.file}`).then(r => r.arrayBuffer()).then(buf => parse(buf))
-  : Promise.resolve(undefined)
+/** The fonts the headlines' runs set of their own, by file */
+let runFontsPromise: Promise<Record<string, Font>> | undefined
+export const loadRunFonts = () => runFontsPromise ??= Promise.all(
+  [...new Set(Object.values(PRICE_CARD.headlines).flat(2).flatMap(r => r.font ? [r.font] : []))].map(file =>
+    fetch(`${import.meta.env.BASE_URL}${file}`).then(r => r.arrayBuffer()).then(buf => [file, parse(buf)] as const)),
+).then(Object.fromEntries)
 
-export interface CardFonts extends Fonts { mark?: Font }
+export interface CardFonts extends Fonts { runs: Record<string, Font> }
 
 /** What the card is drawn in */
-export type Ink = 'black' | 'white' | 'grey' | 'mark'
-export const INKS: Record<Ink, string> = { black: '#000000', white: '#ffffff', grey: '#808080', mark: PRICE_CARD.mark?.color ?? '#000000' }
+/** What the card is drawn in: a colour */
+export type Ink = string
+const BLACK = '#000000'
+const WHITE = '#ffffff'
+const GREY = '#808080'
 
 export interface Art {
   photo: Photo
-  /** Outlines by ink, each filled even-odd */
+  /** Outlines by ink, each filled even-odd, in the order drawn */
   parts: Record<Ink, Cmd[]>
   issues: string[]
 }
@@ -126,30 +128,32 @@ const NUMS = ['lnum', 'tnum']
 
 export function buildCard(fonts: CardFonts, input: Input): Art {
   const trim = trimOf(input.model, input.trim)
-  const parts: Record<Ink, Cmd[]> = { black: [], white: [], grey: [], mark: [] }
+  const parts: Record<Ink, Cmd[]> = { [BLACK]: [], [WHITE]: [], [GREY]: [] }
   const issues: string[] = []
 
   /** Runs one after another on a baseline, each in its font, ink and features; the pen after them */
   const runs = (list: { text: string; font?: Font; ink?: Ink; feats?: string[] }[], x: number, base: number, size: number) => {
     for (const r of list) {
       const set = setRuns(r.font ?? fonts.medium, [r.text], x, base, size, r.feats ?? [])
-      parts[r.ink ?? 'black'].push(...set.parts[0])
+      const ink = r.ink ?? BLACK
+      parts[ink] ??= []
+      parts[ink].push(...set.parts[0])
       x = set.end
     }
     return x
   }
-  const price = (value: string, x: number, base: number, size: number, ink: Ink = 'black') =>
+  const price = (value: string, x: number, base: number, size: number, ink: Ink = BLACK) =>
     runs([{ text: value, ink, feats: NUMS }, { text: ' ₽', ink }], x, base, size)
 
   // The band: the wordmark, «от … ₽» on the band's bottom padding
-  parts.white.push(...fromD(PRICE_CARD.lettering[input.model], SIDE, SIDE))
+  parts[WHITE].push(...fromD(PRICE_CARD.lettering[input.model], SIDE, SIDE))
   const fromBase = baseline(539, BODY, 56.25)
-  price(trim.from, runs([{ text: 'от ', ink: 'white' }], SIDE, fromBase, BODY), fromBase, BODY, 'white')
+  price(trim.from, runs([{ text: 'от ', ink: WHITE }], SIDE, fromBase, BODY), fromBase, BODY, WHITE)
 
   // The headline, Figma's lines
   let top = 820
   for (const line of PRICE_CARD.headlines[input.model]) {
-    const end = runs(line.map(r => r.mark && fonts.mark ? { text: r.text, font: fonts.mark, ink: 'mark' as Ink } : { text: r.text }), SIDE, baseline(top, HEADLINE), HEADLINE)
+    const end = runs(line.map(r => ({ text: r.text, font: r.font ? fonts.runs[r.font] : undefined, ink: r.color })), SIDE, baseline(top, HEADLINE), HEADLINE)
     if (end - SIDE > COLUMN + 0.5) issues.push('Заголовок не помещается')
     top += HEADLINE
   }
@@ -172,19 +176,19 @@ export function buildCard(fonts: CardFonts, input: Input): Art {
   // numbers aren't broken between their digit groups, nor «ст.» from its number
   const legal = wrap(tidy(input.legal).map(p => typografText(p).replace(/(\d) (?=\d{3}(?!\d))/g, '$1\u00a0').replace(/\bст\. (?=\d)/g, 'ст.\u00a0')), legalFits)
   const legalTop = legal.length ? BOTTOM - legal.length * LEGAL : BOTTOM_BARE
-  legal.forEach((line, i) => runs([{ text: line, font: fonts.regular, ink: 'grey' }], SIDE, baseline(legalTop + i * LEGAL, LEGAL), LEGAL))
+  legal.forEach((line, i) => runs([{ text: line, font: fonts.regular, ink: GREY }], SIDE, baseline(legalTop + i * LEGAL, LEGAL), LEGAL))
   const row = legalTop - (legal.length ? 75 : 0) - 200
   if (row < listEnd + MIN_GAP) issues.push('Сноска слишком длинная')
 
   // «от …» in the band is the trim bare, this the car as it stands, with the dealer's equipment: the law asks for it whole
   runs([{ text: 'Полная стоимость' }], SIDE, baseline(row, LABEL), LABEL)
-  const after = price(input.full || '9 999 999', SIDE, baseline(row + 75, PRICE), PRICE, input.full ? 'black' : 'grey')
+  const after = price(input.full || '9 999 999', SIDE, baseline(row + 75, PRICE), PRICE, input.full ? BLACK : GREY)
   if (trim.monthly) {
     const x = after + 125
     runs([{ text: 'Ежемесячный платёж' }], x, baseline(row, LABEL), LABEL)
     price(trim.monthly, x, baseline(row + 75, PRICE), PRICE)
   }
-  parts.black.push(...qrOutline(input.url, CARD.w - SIDE - 200, row, 200))
+  parts[BLACK].push(...qrOutline(input.url, CARD.w - SIDE - 200, row, 200))
 
   const absent = missingChars(fonts.regular, input.legal)
   if (absent.length) issues.push(`Сноска: нет в шрифте ${absent.map(c => `«${c}»`).join(', ')}`)

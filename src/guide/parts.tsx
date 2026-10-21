@@ -223,9 +223,9 @@ export function PriceCardPreview({ model, trim, alt }: { model: string; trim: st
   useEffect(() => {
     let on = true
     Promise.all([import('@/pricecard/card'), import('@/pricecard/CardArt'), import('@/ui/type')])
-      .then(([c, a, t]) => Promise.all([t.loadFonts(), c.loadMark()]).then(([fonts, mark]) => {
+      .then(([c, a, t]) => Promise.all([t.loadFonts(), c.loadRunFonts()]).then(([fonts, runs]) => {
         const data = c.trimOf(model, trim)
-        const art = c.buildCard({ ...fonts, mark }, { model, trim, full: data.full, legal: data.legal, url: modelOf(model).page })
+        const art = c.buildCard({ ...fonts, runs }, { model, trim, full: data.full, legal: data.legal, url: modelOf(model).page })
         if (on) setCard({ art, Draw: a.default })
       }))
     return () => { on = false }

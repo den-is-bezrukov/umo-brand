@@ -3,7 +3,7 @@ import {
   moveTo, lineTo, appendBezierCurve, closePath, pushGraphicsState, popGraphicsState, setFillingRgbColor, rectangle, clip, endPath,
 } from 'pdf-lib'
 import type { Cmd } from '@/livery/geometry'
-import { BAND, CARD, INKS, photoRect, type Art, type Ink } from './card'
+import { BAND, CARD, photoRect, type Art } from './card'
 
 // Loaded only when the PDF is downloaded, so the page doesn't carry pdf-lib until then.
 
@@ -40,12 +40,12 @@ export async function cardsPdf(cards: Art[], title: string): Promise<Blob> {
     page.drawImage(photos.get(url)!, { x: X(r.x), y: Y(r.y + r.h), width: r.w * K, height: r.h * K })
     page.pushOperators(popGraphicsState())
 
-    for (const ink of Object.keys(INKS) as Ink[]) {
-      if (!art.parts[ink].length) continue
+    for (const [ink, cmds] of Object.entries(art.parts)) {
+      if (!cmds.length) continue
       page.pushOperators(
         pushGraphicsState(),
-        setFillingRgbColor(...rgb(INKS[ink])),
-        ...path(art.parts[ink]),
+        setFillingRgbColor(...rgb(ink)),
+        ...path(cmds),
         PDFOperator.of(PDFOperatorNames.FillEvenOdd),
         popGraphicsState(),
       )

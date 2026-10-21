@@ -6,7 +6,7 @@ import { useStaff, ItemFrame, useAddKey, Removed, plain, ITEM_EDGE_OVER, type Ro
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
 import { loadFonts } from '@/ui/type'
-import { CARD, TRIMS as CARD_TRIMS, buildCard, loadMark, trimOf, type CardFonts, type Model, type Trim } from '@/pricecard/card'
+import { CARD, TRIMS as CARD_TRIMS, buildCard, loadRunFonts, trimOf, type CardFonts, type Model, type Trim } from '@/pricecard/card'
 import { MODELS, DEFAULT_MODEL, modelFrom, modelOf, fileName } from '@/data/models'
 import CardArt from '@/pricecard/CardArt'
 import { SITE } from '@/site'
@@ -101,7 +101,7 @@ function firstIssue(fonts: CardFonts | undefined, c: Card): { field: 'url' | 'fu
   return said ? { field: 'legal', text: said } : null
 }
 
-const fontsPromise = () => Promise.all([loadFonts(), loadMark()]).then(([f, mark]) => ({ ...f, mark }))
+const fontsPromise = () => Promise.all([loadFonts(), loadRunFonts()]).then(([f, runs]) => ({ ...f, runs }))
 
 /** The cards' PDF, an A3 page each; the PDF code comes in on the first call */
 async function pdfOf(cards: Card[], name = pdfName(cards)) {

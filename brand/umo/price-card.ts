@@ -31,11 +31,14 @@ const UMO = [
   'M346.854 0C365.847 0 375 7.83582 375 27.0896V47.9105C375 67.153 365.858 75 346.854 75H292.524C273.528 75 264.375 67.1642 264.375 47.9105V27.0896C264.375 7.84702 273.528 0 292.524 0H346.854ZM292.5 47.8125H346.875V27.0896L292.5 27.1875V47.8125Z',
 ].join('')
 
+/** Alice's mark on @, a thin no-break space, in Alice Okniks (`theme.css`) */
+const ALICE = { font: 'fonts/AliceOkniks.woff', color: '#7a55ff' }
+
 export const PRICE_CARD: BrandPriceCard = {
-  /** The headline as Figma breaks it, a line a row; Alice's mark (and on UMO 5 the thin no-break space before it) the `mark` */
+  /** The headline as Figma breaks it, a line a row; Alice's mark (and on UMO 5 the thin no-break space before it) in Alice Okniks, in Alice's violet */
   headlines: {
-    umo8: [[{ text: 'Гибрид с\u00a0Алисой\u00a0' }, { text: '@', mark: true }], [{ text: 'и\u00a0технологиями\u00a0Яндекса' }]],
-    umo5: [[{ text: 'Электромобиль' }], [{ text: 'с\u00a0технологиями Яндекса' }], [{ text: 'и\u00a0Алисой' }, { text: '\u00a0@', mark: true }]],
+    umo8: [[{ text: 'Гибрид с\u00a0Алисой\u00a0' }, { text: '@', ...ALICE }], [{ text: 'и\u00a0технологиями\u00a0Яндекса' }]],
+    umo5: [[{ text: 'Электромобиль' }], [{ text: 'с\u00a0технологиями Яндекса' }], [{ text: 'и\u00a0Алисой' }, { text: '\u00a0@', ...ALICE }]],
   },
   /** The wordmark with the model's number, 525×75 */
   lettering: {
@@ -43,8 +46,6 @@ export const PRICE_CARD: BrandPriceCard = {
     umo5: UMO + 'M508.191 30.2086H454.062V14.1255H520.387C521.875 14.1255 522.767 13.3733 522.767 12.0227V2.10281C522.767 0.747954 522.023 0 520.687 0H440.238C439.198 0 438.75 0.752223 438.75 1.80363V30.9608C438.75 39.3763 443.063 43.4366 454.066 43.4366H509.684V60.8702H440.534C439.494 60.8702 438.75 61.4728 438.75 62.8234V73.1964C438.75 74.3974 439.346 75 440.534 75H508.492C519.346 75 525 68.6873 525 58.3143V48.544C525 35.316 520.687 30.2086 508.196 30.2086H508.191Z',
   },
   /** Per trim, the first a model's default; «от» and the monthly payment fixed, the full cost the dealer's to raise (the form) */
-  /** Alice's mark on @, a thin no-break space, in Alice Okniks (`theme.css`) and Alice's violet */
-  mark: { file: 'fonts/AliceOkniks.woff', color: '#7a55ff' },
   trims: {
     umo5: [
       {

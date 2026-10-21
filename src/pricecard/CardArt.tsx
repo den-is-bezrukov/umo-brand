@@ -1,6 +1,6 @@
 import { useId } from 'react'
 import { toD } from '@/livery/geometry'
-import { BAND, CARD, INKS, photoRect, type Art, type Ink } from './card'
+import { BAND, CARD, photoRect, type Art } from './card'
 
 /** The card in the preview, in its px: the photo's screen copy cut to the band, the outlines over it, as in the PDF */
 export default function CardArt({ art }: { art: Art }) {
@@ -11,8 +11,8 @@ export default function CardArt({ art }: { art: Art }) {
       <rect width={CARD.w} height={CARD.h} fill="#ffffff" />
       <clipPath id={clip}><rect width={CARD.w} height={BAND} /></clipPath>
       <image href={art.photo.preview} x={r.x} y={r.y} width={r.w} height={r.h} preserveAspectRatio="none" clipPath={`url(#${clip})`} />
-      {(Object.keys(INKS) as Ink[]).map(ink => art.parts[ink].length > 0 && (
-        <path key={ink} d={toD(art.parts[ink])} fill={INKS[ink]} fillRule="evenodd" />
+      {Object.entries(art.parts).map(([ink, cmds]) => cmds.length > 0 && (
+        <path key={ink} d={toD(cmds)} fill={ink} fillRule="evenodd" />
       ))}
     </svg>
   )

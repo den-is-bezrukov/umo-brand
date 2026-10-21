@@ -1,6 +1,6 @@
 # The brand
 
-Everything a brand's own lives in its folder, `brand/<name>/`; the rest of the code is the core, which takes the brand only from there, through the `@brand/…` alias, and names no brand. `vite.config.ts` points the alias at `brand/<BRAND>` (package.json's `brand` unless the `BRAND` variable says otherwise), so another brand is another folder with the same parts. `src/brand.ts` says what each part has to hold; the brand's modules are typed by it. TypeScript checks every brand's folder against the default brand's types (`tsconfig.json`'s `@brand`, the one place besides package.json that names it). What is the brand's alone, where its parts came from and how they were made, is in the brand's own `README.md`.
+Everything a brand's own lives in its folder, `brand/<name>/`; the rest of the code is the core, which takes the brand only from there, through the `@brand/…` alias, and names no brand. `vite.config.ts` points the alias at `brand/<BRAND>` (package.json's `brand` unless the `BRAND` variable says otherwise), so another brand is another folder with the same parts. `src/brand.ts` says what each part has to hold; the brand's modules are typed by it. TypeScript checks every brand's folder against the default brand's types (`tsconfig.json`'s `@brand`, the one place besides package.json that names it). What is the brand's alone, and how its parts were made, is in the brand's own `README.md`.
 
 The core is written as if every brand were a client: no brand's name, font, site, dealers or Figma file in the core's code, comments, docs or skills; examples say «<Бренд>», «Дилер Город», `<Brand>_price-tags.pdf`, «the brand font».
 
@@ -16,12 +16,12 @@ The core is written as if every brand were a client: no brand's name, font, site
 - `points.ts` — `POINTS`, the points of sale (dealers): lists merged in order (where they come from is the brand's), the prefix every name starts with (the brand's name), the brand's name as people write it; `src/data/points.ts` merges and searches them.
 - `site.json` — the site's settings, `SITE` (`src/site.ts`): `name` («Бренд <Бренд>», «Ценник <Бренд>»), `file` (the files' prefix, <Brand>_price-tags.pdf), `domain` (where the site lives: the instructions' links, Metrika's host), `home` (the brand's own site: a QR's default, the dealers' sites under it), `support` (the bot), `metrika` (the counter, none for none), and the HTML's title, description, language, robots, icons and social image, which `vite.config.ts` reads.
 - `models.ts` — `MODELS`, the models: id (in links and data), name («<Бренд> 5», also on files: <Brand>-5-PRO.pdf, <Brand>5_dealer-livery.zip), page (a QR's default); the first is the default; `src/data/models.ts` reads them.
-- `price-card.ts` — `PRICE_CARD`, what the price card says per model: the headline (a run may be a partner's mark, `mark`: its font and colour), the wordmark with the model's number, the trims with their photos, prices, lists and fine print; `src/pricecard/card.ts` lays it out.
+- `price-card.ts` — `PRICE_CARD`, what the price card says per model: the headline (a run may have its own font and colour), the wordmark with the model's number, the trims with their photos, prices, lists and fine print; `src/pricecard/card.ts` lays it out.
 - `taglines.ts` — the livery's slogans per model, the default first.
 - `livery.ts`, `lettering.ts` — `LIVERY`, the livery's cars: the wordmark (600×120) and per model the surfaces in mm (sides and rear window, QR, lettering, text zones, obstacles, photos, spec dimensions), the model numbers' outlines in `lettering.ts`; `src/livery/surface.ts` holds the mechanics and the types they're written in.
 - `Wordmark.tsx`, `HeaderLogo.tsx`, `CobrandLockup.tsx` — the guide's logo: the wordmark on plates, the header's lockup that folds with the scroll (`COBRAND` turns the partner off; `setLogoFold` folds it by script, its layers' moves in the brand's `theme.css`), the co-branding lockup.
 - `check.mjs` — the check's scenarios on the brand's data (`SCENARIOS`, `TABLES`, read by `scripts/check.mjs`).
-- `README.md` — the brand's own notes: its numbers, sources, and how its parts were made.
+- `README.md` — the brand's own notes: its numbers and how its parts were made.
 
 ## Checking
 
