@@ -3,7 +3,6 @@ import {
   PDFOperator, PDFOperatorNames, PDFArray, PDFNumber, type PDFDocument, type PDFFont, type PDFPage,
   pushGraphicsState, popGraphicsState, setFillingCmykColor, beginText, endText, setTextMatrix, setFontAndSize,
 } from 'pdf-lib'
-import fontkit from '@pdf-lib/fontkit'
 import type { TextLine } from './liveText'
 
 // The noted lines (`liveText.ts`) written into a template's pages, loaded with the PDF only: each letter at its pen
@@ -14,8 +13,9 @@ import type { TextLine } from './liveText'
 /** The fonts a template writes in: CoFo Sans Regular and Medium, whole */
 export type LiveFonts = Map<string, PDFFont>
 
+/** fontkit (some 320 KB) loads here, with the template only: the files to print are in outlines and don't need it */
 export async function embedCoFo(doc: PDFDocument): Promise<LiveFonts> {
-  doc.registerFontkit(fontkit)
+  doc.registerFontkit((await import('@pdf-lib/fontkit')).default)
   const one = async (name: string) => {
     const bytes = await fetch(`${import.meta.env.BASE_URL}fonts/CoFoSans-${name}.ttf`).then(r => r.arrayBuffer())
     return [`CoFoSans-${name}`, await doc.embedFont(bytes, { subset: false, customName: `CoFoSans-${name}` })] as const

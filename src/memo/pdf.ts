@@ -3,7 +3,6 @@ import {
   moveTo, lineTo, appendBezierCurve, closePath, pushGraphicsState, popGraphicsState, setFillingCmykColor,
   beginText, endText, setTextMatrix, setFontAndSize,
 } from 'pdf-lib'
-import fontkit from '@pdf-lib/fontkit'
 import type { Cmd } from '@/livery/geometry'
 import { writePdfData } from '@/ui/pdfDataWrite'
 import { MEMOS_KEY, PAGE, MEMO_TEXTS, parseArt, type Block, type Shape } from './memo'
@@ -122,7 +121,8 @@ function textOps(page: PDFPage, pdfFonts: Record<FontKey, PDFFont>, fonts: MemoF
 export async function memosTemplate(blocks: Block[], fonts: MemoFonts): Promise<Blob> {
   const doc = await PDFDocument.create()
   doc.setTitle('UMO_owner-memo_template.pdf')
-  doc.registerFontkit(fontkit)
+  // fontkit loads with the template only, as in `embedCoFo`
+  doc.registerFontkit((await import('@pdf-lib/fontkit')).default)
   // Whole and named as the font is (pdf-lib would add a random suffix), so Illustrator finds the installed CoFo Sans
   // for it: a subset kept the text live in a page opened alone, but Illustrator's import of all pages outlined it
   const font = (name: string) => fetch(`${import.meta.env.BASE_URL}fonts/CoFoSans-${name}.ttf`).then(r => r.arrayBuffer())

@@ -52,7 +52,7 @@ Start with task-relevant files below. Only follow imports or inspect other files
 
 ## Dependencies
 
-- Runtime: React 19 and React DOM 19; `pdf-lib` for PDF (`@pdf-lib/fontkit` to embed CoFo Sans in the memo's template), `opentype.js` for text in outlines, `qrcode`, `fflate` for .xlsx and zips, `typograf`
+- Runtime: React 19 and React DOM 19; `pdf-lib` for PDF (`@pdf-lib/fontkit` to embed CoFo Sans in the editable templates, loaded with a template only), `opentype.js` for text in outlines, `qrcode`, `fflate` for .xlsx and zips, `typograf`
 - Styling: Tailwind CSS v4 with the `@tailwindcss/vite` plugin
 - Build tooling: Vite 8, TypeScript 5.7, and `@vitejs/plugin-react`
 - Formatting: oxfmt
