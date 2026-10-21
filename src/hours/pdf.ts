@@ -7,14 +7,15 @@ import type { Cmd } from '@/livery/geometry'
 import { writePdfData } from '@/ui/pdfDataWrite'
 import { embedFonts, textOps, type LiveFonts } from '@/ui/liveTextPdf'
 import type { TextLine } from '@/ui/liveText'
+import { SITE } from '@/site'
 
 // Loaded only when the PDF is downloaded, so the page doesn't carry pdf-lib until then.
 
 const PT = 72 / 25.4
 /** The file's name, also its title, which Chrome shows on the tab of a PDF opened from a link */
-export const SIGN_FILE = 'UMO_hours-sign.pdf'
+export const SIGN_FILE = `${SITE.file}_hours-sign.pdf`
 /** The editable template's name */
-export const SIGN_TEMPLATE = 'UMO_hours-sign_template.pdf'
+export const SIGN_TEMPLATE = `${SITE.file}_hours-sign_template.pdf`
 /** The source's colour, C60 M40 Y40 K100, as the livery's and the name tag's */
 const INK: [number, number, number, number] = [0.6, 0.4, 0.4, 1]
 

@@ -10,6 +10,7 @@ import { embedFonts, textOps, type LiveFonts } from '@/ui/liveTextPdf'
 import type { TextLine } from '@/ui/liveText'
 // How the tag should look, for the maker: the guide's photo of the tag on a shirt
 import REFERENCE from '@brand/guide/images/name-tag.webp'
+import { SITE } from '@/site'
 
 // Loaded only when the files are downloaded, so the page doesn't carry pdf-lib until then.
 
@@ -58,7 +59,7 @@ function pathOps(cmds: Cmd[], H: number): PDFOperator[] {
  */
 async function tagsPdf(tags: Tag[], people: unknown): Promise<Uint8Array> {
   const doc = await PDFDocument.create()
-  doc.setTitle('UMO name tags 70×25')
+  doc.setTitle(`${SITE.name} name tags 70×25`)
   // The staff as typed, so the PDF (or the ZIP holding it) dropped back on the page opens them
   writePdfData(doc, TAGS_KEY, { people })
   await tagPages(doc, tags.map(tag => ({ tag })))
@@ -71,7 +72,7 @@ async function tagsPdf(tags: Tag[], people: unknown): Promise<Uint8Array> {
  */
 export async function tagsTemplate(tags: { tag: Tag; lines: TextLine[] }[]): Promise<Blob> {
   const doc = await PDFDocument.create()
-  doc.setTitle('UMO_name-tags_template.pdf')
+  doc.setTitle(`${SITE.file}_name-tags_template.pdf`)
   await tagPages(doc, tags, await embedFonts(doc))
   const bytes = await doc.save({ useObjectStreams: false })
   return new Blob([bytes as BlobPart], { type: 'application/pdf' })
@@ -97,14 +98,14 @@ async function tagPages(doc: PDFDocument, tags: { tag: Tag; lines?: TextLine[] }
 
 /** The requirements of the source's `UMO_name-tag_spec_ТТ.txt`, the text now coming in outlines */
 function spec(count: number): string {
-  return `БЕЙДЖ СОТРУДНИКА ДЦ UMO
+  return `БЕЙДЖ СОТРУДНИКА ДЦ ${SITE.name}
 Требования к изготовлению
 
 
 СОСТАВ
 
-UMO_name-tags.pdf            — макеты бейджей, ${count} шт., по одному на странице, 1:1
-UMO_name-tag_reference.webp  — референс внешнего вида
+${`${SITE.file}_name-tags.pdf`.padEnd(29)}— макеты бейджей, ${count} шт., по одному на странице, 1:1
+${`${SITE.file}_name-tag_reference.webp`.padEnd(29)}— референс внешнего вида
 Размер 70 × 25 мм, углы скруглены радиусом 4 мм.
 Контур — линия реза. Текст и логотип уже в кривых.
 
@@ -148,7 +149,7 @@ UMO_name-tag_reference.webp  — референс внешнего вида
 
 async function tagsParts(tags: Tag[], people: unknown) {
   const [pdf, photo] = await Promise.all([tagsPdf(tags, people), fetch(REFERENCE).then(r => r.arrayBuffer())])
-  return { 'UMO_name-tags.pdf': pdf, 'UMO_name-tag_reference.webp': new Uint8Array(photo), '00_UMO_name-tags_spec.txt': strToU8(spec(tags.length)) }
+  return { [`${SITE.file}_name-tags.pdf`]: pdf, [`${SITE.file}_name-tag_reference.webp`]: new Uint8Array(photo), [`00_${SITE.file}_name-tags_spec.txt`]: strToU8(spec(tags.length)) }
 }
 
 export async function tagsZip(tags: Tag[], people: unknown): Promise<Blob> {

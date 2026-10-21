@@ -19,7 +19,7 @@ import { withoutBrand } from '@/data/points'
 // Figma's text boxes are trimmed to the capitals (680 of 1000 units), so its numbers are cap tops and baselines.
 
 /** The PDF info entry holding what the cards were made from (`writePdfData`), read back when the PDF is dropped */
-export const CARDS_KEY = 'UMOBusinessCards'
+export const CARDS_KEY = `${SITE.file}BusinessCards`
 
 /** The card, mm */
 export const CARD = { w: 90, h: 50 }
@@ -89,7 +89,7 @@ export interface Back {
   issues: Issue[]
 }
 
-const TYPE = 'Официальный дилер UMO'
+const TYPE = `Официальный дилер ${SITE.name}`
 
 /** One line from `x` on `baseline`: kerning, and the case-sensitive forms where `caseForms` (on in Figma for the Medium headings) */
 function setLine(font: Font, text: string, x: number, baseline: number, size: number, caseForms: boolean) {

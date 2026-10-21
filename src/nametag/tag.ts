@@ -6,6 +6,7 @@ import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { nameFault } from '@/ui/names'
 import { noteLine } from '@/ui/liveText'
 import { NAME_TAG_LOGO } from '@brand/logo'
+import { SITE } from '@/site'
 
 // A dealership employee's name tag, as in the hand-made Illustrator source in
 // Yandex Disk `02 UMO/Name Tag`: a 70×25 mm plate with 4 mm rounded corners, the name and surname in CoFo Sans Medium
@@ -15,7 +16,7 @@ import { NAME_TAG_LOGO } from '@brand/logo'
 const PT = 25.4 / 72
 
 /** The PDF info entry holding the staff the tags were made from (`writePdfData`), read back when the PDF or ZIP is dropped */
-export const TAGS_KEY = 'UMONameTags'
+export const TAGS_KEY = `${SITE.file}NameTags`
 
 /** The plate, in millimetres */
 export const TAG = { w: 70, h: 25, r: 4 }

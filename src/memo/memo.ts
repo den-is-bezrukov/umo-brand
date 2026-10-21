@@ -5,6 +5,7 @@ import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { nameFault } from '@/ui/names'
 import { layoutText, glyphRuns, advance, type Line, type MemoFonts, type MemoText } from './text'
 import TEXTS from '@brand/memo/texts.json'
+import { SITE } from '@/site'
 
 // The owner's memo: two A4 pages a dealership hands over with a car. Everything
 // but the contacts at the foot of the second page is Figma's, taken out by scripts/fetch-memo.mjs into
@@ -14,7 +15,7 @@ import TEXTS from '@brand/memo/texts.json'
 // rest Regular 3,6 mm on 4,5, each 1,5 mm under the one before; a line left out closes up. Figma px, 10 a millimetre.
 
 /** The PDF info entry holding what the memos were made from (`writePdfData`), read back when the PDF is dropped */
-export const MEMOS_KEY = 'UMOOwnerMemos'
+export const MEMOS_KEY = `${SITE.file}OwnerMemos`
 
 /** A4, Figma px */
 export const PAGE = { w: 2100, h: 2970 }

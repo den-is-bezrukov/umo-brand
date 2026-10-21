@@ -8,6 +8,7 @@ import Dialog from '@/ui/Dialog'
 import { TEXT_LINK } from '@/ui/links'
 import { GENERATORS, editTitle } from '@/data/generators'
 import { Chapter, Section, Text, Constructor, UNDERLINE, LINK_HOVER, img, type Medium } from './parts'
+import { SITE } from '@/site'
 
 // The guide's page: the first screen, the contents (the sidebar, the phone's bottom bar and its sheet), the brand's
 // chapters (`@brand/guide`), Материалы with every generator, the editor's window, Контакты.
@@ -909,7 +910,7 @@ export default function Guide() {
           enough of a hint that it scrolls, so the scrollbar, far from the text at this width, is hidden. */}
       <aside ref={asideRef} className="hidden lg:flex sticky top-0 h-screen w-[320px] xl:w-1/3 shrink-0 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {/* The logo's box is the folded UMO, 120 by 24; the lockup is drawn larger over it and scaled (useHeroReveal). */}
-        <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" onClick={toTop} aria-label="В начало" data-logo className="block h-6 w-[120px]"><div data-umo-y-desk className="origin-top-left will-change-transform"><UmoYLayers title="UMO" /></div></a></div>
+        <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" onClick={toTop} aria-label="В начало" data-logo className="block h-6 w-[120px]"><div data-umo-y-desk className="origin-top-left will-change-transform"><UmoYLayers title={SITE.name} /></div></a></div>
         {/* The row is fixed to the bottom of the screen — not moved there by script, which lags the scroll a frame and
             makes it shake — so the list keeps its height free at the end. */}
         <div data-umo-y-nav className="px-6 pb-[68px] will-change-transform"><Nav active={active} expandAll={expandAll} /></div>
@@ -923,7 +924,7 @@ export default function Guide() {
       {/* Mobile top bar. iOS 26 browsers draw the page under their translucent top bar and stick `top: 0` below it,
           so the white is extended a screen upwards to hide content scrolling above the header. */}
       <header className="lg:hidden sticky top-0 z-20 bg-white p-4 md:p-6 before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-screen before:bg-white before:content-['']">
-        <a href="#top" onClick={toTop} aria-label="В начало" className="block w-fit"><UmoYLayers title="UMO" /></a>
+        <a href="#top" onClick={toTop} aria-label="В начало" className="block w-fit"><UmoYLayers title={SITE.name} /></a>
       </header>
 
       {/* Mobile table of contents: a bar at the bottom names the heading you're reading and stands in for the

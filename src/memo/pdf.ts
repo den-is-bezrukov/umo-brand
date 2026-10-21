@@ -11,6 +11,7 @@ import { MEMOS_KEY, PAGE, MEMO_TEXTS, parseArt, type Block, type Shape } from '.
 import { layoutText, advance, type FontKey, type Line, type MemoFonts } from './text'
 import page1 from '@brand/assets/memo/page-1.svg'
 import page2 from '@brand/assets/memo/page-2.svg'
+import { SITE } from '@/site'
 
 // Loaded only when a memo is downloaded, so the page doesn't carry pdf-lib until then. Two files: the memos to print,
 // everything in outlines (Figma's own for its parts), and the template, the same pages with every text live in CoFo
@@ -75,7 +76,7 @@ const fillOps = (cmds: Cmd[]) => [pushGraphicsState(), setFillingCmykColor(...K(
 /** The memos to print: Figma's pages in outlines and each consultant's contacts */
 export async function memosPdf(blocks: Block[], data: unknown): Promise<Blob> {
   const doc = await PDFDocument.create()
-  doc.setTitle('UMO_owner-memo.pdf')
+  doc.setTitle(`${SITE.file}_owner-memo.pdf`)
   writePdfData(doc, MEMOS_KEY, data)
   const [one, two] = await Promise.all([art(page1), art(page2)])
   const [first, second] = [shared(doc, one), shared(doc, two)]
@@ -122,7 +123,7 @@ function textOps(page: PDFPage, pdfFonts: Record<FontKey, PDFFont>, fonts: MemoF
 /** The template: the same pages, every text live in CoFo Sans, the rest as in `memosPdf` */
 export async function memosTemplate(blocks: Block[], fonts: MemoFonts): Promise<Blob> {
   const doc = await PDFDocument.create()
-  doc.setTitle('UMO_owner-memo_template.pdf')
+  doc.setTitle(`${SITE.file}_owner-memo_template.pdf`)
   // fontkit loads with the template only, as in `embedFonts`
   doc.registerFontkit((await import('@pdf-lib/fontkit')).default)
   // Whole and named as the font is, so Illustrator finds the installed one for it: a subset kept the text live in a

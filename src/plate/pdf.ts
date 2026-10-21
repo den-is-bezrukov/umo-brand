@@ -5,12 +5,13 @@ import {
 import { STRIP, type Strip } from './frame'
 import { embedFonts, textOps } from '@/ui/liveTextPdf'
 import type { TextLine } from '@/ui/liveText'
+import { SITE } from '@/site'
 
 // Loaded only when the PDF is downloaded, so the guide and the constructor page don't carry pdf-lib.
 
 const PT = 72 / 25.4
 /** The file's name, also its title, which Chrome shows on the tab of a PDF opened from a link */
-export const STRIP_FILE = 'UMO_plate-frame_501x21.pdf'
+export const STRIP_FILE = `${SITE.file}_plate-frame_501x21.pdf`
 
 /**
  * The strip for the printer: a 501×21 mm page, the text as filled outlines in a spot colour named White, as white ink
@@ -23,7 +24,7 @@ export async function stripPdf(strip: Strip): Promise<Blob> {
 
 /** The editable template: the same page, the text live in CoFo Sans (`src/ui/liveTextPdf.ts`), in the same White */
 export async function stripTemplate(strip: Strip, lines: TextLine[]): Promise<Blob> {
-  return stripPage(strip, 'UMO_plate-frame_template.pdf', lines)
+  return stripPage(strip, `${SITE.file}_plate-frame_template.pdf`, lines)
 }
 
 /** The page: the text as outlines, or, with `lines`, the noted lines as text */

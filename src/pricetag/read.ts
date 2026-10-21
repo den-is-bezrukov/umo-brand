@@ -1,11 +1,12 @@
 import { DEFAULT_CAPTION, type Item } from './tag'
 import { isPdf, readPdfData } from '@/ui/pdfData'
+import { SITE } from '@/site'
 
 // The tags' own PDF dropped back on the page, to fix a price and download again: it carries the dealer and the goods
 // as typed in its info (`DATA_KEY`, written by `tagsPdf`). Any other PDF has no tags to give.
 
 /** The PDF info entry holding the list, as JSON */
-export const DATA_KEY = 'UMOPriceTags'
+export const DATA_KEY = `${SITE.file}PriceTags`
 
 export interface TagsData { dealer: string; items: Item[] }
 

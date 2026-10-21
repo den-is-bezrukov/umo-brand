@@ -9,6 +9,7 @@ import { writePdfData } from '@/ui/pdfDataWrite'
 import { embedFonts, textOps, type LiveFonts } from '@/ui/liveTextPdf'
 import type { TextLine } from '@/ui/liveText'
 import { CARDS_KEY } from './card'
+import { SITE } from '@/site'
 
 // Loaded only when the cards are downloaded, so the page doesn't carry pdf-lib until then.
 
@@ -45,7 +46,7 @@ function pathOps(cmds: Cmd[], H: number): PDFOperator[] {
  */
 export async function cardsPdf(backs: Back[], { faceEach, marks }: PageOptions, data: unknown): Promise<Blob> {
   const doc = await PDFDocument.create()
-  doc.setTitle('UMO business cards 90×50')
+  doc.setTitle(`${SITE.name} business cards 90×50`)
   // What the cards were made from, so the PDF dropped back on the page opens them
   writePdfData(doc, CARDS_KEY, data)
   return cardPages(doc, backs.map(b => ({ back: b })), { faceEach, marks })
@@ -57,7 +58,7 @@ export async function cardsPdf(backs: Back[], { faceEach, marks }: PageOptions, 
  */
 export async function cardsTemplate(backs: { back: Back; lines: TextLine[] }[], options: PageOptions): Promise<Blob> {
   const doc = await PDFDocument.create()
-  doc.setTitle('UMO_business-cards_template.pdf')
+  doc.setTitle(`${SITE.file}_business-cards_template.pdf`)
   return cardPages(doc, backs, options, await embedFonts(doc))
 }
 

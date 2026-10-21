@@ -9,6 +9,7 @@ import { writePdfData } from '@/ui/pdfDataWrite'
 import type { Cmd } from '@/livery/geometry'
 import { embedFonts, textOps, type LiveFonts } from '@/ui/liveTextPdf'
 import type { TextLine } from '@/ui/liveText'
+import { SITE } from '@/site'
 
 // Loaded only when the tags are downloaded, so the page doesn't carry pdf-lib until then.
 
@@ -49,7 +50,7 @@ const rect = (x: number, y: number, w: number, h: number): Cmd[] => [['M', x, y]
  * columns is white. All text and logos are filled outlines, black 100% K
  */
 /** The file's name, also its title, which Chrome shows on the tab of a PDF opened from a link */
-export const TAGS_FILE = 'UMO_price-tags.pdf'
+export const TAGS_FILE = `${SITE.file}_price-tags.pdf`
 
 export async function tagsPdf(tags: Tag[], data: TagsData): Promise<Blob> {
   const doc = await PDFDocument.create()
@@ -63,7 +64,7 @@ export async function tagsPdf(tags: Tag[], data: TagsData): Promise<Blob> {
 /** The editable template (`UMO_price-tags_template.pdf`): the same sheets, the text live in CoFo Sans, the logos in outlines */
 export async function tagsTemplate(tags: { tag: Tag; lines: TextLine[] }[]): Promise<Blob> {
   const doc = await PDFDocument.create()
-  doc.setTitle('UMO_price-tags_template.pdf')
+  doc.setTitle(`${SITE.file}_price-tags_template.pdf`)
   return sheets(doc, tags, await embedFonts(doc))
 }
 

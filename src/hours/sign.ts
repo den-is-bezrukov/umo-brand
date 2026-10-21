@@ -4,6 +4,7 @@ import { missingChars, oneLine, setRuns as setType, wrapWords } from '@/ui/type'
 import { logo } from '@/card/card'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { noteLine } from '@/ui/liveText'
+import { SITE } from '@/site'
 
 // The dealership's hours sign (the source in Yandex Disk `02 UMO/Hours Sign`,
 // UMO_hours-sign.pdf): a 480×680 mm plate, the UMO logo at the top, the hours large in the middle with a line under
@@ -12,7 +13,7 @@ import { noteLine } from '@/ui/liveText'
 // Medium. Figma's text boxes are «leading-none», so a baseline is 0.844 of the size under a box's top.
 
 /** The key of the fields as typed in the PDF's info (`writePdfData`) */
-export const SIGN_KEY = 'UMOHoursSign'
+export const SIGN_KEY = `${SITE.file}HoursSign`
 
 /** The sign, mm */
 export const SIGN = { w: 480, h: 680 }
@@ -35,7 +36,7 @@ export const INFO_LAST = 3104.571 / 5 - INFO.leading + (INFO.leading - INFO.size
 const ADDRESS_LINES = 2
 
 /** The dealer's marketing name as umo.auto has it, «UMO АГАТ Владимир» (not Figma's «Официальный дилер …») */
-export const DEALER_PREFIX = 'UMO '
+export const DEALER_PREFIX = `${SITE.name} `
 export const ADDRESS_PREFIX = 'Адрес: '
 export const PHONE_PREFIX = 'Телефон: '
 
