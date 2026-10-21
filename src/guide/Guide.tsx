@@ -4,6 +4,7 @@ import type { Art } from '@/pricecard/card'
 import UmoLogo from '@brand/Wordmark'
 import UmoYLayers, { COBRAND, setUmoY } from '@brand/HeaderLogo'
 import UmoYandexLockup from '@brand/CobrandLockup'
+import { COLORS } from '@brand/colors'
 import PlateArt from '@/plate/PlateArt'
 import { BASELINE as STRIP_BASELINE } from '@/plate/frame'
 import { toD } from '@/livery/geometry'
@@ -40,7 +41,7 @@ const DRAWN: Medium[] = [
     // The 210×297 card centred on the 444×333 grey
     id: 'price-card', to: '/price-card', title: 'Прайс-карта', row: 'Обновить прайс-карту', w: 444, h: 333,
     picture: (
-      <div className="flex aspect-4/3 items-center justify-center bg-[#f5f5f5]">
+      <div className="flex aspect-4/3 items-center justify-center bg-surface">
         <div className="w-[47.3%]">
           <PriceCardPreview alt="Прайс-карта UMO 5" />
         </div>
@@ -51,7 +52,7 @@ const DRAWN: Medium[] = [
     // The 90×60 tag as the constructor sets it, as wide as the plate on the 444×333 grey
     id: 'price-tag', to: '/price-tag', title: 'Ценник', row: 'Сделать ценники', w: 444, h: 333,
     picture: (
-      <div className="flex aspect-4/3 items-center justify-center bg-[#f5f5f5]">
+      <div className="flex aspect-4/3 items-center justify-center bg-surface">
         <svg viewBox={`0 0 ${TAG.w} ${TAG.h}`} className="block h-auto w-[58.8%]" role="img" aria-label="Ценник UMO">
           <rect width={TAG.w} height={TAG.h} fill="white" />
           <rect width={TAG.w} height={BAND} fill="black" />
@@ -72,7 +73,7 @@ const DRAWN: Medium[] = [
     // The 480×680 sign as tall as the price card on the 444×333 grey
     id: 'hours-sign', to: '/hours-sign', title: 'Режимник', row: 'Указать часы работы', w: 444, h: 333,
     picture: (
-      <div className="flex aspect-4/3 items-center justify-center bg-[#f5f5f5]">
+      <div className="flex aspect-4/3 items-center justify-center bg-surface">
         <svg viewBox={`0 0 ${SIGN.w} ${SIGN.h}`} className="block h-auto w-[47.3%]" role="img" aria-label="Режимник UMO">
           <rect width={SIGN.w} height={SIGN.h} fill="white" />
           <path d={toD(SIGN_LOGO)} fill="black" fillRule="evenodd" />
@@ -91,7 +92,7 @@ const DRAWN: Medium[] = [
     // The 261×66 plate in its frame centred on the 444×333 grey
     id: 'plate-frame', to: '/plate-frame', title: 'Рамка номера', row: 'Сделать рамку номера', w: 444, h: 333,
     picture: (
-      <div className="flex aspect-4/3 items-center justify-center bg-[#f5f5f5]">
+      <div className="flex aspect-4/3 items-center justify-center bg-surface">
         <PlateArt className="w-[58.8%]!">
           <text y={STRIP_BASELINE} fontFamily="CoFo Sans" fontWeight={500} fontSize={18} letterSpacing={-0.18} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Центр UMO | Название дилера</text>
         </PlateArt>
@@ -119,7 +120,7 @@ function packMedia<T extends { w: number; h: number }>(items: T[]): T[] {
 const GENERATED: Record<string, React.LazyExoticComponent<(props: { wide?: boolean }) => ReactNode>> = {
   '/memo': lazy(() => import('@/memo/MemoPreview')),
 }
-const GreyCard = ({ wide }: { wide?: boolean }) => <div className={`${wide ? 'aspect-2/1' : 'aspect-4/3'} bg-[#f5f5f5]`} />
+const GreyCard = ({ wide }: { wide?: boolean }) => <div className={`${wide ? 'aspect-2/1' : 'aspect-4/3'} bg-surface`} />
 const UNDRAWN = GENERATORS.filter(g => !DRAWN.some(m => m.to === g.path))
 const LONE = (DRAWN.filter(m => !isWide(m)).length + UNDRAWN.length) % 2 === 1
 const MEDIA_LIST: Medium[] = [
@@ -251,7 +252,7 @@ function useActiveSection() {
  * The contents' links turn grey (#808080) at once and fade back to black over 0.35s once the pointer leaves, like
  * guides.area17.com (a transition runs with the duration of the state it heads to). The active one stays black.
  */
-const NAV_HOVER = 'transition-[color] duration-350 ease-[ease] hover:text-[#808080] hover:duration-0'
+const NAV_HOVER = 'transition-[color] duration-350 ease-[ease] hover:text-caption hover:duration-0'
 
 /**
  * Links in the page (the quick links, download rows and captions) stay black and get a hairline underline as set in
@@ -968,7 +969,7 @@ function Fig({ name, w, h, alt = '', eager, caption, cross, href, focus = 50, fl
         height={h * 2}
         loading={eager ? 'eager' : 'lazy'}
         decoding="async"
-        className={`block h-auto w-full bg-[#f5f5f5] ${wide ? `aspect-4/3 ${flat || phone43 ? 'object-contain' : 'object-cover'} min-[520px]:aspect-(--ratio)` : ''}`}
+        className={`block h-auto w-full bg-surface ${wide ? `aspect-4/3 ${flat || phone43 ? 'object-contain' : 'object-cover'} min-[520px]:aspect-(--ratio)` : ''}`}
         style={wide ? ({ '--ratio': `${w} / ${h}`, objectPosition: `${focus}% 50%`, ...(flat && { background: flat }) } as CSSProperties) : { aspectRatio: `${w} / ${h}` }}
       />
       {caption && <Caption cross={cross} download={!!href}>{caption}</Caption>}
@@ -1033,12 +1034,10 @@ function LogoPlate({ w, h, logo, bg, dark, caption, phone43, className = '' }: {
 }
 
 /**
- * A brand colour as a tile with its values printed on it, as the logo schemes carry their measures: the name at the
+ * A brand colour (`@brand/colors`) as a tile with its values printed on it, as the logo schemes carry their measures: the name at the
  * top, each value at the bottom on one line with a short label (where it's used), as the download rows. Codes copy on a click. `dark` sets the text
  * white; a white tile gets a hairline edge, or it would vanish into the page.
  */
-const WHITE: [string, string][] = [['Экран', '#FFFFFF'], ['На светлом', 'без краски'], ['На тёмном', 'белая краска']]
-
 function Swatch({ color, name, values, dark, className = '' }: {
   color: string; name: string; values: [string, string][]; dark?: boolean; className?: string
 }) {
@@ -1154,7 +1153,7 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
     >
       {items.map((a, i) => {
         // `bare` drops the hairline over the first row only (the one right under its picture)
-        const row = `group flex items-center gap-2 ${bare && i === 0 ? '' : 'border-t border-[#e6e6e6]'} py-[14px] text-[16px] leading-none tracking-[-0.01em]`
+        const row = `group flex items-center gap-2 ${bare && i === 0 ? '' : 'border-t border-line'} py-[14px] text-[16px] leading-none tracking-[-0.01em]`
         // The row a preview above stands for lights up while the preview is pointed at
         const linked = preview === ('to' in a ? a.to : a.file)
         const lit = pointed !== undefined && pointed === ('to' in a ? a.to : a.file)
@@ -1173,14 +1172,14 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
         const pointedRow = `group-hover:inline ${linked ? 'group-has-[[data-preview]:hover]/preview:inline' : ''} ${lit ? 'inline' : ''}`
         // A format pointed at itself is underlined as the name is, the link it stands for
         const format = `${UNDERLINE} hover:decoration-black/40 hover:duration-0`
-        const meta = `shrink-0 text-[#808080] [font-feature-settings:"tnum"_1] group-hover:text-black ${linked ? 'group-has-[[data-preview]:hover]/preview:text-black' : ''} ${lit ? 'text-black' : ''}`
+        const meta = `shrink-0 text-caption [font-feature-settings:"tnum"_1] group-hover:text-black ${linked ? 'group-has-[[data-preview]:hover]/preview:text-black' : ''} ${lit ? 'text-black' : ''}`
         if ('to' in a && a.template) {
           const tpl = a.template
           return (
             // After the name, 8 px off it, what a click does where the pointer is: ↗ over the card (its picture or row, the
             // constructor), ↓ over the PDF (the font's own arrows)
-            <div key={a.to} className={`group/row flex items-stretch ${bare && i === 0 ? '' : 'border-t border-[#e6e6e6]'}`}>
-              <Link to={a.to} title={editTitle(a.to)} className={`${row.replace(/border-t border-\[#e6e6e6\]/, '')} min-w-0 flex-1`}>
+            <div key={a.to} className={`group/row flex items-stretch ${bare && i === 0 ? '' : 'border-t border-line'}`}>
+              <Link to={a.to} title={editTitle(a.to)} className={`${row.replace(/border-t border-line/, '')} min-w-0 flex-1`}>
                 {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 text-center font-medium">↗</span>}
                 <span className="flex min-w-0 flex-1 items-center gap-2">
                   {/* Over the PDF the verb gives way to the template's name («Шаблон визитки»), the name saying what that click does */}
@@ -1191,7 +1190,7 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
                 </span>
                 {a.verb && <span className={`${meta} ${format}`}>{a.verb}</span>}
               </Link>
-              <a href={tpl.t} target="_blank" rel="noopener" data-format title={`Скачать ${formatOf(tpl)}`} aria-label={`${a.title}, шаблон ${formatOf(tpl)}`} className="group/format flex shrink-0 items-center pl-3 text-[16px] leading-none tracking-[-0.01em] text-[#808080] hover:text-black">
+              <a href={tpl.t} target="_blank" rel="noopener" data-format title={`Скачать ${formatOf(tpl)}`} aria-label={`${a.title}, шаблон ${formatOf(tpl)}`} className="group/format flex shrink-0 items-center pl-3 text-[16px] leading-none tracking-[-0.01em] text-caption hover:text-black">
                 <span className={`${UNDERLINE} group-hover/format:decoration-black/40 group-hover/format:duration-0`}>{formatOf(tpl)}</span>
               </a>
             </div>
@@ -1220,14 +1219,14 @@ function Assets({ items, preview, early, bare }: { items: Asset[]; preview?: str
           // The row is the file's link, its other formats links of their own after it, each the row's height (a
           // finger's target on phones), pointing at one lighting it alone
           return (
-            <div key={a.file} className={`group/row flex items-stretch ${bare && i === 0 ? '' : 'border-t border-[#e6e6e6]'}`}>
-              <a href={`/downloads/${a.file}`} download title={`Скачать ${formatOf(a)}`} className={`${row.replace(/border-t border-\[#e6e6e6\]/, '')} min-w-0 flex-1`}>
+            <div key={a.file} className={`group/row flex items-stretch ${bare && i === 0 ? '' : 'border-t border-line'}`}>
+              <a href={`/downloads/${a.file}`} download title={`Скачать ${formatOf(a)}`} className={`${row.replace(/border-t border-line/, '')} min-w-0 flex-1`}>
                 {ROW_ARROWS && <span aria-hidden className="w-4 shrink-0 border-b border-black pb-px text-center font-medium">↓</span>}
                 {named(a.label ?? a.file, `${pointedRow} group-has-[[data-format]:hover]/row:inline`)}
                 <span className={`${meta} ${format}`}>{formatOf(a)}</span>
               </a>
               {a.also.map(f => (
-                <a key={f.file} href={`/downloads/${f.file}`} download data-format title={`Скачать ${formatOf(f)}`} aria-label={`${a.label ?? a.file}, ${formatOf(f)}`} className="flex shrink-0 items-center pl-3 text-[16px] leading-none tracking-[-0.01em] text-[#808080] [font-feature-settings:'tnum'_1] hover:text-black group/format">
+                <a key={f.file} href={`/downloads/${f.file}`} download data-format title={`Скачать ${formatOf(f)}`} aria-label={`${a.label ?? a.file}, ${formatOf(f)}`} className="flex shrink-0 items-center pl-3 text-[16px] leading-none tracking-[-0.01em] text-caption [font-feature-settings:'tnum'_1] hover:text-black group/format">
                   <span className={`${UNDERLINE} group-hover/format:decoration-black/40 group-hover/format:duration-0`}>{formatOf(f)}</span>
                 </a>
               ))}
@@ -1408,7 +1407,7 @@ const DICTIONARY: Rule[] = [
  */
 function Bubble({ title, children }: { title?: ReactNode; children?: ReactNode }) {
   return (
-    <div className="flex flex-col gap-2 rounded-tr-2xl rounded-b-2xl bg-[#f5f5f5] p-4 leading-[1.25]">
+    <div className="flex flex-col gap-2 rounded-tr-2xl rounded-b-2xl bg-surface p-4 leading-[1.25]">
       {title && <p className="text-[20px] font-medium tracking-[-0.01em]">{title}</p>}
       {children && <p className="text-[16px]">{children}</p>}
     </div>
@@ -1419,7 +1418,7 @@ function Bubble({ title, children }: { title?: ReactNode; children?: ReactNode }
 function PhotoCard({ name, title, children, grow, focus }: { name: string; title: ReactNode; children?: ReactNode; grow?: boolean; focus?: number }) {
   return (
     // 4:3 on phones, to save the one column's height; 3:4 from md, as in Figma. Shaped as the bubbles, a message too
-    <div className={`relative aspect-4/3 overflow-hidden rounded-tr-2xl rounded-b-2xl bg-[#f5f5f5] sm:aspect-3/4 ${grow ? 'sm:aspect-auto sm:min-h-0 sm:flex-1' : ''}`}>
+    <div className={`relative aspect-4/3 overflow-hidden rounded-tr-2xl rounded-b-2xl bg-surface sm:aspect-3/4 ${grow ? 'sm:aspect-auto sm:min-h-0 sm:flex-1' : ''}`}>
       <img src={img(name)} alt="" loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover sm:object-center!" style={focus !== undefined ? { objectPosition: `50% ${focus}%` } : undefined} />
       <div className="absolute inset-x-4 top-4 flex flex-col gap-2 leading-[1.25] text-white">
         {/* A line alone over a photo is 240 wide, as in Figma, so it breaks the same way on any card */}
@@ -1486,10 +1485,10 @@ function Dictionary({ rows }: { rows: Rule[] }) {
         <p>Мотивация</p>
       </div>
       {rows.map((row, i) => (
-        <div key={i} className={`grid grid-cols-1 ${cols} gap-x-6 gap-y-2 border-t border-[#e6e6e6] py-4`}>
+        <div key={i} className={`grid grid-cols-1 ${cols} gap-x-6 gap-y-2 border-t border-line py-4`}>
           <p className="font-medium"><span className="md:hidden">✓&nbsp;</span>{list(row.good)}</p>
           <p><span className="md:hidden">✗&nbsp;</span>{list(row.bad)}</p>
-          <p className="text-[#808080] md:text-black">{row.why}</p>
+          <p className="text-caption md:text-black">{row.why}</p>
         </div>
       ))}
     </div>
@@ -1969,7 +1968,7 @@ export default function Guide() {
               </Text>
               <div className="flex flex-col gap-4 md:gap-6">
                 <figure className="flex flex-col gap-3">
-                  <div className="flex aspect-4/3 min-[520px]:aspect-2/1 items-center justify-center bg-[#f5f5f5]">
+                  <div className="flex aspect-4/3 min-[520px]:aspect-2/1 items-center justify-center bg-surface">
                     <p className="text-[48px] sm:text-[72px] md:text-[96px] font-medium leading-none tracking-[-0.01em]">CoFo Sans</p>
                   </div>
                   <Caption>Базовая гарнитура</Caption>
@@ -2039,18 +2038,13 @@ export default function Guide() {
               </Text>
               <div className="flex flex-col gap-4 md:gap-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
-                  <Swatch color="#000000" dark name="Чёрный" className="aspect-4/3" values={[
-                    ['Экран', '#000000'], ['Плёнка, вывески', 'C60 M40 Y40 K100'], ['Текст', 'K100'],
-                  ]} />
-                  <Swatch color="#ffffff" name="Белый" className="aspect-4/3 min-[520px]:max-sm:hidden" values={WHITE} />
+                  {COLORS.main.map((c, i) => <Swatch key={c.name} {...c} className={`aspect-4/3 ${i === COLORS.main.length - 1 ? 'min-[520px]:max-sm:hidden' : ''}`} />)}
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6">
-                  {/* From 520 px to sm white is one of the small tiles, two by two under the black; narrower, its rows
-                      («На тёмном белая краска») don't fit a small tile, and it stays large */}
-                  <Swatch color="#ffffff" name="Белый" className="aspect-4/3 hidden max-sm:p-4 min-[520px]:max-sm:flex" values={WHITE} />
-                  <Swatch color="#f5f5f5" name="Фон" className="aspect-4/3 max-sm:p-4" values={[['Экран', '#F5F5F5'], ['Печать', 'K4']]} />
-                  <Swatch color="#e6e6e6" name="Линии" className="aspect-4/3 max-sm:p-4" values={[['Экран', '#E6E6E6'], ['Печать', 'K10']]} />
-                  <Swatch color="#808080" dark name="Подписи" className="aspect-4/3 max-sm:p-4" values={[['Экран', '#808080'], ['Печать', 'K50']]} />
+                  {/* From 520 px to sm the last main colour (white) is one of the small tiles, two by two under the
+                      first; narrower, its rows («На тёмном белая краска») don't fit a small tile, and it stays large */}
+                  {[COLORS.main[COLORS.main.length - 1]].map(c => <Swatch key={c.name} {...c} className="aspect-4/3 hidden max-sm:p-4 min-[520px]:max-sm:flex" />)}
+                  {COLORS.service.map(c => <Swatch key={c.name} {...c} className="aspect-4/3 max-sm:p-4" />)}
                 </div>
               </div>
             </Section>
@@ -2153,7 +2147,7 @@ export default function Guide() {
               </Section>
             </Chapter>
 
-            <footer className="mt-auto text-[16px] leading-[1.25] tracking-[-0.01em] text-[#808080]">© 2026 ООО «ЭМ РУС». Стандарты бренда UMO</footer>
+            <footer className="mt-auto text-[16px] leading-[1.25] tracking-[-0.01em] text-caption">© 2026 ООО «ЭМ РУС». Стандарты бренда UMO</footer>
           </div>
         </div>
       </main>

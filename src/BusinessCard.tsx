@@ -351,7 +351,7 @@ export default function BusinessCard() {
             <div ref={dealerForm} className="flex flex-col gap-4">
               <div data-field="dealer" className="group/field flex flex-col gap-3">
                 <div className="flex items-center justify-between gap-2">
-                  <p className={`text-[14px] leading-4 text-[#808080] ${ALERT_LABEL}`}>Дилер</p>
+                  <p className={`text-[14px] leading-4 text-caption ${ALERT_LABEL}`}>Дилер</p>
                   <button type="button" onClick={() => setDealerOpen(o => !o)} aria-expanded={dealerOpen} className={rowAction}>
                     {dealerOpen ? 'Свернуть' : 'Редактировать'}
                   </button>
@@ -417,7 +417,7 @@ export default function BusinessCard() {
                           is edged on its own. The number is a live mask, set
                           as the card sets it while it's typed, the caret staying after the same digit; a whole one pasted
                           with its extension splits. The extension follows «Доб.», grey, its placeholder and prefix both */}
-                      <div className="flex rounded-[8px] bg-[#f5f5f5]">
+                      <div className="flex rounded-[8px] bg-surface">
                         <TextInput
                           value={p.phone}
                           onChange={v => {
@@ -433,7 +433,7 @@ export default function BusinessCard() {
                           inputMode="tel"
                           invalid={bad('phone', 'Телефон')}
                         />
-                        <label className="flex h-10 in-[[data-sheet]]:h-12! min-w-20 shrink-0 cursor-text items-center rounded-[8px] bg-[#f5f5f5] px-3 text-[14px] leading-5 focus-within:ring-1 focus-within:ring-inset focus-within:ring-black/40">
+                        <label className="flex h-10 in-[[data-sheet]]:h-12! min-w-20 shrink-0 cursor-text items-center rounded-[8px] bg-surface px-3 text-[14px] leading-5 focus-within:ring-1 focus-within:ring-inset focus-within:ring-black/40">
                           <span className="text-[#999]">Доб.&nbsp;</span>
                           <input
                             value={p.ext}
@@ -493,7 +493,7 @@ export default function BusinessCard() {
       <main
         {...staff.dropTarget}
         onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure, [data-add], [data-template]')) staff.setSelected(null) }}
-        className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16
+        className={`flex flex-1 flex-col bg-surface px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16
           ${mode === 'table' && staff.file && staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
       >
         {mode === 'table' && !staff.file ? (

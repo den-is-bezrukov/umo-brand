@@ -107,9 +107,9 @@ function TimeField({ value, onChange, onCommit, placeholder, invalid, label, min
     const next = dir > 0 ? Math.floor(now / STEP) * STEP + STEP : Math.ceil(now / STEP) * STEP - STEP
     onCommit(timeOf(Math.max(min, Math.min(max, next))))
   }
-  const button = 'flex w-9 shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] hover:text-black'
+  const button = 'flex w-9 shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-caption hover:text-black'
   return (
-    <div className="flex h-10 in-[[data-sheet]]:h-12! rounded-[8px] bg-[#f5f5f5] focus-within:ring-1 focus-within:ring-inset focus-within:ring-black/40">
+    <div className="flex h-10 in-[[data-sheet]]:h-12! rounded-[8px] bg-surface focus-within:ring-1 focus-within:ring-inset focus-within:ring-black/40">
       <button type="button" tabIndex={-1} onClick={() => step(-1)} aria-label={`${label}: на полчаса раньше`} className={button}><StepIcon /></button>
       {/* The typed time over a copy of it with the rest of «9:00» grey after it, so the colon always shows: the copy
           sizes the box, centred, and the input lies over it */}
@@ -312,7 +312,7 @@ export default function HoursSign() {
             <path d={toD(LOGO)} fill="#000" fillRule="evenodd" />
             {[...byFill].map(([color, d]) => <path key={color} d={d} fill={color} />)}
           </svg>
-          <figcaption className="mt-0.5 text-center text-[14px] leading-5 text-[#808080]">
+          <figcaption className="mt-0.5 text-center text-[14px] leading-5 text-caption">
             <span className="relative">
               Табличка, {SIGN.w}&nbsp;×&nbsp;{SIGN.h}&nbsp;мм
               <CaptionReset onClick={blank ? undefined : reset} label="Вернуть табличку по умолчанию" extra={<TemplateButton make={makeTemplate} name="UMO_hours-sign_template.pdf" goalId="download_hours_sign_template" />} />
@@ -403,7 +403,7 @@ export default function HoursSign() {
         {download}
       </aside>
 
-      <main className="flex flex-1 items-center justify-center bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
+      <main className="flex flex-1 items-center justify-center bg-surface p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
         {preview}
       </main>
 

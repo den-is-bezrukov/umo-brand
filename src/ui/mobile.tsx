@@ -58,7 +58,7 @@ function Btn({ label, name, onClick, hidden, children }: { label: string; name?:
       aria-label={name ?? label}
       onClick={onClick}
       // 30 px as in Figma, a finger's 40 round it (the ::after); hidden keeps its place, so the others don't move
-      className={`relative flex size-[30px] shrink-0 after:absolute after:-inset-[5px] after:content-[''] cursor-pointer items-center justify-center rounded-[8px] text-[#808080] active:text-black ${hidden ? 'invisible' : ''}`}
+      className={`relative flex size-[30px] shrink-0 after:absolute after:-inset-[5px] after:content-[''] cursor-pointer items-center justify-center rounded-[8px] text-caption active:text-black ${hidden ? 'invisible' : ''}`}
     >
       {children}
     </button>
@@ -563,7 +563,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
     // The page's background is the canvas's; over it the picture with its row, over all the sheet, and the download at
     // the screen's foot over the sheet; clipped, not hidden, so nothing scrolls it (a focused control in the sheet
     // scrolled it by 83 px, the canvas off its place)
-    <div ref={root} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchCancel} className="fixed inset-0 overflow-clip bg-[#f5f5f5] font-sans text-black">
+    <div ref={root} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchCancel} className="fixed inset-0 overflow-clip bg-surface font-sans text-black">
       {/* The canvas, 10 px in: above the sheet at 60%, the whole screen with the picture alone. The
           sheet over the whole screen slides over it, leaving it as it is (it shrank under the sheet, the picture refitted
           as it went and jerked) */}
@@ -586,7 +586,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
             <div className="flex min-w-0 flex-1 items-center justify-center">
               {back}
               {reset && resetBtn}
-              <span className="min-w-0 truncate px-1 text-[14px] leading-5 text-[#808080] [font-feature-settings:'case'_1,'lnum'_1,'tnum'_1]">
+              <span className="min-w-0 truncate px-1 text-[14px] leading-5 text-caption [font-feature-settings:'case'_1,'lnum'_1,'tnum'_1]">
                 {slide?.item !== undefined ? `${number}/${total}` : slide?.number !== undefined ? `${number}/${slide.label}` : slide?.label}
               </span>
               {staff && current && copyBtn}
@@ -607,7 +607,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
           {/* Only what's there: the reset, the name and copy centred together, no place kept */}
           <div className="flex min-w-0 flex-1 items-center justify-center">
             {reset && resetBtn}
-            {slide?.label && slide.item === undefined && <span className="min-w-0 truncate px-1 text-[14px] leading-5 text-[#808080] [font-feature-settings:'case'_1,'lnum'_1,'tnum'_1]">{slide.label}</span>}
+            {slide?.label && slide.item === undefined && <span className="min-w-0 truncate px-1 text-[14px] leading-5 text-caption [font-feature-settings:'case'_1,'lnum'_1,'tnum'_1]">{slide.label}</span>}
             {staff && current && copyBtn}
           </div>
           {addBtn}

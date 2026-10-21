@@ -7,7 +7,7 @@ import { PAGE } from './memo'
 // The pages (1,5 MB) load as the card comes near the screen
 export default function MemoPreview({ wide }: { wide?: boolean }) {
   return (
-    <div className={`flex items-center justify-center bg-[#f5f5f5] ${wide ? 'aspect-2/1 gap-[2%]' : 'aspect-4/3 gap-[3%]'}`}>
+    <div className={`flex items-center justify-center bg-surface ${wide ? 'aspect-2/1 gap-[2%]' : 'aspect-4/3 gap-[3%]'}`}>
       {[page1, page2].map(src => (
         <img key={src} src={src} alt="" loading="lazy" draggable={false} className={`block bg-white ${wide ? 'w-[25.5%]' : 'w-[33.4%]'}`} style={{ aspectRatio: `${PAGE.w} / ${PAGE.h}` }} />
       ))}

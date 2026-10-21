@@ -48,11 +48,11 @@ export default function LinkDealer({ param, withUmo, children }: { param: string
         {choices.map(d => (
           <button key={d.name} type="button" onClick={() => pick(d)} className={`${outlined} flex-col items-start! gap-0.5 text-left`}>
             <span>UMO {withoutUmo(d.name)}</span>
-            {d.address && <span className="font-normal text-[#808080]">{d.address}</span>}
+            {d.address && <span className="font-normal text-caption">{d.address}</span>}
           </button>
         ))}
       </div>
-      <button type="button" onClick={() => pick()} className="cursor-pointer self-start text-[14px] leading-5 text-[#808080] hover:text-black">
+      <button type="button" onClick={() => pick()} className="cursor-pointer self-start text-[14px] leading-5 text-caption hover:text-black">
         Моего салона нет в списке
       </button>
     </main>

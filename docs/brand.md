@@ -5,7 +5,8 @@ Everything UMO's own lives in `brand/umo/`; the rest of the code is the core, wh
 ## Parts
 
 - `public/` — the site's root: the fonts, the guide's downloads (`downloads/`), the icons, the social image. The core's own `public/` holds only `404.html`, added to the build by `core-public`.
-- `theme.css` — the site's type: the `@font-face` rules and Tailwind's `--font-sans`; `src/index.css` imports it.
+- `theme.css` — the site's type and greys: the `@font-face` rules, Tailwind's `--font-sans`, and the colour tokens the whole site is drawn with, `surface` (backgrounds, #f5f5f5), `line` (hairlines, #e6e6e6), `caption` (captions and quiet text, #808080), as classes `bg-surface`, `border-line`, `text-caption`; `src/index.css` imports it.
+- `colors.ts` — `COLORS`, the guide's Цвет: the main colours in large tiles, the service ones in small, each with its values (screen, print).
 - `fonts.ts` — `FONTS`, the type the generators set their files in (in outlines, `src/ui/type.ts`) and their editable templates in (live, `src/ui/liveTextPdf.ts`, the memo's `src/memo/pdf.ts`): the TrueType file and PostScript name of the Regular and the Medium, and `short`, which names them in a PDF's resources. UMO's also has `ALICE`, Alice's mark for the price card.
 - `logo.ts` — the wordmark in outlines for the generators: `LOGO` (480×96, the business card, price tag, hours sign) and `NAME_TAG_LOGO`, the name tag's source drawing in the tag's millimetres.
 - `Wordmark.tsx`, `HeaderLogo.tsx`, `CobrandLockup.tsx` — the guide's logo: the wordmark on plates, the header's lockup that folds with the scroll (`COBRAND` turns the partner off), the co-branding lockup.

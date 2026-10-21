@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom'
 import { CrossIcon } from './icons'
 
 /** The ×'s hover, as the guide's links: #808080 at once, fading back */
-const HOVER = 'transition-[color] duration-350 ease-[ease] hover:text-[#808080] hover:duration-0'
+const HOVER = 'transition-[color] duration-350 ease-[ease] hover:text-caption hover:duration-0'
 
 /**
  * The site's one dialog: the guide's «Редактор материалов» and the generators' «Инструкция». Over black at 40%, centred

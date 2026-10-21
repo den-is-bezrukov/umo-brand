@@ -436,7 +436,7 @@ export default function Memo() {
         {/* The dealership: the whole list's */}
         <div ref={dealerForm} className="flex flex-col gap-4">
           <div data-field="dealer" className="group/field flex flex-col gap-3">
-            <p className={`text-[14px] leading-4 text-[#808080] ${ALERT_LABEL}`}>Дилер</p>
+            <p className={`text-[14px] leading-4 text-caption ${ALERT_LABEL}`}>Дилер</p>
             <ComboField value={dealer.name} onChange={pickDealer} options={DEALER_OPTIONS} filter={dealerFilter} singleLine placeholder="Название дилера" label="Дилеры UMO" invalid={dealerWrong.has('dealer')} />
           </div>
             {field('dealerPhone', 'Телефон дилера', <TextInput value={input.phone} onChange={v => phoneChange(v, text => setDealer(d => ({ ...d, phone: text })))} placeholder="+7 987 654 32 10" inputMode="tel" invalid={dealerWrong.has('dealerPhone')} />)}
@@ -505,7 +505,7 @@ export default function Memo() {
         ref={setCanvas}
         {...staff.dropTarget}
         onClick={e => { if (!(e.target as Element).closest('figure, [data-add], [data-template]')) staff.setSelected(null) }}
-        className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16 ${staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
+        className={`flex flex-1 flex-col bg-surface px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16 ${staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
       >
         <div className="m-auto grid w-full grid-cols-1 gap-8">
           {items.map((p, i) => renderItem(p, i))}

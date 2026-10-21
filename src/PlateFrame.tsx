@@ -139,7 +139,7 @@ export default function PlateFrame() {
               {strip && noName && start && <path d={toD(start.cmds)} fill="white" />}
             </PlateArt>
           </div>
-          <figcaption className="mt-0.5 text-center text-[14px] leading-5 text-[#808080]">
+          <figcaption className="mt-0.5 text-center text-[14px] leading-5 text-caption">
             <span className="relative">
               Поле печати, {STRIP.w}&nbsp;×&nbsp;{STRIP.h}&nbsp;мм
               {/* The reset, by what it resets, as the livery's sheets and the cards' own */}
@@ -211,7 +211,7 @@ export default function PlateFrame() {
         {download}
       </aside>
 
-      <main className="flex flex-1 items-center bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
+      <main className="flex flex-1 items-center bg-surface p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
         {preview}
       </main>
 

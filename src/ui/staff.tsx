@@ -444,11 +444,11 @@ export function TableSource<P extends object>({ staff, template }: { staff: Staf
         <label
           {...s.dropTarget}
           className={`flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-1 rounded-[8px] border border-dashed p-4 text-center text-[14px] leading-5
-            ${s.dragging ? 'border-black bg-[#f5f5f5]' : s.tableError ? 'border-[#e30]' : 'border-black/20 hover:border-black/40'}`}
+            ${s.dragging ? 'border-black bg-surface' : s.tableError ? 'border-[#e30]' : 'border-black/20 hover:border-black/40'}`}
         >
           <FileInput staff={s} />
           <span className="font-medium break-all">{s.file}</span>
-          <span className="text-[#808080]">{s.countWord(s.people.length)} · заменить</span>
+          <span className="text-caption">{s.countWord(s.people.length)} · заменить</span>
         </label>
       )}
       {s.tableError && <p className="text-[13px] leading-5 text-[#e30]">{s.tableError}</p>}
@@ -545,7 +545,7 @@ export function CaptionReset({ onClick, label = 'Сбросить', extra }: { o
           title={label}
           aria-label={label}
           onClick={onClick}
-          className="flex size-[30px] cursor-pointer items-center justify-center rounded-[8px] text-[#808080] hover:text-black"
+          className="flex size-[30px] cursor-pointer items-center justify-center rounded-[8px] text-caption hover:text-black"
         >
           <ResetIcon />
         </button>
@@ -578,7 +578,7 @@ export function Action({ label, name, keys, hidden, onClick, children }: { label
       aria-keyshortcuts={keys?.replace('⌘', 'Meta+').replace('Ctrl+', 'Control+')}
       // A click here is the action's, not the row's, which would select the item again
       onClick={e => { e.stopPropagation(); onClick() }}
-      className={`flex size-[30px] shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] hover:text-black`}
+      className={`flex size-[30px] shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-caption hover:text-black`}
     >
       {children}
     </button>
@@ -618,7 +618,7 @@ export function ItemFrame<P extends object>({ staff, item, n, label, onAdd, extr
           the canvas (the memo's spread) ends where its figure does, and the actions hid on the way to them */}
       <div className="absolute top-0 bottom-0 left-full flex w-[38px] flex-col items-center pl-2">
       {/* A lone item has no number: a «1» there says nothing */}
-      {(staff.items.length > 1 || label) && <span aria-hidden className="pointer-events-none pb-[5px] text-center text-[14px] leading-5 text-[#808080] [font-feature-settings:'lnum'_1,'tnum'_1]">{label ?? n}</span>}
+      {(staff.items.length > 1 || label) && <span aria-hidden className="pointer-events-none pb-[5px] text-center text-[14px] leading-5 text-caption [font-feature-settings:'lnum'_1,'tnum'_1]">{label ?? n}</span>}
       {(staff.mode === 'manual' || extra) && (
         <div className={`flex-1 flex-col items-center ${active ? 'flex' : 'hidden'} ${hover}`}>
           {/* What acts on this item: duplicate, template, reset, the bin; then the plus, a new one after it, last */}
@@ -673,9 +673,9 @@ export function Removed<P extends object>({ staff, at }: { staff: Staff<P>; at: 
   if (useContext(InSlide)) return null
   if (staff.removed?.index !== at || staff.mode !== 'manual') return null
   return (
-    <div className="flex h-10 items-center justify-center gap-2 text-[14px] leading-5 text-[#808080]">
+    <div className="flex h-10 items-center justify-center gap-2 text-[14px] leading-5 text-caption">
       {/* The bin in its ring (1 px, #808080, black on hover), as «Удалить»: a click removes it for good at once */}
-      <button type="button" title="Удалить сразу" aria-label="Удалить сразу" onClick={e => { e.stopPropagation(); staff.dismiss() }} className="relative flex size-[30px] cursor-pointer items-center justify-center rounded-full text-[#808080] hover:text-black">
+      <button type="button" title="Удалить сразу" aria-label="Удалить сразу" onClick={e => { e.stopPropagation(); staff.dismiss() }} className="relative flex size-[30px] cursor-pointer items-center justify-center rounded-full text-caption hover:text-black">
         <TrashIcon />
         {/* The ring, from the top clockwise, a new one for each removal */}
         <svg key={staff.removed.item.key} width="30" height="30" viewBox="0 0 30 30" aria-hidden className="pointer-events-none absolute inset-0 -rotate-90 motion-reduce:hidden">
@@ -683,7 +683,7 @@ export function Removed<P extends object>({ staff, at }: { staff: Staff<P>; at: 
         </svg>
       </button>
       Удаляем ·
-      <button type="button" title={`${MOD}Z`} onClick={e => { e.stopPropagation(); staff.restore() }} className="cursor-pointer text-black hover:text-[#808080]">Вернуть</button>
+      <button type="button" title={`${MOD}Z`} onClick={e => { e.stopPropagation(); staff.restore() }} className="cursor-pointer text-black hover:text-caption">Вернуть</button>
     </div>
   )
 }

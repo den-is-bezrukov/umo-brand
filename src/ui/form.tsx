@@ -60,7 +60,7 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
         <nav aria-label="Конструкторы" className="mt-1 flex flex-col items-start gap-4">
           {GENERATORS.map(g => g.path === current
             ? <button key={g.path} type="button" aria-current="page" onClick={() => setMenu(false)} className={`${name} cursor-pointer text-left`}>{g.title}</button>
-            : <Link key={g.path} to={g.path} className={`${name} text-[#bfbfbf] hover:text-[#808080] active:text-[#808080]`}>{g.title}</Link>)}
+            : <Link key={g.path} to={g.path} className={`${name} text-[#bfbfbf] hover:text-caption active:text-caption`}>{g.title}</Link>)}
         </nav>
       ) : (
         <GeneratorRing current={current} />
@@ -137,7 +137,7 @@ export function SegBtn({ active, onClick, disabled, title, children }: { active:
       aria-pressed={active}
       className={`flex-1 min-w-0 flex items-center justify-center rounded-[8px] border px-3 py-[9px] in-[[data-sheet]]:py-[13px]! cursor-pointer
         disabled:cursor-not-allowed disabled:text-[#999]
-        ${active ? 'border-black/10 bg-white text-black' : 'border-transparent text-[#808080]'}`}
+        ${active ? 'border-black/10 bg-white text-black' : 'border-transparent text-caption'}`}
     >
       <span className="font-medium text-[14px] leading-5 whitespace-nowrap">{children}</span>
     </button>
@@ -157,7 +157,7 @@ export const ALERT_LABEL = 'group-has-[[aria-invalid=true]]/field:text-[#e30]'
 export function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div className="group/field flex flex-col gap-3">
-      <p className={`text-[14px] leading-4 text-[#808080] whitespace-nowrap ${ALERT_LABEL}`}>{label}</p>
+      <p className={`text-[14px] leading-4 text-caption whitespace-nowrap ${ALERT_LABEL}`}>{label}</p>
       {children}
     </div>
   )
@@ -165,7 +165,7 @@ export function Field({ label, children }: { label: string; children: React.Reac
 
 export function Segments({ children }: { children: React.ReactNode }) {
   // The picked one a white tile edged at 10% on the grey, the others grey text; no hover
-  return <div className="flex rounded-[8px] bg-[#f5f5f5]">{children}</div>
+  return <div className="flex rounded-[8px] bg-surface">{children}</div>
 }
 
 /**
@@ -197,7 +197,7 @@ export function TextInput({ value, onChange, onBlur, onPaste, placeholder, inval
       aria-invalid={invalid || undefined}
       inputMode={inputMode ?? (numeric ? 'numeric' : undefined)}
       pattern={numeric ? '[0-9 ]*' : undefined}
-      className={`h-10 in-[[data-sheet]]:h-12! w-full min-w-0 rounded-[8px] bg-[#f5f5f5] px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]
+      className={`h-10 in-[[data-sheet]]:h-12! w-full min-w-0 rounded-[8px] bg-surface px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]
         focus:ring-1 focus:ring-inset focus:ring-black/40 ${className}`}
     />
   )
@@ -217,7 +217,7 @@ function useAutoHeight(value: string) {
   return ref
 }
 
-const areaClass = 'block min-h-10 in-[[data-sheet]]:min-h-12! in-[[data-sheet]]:py-[14px]! w-full min-w-0 resize-none overflow-hidden rounded-[8px] bg-[#f5f5f5] py-[10px] px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]'
+const areaClass = 'block min-h-10 in-[[data-sheet]]:min-h-12! in-[[data-sheet]]:py-[14px]! w-full min-w-0 resize-none overflow-hidden rounded-[8px] bg-surface py-[10px] px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]'
 
 /** Multi-line text where Enter is a line break the layout keeps */
 export function TextArea({ value, onChange, placeholder, invalid, className = '', ...rest }: { value: string; onChange: (v: string) => void; placeholder?: string; invalid?: boolean; className?: string } & Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'value' | 'onChange'>) {
@@ -389,7 +389,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
             aria-selected={t === hit}
             onMouseEnter={() => setActive(i)}
             onClick={() => pick(t)}
-            className={`flex cursor-pointer items-start gap-2 rounded-[8px] px-3 py-[10px] ${i === active ? 'bg-[#f5f5f5]' : ''} ${t === hit ? 'font-medium' : ''}`}
+            className={`flex cursor-pointer items-start gap-2 rounded-[8px] px-3 py-[10px] ${i === active ? 'bg-surface' : ''} ${t === hit ? 'font-medium' : ''}`}
           >
             <span className="min-w-0 flex-1">{shownAs(t).replace('\n', ' ')}</span>
             {t === hit && <span className="flex h-5 w-4 shrink-0 items-center justify-center"><Tick /></span>}
@@ -420,7 +420,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
                 role="option"
                 aria-selected={t === hit}
                 onClick={() => { pick(t); closeScreen() }}
-                className={`flex cursor-pointer items-start gap-2 rounded-[8px] px-3 py-3 active:bg-[#f5f5f5] ${t === hit ? 'font-medium' : ''}`}
+                className={`flex cursor-pointer items-start gap-2 rounded-[8px] px-3 py-3 active:bg-surface ${t === hit ? 'font-medium' : ''}`}
               >
                 <span className="min-w-0 flex-1">{shownAs(t).replace('\n', ' ')}</span>
                 {t === hit && <span className="flex h-5 w-4 shrink-0 items-center justify-center"><Tick /></span>}
@@ -484,7 +484,7 @@ export function Checkbox({ checked, onChange, children, className = '' }: { chec
     // In the phone's sheet the row takes a finger's 48 px, 16 px over and under it given back by margins, so it looks as before
     <label className={`flex cursor-pointer items-center gap-2 text-[14px] leading-4 text-black in-[[data-sheet]]:-my-4 in-[[data-sheet]]:py-4 ${className}`}>
       <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="peer sr-only" />
-      <span aria-hidden className="flex size-4 shrink-0 items-center justify-center rounded-[4px] bg-[#f5f5f5] peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-black/30">
+      <span aria-hidden className="flex size-4 shrink-0 items-center justify-center rounded-[4px] bg-surface peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-black/30">
         {checked && <Tick />}
       </span>
       {children}
@@ -506,7 +506,7 @@ export function OptionalField({ label, on, onChange, extra, children }: { label:
 }
 
 // Grey #808080, black on hover, the icon with it
-export const rowAction = 'flex shrink-0 cursor-pointer items-center gap-2 text-[14px] leading-4 text-[#808080] transition-colors hover:text-black'
+export const rowAction = 'flex shrink-0 cursor-pointer items-center gap-2 text-[14px] leading-4 text-caption transition-colors hover:text-black'
 
 /** Corners for the size switch, on the 16 grid with the ticks' 2 px stroke and square ends: at the outer corners to grow, turned in to shrink */
 function SizeIcon({ grow }: { grow: boolean }) {
@@ -650,7 +650,7 @@ export function LinkButtons({ incomplete, file: make, fileOnly }: {
       {/* Regular, as a note rather than a button's name; while it shows the button is still, no hover or click, its text grey #808080, as quiet lines: the hover's edge is overridden, as
           pointer-events: none kept the browser's hover on until the pointer moved */}
       {copied
-        ? <span className="font-normal text-[#808080]">{copied === 'editor' ? 'Ссылка на редактор скопирована' : 'Ссылка на файл скопирована'}</span>
+        ? <span className="font-normal text-caption">{copied === 'editor' ? 'Ссылка на редактор скопирована' : 'Ссылка на файл скопирована'}</span>
         : alt && !fileOnly ? 'Ссылка на редактор' : 'Поделиться'}
     </button>
   )

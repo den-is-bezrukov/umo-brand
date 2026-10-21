@@ -237,7 +237,7 @@ export default function PriceTag() {
           <div className="flex flex-col gap-4">
           {/* The dealer first: the whole list's, set once */}
           <div ref={dealerField} className="group/field flex flex-col gap-3 tracking-normal">
-            <p className={`text-[14px] leading-4 text-[#808080] ${ALERT_LABEL}`}>Дилер</p>
+            <p className={`text-[14px] leading-4 text-caption ${ALERT_LABEL}`}>Дилер</p>
             <ComboField
               value={dealer}
               onChange={setDealer}
@@ -324,7 +324,7 @@ export default function PriceTag() {
       <main
         {...staff.dropTarget}
         onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure, [data-add], [data-template]')) staff.setSelected(null) }}
-        className={`flex flex-1 flex-col bg-[#f5f5f5] px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16
+        className={`flex flex-1 flex-col bg-surface px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16
           ${mode === 'table' && staff.file && staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
       >
         {mode === 'table' && !staff.file ? (
@@ -351,7 +351,7 @@ function PriceField({ value, onChange, invalid }: { value: string; onChange: (v:
   const kopecks = value.split(',')[1]
   const tail = !value ? '' : kopecks === undefined ? ',00' : '00'.slice(kopecks.length)
   return (
-    <div className="relative rounded-[8px] bg-[#f5f5f5]">
+    <div className="relative rounded-[8px] bg-surface">
       <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center overflow-hidden px-3 text-[14px] leading-5 whitespace-pre">
         <span className="invisible">{value}</span>
         <span className="text-[#999]">{tail}</span>

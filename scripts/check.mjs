@@ -310,6 +310,8 @@ async function collect(page, downloads, dir, wait) {
   for (const b of done().begun) {
     const name = b.params.suggestedFilename
     if (/^[0-9a-f-]{36}(\.\w+)?$/.test(name)) continue
+    // The blob a `pdf=1` link opens after saving may come again under the file's name, numbered by Chrome
+    if (/ \(?\d+\)?\.\w+$/.test(name) || files.includes(name)) continue
     const from = path.join(downloads, b.params.guid)
     if (!fs.existsSync(from)) continue
     mkdir(dir)

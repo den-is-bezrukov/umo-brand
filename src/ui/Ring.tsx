@@ -139,7 +139,7 @@ export default function Ring({ label, items, current, onPick, href, heading, foc
     }
   }, [current]) // eslint-disable-line react-hooks/exhaustive-deps
   const name = 'shrink-0 snap-start text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
-  const tone = (key: string) => (key === lit ? 'text-black' : 'text-[#bfbfbf] hover:text-[#808080] active:text-[#808080]')
+  const tone = (key: string) => (key === lit ? 'text-black' : 'text-[#bfbfbf] hover:text-caption active:text-caption')
   return (
     <div className="relative -mx-6 my-1">
       {/* 8 px over and under for the descenders (р, у), which the scroller would clip; one Tab stop, ringed whole, its

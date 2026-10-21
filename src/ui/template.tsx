@@ -56,7 +56,7 @@ export function TemplateButton({ make, name, goalId, params, title: own }: { mak
       aria-label={said}
       onClick={click}
       disabled={!make}
-      className={`flex size-[30px] shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-[#808080] hover:text-black disabled:cursor-default disabled:hover:text-[#808080] ${busy ? 'animate-pulse' : ''}`}
+      className={`flex size-[30px] shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-caption hover:text-black disabled:cursor-default disabled:hover:text-caption ${busy ? 'animate-pulse' : ''}`}
     >
       <TemplateIcon />
     </button>

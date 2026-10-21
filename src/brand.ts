@@ -16,3 +16,12 @@ export interface BrandFonts {
 
 /** A drawing in absolute path data (M L H V C Z), `w`×`h` units */
 export interface Mark { w: number; h: number; d: string }
+
+/** A colour as the guide's Цвет shows it: its tile's colour, white text on it if `dark`, its values (where used, the code) */
+export interface Swatch { name: string; color: string; dark?: boolean; values: [string, string][] }
+
+/**
+ * `@brand/colors`: the brand's colours for the guide's Цвет, the main ones in large tiles, the service ones in small.
+ * The site's own greys are tokens in `theme.css` (`--color-surface`, `--color-line`, `--color-caption`)
+ */
+export interface BrandColors { main: Swatch[]; service: Swatch[] }

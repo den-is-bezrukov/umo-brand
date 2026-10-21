@@ -76,7 +76,7 @@ function SheetPreview({ sheet, seams, dims, onReset, resetLabel, extra }: { shee
       </svg>
       {/* Under the picture, centred, as on every generator's canvas */}
       {/* One grey line, as quiet as the rest of the page's secondary text: the sheet is what's shown */}
-      <figcaption className="mt-0.5 text-center text-[14px] leading-5 text-[#808080]">
+      <figcaption className="mt-0.5 text-center text-[14px] leading-5 text-caption">
         <span className="relative">
           {s.title}, {mm(s.w)}&nbsp;×&nbsp;{mm(s.h)}&nbsp;мм
           {(onReset || extra) && <CaptionReset onClick={onReset} label={resetLabel} extra={extra} />}
@@ -347,7 +347,7 @@ export default function Livery() {
         {download}
       </aside>
 
-      <main className="flex-1 bg-[#f5f5f5] p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
+      <main className="flex-1 bg-surface p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
         <div className="mx-auto flex max-w-[1200px] flex-col gap-10">
           {/* «Скачать шаблон» by every sheet's caption, before its reset, each the same file of all the sheets: sought
               by the one in hand (it stood by the left side's only and read as that side's) */}
