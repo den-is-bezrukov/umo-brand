@@ -7,10 +7,11 @@ import { specMarks, labelCmds, type Cmd, type Sheet } from './geometry'
 import { loadFont } from '@/ui/type'
 import type { Surface } from './layout'
 import { embedFonts, textOps } from '@/ui/liveTextPdf'
+import { COLORS } from '@brand/colors'
 
 const PT = 72 / 25.4
-// The livery colour of the Illustrator sources: rich black, C60 M40 Y40 K100.
-const INK: [number, number, number, number] = [0.6, 0.4, 0.4, 1]
+// The film's colour: the brand's print black
+const INK = COLORS.ink
 // The dimensions' orange, #ee4400, as on the page
 const DIMS: [number, number, number] = [0xee / 255, 0x44 / 255, 0]
 

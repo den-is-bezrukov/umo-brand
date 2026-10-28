@@ -15,4 +15,6 @@ export const COLORS: BrandColors = {
     { name: 'Линии', color: '#e6e6e6', values: [['Экран', '#E6E6E6'], ['Печать', 'K10']] },
     { name: 'Подписи', color: '#808080', dark: true, values: [['Экран', '#808080'], ['Печать', 'K50']] },
   ],
+  // Чёрный's «Плёнка, вывески»: the livery, the name tag, the hours sign, the business card's black face
+  ink: [0.6, 0.4, 0.4, 1],
 }

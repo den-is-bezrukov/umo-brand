@@ -24,10 +24,11 @@ export interface Mark { w: number; h: number; d: string }
 export interface Swatch { name: string; color: string; dark?: boolean; values: [string, string][] }
 
 /**
- * `@brand/colors`: the brand's colours for the guide's Цвет, the main ones in large tiles, the service ones in small.
- * The site's own greys are tokens in `theme.css` (`--color-surface`, `--color-line`, `--color-caption`)
+ * `@brand/colors`: the brand's colours for the guide's Цвет, the main ones in large tiles, the service ones in small,
+ * and `ink`, the black the generators print film, signs and a black ground in (C, M, Y, K from 0 to 1; text on white
+ * stays 100% K). The site's own greys are tokens in `theme.css` (`--color-surface`, `--color-line`, `--color-caption`)
  */
-export interface BrandColors { main: Swatch[]; service: Swatch[] }
+export interface BrandColors { main: Swatch[]; service: Swatch[]; ink: [number, number, number, number] }
 
 /** A chapter of the guide in its contents, with its sections; `id` its anchor */
 export interface GuideChapter { id: string; title: string; children?: GuideChapter[] }

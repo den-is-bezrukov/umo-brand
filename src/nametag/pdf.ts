@@ -11,13 +11,14 @@ import type { TextLine } from '@/ui/liveText'
 // How the tag should look, for the maker: the guide's photo of the tag on a shirt
 import REFERENCE from '@brand/guide/images/name-tag.webp'
 import { SITE } from '@/site'
+import { COLORS } from '@brand/colors'
 
 // Loaded only when the files are downloaded, so the page doesn't carry pdf-lib until then.
 
 
 const PT = 72 / 25.4
-/** The source's colour, C60 M40 Y40 K100: nominal, the material decides the real one */
-const INK: [number, number, number, number] = [0.6, 0.4, 0.4, 1]
+/** The brand's print black: nominal, the material decides the real one */
+const INK = COLORS.ink
 
 /** The LOGO path's M/L/C/Z commands as Cmds */
 function svgCmds(d: string): Cmd[] {

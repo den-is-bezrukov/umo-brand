@@ -13,4 +13,6 @@ export const COLORS: BrandColors = {
     { name: 'Белый', color: '#ffffff', values: [['Экран', '#FFFFFF'], ['Печать', 'без краски']] },
     { name: 'Песочный', color: '#eeddcc', values: [['Экран', '#EEDDCC']] },
   ],
+  // Чёрный's «Печать, фон»: the business card's black face, the hours sign
+  ink: [0.6, 0.4, 0.4, 1],
 }

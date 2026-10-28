@@ -8,6 +8,7 @@ import { writePdfData } from '@/ui/pdfDataWrite'
 import { embedFonts, textOps, type LiveFonts } from '@/ui/liveTextPdf'
 import type { TextLine } from '@/ui/liveText'
 import { SITE } from '@/site'
+import { COLORS } from '@brand/colors'
 
 // Loaded only when the PDF is downloaded, so the page doesn't carry pdf-lib until then.
 
@@ -16,8 +17,8 @@ const PT = 72 / 25.4
 export const SIGN_FILE = `${SITE.file}_hours-sign.pdf`
 /** The editable template's name */
 export const SIGN_TEMPLATE = `${SITE.file}_hours-sign_template.pdf`
-/** The source's colour, C60 M40 Y40 K100, as the livery's and the name tag's; a black variant's ground */
-const INK: [number, number, number, number] = [0.6, 0.4, 0.4, 1]
+/** The brand's print black, as the livery's and the name tag's; a black variant's ground */
+const INK = COLORS.ink
 /** White on a black ground: no ink */
 const WHITE: [number, number, number, number] = [0, 0, 0, 0]
 

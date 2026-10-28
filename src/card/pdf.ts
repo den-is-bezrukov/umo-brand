@@ -10,6 +10,7 @@ import { embedFonts, textOps, type LiveFonts } from '@/ui/liveTextPdf'
 import type { TextLine } from '@/ui/liveText'
 import { CARDS_KEY } from './card'
 import { SITE } from '@/site'
+import { COLORS } from '@brand/colors'
 
 // Loaded only when the cards are downloaded, so the page doesn't carry pdf-lib until then.
 
@@ -18,8 +19,8 @@ const PT = 72 / 25.4
 /** Black text on white: 100% K, no rich black, so small type stays sharp whatever the registration */
 const BLACK: [number, number, number, number] = [0, 0, 0, 1]
 
-/** A black ground: rich black, as large areas print */
-const GROUND: [number, number, number, number] = [0.6, 0.4, 0.4, 1]
+/** A black ground: the brand's print black, rich, as large areas print */
+const GROUND = COLORS.ink
 /** White on it: no ink */
 const WHITE: [number, number, number, number] = [0, 0, 0, 0]
 
