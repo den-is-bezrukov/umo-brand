@@ -68,7 +68,7 @@ export const STATEMENT = 'Превращаем идеи в цифровые пр
 export const MATERIALS_LEAD = 'Готовый дизайн для офиса, встреч и событий Evrone:'
 
 /** Материалы' first sentence lists the generators in this order */
-export const INTRO_ORDER = ['/business-card', '/hours-sign', '/plate-frame']
+export const INTRO_ORDER = ['/business-card', '/hours-sign']
 
 /** Материалы' pictures drawn for the guide: none yet, each generator gets its own preview or a grey card */
 export const DRAWN: Medium[] = []

@@ -31,8 +31,8 @@ const crumb = 'underline decoration-transparent decoration-[0.35px] underline-of
 
 /**
  * The top of a generator's form, the same on every screen (the phone's, carried over to wide screens):
- * the breadcrumbs in Medium, 16 px tall, «Бренд <Бренд> · Редактор материалов», as the guide's quick link names it; the generators' line under them
- * (`GeneratorRing`). «Редактор материалов», the app itself, opens every generator in place, nothing in the row moving
+ * the breadcrumbs in Medium, 16 px tall, «Бренд <Бренд> · Редактор», as the guide's quick link names it; the generators' line under them
+ * (`GeneratorRing`). «Редактор», the app itself, opens every generator in place, nothing in the row moving
  * (no chevron after it: it only clutters the row), and the line and everything after it in the form give
  * way to every generator, 24 px Medium 16 px apart, the current one black. The crumb again, the current
  * name or Esc fold it. Not a menu icon by the crumbs: the generators are an app of their own, where a burger promises the
@@ -75,7 +75,7 @@ const CRUMBS = "text-[14px] font-medium leading-4 tracking-normal [font-feature-
 
 /**
  * The breadcrumbs, set apart from the form's tighter tracking so they don't shift when the list opens: the way back to
- * the guide (the brand's logo leads to the brand's site, so it isn't here) and Редактор материалов, the app itself, which shows
+ * the guide (the brand's logo leads to the brand's site, so it isn't here) and Редактор, the app itself, which shows
  * every generator (not Материалы, the guide's chapter, between them)
  */
 function PhoneCrumbs({ open, onEditor }: { open: boolean; onEditor: () => void }) {
@@ -83,7 +83,7 @@ function PhoneCrumbs({ open, onEditor }: { open: boolean; onEditor: () => void }
     <nav className={`flex min-w-0 flex-1 items-center gap-2 whitespace-nowrap ${CRUMBS}`}>
       <Link to="/" className={crumb}>Бренд {SITE.name}</Link>
       <span aria-hidden>·</span>
-      <button type="button" onClick={onEditor} aria-expanded={open} aria-label="Редактор материалов: все конструкторы" className={`${crumb} cursor-pointer`}>Редактор материалов</button>
+      <button type="button" onClick={onEditor} aria-expanded={open} aria-label="Редактор: все конструкторы" className={`${crumb} cursor-pointer`}>Редактор</button>
     </nav>
   )
 }
@@ -136,7 +136,7 @@ export function SegBtn({ active, onClick, disabled, title, children }: { active:
       disabled={disabled}
       title={title}
       aria-pressed={active}
-      className={`flex-1 min-w-0 flex items-center justify-center rounded-[8px] border px-3 py-[9px] in-[[data-sheet]]:py-[13px]! cursor-pointer
+      className={`flex-1 min-w-0 flex items-center justify-center rounded-control border px-3 py-[9px] in-[[data-sheet]]:py-[13px]! cursor-pointer
         disabled:cursor-not-allowed disabled:text-[#999]
         ${active ? 'border-black/10 bg-white text-black' : 'border-transparent text-caption'}`}
     >
@@ -166,7 +166,7 @@ export function Field({ label, children }: { label: string; children: React.Reac
 
 export function Segments({ children }: { children: React.ReactNode }) {
   // The picked one a white tile edged at 10% on the grey, the others grey text; no hover
-  return <div className="flex rounded-[8px] bg-surface">{children}</div>
+  return <div className="flex rounded-control bg-surface">{children}</div>
 }
 
 /**
@@ -198,7 +198,7 @@ export function TextInput({ value, onChange, onBlur, onPaste, placeholder, inval
       aria-invalid={invalid || undefined}
       inputMode={inputMode ?? (numeric ? 'numeric' : undefined)}
       pattern={numeric ? '[0-9 ]*' : undefined}
-      className={`h-10 in-[[data-sheet]]:h-12! w-full min-w-0 rounded-[8px] bg-surface px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]
+      className={`h-10 in-[[data-sheet]]:h-12! w-full min-w-0 rounded-control bg-surface px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]
         focus:ring-1 focus:ring-inset focus:ring-black/40 ${className}`}
     />
   )
@@ -218,7 +218,7 @@ function useAutoHeight(value: string) {
   return ref
 }
 
-const areaClass = 'block min-h-10 in-[[data-sheet]]:min-h-12! in-[[data-sheet]]:py-[14px]! w-full min-w-0 resize-none overflow-hidden rounded-[8px] bg-surface py-[10px] px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]'
+const areaClass = 'block min-h-10 in-[[data-sheet]]:min-h-12! in-[[data-sheet]]:py-[14px]! w-full min-w-0 resize-none overflow-hidden rounded-control bg-surface py-[10px] px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]'
 
 /** Multi-line text where Enter is a line break the layout keeps */
 export function TextArea({ value, onChange, placeholder, invalid, className = '', ...rest }: { value: string; onChange: (v: string) => void; placeholder?: string; invalid?: boolean; className?: string } & Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'value' | 'onChange'>) {
@@ -372,7 +372,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
         onMouseDown={e => e.preventDefault()}
         // White, 2 px inside its edge, a soft shadow and no line; rows 8 px round, the pointed one grey, the picked one
         // medium with a tick
-        className="max-h-[288px] overflow-y-auto rounded-[8px] bg-white p-[2px] text-[14px] leading-5 text-black shadow-[0_10px_15px_rgba(0,0,0,0.1)]"
+        className="max-h-[288px] overflow-y-auto rounded-control bg-white p-[2px] text-[14px] leading-5 text-black shadow-[0_10px_15px_rgba(0,0,0,0.1)]"
         // The popover's own styles centre it on the screen (inset 0, margin auto): undone here, then put under the field
         style={{
           position: 'fixed',
@@ -390,7 +390,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
             aria-selected={t === hit}
             onMouseEnter={() => setActive(i)}
             onClick={() => pick(t)}
-            className={`flex cursor-pointer items-start gap-2 rounded-[8px] px-3 py-[10px] ${i === active ? 'bg-surface' : ''} ${t === hit ? 'font-medium' : ''}`}
+            className={`flex cursor-pointer items-start gap-2 rounded-control px-3 py-[10px] ${i === active ? 'bg-surface' : ''} ${t === hit ? 'font-medium' : ''}`}
           >
             <span className="min-w-0 flex-1">{shownAs(t).replace('\n', ' ')}</span>
             {t === hit && <span className="flex h-5 w-4 shrink-0 items-center justify-center"><Tick /></span>}
@@ -421,7 +421,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
                 role="option"
                 aria-selected={t === hit}
                 onClick={() => { pick(t); closeScreen() }}
-                className={`flex cursor-pointer items-start gap-2 rounded-[8px] px-3 py-3 active:bg-surface ${t === hit ? 'font-medium' : ''}`}
+                className={`flex cursor-pointer items-start gap-2 rounded-control px-3 py-3 active:bg-surface ${t === hit ? 'font-medium' : ''}`}
               >
                 <span className="min-w-0 flex-1">{shownAs(t).replace('\n', ' ')}</span>
                 {t === hit && <span className="flex h-5 w-4 shrink-0 items-center justify-center"><Tick /></span>}
@@ -541,7 +541,7 @@ export function SizeSwitch({ large, onChange, label }: { large: boolean; onChang
 }
 
 // Edged at 10%, at 40% on hover
-export const outlined = 'flex min-w-16 flex-1 items-center justify-center rounded-[8px] border border-black/10 px-3 py-[9px] in-[[data-sheet]]:py-[13px]! text-[14px] font-medium leading-5 text-black cursor-pointer hover:border-black/40 disabled:cursor-default disabled:text-[#999] disabled:hover:border-black/10'
+export const outlined = 'flex min-w-16 flex-1 items-center justify-center rounded-control border border-black/10 px-3 py-[9px] in-[[data-sheet]]:py-[13px]! text-[14px] font-medium leading-5 text-black cursor-pointer hover:border-black/40 disabled:cursor-default disabled:text-[#999] disabled:hover:border-black/10'
 
 /** A word the download bar's line says for a moment («В файле нет режимника») */
 const flashes = new Set<(text: string) => void>()
@@ -730,7 +730,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
       // opens, the field only lights up)
       onClick={leads ? () => { foot?.(); onNote!() } : onClick}
       disabled={busy || (disabled && !leads)}
-      className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-[8px] bg-black px-3 py-[10px] in-[[data-sheet]]:py-[14px]! text-[14px] leading-5 hover:enabled:bg-[#333] disabled:cursor-default
+      className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-control bg-black px-3 py-[10px] in-[[data-sheet]]:py-[14px]! text-[14px] leading-5 hover:enabled:bg-[#333] disabled:cursor-default
         ${lead || said ? 'font-normal' : 'font-medium'} ${disabled && !leads && !busy ? 'text-[#999]' : 'text-white'}`}
     >
       {busy && (

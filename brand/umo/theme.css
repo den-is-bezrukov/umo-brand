@@ -35,6 +35,8 @@
   --color-surface: #f5f5f5;
   --color-line: #e6e6e6;
   --color-caption: #808080;
+  /* The corners of the interface's controls: fields, buttons, switches, menus (`rounded-control`) */
+  --radius-control: 8px;
 }
 
 /* The guide's logo with the Y cobrand (`HeaderLogo.tsx`) folds with the scroll as the core folds the sidebar

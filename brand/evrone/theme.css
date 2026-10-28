@@ -1,12 +1,19 @@
 /* Evrone's interface type on the site: Inter, the free alternative to Suisse Int'l (the brand's type, licensed, which
-   only the generators use for their files: `fonts.ts`). One weight, as the brand's: Inter Medium, as dense as Suisse
-   Int'l Book, for every weight asked (no faux bold); the release's own file, whole (`public/fonts/Inter-Medium.woff2`,
-   Inter 4.1's `web/`; the licence beside it). */
+   only the generators use for their files: `fonts.ts`). Regular and Medium where UMO's interface has CoFo Sans Regular
+   and Medium; the release's own files, whole (Inter 4.1's `web/`; the licence beside them). */
 
 @font-face {
   font-family: 'Inter';
   font-style: normal;
-  font-weight: 100 900;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/Inter-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 500;
   font-display: swap;
   src: url('/fonts/Inter-Medium.woff2') format('woff2');
 }
@@ -17,4 +24,7 @@
   --color-surface: #f5f5f5;
   --color-line: #e6e6e6;
   --color-caption: #808080;
+  /* The corners of the interface's controls: fields, buttons, switches, menus (`rounded-control`), as Composter's
+     kit has them (evrone.com's are 6) */
+  --radius-control: 5px;
 }

@@ -443,7 +443,7 @@ export function TableSource<P extends object>({ staff, template }: { staff: Staf
       {s.file && (
         <label
           {...s.dropTarget}
-          className={`flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-1 rounded-[8px] border border-dashed p-4 text-center text-[14px] leading-5
+          className={`flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-1 rounded-control border border-dashed p-4 text-center text-[14px] leading-5
             ${s.dragging ? 'border-black bg-surface' : s.tableError ? 'border-[#e30]' : 'border-black/20 hover:border-black/40'}`}
         >
           <FileInput staff={s} />
@@ -461,7 +461,7 @@ export function TableSource<P extends object>({ staff, template }: { staff: Staf
 export function UploadArea<P extends object>({ staff }: { staff: Staff<P> }) {
   const s = staff as unknown as Staff<object>
   return (
-    <label className={`flex min-h-[240px] flex-1 cursor-pointer items-center justify-center rounded-[8px] border border-dashed text-[14px] font-medium leading-5
+    <label className={`flex min-h-[240px] flex-1 cursor-pointer items-center justify-center rounded-control border border-dashed text-[14px] font-medium leading-5
       ${s.dragging ? 'border-black bg-black/5' : 'border-black/20 hover:border-black/40'}`}>
       <FileInput staff={s} />
       {s.uploadLabel}
@@ -545,7 +545,7 @@ export function CaptionReset({ onClick, label = 'Сбросить', extra }: { o
           title={label}
           aria-label={label}
           onClick={onClick}
-          className="flex size-[30px] cursor-pointer items-center justify-center rounded-[8px] text-caption hover:text-black"
+          className="flex size-[30px] cursor-pointer items-center justify-center rounded-control text-caption hover:text-black"
         >
           <ResetIcon />
         </button>
@@ -578,7 +578,7 @@ export function Action({ label, name, keys, hidden, onClick, children }: { label
       aria-keyshortcuts={keys?.replace('⌘', 'Meta+').replace('Ctrl+', 'Control+')}
       // A click here is the action's, not the row's, which would select the item again
       onClick={e => { e.stopPropagation(); onClick() }}
-      className={`flex size-[30px] shrink-0 cursor-pointer items-center justify-center rounded-[8px] text-caption hover:text-black`}
+      className={`flex size-[30px] shrink-0 cursor-pointer items-center justify-center rounded-control text-caption hover:text-black`}
     >
       {children}
     </button>

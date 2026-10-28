@@ -1,16 +1,16 @@
 # Evrone
 
-The second brand on the core, for trying it without UMO: the business card, the hours sign and the plate frame
-(`materials` in `site.json`), no dealers or models. `BRAND=evrone pnpm dev` runs it (port 2008 in `.claude/launch.json`).
+The second brand on the core, for trying it without UMO: the business card and the hours sign (`materials` in
+`site.json`; the plate frame left out for now, back with `plate-frame` in that list), no dealers or models. `BRAND=evrone pnpm dev` runs it (port 2008 in `.claude/launch.json`).
 
 ## Where things come from
 
 - Everything from Evrone's Yandex Disk «04 Identity» and Figma «Evrone Identity».
 - The type: Suisse Int'l Book, the one weight, for the generators' files only (`fonts.ts`); cap height 725 of 1000.
 - The site's interface type: Inter (`theme.css`), the closest free match: the same widths within 1% and x-height to
-  cap height (0.750 against 0.742), the same neo-grotesque R, G, Q and 1 (Geist rounder and more geometric). Pinned at
-  Medium (500), where its stems (0.15 of the cap height) come nearest Suisse Book's (0.157): the release's own
-  `web/Inter-Medium.woff2`, whole, not cut down (a missing character would turn up only later), its OFL beside it.
+  cap height (0.750 against 0.742), the same neo-grotesque R, G, Q and 1 (Geist rounder and more geometric). Regular
+  and Medium where UMO's interface has CoFo Sans Regular and Medium: the release's own `web/Inter-Regular.woff2` and
+  `Inter-Medium.woff2`, whole, not cut down (a missing character would turn up only later), its OFL beside them.
 - The logo: `01 Logo/evrone-logo-b.svg` (1600×320), cut to its ink, 1600×297.14 (`logo.ts`); the SVGs in `public/downloads`.
 - The colours: Figma's «evrone_colors» and evrone.com: black, #ff4400, white, #eeddcc.
 - The first screen: `04 Graphics/evrone-back-gradient.jpg`, cropped to 2:1 (`guide/images/hero.webp`).

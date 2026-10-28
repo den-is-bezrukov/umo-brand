@@ -352,7 +352,7 @@ function PriceField({ value, onChange, invalid }: { value: string; onChange: (v:
   const kopecks = value.split(',')[1]
   const tail = !value ? '' : kopecks === undefined ? ',00' : '00'.slice(kopecks.length)
   return (
-    <div className="relative rounded-[8px] bg-surface">
+    <div className="relative rounded-control bg-surface">
       <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center overflow-hidden px-3 text-[14px] leading-5 whitespace-pre">
         <span className="invisible">{value}</span>
         <span className="text-[#999]">{tail}</span>
