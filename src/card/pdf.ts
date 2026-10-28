@@ -1,9 +1,9 @@
 import {
   PDFDocument, PDFOperator, PDFOperatorNames,
   moveTo, lineTo, appendBezierCurve, closePath, pushGraphicsState, popGraphicsState, setFillingCmykColor,
-  setStrokingCmykColor, setLineWidth, stroke,
+  setStrokingCmykColor, setLineWidth, stroke, rectangle, fill,
 } from 'pdf-lib'
-import { CARD, FACE, BACK_LOGO, type Back } from './card'
+import { CARD, FACES, BACK_LOGO, type Back } from './card'
 import type { Cmd } from '@/livery/geometry'
 import { writePdfData } from '@/ui/pdfDataWrite'
 import { embedFonts, textOps, type LiveFonts } from '@/ui/liveTextPdf'
@@ -18,15 +18,24 @@ const PT = 72 / 25.4
 /** Black text on white: 100% K, no rich black, so small type stays sharp whatever the registration */
 const BLACK: [number, number, number, number] = [0, 0, 0, 1]
 
-/**
- * `faceEach`: a face before every back, rather than one face and then the backs (the default). `marks`: crop marks,
- * the page then 3 mm larger on every side, the marks in that margin from 1 mm off the card's edge, as no bleed is
- * needed (the card is white) and the printers' margins were 3 mm at most
- */
-export interface PageOptions { faceEach: boolean; marks: boolean }
+/** A black ground: rich black, as large areas print */
+const GROUND: [number, number, number, number] = [0.6, 0.4, 0.4, 1]
+/** White on it: no ink */
+const WHITE: [number, number, number, number] = [0, 0, 0, 0]
 
-const MARGIN = 3
-const MARK_OFF = 1
+/**
+ * `face`: which of the brand's faces (`FACES`), the first by default. `faceEach`: a face before every back, rather than
+ * one face and then the backs (the default). `marks`: crop marks, the page then 3 mm larger on every side, the marks
+ * in that margin from 1 mm off the card's edge, as no bleed is needed on a white card and the printers' margins were
+ * 3 mm at most. A brand with a black face has 5 mm round the card, the black running 2 mm past its edge and the marks
+ * from there
+ */
+export interface PageOptions { face?: number; faceEach: boolean; marks: boolean }
+
+const DARK = FACES.some(f => f.dark)
+const BLEED = 2
+const MARGIN = DARK ? 5 : 3
+const MARK_OFF = DARK ? BLEED : 1
 /** Registration black (100% of every ink), as crop marks are, so they show on every plate */
 const REGISTRATION: [number, number, number, number] = [1, 1, 1, 1]
 
@@ -41,15 +50,15 @@ function pathOps(cmds: Cmd[], H: number): PDFOperator[] {
 }
 
 /**
- * The cards for the printer, a 90×50 mm page each at 1:1, no bleed (the card is white, nothing runs off its edge),
- * crop marks if asked; all text and logos as filled outlines in 100% K
+ * The cards for the printer, a page each at 1:1, no bleed on a white card (nothing runs off its edge), crop marks
+ * if asked; all text and logos as filled outlines in 100% K, white on a black face
  */
-export async function cardsPdf(backs: Back[], { faceEach, marks }: PageOptions, data: unknown): Promise<Blob> {
+export async function cardsPdf(backs: Back[], options: PageOptions, data: unknown): Promise<Blob> {
   const doc = await PDFDocument.create()
-  doc.setTitle(`${SITE.name} business cards 90×50`)
+  doc.setTitle(`${SITE.name} business cards ${CARD.w}×${CARD.h}`)
   // What the cards were made from, so the PDF dropped back on the page opens them
   writePdfData(doc, CARDS_KEY, data)
-  return cardPages(doc, backs.map(b => ({ back: b })), { faceEach, marks })
+  return cardPages(doc, backs.map(b => ({ back: b })), options)
 }
 
 /**
@@ -63,16 +72,25 @@ export async function cardsTemplate(backs: { back: Back; lines: TextLine[] }[], 
 }
 
 /** The pages: the text as outlines, or, with `live`, the noted lines as text */
-async function cardPages(doc: PDFDocument, backs: { back: Back; lines?: TextLine[] }[], { faceEach, marks }: PageOptions, live?: LiveFonts): Promise<Blob> {
+async function cardPages(doc: PDFDocument, backs: { back: Back; lines?: TextLine[] }[], { face = 0, faceEach, marks }: PageOptions, live?: LiveFonts): Promise<Blob> {
   const m = marks ? MARGIN : 0
-  const page = (art: Cmd[], text: TextLine[] = []) => {
+  const page = (art: Cmd[], text: TextLine[] = [], dark = false) => {
     const p = doc.addPage([(CARD.w + 2 * m) * PT, (CARD.h + 2 * m) * PT])
     const H = p.getHeight()
     // The card's own box, for the printer's imposition
     p.setTrimBox(m * PT, m * PT, CARD.w * PT, CARD.h * PT)
     const at = (cmds: Cmd[]): Cmd[] => cmds.map(c => c.map((v, i) => (i === 0 ? v : (v as number) + m)) as Cmd)
+    // A black face: the ground to the bleed where there's a margin, else to the edge
+    if (dark) {
+      const b = marks ? BLEED : 0
+      p.pushOperators(
+        pushGraphicsState(), setFillingCmykColor(...GROUND),
+        rectangle((m - b) * PT, (m - b) * PT, (CARD.w + 2 * b) * PT, (CARD.h + 2 * b) * PT), fill(),
+        popGraphicsState(),
+      )
+    }
     p.pushOperators(
-      pushGraphicsState(), setFillingCmykColor(...BLACK),
+      pushGraphicsState(), setFillingCmykColor(...(dark ? WHITE : BLACK)),
       ...pathOps(at(art), H), PDFOperator.of(PDFOperatorNames.FillEvenOdd),
       popGraphicsState(),
     )
@@ -94,11 +112,12 @@ async function cardPages(doc: PDFDocument, backs: { back: Back; lines?: TextLine
     )
   }
   const back = ({ back: b, lines }: typeof backs[number]) => page([...BACK_LOGO, ...(live ? [] : Object.values(b.fields).flat()), ...b.qr], lines)
+  const f = FACES[face] ?? FACES[0]
   if (!faceEach) {
-    page(FACE)
+    page(f.art, [], f.dark)
     backs.forEach(back)
   } else {
-    backs.forEach(b => { page(FACE); back(b) })
+    backs.forEach(b => { page(f.art, [], f.dark); back(b) })
   }
   const bytes = await doc.save({ useObjectStreams: false })
   return new Blob([bytes as BlobPart], { type: 'application/pdf' })

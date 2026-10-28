@@ -13,6 +13,7 @@ export interface BrandFonts {
   /** A short name for the type, naming its fonts in a PDF's resources (`Brand`: BrandRegular, BrandR) */
   short: string
   regular: BrandFont
+  /** The same face as `regular` for a type of one weight: the generators then set everything in it */
   medium: BrandFont
 }
 
@@ -61,6 +62,8 @@ export interface BrandSite {
   support: string
   /** Yandex.Metrika's counter, none for no counter */
   metrika?: number
+  /** The generators the brand has, by path (`business-card`), the rest left out of the site; without it, every one */
+  materials?: string[]
 }
 
 /** A model of the brand: its id in links and data (`brand5`), its name as written («<Бренд> 5»), its page on the brand's site */

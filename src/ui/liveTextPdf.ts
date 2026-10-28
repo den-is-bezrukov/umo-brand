@@ -17,8 +17,10 @@ export type LiveFonts = Map<string, PDFFont>
 /** fontkit (some 320 KB) loads here, with the template only: the files to print are in outlines and don't need it */
 export async function embedFonts(doc: PDFDocument): Promise<LiveFonts> {
   doc.registerFontkit((await import('@pdf-lib/fontkit')).default)
-  const [regular, medium] = await embedFaces(doc, [FONTS.regular, FONTS.medium])
-  return new Map([[FONTS.regular.name, regular], [FONTS.medium.name, medium]])
+  // A type of one weight goes in once
+  const one = FONTS.medium.name === FONTS.regular.name
+  const [regular, medium] = await embedFaces(doc, one ? [FONTS.regular] : [FONTS.regular, FONTS.medium])
+  return new Map([[FONTS.regular.name, regular], [FONTS.medium.name, medium ?? regular]])
 }
 
 /**

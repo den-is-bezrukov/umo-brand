@@ -5,7 +5,7 @@ import { withListBreak } from '@/data/positions'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { nameFault } from '@/ui/names'
 import { noteLine } from '@/ui/liveText'
-import { NAME_TAG_LOGO } from '@brand/logo'
+import { NAME_TAG_LOGO } from '@brand/name-tag'
 import { SITE } from '@/site'
 
 // A dealership employee's name tag, as in the hand-made source: a 70×25 mm plate with 4 mm rounded corners, the name and surname in the brand font's Medium

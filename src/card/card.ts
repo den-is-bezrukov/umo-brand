@@ -6,45 +6,59 @@ import { nameFault } from '@/ui/names'
 import { withListBreak } from '@/data/positions'
 import { noteLine } from '@/ui/liveText'
 import { LOGO } from '@brand/logo'
+import { BUSINESS_CARD as L } from '@brand/business-card'
 import { SITE } from '@/site'
 import { withoutBrand } from '@/data/points'
 
-// A dealership employee's business card: 90×50 mm, two sides. The face
-// is the brand's logo 40×8 mm in the bottom left corner, the same for everyone. The back has
-// two blocks within 5 mm margins: the dealership at the top, set once for the whole list — its name in the brand
-// font's Medium 4 mm, then «Официальный дилер <Бренд>», the address and the site in Regular 3 mm, with the logo 15×3 mm in the
-// top right corner — and the person at the bottom — name and surname in Medium 4 mm, then position, email and phone
-// in Regular 3 mm, with the QR code 15×15 mm in the bottom right corner. The dealership block hangs from the top
-// margin, the person's stands on the bottom one, so a line left out or a second one closes up towards the edge.
-// Figma's text boxes are trimmed to the capitals (680 of 1000 units), so its numbers are cap tops and baselines.
+// An employee's business card, two sides, laid out as the brand's `@brand/business-card` says (`BrandBusinessCard`).
+// The face is the brand's logo, the same for everyone. The back: the dealership at the top if the card names one, set
+// once for the whole list — its name in the brand font's Medium, then «Официальный дилер <Бренд>», the address and the
+// site in Regular — and the person at the bottom: name and surname in Medium, over the position or on lines of their
+// own, then position, email and phone in Regular, with the QR code. The dealership block hangs from its top, the
+// person's stands on its bottom, so a line left out or a second one closes up towards the edge.
+
+/** A logo `w` mm wide from (x, y), mm */
+export interface LogoBox { x: number; y: number; w: number }
+
+/**
+ * `@brand/business-card`: the card's layout, mm, from Figma, whose text boxes are trimmed to the capitals, so the
+ * numbers are cap tops and baselines
+ */
+export interface BrandBusinessCard {
+  size: { w: number; h: number }
+  /** The brand font's cap height, of its size */
+  cap: number
+  /** The faces to choose from, the first the default: black (`dark`, the logo white) or white, and the logo on it */
+  faces: { label: string; dark: boolean; logo: LogoBox }[]
+  /** The back's logo, if it has one */
+  logo?: LogoBox
+  qr: { x: number; y: number; size: number }
+  /**
+   * The dealership at the top, if the card names one, its name's capitals on `top`: the name in `name` mm (Medium,
+   * `width` wide), «Официальный дилер <Бренд>», the address (up to two lines, `addressWidth`) and the site in `size`
+   * (Regular); `afterName` from the name's baseline to the next, `pitch` between items, `leading` inside one
+   */
+  dealer?: { x: number; top: number; name: number; size: number; width: number; addressWidth: number; afterName: number; pitch: number; leading: number }
+  /**
+   * The person, from the bottom: phone, email and position (`position.lines` at most, after a fixed `prefix`) in
+   * `size` (Regular) within `width`, the last baseline on `bottom`, `pitch` between items, `leading` inside one; name and
+   * surname in `name.size` (Medium) within `name.width`, on one line `afterPosition` over the position's capitals, or
+   * on two from (`x`, `baseline`), `pitch` apart
+   */
+  person: {
+    x: number; bottom: number; size: number; width: number; pitch: number; leading: number
+    position: { lines: number; prefix?: string }
+    name: { size: number; width: number } & ({ afterPosition: number } | { x: number; baseline: number; pitch: number })
+  }
+}
 
 /** The PDF info entry holding what the cards were made from (`writePdfData`), read back when the PDF is dropped */
 export const CARDS_KEY = `${SITE.file}BusinessCards`
 
 /** The card, mm */
-export const CARD = { w: 90, h: 50 }
+export const CARD = L.size
 
-const MARGIN = 5
-const CAP = 0.68
-/** The name lines, Medium */
-const BIG = 4
-/** The rest, Regular */
-const SMALL = 3
-/** From a heading's baseline to the first line under it: 2.3 mm between the capitals */
-const AFTER_HEADING = 2.3 + CAP * SMALL
-/** From one item's baseline to the next: 2 mm between them */
-const PITCH = 2 + CAP * SMALL
-/** Between the lines of one item (the address, a position in two lines): 100% */
-const LEADING = SMALL
-
-/** The dealership's column, left of the logo */
-const DEALER_W = 65
-/** The address, under the logo, runs on to its right edge: the full width between the margins */
-const ADDRESS_W = 80
-/** The person's column, left of the QR with 5 mm to it */
-const PERSON_W = 60
-
-export const QR = { x: 70, y: 30, size: 15 }
+export const QR = L.qr
 
 /** The logo `w` mm wide from (x, y), as commands (absolute M, L, H, V, C, Z) */
 export function logo(x: number, y: number, w: number): Cmd[] {
@@ -64,10 +78,12 @@ export function logo(x: number, y: number, w: number): Cmd[] {
   return cmds
 }
 
-/** The face: the logo 40×8 mm, its bottom left corner on the margins */
-export const FACE = logo(MARGIN, CARD.h - MARGIN - 8, 40)
-/** The back's logo, 15×3 mm, its top right corner on the margins, level with the capitals of the dealership's name */
-export const BACK_LOGO = logo(CARD.w - MARGIN - 15, MARGIN, 15)
+/** The faces to choose from, the first the default, each with its logo */
+export const FACES = L.faces.map(f => ({ label: f.label, dark: f.dark, art: logo(f.logo.x, f.logo.y, f.logo.w) }))
+/** The back's logo, if it has one */
+export const BACK_LOGO = L.logo ? logo(L.logo.x, L.logo.y, L.logo.w) : []
+/** Whether the card names the dealership */
+export const HAS_DEALER = !!L.dealer
 
 /** The dealership, set once for the whole list */
 export interface Dealer { name: string; address: string; site: string }
@@ -190,21 +206,24 @@ const mixedScripts = (email: string) => email.split(/[@.]/).some(part => /[a-z]/
 export function buildBack(fonts: Fonts, dealer: Dealer, person: Person, qr: QrData | null): Back {
   const fields: Partial<Record<CardField, Cmd[]>> = {}
   const issues: Issue[] = []
-  const x = MARGIN
+  const P = L.person
 
   const check = (field: CardField, label: string, text: string, font: Font) => {
     const absent = missingChars(font, text)
     if (absent.length) issues.push({ field, text: `${label}: нет в шрифте ${absent.map(c => `«${c}»`).join(', ')}` })
     if (hasProfanity(text)) issues.push({ field, text: `${label}: ${PROFANITY.toLowerCase()}` })
   }
-  /** Lines of one field from `baseline` down, checked against its column and line count */
-  const lines = (field: CardField, label: string, text: string, baseline: number, size: number, width: number, max: number, wrapIt: boolean) => {
-    const font = size === BIG ? fonts.medium : fonts.regular
+  /**
+   * Lines of one field from (`x`, `baseline`) down, `leading` apart, checked against its column and line count; a
+   * `heading` in Medium with the case forms, the rest in Regular
+   */
+  const lines = (field: CardField, label: string, text: string, x: number, baseline: number, size: number, leading: number, width: number, max: number, wrapIt: boolean, heading = false) => {
+    const font = heading ? fonts.medium : fonts.regular
     const set = wrapIt ? wrap(font, text, size, width) : [oneLine(text)].filter(Boolean)
     const cmds: Cmd[] = []
     set.forEach((t, i) => {
-      const l = setLine(font, t, x, baseline + i * LEADING, size, size === BIG)
-      noteLine(font, size, baseline + i * LEADING, t, l.pens)
+      const l = setLine(font, t, x, baseline + i * leading, size, heading)
+      noteLine(font, size, baseline + i * leading, t, l.pens)
       cmds.push(...l.cmds)
       if (l.width > width + 0.01) issues.push({ field, text: `${label} шире ${width} мм` })
     })
@@ -214,53 +233,74 @@ export function buildBack(fonts: Fonts, dealer: Dealer, person: Person, qr: QrDa
     return set.length
   }
 
-  // The dealership, from the top: its capitals on the top margin
-  let y = MARGIN + CAP * BIG
-  lines('dealer', 'Название', dealer.name, y, BIG, DEALER_W, 1, false)
-  y += AFTER_HEADING
-  lines('type', 'Подпись', TYPE, y, SMALL, DEALER_W, 1, false)
-  y += PITCH
-  const address = lines('address', 'Адрес', dealer.address, y, SMALL, ADDRESS_W, 2, true)
-  y += (address - 1) * LEADING + PITCH
-  const site = siteText(dealer.site)
-  if (site) lines('site', 'Сайт', site, y, SMALL, DEALER_W, 1, false)
+  // The dealership, from the top: its capitals on the top
+  const D = L.dealer
+  if (D) {
+    let y = D.top + L.cap * D.name
+    lines('dealer', 'Название', dealer.name, D.x, y, D.name, D.leading, D.width, 1, false, true)
+    y += D.afterName
+    lines('type', 'Подпись', TYPE, D.x, y, D.size, D.leading, D.width, 1, false)
+    y += D.pitch
+    const address = lines('address', 'Адрес', dealer.address, D.x, y, D.size, D.leading, D.addressWidth, 2, true)
+    y += (address - 1) * D.leading + D.pitch
+    const site = siteText(dealer.site)
+    if (site) lines('site', 'Сайт', site, D.x, y, D.size, D.leading, D.width, 1, false)
+  }
 
-  // The person, from the bottom: the last line on the bottom margin
-  y = CARD.h - MARGIN
+  // The person, from the bottom: the last line on the bottom
+  let y = P.bottom
   const phone = phoneLine(person)
   if (phone) {
-    lines('phone', 'Телефон', phone, y, SMALL, PERSON_W, 1, false)
+    lines('phone', 'Телефон', phone, P.x, y, P.size, P.leading, P.width, 1, false)
     if (!formatPhone(person.phone)) issues.push({ field: 'phone', text: 'Телефон: проверьте номер' })
-    y -= PITCH
+    y -= P.pitch
   }
   const email = oneLine(person.email)
   if (email) {
-    lines('email', 'Почта', email, y, SMALL, PERSON_W, 1, false)
+    lines('email', 'Почта', email, P.x, y, P.size, P.leading, P.width, 1, false)
     if (!EMAIL.test(email.replace(/ /g, ''))) issues.push({ field: 'email', text: 'Почта: проверьте адрес' })
     else if (mixedScripts(email)) issues.push({ field: 'email', text: 'Почта: смешаны русские и латинские буквы' })
-    y -= PITCH
+    y -= P.pitch
   }
-  // The position may take two lines, breaking where typed, or where the list breaks it (typed or picked on one line)
+  // The position may take two lines, breaking where typed, or where the list breaks it (typed or picked on one line);
+  // after a fixed prefix, one
   const font = fonts.regular
-  const listed = withListBreak(person.position)
-  const position = wrap(font, listed, SMALL, PERSON_W)
-  const first = y - (Math.max(position.length, 1) - 1) * LEADING
-  lines('position', 'Должность', listed, first, SMALL, PERSON_W, 2, true)
-  y = first - AFTER_HEADING
+  const prefix = P.position.prefix
+  if (prefix) {
+    const pre = setLine(font, prefix, P.x, y, P.size, false)
+    noteLine(font, P.size, y, prefix, pre.pens)
+    fields.type = pre.cmds
+    const text = oneLine(person.position)
+    lines('position', 'Должность', text, pre.end, y, P.size, P.leading, P.width - (pre.end - P.x), 1, false)
+  } else {
+    const listed = withListBreak(person.position)
+    const position = wrap(font, listed, P.size, P.width)
+    const first = y - (Math.max(position.length, 1) - 1) * P.leading
+    lines('position', 'Должность', listed, P.x, first, P.size, P.leading, P.width, P.position.lines, true)
+    y = first
+  }
 
-  // Name and surname on one line, never shrunk: too long is an error, as on the name tag
   const name = oneLine(person.name)
   const surname = oneLine(person.surname)
-  const n = setLine(fonts.medium, name, x, y, BIG, true)
-  noteLine(fonts.medium, BIG, y, name, n.pens)
-  const space = name ? fonts.medium.charToGlyph(' ').advanceWidth! * BIG / fonts.medium.unitsPerEm : 0
-  const start = name ? n.end + space : x
-  const s = setLine(fonts.medium, surname, start, y, BIG, true)
-  noteLine(fonts.medium, BIG, y, surname, s.pens)
-  fields.name = n.cmds
-  fields.surname = s.cmds
-  const width = surname ? start - x + s.width : n.width
-  if (width > PERSON_W + 0.01) for (const field of ['name', 'surname'] as const) issues.push({ field, text: `Имя и фамилия шире ${PERSON_W} мм` })
+  const N = P.name
+  if ('afterPosition' in N) {
+    // Name and surname on one line, never shrunk: too long is an error, as on the name tag
+    y -= N.afterPosition
+    const n = setLine(fonts.medium, name, P.x, y, N.size, true)
+    noteLine(fonts.medium, N.size, y, name, n.pens)
+    const space = name ? fonts.medium.charToGlyph(' ').advanceWidth! * N.size / fonts.medium.unitsPerEm : 0
+    const start = name ? n.end + space : P.x
+    const s = setLine(fonts.medium, surname, start, y, N.size, true)
+    noteLine(fonts.medium, N.size, y, surname, s.pens)
+    fields.name = n.cmds
+    fields.surname = s.cmds
+    const width = surname ? start - P.x + s.width : n.width
+    if (width > N.width + 0.01) for (const field of ['name', 'surname'] as const) issues.push({ field, text: `Имя и фамилия шире ${N.width} мм` })
+  } else {
+    // Name and surname on lines of their own, from the top
+    lines('name', 'Имя', name, N.x, N.baseline, N.size, N.pitch, N.width, 1, false, true)
+    lines('surname', 'Фамилия', surname, N.x, N.baseline + N.pitch, N.size, N.pitch, N.width, 1, false, true)
+  }
   check('name', 'Имя', name, fonts.medium)
   check('surname', 'Фамилия', surname, fonts.medium)
   for (const [field, label, t] of [['name', 'Имя', name], ['surname', 'Фамилия', surname]] as const) {

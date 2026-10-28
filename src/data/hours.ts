@@ -1,9 +1,6 @@
 import { dealerOf } from './points'
 
-// The hours sign's texts: the line under the hours, and what the points of sale say of a dealer
-
-/** The line under the hours, fixed, as the source has it */
-export const DEFAULT_HOURS_LINE = 'Работаем без выходных'
+// What the points of sale say of a dealer, for the hours sign
 
 /** The address the brand's points of sale (`@brand/points`) give a dealer */
 export const addressOf = (name: string) => dealerOf(name)?.address

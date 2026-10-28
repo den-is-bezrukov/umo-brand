@@ -18,21 +18,22 @@ import { SITE } from '@/site'
 // 501×21 mm PDF with the text in outlines, for the frame maker. The line is the dealer's marketing name as the brand
 // lists it («<Бренд> Дилер Город»): the brand's name before it is fixed, so only the name is typed or picked from the suggestions.
 // A link with `text` (even empty: /plate-frame?text) opens a hidden mode where the whole line is free, for the odd case
-// the prefix doesn't fit; nothing on the page leads there.
+// the prefix doesn't fit; nothing on the page leads there. A brand without dealers has only that mode, its site's
+// address the placeholder.
 
 const PREFIX = `${SITE.name} `
 /** The name field's placeholder, standing grey on the frame while it's empty; never in the PDF */
 const PLACEHOLDER_NAME = 'Центр'
-const PLACEHOLDER_TEXT = PREFIX + PLACEHOLDER_NAME
 const GHOST = '#808080'
 /** The dealers' names for the suggestions, without the fixed brand's name */
 const NAMES = DEALER_NAMES.map(withoutBrand)
+const PLACEHOLDER_TEXT = NAMES.length ? PREFIX + PLACEHOLDER_NAME : new URL(SITE.home).host
 const RED = '#ff2a1a'
 
 export default function PlateFrame() {
   const [link] = useState(linkParams)
-  // The free line: on while the link has `text`, so it stays on as the address keeps it
-  const [custom] = useState(() => link.has('text'))
+  // The free line: on while the link has `text`, so it stays on as the address keeps it, or with no dealers to pick
+  const [custom] = useState(() => link.has('text') || !NAMES.length)
   // Empty at first, as the name tag's fields: «Центр» as a value reads as filled in
   // A name with the brand's name (a link made by hand) loses it, as the prefix is fixed
   const [name, setName] = useState(() => withoutBrand(link.get('name') ?? ''))

@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import './index.css'
 import { COUNTER } from './ui/metrika'
+import { MATERIALS } from './data/materials'
 
 // Pages are split so the guide doesn't download the PDF renderer the price card needs.
 const App = lazy(() => import('./App'))
@@ -37,6 +38,9 @@ function MetrikaHits() {
   return null
 }
 
+/** A generator's route, if the brand has it (`MATERIALS`) */
+const has = (path: string) => MATERIALS.some(g => g.path === path)
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
@@ -44,15 +48,15 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <Suspense fallback={null}>
         <Routes>
           <Route path="/" element={<Guide />} />
-          <Route path="/price-card" element={<App />} />
-          <Route path="/livery" element={<LinkDealer param="top" withPrefix><Livery /></LinkDealer>} />
-          <Route path="/plate-frame" element={<LinkDealer param="name"><PlateFrame /></LinkDealer>} />
-          <Route path="/name-tag" element={<NameTag />} />
-          <Route path="/business-card" element={<LinkDealer param="dealer"><BusinessCard /></LinkDealer>} />
-          <Route path="/price-tag" element={<LinkDealer param="dealer"><PriceTag /></LinkDealer>} />
+          {has('/price-card') && <Route path="/price-card" element={<App />} />}
+          {has('/livery') && <Route path="/livery" element={<LinkDealer param="top" withPrefix><Livery /></LinkDealer>} />}
+          {has('/plate-frame') && <Route path="/plate-frame" element={<LinkDealer param="name"><PlateFrame /></LinkDealer>} />}
+          {has('/name-tag') && <Route path="/name-tag" element={<NameTag />} />}
+          {has('/business-card') && <Route path="/business-card" element={<LinkDealer param="dealer"><BusinessCard /></LinkDealer>} />}
+          {has('/price-tag') && <Route path="/price-tag" element={<LinkDealer param="dealer"><PriceTag /></LinkDealer>} />}
           <Route path="/editor" element={<Guide />} />
-          <Route path="/hours-sign" element={<LinkDealer param="name"><HoursSign /></LinkDealer>} />
-          <Route path="/memo" element={<Memo />} />
+          {has('/hours-sign') && <Route path="/hours-sign" element={<LinkDealer param="name"><HoursSign /></LinkDealer>} />}
+          {has('/memo') && <Route path="/memo" element={<Memo />} />}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Suspense>

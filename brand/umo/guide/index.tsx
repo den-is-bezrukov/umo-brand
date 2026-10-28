@@ -8,7 +8,7 @@ import PlateArt from '@/plate/PlateArt'
 import { BASELINE as STRIP_BASELINE } from '@/plate/frame'
 import { toD } from '@/livery/geometry'
 import { TAG, BAND, BAND_ART, DEFAULT_CAPTION, SIDE as TAG_SIDE, CAP as TAG_CAP, DROP as TAG_DROP, DEALER as TAG_DEALER, NAME as TAG_NAME, SMALL as TAG_SMALL, TRACK as TAG_TRACK, CAPTION_TOP as TAG_CAPTION_TOP, PRICE as TAG_PRICE } from '@/pricetag/tag'
-import { SIGN, LOGO as SIGN_LOGO, MARGIN as SIGN_MARGIN, TIME as SIGN_TIME, LINE as SIGN_LINE, INFO as SIGN_INFO, INFO_LAST as SIGN_INFO_LAST } from '@/hours/sign'
+import { SIGN, LOGO as SIGN_LOGO, MARGIN as SIGN_MARGIN, TIME as SIGN_TIME, LINE as SIGN_LINE, INFO as SIGN_INFO, INFO_LAST as SIGN_INFO_LAST } from '@brand/hours-sign'
 import heroMp4 from './images/hero.mp4'
 import hero720Mp4 from './images/hero-720.mp4'
 

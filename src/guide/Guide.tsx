@@ -6,7 +6,8 @@ import tocIcons from '@/icons/toc'
 import { useTypograf } from './typograf'
 import Dialog from '@/ui/Dialog'
 import { TEXT_LINK } from '@/ui/links'
-import { GENERATORS, editTitle } from '@/data/generators'
+import { editTitle } from '@/data/generators'
+import { MATERIALS } from '@/data/materials'
 import { Chapter, Section, Text, Constructor, UNDERLINE, LINK_HOVER, img, type Medium } from './parts'
 import { SITE } from '@/site'
 
@@ -44,7 +45,7 @@ const GENERATED: Record<string, React.LazyExoticComponent<(props: { wide?: boole
   '/memo': lazy(() => import('@/memo/MemoPreview')),
 }
 const GreyCard = ({ wide }: { wide?: boolean }) => <div className={`${wide ? 'aspect-2/1' : 'aspect-4/3'} bg-surface`} />
-const UNDRAWN = GENERATORS.filter(g => !DRAWN.some(m => m.to === g.path))
+const UNDRAWN = MATERIALS.filter(g => !DRAWN.some(m => m.to === g.path))
 const LONE = (DRAWN.filter(m => !isWide(m)).length + UNDRAWN.length) % 2 === 1
 const MEDIA_LIST: Medium[] = [
   ...DRAWN,
@@ -59,7 +60,7 @@ const MEDIA_LIST: Medium[] = [
 ]
 const MEDIA = packMedia(MEDIA_LIST)
 const rank = (path: string) => { const i = INTRO_ORDER.indexOf(path); return i < 0 ? INTRO_ORDER.length : i }
-const INTRO = [...GENERATORS].sort((a, b) => rank(a.path) - rank(b.path))
+const INTRO = [...MATERIALS].sort((a, b) => rank(a.path) - rank(b.path))
 
 const NAV: NavItem[] = [
   ...CHAPTERS,
@@ -478,8 +479,10 @@ function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObjec
 function Hero({ bodyRef }: { bodyRef: RefObject<HTMLElement | null> }) {
   const ref = useRef<HTMLDivElement>(null)
   const videoRef = useRef<HTMLVideoElement>(null)
+  // A brand without a film (`HERO.video` empty) has the still alone
   const [still] = useState(() =>
-    window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    !HERO.video
+    || window.matchMedia('(prefers-reduced-motion: reduce)').matches
     || !!(navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData)
   const [src, setSrc] = useState(() => {
     // The connection type only: Chrome's `downlink` is guessed from the first few requests and reads far too low then
@@ -552,7 +555,7 @@ function BarLinks() {
     // The full names at any width (a trial): where they run past the bar, it scrolls sideways to the screen's edge, its
     // 16px over and under (24 from md) kept in the scroller so the links' tap areas aren't clipped
     <nav aria-label="Быстрые ссылки" className="relative -my-4 -mr-4 -ml-2 flex min-w-0 gap-x-4 overflow-x-auto overscroll-x-contain py-4 pr-4 whitespace-nowrap [scrollbar-width:none] md:-my-6 md:-mr-6 md:-ml-4 md:gap-x-6 md:py-6 md:pr-6 [&::-webkit-scrollbar]:hidden">
-      <a href="#brand" className={`${BAR_LINK} ${LINK_HOVER}`}>Платформа бренда</a>
+      <a href={`#${CHAPTERS[0].id}`} className={`${BAR_LINK} ${LINK_HOVER}`}>{CHAPTERS[0].title}</a>
       {/* Not under 380px, where the three and the icon don't fit the bar (it scrolls sideways, «Редактор» cut off) */}
       <a href="#materials" className={`${BAR_LINK} ${LINK_HOVER} max-[379px]:hidden`}>Материалы</a>
       <Link to="/editor" className={`${BAR_LINK} ${LINK_HOVER}`}>Редактор</Link>
@@ -736,7 +739,7 @@ function Carriers({ items }: { items: typeof MEDIA }) {
     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:gap-6">
       {items.map(c => (
         <div key={c.to} id={c.id} className={`scroll-mt-24 ${isWide(c) ? 'sm:col-span-2' : ''}`}>
-          <Constructor to={c.to} title={c.title} label={c.row} flush template={GENERATORS.find(g => g.path === c.to)?.templates?.[0]}>{c.picture}</Constructor>
+          <Constructor to={c.to} title={c.title} label={c.row} flush template={MATERIALS.find(g => g.path === c.to)?.templates?.[0]}>{c.picture}</Constructor>
         </div>
       ))}
     </div>
@@ -775,7 +778,7 @@ function useWide() {
  * as the contents)
  */
 function EditorLinks() {
-  return GENERATORS.map(m => (
+  return MATERIALS.map(m => (
     <Link key={m.path} to={m.path} target="_blank" rel="noopener" title={editTitle(m.path)} className="group flex items-center gap-2 text-[24px] font-medium leading-6 tracking-[-0.01em]">
       <span className={`${UNDERLINE} group-hover:decoration-black/40 group-hover:duration-0`}>{m.title}</span>
       <span aria-hidden className="opacity-0 group-hover:opacity-100">↗</span>
@@ -992,12 +995,12 @@ export default function Guide() {
                 <p id="statement" className="text-[32px] font-medium leading-none tracking-[-0.01em] md:text-[48px] lg:mt-[calc(8px-0.164em+var(--logo-overhang,0px))] lg:max-w-[912px] lg:text-[min(60px,6.58cqw)]">
                   {STATEMENT}
                 </p>
-                {/* Quick links: read (Платформа бренда), see (Материалы, the templates there too), make (Редактор, the
+                {/* Quick links: read (the brand's first chapter, Платформа бренда), see (Материалы, the templates there too), make (Редактор, the
                     constructors' window, titled «Редактор материалов»; «Редактор» alone after Материалы, with no echo). They
                     were Платформа and Материалы для дилеров, then Носители and Печатные материалы, then no Материалы */}
                 {/* From lg only: below it they stand in the bottom bar beside the menu icon (BarLinks) */}
                 <nav aria-label="Быстрые ссылки" ref={quickRef} className="flex max-lg:hidden flex-wrap gap-x-6 gap-y-2 text-[16px] font-medium leading-[1.25] tracking-[-0.01em]">
-                  <a href="#brand" className={LINK_HOVER}>Платформа бренда</a>
+                  <a href={`#${CHAPTERS[0].id}`} className={LINK_HOVER}>{CHAPTERS[0].title}</a>
                   <a href="#materials" className={LINK_HOVER}>Материалы</a>
                   <Link to="/editor" className={LINK_HOVER}>Редактор</Link>
                 </nav>

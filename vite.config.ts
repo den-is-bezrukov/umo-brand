@@ -29,7 +29,8 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
       siteMetaPlugin(siteConfiguration),
-      routePages([...GENERATORS.map(g => g.path), '/editor']),
+      brandDefaults(brandDir, path.resolve(__dirname, 'src/brand-default')),
+      routePages([...GENERATORS.map(g => g.path).filter(p => !siteConfiguration.materials || siteConfiguration.materials.includes(p.slice(1))), '/editor']),
       corePublic(path.resolve(__dirname, 'public')),
       reactRefreshBoundaryFallback(),
     ],
@@ -54,6 +55,8 @@ export default defineConfig(({ mode }) => {
 })
 
 type SiteConfiguration = {
+  /** The generators the brand has, by path (`business-card`); without it, every one */
+  materials?: string[]
   /** Where the site lives: the Metrika counter counts there only */
   domain?: string
   /** Yandex.Metrika's counter, none for no counter */
@@ -260,6 +263,24 @@ function routePages(paths: string[]): Plugin {
       for (const p of paths) {
         this.emitFile({ type: 'asset', fileName: `${p.slice(1)}.html`, source: index.source })
       }
+    },
+  }
+}
+
+/**
+ * A part the brand doesn't have (`@brand/livery` for a brand without a livery) taken from the core's defaults,
+ * `src/brand-default/`, empty: a material the brand leaves out of its `materials` still builds, and never shows
+ */
+function brandDefaults(brandDir: string, defaultsDir: string): Plugin {
+  const find = (base: string) => ['', '.ts', '.tsx', '.json'].map(e => base + e).find(f => fs.existsSync(f) && fs.statSync(f).isFile())
+  return {
+    name: 'brand-defaults',
+    enforce: 'pre',
+    resolveId(source) {
+      const [file, query] = source.split('?')
+      if (!file.startsWith(brandDir + path.sep) || find(file)) return null
+      const fallback = find(path.join(defaultsDir, path.relative(brandDir, file)))
+      return fallback && (query === undefined ? fallback : `${fallback}?${query}`)
     },
   }
 }

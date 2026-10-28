@@ -1,0 +1,14 @@
+{
+  "name": "Evrone",
+  "file": "Evrone",
+  "domain": "brand.evrone.com",
+  "home": "https://evrone.com",
+  "support": "https://evrone.com/contacts",
+  "materials": ["business-card", "hours-sign", "plate-frame"],
+  "title": "Бренд Evrone",
+  "description": "Стандарты бренда Evrone и печатные материалы",
+  "language": "ru",
+  "robots": {
+    "index": false
+  }
+}

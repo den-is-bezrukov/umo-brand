@@ -6,7 +6,7 @@ import { goal } from '@/ui/metrika'
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/ui/type'
 import { xlsxCells, pastedCells, byHeaders, FULL_NAME, fromFullName, type Cells } from '@/nametag/table'
-import { CARDS_KEY, CARD, QR, FACE, BACK_LOGO, DEALER_FIELDS, buildBack, siteFor, siteText, splitPhone, maskPhone, type CardField, type Dealer, type Person, type QrData } from '@/card/card'
+import { CARDS_KEY, CARD, QR, FACES, BACK_LOGO, HAS_DEALER, DEALER_FIELDS, buildBack, siteFor, siteText, splitPhone, maskPhone, type CardField, type Dealer, type Person, type QrData } from '@/card/card'
 import CardArt from '@/card/CardArt'
 import { POSITION_OPTIONS } from '@/data/positions'
 import { DEALER_NAMES, dealerFilter, dealerOf, withoutBrand, phoneOf } from '@/data/points'
@@ -62,11 +62,11 @@ const addressOf = (name: string) => dealerOf(name)?.address || undefined
  */
 const DEALER_OPTIONS = DEALER_NAMES.map(withoutBrand)
 
-/** What the grey stand-in QR holds */
+/** What the grey stand-in QR holds, and the QR's link on a card that names no dealership */
 const SAMPLE_LINK = SITE.home
 
 /** What the cards were made from, kept in their PDF (`CARDS_KEY`) */
-interface CardsData { dealer: Omit<Dealer, 'site'> & { site: string | null }; qrLink: string | null; faceEach: boolean; marks: boolean; people: Person[] }
+interface CardsData { dealer: Omit<Dealer, 'site'> & { site: string | null }; qrLink: string | null; face?: number; faceEach: boolean; marks: boolean; people: Person[] }
 
 const PERSON_FIELDS: CardField[] = ['name', 'surname', 'position', 'email', 'phone']
 
@@ -101,7 +101,8 @@ export default function BusinessCard() {
   const [dealerOpen, setDealerOpen] = useState(false)
   /** The QR's link, following the site until it's edited */
   const [qrLink, setQrLink] = useState<string | null>(initial.qrLink)
-  // The face before every back (else once, before all of them), and crop marks around each card
+  // Which of the brand's faces, the face before every back (else once, before all of them), and crop marks around each card
+  const [face, setFace] = useState(0)
   const [faceEach, setFaceEach] = useState(false)
   const [marks, setMarks] = useState(initial.marks)
 
@@ -118,6 +119,7 @@ export default function BusinessCard() {
       if (!d?.people?.length) throw new Error('В этом PDF нет визиток: подходят PDF, скачанные здесь')
       setDealer({ name: String(d.dealer?.name ?? ''), address: String(d.dealer?.address ?? ''), site: d.dealer?.site ?? null })
       setQrLink(d.qrLink ?? null)
+      setFace(FACES[d.face ?? 0] ? d.face ?? 0 : 0)
       setFaceEach(!!d.faceEach)
       setMarks(!!d.marks)
       return d.people.map(p => ({ ...BLANK, ...p }))
@@ -140,9 +142,10 @@ export default function BusinessCard() {
     return () => { document.title = prev }
   }, [])
 
-  const siteLink = siteText(dealer.site) ? `https://${siteText(dealer.site)}` : ''
+  // A card naming no dealership links to the brand's site, and its staff's mail is there
+  const siteLink = !HAS_DEALER ? SAMPLE_LINK : siteText(dealer.site) ? `https://${siteText(dealer.site)}` : ''
   /** The domain the email field suggests: the site's, without a path */
-  const mailDomain = siteText(dealer.site).split('/')[0]
+  const mailDomain = (HAS_DEALER ? siteText(dealer.site) : siteText(SITE.home)).split('/')[0]
   const link = qrLink ?? siteLink
   const qrFor = (_p: Person): QrData | null =>
     isValidUrl(link) ? { text: link.trim(), level: 'M' } : null
@@ -170,7 +173,7 @@ export default function BusinessCard() {
   }) : undefined, [fonts, items, dealer, link]) // eslint-disable-line react-hooks/exhaustive-deps
 
   /** The dealership's errors, the same on every card */
-  const dealerMissing = (['dealer', 'address', 'site'] as const).filter(f => !(f === 'dealer' ? dealer.name : dealer[f]).trim())
+  const dealerMissing = !HAS_DEALER ? [] : (['dealer', 'address', 'site'] as const).filter(f => !(f === 'dealer' ? dealer.name : dealer[f]).trim())
   const dealerIssues = [
     ...dealerMissing.map(f => MISSING[f]!),
     ...new Set(cards?.[0]?.issues.filter(i => i.field && DEALER_FIELDS.includes(i.field)).map(i => i.text) ?? []),
@@ -212,17 +215,17 @@ export default function BusinessCard() {
   /** The cards' PDF for «Поделиться» to send, made again as they change */
   const shareFile = useCallback(async () => {
     const { cardsPdf } = await import('@/card/pdf')
-    const data: CardsData = { dealer: input, qrLink, faceEach, marks, people: items.map(plain) }
-    return new File([await cardsPdf(cards!.map(c => c.back), { faceEach, marks }, data)], `${SITE.file}_business-cards.pdf`, { type: 'application/pdf' })
-  }, [cards, input, qrLink, faceEach, marks, items]) // eslint-disable-line react-hooks/exhaustive-deps
+    const data: CardsData = { dealer: input, qrLink, ...(FACES.length > 1 && { face }), faceEach, marks, people: items.map(plain) }
+    return new File([await cardsPdf(cards!.map(c => c.back), { face, faceEach, marks }, data)], `${SITE.file}_business-cards.pdf`, { type: 'application/pdf' })
+  }, [cards, input, qrLink, face, faceEach, marks, items]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleExport = async () => {
     if (!cards || !ok) return
     setExporting(true)
     try {
       const { cardsPdf } = await import('@/card/pdf')
-      const data: CardsData = { dealer: input, qrLink, faceEach, marks, people: items.map(plain) }
-      const blob = await cardsPdf(cards.map(c => c.back), { faceEach, marks }, data)
+      const data: CardsData = { dealer: input, qrLink, ...(FACES.length > 1 && { face }), faceEach, marks, people: items.map(plain) }
+      const blob = await cardsPdf(cards.map(c => c.back), { face, faceEach, marks }, data)
       const a = document.createElement('a')
       a.href = URL.createObjectURL(blob)
       a.download = `${SITE.file}_business-cards.pdf`
@@ -246,8 +249,8 @@ export default function BusinessCard() {
     if (!ok) { setPdfOnly(false); return }
     import('@/card/pdf')
       .then(async ({ cardsPdf }) => {
-        const data: CardsData = { dealer: input, qrLink, faceEach, marks, people: items.map(plain) }
-        saveAndOpenPdf(await cardsPdf(cards.map(c => c.back), { faceEach, marks }, data), `${SITE.file}_business-cards.pdf`)
+        const data: CardsData = { dealer: input, qrLink, ...(FACES.length > 1 && { face }), faceEach, marks, people: items.map(plain) }
+        saveAndOpenPdf(await cardsPdf(cards.map(c => c.back), { face, faceEach, marks }, data), `${SITE.file}_business-cards.pdf`)
         goal('download_business_card', { count: cards.length, faceEach, marks, via: 'link' })
       })
       .catch(() => setPdfOnly(false))
@@ -257,7 +260,7 @@ export default function BusinessCard() {
   const makeTemplate = (i: number) => {
     const c = cards?.[i]
     // Without a link yet, the grey sample code stands in, as on the page
-    return c ? () => import('@/card/pdf').then(m => m.cardsTemplate([{ back: { ...c.back, qr: c.back.qr.length ? c.back.qr : c.ghostQr }, lines: c.lines }], { faceEach, marks })) : undefined
+    return c ? () => import('@/card/pdf').then(m => m.cardsTemplate([{ back: { ...c.back, qr: c.back.qr.length ? c.back.qr : c.ghostQr }, lines: c.lines }], { face, faceEach, marks })) : undefined
   }
   /** The blank one a `template` link gives: every field its placeholder, the QR the sample one */
   const makeBlank = fonts ? () => {
@@ -276,7 +279,7 @@ export default function BusinessCard() {
   /** «Скачать шаблон» in the item's column */
   const templateIcon = (i: number) => <TemplateButton make={makeTemplate(i)} name={`${SITE.file}_business-cards_template.pdf`} goalId="download_business_card_template" />
 
-  const face = toD(FACE)
+  const faceArt = <CardArt text={toD(FACES[face].art)} dark={FACES[face].dark} />
   /** The QR, the whole list's: with the dealership, under «Изменить» after the site it follows */
   const qrField = (
     <Labelled label="QR-код">
@@ -341,8 +344,9 @@ export default function BusinessCard() {
 
           {/* The dealership and the person in one column, 16 px apart as any fields; the pages, the whole file's, set apart */}
           <div className="flex flex-col gap-4 tracking-normal">
-            {/* The dealership: the whole list's */}
-            <div ref={dealerForm} className="flex flex-col gap-4">
+            {/* The dealership: the whole list's; a card naming none has the QR alone */}
+            {!HAS_DEALER && qrField}
+            {HAS_DEALER && <div ref={dealerForm} className="flex flex-col gap-4">
               <div data-field="dealer" className="group/field flex flex-col gap-3">
                 <div className="flex items-center justify-between gap-2">
                   <p className={`text-[14px] leading-4 text-caption ${ALERT_LABEL}`}>Дилер</p>
@@ -373,7 +377,7 @@ export default function BusinessCard() {
               </div>
               {qrField}
               </>}
-            </div>
+            </div>}
 
             {mode === 'manual' && current && (() => {
               const p = current
@@ -447,6 +451,13 @@ export default function BusinessCard() {
 
             {/* The whole file's, in the form's rhythm (not 24 px more: set apart, they read as a slip) */}
             <div className="flex flex-col gap-4">
+              {FACES.length > 1 && (
+                <Labelled label="Обложка">
+                  <Segments>
+                    {FACES.map((f, i) => <SegBtn key={f.label} active={face === i} onClick={() => setFace(i)}>{f.label}</SegBtn>)}
+                  </Segments>
+                </Labelled>
+              )}
               {/* With one card the face goes once either way */}
               {items.length > 1 && <Checkbox checked={faceEach} onChange={setFaceEach}>Обложка у всех</Checkbox>}
               <Checkbox checked={marks} onChange={setMarks}>Метки реза</Checkbox>
@@ -474,7 +485,7 @@ export default function BusinessCard() {
 
   // Phones: the canvas over a sheet with the form (trial)
   if (pdfOnly || templateOnly) return null
-  if (phone) return <MobileEditor slides={mode === 'table' && !staff.file ? [{ key: 'upload', node: <UploadArea staff={staff} /> }] : [{ key: 'face', number: 0, label: 'Обложка', ratio: CARD.h / CARD.w, node: <div className="outline-1 outline-black/10"><CardArt text={face} /></div> }, ...items.map((p, i) => ({ key: p.key, item: p.key, number: i + 1, label: `${p.name} ${p.surname}`.replace(/\s+/g, ' ').trim(), ratio: CARD.h / CARD.w, node: renderItem(p, i) }))]} onAdd={mode === 'manual' ? addItem : undefined} sidebar={sidebar} download={download} staff={staff} />
+  if (phone) return <MobileEditor slides={mode === 'table' && !staff.file ? [{ key: 'upload', node: <UploadArea staff={staff} /> }] : [{ key: 'face', number: 0, label: 'Обложка', ratio: CARD.h / CARD.w, node: <div className="outline-1 outline-black/10">{faceArt}</div> }, ...items.map((p, i) => ({ key: p.key, item: p.key, number: i + 1, label: `${p.name} ${p.surname}`.replace(/\s+/g, ' ').trim(), ratio: CARD.h / CARD.w, node: renderItem(p, i) }))]} onAdd={mode === 'manual' ? addItem : undefined} sidebar={sidebar} download={download} staff={staff} />
 
   return (
     <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
@@ -498,7 +509,7 @@ export default function BusinessCard() {
           <div className="flex justify-center">
             {/* Dimmed with the cards not selected while there are several; with one card it's that card's own face, never dimmed */}
             <div className={`w-full max-w-[480px] transition-opacity duration-150 ${mode === 'manual' && current && items.length > 1 ? 'opacity-40' : ''}`}>
-              <div className="outline-1 outline-black/10"><CardArt text={face} /></div>
+              <div className="outline-1 outline-black/10">{faceArt}</div>
             </div>
           </div>
           {items.map(renderItem)}

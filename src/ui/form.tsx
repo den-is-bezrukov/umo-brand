@@ -2,7 +2,7 @@ import { useContext, useEffect, useId, useLayoutEffect, useRef, useState } from 
 import { createPortal } from 'react-dom'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { goal } from './metrika'
-import { GENERATORS } from '@/data/generators'
+import { MATERIALS } from '@/data/materials'
 import HelpButton from './help'
 import Ring from './Ring'
 import { ChevronIcon } from './icons'
@@ -54,12 +54,12 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
     <div data-head className="flex flex-col gap-4">
       <div className="flex items-center gap-2">
         <PhoneCrumbs open={menu} onEditor={toggle} />
-        <HelpButton page={current} tabs={GENERATORS} />
+        <HelpButton page={current} tabs={MATERIALS} />
       </div>
       {menu ? (
         // 20 px under the crumbs, as the line's names stand (its 4 px over them), so the first name doesn't jump up
         <nav aria-label="Конструкторы" className="mt-1 flex flex-col items-start gap-4">
-          {GENERATORS.map(g => g.path === current
+          {MATERIALS.map(g => g.path === current
             ? <button key={g.path} type="button" aria-current="page" onClick={() => setMenu(false)} className={`${name} cursor-pointer text-left`}>{g.title}</button>
             : <Link key={g.path} to={g.path} className={`${name} text-[#bfbfbf] hover:text-caption active:text-caption`}>{g.title}</Link>)}
         </nav>
@@ -98,7 +98,7 @@ function GeneratorRing({ current }: { current: string }) {
   return (
     <Ring
       label="Конструкторы"
-      items={GENERATORS.map(g => ({ key: g.path, title: g.title }))}
+      items={MATERIALS.map(g => ({ key: g.path, title: g.title }))}
       current={current}
       onPick={(path, keys) => navigate(path, keys ? { state: { turned: true } } : undefined)}
       href={path => path}

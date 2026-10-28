@@ -1,37 +1,42 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Font } from 'opentype.js'
 import { goal } from '@/ui/metrika'
-import { Field, TextInput, ComboField, GeneratorHeader, LinkButtons, DownloadBar, flash } from '@/ui/form'
+import { Field, TextInput, ComboField, GeneratorHeader, LinkButtons, DownloadBar, Segments, SegBtn, flash } from '@/ui/form'
 import { isPdf, readPdfData } from '@/ui/pdfData'
 import { CaptionReset } from '@/ui/staff'
 import { linkParams, useLinkState, saveAndOpenPdf } from '@/ui/share'
 import { toD } from '@/livery/geometry'
 import { maskPhone, siteFor } from '@/card/card'
-import { SIGN, SIGN_KEY, LOGO, buildSign, timeText, type SignField, type Input } from '@/hours/sign'
+import { SIGN, SIGN_KEY, FIELDS, HOURS, VARIANTS, buildSign, signLogo, timeText, type SignField, type SignFieldSpec, type Input } from '@/hours/sign'
 import { loadFont, oneLine } from '@/ui/type'
 import { DEALER_NAMES, dealerFilter, withoutBrand, phoneOf } from '@/data/points'
-import { DEFAULT_HOURS_LINE, addressOf, hoursOf } from '@/data/hours'
+import { addressOf, hoursOf } from '@/data/hours'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { recordText } from '@/ui/liveText'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
 import { SITE } from '@/site'
 
-// The dealership's hours sign: a 480×680 mm plate with the logo, the hours, a
-// line under them and the dealership at the bottom, as a PDF in outlines for the maker. A dealer picked from the list
-// puts in its address and hours from the brand's site and its site, all of them edited freely; the phone from the hand-kept list.
+// The hours sign: the hours and the brand's fields (`@brand/hours-sign`), as a PDF in outlines for the maker. A
+// dealer picked from the list puts in its address and hours from the brand's site and its site, all of them edited
+// freely; the phone from the hand-kept list.
 
 /** The dealers' names without the brand's name, which the sign puts before them, fixed */
 const NAMES = DEALER_NAMES.map(withoutBrand)
 
+/** The field of each kind, if the brand's sign has one */
+const byKind = (kind: SignFieldSpec['kind']) => FIELDS.find(f => f.kind === kind)
+const DEALER = byKind('dealer')
+const SITE_FIELD = byKind('site')
+/** A field's name in a link and the cards' data */
+const paramOf = (f: SignFieldSpec) => f.param ?? f.id
+
 /** Empty fields stand grey on the sign as these; never in the PDF */
-const PLACEHOLDER: Record<Exclude<SignField, 'line'>, string> = {
-  from: '9:00', to: '21:00', dealer: 'Название дилера', address: 'Адрес', phone: '+7 495 000 00 00', site: 'Сайт',
-}
+const PLACEHOLDER: Input = { from: HOURS.placeholder[0], to: HOURS.placeholder[1], ...Object.fromEntries(FIELDS.map(f => [f.id, f.placeholder])) }
 /** What an empty field asks for in the download button, in the form's order */
-const MISSING: Record<Exclude<SignField, 'line'>, string> = {
-  from: 'Указать время', to: 'Указать время', dealer: 'Выбрать дилера', address: 'Указать адрес', phone: 'Указать телефон', site: 'Указать сайт',
-}
-const ORDER = ['from', 'to', 'dealer', 'address', 'phone', 'site'] as const
+const MISSING: Record<SignField, string> = { from: 'Указать время', to: 'Указать время', ...Object.fromEntries(FIELDS.map(f => [f.id, f.missing])) }
+/** What each field starts with, and comes back to with the reset */
+const DEFAULTS: Input = { from: HOURS.default?.[0] ?? '', to: HOURS.default?.[1] ?? '', ...Object.fromEntries(FIELDS.map(f => [f.id, f.default ?? ''])) }
+const ORDER = ['from', 'to', ...FIELDS.map(f => f.id)]
 
 /** The hours step by half an hour, from 0:00 to 24:00 */
 const STEP = 30
@@ -143,26 +148,35 @@ const ALERT = '#e30'
 
 export default function HoursSign() {
   const [link] = useState(linkParams)
+  /** The dealer a link names, as written */
+  const linked = DEALER ? link.get(paramOf(DEALER)) ?? '' : ''
   // A listed dealer's hours from the brand's site stand in for the times a link leaves out, as its address does
-  const [from, setFrom] = useState(() => maskTime(link.get('from') ?? hoursOf(link.get('name') ?? '')?.from ?? ''))
-  const [to, setTo] = useState(() => maskTime(link.get('to') ?? hoursOf(link.get('name') ?? '')?.to ?? ''))
-  // The line under the hours is fixed, «Работаем без выходных»: nothing a dealer needs to change there
-  const line = DEFAULT_HOURS_LINE
+  const [from, setFrom] = useState(() => maskTime(link.get('from') ?? hoursOf(linked)?.from ?? DEFAULTS.from))
+  const [to, setTo] = useState(() => maskTime(link.get('to') ?? hoursOf(linked)?.to ?? DEFAULTS.to))
   // A name with the brand's name (a link made by hand) loses it, as the sign puts it before the name; a phone takes the field's mask
-  const [dealer, setDealer] = useState(() => withoutBrand(link.get('name') ?? ''))
-  const [address, setAddress] = useState(() => link.get('address') ?? addressOf(link.get('name') ?? '') ?? '')
-  const [phone, setPhone] = useState(() => maskPhone(link.get('phone') ?? phoneOf(link.get('name') ?? '') ?? '').text)
+  const [fields, setFields] = useState<Input>(() => Object.fromEntries(FIELDS.filter(f => f.kind !== 'site').map(f => {
+    const v = link.get(paramOf(f))
+    return [f.id,
+      f.kind === 'dealer' ? withoutBrand(v ?? '')
+        : f.kind === 'address' ? v ?? (DEALER && addressOf(linked)) ?? DEFAULTS[f.id]
+          : f.kind === 'phone' ? maskPhone(v ?? (DEALER && phoneOf(linked)) ?? DEFAULTS[f.id]).text
+            : v ?? DEFAULTS[f.id]]
+  })))
+  const set = (id: string, v: string) => setFields(f => ({ ...f, [id]: v }))
+  const dealer = DEALER ? fields[DEALER.id] : ''
   /** A dealer's phone as the field writes it */
   const dealerPhone = (name: string) => { const p = phoneOf(name); return p ? maskPhone(p).text : undefined }
   /** The site follows the dealer's name (`siteFor`) until it's edited: null */
-  const [ownSite, setSite] = useState<string | null>(link.get('site'))
+  const [ownSite, setSite] = useState<string | null>(SITE_FIELD ? link.get(paramOf(SITE_FIELD)) : null)
   const site = ownSite ?? siteFor(dealer)
+  /** Which of the brand's variants (black, white), the first by default */
+  const [variant, setVariant] = useState(() => VARIANTS[+(link.get('variant') ?? 0)] ? +(link.get('variant') ?? 0) : 0)
+  /** What a field would have of itself: the picked dealer's address or phone, else its default */
+  const auto = (f: SignFieldSpec) => (f.kind === 'address' && DEALER ? addressOf(dealer) : f.kind === 'phone' && DEALER ? dealerPhone(dealer) : undefined) ?? f.default
   useLinkState({
     from, to,
-    name: dealer,
-    address: address === addressOf(dealer) ? null : address,
-    phone: phone === dealerPhone(dealer) ? null : phone,
-    site: ownSite,
+    ...Object.fromEntries(FIELDS.map(f => [paramOf(f), f.kind === 'site' ? ownSite : f.kind === 'dealer' ? fields[f.id] : fields[f.id] === auto(f) ? null : fields[f.id]])),
+    ...(VARIANTS.length > 1 && { variant: variant ? String(variant) : null }),
   })
 
   const [font, setFont] = useState<Font>()
@@ -176,21 +190,21 @@ export default function HoursSign() {
     return () => { document.title = prev }
   }, [])
 
-  const values: Record<Exclude<SignField, 'line'>, string> = { from: wholeTime(from), to: wholeTime(to), dealer, address, phone, site }
+  const values: Input = { from: wholeTime(from), to: wholeTime(to), ...fields, ...(SITE_FIELD && { [SITE_FIELD.id]: site }) }
   const empty = ORDER.filter(f => !oneLine(values[f]))
-  const shown: Input = { line, ...Object.fromEntries(ORDER.map(f => [f, oneLine(values[f]) ? values[f] : PLACEHOLDER[f]])) as Omit<Input, 'line'> }
+  const shown: Input = Object.fromEntries(ORDER.map(f => [f, oneLine(values[f]) ? values[f] : PLACEHOLDER[f]]))
   // Its lines noted too, for the editable template
-  const built = useMemo(() => font ? recordText(() => buildSign(font, shown)) : undefined, [font, JSON.stringify(shown)]) // eslint-disable-line react-hooks/exhaustive-deps
+  const built = useMemo(() => font ? recordText(() => buildSign(font, shown, variant)) : undefined, [font, JSON.stringify(shown), variant]) // eslint-disable-line react-hooks/exhaustive-deps
   const sign = built?.result
   /** Faults of what's typed; a placeholder is never one */
-  const issues = (sign?.issues ?? []).filter(i => !empty.includes(i.field as typeof ORDER[number]))
+  const issues = (sign?.issues ?? []).filter(i => !empty.includes(i.field))
   const wrong = new Set(issues.map(i => i.field))
   const ok = !!sign && !empty.length && !issues.length
 
   // The first thing to do, in the form's order: an empty field or a wrong one
   const firstEmpty = empty[0]
-  const firstWrong = ORDER.find(f => wrong.has(f)) ?? (wrong.has('line') ? 'line' : undefined)
-  const firstAt = firstEmpty && (!firstWrong || ORDER.indexOf(firstEmpty) <= ORDER.indexOf(firstWrong as typeof ORDER[number])) ? firstEmpty : firstWrong
+  const firstWrong = ORDER.find(f => wrong.has(f))
+  const firstAt = firstEmpty && (!firstWrong || ORDER.indexOf(firstEmpty) <= ORDER.indexOf(firstWrong)) ? firstEmpty : firstWrong
   const note = !firstAt ? undefined
     : firstAt === firstEmpty ? MISSING[firstAt]
       : issues.find(i => i.field === firstAt)!.text
@@ -200,32 +214,40 @@ export default function HoursSign() {
 
   const pickDealer = (v: string) => {
     // The address, phone and hours follow the dealer picked while they're empty or the previous dealer's
-    const a = addressOf(v)
-    if (a && (!address.trim() || address === addressOf(dealer))) setAddress(a)
-    const p = dealerPhone(v)
-    if (p && (!phone.trim() || phone === dealerPhone(dealer))) setPhone(p)
+    const next = { ...fields, [DEALER!.id]: v }
+    for (const f of FIELDS) {
+      const now = f.kind === 'address' ? addressOf(v) : f.kind === 'phone' ? dealerPhone(v) : undefined
+      const was = f.kind === 'address' ? addressOf(dealer) : f.kind === 'phone' ? dealerPhone(dealer) : undefined
+      if (now && (!fields[f.id].trim() || fields[f.id] === was)) next[f.id] = now
+    }
     const h = hoursOf(v)
     const was = hoursOf(dealer)
     if (h && ((!from.trim() && !to.trim()) || (was && from === was.from && to === was.to))) { setFrom(h.from); setTo(h.to) }
-    setDealer(v)
+    setFields(next)
   }
 
-  const blank = !ORDER.some(f => f !== 'site' && oneLine(values[f])) && ownSite === null
+  const blank = ORDER.every(f => f === SITE_FIELD?.id || oneLine(values[f]) === DEFAULTS[f]) && ownSite === null && variant === 0
   const reset = () => {
-    setFrom(''); setTo(''); setDealer(''); setAddress(''); setPhone(''); setSite(null)
+    setFrom(DEFAULTS.from); setTo(DEFAULTS.to); setFields(Object.fromEntries(Object.keys(fields).map(id => [id, DEFAULTS[id]]))); setSite(null); setVariant(0)
   }
 
+  /** What the sign was made from, kept in its PDF (`SIGN_KEY`) */
+  const data = () => ({
+    from, to,
+    ...Object.fromEntries(FIELDS.map(f => [f.id, f.kind === 'site' ? ownSite : fields[f.id]])),
+    ...(VARIANTS.length > 1 && { variant }),
+  })
   const pdfOf = async (s: NonNullable<typeof sign>) => {
     const { signPdf, SIGN_FILE } = await import('@/hours/pdf')
-    return { blob: await signPdf(s, { from, to, dealer, address, phone, site: ownSite }), name: SIGN_FILE }
+    return { blob: await signPdf(s, data(), variant), name: SIGN_FILE }
   }
   /** The sign's PDF for «Поделиться» to send, made again as it changes */
   const shareFile = useCallback(async () => {
     const { blob, name } = await pdfOf(sign!)
     return new File([blob], name, { type: 'application/pdf' })
-  }, [sign, from, to, dealer, address, phone, ownSite]) // eslint-disable-line react-hooks/exhaustive-deps
+  }, [sign, from, to, fields, ownSite, variant]) // eslint-disable-line react-hooks/exhaustive-deps
   const downloadGoal = (extra?: Record<string, unknown>) =>
-    goal('download_hours_sign', { from: oneLine(from), to: oneLine(to), dealer: NAMES.includes(oneLine(dealer)), ...extra })
+    goal('download_hours_sign', { from: oneLine(from), to: oneLine(to), ...(DEALER && { dealer: NAMES.includes(oneLine(dealer)) }), ...extra })
 
   const handleExport = async () => {
     if (!sign || !ok) return
@@ -244,10 +266,10 @@ export default function HoursSign() {
   }
 
   /** The editable template: the sign as on the page, placeholders where nothing is typed */
-  const makeTemplate = built ? () => import('@/hours/pdf').then(m => m.signTemplate(built.result, built.lines)) : undefined
-  /** The blank one a `template` link gives: every field its placeholder, the line under the hours as by default */
+  const makeTemplate = built ? () => import('@/hours/pdf').then(m => m.signTemplate(built.result, built.lines, variant)) : undefined
+  /** The blank one a `template` link gives: every field its placeholder */
   const makeBlank = font ? () => {
-    const one = recordText(() => buildSign(font, { line: DEFAULT_HOURS_LINE, ...PLACEHOLDER }))
+    const one = recordText(() => buildSign(font, PLACEHOLDER))
     return import('@/hours/pdf').then(m => m.signTemplate(one.result, one.lines))
   } : undefined
   const templateOnly = useTemplateLink(makeBlank, `${SITE.file}_hours-sign_template.pdf`, 'download_hours_sign_template')
@@ -283,19 +305,23 @@ export default function HoursSign() {
   /** Its own PDF dropped on the page opens what it was made from; any other file is said to have no sign */
   const openFile = async (file: File) => {
     const bytes = new Uint8Array(await file.arrayBuffer())
-    const d = isPdf(bytes) ? readPdfData(bytes, SIGN_KEY) as Partial<Record<'from' | 'to' | 'dealer' | 'address' | 'phone' | 'site', string | null>> | undefined : undefined
+    const d = isPdf(bytes) ? readPdfData(bytes, SIGN_KEY) as Record<string, unknown> | undefined : undefined
     if (!d || typeof d !== 'object') { flash('В файле нет режимника'); return }
     const text = (v: unknown) => typeof v === 'string' ? v : ''
-    setFrom(maskTime(text(d.from))); setTo(maskTime(text(d.to))); setDealer(text(d.dealer)); setAddress(text(d.address)); setPhone(text(d.phone))
-    setSite(typeof d.site === 'string' ? d.site : null)
+    setFrom(maskTime(text(d.from))); setTo(maskTime(text(d.to)))
+    setFields(Object.fromEntries(Object.keys(fields).map(id => [id, text(d[id])])))
+    if (SITE_FIELD) setSite(typeof d[SITE_FIELD.id] === 'string' ? d[SITE_FIELD.id] as string : null)
+    setVariant(typeof d.variant === 'number' && VARIANTS[d.variant] ? d.variant : 0)
   }
 
   /** A day under 8 hours, the shortest any dealer works (10:00–18:00): likely a typo, said under the sign */
   const short = !empty.includes('from') && !empty.includes('to') && !!timeText(values.from) && !!timeText(values.to)
     && minutesOf(timeText(values.to)!) - minutesOf(timeText(values.from)!) < SHORT_DAY
 
+  const dark = !!VARIANTS[variant]?.dark
+  const ink = dark ? '#fff' : '#000'
   const fill = (field: SignField | 'fixed') =>
-    field === 'fixed' ? '#000' : wrong.has(field) ? ALERT : field !== 'line' && empty.includes(field) ? GHOST : '#000'
+    field === 'fixed' ? ink : wrong.has(field) ? ALERT : empty.includes(field) ? GHOST : ink
   const byFill = new Map<string, string>()
   for (const p of sign?.parts ?? []) byFill.set(fill(p.field), (byFill.get(fill(p.field)) ?? '') + toD(p.cmds))
 
@@ -303,10 +329,10 @@ export default function HoursSign() {
     <>
         <figure className="flex w-full flex-col items-center gap-2">
           {/* As tall as the canvas allows on wide screens, as wide as it on phones; on wide screens its width is the
-              smaller of the canvas's and the one the height allows (12/17 of it, 480 × 680), so a narrow canvas shrinks
-              the sign whole: a fixed height with the width capped stretched its white box past 480 × 680 */}
-          <svg viewBox={`0 0 ${SIGN.w} ${SIGN.h}`} className="block h-auto w-full max-w-[480px] bg-white md:w-[min(100%,calc((100dvh-128px-30px)*12/17))] md:max-w-none" role="img" aria-label="Режимник">
-            <path d={toD(LOGO)} fill="#000" fillRule="evenodd" />
+              smaller of the canvas's and the one the height allows (the sheet's width to its height), so a narrow
+              canvas shrinks the sign whole: a fixed height with the width capped stretched its box past the sheet */}
+          <svg viewBox={`0 0 ${SIGN.w} ${SIGN.h}`} style={{ '--ratio': SIGN.w / SIGN.h, background: dark ? '#000' : '#fff' } as React.CSSProperties} className="block h-auto w-full max-w-[480px] md:w-[min(100%,calc((100dvh-128px-30px)*var(--ratio)))] md:max-w-none" role="img" aria-label="Режимник">
+            <path d={toD(signLogo(variant))} fill={ink} fillRule="evenodd" />
             {[...byFill].map(([color, d]) => <path key={color} d={d} fill={color} />)}
           </svg>
           <figcaption className="mt-0.5 text-center text-[14px] leading-5 text-caption">
@@ -321,6 +347,32 @@ export default function HoursSign() {
     </>
   )
 
+  /** A field of the brand's as its kind asks */
+  const input = (f: SignFieldSpec) => {
+    const invalid = wrong.has(f.id)
+    if (f.kind === 'dealer') return <ComboField value={fields[f.id]} onChange={pickDealer} options={NAMES} filter={dealerFilter} placeholder={f.placeholder} label={`Дилеры ${SITE.name}`} singleLine invalid={invalid} />
+    if (f.kind === 'site') return <ComboField value={site} onChange={setSite} options={[siteFor(dealer)].filter(Boolean)} placeholder={f.placeholder} label="Сайт дилера" singleLine invalid={invalid} />
+    if (f.kind === 'phone') return (
+      // A live mask, as the business card's: set as the sign sets it while it's typed, the caret after the same digit
+      <TextInput
+        value={fields[f.id]}
+        onChange={v => {
+          const el = document.activeElement as HTMLInputElement
+          const before = v.slice(0, el.selectionStart ?? v.length).replace(/\D/g, '').length
+          const { text, caret } = maskPhone(v, before)
+          set(f.id, text)
+          requestAnimationFrame(() => { if (document.activeElement === el) el.setSelectionRange(caret, caret) })
+        }}
+        placeholder={f.placeholder}
+        inputMode="tel"
+        invalid={invalid}
+      />
+    )
+    // The address a plain field, as the business card's: the dealer's put in as it's picked, edited by hand (a list of
+    // every dealer's address let a picked dealer take another's)
+    return <TextInput value={fields[f.id]} onChange={v => set(f.id, v)} placeholder={f.placeholder} invalid={invalid} />
+  }
+
   const sidebar = (
     <>
         <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
@@ -333,35 +385,18 @@ export default function HoursSign() {
                 <div data-field="to"><TimeField value={to} onChange={setTo} onCommit={commitTo} placeholder={PLACEHOLDER.to} label="Закрытие" invalid={wrong.has('to')} min={STEP} max={DAY} /></div>
               </div>
             </Field>
-            <Field label="Дилер">
-              <div data-field="dealer"><ComboField value={dealer} onChange={pickDealer} options={NAMES} filter={dealerFilter} placeholder={PLACEHOLDER.dealer} label={`Дилеры ${SITE.name}`} singleLine invalid={wrong.has('dealer')} /></div>
-            </Field>
-            <Field label="Адрес">
-              {/* A plain field, as the business card's: the dealer's address put in as it's picked, edited by hand (a list of
-                  every dealer's address let a picked dealer take another's) */}
-              <div data-field="address"><TextInput value={address} onChange={setAddress} placeholder={PLACEHOLDER.address} invalid={wrong.has('address')} /></div>
-            </Field>
-            <Field label="Телефон">
-              {/* A live mask, as the business card's: set as the sign sets it while it's typed, the caret after the same digit */}
-              <div data-field="phone">
-                <TextInput
-                  value={phone}
-                  onChange={v => {
-                    const el = document.activeElement as HTMLInputElement
-                    const before = v.slice(0, el.selectionStart ?? v.length).replace(/\D/g, '').length
-                    const { text, caret } = maskPhone(v, before)
-                    setPhone(text)
-                    requestAnimationFrame(() => { if (document.activeElement === el) el.setSelectionRange(caret, caret) })
-                  }}
-                  placeholder={PLACEHOLDER.phone}
-                  inputMode="tel"
-                  invalid={wrong.has('phone')}
-                />
-              </div>
-            </Field>
-            <Field label="Сайт">
-              <div data-field="site"><ComboField value={site} onChange={setSite} options={[siteFor(dealer)].filter(Boolean)} placeholder={PLACEHOLDER.site} label="Сайт дилера" singleLine invalid={wrong.has('site')} /></div>
-            </Field>
+            {FIELDS.map(f => (
+              <Field key={f.id} label={f.label}>
+                <div data-field={f.id}>{input(f)}</div>
+              </Field>
+            ))}
+            {VARIANTS.length > 1 && (
+              <Field label="Фон">
+                <Segments>
+                  {VARIANTS.map((v, i) => <SegBtn key={v.label} active={variant === i} onClick={() => setVariant(i)}>{v.label}</SegBtn>)}
+                </Segments>
+              </Field>
+            )}
           </div>
         </div>
     </>

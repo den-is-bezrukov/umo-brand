@@ -4,8 +4,8 @@ import { MODELS } from '@brand/models'
 
 export { MODELS }
 
-/** The default model, the first */
-export const DEFAULT_MODEL = MODELS[0].id
+/** The default model, the first; none for a brand without models */
+export const DEFAULT_MODEL = MODELS[0]?.id ?? ''
 
 /** A model by its id */
 export const modelOf = (id: string) => MODELS.find(m => m.id === id) ?? MODELS[0]
