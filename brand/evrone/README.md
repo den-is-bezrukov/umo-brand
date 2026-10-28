@@ -1,7 +1,7 @@
 # Evrone
 
 The second brand on the core, for trying it without UMO: the business card, the hours sign and the plate frame
-(`materials` in `site.json`), no dealers or models. `BRAND=evrone pnpm dev` runs it (port 5589 in `.claude/launch.json`).
+(`materials` in `site.json`), no dealers or models. `BRAND=evrone pnpm dev` runs it (port 2008 in `.claude/launch.json`).
 
 ## Where things come from
 
@@ -25,3 +25,18 @@ Figma's POS page, «evrone_a4» 1098:150 (black) and 1100:314 (white), 10 px a m
 signs they replace, with the phone row these lacked. The black's legal lines were set in Golos Text by mistake: here in
 Suisse. Figma sets a line's baseline at (line − 1.297 × size) / 2 + 0.986 × size under its top (the hhea box centred);
 the built signs match Figma's render within 0.1 mm.
+
+## Guide
+
+- The texts: from evrone.ru (main page, «О нас»: the descriptor, the mission, the clients, the services) and evrone.com
+  («About»: the purpose behind Видение), the Instagram profile's line for the tone; adapted from UMO's chapters. Brandfetch
+  wouldn't open (a bot check).
+- The pictures: Figma «Evrone Identity» frames exported at 1x and cut to 2:1 or 4:3 (1110:2 positioning, 1445:150 team,
+  1348:5 audience, 1468:5 voice, 1468:23 and 1468:28 the examples, 1185:1235 the stand, 314:4 the poster, 138:133,
+  138:144, 138:129 the events, 1360:12, 1360:18, 1348:7, 1360:15, 1373:24 the characters); the card from
+  evrone-bc_iugu.pdf; the backgrounds and service icons from Yandex Disk «04 Graphics».
+- Drawn from the logo by a script (fontTools, the text in outlines): `clearspace.svg` (the logo's height, an «e», on
+  every side), `minsize.svg` (≥20 mm, ≥40 px, as UMO's), `font-helvetica.svg` and `font-arial.svg` (the fallbacks in
+  their own Regular, as figma.site lists them), the eight `misuse-*.svg`.
+- The icons in `public/downloads` are Figma's 12:23 and 12:21; the orange one recoloured from #FF5533 to the brand's
+  #FF4400. It is also the site's favicon.

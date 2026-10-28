@@ -3,12 +3,21 @@
   "file": "Evrone",
   "domain": "brand.evrone.com",
   "home": "https://evrone.com",
-  "support": "https://evrone.com/contacts",
-  "materials": ["business-card", "hours-sign", "plate-frame"],
+  "support": "https://evrone.ru/contact",
+  "materials": [
+    "business-card",
+    "hours-sign",
+    "plate-frame"
+  ],
   "title": "Бренд Evrone",
   "description": "Стандарты бренда Evrone и печатные материалы",
   "language": "ru",
   "robots": {
     "index": false
+  },
+  "icons": {
+    "icon": "/favicon.svg",
+    "ico": "/favicon.ico",
+    "appleTouchIcon": "/apple-touch-icon.png"
   }
 }
