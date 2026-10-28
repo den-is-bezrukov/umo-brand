@@ -29,8 +29,9 @@
   src: url('/fonts/CoFoSans-Medium.woff2') format('woff2');
 }
 
-/* The editor (the generators' pages): Geist, CoFo Sans's free alternative, Regular and Medium; the release's own files,
-   whole (Geist 1.7.2's `webfonts/`; the licence beside them). The guide stays in CoFo Sans */
+/* The editor (the generators' pages): Geist, CoFo Sans's free alternative: its Regular for CoFo's Regular, its SemiBold
+   for CoFo's Medium (the same stems, 0.18 of the cap height; Geist's Medium is lighter); the release's own files, whole
+   (Geist 1.7.2's `webfonts/`; the licence beside them). The guide stays in CoFo Sans */
 @font-face {
   font-family: 'Geist';
   font-style: normal;
@@ -44,7 +45,7 @@
   font-style: normal;
   font-weight: 500;
   font-display: swap;
-  src: url('/fonts/Geist-Medium.woff2') format('woff2');
+  src: url('/fonts/Geist-SemiBold.woff2') format('woff2');
 }
 
 /* The editor's type (`src/index.css`) */
