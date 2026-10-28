@@ -7,7 +7,7 @@ The second brand on the core, for trying it without UMO: the business card and t
 
 - Everything from Evrone's Yandex Disk «04 Identity» and Figma «Evrone Identity».
 - The type: Suisse Int'l Book, the one weight, for the generators' files only (`fonts.ts`); cap height 725 of 1000.
-- The site's interface type: Inter (`theme.css`), the closest free match: the same widths within 1% and x-height to
+- The editor's type (the generators' pages; the guide is in Suisse): Inter (`theme.css`), the closest free match: the same widths within 1% and x-height to
   cap height (0.750 against 0.742), the same neo-grotesque R, G, Q and 1 (Geist rounder and more geometric). Regular
   and Medium where UMO's interface has CoFo Sans Regular and Medium: the release's own `web/Inter-Regular.woff2` and
   `Inter-Medium.woff2`, whole, not cut down (a missing character would turn up only later), its OFL beside them.
@@ -41,7 +41,6 @@ the built signs match Figma's render within 0.1 mm.
   evrone-bc_iugu.pdf; the backgrounds and service icons from Yandex Disk «04 Graphics».
 - Drawn from the logo by a script (fontTools, the text in outlines): `clearspace.svg` (the logo's height, an «e», on
   every side), `minsize.svg` (≥20 mm, ≥40 px, as UMO's), `font-inter.svg`, `font-helvetica.svg` and `font-arial.svg`
-  (the alternatives in their own Regular; Helvetica and Arial as figma.site lists them), the eight `misuse-*.svg`,
-  `type-base.svg` and `type-styles.svg` (Suisse Int'l in outlines, as the site doesn't load it).
+  (the alternatives in their own Regular; Helvetica and Arial as figma.site lists them), the eight `misuse-*.svg`.
 - The icons in `public/downloads` are Figma's 12:23 and 12:21; the orange one recoloured from #FF5533 to the brand's
   #FF4400. It is also the site's favicon.

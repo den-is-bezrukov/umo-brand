@@ -2,6 +2,13 @@
 /* The brand's fonts and theme (`brand/<name>/theme.css`) */
 @import '@brand/theme.css';
 
+/* The generators (the editor, `data-editor` on the page while one is open, `src/main.tsx`) are set in the brand's
+   interface type, `--font-editor`, a free one; the guide in the brand's own, `--font-sans` (both the brand's
+   `theme.css`). */
+:root[data-editor] {
+  --font-sans: var(--font-editor);
+}
+
 /* Grayscale smoothing like contrastfoundry.com: on macOS/iOS the default draws the type heavier and softer. */
 body {
   -webkit-font-smoothing: antialiased;

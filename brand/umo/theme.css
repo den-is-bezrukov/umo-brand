@@ -1,5 +1,5 @@
-/* UMO's type on the site: CoFo Sans for everything (the generators set their files in it too, `fonts.ts`), Alice
-   Okniks for Alice's mark. Files in `public/fonts`. */
+/* UMO's type on the site: CoFo Sans for the guide (the generators set their files in it too, `fonts.ts`), Geist for
+   the editor (below), Alice Okniks for Alice's mark. Files in `public/fonts`. */
 
 /* Alice Okniks: Denis's icon font for the Alice mark (repo alice-okniks, dist/Alice Okniks.ttf, shipped whole as
    WOFF): the mark on @ * ^, a thin no-break space on U+00A0, weight 400–700 and X/Y/Z axes, ss01 solid, ss02 drop
@@ -27,6 +27,29 @@
   font-weight: 500;
   font-display: swap;
   src: url('/fonts/CoFoSans-Medium.woff2') format('woff2');
+}
+
+/* The editor (the generators' pages): Geist, CoFo Sans's free alternative, Regular and Medium; the release's own files,
+   whole (Geist 1.7.2's `webfonts/`; the licence beside them). The guide stays in CoFo Sans */
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/Geist-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/Geist-Medium.woff2') format('woff2');
+}
+
+/* The editor's type (`src/index.css`) */
+:root {
+  --font-editor: 'Geist', sans-serif;
 }
 
 @theme {

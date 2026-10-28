@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useEffect } from 'react'
+import React, { lazy, Suspense, useEffect, useLayoutEffect } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import './index.css'
@@ -41,10 +41,23 @@ function MetrikaHits() {
 /** A generator's route, if the brand has it (`MATERIALS`) */
 const has = (path: string) => MATERIALS.some(g => g.path === path)
 
+/**
+ * `data-editor` on the page while a generator is open, so it's set in the brand's interface type (`src/index.css`);
+ * the guide, `/editor`'s window too, in the brand's own. Set before the first paint and with every path
+ */
+const markEditor = (pathname: string) => document.documentElement.toggleAttribute('data-editor', has(pathname))
+markEditor(location.pathname)
+function EditorType() {
+  const { pathname } = useLocation()
+  useLayoutEffect(() => { markEditor(pathname) }, [pathname])
+  return null
+}
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
       <MetrikaHits />
+      <EditorType />
       <Suspense fallback={null}>
         <Routes>
           <Route path="/" element={<Guide />} />
