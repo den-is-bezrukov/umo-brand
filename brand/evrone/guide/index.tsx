@@ -115,6 +115,9 @@ const MISUSE: [string, string][] = [
   ['misuse-color', 'Некорректный выбор цвета, недостаточный контраст'],
 ]
 
+// Inter's own release: Google Fonts has no direct download link any more, only its specimen page
+const INTER_ZIP = 'https://github.com/rsms/inter/releases/download/v4.1/Inter-4.1.zip'
+
 /** A download, at the site's root */
 const download = (file: string) => `${import.meta.env.BASE_URL}downloads/${file}`
 
@@ -369,16 +372,12 @@ export function Chapters() {
             <Section>
               <Text>
                 <p>Гарнитура Suisse Int'l — основа визуального стиля Evrone. Бренд использует одно её начертание, Book: и для заголовков, и для текста.</p>
-                <p>Когда Suisse Int'l недоступен, допускаются системные альтернативы.</p>
+                <p>Когда Suisse Int'l недоступен, допускаются бесплатные и системные альтернативы. Интерфейс этого сайта набран Inter.</p>
               </Text>
               <div className="flex flex-col gap-4 md:gap-6">
-                <figure className="flex flex-col gap-3">
-                  <div className="flex aspect-4/3 min-[520px]:aspect-2/1 items-center justify-center bg-surface">
-                    <p className="text-[48px] sm:text-[72px] md:text-[96px] leading-none tracking-[-0.03em]">Suisse Int'l</p>
-                  </div>
-                  <Caption>Базовая гарнитура</Caption>
-                </figure>
-                <div className="grid grid-cols-2 gap-4 md:gap-6">
+                <Fig name="type-base" w={912} h={456} phone43 caption="Базовая гарнитура" alt="Suisse Int'l" />
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 md:gap-6">
+                  <Fig name="font-inter" w={288} h={216} caption="Альтернатива для Google и веба" alt="Inter" href={INTER_ZIP} />
                   <Fig name="font-helvetica" w={288} h={216} caption="Альтернатива для macOS" alt="Helvetica Neue" />
                   <Fig name="font-arial" w={288} h={216} caption="Альтернатива для Windows и Google Документов" alt="Arial" />
                 </div>
@@ -393,14 +392,7 @@ export function Chapters() {
                   <p>Крупный текст набирается плотнее: заголовки — с разрядкой от −2 до −4%, основной текст — без разрядки. Так набраны визитка, режимник и плакаты Evrone.</p>
                 </Text>
               </Head>
-              <figure className="flex flex-col gap-3">
-                <div className="flex flex-col justify-center gap-6 bg-surface p-6 md:aspect-2/1 md:p-12">
-                  <p className="text-[40px] leading-none tracking-[-0.035em] md:text-[64px]">Превращаем идеи в&nbsp;цифровые продукты</p>
-                  <p className="text-[20px] leading-[1.2] tracking-[-0.02em] md:text-[28px]">Разработка программного обеспечения на&nbsp;заказ</p>
-                  <p className="max-w-[560px] text-[16px] leading-[1.4]">Evrone — компания по разработке программных продуктов. Помогаем бизнесу реализовывать амбициозные проекты, используя современные подходы и технологии.</p>
-                </div>
-                <Caption>Заголовок, подзаголовок и основной текст</Caption>
-              </figure>
+              <Fig name="type-styles" w={912} h={456} phone43 caption="Заголовок, подзаголовок и основной текст" alt="Заголовок 56 px с разрядкой −3,5%, подзаголовок 28 px с разрядкой −2%, основной текст 16 px" />
             </Section>
           </Chapter>
 
