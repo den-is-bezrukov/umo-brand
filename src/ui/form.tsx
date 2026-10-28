@@ -10,6 +10,9 @@ import { InFoot, InSheet, SheetLayer, FOOT_BG } from './phone'
 import { MOD, withMod, otherLayout } from './keys'
 import { SITE } from '@/site'
 
+/** The editor's name in the generators' header: the brand's (`editor` in its site.json), «Редактор материалов» without one */
+const EDITOR = SITE.editor ?? 'Редактор материалов'
+
 // Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag, business card). Light UI per the Figma layout,
 // matching the brand guide.
 
@@ -31,8 +34,8 @@ const crumb = 'underline decoration-transparent decoration-[0.35px] underline-of
 
 /**
  * The top of a generator's form, the same on every screen (the phone's, carried over to wide screens):
- * the breadcrumbs in Medium, 16 px tall, «Бренд <Бренд> · Редактор», as the guide's quick link names it; the generators' line under them
- * (`GeneratorRing`). «Редактор», the app itself, opens every generator in place, nothing in the row moving
+ * the breadcrumbs in Medium, 16 px tall, «Бренд <Бренд> · Редактор материалов» (the brand's `editor`), as the guide's quick link names it; the generators' line under them
+ * (`GeneratorRing`). «Редактор материалов», the app itself, opens every generator in place, nothing in the row moving
  * (no chevron after it: it only clutters the row), and the line and everything after it in the form give
  * way to every generator, 24 px Medium 16 px apart, the current one black. The crumb again, the current
  * name or Esc fold it. Not a menu icon by the crumbs: the generators are an app of their own, where a burger promises the
@@ -75,7 +78,7 @@ const CRUMBS = "text-[14px] font-medium leading-4 tracking-normal [font-feature-
 
 /**
  * The breadcrumbs, set apart from the form's tighter tracking so they don't shift when the list opens: the way back to
- * the guide (the brand's logo leads to the brand's site, so it isn't here) and Редактор, the app itself, which shows
+ * the guide (the brand's logo leads to the brand's site, so it isn't here) and Редактор материалов, the app itself, which shows
  * every generator (not Материалы, the guide's chapter, between them)
  */
 function PhoneCrumbs({ open, onEditor }: { open: boolean; onEditor: () => void }) {
@@ -83,7 +86,7 @@ function PhoneCrumbs({ open, onEditor }: { open: boolean; onEditor: () => void }
     <nav className={`flex min-w-0 flex-1 items-center gap-2 whitespace-nowrap ${CRUMBS}`}>
       <Link to="/" className={crumb}>Бренд {SITE.name}</Link>
       <span aria-hidden>·</span>
-      <button type="button" onClick={onEditor} aria-expanded={open} aria-label="Редактор: все конструкторы" className={`${crumb} cursor-pointer`}>Редактор</button>
+      <button type="button" onClick={onEditor} aria-expanded={open} aria-label={`${EDITOR}: все конструкторы`} className={`${crumb} cursor-pointer`}>{EDITOR}</button>
     </nav>
   )
 }

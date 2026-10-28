@@ -62,6 +62,8 @@ export interface BrandSite {
   support: string
   /** Yandex.Metrika's counter, none for no counter */
   metrika?: number
+  /** The editor's name in the generators' header, «Редактор материалов» without it */
+  editor?: string
   /** The generators the brand has, by path (`business-card`), the rest left out of the site; without it, every one */
   materials?: string[]
 }

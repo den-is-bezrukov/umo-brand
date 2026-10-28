@@ -317,7 +317,7 @@ const MAKES: Record<string, string> = {
  * «Инструкция» in the site's dialog (`Dialog`, as the guide's «Редактор материалов»), 560 px wide, opened on the page's
  * own and titled with what's being made: «Как сделать рамку номера» and a combobox's chevron, «Общие вопросы» for what
  * they share. The made thing and the chevron open the list of instructions in the dialog's body, in place of the text,
- * as «Редактор» in the form's header opens the generators: 24 px Medium, 16 apart, the open one black, the
+ * as «Редактор материалов» in the form's header opens the generators: 24 px Medium, 16 apart, the open one black, the
  * rest #bfbfbf; a pick shows that instruction from its top; the title again or Esc fold the list back (not a ring of
  * tabs under the title, a combobox's list over the text or «Все инструкции» at the foot)
  */
