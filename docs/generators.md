@@ -2,7 +2,7 @@
 
 ## Generator form (`src/ui/form.tsx`)
 
-The generators' pages are set in the brand's editor type (`--font-editor`, a free font: UMO's Geist, Evrone's Inter), the guide in the brand's own (`docs/brand.md`, «theme.css»); the controls' corners are the brand's `rounded-control`.
+The generators' pages are set in the brand's editor type (`--font-editor`: Evrone's Inter, a free font; UMO's CoFo Sans, as its guide), the guide in the brand's own (`docs/brand.md`, «theme.css»); the controls' corners are the brand's `rounded-control`.
 
 The sidebar is 320 px plus a 1 px stroke on wide screens.
 
