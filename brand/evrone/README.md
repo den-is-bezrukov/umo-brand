@@ -9,8 +9,8 @@ The second brand on the core, for trying it without UMO: the business card, the 
 - The type: Suisse Int'l Book, the one weight, for the generators' files only (`fonts.ts`); cap height 725 of 1000.
 - The site's interface type: Inter (`theme.css`), the closest free match: the same widths within 1% and x-height to
   cap height (0.750 against 0.742), the same neo-grotesque R, G, Q and 1 (Geist rounder and more geometric). Pinned at
-  weight 500, where its stems (0.15 of the cap height) come nearest Suisse Book's (0.157), its optical size kept, cut to
-  Latin and Cyrillic: `public/fonts/Inter-500.woff2`, 46 KB, from Inter 4.1's variable font, its OFL beside it.
+  Medium (500), where its stems (0.15 of the cap height) come nearest Suisse Book's (0.157): the release's own
+  `web/Inter-Medium.woff2`, whole, not cut down (a missing character would turn up only later), its OFL beside it.
 - The logo: `01 Logo/evrone-logo-b.svg` (1600×320), cut to its ink, 1600×297.14 (`logo.ts`); the SVGs in `public/downloads`.
 - The colours: Figma's «evrone_colors» and evrone.com: black, #ff4400, white, #eeddcc.
 - The first screen: `04 Graphics/evrone-back-gradient.jpg`, cropped to 2:1 (`guide/images/hero.webp`).

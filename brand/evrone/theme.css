@@ -1,14 +1,14 @@
 /* Evrone's interface type on the site: Inter, the free alternative to Suisse Int'l (the brand's type, licensed, which
-   only the generators use for their files: `fonts.ts`). One weight, as the brand's: Inter at 500, as dense as Suisse
-   Int'l Book, for every weight asked (no faux bold), its optical size kept, cut to Latin and Cyrillic
-   (`public/fonts/Inter-500.woff2`, from Inter 4.1's variable font; the licence beside it). */
+   only the generators use for their files: `fonts.ts`). One weight, as the brand's: Inter Medium, as dense as Suisse
+   Int'l Book, for every weight asked (no faux bold); the release's own file, whole (`public/fonts/Inter-Medium.woff2`,
+   Inter 4.1's `web/`; the licence beside it). */
 
 @font-face {
   font-family: 'Inter';
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
-  src: url('/fonts/Inter-500.woff2') format('woff2');
+  src: url('/fonts/Inter-Medium.woff2') format('woff2');
 }
 
 @theme {
