@@ -11,6 +11,8 @@ The second brand on the core, for trying it without UMO: the business card and t
   cap height (0.750 against 0.742), the same neo-grotesque R, G, Q and 1 (Geist rounder and more geometric). Regular
   and Medium where UMO's interface has CoFo Sans Regular and Medium: the release's own `web/Inter-Regular.woff2` and
   `Inter-Medium.woff2`, whole, not cut down (a missing character would turn up only later), its OFL beside them.
+- The interface: the controls' corners 5 px, as Composter's kit (`radius-control`, `theme.css`); the editor's crumb
+  «Редактор» (`editor` in `site.json`).
 - The logo: `01 Logo/evrone-logo-b.svg` (1600×320), cut to its ink, 1600×297.14 (`logo.ts`); the SVGs in `public/downloads`.
 - The colours: Figma's «evrone_colors» and evrone.com: black, #ff4400, white, #eeddcc.
 - The first screen: `04 Graphics/evrone-back-gradient.jpg`, cropped to 2:1 (`guide/images/hero.webp`).
@@ -25,7 +27,8 @@ within 0.03 mm.
 
 ## Hours sign
 
-Figma's POS page, «evrone_a4» 1098:150 (black) and 1100:314 (white), 10 px a millimetre; 1098:3 is the photo of the
+A4, black (the name large, the hours, the company's details small at the bottom) or white (the company with
+its details at the top, the hours at the bottom), with a phone row. Figma's POS page, «evrone_a4» 1098:150 (black) and 1100:314 (white), 10 px a millimetre; 1098:3 is the photo of the
 signs they replace, with the phone row these lacked. The black's legal lines were set in Golos Text by mistake: here in
 Suisse. Figma sets a line's baseline at (line − 1.297 × size) / 2 + 0.986 × size under its top (the hhea box centred);
 the built signs match Figma's render within 0.1 mm.

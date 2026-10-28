@@ -5,6 +5,8 @@ UMO's site is [umo.autos](https://umo.autos), the brand's own [umo.auto](https:/
 ## Where things come from
 
 - The type: CoFo Sans Regular and Medium (`fonts.ts`, `theme.css`); Alice's mark is Alice Okniks, Denis's own icon font (below).
+- The interface: the editor (the generators' pages) in CoFo Sans too, as the guide (`--font-editor`); the controls'
+  corners 8 px (`radius-control`, `theme.css`).
 
 ## Dealers
 
@@ -35,6 +37,28 @@ The obstacles — the seam between the doors and the front door handle — are a
 The headlines say «с Алисой» and «технологиями Яндекса», with Alice's mark (`@`) in Alice Okniks in Alice's purple #7a55ff (a run with its own `font` and `color` in `price-card.ts`; ss02 is set in Figma but the font has none, so it's the plain mark). «Ежемесячный платёж» is UMO 8's only, and UMO 8's fine print carries its credit terms. «от …» is the trim's own price (Figma had UMO 5 Pro's at 3 440 000, Max's). The guide's picture of the card is UMO 5 Max at its defaults.
 
 Each trim has its own, two files: the full JPEG for the PDF and a 1600 px WebP for the preview (`*-car-preview.webp`, `cwebp -q 80 -resize 1600 0`), all Figma's own, cut to what the band shows and 3 mm round it at the photo's own resolution (no more is kept: the four were 5.6 MB uncut, 2 MB cut). UMO 8 Max `assets/umo8-car.jpg` 2286×814, Ultra `umo8-ultra-car.jpg` 2744×977, UMO 5 Pro `umo5-car.jpg` and Max `umo5-max-car.jpg` 3902×1389 (Max cut 3 px lower, from +15+669: its car stands that much lower in Figma's photo, and switching the trims it jumped) (the shorter names are the first trims'). Figma's boxes for the uncut photos, from which the cuts were made: UMO 8 Max (−30, −350) 2560×1440 over 2752×1536, Ultra (−200, −330) 2400×1200 over 3084×1536 (Figma's top layer; the earlier photo lies under it), UMO 5 (−30, −350) 2250×1181 over 4096×2286. A new photo: cut it the same way (`magick … -crop WxH+X+Y -quality 88`), set its box and `px`, and make the WebP.
+
+## Business card
+
+90×50 mm (10 Figma px = 1 mm, cap height 680 of 1000), numbers in `business-card.ts`. The face is the logo 40×8 mm in
+the bottom left corner. The back, within 5 mm margins: the dealership at the top, hanging from the top margin — its
+name in CoFo Sans Medium 4 mm (case forms on), then «Официальный дилер UMO», the address (up to two lines) and the site
+in Regular 3 mm, within 65 mm but the address, which runs under the logo to its right edge (80 mm), the logo 15×3 in
+the top right corner level with the name's capitals — and the person at the bottom, standing on the bottom margin —
+name and surname on one line of Medium 4 mm within 60 mm (never shrunk), then position (up to two lines), email and
+phone in Regular 3 mm, the QR 15×15 in the bottom right corner. 2.3 mm between the capitals under a heading, 2 mm
+between items, 100% leading inside one.
+
+## Hours sign
+
+The dealership's plate (the source: 480×680 mm, Illustrator's large canvas at 1:10), numbers in `hours-sign.ts`
+(Figma's frame is 2400×3400, 5 px a millimetre; within half a millimetre of the source), which also exports them for
+the guide's picture of the sign (`guide/index.tsx`). The margins and column are sevenths of the width (68,57 and
+342,86 mm), the logo across the column from the top margin. The hours centred, CoFo Sans Medium 58,5 mm, −0,85%
+tracking, lining tabular figures and case forms («9:00—21:00», the dash raised), always as wide as Figma's «9:00—21:00»
+at its size, so a longer range is smaller and a shorter one larger, on the same baseline. The line under them, 31,1 mm,
+−0,8%, is fixed as «Работаем без выходных». The dealership at the bottom, Medium 9,14 mm on 1,5 lines, standing on its
+last line: the marketing name («UMO » fixed), «Адрес: …» (up to two lines, balanced), «Телефон: …», the site.
 
 ## Guide
 
