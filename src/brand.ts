@@ -35,7 +35,7 @@ export interface GuideChapter { id: string; title: string; children?: GuideChapt
 
 /**
  * A point: a place of the brand's where its people meet clients (UMO's dealers, an office, a branch), as the
- * generators know it: its name as the brand writes it, city, short address, hours («ежедневно, 09:00–21:00»), phone,
+ * generators know it: its name as the brand writes it, city, short address, hours every day («9:00–21:00», none for more than one range), phone,
  * and the names it's also called by (`aka`)
  */
 export interface Point { name: string; city: string; address: string; hours: string; phone: string; aka: string[] }
@@ -84,6 +84,12 @@ export interface BrandSite {
   editor?: string
   /** The generators the brand has, by path (`business-card`), the rest left out of the site; without it, every one */
   materials?: string[]
+  /**
+   * The generators as the brand names them, by path, over the core's names: `title` in the generators' line, `phrase`
+   * in Материалы' first sentence, `of` and `one` in tooltips («шаблон памятки», «добавить памятку»); «Инструкция»'s
+   * titles are the brand's own (`@brand/help`)
+   */
+  names?: Record<string, { title?: string; phrase?: string; of?: string; one?: string }>
 }
 
 /**

@@ -15,6 +15,7 @@ import { isPdf, readPdfData } from '@/ui/pdfData'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
 import { SITE } from '@/site'
+import { MATERIALS } from '@/data/materials'
 import { WORDS } from '@brand/words'
 
 /** What the brand calls its points (`@brand/words`) */
@@ -151,7 +152,9 @@ export default function Memo() {
 
   useEffect(() => {
     const prev = document.title
-    document.title = `Памятка владельца ${SITE.name}`
+    // The memo as the brand names it («памятка владельца» at UMO), capitalised
+    const phrase = MATERIALS.find(g => g.path === '/memo')?.phrase ?? 'памятка'
+    document.title = `${phrase[0].toUpperCase()}${phrase.slice(1)} ${SITE.name}`
     return () => { document.title = prev }
   }, [])
 
