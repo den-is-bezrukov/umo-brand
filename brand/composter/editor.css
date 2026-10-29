@@ -192,9 +192,20 @@
   :root[data-editor] [data-ui='checkbox'] > input:checked + span[aria-hidden] {
     mask-image: url('./icons/cross.svg');
   }
-  /* Pointed at, the row's words and its mark turn white */
-  :root[data-editor] [data-ui='checkbox']:hover {
+  /* Pointed at anywhere on its block, the row's words and its mark turn white */
+  :root[data-editor] [data-ui='checkbox']:hover,
+  :root[data-editor] [data-ui='field']:hover [data-ui='checkbox'] {
     color: #fff;
+  }
+  /* A block that is only the toggle takes the click anywhere on it */
+  :root[data-editor] [data-ui='field']:has(> [data-ui='label']:only-child) {
+    position: relative;
+    cursor: pointer;
+  }
+  :root[data-editor] [data-ui='field']:has(> [data-ui='label']:only-child) [data-ui='checkbox']::after {
+    content: '';
+    position: absolute;
+    inset: 0;
   }
   :root[data-editor] [data-ui='checkbox'] > span[aria-hidden] svg {
     display: none;
