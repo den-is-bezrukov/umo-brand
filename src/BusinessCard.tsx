@@ -420,7 +420,7 @@ export default function BusinessCard() {
                           is edged on its own. The number is a live mask, set
                           as the card sets it while it's typed, the caret staying after the same digit; a whole one pasted
                           with its extension splits. The extension follows «Доб.», grey, its placeholder and prefix both */}
-                      <div className="flex rounded-control bg-surface">
+                      <div data-ui="input" className="flex rounded-control bg-surface">
                         <TextInput
                           value={p.phone}
                           onChange={v => {
@@ -436,7 +436,7 @@ export default function BusinessCard() {
                           inputMode="tel"
                           invalid={bad('phone', 'Телефон')}
                         />
-                        <label className="flex h-10 in-[[data-sheet]]:h-12! min-w-20 shrink-0 cursor-text items-center rounded-control bg-surface px-3 text-[14px] leading-5 focus-within:ring-1 focus-within:ring-inset focus-within:ring-ink/40">
+                        <label data-ui="input" className="flex h-10 in-[[data-sheet]]:h-12! min-w-20 shrink-0 cursor-text items-center rounded-control bg-surface px-3 text-[14px] leading-5 focus-within:ring-1 focus-within:ring-inset focus-within:ring-ink/40">
                           <span className="text-hint">Доб.&nbsp;</span>
                           <input
                             value={p.ext}

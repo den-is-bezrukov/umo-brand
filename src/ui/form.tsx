@@ -9,6 +9,7 @@ import { ChevronIcon } from './icons'
 import { InFoot, InSheet, SheetLayer, FOOT_BG } from './phone'
 import { MOD, withMod, otherLayout } from './keys'
 import { SITE } from '@/site'
+import Wordmark from '@brand/Wordmark'
 
 /** The editor's name in the generators' header: the brand's (`editor` in its site.json), «Редактор материалов» without one */
 const EDITOR = SITE.editor ?? 'Редактор материалов'
@@ -53,8 +54,19 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
     return () => { delete document.documentElement.dataset.menu; document.removeEventListener('keydown', key) }
   }, [menu])
   const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
+  const title = MATERIALS.find(g => g.path === current)?.title
   return (
     <div data-head className="flex flex-col gap-4">
+      {/* A head a brand's style may show instead of the crumbs and the line (`data-ui`, hidden here): the logo, the way
+          back to the guide, the editor's name, a button for every generator, and the open one's name */}
+      <div data-ui="head-bar" className="hidden items-center gap-2">
+        <Link to="/" data-ui="head-logo" aria-label={`Бренд ${SITE.name}`}><Wordmark className="h-4 w-auto" /></Link>
+        <span data-ui="head-name">{EDITOR}</span>
+        <button type="button" data-ui="head-menu" onClick={toggle} aria-expanded={menu} aria-label={`${EDITOR}: все конструкторы`} title="Все материалы">
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden><path d="M8 2v12M2 8h12" /></svg>
+        </button>
+      </div>
+      <p data-ui="head-title" className="hidden">{title}</p>
       <div className="flex items-center gap-2">
         <PhoneCrumbs open={menu} onEditor={toggle} />
         <HelpButton page={current} tabs={MATERIALS} />
@@ -364,6 +376,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
         aria-label={label}
         onMouseDown={e => e.preventDefault()}
         onClick={() => { if (inSheet) { setAll(true); openScreen(); return } box.current?.querySelector<HTMLElement>('textarea, input')?.focus(); setAll(true); setOpen(o => !o || !all) }}
+        data-ui="chevron"
         className="absolute top-0 right-0 flex size-10 in-[[data-sheet]]:h-12! cursor-pointer items-center justify-center"
       >
         <ChevronIcon />

@@ -1,145 +1,216 @@
-/* Компостер's editor (the generators' pages) in Composter's own style, its Figma UI3 panel: Inter 11/16, controls
-   32 px, a 240 px sidebar of blocks with a hairline over each and a 40 px heading, the orange main button, a blue focus.
-   Taken from Composter's `src/style.css` (github.com/den-is-bezrukov/composter); the guide keeps the brand's black and
-   white. The colours and corners are the core's tokens set for the editor alone (`:root[data-editor]`); the rest
-   restyles the core's named parts (`data-ui`, docs/brand.md), on wide screens only: on a phone the editor keeps the
-   core's layout, in these colours. Weights: Composter's 450 and 550 are Inter Regular and Medium here. */
+/* Компостер's editor (the generators' pages), dark, as Figma «Composter» draws it (Editor Livery, 27:414): a black page,
+   a 360 px sidebar of white at 8% cut into blocks by black lines, 24 px round each and 16 apart inside; the head the
+   logo, the editor's name and a dotted plus for every generator over the open one's name, 32 px; a block's label 14 px
+   white at 40%, its value 16 px white on nothing; choices as words, the picked one white, the rest at 20%; a part that
+   can be left out a dotted plus (off) or cross (on) at the row's end; pill buttons, the download white. The colours are
+   the core's tokens set for the editor alone (`:root[data-editor]`), the rest restyles the core's named parts
+   (`data-ui`, docs/brand.md), on wide screens only: on a phone the core's layout in these colours. Figma sets it in
+   Suisse Int'l, the editor's name in Suisse Int'l Mono; here Inter, the brand's free type. */
 
 :root[data-editor] {
-  --color-ink: rgb(0 0 0 / 0.9);
-  --color-caption: rgb(0 0 0 / 0.5);
-  --color-hint: rgb(0 0 0 / 0.3);
-  --color-faint: rgb(0 0 0 / 0.3);
-  --color-accent: #ff5c16;
-  --color-error: #f24822;
-  --radius-panel: 13px;
-  --accent-hover: #e84f0c;
-  --focus: #0d99ff;
+  --color-ink: #fff;
+  --color-paper: #000;
+  --color-surface: #000;
+  --color-line: #000;
+  --color-caption: rgb(255 255 255 / 0.4);
+  --color-hint: rgb(255 255 255 / 0.2);
+  --color-faint: rgb(255 255 255 / 0.2);
+  --color-accent: #fff;
+  --color-on-accent: #000;
+  --color-error: #ff5c4d;
+  --radius-panel: 16px;
+  /* The sidebar: white at 8% over the black page */
+  --panel: #141414;
+  color-scheme: dark;
 }
 
-/* One focus look: Composter's 1 px blue, inside the control */
-:root[data-editor] :focus-visible:not(input, textarea, select, [role='dialog']) {
-  outline: 1px solid var(--focus);
-  outline-offset: -1px;
-}
-:root[data-editor] [data-ui='input']:is(:focus, :focus-within) {
-  box-shadow: none;
-  outline: 1px solid var(--focus);
-  outline-offset: -1px;
-}
-:root[data-editor] [data-ui='primary']:hover:enabled {
-  background: var(--accent-hover);
-}
-:root[data-editor] .hours-range:focus-visible::-webkit-slider-thumb {
-  outline: 1px solid var(--focus);
-  outline-offset: 0;
-}
-:root[data-editor] .hours-range:focus-visible::-moz-range-thumb {
-  outline: 1px solid var(--focus);
-  outline-offset: 0;
+:root[data-editor] body {
+  background: #000;
 }
 
 @media (min-width: 768px) {
-  /* The panel: 240 px, every text in it 11/16 Regular unless said otherwise */
   :root[data-editor] [data-ui='sidebar'] {
-    width: 240px;
+    width: 360px;
+    background: var(--panel);
+    border-right: 0;
   }
   :root[data-editor] [data-ui='sidebar'] * {
-    font-size: 11px;
-    line-height: 16px;
-    letter-spacing: 0.005em;
-    font-weight: 400;
+    letter-spacing: 0;
   }
   :root[data-editor] [data-ui='sidebar-body'] {
     gap: 0;
     padding: 0;
   }
 
-  /* The head as Composter's: the generators' names its title, 13/22 Medium, the crumbs under them its grey line */
+  /* The head: the logo, the editor's name and the plus, 16 px tall, the open generator's name 32 px under them */
   :root[data-editor] [data-head] {
-    gap: 4px;
-    padding: 8px 16px 12px;
+    gap: 24px;
+    padding: 24px;
+    border-bottom: 1px solid #000;
   }
-  :root[data-editor] [data-ui='crumbs'] * {
-    color: var(--color-caption);
+  :root[data-editor] [data-head] > :not([data-ui='head-bar'], [data-ui='head-title'], nav) {
+    display: none;
   }
-  :root[data-editor] [data-ui='ring'] {
-    margin: 0 -16px;
+  :root[data-editor] [data-ui='head-bar'] {
+    display: flex;
+    height: 16px;
   }
-  :root[data-editor] [data-ui='ring'] nav {
-    gap: 16px;
-    padding-left: 16px;
-    scroll-padding-left: 16px;
+  /* The logo in its Latin spelling, as Figma's head has it (the variant Lang=Latin), white at 40% */
+  :root[data-editor] [data-ui='head-logo'] {
+    flex: none;
+    width: 128px;
+    height: 16px;
+    background: url('./icons/logo-latin.svg') center / contain no-repeat;
+  }
+  :root[data-editor] [data-ui='head-logo'] svg,
+  :root[data-editor] [data-ui='head-name'] {
+    display: none;
+  }
+  :root[data-editor] [data-ui='head-menu'] {
+    margin-left: auto;
+  }
+  :root[data-editor] [data-ui='head-menu'] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    background: url('./icons/plus.svg') center / 16px no-repeat;
+  }
+  :root[data-editor] [data-ui='head-menu'] svg {
+    display: none;
+  }
+  :root[data-editor] [data-ui='head-title'] {
+    display: block;
+    font-size: 32px;
+    line-height: 32px;
+    font-weight: 500;
+    color: #fff;
+  }
+  :root[data-editor][data-menu] [data-ui='head-title'] {
+    display: none;
   }
   :root[data-editor] [data-ui='ring-name'] {
-    font-size: 13px;
-    line-height: 22px;
-    font-weight: 500;
-    letter-spacing: -0.0025em;
+    font-size: 32px;
+    line-height: 32px;
   }
 
-  /* Each field a block: a hairline over it, a 40 px heading, its control 4 px under, 12 px under the block */
-  :root[data-editor] [data-ui='form'] {
+  /* Blocks: 24 px round, the label 16 over the value, a black line under each */
+  /* Blocks line to line: no gap between the groups the core spaces them in */
+  :root[data-editor] [data-ui='sidebar-body'] div:not([data-ui='field'], [data-ui='field'] div, [data-head], [data-head] div) {
     gap: 0;
   }
   :root[data-editor] [data-ui='field'] {
-    gap: 0;
-    padding: 0 16px 12px;
-    border-top: 1px solid var(--color-line);
+    gap: 16px;
+    padding: 24px;
+    border-bottom: 1px solid #000;
   }
   :root[data-editor] [data-ui='label'] {
-    height: 40px;
-    margin: 0 -8px 0 -16px;
-    padding: 0 8px 0 16px;
-    display: flex;
-    align-items: center;
-    color: var(--color-ink);
+    font-size: 14px;
+    line-height: 16px;
+    color: var(--color-caption);
   }
-  :root[data-editor] [data-ui='label'],
-  :root[data-editor] [data-ui='label'] > :first-child {
+  :root[data-editor] [data-ui='label'] * {
+    font-size: 14px;
+    line-height: 16px;
+    font-weight: 400;
+  }
+
+  /* Values on nothing: 16 px white, no box, no padding */
+  :root[data-editor] [data-ui='input'] {
+    height: auto;
+    min-height: 16px;
+    padding: 0;
+    background: transparent;
+    font-size: 16px;
+    line-height: 16px;
+    box-shadow: none;
+  }
+  :root[data-editor] input[data-ui='input'] {
+    height: 16px;
+  }
+  :root[data-editor] [data-ui='input']:is(:focus, :focus-within) {
+    box-shadow: none;
+    outline: none;
+  }
+
+  /* A field's chevron at its end, as tall as the 16 px value */
+  :root[data-editor] [data-ui='chevron'] {
+    width: 16px;
+    height: 16px;
+    color: var(--color-caption);
+  }
+
+  /* Choices as words: the picked one white, the rest at 20% */
+  :root[data-editor] [data-ui='segments'] {
+    gap: 16px;
+    background: none;
+  }
+  :root[data-editor] [data-ui='seg'] {
+    flex: none;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--color-hint);
+  }
+  :root[data-editor] [data-ui='seg'][aria-pressed='true'] {
+    color: #fff;
+  }
+  :root[data-editor] [data-ui='seg'] span {
+    font-size: 16px;
+    line-height: 16px;
     font-weight: 500;
   }
-  /* A label row's own words (a checkbox, or a label with an action after it) take the heading's colour */
-  :root[data-editor] [data-ui='label'] > :first-child {
-    color: inherit;
+
+  /* A part left out or in: the label at the row's start, a dotted plus (off) or cross (on) at its end */
+  :root[data-editor] [data-ui='checkbox'] {
+    flex: 1;
+    font-size: 14px;
+    line-height: 16px;
+    color: var(--color-caption);
   }
-  /* A checkbox standing alone, not a field's label, keeps the blocks' 16 px in */
+  :root[data-editor] [data-ui='checkbox'] > span[aria-hidden] {
+    order: 2;
+    margin-left: auto;
+    background: url('./icons/plus.svg') center / 16px no-repeat;
+  }
+  :root[data-editor] [data-ui='checkbox'] > input:checked + span[aria-hidden] {
+    background-image: url('./icons/cross.svg');
+  }
+  :root[data-editor] [data-ui='checkbox'] > span[aria-hidden] svg {
+    display: none;
+  }
   :root[data-editor] :not([data-ui='label']) > [data-ui='checkbox'] {
-    margin-inline: 16px;
-  }
-  :root[data-editor] [data-ui='field']:has([aria-invalid='true']) [data-ui='label'] {
-    color: var(--color-error);
-  }
-  :root[data-editor] [data-ui='label'] + * {
-    margin-top: 4px;
+    padding: 24px;
+    border-bottom: 1px solid #000;
   }
 
-  /* Controls 32 px: fields with 8 px inside, segments, buttons */
-  :root[data-editor] [data-ui='input'] {
-    min-height: 32px;
-    height: auto;
-    padding: 8px;
+  /* The foot: pills 48 px, «Поделиться» white at 8%, the download white with black text */
+  :root[data-editor] [data-ui='download'] {
+    padding: 24px;
+    gap: 16px;
+    background: var(--panel) !important;
+    border-top: 1px solid #000;
   }
-  :root[data-editor] input[data-ui='input'],
-  :root[data-editor] div[data-ui='input'] {
-    height: 32px;
-    padding-block: 0;
+  :root[data-editor] [data-ui='button'],
+  :root[data-editor] [data-ui='primary'] {
+    height: 48px;
+    padding: 16px;
+    border: 0;
+    border-radius: 999px;
+    font-size: 16px;
+    line-height: 16px;
   }
-  :root[data-editor] [data-ui='seg'],
   :root[data-editor] [data-ui='button'] {
-    padding-block: 7px;
+    background: rgb(255 255 255 / 0.08);
+    color: #fff;
+    box-shadow: none;
   }
   :root[data-editor] [data-ui='button']:hover:not(:disabled) {
-    border-color: var(--color-line);
-    background: var(--color-surface);
-  }
-
-  /* The download: 16 px round, the main button 32 px */
-  :root[data-editor] [data-ui='download'] {
-    padding: 16px;
-    gap: 8px;
+    background: rgb(255 255 255 / 0.14);
   }
   :root[data-editor] [data-ui='primary'] {
-    padding-block: 8px;
+    font-weight: 500;
+  }
+  :root[data-editor] [data-ui='primary']:hover:enabled {
+    background: rgb(255 255 255 / 0.85);
   }
 }
