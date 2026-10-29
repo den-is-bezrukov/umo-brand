@@ -179,6 +179,11 @@
     color: #fff;
   }
 
+  /* Suisse kerns two slashes 90 units into each other, so «//» reads as one thick stroke: the link set without kerning */
+  :root[data-editor] [data-part='url'] {
+    font-kerning: none;
+  }
+
   /* No tick for a link that's right: only a wrong one is said */
   :root[data-editor] [data-ui='valid'] {
     display: none;

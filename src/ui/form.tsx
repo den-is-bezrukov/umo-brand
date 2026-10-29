@@ -488,7 +488,7 @@ export function UrlField({ value, onChange }: { value: string; onChange: (v: str
         placeholder="https://..."
         aria-invalid={error || undefined}
         spellCheck={false}
-        data-ui="input" className={`${areaClass} break-all pr-9 focus:ring-1 focus:ring-inset focus:ring-ink/40`}
+        data-ui="input" data-part="url" className={`${areaClass} break-all pr-9 focus:ring-1 focus:ring-inset focus:ring-ink/40`}
       />
       {/* On the first line, however many lines the link takes */}
       <div className="pointer-events-none absolute top-0 right-0 flex h-10 in-[[data-sheet]]:h-12! w-9 items-center justify-center">
