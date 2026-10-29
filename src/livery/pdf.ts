@@ -8,6 +8,10 @@ import { loadFont } from '@/ui/type'
 import type { Surface } from './layout'
 import { embedFonts, textOps } from '@/ui/liveTextPdf'
 import { COLORS } from '@brand/colors'
+import { WORDS } from '@brand/words'
+
+/** The livery's word in files' names: the brand's word for its points before it where it has one (dealer-livery), else livery */
+export const LIVERY_FILE = WORDS.point.file ? `${WORDS.point.file}-livery` : 'livery'
 
 const PT = 72 / 25.4
 // The film's colour: the brand's print black
@@ -43,19 +47,19 @@ async function cutFile(sheets: Sheet[], title: string): Promise<Uint8Array> {
 }
 
 /**
- * The editable template (`<Brand>8_dealer-livery_template.pdf`): the decals' pages as in the cut file, the dealer and
+ * The editable template (`<Brand>8_dealer-livery_template.pdf`): the decals' pages as in the cut file, the point and
  * tagline live in the brand font (`src/ui/liveTextPdf.ts`), the QR and lettering in outlines; for editing the text only,
  * the plotter cuts the outlines
  */
 export async function liveryTemplate(prefix: string, sheets: Sheet[]): Promise<Blob> {
   const doc = await PDFDocument.create()
-  doc.setTitle(`${prefix}_dealer-livery_template.pdf`)
+  doc.setTitle(`${prefix}_${LIVERY_FILE}_template.pdf`)
   const fonts = await embedFonts(doc)
   for (const s of sheets) {
     const page = doc.addPage([s.surface.w * PT, s.surface.h * PT])
     const H = page.getHeight()
     fillShapes(page, s.fixed, PT, 0, 0, 'ink')
-    const lines = [...s.dealer.lines, ...s.tagline.lines].filter(l => !l.extra).map(l => l.live)
+    const lines = [...s.point.lines, ...s.tagline.lines].filter(l => !l.extra).map(l => l.live)
     page.pushOperators(...textOps(page, fonts, lines, (x, y) => [x * PT, H - y * PT], PT, INK))
   }
   return new Blob([await doc.save() as BlobPart], { type: 'application/pdf' })
@@ -112,20 +116,20 @@ async function specFile(sheets: Sheet[], title: string): Promise<Uint8Array> {
 }
 
 /**
- * A dealer livery in one zip: the decals (left side, right side, rear window — one page each, every page at its own
+ * A point livery in one zip: the decals (left side, right side, rear window — one page each, every page at its own
  * size), the spec, and the editable template (the model's defaults, as
  * the icon gives it), so whoever gets the zip has all of it
  */
 export async function liveryZip(prefix: string, sheets: Sheet[], template: Blob): Promise<Blob> {
   const [livery, spec, tpl] = await Promise.all([
-    cutFile(sheets, `${prefix} dealer livery`),
-    specFile(sheets, `${prefix} dealer livery spec`),
+    cutFile(sheets, `${prefix} ${LIVERY_FILE.replace('-', ' ')}`),
+    specFile(sheets, `${prefix} ${LIVERY_FILE.replace('-', ' ')} spec`),
     template.arrayBuffer(),
   ])
   const zip = zipSync({
-    [`00_${prefix}_dealer-livery_spec.pdf`]: spec,
-    [`${prefix}_dealer-livery.pdf`]: livery,
-    [`${prefix}_dealer-livery_template.pdf`]: new Uint8Array(tpl),
+    [`00_${prefix}_${LIVERY_FILE}_spec.pdf`]: spec,
+    [`${prefix}_${LIVERY_FILE}.pdf`]: livery,
+    [`${prefix}_${LIVERY_FILE}_template.pdf`]: new Uint8Array(tpl),
   }, { level: 0 })
   return new Blob([zip as BlobPart], { type: 'application/zip' })
 }

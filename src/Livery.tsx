@@ -4,7 +4,7 @@ import { goal } from '@/ui/metrika'
 import { Field, OptionalField, Segments, SegBtn, ComboField, UrlField, Checkbox, SizeSwitch, GeneratorHeader, LinkButtons, DownloadBar, isValidUrl } from '@/ui/form'
 import { CaptionReset } from '@/ui/staff'
 import { linkParams, useLinkState } from '@/ui/share'
-import { DEALER_NAMES, dealerFilter, withoutBrand } from '@/data/points'
+import { POINT_NAMES, pointFilter, withoutBrand } from '@/data/points'
 import { DEFAULT_TAGLINE, TAGLINES } from '@brand/taglines'
 import { MODELS, DEFAULT_MODEL, modelFrom, fileName } from '@/data/models'
 import { LIVERIES, SURFACES, withoutQr, smallQr, type Model } from '@/livery/layout'
@@ -13,9 +13,14 @@ import { loadFont } from '@/ui/type'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
 import { SITE } from '@/site'
+import { WORDS } from '@brand/words'
+import { LIVERY_FILE } from '@/livery/pdf'
 
-// Dealer livery generator: lettering for both sides and the rear window of a dealer's demo car. The preview puts the sheets on
-// photos of the car, with the door seam and handle marked, so a dealer name or tagline that would run onto them shows
+/** What the brand calls its points (`@brand/words`) */
+const W = WORDS.point
+
+// Point livery generator: lettering for both sides and the rear window of a point's demo car. The preview puts the sheets on
+// photos of the car, with the door seam and handle marked, so a point name or tagline that would run onto them shows
 // up before the files go to the wrap shop.
 
 /** The QR leads to the model's own page unless another link is set, as on the price card */
@@ -23,7 +28,7 @@ const DEFAULT_URL = Object.fromEntries(MODELS.map(m => [m.id, m.page])) as Recor
 const DEFAULT_TOP = `Центр ${SITE.name}`
 
 // The parts that can be left out, as the `off` link parameter names them
-const PARTS = { qr: 'qr', dealer: 'top', tagline: 'bottom', rear: 'rear', rearDealer: 'rdealer', rearTagline: 'rslogan' } as const
+const PARTS = { qr: 'qr', point: 'top', tagline: 'bottom', rear: 'rear', rearPoint: 'rdealer', rearTagline: 'rslogan' } as const
 const RED = '#ff2a1a'
 /** The spec's dimensions: orange, apart from the red of text at fault */
 const DIMS = '#ee4400'
@@ -33,7 +38,7 @@ function SheetPreview({ sheet, dims, onReset, resetLabel, extra }: { sheet: Shee
   const marks = specMarks(s)
   const [vx, vy, vw, vh] = s.photo.view
   const bad = (l: Line) => l.issues.length > 0
-  const lines = [...sheet.dealer.lines, ...sheet.tagline.lines]
+  const lines = [...sheet.point.lines, ...sheet.tagline.lines]
   const hairline = { vectorEffect: 'non-scaling-stroke' as const, strokeWidth: 1, fill: 'none' }
   const anchor = { left: 'start', center: 'middle', right: 'end' } as const
   // White decals, or black on a white car's sides (`Surface.decal`)
@@ -88,17 +93,17 @@ export default function Livery() {
   // Settings come from the link the page was opened with (see `useLinkState` below), defaults for the rest
   const [link] = useState(linkParams)
   const [model, setModel] = useState<Model>(modelFrom(link.get('model')) as Model)
-  const [dealer, setDealer] = useState(link.get('top') ?? DEFAULT_TOP)
+  const [point, setPoint] = useState(link.get('top') ?? DEFAULT_TOP)
   const [tagline, setTagline] = useState(() => link.get('bottom') ?? DEFAULT_TAGLINE[model])
   // The rear window's slogan follows the sides' until it's edited (as the price card's credit price follows the full
-  // one); the dealer there is always the sides' (one line), only left off or not: there's no reason for it to differ.
+  // one); the point there is always the sides' (one line), only left off or not: there's no reason for it to differ.
   // Links from when it could carry its own (`rtop`) open with the sides'.
   const [rearTagline, setRearTagline] = useState<string | undefined>(() => link.get('rbottom') ?? undefined)
   const [url, setUrl] = useState(link.get('link') ?? DEFAULT_URL[model])
   // What goes into the files; a part that's off is in neither the preview, nor the decals, nor the spec
   const [on, setOn] = useState(() => {
     const off = (link.get('off') ?? '').split(',')
-    return { qr: !off.includes(PARTS.qr), tagline: !off.includes(PARTS.tagline), dealer: !off.includes(PARTS.dealer), rear: link.get('rear') === 'on', rearDealer: !off.includes(PARTS.rearDealer), rearTagline: !off.includes(PARTS.rearTagline) }
+    return { qr: !off.includes(PARTS.qr), tagline: !off.includes(PARTS.tagline), point: !off.includes(PARTS.point), rear: link.get('rear') === 'on', rearPoint: !off.includes(PARTS.rearPoint), rearTagline: !off.includes(PARTS.rearTagline) }
   })
   const toggle = (key: keyof typeof on) => (v: boolean) => setOn(o => ({ ...o, [key]: v }))
   const show = (link.get('show') ?? '').split(',')
@@ -109,7 +114,7 @@ export default function Livery() {
   const [qrSmall, setQrSmall] = useState(link.get('qr') === 'small')
 
   // Another model brings its own tagline in place of the old model's suggestion (the default or the one without
-  // «Попробуй»), unless the field holds text of the dealer's own
+  // «Попробуй»), unless the field holds text of the point's own
   const chooseModel = (m: Model) => {
     const swap = (t: string) => { const i = TAGLINES[model].indexOf(t); return i < 0 ? t : TAGLINES[m][i] }
     setTagline(swap(tagline))
@@ -128,7 +133,7 @@ export default function Livery() {
     // The first model by default, so a link without `model` opens it
     model: model === DEFAULT_MODEL ? null : model,
     link: url.trim() === DEFAULT_URL[model] ? null : url.trim(),
-    top: dealer === DEFAULT_TOP ? null : dealer,
+    top: point === DEFAULT_TOP ? null : point,
     bottom: tagline === DEFAULT_TAGLINE[model] ? null : tagline,
     // The rear window is off by default, so it's the one part the link turns on
     off: (Object.keys(PARTS) as (keyof typeof PARTS)[]).filter(k => k !== 'rear' && !on[k]).map(k => PARTS[k]).join(','),
@@ -154,9 +159,9 @@ export default function Livery() {
   const urlRef = useRef<HTMLDivElement>(null)
   const qrUrl = urlValid ? url.trim() : DEFAULT_URL[model]
 
-  const sideText = { dealer: on.dealer ? dealer : null, tagline: on.tagline ? tagline : null }
+  const sideText = { point: on.point ? point : null, tagline: on.tagline ? tagline : null }
   const rearText = {
-    dealer: on.rearDealer ? sideText.dealer : null,
+    point: on.rearPoint ? sideText.point : null,
     tagline: !on.rearTagline ? null : ownRearOn ? rearTagline! : sideText.tagline,
   }
   const qr = on.qr ? qrUrl : null
@@ -167,7 +172,7 @@ export default function Livery() {
         return buildSheet(font, surface, { ...(id === 'rear' ? rearText : sideText), url: qr, large })
       })
       : [],
-    [font, layout, on.rear, sideText.dealer, sideText.tagline, rearText.dealer, rearText.tagline, qr, qrSmall, large],
+    [font, layout, on.rear, sideText.point, sideText.tagline, rearText.point, rearText.tagline, qr, qrSmall, large],
   )
   // Which sheets a field's text goes on, to mark it when one of them has a problem with it
   const sloganSheets = sheets.filter(s => s.surface.id !== 'rear' || !ownRearOn)
@@ -175,25 +180,25 @@ export default function Livery() {
   // Turning the rear window off forgets its settings, so it comes back carrying the sides' texts
   const toggleRear = (v: boolean) => {
     if (!v) setRearTagline(undefined)
-    setOn(o => ({ ...o, rear: v, ...(v ? {} : { rearDealer: true, rearTagline: true }) }))
+    setOn(o => ({ ...o, rear: v, ...(v ? {} : { rearPoint: true, rearTagline: true }) }))
   }
   // The resets on the canvas, at the end of a sheet's caption, by what they reset. Both sides are made of the same
-  // fields, so either side's resets them both: the dealer, slogan and QR, their sizes; the model stays, as do the
+  // fields, so either side's resets them both: the point, slogan and QR, their sizes; the model stays, as do the
   // dimensions shown (a view, not the content). The glass's resets its own: its slogan follows the sides' again
-  const sidesAtDefaults = dealer === DEFAULT_TOP && tagline === DEFAULT_TAGLINE[model] && url === DEFAULT_URL[model]
-    && on.qr && on.tagline && on.dealer && !large && !qrSmall
+  const sidesAtDefaults = point === DEFAULT_TOP && tagline === DEFAULT_TAGLINE[model] && url === DEFAULT_URL[model]
+    && on.qr && on.tagline && on.point && !large && !qrSmall
   const resetSides = () => {
-    setDealer(DEFAULT_TOP)
+    setPoint(DEFAULT_TOP)
     setTagline(DEFAULT_TAGLINE[model])
     setUrl(DEFAULT_URL[model])
-    setOn(o => ({ ...o, qr: true, tagline: true, dealer: true }))
+    setOn(o => ({ ...o, qr: true, tagline: true, point: true }))
     setLarge(false)
     setQrSmall(false)
   }
-  const rearAtDefaults = rearTagline === undefined && on.rearDealer && on.rearTagline
+  const rearAtDefaults = rearTagline === undefined && on.rearPoint && on.rearTagline
   const resetRear = () => {
     setRearTagline(undefined)
-    setOn(o => ({ ...o, rearDealer: true, rearTagline: true }))
+    setOn(o => ({ ...o, rearPoint: true, rearTagline: true }))
   }
   const ok = sheets.length > 0 && sheets.every(s => s.issues.length === 0)
 
@@ -205,18 +210,18 @@ export default function Livery() {
       const blob = await liveryZip(prefix, sheets, await makeBlank!())
       const link = document.createElement('a')
       link.href = URL.createObjectURL(blob)
-      link.download = `${prefix}_dealer-livery.zip`
+      link.download = `${prefix}_${LIVERY_FILE}.zip`
       link.click()
-      // Texts and the QR link go along only when they aren't from the suggestions: what dealers put on the car themselves
+      // Texts and the QR link go along only when they aren't from the suggestions: what points put on the car themselves
       const flat = (t: string) => t.replace(/\s+/g, ' ').trim()
       const own = (shown: boolean, t: string, list: string[]) => shown && !list.some(o => flat(o) === flat(t)) ? flat(t).slice(0, 200) : undefined
       const texts = Object.fromEntries(Object.entries({
-        dealerText: own(on.dealer, dealer, DEALER_NAMES),
+        pointText: own(on.point, point, POINT_NAMES),
         taglineText: own(on.tagline, tagline, TAGLINES[model]),
         rearTaglineText: own(ownRearOn, rearTagline ?? '', TAGLINES[model]),
         link: own(on.qr, qrUrl, Object.values(DEFAULT_URL)),
       }).filter(([, t]) => t !== undefined)) as Record<string, string>
-      goal('download_livery', { model, qr: on.qr ? (qrSmall ? 'small' : 'large') : 'off', dealer: on.dealer, tagline: on.tagline, rear: on.rear, ...texts, ...(via && { via }) })
+      goal('download_livery', { model, qr: on.qr ? (qrSmall ? 'small' : 'large') : 'off', dealer: on.point, tagline: on.tagline, rear: on.rear, ...texts, ...(via && { via }) })
       setTimeout(() => URL.revokeObjectURL(link.href), 1000)
     } finally {
       setExporting(false)
@@ -224,18 +229,18 @@ export default function Livery() {
   }
 
   const prefix = fileName(model, '')
-  const templateName = `${prefix}_dealer-livery_template.pdf`
+  const templateName = `${prefix}_${LIVERY_FILE}_template.pdf`
   /** The editable template, the icon's and a `template` link's alike: the model's sheets at their defaults, the rear
    * window too, whatever's typed or switched off on the page */
   const makeBlank = font ? () => {
-    const text = { dealer: DEFAULT_TOP, tagline: DEFAULT_TAGLINE[model], url: DEFAULT_URL[model] }
+    const text = { point: DEFAULT_TOP, tagline: DEFAULT_TAGLINE[model], url: DEFAULT_URL[model] }
     const blank = SURFACES.map(id => buildSheet(font, layout[id], text))
     return import('@/livery/pdf').then(m => m.liveryTemplate(prefix, blank))
   } : undefined
   const templateOnly = useTemplateLink(makeBlank, templateName, 'download_livery_template')
   const templateIcon = <TemplateButton make={makeBlank} name={templateName} goalId="download_livery_template" />
 
-  // `pdf` in the link (a link made for the dealer) downloads the ZIP once the font is in, the editor staying
+  // `pdf` in the link (a link made for the point) downloads the ZIP once the font is in, the editor staying
   // with the car in it, as the name tag's (a ZIP doesn't open in the browser); sheets at fault only show what's wrong
   const zipStarted = useRef(false)
   useEffect(() => {
@@ -265,8 +270,8 @@ export default function Livery() {
               <div ref={urlRef}><UrlField value={url} onChange={setUrl} /></div>
             </OptionalField>
 
-            <OptionalField label="Дилер" on={on.dealer} onChange={toggle('dealer')}>
-              <ComboField value={dealer} onChange={setDealer} options={DEALER_NAMES} filter={dealerFilter} shownAs={withoutBrand} label="Дилеры" invalid={sheets.some(s => s.dealer.issues.length > 0) || !dealer.trim()} />
+            <OptionalField label={W.one} on={on.point} onChange={toggle('point')}>
+              <ComboField value={point} onChange={setPoint} options={POINT_NAMES} filter={pointFilter} shownAs={withoutBrand} label={W.many} invalid={sheets.some(s => s.point.issues.length > 0) || !point.trim()} />
             </OptionalField>
 
             <OptionalField
@@ -297,7 +302,7 @@ export default function Livery() {
               </OptionalField>
             )}
 
-            {on.rear && on.dealer && <Checkbox checked={on.rearDealer} onChange={toggle('rearDealer')}>Дилер на стекле</Checkbox>}
+            {on.rear && on.point && <Checkbox checked={on.rearPoint} onChange={toggle('rearPoint')}>{W.one} на стекле</Checkbox>}
 
             {/* Overlays on the preview only */}
             <Checkbox checked={dims} onChange={setDims}>Показать размеры</Checkbox>

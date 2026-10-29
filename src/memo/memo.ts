@@ -6,11 +6,12 @@ import { nameFault } from '@/ui/names'
 import { layoutText, glyphRuns, advance, type Line, type MemoFonts, type MemoText } from './text'
 import TEXTS from '@brand/memo/texts.json'
 import { SITE } from '@/site'
+import { WORDS } from '@brand/words'
 
-// The owner's memo: two A4 pages a dealership hands over with a car. Everything
+// The owner's memo: two A4 pages a point hands over with a car. Everything
 // but the contacts at the foot of the second page is Figma's, in
 // the brand's assets/memo (outlines) and texts.json (the texts, for the template's live text). The contacts are two columns
-// 90 mm apart from 15 mm in and 252 mm down: the dealership (its name, then address, phone, email and site) and the
+// 90 mm apart from 15 mm in and 252 mm down: the point (its name, then address, phone, email and site) and the
 // consultant (position, then name, phone and email), the first line the brand font's Medium 4,5 mm on 5,985 mm lines, the
 // rest Regular 3,6 mm on 4,5, each 1,5 mm under the one before; a line left out closes up. Figma px, 10 a millimetre.
 
@@ -22,26 +23,26 @@ export const PAGE = { w: 2100, h: 2970 }
 
 export const MEMO_TEXTS = TEXTS as MemoText[]
 
-/** Where the dealership's column ends, as in Figma (its five lines from 2520): it grows up from there */
+/** Where the point's column ends, as in Figma (its five lines from 2520): it grows up from there */
 const BOTTOM = 2820
 /**
- * The columns, [x, measure], on twelve of 150 px across the 1800 px text: six and six (the dealer's measure 50 px
+ * The columns, [x, measure], on twelve of 150 px across the 1800 px text: six and six (the point's measure 50 px
  * clear of the consultant, as the second page's two columns of features), or, `wide`, eight and four, for an address
  * that takes a third line in six
  */
 const COLUMNS = {
-  even: { dealer: [150, 850], person: [1050, 850] },
-  wide: { dealer: [150, 1150], person: [1350, 600] },
+  even: { point: [150, 850], person: [1050, 850] },
+  wide: { point: [150, 1150], person: [1350, 600] },
 } as const
 const GAP = 15
 const HEAD = { size: 45, lineHeight: 59.85, font: 'm' as const }
 const BODY = { size: 36, lineHeight: 45, font: 'r' as const }
 
-export interface Dealer { name: string; address: string; phone: string; email: string; site: string }
+export interface PointDetails { name: string; address: string; phone: string; email: string; site: string }
 export interface Person { position: string; name: string; surname: string; phone: string; email: string }
 
-export type MemoField = 'dealer' | 'address' | 'dealerPhone' | 'dealerEmail' | 'site' | 'position' | 'name' | 'surname' | 'phone' | 'email'
-export const DEALER_FIELDS: MemoField[] = ['dealer', 'dealerPhone', 'address', 'dealerEmail', 'site']
+export type MemoField = 'point' | 'address' | 'pointPhone' | 'pointEmail' | 'site' | 'position' | 'name' | 'surname' | 'phone' | 'email'
+export const POINT_FIELDS: MemoField[] = ['point', 'pointPhone', 'address', 'pointEmail', 'site']
 
 export interface Issue { field: MemoField | null; text: string }
 
@@ -73,7 +74,7 @@ export function outlines(fonts: MemoFonts, size: number, set: Line[]): Cmd[] {
  * The contacts for one consultant. The texts come as shown: the page puts placeholders in empty fields, the same
  * layout then holding them in grey
  */
-export function buildBlock(fonts: MemoFonts, dealer: Dealer, person: Person, wide = false): Block {
+export function buildBlock(fonts: MemoFonts, point: PointDetails, person: Person, wide = false): Block {
   const fields: Block['fields'] = {}
   const set: FieldLines[] = []
   const issues: Issue[] = []
@@ -125,8 +126,8 @@ export function buildBlock(fonts: MemoFonts, dealer: Dealer, person: Person, wid
     return start
   }
 
-  /** The dealer's phone and email are said as the dealer's, as their fields are labelled */
-  const whose = (field: MemoField, label: string) => DEALER_FIELDS.includes(field) ? `${label} дилера` : label
+  /** The point's phone and email are said as the point's, as their fields are labelled */
+  const whose = (field: MemoField, label: string) => POINT_FIELDS.includes(field) ? `${label} ${WORDS.point.of}` : label
   const phone = (field: MemoField, raw: string) => {
     const f = formatPhone(raw)
     if (oneLine(raw) && !f) issues.push({ field, text: `${whose(field, 'Телефон')}: проверьте номер` })
@@ -142,14 +143,14 @@ export function buildBlock(fonts: MemoFonts, dealer: Dealer, person: Person, wid
 
   // The phone over the address, level with the consultant's name, so an address of two or three lines (on 4,5 mm
   // lines, against 6 mm between the lines) comes after the rows the columns share
-  // The dealership stands on `BOTTOM` and grows up; the consultant hangs from its top, the dealer's name and the
+  // The point stands on `BOTTOM` and grows up; the consultant hangs from its top, the point's name and the
   // position always on one line
-  const top = column(columns.dealer, [
-    ['dealer', 'Название', dealer.name, 1],
-    ['dealerPhone', 'Телефон дилера', phone('dealerPhone', dealer.phone), 1],
-    ['address', 'Адрес', dealer.address, 3],
-    ['dealerEmail', 'Почта дилера', email('dealerEmail', dealer.email), 1],
-    ['site', 'Сайт', siteText(dealer.site), 1],
+  const top = column(columns.point, [
+    ['point', 'Название', point.name, 1],
+    ['pointPhone', `Телефон ${WORDS.point.of}`, phone('pointPhone', point.phone), 1],
+    ['address', 'Адрес', point.address, 3],
+    ['pointEmail', `Почта ${WORDS.point.of}`, email('pointEmail', point.email), 1],
+    ['site', 'Сайт', siteText(point.site), 1],
   ])
   column(columns.person, [
     ['position', 'Должность', person.position, 2],
@@ -172,12 +173,12 @@ export function buildBlock(fonts: MemoFonts, dealer: Dealer, person: Person, wid
  * The whole list's contacts, in one layout for all: six and six, or eight and four where the address takes a third
  * line in six and every consultant fits in four (the position in two lines, the rest in one)
  */
-export function buildBlocks(fonts: MemoFonts, dealer: Dealer, people: Person[]): Block[] {
-  const even = people.map(p => buildBlock(fonts, dealer, p))
+export function buildBlocks(fonts: MemoFonts, point: PointDetails, people: Person[]): Block[] {
+  const even = people.map(p => buildBlock(fonts, point, p))
   const lines = even[0]?.set.find(s => s.field === 'address')?.lines.length ?? 0
   if (lines < 3) return even
-  const wide = people.map(p => buildBlock(fonts, dealer, p, true))
-  return wide.every(b => !b.over.some(f => !DEALER_FIELDS.includes(f))) ? wide : even
+  const wide = people.map(p => buildBlock(fonts, point, p, true))
+  return wide.every(b => !b.over.some(f => !POINT_FIELDS.includes(f))) ? wide : even
 }
 
 /** A shape of Figma's pages: a path (or a rounded rectangle) filled black or white, or stroked; `text` marks text outlines */

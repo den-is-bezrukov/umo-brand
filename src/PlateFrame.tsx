@@ -8,31 +8,35 @@ import { toD } from '@/livery/geometry'
 import { loadFont } from '@/ui/type'
 import { STRIP, buildStrip, lineStart, type Align } from '@/plate/frame'
 import PlateArt from '@/plate/PlateArt'
-import { DEALER_NAMES, dealerFilter, withoutBrand } from '@/data/points'
+import { POINT_NAMES, pointFilter, withoutBrand } from '@/data/points'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { recordText } from '@/ui/liveText'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
 import { SITE } from '@/site'
+import { WORDS } from '@brand/words'
 
-// Number plate frame generator: the dealer's line printed under the plate, as a
-// 501×21 mm PDF with the text in outlines, for the frame maker. The line is the dealer's marketing name as the brand
-// lists it («<Бренд> Дилер Город»): the brand's name before it is fixed, so only the name is typed or picked from the suggestions.
+/** What the brand calls its points (`@brand/words`) */
+const W = WORDS.point
+
+// Number plate frame generator: the point's line printed under the plate, as a
+// 501×21 mm PDF with the text in outlines, for the frame maker. The line is the point's marketing name as the brand
+// lists it («<Бренд> Точка Город»): the brand's name before it is fixed, so only the name is typed or picked from the suggestions.
 // A link with `text` (even empty: /plate-frame?text) opens a hidden mode where the whole line is free, for the odd case
-// the prefix doesn't fit; nothing on the page leads there. A brand without dealers has only that mode, its site's
+// the prefix doesn't fit; nothing on the page leads there. A brand without points has only that mode, its site's
 // address the placeholder.
 
 const PREFIX = `${SITE.name} `
 /** The name field's placeholder, standing grey on the frame while it's empty; never in the PDF */
 const PLACEHOLDER_NAME = 'Центр'
 const GHOST = 'var(--color-caption)'
-/** The dealers' names for the suggestions, without the fixed brand's name */
-const NAMES = DEALER_NAMES.map(withoutBrand)
+/** The points' names for the suggestions, without the fixed brand's name */
+const NAMES = POINT_NAMES.map(withoutBrand)
 const PLACEHOLDER_TEXT = NAMES.length ? PREFIX + PLACEHOLDER_NAME : new URL(SITE.home).host
 const RED = '#ff2a1a'
 
 export default function PlateFrame() {
   const [link] = useState(linkParams)
-  // The free line: on while the link has `text`, so it stays on as the address keeps it, or with no dealers to pick
+  // The free line: on while the link has `text`, so it stays on as the address keeps it, or with no points to pick
   const [custom] = useState(() => link.has('text') || !NAMES.length)
   // Empty at first, as the name tag's fields: «Центр» as a value reads as filled in
   // A name with the brand's name (a link made by hand) loses it, as the prefix is fixed
@@ -67,7 +71,7 @@ export default function PlateFrame() {
   /** Red only for a wrong line, never an empty one */
   const wrong = !noName && !!strip && strip.issues.length > 0
 
-  /** Nothing to copy or reset: no dealer, the line on the left */
+  /** Nothing to copy or reset: no point, the line on the left */
   const blank = noName && align === 'left'
   const form = useRef<HTMLDivElement>(null)
   /** The line under the download leads to the field, which opens its suggestions on focus */
@@ -80,7 +84,7 @@ export default function PlateFrame() {
   }
 
   const downloadGoal = (extra?: Record<string, unknown>) => {
-    // The line goes along only when it isn't a dealer from the list: what dealers type for themselves
+    // The line goes along only when it isn't a point from the list: what points type for themselves
     const listed = !custom && NAMES.includes(name.trim())
     goal('download_plate_frame', { free: custom, align, listed, ...(listed ? {} : { line: line.trim().slice(0, 100) }), ...extra })
   }
@@ -118,7 +122,7 @@ export default function PlateFrame() {
   const makeBlank = font ? () => templateOf(PREFIX + PLACEHOLDER_NAME) : undefined
   const templateOnly = useTemplateLink(makeBlank, `${SITE.file}_plate-frame_template.pdf`, 'download_plate_frame_template')
 
-  // `pdf` in the link (a link made for the dealer) opens the strip's PDF itself, with no editor, once the font
+  // `pdf` in the link (a link made for the point) opens the strip's PDF itself, with no editor, once the font
   // is in; a line at fault opens the editor instead, showing what's wrong
   const [pdfOnly, setPdfOnly] = useState(() => link.has('pdf'))
   const pdfStarted = useRef(false)
@@ -169,8 +173,8 @@ export default function PlateFrame() {
                 <TextInput value={text} onChange={setText} placeholder={PLACEHOLDER_TEXT} invalid={wrong} className="[font-feature-settings:'case'_1]" />
               </Field>
             ) : (
-              <Field label="Дилер">
-                <ComboField value={name} onChange={setName} options={NAMES} filter={dealerFilter} placeholder={PLACEHOLDER_NAME} label="Дилеры" singleLine invalid={wrong} />
+              <Field label={W.one}>
+                <ComboField value={name} onChange={setName} options={NAMES} filter={pointFilter} placeholder={PLACEHOLDER_NAME} label={W.many} singleLine invalid={wrong} />
               </Field>
             )}
 
@@ -194,9 +198,9 @@ export default function PlateFrame() {
           onClick={handleExport}
           busy={exporting}
           disabled={!ok}
-          note={noName ? (custom ? 'Добавить текст' : 'Выбрать дилера') : strip?.issues[0]}
+          note={noName ? (custom ? 'Добавить текст' : `Выбрать ${W.pick}`) : strip?.issues[0]}
           onNote={toField}
-          // Nothing to copy or reset until there's a dealer or the line is centred
+          // Nothing to copy or reset until there's a point or the line is centred
           links={!blank && <LinkButtons incomplete={!ok} file={shareFile} />}
         />
   )

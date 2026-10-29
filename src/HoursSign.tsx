@@ -9,23 +9,27 @@ import { toD } from '@/livery/geometry'
 import { maskPhone, siteFor } from '@/card/card'
 import { SIGN, SIGN_KEY, FIELDS, HOURS, VARIANTS, buildSign, signLogo, timeText, type SignField, type SignFieldSpec, type Input } from '@/hours/sign'
 import { loadFont, oneLine } from '@/ui/type'
-import { DEALER_NAMES, dealerFilter, withoutBrand, phoneOf } from '@/data/points'
+import { POINT_NAMES, pointFilter, withoutBrand, phoneOf } from '@/data/points'
 import { addressOf, hoursOf } from '@/data/hours'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { recordText } from '@/ui/liveText'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
 import { SITE } from '@/site'
+import { WORDS } from '@brand/words'
+
+/** What the brand calls its points (`@brand/words`) */
+const W = WORDS.point
 
 // The hours sign: the hours and the brand's fields (`@brand/hours-sign`), as a PDF in outlines for the maker. A
-// dealer picked from the list puts in its address and hours from the brand's site and its site, all of them edited
+// point picked from the list puts in its address and hours from the brand's site and its site, all of them edited
 // freely; the phone from the hand-kept list.
 
-/** The dealers' names without the brand's name, which the sign puts before them, fixed */
-const NAMES = DEALER_NAMES.map(withoutBrand)
+/** The points' names without the brand's name, which the sign puts before them, fixed */
+const NAMES = POINT_NAMES.map(withoutBrand)
 
 /** The field of each kind, if the brand's sign has one */
 const byKind = (kind: SignFieldSpec['kind']) => FIELDS.find(f => f.kind === kind)
-const DEALER = byKind('dealer')
+const POINT = byKind('point')
 const SITE_FIELD = byKind('site')
 /** A field's name in a link and the cards' data */
 const paramOf = (f: SignFieldSpec) => f.param ?? f.id
@@ -175,34 +179,34 @@ const ALERT = 'var(--color-error)'
 
 export default function HoursSign() {
   const [link] = useState(linkParams)
-  /** The dealer a link names, as written */
-  const linked = DEALER ? link.get(paramOf(DEALER)) ?? '' : ''
-  // A listed dealer's hours from the brand's site stand in for the times a link leaves out, as its address does
+  /** The point a link names, as written */
+  const linked = POINT ? link.get(paramOf(POINT)) ?? '' : ''
+  // A listed point's hours from the brand's site stand in for the times a link leaves out, as its address does
   const [from, setFrom] = useState(() => maskTime(link.get('from') ?? hoursOf(linked)?.from ?? DEFAULTS.from))
   const [to, setTo] = useState(() => maskTime(link.get('to') ?? hoursOf(linked)?.to ?? DEFAULTS.to))
   // A name with the brand's name (a link made by hand) loses it, as the sign puts it before the name; a phone takes the field's mask
   const [fields, setFields] = useState<Input>(() => Object.fromEntries(FIELDS.filter(f => f.kind !== 'site').map(f => {
     const v = link.get(paramOf(f))
     return [f.id,
-      f.kind === 'dealer' ? withoutBrand(v ?? '')
-        : f.kind === 'address' ? v ?? (DEALER && addressOf(linked)) ?? DEFAULTS[f.id]
-          : f.kind === 'phone' ? maskPhone(v ?? (DEALER && phoneOf(linked)) ?? DEFAULTS[f.id]).text
+      f.kind === 'point' ? withoutBrand(v ?? '')
+        : f.kind === 'address' ? v ?? (POINT && addressOf(linked)) ?? DEFAULTS[f.id]
+          : f.kind === 'phone' ? maskPhone(v ?? (POINT && phoneOf(linked)) ?? DEFAULTS[f.id]).text
             : v ?? DEFAULTS[f.id]]
   })))
   const set = (id: string, v: string) => setFields(f => ({ ...f, [id]: v }))
-  const dealer = DEALER ? fields[DEALER.id] : ''
-  /** A dealer's phone as the field writes it */
-  const dealerPhone = (name: string) => { const p = phoneOf(name); return p ? maskPhone(p).text : undefined }
-  /** The site follows the dealer's name (`siteFor`) until it's edited: null */
+  const point = POINT ? fields[POINT.id] : ''
+  /** A point's phone as the field writes it */
+  const pointPhone = (name: string) => { const p = phoneOf(name); return p ? maskPhone(p).text : undefined }
+  /** The site follows the point's name (`siteFor`) until it's edited: null */
   const [ownSite, setSite] = useState<string | null>(SITE_FIELD ? link.get(paramOf(SITE_FIELD)) : null)
-  const site = ownSite ?? siteFor(dealer)
+  const site = ownSite ?? siteFor(point)
   /** Which of the brand's variants (black, white), the first by default */
   const [variant, setVariant] = useState(() => VARIANTS[+(link.get('variant') ?? 0)] ? +(link.get('variant') ?? 0) : 0)
-  /** What a field would have of itself: the picked dealer's address or phone, else its default */
-  const auto = (f: SignFieldSpec) => (f.kind === 'address' && DEALER ? addressOf(dealer) : f.kind === 'phone' && DEALER ? dealerPhone(dealer) : undefined) ?? f.default
+  /** What a field would have of itself: the picked point's address or phone, else its default */
+  const auto = (f: SignFieldSpec) => (f.kind === 'address' && POINT ? addressOf(point) : f.kind === 'phone' && POINT ? pointPhone(point) : undefined) ?? f.default
   useLinkState({
     from, to,
-    ...Object.fromEntries(FIELDS.map(f => [paramOf(f), f.kind === 'site' ? ownSite : f.kind === 'dealer' ? fields[f.id] : fields[f.id] === auto(f) ? null : fields[f.id]])),
+    ...Object.fromEntries(FIELDS.map(f => [paramOf(f), f.kind === 'site' ? ownSite : f.kind === 'point' ? fields[f.id] : fields[f.id] === auto(f) ? null : fields[f.id]])),
     ...(VARIANTS.length > 1 && { variant: variant ? String(variant) : null }),
   })
 
@@ -239,16 +243,16 @@ export default function HoursSign() {
   const form = useRef<HTMLDivElement>(null)
   const toField = () => form.current?.querySelector<HTMLElement>(`[data-field="${firstAt}"] input, [data-field="${firstAt}"] textarea`)?.focus()
 
-  const pickDealer = (v: string) => {
-    // The address, phone and hours follow the dealer picked while they're empty or the previous dealer's
-    const next = { ...fields, [DEALER!.id]: v }
+  const pickPoint = (v: string) => {
+    // The address, phone and hours follow the point picked while they're empty or the previous point's
+    const next = { ...fields, [POINT!.id]: v }
     for (const f of FIELDS) {
-      const now = f.kind === 'address' ? addressOf(v) : f.kind === 'phone' ? dealerPhone(v) : undefined
-      const was = f.kind === 'address' ? addressOf(dealer) : f.kind === 'phone' ? dealerPhone(dealer) : undefined
+      const now = f.kind === 'address' ? addressOf(v) : f.kind === 'phone' ? pointPhone(v) : undefined
+      const was = f.kind === 'address' ? addressOf(point) : f.kind === 'phone' ? pointPhone(point) : undefined
       if (now && (!fields[f.id].trim() || fields[f.id] === was)) next[f.id] = now
     }
     const h = hoursOf(v)
-    const was = hoursOf(dealer)
+    const was = hoursOf(point)
     if (h && ((!from.trim() && !to.trim()) || (was && from === was.from && to === was.to))) { setFrom(h.from); setTo(h.to) }
     setFields(next)
   }
@@ -274,7 +278,7 @@ export default function HoursSign() {
     return new File([blob], name, { type: 'application/pdf' })
   }, [sign, from, to, fields, ownSite, variant]) // eslint-disable-line react-hooks/exhaustive-deps
   const downloadGoal = (extra?: Record<string, unknown>) =>
-    goal('download_hours_sign', { from: oneLine(from), to: oneLine(to), ...(DEALER && { dealer: NAMES.includes(oneLine(dealer)) }), ...extra })
+    goal('download_hours_sign', { from: oneLine(from), to: oneLine(to), ...(POINT && { dealer: NAMES.includes(oneLine(point)) }), ...extra })
 
   const handleExport = async () => {
     if (!sign || !ok) return
@@ -301,7 +305,7 @@ export default function HoursSign() {
   } : undefined
   const templateOnly = useTemplateLink(makeBlank, `${SITE.file}_hours-sign_template.pdf`, 'download_hours_sign_template')
 
-  // `pdf` in the link (a link made for the dealer) opens the sign's PDF itself, with no editor, once the font
+  // `pdf` in the link (a link made for the point) opens the sign's PDF itself, with no editor, once the font
   // is in; a sign at fault opens the editor instead, showing what's wrong
   const [pdfOnly, setPdfOnly] = useState(() => link.has('pdf'))
   const pdfStarted = useRef(false)
@@ -341,7 +345,7 @@ export default function HoursSign() {
     setVariant(typeof d.variant === 'number' && VARIANTS[d.variant] ? d.variant : 0)
   }
 
-  /** A day under 8 hours, the shortest any dealer works (10:00–18:00): likely a typo, said under the sign */
+  /** A day under 8 hours, the shortest any point works (10:00–18:00): likely a typo, said under the sign */
   const short = !empty.includes('from') && !empty.includes('to') && !!timeText(values.from) && !!timeText(values.to)
     && minutesOf(timeText(values.to)!) - minutesOf(timeText(values.from)!) < SHORT_DAY
 
@@ -377,8 +381,8 @@ export default function HoursSign() {
   /** A field of the brand's as its kind asks */
   const input = (f: SignFieldSpec) => {
     const invalid = wrong.has(f.id)
-    if (f.kind === 'dealer') return <ComboField value={fields[f.id]} onChange={pickDealer} options={NAMES} filter={dealerFilter} placeholder={f.placeholder} label={`Дилеры ${SITE.name}`} singleLine invalid={invalid} />
-    if (f.kind === 'site') return <ComboField value={site} onChange={setSite} options={[siteFor(dealer)].filter(Boolean)} placeholder={f.placeholder} label="Сайт дилера" singleLine invalid={invalid} />
+    if (f.kind === 'point') return <ComboField value={fields[f.id]} onChange={pickPoint} options={NAMES} filter={pointFilter} placeholder={f.placeholder} label={`${W.many} ${SITE.name}`} singleLine invalid={invalid} />
+    if (f.kind === 'site') return <ComboField value={site} onChange={setSite} options={[siteFor(point)].filter(Boolean)} placeholder={f.placeholder} label={`Сайт ${W.of}`} singleLine invalid={invalid} />
     if (f.kind === 'phone') return (
       // A live mask, as the business card's: set as the sign sets it while it's typed, the caret after the same digit
       <TextInput
@@ -395,8 +399,8 @@ export default function HoursSign() {
         invalid={invalid}
       />
     )
-    // The address a plain field, as the business card's: the dealer's put in as it's picked, edited by hand (a list of
-    // every dealer's address let a picked dealer take another's)
+    // The address a plain field, as the business card's: the point's put in as it's picked, edited by hand (a list of
+    // every point's address let a picked point take another's)
     return <TextInput value={fields[f.id]} onChange={v => set(f.id, v)} placeholder={f.placeholder} invalid={invalid} />
   }
 

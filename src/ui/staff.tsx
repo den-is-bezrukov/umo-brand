@@ -296,7 +296,7 @@ export function useStaff<P extends object>({ blank, readFile, readPasted, initia
     setSelected(r.key)
   }
   /**
-   * Every item changed by `patch` where it returns something (a dealer's phone into the people who had none). Not an
+   * Every item changed by `patch` where it returns something (a point's phone into the people who had none). Not an
    * edit: a loaded file stays the file
    */
   const fill = (patch: (p: Row<P>) => Partial<P> | null) => setList(list => list.map(p => { const c = patch(p); return c ? { ...p, ...c } : p }))

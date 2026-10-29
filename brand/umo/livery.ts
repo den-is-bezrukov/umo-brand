@@ -62,8 +62,8 @@ const bareRows = (x: number): Surface['dims']['rows'] => [
   { from: 380, to: 500, label: '120', x, part: 'tagline' },
 ]
 const dealerRows = (x: number): Surface['dims']['rows'] => [
-  { from: 0, to: 80, label: '80', x, part: 'dealer' },
-  { from: 80, to: 140, label: '60', x, part: 'dealer' },
+  { from: 0, to: 80, label: '80', x, part: 'point' },
+  { from: 80, to: 140, label: '60', x, part: 'point' },
 ]
 // UMO, the gap, the model number
 const bareCols = (front: 'start' | 'end'): Surface['dims']['cols'] => [
@@ -75,7 +75,7 @@ const bareCols = (front: 'start' | 'end'): Surface['dims']['cols'] => [
   ...sideBottom(BARE_W, front),
 ]
 const bareGrid = (dealerFrom: number): Surface['dims']['grid'] => [
-  [dealerFrom, 80, dealerFrom + 450, 80, 'dealer'], [0, 140, BARE_W, 140], [0, 300, BARE_W, 300], [0, 380, BARE_W, 380, 'tagline'],
+  [dealerFrom, 80, dealerFrom + 450, 80, 'point'], [0, 140, BARE_W, 140], [0, 300, BARE_W, 300], [0, 380, BARE_W, 380, 'tagline'],
 ]
 
 // The side photo covers 4800 × 2000 mm of the spec page, starting 450 mm from its top.
@@ -91,7 +91,7 @@ const UMO8: Record<SurfaceId, Surface> = {
     wordmark: { x: 450, y: 140, h: 120 },
     num: { x: 1130, y: 140, h: 120 },
     numGlyph: EIGHT,
-    dealer: { x: 0, align: 'left', baseline: 74, ...sideText, maxWidth: DEALER_W, maxLines: 2, centred: true },
+    point: { x: 0, align: 'left', baseline: 74, ...sideText, maxWidth: DEALER_W, maxLines: 2, centred: true },
     tagline: { x: 450, align: 'left', baseline: 492, ...sideText, maxWidth: 400, maxLines: 3 },
     obstacles: leftObstacles,
     clearance: 10,
@@ -107,14 +107,14 @@ const UMO8: Record<SurfaceId, Surface> = {
       ],
       rows: [
         ...sideMargins(-1, -125),
-        { from: 0, to: 80, label: '80', x: -1, part: 'dealer' },
-        { from: 80, to: 140, label: '60', x: -1, part: 'dealer' },
+        { from: 0, to: 80, label: '80', x: -1, part: 'point' },
+        { from: 80, to: 140, label: '60', x: -1, part: 'point' },
         { from: 140, to: 500, label: '360', x: -1 },
         ...letteringRows(1),
       ],
       grid: [
         [360, 0, 360, 500], [450, 0, 450, 500],
-        [0, 80, 450, 80, 'dealer'], [0, 140, 1280, 140],
+        [0, 80, 450, 80, 'point'], [0, 140, 1280, 140],
         [450, 260, 1280, 260], [450, 380, 1280, 380, 'tagline'],
       ],
     },
@@ -124,7 +124,7 @@ const UMO8: Record<SurfaceId, Surface> = {
       w: BARE_W,
       wordmark: { x: 0, ...bareLettering },
       num: { x: 900, ...bareLettering },
-      dealer: { x: 0, align: 'left', baseline: 74, ...sideText, maxWidth: DEALER_W, maxLines: 2, centred: true },
+      point: { x: 0, align: 'left', baseline: 74, ...sideText, maxWidth: DEALER_W, maxLines: 2, centred: true },
       tagline: { x: 0, align: 'left', ...bareTagline },
       taglineLarge: { x: 0, align: 'left', ...bareTaglineLarge },
       dims: {
@@ -143,7 +143,7 @@ const UMO8: Record<SurfaceId, Surface> = {
     wordmark: { x: 0, y: 140, h: 120 },
     num: { x: 680, y: 140, h: 120 },
     numGlyph: EIGHT,
-    dealer: { x: 1280, align: 'right', baseline: 74, ...sideText, maxWidth: DEALER_W, maxLines: 2, centred: true },
+    point: { x: 1280, align: 'right', baseline: 74, ...sideText, maxWidth: DEALER_W, maxLines: 2, centred: true },
     tagline: { x: 830, align: 'right', baseline: 492, ...sideText, maxWidth: 400, maxLines: 3 },
     obstacles: leftObstacles.map(mirror),
     clearance: 10,
@@ -160,13 +160,13 @@ const UMO8: Record<SurfaceId, Surface> = {
       rows: [
         ...letteringRows(-1),
         ...sideMargins(1, 1405),
-        { from: 0, to: 80, label: '80', x: 1, part: 'dealer' },
-        { from: 80, to: 140, label: '60', x: 1, part: 'dealer' },
+        { from: 0, to: 80, label: '80', x: 1, part: 'point' },
+        { from: 80, to: 140, label: '60', x: 1, part: 'point' },
         { from: 140, to: 500, label: '360', x: 1 },
       ],
       grid: [
         [920, 0, 920, 500], [830, 0, 830, 500],
-        [830, 80, 1280, 80, 'dealer'], [0, 140, 1280, 140],
+        [830, 80, 1280, 80, 'point'], [0, 140, 1280, 140],
         [0, 260, 830, 260], [0, 380, 830, 380, 'tagline'],
       ],
     },
@@ -176,7 +176,7 @@ const UMO8: Record<SurfaceId, Surface> = {
       w: BARE_W,
       wordmark: { x: 0, ...bareLettering },
       num: { x: 900, ...bareLettering },
-      dealer: { x: BARE_W, align: 'right', baseline: 74, ...sideText, maxWidth: DEALER_W, maxLines: 2, centred: true },
+      point: { x: BARE_W, align: 'right', baseline: 74, ...sideText, maxWidth: DEALER_W, maxLines: 2, centred: true },
       tagline: { x: BARE_W, align: 'right', ...bareTagline },
       taglineLarge: { x: BARE_W, align: 'right', ...bareTaglineLarge },
       dims: {
@@ -196,7 +196,7 @@ const UMO8: Record<SurfaceId, Surface> = {
     num: { x: 835 - 93.75, y: 0, h: 75 },
     numGlyph: EIGHT,
     // Rear text: 37.5 mm, one dealer line over a two-line tagline in the 125 mm under the lettering.
-    dealer: { x: 325, align: 'left', baseline: 152.5, size: 37.5, leading: 37.5, maxWidth: 510, maxLines: 1, oneLine: true },
+    point: { x: 325, align: 'left', baseline: 152.5, size: 37.5, leading: 37.5, maxWidth: 510, maxLines: 1, oneLine: true },
     tagline: { x: 325, align: 'left', baseline: 242.5, size: 37.5, leading: 37.5, maxWidth: 510, maxLines: 2 },
     obstacles: [],
     clearance: 0,
@@ -273,8 +273,8 @@ const side5Lettering = (x: number): Surface['dims']['rows'] => [
   { from: 380, to: 500, label: '120', x, part: 'tagline' },
 ]
 const side5Qr = (x: number): Surface['dims']['rows'] => [
-  { from: 0, to: 80, label: '80', x, part: 'dealer' },
-  { from: 80, to: 140, label: '60', x, part: 'dealer' },
+  { from: 0, to: 80, label: '80', x, part: 'point' },
+  { from: 80, to: 140, label: '60', x, part: 'point' },
   { from: 140, to: 500, label: '360', x },
 ]
 
@@ -294,8 +294,8 @@ const bare5Rows = (x: number): Surface['dims']['rows'] => [
   { from: 380, to: 500, label: '120', x, part: 'tagline' },
 ]
 const bare5Dealer80 = (x: number): Surface['dims']['rows'] => [
-  { from: 0, to: 80, label: '80', x, part: 'dealer' },
-  { from: 80, to: 140, label: '60', x, part: 'dealer' },
+  { from: 0, to: 80, label: '80', x, part: 'point' },
+  { from: 80, to: 140, label: '60', x, part: 'point' },
 ]
 const bare5Cols: Surface['dims']['cols'] = [
   { from: 0, to: 800, label: '800' },
@@ -303,7 +303,7 @@ const bare5Cols: Surface['dims']['cols'] = [
   { from: 900, to: BARE5_W, label: '186,5' },
 ]
 const bare5Grid = (dealerFrom: number): Surface['dims']['grid'] => [
-  [dealerFrom, 80, dealerFrom + DEALER5_W, 80, 'dealer'], [0, 140, BARE5_W, 140], [0, 300, BARE5_W, 300], [0, 380, BARE5_W, 380, 'tagline'],
+  [dealerFrom, 80, dealerFrom + DEALER5_W, 80, 'point'], [0, 140, BARE5_W, 140], [0, 300, BARE5_W, 300], [0, 380, BARE5_W, 380, 'tagline'],
 ]
 
 // The side photo is the Figma frame's: 4718 × 1680 mm, the car's right side, the sheet's top 682 down.
@@ -321,7 +321,7 @@ const UMO5: Record<SurfaceId, Surface> = {
     num: { x: 1170, y: 140, h: 120 },
     numGlyph: FIVE,
     decal: '#000000',
-    dealer: { x: 0, align: 'left', baseline: 71, ...side5Text, maxWidth: DEALER5_W, maxLines: 2, centred: true },
+    point: { x: 0, align: 'left', baseline: 71, ...side5Text, maxWidth: DEALER5_W, maxLines: 2, centred: true },
     tagline: { x: 480, align: 'left', baseline: 492, ...side5Text, maxWidth: 420, maxLines: 3 },
     obstacles: right5Obstacles.map(mirror5),
     clearance: 10,
@@ -339,7 +339,7 @@ const UMO5: Record<SurfaceId, Surface> = {
       rows: [...side5Qr(-1), ...side5Bottom(-200, -1), ...side5Lettering(1)],
       grid: [
         [360, 0, 360, 500], [480, 0, 480, 500],
-        [0, 80, DEALER5_W, 80, 'dealer'], [0, 140, SIDE5_W, 140],
+        [0, 80, DEALER5_W, 80, 'point'], [0, 140, SIDE5_W, 140],
         [480, 260, SIDE5_W, 260], [480, 380, SIDE5_W, 380, 'tagline'],
       ],
     },
@@ -349,7 +349,7 @@ const UMO5: Record<SurfaceId, Surface> = {
       w: BARE5_W,
       wordmark: { x: 0, ...bare5Lettering },
       num: { x: 900, ...bare5Lettering },
-      dealer: { x: 0, align: 'left', ...bare5Dealer },
+      point: { x: 0, align: 'left', ...bare5Dealer },
       tagline: { x: 0, align: 'left', ...bare5Tagline },
       taglineLarge: { x: 0, align: 'left', ...bare5TaglineLarge },
       dims: {
@@ -374,7 +374,7 @@ const UMO5: Record<SurfaceId, Surface> = {
     num: { x: 690, y: 140, h: 120 },
     numGlyph: FIVE,
     decal: '#000000',
-    dealer: { x: SIDE5_W, align: 'right', baseline: 71, ...side5Text, maxWidth: DEALER5_W, maxLines: 2, centred: true },
+    point: { x: SIDE5_W, align: 'right', baseline: 71, ...side5Text, maxWidth: DEALER5_W, maxLines: 2, centred: true },
     tagline: { x: 830, align: 'right', baseline: 492, ...side5Text, maxWidth: 420, maxLines: 3 },
     obstacles: right5Obstacles,
     clearance: 10,
@@ -392,7 +392,7 @@ const UMO5: Record<SurfaceId, Surface> = {
       rows: [...side5Lettering(-1), ...side5Qr(1), ...side5Bottom(SIDE5_W + 200, 1)],
       grid: [
         [830, 0, 830, 500], [950, 0, 950, 500],
-        [SIDE5_W - DEALER5_W, 80, SIDE5_W, 80, 'dealer'], [0, 140, SIDE5_W, 140],
+        [SIDE5_W - DEALER5_W, 80, SIDE5_W, 80, 'point'], [0, 140, SIDE5_W, 140],
         [0, 260, 830, 260], [0, 380, 830, 380, 'tagline'],
       ],
     },
@@ -402,7 +402,7 @@ const UMO5: Record<SurfaceId, Surface> = {
       w: BARE5_W,
       wordmark: { x: 0, ...bare5Lettering },
       num: { x: 900, ...bare5Lettering },
-      dealer: { x: BARE5_W, align: 'right', ...bare5Dealer },
+      point: { x: BARE5_W, align: 'right', ...bare5Dealer },
       tagline: { x: BARE5_W, align: 'right', ...bare5Tagline },
       taglineLarge: { x: BARE5_W, align: 'right', ...bare5TaglineLarge },
       dims: {
@@ -428,7 +428,7 @@ const UMO5: Record<SurfaceId, Surface> = {
     numGlyph: FIVE,
     decal: '#ffffff',
     // Rear text: 30 mm, one dealer line over a two-line tagline, 45 under the lettering.
-    dealer: { x: 250, align: 'left', baseline: 126, size: 30, leading: 30, maxWidth: 400, maxLines: 1, oneLine: true },
+    point: { x: 250, align: 'left', baseline: 126, size: 30, leading: 30, maxWidth: 400, maxLines: 1, oneLine: true },
     tagline: { x: 250, align: 'left', baseline: 194, size: 30, leading: 30, maxWidth: 400, maxLines: 2 },
     obstacles: [],
     clearance: 0,

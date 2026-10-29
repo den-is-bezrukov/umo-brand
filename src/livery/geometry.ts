@@ -1,6 +1,7 @@
 import type { Font } from 'opentype.js'
 import QRCode from 'qrcode'
 import { LIVERY } from '@brand/livery'
+import { WORDS } from '@brand/words'
 import type { Surface, TextBlock, Obstacle, TextPart } from './layout'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { textLine, type TextLine } from '@/ui/liveText'
@@ -32,7 +33,7 @@ export interface Sheet {
   /** Everything to cut: `fixed` (the QR and the model's lettering), then the text lines */
   shapes: Cmd[][]
   fixed: Cmd[][]
-  dealer: TextResult
+  point: TextResult
   tagline: TextResult
   issues: string[]
 }
@@ -207,33 +208,33 @@ export function labelCmds(font: Font, text: string, x: number, y: number, size: 
   return pathCmds(font.getPath(text, left, y, size).commands)
 }
 
-/** Dealer name, tagline and the QR link; `null` leaves that part off the sheet */
-export function buildSheet(font: Font, base: Surface, input: { dealer: string | null; tagline: string | null; url: string | null; large?: boolean }): Sheet {
+/** Point name, tagline and the QR link; `null` leaves that part off the sheet */
+export function buildSheet(font: Font, base: Surface, input: { point: string | null; tagline: string | null; url: string | null; large?: boolean }): Sheet {
   // The larger tagline where the sheet has one
   const chosen = input.large && base.taglineLarge ? { ...base, tagline: base.taglineLarge } : base
   const surface = chosen.stack ? chosen : trimmed(chosen, input)
   const { qr, wordmark, num, stack } = surface
   const none: TextResult = { lines: [], issues: [] }
-  const dealer = input.dealer === null ? none
-    : setText(font, input.dealer, surface.dealer, 'Имя дилера', surface, stack && surface.dealer.baseline)
-  // Stacked, the tagline follows the dealer name, or takes its place
-  const afterDealer = dealer.lines.length
-    ? surface.dealer.baseline + (dealer.lines.length - 1) * surface.dealer.leading + (stack?.gap ?? 0)
-    : surface.dealer.baseline
-  // Stacked, the tagline may take the dealer's lines too when there's no dealer name
-  const taglineBlock = stack && input.dealer === null
-    ? { ...surface.tagline, maxLines: surface.tagline.maxLines + surface.dealer.maxLines }
+  const point = input.point === null ? none
+    : setText(font, input.point, surface.point, `Имя ${WORDS.point.of}`, surface, stack && surface.point.baseline)
+  // Stacked, the tagline follows the point name, or takes its place
+  const afterPoint = point.lines.length
+    ? surface.point.baseline + (point.lines.length - 1) * surface.point.leading + (stack?.gap ?? 0)
+    : surface.point.baseline
+  // Stacked, the tagline may take the point's lines too when there's no point name
+  const taglineBlock = stack && input.point === null
+    ? { ...surface.tagline, maxLines: surface.tagline.maxLines + surface.point.maxLines }
     : surface.tagline
   const tagline = input.tagline === null ? none
-    : setText(font, input.tagline, taglineBlock, 'Слоган', surface, stack && afterDealer)
+    : setText(font, input.tagline, taglineBlock, 'Слоган', surface, stack && afterPoint)
   let sheetSurface = surface
   const digit = surface.numGlyph
   let lettering = [fromD(LIVERY.wordmark.d, wordmark.h / LIVERY.wordmark.h, wordmark.x, wordmark.y), fromD(digit.d, num.h / digit.h, num.x, num.y)]
   if (stack) {
     // Centre the column (lettering and text) on the sheet's height: from the top of the lettering to the deepest
     // descender of the last line
-    const last = [...dealer.lines, ...tagline.lines].length
-      ? (tagline.lines.length ? { block: surface.tagline, n: tagline.lines.length, first: afterDealer } : { block: surface.dealer, n: dealer.lines.length, first: surface.dealer.baseline })
+    const last = [...point.lines, ...tagline.lines].length
+      ? (tagline.lines.length ? { block: surface.tagline, n: tagline.lines.length, first: afterPoint } : { block: surface.point, n: point.lines.length, first: surface.point.baseline })
       : null
     const top = Math.min(wordmark.y, num.y)
     const bottom = last ? last.first + (last.n - 1) * last.block.leading + last.block.size * DESCENDER : Math.max(wordmark.y + wordmark.h, num.y + num.h)
@@ -246,7 +247,7 @@ export function buildSheet(font: Font, base: Surface, input: { dealer: string | 
     const dx = -shrink
     const dy = -top
     lettering = lettering.map(c => moveCmds(c, dx, dy))
-    for (const l of [...dealer.lines, ...tagline.lines]) {
+    for (const l of [...point.lines, ...tagline.lines]) {
       l.cmds = moveCmds(l.cmds, dx, dy)
       l.ink = { ...l.ink, x1: l.ink.x1 + dx, x2: l.ink.x2 + dx, y1: l.ink.y1 + dy, y2: l.ink.y2 + dy }
       l.live = { ...l.live, baseline: l.live.baseline + dy, chars: l.live.chars.map(c => ({ ...c, x: c.x + dx })) }
@@ -260,13 +261,13 @@ export function buildSheet(font: Font, base: Surface, input: { dealer: string | 
   ]
   const shapes = [
     ...fixed,
-    ...dealer.lines.map(l => l.cmds),
+    ...point.lines.map(l => l.cmds),
     ...tagline.lines.map(l => l.cmds),
   ]
-  const issues = [...dealer.issues, ...tagline.issues]
-  if (input.dealer !== null && !input.dealer.trim()) issues.unshift('Нет имени дилера')
+  const issues = [...point.issues, ...tagline.issues]
+  if (input.point !== null && !input.point.trim()) issues.unshift(`Нет имени ${WORDS.point.of}`)
   if (input.tagline !== null && !input.tagline.trim()) issues.unshift('Нет слогана')
-  return { surface: sheetSurface, shapes, fixed, dealer, tagline, issues }
+  return { surface: sheetSurface, shapes, fixed, point, tagline, issues }
 }
 
 /**
@@ -303,7 +304,7 @@ export const mm = (v: number) => String(Math.round(v * 2) / 2).replace('.', ',')
 
 /**
  * The spec's dimensions without the rows and lines of the texts left out. On each side the rows around a dropped
- * one close up: the dealer's 80 and 60 become one 140, the tagline's two 120s one 240.
+ * one close up: the point's 80 and 60 become one 140, the tagline's two 120s one 240.
  */
 function withoutParts(dims: Surface['dims'], off: Set<TextPart>): Surface['dims'] {
   type Row = Surface['dims']['rows'][number]
@@ -324,15 +325,15 @@ function withoutParts(dims: Surface['dims'], off: Set<TextPart>): Surface['dims'
 
 /**
  * A side surface with only what's on it: the rows and lines of the texts left out go (`withoutParts`), and the sheet
- * is cut down to its content — without the dealer name it starts at the top of the QR and lettering, without the
+ * is cut down to its content — without the point name it starts at the top of the QR and lettering, without the
  * tagline (and the QR, which reaches the bottom too) it ends under the lettering. The sheet stays where it was on the
  * body, so the strip cut off joins the distance to the window line or the moulding: ~100 + 140 become ~240.
  */
-function trimmed(s: Surface, input: { dealer: string | null; tagline: string | null; url: string | null }): Surface {
-  const off = new Set<TextPart>([...(input.dealer === null ? ['dealer' as const] : []), ...(input.tagline === null ? ['tagline' as const] : [])])
+function trimmed(s: Surface, input: { point: string | null; tagline: string | null; url: string | null }): Surface {
+  const off = new Set<TextPart>([...(input.point === null ? ['point' as const] : []), ...(input.tagline === null ? ['tagline' as const] : [])])
   const parts = off.size ? withoutParts(s.dims, off) : s.dims
   const qr = input.url !== null
-  const top = input.dealer !== null ? 0 : Math.min(...(qr ? [s.qr.y] : []), s.wordmark.y, s.num.y)
+  const top = input.point !== null ? 0 : Math.min(...(qr ? [s.qr.y] : []), s.wordmark.y, s.num.y)
   const bottom = input.tagline !== null ? s.h : Math.max(...(qr ? [s.qr.y + s.qr.size] : []), s.wordmark.y + s.wordmark.h, s.num.y + s.num.h)
   if (top === 0 && bottom === s.h) return { ...s, dims: parts }
   const h = bottom - top
@@ -357,7 +358,7 @@ function trimmed(s: Surface, input: { dealer: string | null; tagline: string | n
     qr: { ...s.qr, y: s.qr.y - top },
     wordmark: { ...s.wordmark, y: s.wordmark.y - top },
     num: { ...s.num, y: s.num.y - top },
-    dealer: { ...s.dealer, baseline: s.dealer.baseline - top },
+    point: { ...s.point, baseline: s.point.baseline - top },
     tagline: { ...s.tagline, baseline: s.tagline.baseline - top },
     obstacles: s.obstacles.map(up),
     photo: { ...s.photo, y: s.photo.y + top },

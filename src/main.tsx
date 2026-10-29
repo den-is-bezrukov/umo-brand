@@ -15,8 +15,8 @@ const BusinessCard = lazy(() => import('./BusinessCard'))
 const PriceTag = lazy(() => import('./PriceTag'))
 const HoursSign = lazy(() => import('./HoursSign'))
 const Memo = lazy(() => import('./Memo'))
-// A `pdf=1` link may name the dealer loosely; the page finds it, asking which when there are several
-const LinkDealer = lazy(() => import('./ui/LinkDealer'))
+// A `pdf=1` link may name the point loosely; the page finds it, asking which when there are several
+const LinkPoint = lazy(() => import('./ui/LinkPoint'))
 
 // Yandex.Metrika (index.html, the brand's domain only) is set to `defer`, as Metrika asks of a single-page site: a view is
 // sent here, once per page. Only a new path counts: the generators rewrite the query with every setting changed, the
@@ -62,13 +62,13 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Routes>
           <Route path="/" element={<Guide />} />
           {has('/price-card') && <Route path="/price-card" element={<App />} />}
-          {has('/livery') && <Route path="/livery" element={<LinkDealer param="top" withPrefix><Livery /></LinkDealer>} />}
-          {has('/plate-frame') && <Route path="/plate-frame" element={<LinkDealer param="name"><PlateFrame /></LinkDealer>} />}
+          {has('/livery') && <Route path="/livery" element={<LinkPoint param="top" withPrefix><Livery /></LinkPoint>} />}
+          {has('/plate-frame') && <Route path="/plate-frame" element={<LinkPoint param="name"><PlateFrame /></LinkPoint>} />}
           {has('/name-tag') && <Route path="/name-tag" element={<NameTag />} />}
-          {has('/business-card') && <Route path="/business-card" element={<LinkDealer param="dealer"><BusinessCard /></LinkDealer>} />}
-          {has('/price-tag') && <Route path="/price-tag" element={<LinkDealer param="dealer"><PriceTag /></LinkDealer>} />}
+          {has('/business-card') && <Route path="/business-card" element={<LinkPoint><BusinessCard /></LinkPoint>} />}
+          {has('/price-tag') && <Route path="/price-tag" element={<LinkPoint><PriceTag /></LinkPoint>} />}
           <Route path="/editor" element={<Guide />} />
-          {has('/hours-sign') && <Route path="/hours-sign" element={<LinkDealer param="name"><HoursSign /></LinkDealer>} />}
+          {has('/hours-sign') && <Route path="/hours-sign" element={<LinkPoint param="name"><HoursSign /></LinkPoint>} />}
           {has('/memo') && <Route path="/memo" element={<Memo />} />}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

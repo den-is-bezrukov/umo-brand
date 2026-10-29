@@ -10,6 +10,7 @@ import { SITE } from '@/site'
 import { MODELS, fileName } from '@/data/models'
 import { PRICE_CARD } from '@brand/price-card'
 import { FONTS } from '@brand/fonts'
+import { LIVERY_FILE } from '@/livery/pdf'
 
 /** The site's domain, the brand's own site, its name and files' prefix, as the instructions write them */
 const DOMAIN = SITE.domain
@@ -17,19 +18,19 @@ const HOME = new URL(SITE.home).host
 const NAME = SITE.name
 const FILE = SITE.file
 /** The livery's archives, the last model's first: «<Brand>8_dealer-livery.zip (или <Brand>5_…)» */
-const LIVERY_ZIPS = [...MODELS].reverse().map((m, i) => (i ? `${fileName(m.id, '')}_…` : `${fileName(m.id, '')}_dealer-livery.zip`)).join(' (или ') + (MODELS.length > 1 ? ')' : '')
+const LIVERY_ZIPS = [...MODELS].reverse().map((m, i) => (i ? `${fileName(m.id, '')}_…` : `${fileName(m.id, '')}_${LIVERY_FILE}.zip`)).join(' (или ') + (MODELS.length > 1 ? ')' : '')
 /** The price card's trims per model: «Про и Макс для <Бренд> 5, Макс и Ультра для <Бренд> 8» */
 const TRIM_LIST = MODELS.map(m => `${PRICE_CARD.trims[m.id].map(t => t.name).join(' и ')} для ${m.name}`).join(', ')
 /** How many cards every trim makes, in words: «четыре карты» */
 const CARDS_COUNT = (n => `${['', 'одна', 'две', 'три', 'четыре', 'пять', 'шесть', 'семь', 'восемь', 'девять', 'десять'][n] ?? n} ${n === 1 ? 'карта' : n < 5 ? 'карты' : 'карт'}`)(MODELS.reduce((n, m) => n + PRICE_CARD.trims[m.id].length, 0))
 
-/** Illustrator's «Показать все монтажные области», as the dealer's keyboard has it */
+/** Illustrator's «Показать все монтажные области», as the point's keyboard has it */
 const FIT_ALL = MOD === '⌘' ? '⌥⌘0' : 'Alt+Ctrl+0'
 
 /**
  * «Инструкция», the «?» at the end of the breadcrumbs (as Composter's): one panel for every generator, a tab each and
  * «Общее» for what they share, opened on the current one's: what to do, the table, the print and the usual questions,
- * for a dealer on their own. Help lives here, apart from the controls: no hint texts by them
+ * for a point on their own. Help lives here, apart from the controls: no hint texts by them
  */
 
 type Help = {
@@ -43,7 +44,7 @@ type Help = {
   faq: [string, ReactNode][]
 }
 
-/** The site the generator makes up from the dealer's name (`siteFor`), to be checked: such subdomains didn't resolve as of 2026-10-16 */
+/** The site the generator makes up from the point's name (`siteFor`), to be checked: such subdomains didn't resolve as of 2026-10-16 */
 const SITE_CHECK = (more = ''): [string, ReactNode] => ['Проверьте сайт', `Редактор подставляет сайт по названию салона, например agat-vladimir.${HOME}. Откройте его в браузере: если он не открывается или у салона свой сайт, впишите свой или ${HOME}.${more}`]
 
 /**

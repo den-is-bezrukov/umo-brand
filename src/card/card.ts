@@ -9,12 +9,13 @@ import { LOGO } from '@brand/logo'
 import { BUSINESS_CARD as L } from '@brand/business-card'
 import { SITE } from '@/site'
 import { withoutBrand } from '@/data/points'
+import { POINTS } from '@brand/points'
 
 // An employee's business card, two sides, laid out as the brand's `@brand/business-card` says (`BrandBusinessCard`).
-// The face is the brand's logo, the same for everyone. The back: the dealership at the top if the card names one, set
-// once for the whole list — its name in the brand font's Medium, then «Официальный дилер <Бренд>», the address and the
+// The face is the brand's logo, the same for everyone. The back: the point at the top if the card names one, set
+// once for the whole list — its name in the brand font's Medium, then the brand's line under it if it has one, the address and the
 // site in Regular — and the person at the bottom: name and surname in Medium, over the position or on lines of their
-// own, then position, email and phone in Regular, with the QR code. The dealership block hangs from its top, the
+// own, then position, email and phone in Regular, with the QR code. The point block hangs from its top, the
 // person's stands on its bottom, so a line left out or a second one closes up towards the edge.
 
 /** A logo `w` mm wide from (x, y), mm */
@@ -34,11 +35,12 @@ export interface BrandBusinessCard {
   logo?: LogoBox
   qr: { x: number; y: number; size: number }
   /**
-   * The dealership at the top, if the card names one, its name's capitals on `top`: the name in `name` mm (Medium,
-   * `width` wide), «Официальный дилер <Бренд>», the address (up to two lines, `addressWidth`) and the site in `size`
-   * (Regular); `afterName` from the name's baseline to the next, `pitch` between items, `leading` inside one
+   * The point at the top, if the card names one, its name's capitals on `top`: the name in `name` mm (Medium,
+   * `width` wide), `line` if the brand has one under it («Официальный дилер <Бренд>»), the address (up to two lines,
+   * `addressWidth`) and the site in `size` (Regular); `afterName` from the name's baseline to the next, `pitch` between
+   * items, `leading` inside one
    */
-  dealer?: { x: number; top: number; name: number; size: number; width: number; addressWidth: number; afterName: number; pitch: number; leading: number }
+  point?: { x: number; top: number; name: number; size: number; width: number; addressWidth: number; afterName: number; pitch: number; leading: number; line?: string }
   /**
    * The person, from the bottom: phone, email and position (`position.lines` at most, after a fixed `prefix`) in
    * `size` (Regular) within `width`, the last baseline on `bottom`, `pitch` between items, `leading` inside one; name and
@@ -82,16 +84,16 @@ export function logo(x: number, y: number, w: number): Cmd[] {
 export const FACES = L.faces.map(f => ({ label: f.label, dark: f.dark, art: logo(f.logo.x, f.logo.y, f.logo.w) }))
 /** The back's logo, if it has one */
 export const BACK_LOGO = L.logo ? logo(L.logo.x, L.logo.y, L.logo.w) : []
-/** Whether the card names the dealership */
-export const HAS_DEALER = !!L.dealer
+/** Whether the card names the point */
+export const HAS_POINT = !!L.point
 
-/** The dealership, set once for the whole list */
-export interface Dealer { name: string; address: string; site: string }
+/** The point, set once for the whole list */
+export interface PointDetails { name: string; address: string; site: string }
 /** `ext`, the extension, is the one optional field */
 export interface Person { name: string; surname: string; position: string; email: string; phone: string; ext: string }
 
-export type CardField = 'dealer' | 'type' | 'address' | 'site' | 'name' | 'surname' | 'position' | 'email' | 'phone'
-export const DEALER_FIELDS: CardField[] = ['dealer', 'address', 'site']
+export type CardField = 'point' | 'type' | 'address' | 'site' | 'name' | 'surname' | 'position' | 'email' | 'phone'
+export const POINT_FIELDS: CardField[] = ['point', 'address', 'site']
 
 export interface Issue { field: CardField | null; text: string }
 
@@ -105,7 +107,6 @@ export interface Back {
   issues: Issue[]
 }
 
-const TYPE = `Официальный дилер ${SITE.name}`
 
 /** One line from `x` on `baseline`: kerning, and the case-sensitive forms where `caseForms` (on in Figma for the Medium headings) */
 function setLine(font: Font, text: string, x: number, baseline: number, size: number, caseForms: boolean) {
@@ -178,22 +179,8 @@ export const phoneLine = (p: Pick<Person, 'phone' | 'ext'>) =>
 /** The site as it reads on the card: no protocol, no «www.», no slash at the end */
 export const siteText = (raw: string) => oneLine(raw).replace(/^https?:\/\//i, '').replace(/^www\./i, '').replace(/\/$/, '')
 
-const TRANSLIT: Record<string, string> = {
-  а: 'a', б: 'b', в: 'v', г: 'g', д: 'd', е: 'e', ё: 'e', ж: 'zh', з: 'z', и: 'i', й: 'y', к: 'k', л: 'l', м: 'm', н: 'n',
-  о: 'o', п: 'p', р: 'r', с: 's', т: 't', у: 'u', ф: 'f', х: 'kh', ц: 'ts', ч: 'ch', ш: 'sh', щ: 'shch', ъ: '', ы: 'y',
-  ь: '', э: 'e', ю: 'yu', я: 'ya',
-}
-
-/**
- * The site offered for a dealership: its name without the brand's name, transliterated, as a subdomain of the
- * brand's site (`SITE.home`), as the Figma card has it: «<Бренд> Дилер Город» → dealer-city.<brand site>. Such subdomains don't
- * exist yet; it's a suggestion, typed over freely
- */
-export function siteFor(dealer: string): string {
-  const slug = [...withoutBrand(oneLine(dealer)).toLowerCase()].map(c => TRANSLIT[c] ?? c).join('')
-    .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '')
-  return slug ? `${slug}.${new URL(SITE.home).host}` : ''
-}
+/** The site offered for a point, by the brand's rule (`POINTS.site`) from its name without the brand's name; none without one */
+export const siteFor = (point: string): string => POINTS.site?.(withoutBrand(oneLine(point))) ?? ''
 
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/
 /** A part of the address (before the @, a domain label) with Latin and Cyrillic letters both: «ivanоv» with a Russian о */
@@ -203,7 +190,7 @@ const mixedScripts = (email: string) => email.split(/[@.]/).some(part => /[a-z]/
  * The back for one person. The texts come as shown: the page puts placeholders in empty fields, the same layout then
  * holding them in grey. `qr` null leaves the QR out
  */
-export function buildBack(fonts: Fonts, dealer: Dealer, person: Person, qr: QrData | null): Back {
+export function buildBack(fonts: Fonts, point: PointDetails, person: Person, qr: QrData | null): Back {
   const fields: Partial<Record<CardField, Cmd[]>> = {}
   const issues: Issue[] = []
   const P = L.person
@@ -233,17 +220,19 @@ export function buildBack(fonts: Fonts, dealer: Dealer, person: Person, qr: QrDa
     return set.length
   }
 
-  // The dealership, from the top: its capitals on the top
-  const D = L.dealer
+  // The point, from the top: its capitals on the top
+  const D = L.point
   if (D) {
     let y = D.top + L.cap * D.name
-    lines('dealer', 'Название', dealer.name, D.x, y, D.name, D.leading, D.width, 1, false, true)
+    lines('point', 'Название', point.name, D.x, y, D.name, D.leading, D.width, 1, false, true)
     y += D.afterName
-    lines('type', 'Подпись', TYPE, D.x, y, D.size, D.leading, D.width, 1, false)
-    y += D.pitch
-    const address = lines('address', 'Адрес', dealer.address, D.x, y, D.size, D.leading, D.addressWidth, 2, true)
+    if (D.line) {
+      lines('type', 'Подпись', D.line, D.x, y, D.size, D.leading, D.width, 1, false)
+      y += D.pitch
+    }
+    const address = lines('address', 'Адрес', point.address, D.x, y, D.size, D.leading, D.addressWidth, 2, true)
     y += (address - 1) * D.leading + D.pitch
-    const site = siteText(dealer.site)
+    const site = siteText(point.site)
     if (site) lines('site', 'Сайт', site, D.x, y, D.size, D.leading, D.width, 1, false)
   }
 

@@ -7,7 +7,7 @@ import type { Mark } from '@/brand'
 
 export type SurfaceId = 'left' | 'right' | 'rear'
 
-export type TextPart = 'dealer' | 'tagline'
+export type TextPart = 'point' | 'tagline'
 
 export interface TextBlock {
   /** Left edge for left-aligned text, right edge for right-aligned, middle for centred */
@@ -44,7 +44,7 @@ export interface Surface {
   numGlyph: Mark
   /** Colour of the decals in the preview and the spec, white when not given: black on a white car */
   decal?: string
-  dealer: TextBlock
+  point: TextBlock
   tagline: TextBlock
   obstacles: Obstacle[]
   /** How much space text needs from an obstacle */
@@ -52,7 +52,7 @@ export interface Surface {
   /** Size of the spec's dimension labels, in mm, the same with or without the QR */
   labelSize: number
   /**
-   * Text stacked under the lettering instead of each block sitting at its own baseline: the dealer name at its
+   * Text stacked under the lettering instead of each block sitting at its own baseline: the point name at its
    * baseline, the tagline `gap` under it (or in its place without one), and the lettering with the text centred
    * vertically on the sheet, so leaving a text out doesn't leave a hole. The QR stays put. `textTop` is where the
    * text zone starts under the top of the lettering, for the spec's rows; the spec's rows and lines on the text
@@ -75,7 +75,7 @@ export interface Surface {
   /**
    * Dimension lines for the spec: horizontal ones above the sheet (or at `y`), vertical ones beside it (on the side
    * `x` points to), and the zone grid inside it as [x1, y1, x2, y2] segments. Rows and lines that belong to the
-   * dealer name or the tagline carry its `part` and go when it's left out; the rows next to them close the gap.
+   * point name or the tagline carry its `part` and go when it's left out; the rows next to them close the gap.
    */
   dims: {
     cols: { from: number; to: number; label: string; y?: number }[]
@@ -94,7 +94,7 @@ export interface Surface {
    *   centres the text on it.
    */
   noQr:
-    | { kind: 'layout'; shift: number } & Pick<Surface, 'w' | 'wordmark' | 'num' | 'dealer' | 'tagline' | 'taglineLarge' | 'dims'>
+    | { kind: 'layout'; shift: number } & Pick<Surface, 'w' | 'wordmark' | 'num' | 'point' | 'tagline' | 'taglineLarge' | 'dims'>
     | { kind: 'cut'; side: 'start' | 'end'; width: number; centre?: boolean; dims: Surface['dims'] }
 }
 
@@ -132,7 +132,7 @@ export function withoutQr(s: Surface): Surface {
     w: s.w - width,
     wordmark: { ...s.wordmark, x: shift(s.wordmark.x) },
     num: { ...s.num, x: shift(s.num.x) },
-    dealer: centre ? { ...s.dealer, align: 'center', x: (s.w - width) / 2 } : { ...s.dealer, x: shift(s.dealer.x) },
+    point: centre ? { ...s.point, align: 'center', x: (s.w - width) / 2 } : { ...s.point, x: shift(s.point.x) },
     tagline: centre ? { ...s.tagline, align: 'center', x: (s.w - width) / 2 } : { ...s.tagline, x: shift(s.tagline.x) },
     obstacles: s.obstacles.map(moveObstacle),
     photo: { ...s.photo, x: s.photo.x + offset },
@@ -156,8 +156,8 @@ export function smallQr(s: Surface): Surface {
   const bare = withoutQr(s)
   const add = SMALL_QR_GAP + SMALL_QR
   const w = bare.w
-  // The dealer name sits at the front edge: left-aligned when the front is at the sheet's start
-  const frontStart = bare.dealer.align === 'left'
+  // The point name sits at the front edge: left-aligned when the front is at the sheet's start
+  const frontStart = bare.point.align === 'left'
   // With the front at the end the QR comes first and everything else moves along
   const dx = frontStart ? 0 : add
   const shiftX = <T extends { x: number }>(o: T): T => ({ ...o, x: o.x + dx })
@@ -184,7 +184,7 @@ export function smallQr(s: Surface): Surface {
     qr: { x: frontStart ? w + SMALL_QR_GAP : 0, y: bare.wordmark.y, size: SMALL_QR },
     wordmark: shiftX(bare.wordmark),
     num: shiftX(bare.num),
-    dealer: shiftX(bare.dealer),
+    point: shiftX(bare.point),
     tagline: shiftX(bare.tagline),
     taglineLarge: bare.taglineLarge && shiftX(bare.taglineLarge),
     obstacles: bare.obstacles.map(moveObstacle),

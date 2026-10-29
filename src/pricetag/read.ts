@@ -2,12 +2,13 @@ import { DEFAULT_CAPTION, type Item } from './tag'
 import { isPdf, readPdfData } from '@/ui/pdfData'
 import { SITE } from '@/site'
 
-// The tags' own PDF dropped back on the page, to fix a price and download again: it carries the dealer and the goods
+// The tags' own PDF dropped back on the page, to fix a price and download again: it carries the point and the goods
 // as typed in its info (`DATA_KEY`, written by `tagsPdf`). Any other PDF has no tags to give.
 
 /** The PDF info entry holding the list, as JSON */
 export const DATA_KEY = `${SITE.file}PriceTags`
 
+/** `dealer`: the point, under the key the files already out carry */
 export interface TagsData { dealer: string; items: Item[] }
 
 const NOT_OURS_PDF = 'В этом PDF нет ценников: подходят PDF, скачанные здесь'

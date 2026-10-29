@@ -55,7 +55,7 @@ export const TAGS_FILE = `${SITE.file}_price-tags.pdf`
 export async function tagsPdf(tags: Tag[], data: TagsData): Promise<Blob> {
   const doc = await PDFDocument.create()
   doc.setTitle(TAGS_FILE)
-  // The dealer and the goods as typed, in the document's info, so the file dropped back on the page opens its list
+  // The point and the goods as typed, in the document's info, so the file dropped back on the page opens its list
   // (`readTagsFile`); nothing of it is printed
   writePdfData(doc, DATA_KEY, data)
   return sheets(doc, tags.map(tag => ({ tag })))
@@ -82,9 +82,9 @@ async function sheets(doc: PDFDocument, all: { tag: Tag; lines?: TextLine[] }[],
     )
     sheet.forEach((t, i) => {
       const { x, y } = at(i)
-      const { dealer = [], ...rest } = t.fields
+      const { point = [], ...rest } = t.fields
       fill(BLACK, rect(0, 0, TAG.w, BAND), x, y)
-      fill(WHITE, [...BAND_ART, ...(live ? [] : dealer)], x, y)
+      fill(WHITE, [...BAND_ART, ...(live ? [] : point)], x, y)
       if (live) p.pushOperators(...textOps(p, live, all[from + i].lines ?? [], (lx, ly) => [(lx + x) * PT, (PAGE.h - ly - y) * PT], PT, BLACK))
       else fill(BLACK, Object.values(rest).flat(), x, y)
     })

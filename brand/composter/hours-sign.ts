@@ -27,8 +27,8 @@ export const HOURS_SIGN: BrandHoursSign = {
   // A slider has no empty hours: it starts where its knobs stand
   hours: { placeholder: ['9:00', '21:00'], default: ['9:00', '21:00'], slider: true },
   fields: [
-    // The dealer's marketing name, the brand's name before it fixed
-    { id: 'dealer', param: 'name', kind: 'dealer', label: 'Дилер', placeholder: 'Название дилера', missing: 'Выбрать дилера' },
+    // The branch's name, the brand's name before it fixed
+    { id: 'point', param: 'name', kind: 'point', label: 'Филиал', placeholder: 'Название филиала', missing: 'Выбрать филиал' },
     { id: 'address', kind: 'address', label: 'Адрес', placeholder: 'Адрес', missing: 'Указать адрес' },
     { id: 'phone', kind: 'phone', label: 'Телефон', placeholder: '+7 495 000 00 00', missing: 'Указать телефон' },
     { id: 'site', kind: 'site', label: 'Сайт', placeholder: 'Сайт', missing: 'Указать сайт' },
@@ -43,7 +43,7 @@ export const HOURS_SIGN: BrandHoursSign = {
       {
         kind: 'rows', x: MARGIN, size: INFO.size, leading: INFO.leading, width: COLUMN, bottom: INFO_LAST,
         rows: [
-          { text: `${SITE.name} {dealer}`, label: 'Название дилера' },
+          { text: `${SITE.name} {point}`, label: 'Название филиала' },
           { text: 'Адрес: {address}', label: 'Адрес', lines: 2 },
           { text: 'Телефон: {phone}', label: 'Телефон' },
           { text: '{site}', label: 'Сайт' },

@@ -6,35 +6,39 @@ import { goal } from '@/ui/metrika'
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/ui/type'
 import { xlsxCells, pastedCells, byHeaders, FULL_NAME, fromFullName, type Cells } from '@/nametag/table'
-import { CARDS_KEY, CARD, QR, FACES, BACK_LOGO, HAS_DEALER, DEALER_FIELDS, buildBack, siteFor, siteText, splitPhone, maskPhone, type CardField, type Dealer, type Person, type QrData } from '@/card/card'
+import { CARDS_KEY, CARD, QR, FACES, BACK_LOGO, HAS_POINT, POINT_FIELDS, buildBack, siteFor, siteText, splitPhone, maskPhone, type CardField, type PointDetails, type Person, type QrData } from '@/card/card'
 import CardArt from '@/card/CardArt'
 import { POSITION_OPTIONS } from '@/data/positions'
-import { DEALER_NAMES, dealerFilter, dealerOf, withoutBrand, phoneOf } from '@/data/points'
+import { POINT_NAMES, POINT_PARAM, pointFilter, pointOf, withoutBrand, phoneOf } from '@/data/points'
 import { isPdf, readPdfData } from '@/ui/pdfData'
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { linkParams, saveAndOpenPdf } from '@/ui/share'
 import { recordText } from '@/ui/liveText'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
 import { SITE } from '@/site'
+import { WORDS } from '@brand/words'
 
-// Business card generator: the dealership set once, its staff typed on the page
+/** What the brand calls its points (`@brand/words`) */
+const W = WORDS.point
+
+// Business card generator: the point set once, its staff typed on the page
 // or loaded from the template, one PDF out with the face and a back per person. The staff list works as the name
-// tag's (`useStaff`); the dealership and the QR are the whole list's.
+// tag's (`useStaff`); the point and the QR are the whole list's.
 
 const TEMPLATE = `${import.meta.env.BASE_URL}downloads/${SITE.file}_business-cards_template.xlsx`
 
 const BLANK: Person = { name: '', surname: '', position: '', email: '', phone: '', ext: '' }
 /** Shown grey on the card in place of an empty required field; never in the PDF */
-const PLACEHOLDER = { dealer: 'Название дилера', address: 'Адрес', site: 'Сайт', name: 'Имя', surname: 'Фамилия', position: 'Должность', email: 'Почта', phone: 'Телефон' }
+const PLACEHOLDER = { point: `Название ${W.of}`, address: 'Адрес', site: 'Сайт', name: 'Имя', surname: 'Фамилия', position: 'Должность', email: 'Почта', phone: 'Телефон' }
 const MISSING: Partial<Record<CardField, string>> = {
-  dealer: 'Нет названия дилера', address: 'Нет адреса', site: 'Нет сайта',
+  point: `Нет названия ${W.of}`, address: 'Нет адреса', site: 'Нет сайта',
   name: 'Нет имени', surname: 'Нет фамилии', position: 'Нет должности', email: 'Нет почты', phone: 'Нет телефона',
 }
-/** The mail services the email field suggests after the dealer's own domain, the most used in Russia first */
+/** The mail services the email field suggests after the point's own domain, the most used in Russia first */
 const MAIL_DOMAINS = ['yandex.ru', 'mail.ru', 'gmail.com', 'ya.ru', 'bk.ru', 'inbox.ru', 'list.ru', 'rambler.ru']
 /** The last empty field, said by name under the download */
 const UNFILLED: Partial<Record<CardField, string>> = {
-  dealer: 'Выбрать дилера', address: 'Указать адрес', site: 'Указать сайт',
+  point: `Выбрать ${W.pick}`, address: 'Указать адрес', site: 'Указать сайт',
   name: 'Добавить имя', surname: 'Добавить фамилию', position: 'Указать должность', email: 'Указать почту', phone: 'Указать телефон',
 }
 
@@ -53,37 +57,38 @@ const toPeople = (rows: Cells[]): Person[] => byHeaders(rows, { ...HEADERS, full
   return split ? { ...p, ...split } : p
 })
 
-/** The address the points of sale (`@brand/points`) give a dealer, put in when the dealer is picked */
-const addressOf = (name: string) => dealerOf(name)?.address || undefined
+/** The address the points of sale (`@brand/points`) give a point, put in when the point is picked */
+const addressOf = (name: string) => pointOf(name)?.address || undefined
 
 /**
- * The dealers as the card names them: without the brand's name their marketing names start with («Дилер Город»), as the logo
- * and «Официальный дилер <Бренд>» stand right by the name. For the full names, offer `DEALER_NAMES` as it is
+ * The points as the card names them: without the brand's name their marketing names start with («Точка Город»), as the logo
+ * and the brand's line under it («Официальный дилер <Бренд>») stand right by the name. For the full names, offer `POINT_NAMES` as it is
  */
-const DEALER_OPTIONS = DEALER_NAMES.map(withoutBrand)
+const POINT_OPTIONS = POINT_NAMES.map(withoutBrand)
 
-/** What the grey stand-in QR holds, and the QR's link on a card that names no dealership */
+/** What the grey stand-in QR holds, and the QR's link on a card that names no point */
 const SAMPLE_LINK = SITE.home
 
 /** What the cards were made from, kept in their PDF (`CARDS_KEY`) */
-interface CardsData { dealer: Omit<Dealer, 'site'> & { site: string | null }; qrLink: string | null; face?: number; faceEach: boolean; marks: boolean; people: Person[] }
+// `dealer`: the point, under the key the files and saved lists already out carry
+interface CardsData { dealer: Omit<PointDetails, 'site'> & { site: string | null }; qrLink: string | null; face?: number; faceEach: boolean; marks: boolean; people: Person[] }
 
 const PERSON_FIELDS: CardField[] = ['name', 'surname', 'position', 'email', 'phone']
 
 /**
- * One person's card a link brings (a link made for the dealer): `dealer` (its address from the brand's site and its site follow,
+ * One person's card a link brings (a link made for the point): `point` (its address from the brand's site and its site follow,
  * as when picked; `address`, `site` and `qr` override them; `marks` adds crop marks), then `name`, `surname`, `position`, `phone`, `ext`,
  * `email`. Read on load only, never written back: a whole staff list is made here, not sent as a link
  */
-function fromLink(): { dealer: Omit<Dealer, 'site'> & { site: string | null }; qrLink: string | null; marks: boolean; people: Person[] } {
+function fromLink(): { point: Omit<PointDetails, 'site'> & { site: string | null }; qrLink: string | null; marks: boolean; people: Person[] } {
   const link = linkParams()
   const get = (k: string) => link.get(k)?.trim() ?? ''
-  const name = withoutBrand(get('dealer'))
+  const name = withoutBrand(get(POINT_PARAM))
   const person = { ...BLANK, name: get('name'), surname: get('surname'), position: get('position'), email: get('email'), phone: maskPhone(get('phone')).text, ext: get('ext').replace(/\D/g, '').slice(0, 6) }
-  // A person with no phone takes the salon's, as when the dealer is picked
+  // A person with no phone takes the salon's, as when the point is picked
   if (!person.phone && Object.values(person).some(Boolean)) person.phone = maskPhone(phoneOf(name) ?? '').text
   return {
-    dealer: { name, address: get('address') || addressOf(name) || '', site: get('site') || null },
+    point: { name, address: get('address') || addressOf(name) || '', site: get('site') || null },
     qrLink: get('qr') || null,
     marks: link.has('marks'),
     people: Object.values(person).some(Boolean) ? [person] : [],
@@ -94,11 +99,11 @@ export default function BusinessCard() {
   // Not kept in the address, as the name tag's: a staff list isn't something to send as a link; one card can come in by
   // one (`fromLink`)
   const [initial] = useState(fromLink)
-  /** The site follows the dealer's name (`siteFor`) until it's edited: null */
-  const [input, setDealer] = useState<Omit<Dealer, 'site'> & { site: string | null }>(initial.dealer)
-  const dealer: Dealer = { ...input, site: input.site ?? siteFor(input.name) }
-  /** The address and the site, under «Изменить»: a dealer picked from the list fills them in */
-  const [dealerOpen, setDealerOpen] = useState(false)
+  /** The site follows the point's name (`siteFor`) until it's edited: null */
+  const [input, setPoint] = useState<Omit<PointDetails, 'site'> & { site: string | null }>(initial.point)
+  const point: PointDetails = { ...input, site: input.site ?? siteFor(input.name) }
+  /** The address and the site, under «Изменить»: a point picked from the list fills them in */
+  const [pointOpen, setPointOpen] = useState(false)
   /** The QR's link, following the site until it's edited */
   const [qrLink, setQrLink] = useState<string | null>(initial.qrLink)
   // Which of the brand's faces, the face before every back (else once, before all of them), and crop marks around each card
@@ -110,14 +115,14 @@ export default function BusinessCard() {
     columns: { name: 'Имя', surname: 'Фамилия', position: 'Должность', email: 'Почта', phone: 'Телефон', ext: 'Доб.' },
     blank: BLANK,
     initial: initial.people,
-    // The cards' own PDF brings back the dealership, the QR link, the file's options and the staff, to change a line
+    // The cards' own PDF brings back the point, the QR link, the file's options and the staff, to change a line
     // and download again; else a table
     readFile: data => {
       const bytes = new Uint8Array(data)
       if (!isPdf(bytes)) return toPeople(xlsxCells(data))
       const d = readPdfData(bytes, CARDS_KEY) as CardsData | undefined
       if (!d?.people?.length) throw new Error('В этом PDF нет визиток: подходят PDF, скачанные здесь')
-      setDealer({ name: String(d.dealer?.name ?? ''), address: String(d.dealer?.address ?? ''), site: d.dealer?.site ?? null })
+      setPoint({ name: String(d.dealer?.name ?? ''), address: String(d.dealer?.address ?? ''), site: d.dealer?.site ?? null })
       setQrLink(d.qrLink ?? null)
       setFace(FACES[d.face ?? 0] ? d.face ?? 0 : 0)
       setFaceEach(!!d.faceEach)
@@ -142,10 +147,10 @@ export default function BusinessCard() {
     return () => { document.title = prev }
   }, [])
 
-  // A card naming no dealership links to the brand's site, and its staff's mail is there
-  const siteLink = !HAS_DEALER ? SAMPLE_LINK : siteText(dealer.site) ? `https://${siteText(dealer.site)}` : ''
+  // A card naming no point links to the brand's site, and its staff's mail is there
+  const siteLink = !HAS_POINT ? SAMPLE_LINK : siteText(point.site) ? `https://${siteText(point.site)}` : ''
   /** The domain the email field suggests: the site's, without a path */
-  const mailDomain = (HAS_DEALER ? siteText(dealer.site) : siteText(SITE.home)).split('/')[0]
+  const mailDomain = (HAS_POINT ? siteText(point.site) : siteText(SITE.home)).split('/')[0]
   const link = qrLink ?? siteLink
   const qrFor = (_p: Person): QrData | null =>
     isValidUrl(link) ? { text: link.trim(), level: 'M' } : null
@@ -159,26 +164,26 @@ export default function BusinessCard() {
       ghost.add(field)
       return PLACEHOLDER[field]
     }
-    const shownDealer = { name: or('dealer', dealer.name), address: or('address', dealer.address), site: or('site', dealer.site) }
+    const shownPoint = { name: or('point', point.name), address: or('address', point.address), site: or('site', point.site) }
     const shownPerson = {
       name: or('name', p.name), surname: or('surname', p.surname), position: or('position', p.position),
       email: or('email', p.email), phone: or('phone', p.phone), ext: p.ext,
     }
     const qr = qrFor(p)
     // Its lines noted too, for the editable template
-    const { result: back, lines } = recordText(() => buildBack(fonts, shownDealer, shownPerson, qr))
+    const { result: back, lines } = recordText(() => buildBack(fonts, shownPoint, shownPerson, qr))
     // Without a link yet, a grey code stands in for it, as the placeholders do
     const ghostQr = qr ? [] : qrOutline(SAMPLE_LINK, QR.x, QR.y, QR.size)
     return { back, lines, ghost, ghostQr, issues: back.issues.filter(i => !i.field || !ghost.has(i.field)) }
-  }) : undefined, [fonts, items, dealer, link]) // eslint-disable-line react-hooks/exhaustive-deps
+  }) : undefined, [fonts, items, point, link]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  /** The dealership's errors, the same on every card */
-  const dealerMissing = !HAS_DEALER ? [] : (['dealer', 'address', 'site'] as const).filter(f => !(f === 'dealer' ? dealer.name : dealer[f]).trim())
-  const dealerIssues = [
-    ...dealerMissing.map(f => MISSING[f]!),
-    ...new Set(cards?.[0]?.issues.filter(i => i.field && DEALER_FIELDS.includes(i.field)).map(i => i.text) ?? []),
+  /** The point's errors, the same on every card */
+  const pointMissing = !HAS_POINT ? [] : (['point', 'address', 'site'] as const).filter(f => !(f === 'point' ? point.name : point[f]).trim())
+  const pointIssues = [
+    ...pointMissing.map(f => MISSING[f]!),
+    ...new Set(cards?.[0]?.issues.filter(i => i.field && POINT_FIELDS.includes(i.field)).map(i => i.text) ?? []),
   ]
-  const dealerWrong = new Set<CardField>(cards?.[0]?.issues.filter(i => i.field && DEALER_FIELDS.includes(i.field)).map(i => i.field!) ?? [])
+  const pointWrong = new Set<CardField>(cards?.[0]?.issues.filter(i => i.field && POINT_FIELDS.includes(i.field)).map(i => i.field!) ?? [])
 
   const missing = items.map(p => (['name', 'surname', 'position', 'email', 'phone'] as const).filter(f => !p[f].trim()))
   const problems = items.map((p, i) => [...new Set([
@@ -186,29 +191,29 @@ export default function BusinessCard() {
     ...(cards?.[i]?.issues.filter(x => !x.field || PERSON_FIELDS.includes(x.field)).map(x => x.text) ?? []),
   ])])
   const failing = items.filter((_, i) => missing[i].length || cards?.[i]?.issues.some(x => !x.field || PERSON_FIELDS.includes(x.field))).map(p => p.key)
-  const ok = !!cards && items.length > 0 && failing.length === 0 && dealerIssues.length === 0
+  const ok = !!cards && items.length > 0 && failing.length === 0 && pointIssues.length === 0
 
-  const dealerForm = useRef<HTMLDivElement>(null)
-  /** The dealership's first field at fault takes the focus */
-  const toDealer = () => {
-    const at = dealerMissing[0] ?? [...dealerWrong][0] ?? 'dealer'
+  const pointForm = useRef<HTMLDivElement>(null)
+  /** The point's first field at fault takes the focus */
+  const toPoint = () => {
+    const at = pointMissing[0] ?? [...pointWrong][0] ?? 'point'
     // Opened at once and focused in the tap itself, as iOS raises the keyboard only then
-    if (at !== 'dealer') flushSync(() => setDealerOpen(true))
-    dealerForm.current?.querySelector<HTMLElement>(`[data-field="${at}"] textarea, [data-field="${at}"] input`)?.focus()
+    if (at !== 'point') flushSync(() => setPointOpen(true))
+    pointForm.current?.querySelector<HTMLElement>(`[data-field="${at}"] textarea, [data-field="${at}"] input`)?.focus()
   }
 
   /** The salon's phone as the field writes it: a person's phone and their extension make the salesman's line */
   const salonPhone = (name: string) => { const p = phoneOf(name); return p ? maskPhone(p).text : undefined }
-  const pickDealer = (v: string) => {
-    // People's phones follow the dealer picked while they're empty or the previous dealer's
-    const was = salonPhone(dealer.name), now = salonPhone(v)
+  const pickPoint = (v: string) => {
+    // People's phones follow the point picked while they're empty or the previous point's
+    const was = salonPhone(point.name), now = salonPhone(v)
     if (now) staff.fill(p => (!p.phone.trim() || p.phone === was ? { phone: now } : null))
-    setDealerOnly(v)
+    setPointOnly(v)
   }
-  const setDealerOnly = (v: string) => setDealer(d => ({
+  const setPointOnly = (v: string) => setPoint(d => ({
     ...d,
     name: v,
-    // The address follows the dealer picked while it's empty or the previous dealer's
+    // The address follows the point picked while it's empty or the previous point's
     address: addressOf(v) && (!d.address.trim() || d.address === addressOf(d.name)) ? addressOf(v)! : d.address,
   }))
 
@@ -230,8 +235,8 @@ export default function BusinessCard() {
       a.href = URL.createObjectURL(blob)
       a.download = `${SITE.file}_business-cards.pdf`
       a.click()
-      // The QR link goes along when it isn't the site made up from the dealer's name: what dealers put there
-      const ownLink = link.trim() !== `https://${siteText(siteFor(dealer.name))}`
+      // The QR link goes along when it isn't the site made up from the point's name: what points put there
+      const ownLink = link.trim() !== `https://${siteText(siteFor(point.name))}`
       goal('download_business_card', { count: cards.length, faceEach, marks, ...(ownLink && { link: link.trim().slice(0, 300) }) })
       URL.revokeObjectURL(a.href)
     } finally {
@@ -266,7 +271,7 @@ export default function BusinessCard() {
   const makeBlank = fonts ? () => {
     const { result: back, lines } = recordText(() => buildBack(
       fonts,
-      { name: PLACEHOLDER.dealer, address: PLACEHOLDER.address, site: PLACEHOLDER.site },
+      { name: PLACEHOLDER.point, address: PLACEHOLDER.address, site: PLACEHOLDER.site },
       { name: PLACEHOLDER.name, surname: PLACEHOLDER.surname, position: PLACEHOLDER.position, email: PLACEHOLDER.email, phone: PLACEHOLDER.phone, ext: '' },
       { text: SAMPLE_LINK, level: 'M' },
     ))
@@ -274,26 +279,26 @@ export default function BusinessCard() {
   } : undefined
   const templateOnly = useTemplateLink(makeBlank, `${SITE.file}_business-cards_template.pdf`, 'download_business_card_template')
   /** «Добавить» in the item's column, ⌘↩ from anywhere (the manual list, wide screens) */
-  const addItem = (after?: number) => { const p = salonPhone(dealer.name); if (p) staff.add({ ...BLANK, phone: p }, true, after); else staff.add(undefined, undefined, after) }
+  const addItem = (after?: number) => { const p = salonPhone(point.name); if (p) staff.add({ ...BLANK, phone: p }, true, after); else staff.add(undefined, undefined, after) }
   useAddKey(!phone && mode === 'manual' ? () => addItem(staff.selected) : undefined)
   /** «Скачать шаблон» in the item's column */
   const templateIcon = (i: number) => <TemplateButton make={makeTemplate(i)} name={`${SITE.file}_business-cards_template.pdf`} goalId="download_business_card_template" />
 
   const faceArt = <CardArt text={toD(FACES[face].art)} dark={FACES[face].dark} />
-  /** The QR, the whole list's: with the dealership, under «Изменить» after the site it follows */
+  /** The QR, the whole list's: with the point, under «Изменить» after the site it follows */
   const qrField = (
     <Labelled label="QR-код">
       <UrlField value={link} onChange={setQrLink} />
     </Labelled>
   )
-  /** A card's first fault: a wrong value said as it is, else its first empty field by name (the dealership's are filled) */
+  /** A card's first fault: a wrong value said as it is, else its first empty field by name (the point's are filled) */
   const problemOf = (i: number) => cards?.[i]?.issues.find(x => !x.field || PERSON_FIELDS.includes(x.field))?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!)) : undefined)
 
   const renderItem = (p: typeof items[number], i: number) => {
             const card = cards?.[i]
             const active = mode === 'manual' && p.key === current?.key
             const dimmed = mode === 'manual' && !!current && !active && !phone
-            const wrong = new Set<CardField>([...dealerWrong, ...(card?.issues.map(x => x.field).filter((f): f is CardField => !!f) ?? [])])
+            const wrong = new Set<CardField>([...pointWrong, ...(card?.issues.map(x => x.field).filter((f): f is CardField => !!f) ?? [])])
             const paths = (only: (f: CardField) => boolean) => card
               ? (Object.entries(card.back.fields) as [CardField, Cmd[]][]).filter(([f]) => only(f)).flatMap(([, c]) => c)
               : []
@@ -342,37 +347,37 @@ export default function BusinessCard() {
             </div>
           </Labelled>
 
-          {/* The dealership and the person in one column, 16 px apart as any fields; the pages, the whole file's, set apart */}
+          {/* The point and the person in one column, 16 px apart as any fields; the pages, the whole file's, set apart */}
           <div data-ui="form" className="flex flex-col gap-4 tracking-normal">
-            {/* The dealership: the whole list's; a card naming none has the QR alone */}
-            {!HAS_DEALER && qrField}
-            {HAS_DEALER && <div ref={dealerForm} className="flex flex-col gap-4">
-              <div data-field="dealer" data-ui="field" className="group/field flex flex-col gap-3">
+            {/* The point: the whole list's; a card naming none has the QR alone */}
+            {!HAS_POINT && qrField}
+            {HAS_POINT && <div ref={pointForm} className="flex flex-col gap-4">
+              <div data-field="point" data-ui="field" className="group/field flex flex-col gap-3">
                 <div data-ui="label" className="flex items-center justify-between gap-2">
-                  <p className={`text-[14px] leading-4 text-caption ${ALERT_LABEL}`}>Дилер</p>
-                  <button type="button" onClick={() => setDealerOpen(o => !o)} aria-expanded={dealerOpen} className={rowAction}>
-                    {dealerOpen ? 'Свернуть' : 'Редактировать'}
+                  <p className={`text-[14px] leading-4 text-caption ${ALERT_LABEL}`}>{W.one}</p>
+                  <button type="button" onClick={() => setPointOpen(o => !o)} aria-expanded={pointOpen} className={rowAction}>
+                    {pointOpen ? 'Свернуть' : 'Редактировать'}
                   </button>
                 </div>
                   <ComboField
-                    value={dealer.name}
-                    onChange={pickDealer}
-                    options={DEALER_OPTIONS} filter={dealerFilter}
+                    value={point.name}
+                    onChange={pickPoint}
+                    options={POINT_OPTIONS} filter={pointFilter}
                     singleLine
-                    placeholder="Название дилера"
-                    label={`Дилеры ${SITE.name}`}
-                    invalid={dealerWrong.has('dealer')}
+                    placeholder={`Название ${W.of}`}
+                    label={`${W.many} ${SITE.name}`}
+                    invalid={pointWrong.has('point')}
                   />
               </div>
-              {dealerOpen && <>
+              {pointOpen && <>
               <div data-field="address">
                 <Labelled label="Адрес">
-                  <TextArea value={input.address} onChange={v => setDealer(d => ({ ...d, address: v }))} placeholder="Адрес" invalid={dealerWrong.has('address')} />
+                  <TextArea value={input.address} onChange={v => setPoint(d => ({ ...d, address: v }))} placeholder="Адрес" invalid={pointWrong.has('address')} />
                 </Labelled>
               </div>
               <div data-field="site">
                 <Labelled label="Сайт">
-                  <TextInput value={dealer.site} onChange={v => setDealer(d => ({ ...d, site: v }))} placeholder="Сайт" invalid={dealerWrong.has('site')} />
+                  <TextInput value={point.site} onChange={v => setPoint(d => ({ ...d, site: v }))} placeholder="Сайт" invalid={pointWrong.has('site')} />
                 </Labelled>
               </div>
               {qrField}
@@ -397,8 +402,8 @@ export default function BusinessCard() {
                       <ComboField key={p.key} value={p.position} onChange={v => update(p.key, { position: v })} options={POSITION_OPTIONS} placeholder="Должность" label="Типовые должности" invalid={bad('position', 'Должность')} />
                     </Labelled>
                     <Labelled label="Почта">
-                      {/* The browser's own suggestions: what's typed before the @ at the card's site first (dealer-city.<brand site>
-                          follows the dealer's name, or the site as edited), then the common mail services; the browser
+                      {/* The browser's own suggestions: what's typed before the @ at the card's site first (point-city.<brand site>
+                          follows the point's name, or the site as edited), then the common mail services; the browser
                           narrows them as the domain is typed */}
                       <TextInput value={p.email} onChange={v => update(p.key, { email: v })} placeholder="Почта" invalid={bad('email', 'Почта')} inputMode="email" list="mail-domains" />
                       {(() => {
@@ -466,7 +471,7 @@ export default function BusinessCard() {
           </div>
         </div>
 
-        {/* The dealership first, as every card needs it; then the cards in work, as the name tag counts them */}
+        {/* The point first, as every card needs it; then the cards in work, as the name tag counts them */}
     </>
   )
 
@@ -476,9 +481,9 @@ export default function BusinessCard() {
           onClick={handleExport}
           busy={exporting}
           disabled={!ok}
-          note={(dealerMissing.length ? unfilled([...dealerMissing, ...(items.length === 1 ? missing[0] : [])].map(f => UNFILLED[f]!)) : dealerIssues[0]) ?? (!items.length ? 'Загрузить таблицу' : problemOf(failing.length ? staff.inWork(failing).index : 0))}
-          count={!dealerIssues.length && failing.length ? itemOf(staff.inWork(failing).index, items.length) : undefined}
-          onNote={dealerIssues.length ? toDealer : items.length ? () => staff.nextOf(failing) : pickTable}
+          note={(pointMissing.length ? unfilled([...pointMissing, ...(items.length === 1 ? missing[0] : [])].map(f => UNFILLED[f]!)) : pointIssues[0]) ?? (!items.length ? 'Загрузить таблицу' : problemOf(failing.length ? staff.inWork(failing).index : 0))}
+          count={!pointIssues.length && failing.length ? itemOf(staff.inWork(failing).index, items.length) : undefined}
+          onNote={pointIssues.length ? toPoint : items.length ? () => staff.nextOf(failing) : pickTable}
           links={canShareFiles && <LinkButtons incomplete={!ok} file={shareFile} fileOnly />}
         />
   )

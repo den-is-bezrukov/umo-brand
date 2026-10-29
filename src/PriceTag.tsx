@@ -6,7 +6,7 @@ import { toD, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/ui/type'
 import { xlsxCells, pastedCells, byHeaders, type Cells } from '@/nametag/table'
 import { TAG, BAND, BAND_ART, DEFAULT_CAPTION, buildTag, formatPrice, readPrice, PRICE_FORMAT, type Item, type TagField } from '@/pricetag/tag'
-import { DEALER_NAMES, dealerFilter, withoutBrand } from '@/data/points'
+import { POINT_NAMES, POINT_PARAM, pointFilter, withoutBrand } from '@/data/points'
 import { readTagsFile } from '@/pricetag/read'
 import { plural } from '@/ui/staff'
 import { MobileEditor, usePhone } from '@/ui/mobile'
@@ -14,9 +14,13 @@ import { linkParams, saveAndOpenPdf } from '@/ui/share'
 import { recordText } from '@/ui/liveText'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
 import { SITE } from '@/site'
+import { WORDS } from '@brand/words'
 
-// Price tag generator: price tags for the small goods at a dealership, any
-// employee printing them on an office printer and cutting them out with scissors. The dealer is set once, the goods typed
+/** What the brand calls its points (`@brand/words`) */
+const W = WORDS.point
+
+// Price tag generator: price tags for the small goods at a point, any
+// employee printing them on an office printer and cutting them out with scissors. The point is set once, the goods typed
 // on the page or loaded from the template; one PDF out, eight tags to an A4 sheet. The list works as the name tag's and
 // the business card's (`useStaff`).
 
@@ -24,10 +28,10 @@ const TEMPLATE = `${import.meta.env.BASE_URL}downloads/${SITE.file}_price-tags_t
 
 const BLANK: Item = { name: '', code: '', caption: DEFAULT_CAPTION, price: '' }
 /** Shown grey on the tag in place of an empty required field; never in the PDF */
-const PLACEHOLDER: Partial<Record<TagField, string>> = { dealer: 'Название дилера', name: 'Наименование товара', caption: DEFAULT_CAPTION, price: '0 000' }
-const MISSING: Partial<Record<TagField, string>> = { dealer: 'Нет названия дилера', name: 'Нет наименования', caption: 'Нет подписи', price: 'Нет цены' }
+const PLACEHOLDER: Partial<Record<TagField, string>> = { point: `Название ${W.of}`, name: 'Наименование товара', caption: DEFAULT_CAPTION, price: '0 000' }
+const MISSING: Partial<Record<TagField, string>> = { point: `Нет названия ${W.of}`, name: 'Нет наименования', caption: 'Нет подписи', price: 'Нет цены' }
 /** The first empty field, said by name over the download */
-const UNFILLED: Partial<Record<TagField, string>> = { dealer: 'Выбрать дилера', name: 'Добавить наименование', caption: 'Добавить подпись', price: 'Указать цену' }
+const UNFILLED: Partial<Record<TagField, string>> = { point: `Выбрать ${W.pick}`, name: 'Добавить наименование', caption: 'Добавить подпись', price: 'Указать цену' }
 const REQUIRED = ['name', 'caption', 'price'] as const
 
 const CAPTIONS = [DEFAULT_CAPTION, 'Цена за комплект с НДС', 'Цена за упаковку с НДС']
@@ -49,11 +53,11 @@ const toItems = (rows: Cells[]): Item[] => byHeaders(rows, HEADERS).map(r => ({
 const LINK_CAPTIONS: Record<string, string> = { set: CAPTIONS[1], pack: CAPTIONS[2] }
 
 /**
- * The dealer and goods a link brings (a link made for the dealer): `dealer`, then `n1`, `c1`, `p1`, `s1` (the
+ * The point and goods a link brings (a link made for the point): `point`, then `n1`, `c1`, `p1`, `s1` (the
  * name, code, price, caption), `n2`… while there's a name. Read on load only, never written back: the list would make
  * the address huge
  */
-function fromLink(): { dealer: string; items: Item[] } {
+function fromLink(): { point: string; items: Item[] } {
   const link = linkParams()
   const items: Item[] = []
   for (let i = 1; link.has(`n${i}`); i++) {
@@ -61,25 +65,25 @@ function fromLink(): { dealer: string; items: Item[] } {
     const p = link.get(`p${i}`) ?? ''
     items.push({ name: link.get(`n${i}`) ?? '', code: link.get(`c${i}`) ?? '', caption: LINK_CAPTIONS[s] ?? (s || DEFAULT_CAPTION), price: readPrice(p) ?? p })
   }
-  return { dealer: withoutBrand(link.get('dealer')?.trim() ?? ''), items }
+  return { point: withoutBrand(link.get(POINT_PARAM)?.trim() ?? ''), items }
 }
 
-/** The dealers as the band names them: without the brand's name, as the logo stands right by the name */
-const DEALER_OPTIONS = DEALER_NAMES.map(withoutBrand)
+/** The points as the band names them: without the brand's name, as the logo stands right by the name */
+const POINT_OPTIONS = POINT_NAMES.map(withoutBrand)
 
 export default function PriceTag() {
   const [initial] = useState(fromLink)
-  const [dealer, setDealer] = useState(initial.dealer)
+  const [point, setPoint] = useState(initial.point)
   const staff = useStaff<Item>({
     columns: { name: 'Наименование', code: 'Артикул', price: 'Цена', caption: 'Подпись' },
     blank: BLANK,
     initial: initial.items,
-    // The tags' own PDF brings its dealer and goods
+    // The tags' own PDF brings its point and goods
     // back, to fix a price and download again; else a table
     readFile: data => {
       const own = readTagsFile(data)
       if (!own) return toItems(xlsxCells(data))
-      if (own.dealer) setDealer(own.dealer)
+      if (own.dealer) setPoint(own.dealer)
       return own.items
     },
     readPasted: text => toItems(pastedCells(text)),
@@ -111,19 +115,19 @@ export default function PriceTag() {
       return PLACEHOLDER[field]!
     }
     // Its lines noted too, for the editable template
-    const { result: tag, lines } = recordText(() => buildTag(fonts, or('dealer', dealer), { name: or('name', it.name), code: it.code, caption: or('caption', it.caption), price: or('price', it.price) }))
+    const { result: tag, lines } = recordText(() => buildTag(fonts, or('point', point), { name: or('name', it.name), code: it.code, caption: or('caption', it.caption), price: or('price', it.price) }))
     const wrongPrice = it.price.trim() && !PRICE_FORMAT.test(it.price.trim())
       // A table's price over the largest, else one that isn't a number
       ? [{ field: 'price' as const, text: it.price.split(/[,.]/)[0].replace(/\D/g, '').length > 7 ? 'Цена больше 9 999 999,99' : 'Цена: проверьте число' }]
       : []
     return { tag, lines, ghost, issues: [...tag.issues.filter(i => !ghost.has(i.field)), ...wrongPrice] }
-  }) : undefined, [fonts, items, dealer])
+  }) : undefined, [fonts, items, point])
 
   /** The editable template, one tag's by its icon: as on the page, placeholders where nothing is typed */
   const makeTemplate = (i: number) => tags?.[i] ? () => import('@/pricetag/pdf').then(m => m.tagsTemplate([tags[i]])) : undefined
   /** The blank one a `template` link gives: a sheet of eight placeholder tags */
   const makeBlank = fonts ? () => {
-    const one = recordText(() => buildTag(fonts, PLACEHOLDER.dealer!, { name: PLACEHOLDER.name!, code: 'Артикул', caption: PLACEHOLDER.caption!, price: PLACEHOLDER.price! }))
+    const one = recordText(() => buildTag(fonts, PLACEHOLDER.point!, { name: PLACEHOLDER.name!, code: 'Артикул', caption: PLACEHOLDER.caption!, price: PLACEHOLDER.price! }))
     return import('@/pricetag/pdf').then(m => m.tagsTemplate(Array.from({ length: m.PER_PAGE }, () => ({ tag: one.result, lines: one.lines }))))
   } : undefined
   const templateOnly = useTemplateLink(makeBlank, `${SITE.file}_price-tags_template.pdf`, 'download_price_tag_template')
@@ -133,20 +137,20 @@ export default function PriceTag() {
   /** «Скачать шаблон» in the item's column */
   const templateIcon = (i: number) => <TemplateButton make={makeTemplate(i)} name={`${SITE.file}_price-tags_template.pdf`} goalId="download_price_tag_template" />
 
-  const dealerMissing = !dealer.trim()
-  const dealerIssues = [...(dealerMissing ? [MISSING.dealer!] : []), ...new Set(tags?.[0]?.issues.filter(i => i.field === 'dealer').map(i => i.text) ?? [])]
+  const pointMissing = !point.trim()
+  const pointIssues = [...(pointMissing ? [MISSING.point!] : []), ...new Set(tags?.[0]?.issues.filter(i => i.field === 'point').map(i => i.text) ?? [])]
 
   const missing = items.map(it => REQUIRED.filter(f => !it[f].trim()))
-  const ownIssues = (i: number) => tags?.[i]?.issues.filter(x => x.field !== 'dealer') ?? []
+  const ownIssues = (i: number) => tags?.[i]?.issues.filter(x => x.field !== 'point') ?? []
   const problems = items.map((it, i) => [...new Set([
     ...(staff.showsMissing(it.key) ? missing[i].map(f => MISSING[f]!) : []),
     ...ownIssues(i).map(x => x.text),
   ])])
   const failing = items.filter((_, i) => missing[i].length || ownIssues(i).length).map(it => it.key)
-  const ok = !!tags && items.length > 0 && failing.length === 0 && dealerIssues.length === 0
+  const ok = !!tags && items.length > 0 && failing.length === 0 && pointIssues.length === 0
 
-  const dealerField = useRef<HTMLDivElement>(null)
-  const toDealer = () => dealerField.current?.querySelector<HTMLElement>('textarea, input')?.focus()
+  const pointField = useRef<HTMLDivElement>(null)
+  const toPoint = () => pointField.current?.querySelector<HTMLElement>('textarea, input')?.focus()
 
   const save = (blob: Blob, name: string) => {
     const a = document.createElement('a')
@@ -158,15 +162,15 @@ export default function PriceTag() {
   /** The tags' PDF for «Поделиться» to send, made again as they change */
   const shareFile = useCallback(async () => {
     const { tagsPdf, TAGS_FILE } = await import('@/pricetag/pdf')
-    return new File([await tagsPdf(tags!.map(t => t.tag), { dealer, items: items.map(({ key: _, ...it }) => it) })], TAGS_FILE, { type: 'application/pdf' })
-  }, [tags, dealer, items]) // eslint-disable-line react-hooks/exhaustive-deps
+    return new File([await tagsPdf(tags!.map(t => t.tag), { dealer: point, items: items.map(({ key: _, ...it }) => it) })], TAGS_FILE, { type: 'application/pdf' })
+  }, [tags, point, items]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleExport = async () => {
     if (!tags || !ok) return
     setExporting(true)
     try {
       const { tagsPdf, TAGS_FILE } = await import('@/pricetag/pdf')
-      save(await tagsPdf(tags.map(t => t.tag), { dealer, items: items.map(({ key: _, ...it }) => it) }), TAGS_FILE)
+      save(await tagsPdf(tags.map(t => t.tag), { dealer: point, items: items.map(({ key: _, ...it }) => it) }), TAGS_FILE)
       goal('download_price_tag', { count: tags.length, format: 'pdf' })
     } finally {
       setExporting(false)
@@ -183,7 +187,7 @@ export default function PriceTag() {
     if (!ok) { setPdfOnly(false); return }
     import('@/pricetag/pdf')
       .then(async ({ tagsPdf, TAGS_FILE }) => {
-        const blob = await tagsPdf(tags.map(t => t.tag), { dealer, items: items.map(({ key: _, ...it }) => it) })
+        const blob = await tagsPdf(tags.map(t => t.tag), { dealer: point, items: items.map(({ key: _, ...it }) => it) })
         goal('download_price_tag', { count: tags.length, format: 'pdf', via: 'link' })
         saveAndOpenPdf(blob, TAGS_FILE)
       })
@@ -197,11 +201,11 @@ export default function PriceTag() {
             const t = tags?.[i]
             const active = mode === 'manual' && it.key === current?.key
             const dimmed = mode === 'manual' && !!current && !active && !phone
-            const wrong = new Set<TagField>([...(dealerIssues.length && !dealerMissing ? ['dealer' as const] : []), ...(t?.issues.map(x => x.field) ?? [])])
+            const wrong = new Set<TagField>([...(pointIssues.length && !pointMissing ? ['point' as const] : []), ...(t?.issues.map(x => x.field) ?? [])])
             const paths = (only: (f: TagField) => boolean) => t
               ? (Object.entries(t.tag.fields) as [TagField, Cmd[]][]).filter(([f]) => only(f)).flatMap(([, c]) => c)
               : []
-            const band = (f: TagField) => f === 'dealer'
+            const band = (f: TagField) => f === 'point'
             return (
               <Fragment key={it.key}>
               <Removed staff={staff} at={i} />
@@ -236,17 +240,17 @@ export default function PriceTag() {
 
           {/* The form under the header in one rhythm, 16 px apart as any fields */}
           <div className="flex flex-col gap-4">
-          {/* The dealer first: the whole list's, set once */}
-          <div ref={dealerField} className="group/field flex flex-col gap-3 tracking-normal">
-            <p className={`text-[14px] leading-4 text-caption ${ALERT_LABEL}`}>Дилер</p>
+          {/* The point first: the whole list's, set once */}
+          <div ref={pointField} className="group/field flex flex-col gap-3 tracking-normal">
+            <p className={`text-[14px] leading-4 text-caption ${ALERT_LABEL}`}>{W.one}</p>
             <ComboField
-              value={dealer}
-              onChange={setDealer}
-              options={DEALER_OPTIONS} filter={dealerFilter}
+              value={point}
+              onChange={setPoint}
+              options={POINT_OPTIONS} filter={pointFilter}
               singleLine
-              placeholder="Название дилера"
-              label={`Дилеры ${SITE.name}`}
-              invalid={dealerIssues.length > 0 && !dealerMissing}
+              placeholder={`Название ${W.of}`}
+              label={`${W.many} ${SITE.name}`}
+              invalid={pointIssues.length > 0 && !pointMissing}
             />
           </div>
 
@@ -293,7 +297,7 @@ export default function PriceTag() {
           </div>
         </div>
 
-        {/* The dealer first, as every tag needs it; then the tags in work, as the name tag counts them */}
+        {/* The point first, as every tag needs it; then the tags in work, as the name tag counts them */}
     </>
   )
 
@@ -303,9 +307,9 @@ export default function PriceTag() {
           onClick={handleExport}
           busy={exporting}
           disabled={!ok}
-          note={(dealerMissing ? unfilled([UNFILLED.dealer!, ...(items.length === 1 ? missing[0].map(f => UNFILLED[f]!) : [])]) : dealerIssues[0]) ?? (!items.length ? 'Загрузить таблицу' : problemOf(failing.length ? staff.inWork(failing).index : 0))}
-          count={!dealerIssues.length && failing.length ? itemOf(staff.inWork(failing).index, items.length) : undefined}
-          onNote={dealerIssues.length ? toDealer : items.length ? () => staff.nextOf(failing) : pickTable}
+          note={(pointMissing ? unfilled([UNFILLED.point!, ...(items.length === 1 ? missing[0].map(f => UNFILLED[f]!) : [])]) : pointIssues[0]) ?? (!items.length ? 'Загрузить таблицу' : problemOf(failing.length ? staff.inWork(failing).index : 0))}
+          count={!pointIssues.length && failing.length ? itemOf(staff.inWork(failing).index, items.length) : undefined}
+          onNote={pointIssues.length ? toPoint : items.length ? () => staff.nextOf(failing) : pickTable}
           links={canShareFiles && <LinkButtons incomplete={!ok} file={shareFile} fileOnly />}
         />
   )

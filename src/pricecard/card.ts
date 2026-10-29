@@ -43,12 +43,12 @@ export interface TrimData {
   photo: Photo
   /** «от … ₽» on the photo, the trim bare */
   from: string
-  /** The full cost as it comes; the dealer may raise it, never lower */
+  /** The full cost as it comes; the point may raise it, never lower */
   full: string
   /** The credit's monthly payment, beside the price; none without a credit offer */
   monthly?: string
   list: string[]
-  /** The fine print as it comes; the dealer edits it */
+  /** The fine print as it comes; the point edits it */
   legal: string
 }
 
@@ -107,7 +107,7 @@ export interface Art {
   issues: string[]
 }
 
-/** `full`: the full cost the dealer asks, the trim's price and added equipment; empty, a grey placeholder */
+/** `full`: the full cost the point asks, the trim's price and added equipment; empty, a grey placeholder */
 export interface Input { model: Model; trim: Trim; full: string; legal: string; url: string }
 
 /** A baseline under a line's top, as Figma sets a line `lh` tall */
@@ -180,7 +180,7 @@ export function buildCard(fonts: CardFonts, input: Input): Art {
   const row = legalTop - (legal.length ? 75 : 0) - 200
   if (row < listEnd + MIN_GAP) issues.push('Сноска слишком длинная')
 
-  // «от …» in the band is the trim bare, this the car as it stands, with the dealer's equipment: the law asks for it whole
+  // «от …» in the band is the trim bare, this the car as it stands, with the point's equipment: the law asks for it whole
   runs([{ text: 'Полная стоимость' }], SIDE, baseline(row, LABEL), LABEL)
   const after = price(input.full || '9 999 999', SIDE, baseline(row + 75, PRICE), PRICE, input.full ? BLACK : GREY)
   if (trim.monthly) {

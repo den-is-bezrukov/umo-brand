@@ -41,12 +41,12 @@ export type SignBlock =
   | { kind: 'rows'; x: number; size: number; leading: number; track?: number; width: number; top?: number; bottom?: number; rows: { text: Template; label: string; lines?: number }[] }
 
 /**
- * A field of the brand's form: `dealer` picks one of the brand's points of sale and puts in their address, phone and
- * hours; `site` follows the dealer's name until edited; `phone` takes the phone mask; `address` and `text` are plain.
+ * A field of the brand's form: `point` picks one of the brand's points of sale and puts in their address, phone and
+ * hours; `site` follows the point's name until edited; `phone` takes the phone mask; `address` and `text` are plain.
  * `param` its name in a link (`id` without), `default` what it starts with, `missing` what the download button asks
  * while it's empty
  */
-export interface SignFieldSpec { id: string; param?: string; kind: 'dealer' | 'address' | 'phone' | 'site' | 'text'; label: string; placeholder: string; missing: string; default?: string }
+export interface SignFieldSpec { id: string; param?: string; kind: 'point' | 'address' | 'phone' | 'site' | 'text'; label: string; placeholder: string; missing: string; default?: string }
 
 /** `@brand/hours-sign`: the sheet, mm, the hours' placeholders and defaults, the fields in the form's order, the variants */
 export interface BrandHoursSign {

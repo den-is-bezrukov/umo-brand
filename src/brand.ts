@@ -34,17 +34,30 @@ export interface BrandColors { main: Swatch[]; service: Swatch[]; ink: [number, 
 export interface GuideChapter { id: string; title: string; children?: GuideChapter[] }
 
 /**
- * A point of sale (a dealer) as the generators know it: its name as the brand writes it, city, short address, hours
- * («ежедневно, 09:00–21:00»), phone, and the names it's also called by (`aka`)
+ * A point: a place of the brand's where its people meet clients (UMO's dealers, an office, a branch), as the
+ * generators know it: its name as the brand writes it, city, short address, hours («ежедневно, 09:00–21:00»), phone,
+ * and the names it's also called by (`aka`)
  */
-export interface SalesPoint { name: string; city: string; address: string; hours: string; phone: string; aka: string[] }
+export interface Point { name: string; city: string; address: string; hours: string; phone: string; aka: string[] }
 
 /**
- * `@brand/points`: the points of sale, lists merged in order (a later one adds to or corrects an earlier one, by name),
- * `prefix` the brand's name every point's name starts with («<Бренд> Дилер Город»), `words` the brand's name as people
- * write it, which doesn't tell points apart
+ * `@brand/points`: the brand's points, lists merged in order (a later one adds to or corrects an earlier one, by name),
+ * `prefix` the brand's name every point's name starts with («<Бренд> Точка Город»), `words` words that don't tell points
+ * apart (the brand's name as people write it, what they call a point; `@brand/words`' own word counts already);
+ * `param` the point's name in a link (`point` without it); `site` the site a point's name makes (none without it)
  */
-export interface BrandPoints { lists: Partial<SalesPoint>[][]; prefix: string; words: string[] }
+export interface BrandPoints { lists: Partial<Point>[][]; prefix: string; words: string[]; param?: string; site?: (name: string) => string }
+
+/**
+ * `@brand/words`: what the brand calls its points where the editor speaks of them, as whole phrases, since Russian
+ * declines them and the core never does: `one` a field's label («Дилер»), `many` the suggestions' heading before the
+ * brand's name («Дилеры»), `of` whose («дилера»: «Название дилера», «Телефон дилера»), `pick` what's picked
+ * («дилера»: «Выбрать дилера», «филиал»: «Выбрать филиал»), what a link's page asks (`which` of several, `yours` of one)
+ * and says of none (`notListed`), `file` its word in files' names (`dealer` in <Brand>8_dealer-livery.zip; none for none)
+ */
+export interface BrandWords {
+  point: { one: string; many: string; of: string; pick: string; which: string; yours: string; notListed: string; file?: string }
+}
 
 /**
  * `@brand/site.json`: the site's settings. The core reads these; vite.config.ts also the HTML's (title, description,
@@ -57,7 +70,7 @@ export interface BrandSite {
   file: string
   /** Where this site lives (its domain): the links the instructions give, the Metrika counter's host */
   domain: string
-  /** The brand's own site (https://…): a QR's default, the dealers' sites under it */
+  /** The brand's own site (https://…): a QR's default, the points' sites under it */
   home: string
   /** Where people ask: the guide's Контакты and the generators' «Инструкция» */
   support: string

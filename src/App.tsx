@@ -31,7 +31,7 @@ const priceNum = (s: string) => Number(s.replace(/\D/g, '')) || 0
 
 /**
  * One price card: model and trim, the full cost, the QR's link and the fine print. «от …» and the monthly payment are the
- * trim's, fixed (`TRIMS` in card.ts); the full cost is the dealer's, the trim's price with what equipment they add
+ * trim's, fixed (`TRIMS` in card.ts); the full cost is the point's, the trim's price with what equipment they add
  */
 interface Card {
   model: Model
@@ -122,7 +122,7 @@ const defaultsPdf = () => pdfOf(allDefaults(), DEFAULTS_FILE)
 
 function downloadGoal(cards: Card[], extra?: Record<string, unknown>) {
   const one = cards.length === 1 ? cards[0] : null
-  // QR links other than the model's page go along: where dealers send people
+  // QR links other than the model's page go along: where points send people
   const ownLinks = [...new Set(cards.map(qrUrlOf).filter(u => !Object.values(DEFAULT_URL).includes(u)))].join(' ').slice(0, 300)
   goal('download_price_card', {
     ...(one
@@ -141,7 +141,7 @@ function pdfName(cards: Card[]) {
 
 export default function App() {
   const [initial] = useState(fromLink)
-  // `pdf` in the link (a link made for the dealer) opens the cards' PDF itself, with no editor; a card at fault
+  // `pdf` in the link (a link made for the point) opens the cards' PDF itself, with no editor; a card at fault
   // opens the editor instead, showing what's wrong
   const [pdfOnly, setPdfOnly] = useState(() => linkParams().has('pdf') && initial.every(c => !firstIssue(undefined, c)))
   useEffect(() => {
@@ -228,7 +228,7 @@ export default function App() {
   const issue = firstIssue(fonts, card)
 
   const form = useRef<HTMLDivElement>(null)
-  /** The field at fault takes the focus, as the business card's dealership */
+  /** The field at fault takes the focus, as the business card's point */
   const toIssue = () => {
     if (issue) form.current?.querySelector<HTMLElement>(`[data-field="${issue.field}"] :is(input, textarea)`)?.focus()
   }
@@ -281,14 +281,14 @@ export default function App() {
               </Field>
             </div>
 
-            {/* The full cost, the trim's price and the dealer's equipment, not under the trim's price; it follows the trim until edited */}
+            {/* The full cost, the trim's price and the point's equipment, not under the trim's price; it follows the trim until edited */}
             <div data-field="full" className="col-span-full">
               <Field label="Полная стоимость, ₽">
                 <TextInput numeric step={5000} max={MAX_PRICE} value={card.full} placeholder="9 999 999" invalid={issue?.field === 'full'} onChange={changeFull} />
               </Field>
             </div>
 
-            {/* The fine print under the card's prices, the dealer's to edit; it follows the trim until edited */}
+            {/* The fine print under the card's prices, the point's to edit; it follows the trim until edited */}
             <div data-field="legal" className="col-span-full">
               <Field label="Сноска">
                 <TextArea value={card.legal} onChange={changeLegal} placeholder="Сноска" invalid={issue?.field === 'legal'} className="max-h-60 overflow-y-auto!" />

@@ -4,14 +4,15 @@ import { missingChars, oneLine, setLine, tidy, wrap as wrapLines, type Fonts } f
 import { noteLine } from '@/ui/liveText'
 import { logo } from '@/card/card'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
+import { WORDS } from '@brand/words'
 
-// A price tag for the small goods at a dealership: 90×60 mm, a black band 12 mm tall across the top with the brand's
+// A price tag for the small goods at a point: 90×60 mm, a black band 12 mm tall across the top with the brand's
 // logo 15×3 mm, a hairline and the
-// dealer's name in white, then on white the goods' name from the top, its code under it, and at the bottom the price's
+// point's name in white, then on white the goods' name from the top, its code under it, and at the bottom the price's
 // caption and the price. The layout is fixed, as in Figma: a longer name takes more lines down to the code, never
 // moving it. Figma's frame is 900×600, 10 px a millimetre. Text boxes there are «leading-none» (the line as tall as the
 // type, the font's 974 + 286 units centred on it, so the baseline is 0.844 of the size under the box's top), but the
-// dealer's, trimmed to the capitals.
+// point's, trimmed to the capitals.
 
 /** The tag, mm */
 export const TAG = { w: 90, h: 60 }
@@ -24,15 +25,15 @@ export const DROP = 0.844
 /** The black band */
 export const BAND = 12
 /**
- * The logo, its hairline and the dealer's name: the logo 4.5 mm in and 3 mm (30 px) before the hairline, as Figma; the
+ * The logo, its hairline and the point's name: the logo 4.5 mm in and 3 mm (30 px) before the hairline, as Figma; the
  * name 2.625 mm after it (Figma has 3; 2.25 is a touch close) and free to run to the tag's right edge, with no padding there, so the longest
- * dealers the brand lists (61.1 mm) fit, the type staying as in Figma
+ * points the brand lists (61.1 mm) fit, the type staying as in Figma
  */
 const LOGO_W = 15
 const RULE_X = 22.5
 const RULE_W = 0.15
-const DEALER_X = RULE_X + 2.625
-export const DEALER = { x: DEALER_X, size: 4.4, width: TAG.w - DEALER_X }
+const POINT_X = RULE_X + 2.625
+export const POINT = { x: POINT_X, size: 4.4, width: TAG.w - POINT_X }
 
 /** The goods' name, Medium 45 px on 45 px lines, from the body's 4 mm padding down to the code */
 export const NAME = { top: BAND + 4, size: 4.5, width: TAG.w - 2 * SIDE, lines: 4 }
@@ -48,12 +49,12 @@ export const DEFAULT_CAPTION = 'Цена за штуку с НДС'
 
 export interface Item { name: string; code: string; caption: string; price: string }
 
-export type TagField = 'dealer' | 'name' | 'code' | 'caption' | 'price'
+export type TagField = 'point' | 'name' | 'code' | 'caption' | 'price'
 
 export interface Issue { field: TagField; text: string }
 
 export interface Tag {
-  /** By field: the dealer's white on the band, the rest black on white */
+  /** By field: the point's white on the band, the rest black on white */
   fields: Partial<Record<TagField, Cmd[]>>
   issues: Issue[]
 }
@@ -126,7 +127,7 @@ const wrap = (font: Font, text: string, size: number, width: number) =>
  * One tag. The texts come as shown: the page puts placeholders in empty fields, the same layout then holding them in
  * grey. `price` is the digits as typed or formatted
  */
-export function buildTag(fonts: Fonts, dealer: string, item: Item): Tag {
+export function buildTag(fonts: Fonts, point: string, item: Item): Tag {
   const fields: Partial<Record<TagField, Cmd[]>> = {}
   const issues: Issue[] = []
 
@@ -139,14 +140,14 @@ export function buildTag(fonts: Fonts, dealer: string, item: Item): Tag {
   const line = (field: TagField, label: string, text: string, font: Font, x: number, baseline: number, size: number, width: number, feats: string[] = [], track = 0) => {
     const t = oneLine(text)
     const l = setLine(font, t, x, baseline, size, feats, track)
-    // Noted for the editable template; the dealer's name stands white on the band
-    noteLine(font, size, baseline, t, l.pens, field === 'dealer')
+    // Noted for the editable template; the point's name stands white on the band
+    noteLine(font, size, baseline, t, l.pens, field === 'point')
     if (l.right > width + 0.01) issues.push({ field, text: `${label} шире ${width} мм` })
     check(field, label, t, font)
     return l.cmds
   }
 
-  fields.dealer = line('dealer', 'Название дилера', dealer, fonts.medium, DEALER.x, SIDE + CAP * DEALER.size, DEALER.size, DEALER.width, ['case'])
+  fields.point = line('point', `Название ${WORDS.point.of}`, point, fonts.medium, POINT.x, SIDE + CAP * POINT.size, POINT.size, POINT.width, ['case'])
 
   const name = wrap(fonts.medium, item.name, NAME.size, NAME.width)
   fields.name = name.flatMap((t, i) => {

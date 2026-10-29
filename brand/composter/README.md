@@ -4,6 +4,9 @@ The demo brand, and the brand of the editor itself: Компостер shows eve
 once the brand's guide and an explainer of the guide, the brand and the product. Once UMO moves to its own repository,
 it becomes the core's default brand. `BRAND=composter pnpm dev` runs it (port 2009 in `.claude/launch.json`). For now:
 the business card and the hours sign (`materials` in `site.json`); the rest comes from Figma's sections one by one.
+Its points are branches (`words.ts`: «Филиал», «Выбрать филиал»), three made up for the demo (`points.ts`: Москва,
+Санкт-Петербург, Казань, «ул. Примерная», 000 phones); no site rule, so a branch's site starts empty, and no line under
+the branch's name on the business card.
 
 ## Where things come from
 

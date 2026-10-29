@@ -15,7 +15,7 @@ import { recordText } from '@/ui/liveText'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
 import { SITE } from '@/site'
 
-// Name tag generator: a dealership's staff list in, one zip out with the tags
+// Name tag generator: a point's staff list in, one zip out with the tags
 // in outlines, a page each, and the maker's requirements. Two modes: «Вручную», a list typed on the page, and «Из
 // таблицы», the template filled in and loaded as .xlsx (or its rows pasted), shown as it is. Editing it means taking it
 // to «Вручную». Rows copied from a spreadsheet can be pasted into the manual list too.
@@ -32,7 +32,7 @@ const NO_POSITION = 'Нет должности'
 const UNFILLED: Record<string, string> = { [NO_NAME]: 'Добавить имя', [NO_SURNAME]: 'Добавить фамилию', [NO_POSITION]: 'Указать должность' }
 
 /**
- * One person's tag a link brings (a link made for the dealer): `name`, `surname`, `position`. Read on load only,
+ * One person's tag a link brings (a link made for the point): `name`, `surname`, `position`. Read on load only,
  * never written back: a whole staff list is made here, not sent as a link
  */
 function fromLink(): Person[] {

@@ -27,7 +27,7 @@ export const HOURS_SIGN: BrandHoursSign = {
   hours: { placeholder: ['9:00', '21:00'] },
   fields: [
     // The dealer's marketing name as the brand lists it, the brand's name before it fixed
-    { id: 'dealer', param: 'name', kind: 'dealer', label: 'Дилер', placeholder: 'Название дилера', missing: 'Выбрать дилера' },
+    { id: 'dealer', param: 'name', kind: 'point', label: 'Дилер', placeholder: 'Название дилера', missing: 'Выбрать дилера' },
     { id: 'address', kind: 'address', label: 'Адрес', placeholder: 'Адрес', missing: 'Указать адрес' },
     { id: 'phone', kind: 'phone', label: 'Телефон', placeholder: '+7 495 000 00 00', missing: 'Указать телефон' },
     { id: 'site', kind: 'site', label: 'Сайт', placeholder: 'Сайт', missing: 'Указать сайт' },

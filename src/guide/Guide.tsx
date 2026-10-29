@@ -22,7 +22,7 @@ type NavItem = { id: string; title: string; children?: NavItem[] }
  * `grid-auto-flow: dense` would do). `MEDIA` is that packed order, so the grid and the sidebar's sub-items list the
  * media as they actually stand.
  */
-// `row`: the ↗ row under the picture, named for what a dealer does there, so it reads as a tool to click into (not
+// `row`: the ↗ row under the picture, named for what a point does there, so it reads as a tool to click into (not
 // the medium's name alone, as the contents list it)
 const isWide = (m: { w: number; h: number }) => m.w / m.h >= 2
 function packMedia<T extends { w: number; h: number }>(items: T[]): T[] {

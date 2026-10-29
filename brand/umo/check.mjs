@@ -109,7 +109,7 @@ export const SCENARIOS = [
   { name: 'by-hand/price-card-template-icon', url: '/price-card?model=umo8', download: 'template' },
   { name: 'by-hand/livery-umo8', url: '/livery', click: ['UMO 8'], download: true, phone: true },
   { name: 'by-hand/hours-sign-pick', url: '/hours-sign', fill: [['[data-field="dealer"]', 'агат влад', 'down']], download: true },
-  { name: 'by-hand/business-card-pick', url: `/business-card?${q({ name: 'Анна', surname: 'Иванова', position: 'Менеджер', phone: '+79123456789', email: 'anna@example.ru' })}`, fill: [['[data-field="dealer"]', 'агат влад', 'down']], download: true },
+  { name: 'by-hand/business-card-pick', url: `/business-card?${q({ name: 'Анна', surname: 'Иванова', position: 'Менеджер', phone: '+79123456789', email: 'anna@example.ru' })}`, fill: [['[data-field="point"]', 'агат влад', 'down']], download: true },
   { name: 'by-hand/price-tag-pick', url: `/price-tag?${q({ n1: 'Коврики', p1: '4990' })}`, fill: [['Название дилера', 'агат влад', 'down']], download: true },
   { name: 'by-hand/plate-frame-pick', url: '/plate-frame', fill: [['Центр', 'агат влад', 'down']], download: true },
   { name: 'by-hand/name-tag-template-icon', url: `/name-tag?${q({ name: 'Анна', surname: 'Иванова', position: 'Менеджер' })}`, download: 'template' },

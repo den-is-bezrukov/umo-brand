@@ -13,7 +13,7 @@ import { SITE } from '@/site'
 /** The editor's name in the generators' header: the brand's (`editor` in its site.json), «Редактор материалов» without one */
 const EDITOR = SITE.editor ?? 'Редактор материалов'
 
-// Sidebar controls shared by the generators (price card, dealer livery, plate frame, name tag, business card). Light UI per the Figma layout,
+// Sidebar controls shared by the generators (price card, point livery, plate frame, name tag, business card). Light UI per the Figma layout,
 // matching the brand guide.
 
 /** The tick of checkboxes and of a good link: a 2 px stroke with square ends and bevelled corners, as every icon here */
@@ -252,7 +252,7 @@ const ANCHOR = typeof CSS !== 'undefined' && CSS.supports('anchor-name: --a')
  * through it, Enter picks, Esc or leaving the field closes it; the chevron opens the whole list. An option may carry a
  * line break, kept in the value it gives and shown as a space in the list. First made for the name tag's position
  */
-export function ComboField({ value, onChange, options, placeholder, label, invalid, singleLine, shownAs = t => t, truncate, filter }: { value: string; onChange: (v: string) => void; options: string[]; placeholder?: string; label: string; invalid?: boolean; /** Enter doesn't break the line, pasted breaks become spaces */ singleLine?: boolean; /** How an option reads in the list, when it differs from the value it gives */ shownAs?: (t: string) => string; /** One line, cut off with an ellipsis, rather than growing: for a narrow field (the price tag's caption on phones) */ truncate?: boolean; /** The options for what's typed, when containing it isn't enough: the dealers by city, street or any spelling (`dealerFilter`) */ filter?: (typed: string, options: string[]) => string[] }) {
+export function ComboField({ value, onChange, options, placeholder, label, invalid, singleLine, shownAs = t => t, truncate, filter }: { value: string; onChange: (v: string) => void; options: string[]; placeholder?: string; label: string; invalid?: boolean; /** Enter doesn't break the line, pasted breaks become spaces */ singleLine?: boolean; /** How an option reads in the list, when it differs from the value it gives */ shownAs?: (t: string) => string; /** One line, cut off with an ellipsis, rather than growing: for a narrow field (the price tag's caption on phones) */ truncate?: boolean; /** The options for what's typed, when containing it isn't enough: the points by city, street or any spelling (`pointFilter`) */ filter?: (typed: string, options: string[]) => string[] }) {
   const box = useRef<HTMLDivElement>(null)
   const list = useRef<HTMLDivElement>(null)
   const [open, setOpen] = useState(false)
@@ -260,7 +260,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
   const [active, setActive] = useState(-1)
   const typed = value.replace(/\s+/g, ' ').trim().toLowerCase()
   const hit = options.find(t => oneLine(t) === typed)
-  // Typed in the wrong layout too («lbkth» finds Дилер), after what's found as typed
+  // Typed in the wrong layout too («abkbfk» finds Филиал), after what's found as typed
   const swapped = otherLayout(typed)
   const find = (q: string) => (filter ? filter(q, options) : options.filter(t => oneLine(t).includes(q)))
   const found = find(typed)
@@ -555,7 +555,7 @@ export const flash = (text: string) => flashes.forEach(f => f(text))
 
 /**
  * «Поделиться»: sends a link to the file, `pdf=1` added to the page address (the settings are in it),
- * as it's mostly sent to a dealer, who wants the file, not the editor; with Alt (Option) held the address as it is, the
+ * as it's mostly sent to a point, who wants the file, not the editor; with Alt (Option) held the address as it is, the
  * editor with these settings, for the team, the button saying «Ссылка на редактор» while Alt is down. On phones through
  * the system's share sheet, elsewhere copied, the button itself saying what was copied for two seconds. Off while the
  * result isn't ready (`incomplete`, as «Скачать»): a link is sent for what it makes, not a draft. «Сбросить» isn't beside
@@ -664,14 +664,14 @@ export function LinkButtons({ incomplete, file: make, fileOnly }: {
 
 /**
  * The empty fields said in the download button, in the form's order, as what to do there, in the infinitive, a
- * button's verb («Выбрать дилера», «Указать цену»), going on as they're filled in. A wholly empty form says its first
+ * button's verb («Выбрать точку», «Указать цену»), going on as they're filled in. A wholly empty form says its first
  * field too: it's the first step (not «Не хватает данных»)
  */
 export const unfilled = (said: string[]) => said[0]
 
 /**
  * Which item the note over the download is about, after it: «3/8», its number (as beside it in the list) of all; none
- * for one item or a note about what they share (the dealer). Not «1/5», the first of all the empty and wrong fields
+ * for one item or a note about what they share (the point). Not «1/5», the first of all the empty and wrong fields
  * left, which never moves on and reads as a stuck progress
  */
 export const itemOf = (index: number, total: number) => (total > 1 && index >= 0 ? `${index + 1}/${total}` : undefined)

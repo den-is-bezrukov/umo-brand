@@ -28,7 +28,7 @@ const RUSSIAN = [
   /^г[ао]нд[оа]н/, // гондон; not гондола
   /^шлюх/,
   /^сук[аиуео]?$/, /^суч(?:ар|к|ь)/,
-  // Vulgar but not мат: just as out of place on a dealer's frame or badge
+  // Vulgar but not мат: just as out of place on a point's frame or badge
   /ж[о*]п/, // жопа
   /г[оа*]вн/, // говно
   /дерьм/,
