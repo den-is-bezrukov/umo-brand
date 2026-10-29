@@ -1,5 +1,7 @@
 # Livery (`/livery`)
 
+The lettering's path data (`LIVERY.wordmark`, a surface's `numGlyph`) is absolute M, L, H, V, C and Z, as Figma exports it; a brand without a model number gives an empty mark.
+
 Lettering for a point's demo car: both sides and the rear window, with the point name, tagline and QR link editable. It reproduces the brand's hand-made files, with the decals in one file: the zip holds the template (below), `<Brand>8_livery.pdf` (`LIVERY_FILE`: the brand's file word for a point before it where it has one, UMO's `dealer-livery`) (left and right side and the rear window, each sheet at its own size) and `00_<Brand>8_livery_spec.pdf` (the sheets on the car photos with dimensions in orange; one point there is one millimetre on the car).
 
 **Parts**: the sides are always in; «QR-код», «Дилер» and «Слоган» are checkboxes that label their fields (`OptionalField`), and «Заднее стекло» adds the rear window, off by default. What's off is in neither the preview, nor the decals, nor the spec. Ticked, the rear window shows under it, not indented, «Слоган на стекле» (its field following the sides' slogan until edited) and «Дилер на стекле» (the sides' name, on or off). Turning the rear window off forgets its settings.

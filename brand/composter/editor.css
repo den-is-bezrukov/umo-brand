@@ -185,6 +185,21 @@
   :root[data-editor] [data-ui='checkbox'] > span[aria-hidden] svg {
     display: none;
   }
+  /* In a label row the checkbox's words, the row's action («Мельче») and its plus or cross in that order, the mark at
+     the end; the action's icon goes, as Figma has it */
+  :root[data-editor] [data-ui='label'] {
+    justify-content: flex-start;
+    gap: 8px;
+  }
+  :root[data-editor] [data-ui='label'] > [data-ui='checkbox'] {
+    display: contents;
+  }
+  :root[data-editor] [data-ui='label'] > [data-ui='checkbox'] > span[aria-hidden] {
+    order: 3;
+  }
+  :root[data-editor] [data-ui='label'] > button svg {
+    display: none;
+  }
   :root[data-editor] :not([data-ui='label']) > [data-ui='checkbox'] {
     padding: 24px;
     border-bottom: 1px solid #000;

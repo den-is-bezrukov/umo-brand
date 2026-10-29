@@ -26,6 +26,14 @@ the branch's name on the business card.
 - The guide: the first screen (Первый экран · hero, an Unsplash photo) and the logo (Логотип · logo), 1824 px WebP.
 - The site's settings are placeholders until it has a home: `composter.example`.
 
+## Livery
+
+«Транспорт» (`names` in `site.json`), for now without a car (`livery.ts`): a van and a hatchback (`words.ts`' vehicle
+«Кузов»), the same sheets as UMO's demo car (sides 1280 × 500 mm with the QR, 1100 without, the rear window 835 × 250),
+the punched logo 100 mm high as the lettering, no model number, white decals on a dark field (`assets/livery/no-car.svg`)
+in place of the photos, nothing on the body to keep clear of; the tagline «Пробивной брендинг» (`taglines.ts`), as Figma.
+The cars' photos and their own measures are to come from Figma's Ливрея section.
+
 ## Business card
 
 UMO's layout, set in Inter (Визитка, 10 px a millimetre): its capitals 0.7275 of the size; Figma sets Inter on 100% lines

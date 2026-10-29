@@ -9,11 +9,30 @@ import { FONTS } from '@brand/fonts'
 
 export interface Fonts { medium: Font; regular: Font }
 
+/**
+ * The font with its shaping kept from throwing: where a lookup is beyond opentype.js (Inter 4's `ccmp`, a chained context
+ * of format 2), each character's own glyph, for its measures, outlines and pens alike (they all shape through
+ * `stringToGlyphs`); in such a font nothing opentype.js applies changes them (Inter has no ligatures, and its `ccmp` leaves
+ * precomposed letters as they are), and the features asked for come after, here (`featureMap`)
+ */
+export function shapeSafely(font: Font): Font {
+  // opentype.js passes its render options on (`getPath`, `forEachGlyph`), which its typings leave out
+  const shape = font.stringToGlyphs.bind(font) as (text: string, options?: unknown) => Glyph[]
+  font.stringToGlyphs = ((text: string, options?: unknown) => {
+    try {
+      return shape(text, options)
+    } catch {
+      return [...text].map(ch => font.charToGlyph(ch))
+    }
+  }) as Font['stringToGlyphs']
+  return font
+}
+
 const fontPromises = new Map<string, Promise<Font>>()
 const load = (face: BrandFont) => {
   let p = fontPromises.get(face.file)
   if (!p) {
-    p = fetch(`${import.meta.env.BASE_URL}${face.file}`).then(r => r.arrayBuffer()).then(buf => parse(buf))
+    p = fetch(`${import.meta.env.BASE_URL}${face.file}`).then(r => r.arrayBuffer()).then(buf => shapeSafely(parse(buf)))
     fontPromises.set(face.file, p)
   }
   return p
@@ -47,19 +66,8 @@ export function bindShortWords(text: string): string {
 /** The characters of `text` the font has no glyph for, each once */
 export const missingChars = (font: Font, text: string) => [...new Set([...text.replace(/\s/g, '')].filter(c => !font.hasChar(c)))]
 
-/**
- * The glyphs opentype.js shapes a text into; where a lookup of the font is beyond it (Inter 4's `ccmp` holds a chained
- * context of format 2, which throws), each character's own glyph: in such a font nothing opentype.js applies changes
- * them (Inter has no ligatures, and its `ccmp` leaves precomposed letters as they are); the features asked for come
- * after, here (`featureMap`)
- */
-export function glyphsOf(font: Font, text: string): Glyph[] {
-  try {
-    return font.stringToGlyphs(text)
-  } catch {
-    return [...text].map(ch => font.charToGlyph(ch))
-  }
-}
+/** The glyphs opentype.js shapes a text into, safely where the font was loaded through `shapeSafely` */
+export const glyphsOf = (font: Font, text: string): Glyph[] => font.stringToGlyphs(text)
 
 /**
  * A feature's single substitutions (`case`: the bar, brackets and dashes raised to the capitals; `lnum`, `tnum`), glyph

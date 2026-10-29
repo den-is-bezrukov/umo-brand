@@ -7,8 +7,17 @@
   "editor": "Редактор",
   "materials": [
     "business-card",
-    "hours-sign"
+    "hours-sign",
+    "livery"
   ],
+  "names": {
+    "livery": {
+      "title": "Транспорт",
+      "phrase": "брендинг транспорта",
+      "of": "ливреи",
+      "one": "ливрею"
+    }
+  },
   "title": "Компостер",
   "description": "Демо-бренд редактора: гайд и все материалы",
   "language": "ru",

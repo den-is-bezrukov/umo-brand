@@ -51,14 +51,17 @@ export function toD(cmds: Cmd[]): string {
 
 /** Absolute M/L/C/Z path data (what the logo is stored as) to commands, scaled and moved */
 function fromD(d: string, scale: number, dx: number, dy: number): Cmd[] {
-  const tokens = d.match(/[MLCZ]|-?\d*\.?\d+/g) ?? []
+  const tokens = d.match(/[MLHVCZ]|-?\d*\.?\d+(?:e-?\d+)?/g) ?? []
   const cmds: Cmd[] = []
   let op = ''
   let nums: number[] = []
+  // The pen, for H and V (a line along one axis, as Figma's exports write them), which go out as L
+  let pen: [number, number] = [0, 0]
   const flush = () => {
-    const p = nums.map((n, i) => n * scale + (i % 2 ? dy : dx))
-    if (op === 'M' || op === 'L') for (let i = 0; i < p.length; i += 2) cmds.push([op, p[i], p[i + 1]] as Cmd)
-    if (op === 'C') for (let i = 0; i < p.length; i += 6) cmds.push(['C', p[i], p[i + 1], p[i + 2], p[i + 3], p[i + 4], p[i + 5]])
+    if (op === 'H' || op === 'V') for (const n of nums) pen = op === 'H' ? [n * scale + dx, pen[1]] : [pen[0], n * scale + dy], cmds.push(['L', pen[0], pen[1]])
+    const p = op === 'H' || op === 'V' ? [] : nums.map((n, i) => n * scale + (i % 2 ? dy : dx))
+    if (op === 'M' || op === 'L') for (let i = 0; i < p.length; i += 2) cmds.push([op, p[i], p[i + 1]] as Cmd), pen = [p[i], p[i + 1]]
+    if (op === 'C') for (let i = 0; i < p.length; i += 6) cmds.push(['C', p[i], p[i + 1], p[i + 2], p[i + 3], p[i + 4], p[i + 5]]), pen = [p[i + 4], p[i + 5]]
     if (op === 'Z') cmds.push(['Z'])
     nums = []
   }

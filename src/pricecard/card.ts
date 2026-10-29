@@ -1,4 +1,5 @@
 import { parse, type Font } from 'opentype.js'
+import { shapeSafely } from '@/ui/type'
 import { qrOutline, type Cmd } from '@/livery/geometry'
 import { missingChars, setRuns, tidy, wrap, type Fonts } from '@/ui/type'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
@@ -89,7 +90,7 @@ function fromD(d: string, dx: number, dy: number): Cmd[] {
 let runFontsPromise: Promise<Record<string, Font>> | undefined
 export const loadRunFonts = () => runFontsPromise ??= Promise.all(
   [...new Set(Object.values(PRICE_CARD.headlines).flat(2).flatMap(r => r.font ? [r.font] : []))].map(file =>
-    fetch(`${import.meta.env.BASE_URL}${file}`).then(r => r.arrayBuffer()).then(buf => [file, parse(buf)] as const)),
+    fetch(`${import.meta.env.BASE_URL}${file}`).then(r => r.arrayBuffer()).then(buf => [file, shapeSafely(parse(buf))] as const)),
 ).then(Object.fromEntries)
 
 export interface CardFonts extends Fonts { runs: Record<string, Font> }
