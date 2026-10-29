@@ -280,9 +280,9 @@ export default function NameTag() {
   if (phone) return <MobileEditor slides={mode === 'table' && !staff.file ? [{ key: 'upload', node: <UploadArea staff={staff} /> }] : items.map((it, i) => ({ key: it.key, item: it.key, label: `${it.person.name} ${it.person.surname}`.replace(/\s+/g, ' ').trim(), ratio: TAG.h / TAG.w, node: renderItem(it, i) }))} onAdd={mode === 'manual' ? addItem : undefined} sidebar={sidebar} download={download} staff={staff} />
 
   return (
-    <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
+    <div className="flex min-h-dvh flex-col bg-paper font-sans text-ink md:h-dvh md:flex-row">
 
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
         {sidebar}
         {download}
       </aside>
@@ -293,7 +293,7 @@ export default function NameTag() {
         {...staff.dropTarget}
         onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure, [data-add], [data-template]')) setSelected(null) }}
         className={`flex flex-1 flex-col bg-surface px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16
-          ${mode === 'table' && staff.file && staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
+          ${mode === 'table' && staff.file && staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-ink' : ''}`}
       >
         {mode === 'table' && !staff.file ? (
           <UploadArea staff={staff} />

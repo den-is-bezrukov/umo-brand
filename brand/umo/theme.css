@@ -36,12 +36,28 @@
 
 @theme {
   --font-sans: 'CoFo Sans', sans-serif;
+  /* The interface's colours by role (`docs/brand.md`): the text, and at its opacities the edges, rings, underlines and
+     dims over the page; the page, panels and menus */
+  --color-ink: #000;
+  --color-paper: #fff;
   /* The palette's greys (`colors.ts`), the site's own: backgrounds, hairlines, captions */
   --color-surface: #f5f5f5;
   --color-line: #e6e6e6;
   --color-caption: #808080;
+  /* Placeholders and what can't be pressed yet; the generators' names not open; the empty fields in a preview */
+  --color-hint: #999;
+  --color-faint: #bfbfbf;
+  --color-ghost: #a6a6a6;
+  /* The main button and its text; a field at fault, a link that's right */
+  --color-accent: #000;
+  --color-on-accent: #fff;
+  --color-error: #e30;
+  --color-success: #00c950;
   /* The corners of the interface's controls: fields, buttons, switches, menus (`rounded-control`) */
   --radius-control: 8px;
+  /* Windows and cards (`rounded-panel`); the generators' sheet on a phone (`rounded-sheet`) */
+  --radius-panel: 16px;
+  --radius-sheet: 24px;
 }
 
 /* The guide's logo with the Y cobrand (`HeaderLogo.tsx`) folds with the scroll as the core folds the sidebar

@@ -431,14 +431,14 @@ export default function BusinessCard() {
                           inputMode="tel"
                           invalid={bad('phone', 'Телефон')}
                         />
-                        <label className="flex h-10 in-[[data-sheet]]:h-12! min-w-20 shrink-0 cursor-text items-center rounded-control bg-surface px-3 text-[14px] leading-5 focus-within:ring-1 focus-within:ring-inset focus-within:ring-black/40">
-                          <span className="text-[#999]">Доб.&nbsp;</span>
+                        <label className="flex h-10 in-[[data-sheet]]:h-12! min-w-20 shrink-0 cursor-text items-center rounded-control bg-surface px-3 text-[14px] leading-5 focus-within:ring-1 focus-within:ring-inset focus-within:ring-ink/40">
+                          <span className="text-hint">Доб.&nbsp;</span>
                           <input
                             value={p.ext}
                             onChange={e => update(p.key, { ext: e.target.value.replace(/\D/g, '').slice(0, 6) })}
                             inputMode="numeric"
                             aria-label="Добавочный"
-                            className="w-[6ch] min-w-0 bg-transparent text-black outline-none [font-variant-numeric:lining-nums_tabular-nums]"
+                            className="w-[6ch] min-w-0 bg-transparent text-ink outline-none [font-variant-numeric:lining-nums_tabular-nums]"
                           />
                         </label>
                       </div>
@@ -485,12 +485,12 @@ export default function BusinessCard() {
 
   // Phones: the canvas over a sheet with the form (trial)
   if (pdfOnly || templateOnly) return null
-  if (phone) return <MobileEditor slides={mode === 'table' && !staff.file ? [{ key: 'upload', node: <UploadArea staff={staff} /> }] : [{ key: 'face', number: 0, label: 'Обложка', ratio: CARD.h / CARD.w, node: <div className="outline-1 outline-black/10">{faceArt}</div> }, ...items.map((p, i) => ({ key: p.key, item: p.key, number: i + 1, label: `${p.name} ${p.surname}`.replace(/\s+/g, ' ').trim(), ratio: CARD.h / CARD.w, node: renderItem(p, i) }))]} onAdd={mode === 'manual' ? addItem : undefined} sidebar={sidebar} download={download} staff={staff} />
+  if (phone) return <MobileEditor slides={mode === 'table' && !staff.file ? [{ key: 'upload', node: <UploadArea staff={staff} /> }] : [{ key: 'face', number: 0, label: 'Обложка', ratio: CARD.h / CARD.w, node: <div className="outline-1 outline-ink/10">{faceArt}</div> }, ...items.map((p, i) => ({ key: p.key, item: p.key, number: i + 1, label: `${p.name} ${p.surname}`.replace(/\s+/g, ' ').trim(), ratio: CARD.h / CARD.w, node: renderItem(p, i) }))]} onAdd={mode === 'manual' ? addItem : undefined} sidebar={sidebar} download={download} staff={staff} />
 
   return (
-    <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
+    <div className="flex min-h-dvh flex-col bg-paper font-sans text-ink md:h-dvh md:flex-row">
 
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
         {sidebar}
         {download}
       </aside>
@@ -499,7 +499,7 @@ export default function BusinessCard() {
         {...staff.dropTarget}
         onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure, [data-add], [data-template]')) staff.setSelected(null) }}
         className={`flex flex-1 flex-col bg-surface px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16
-          ${mode === 'table' && staff.file && staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
+          ${mode === 'table' && staff.file && staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-ink' : ''}`}
       >
         {mode === 'table' && !staff.file ? (
           <UploadArea staff={staff} />
@@ -509,7 +509,7 @@ export default function BusinessCard() {
           <div className="flex justify-center">
             {/* Dimmed with the cards not selected while there are several; with one card it's that card's own face, never dimmed */}
             <div className={`w-full max-w-[480px] transition-opacity duration-150 ${mode === 'manual' && current && items.length > 1 ? 'opacity-40' : ''}`}>
-              <div className="outline-1 outline-black/10">{faceArt}</div>
+              <div className="outline-1 outline-ink/10">{faceArt}</div>
             </div>
           </div>
           {items.map(renderItem)}

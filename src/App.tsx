@@ -338,10 +338,10 @@ export default function App() {
   if (phone) return <MobileEditor slides={items.map(c => ({ key: c.key, item: c.key, label: `${modelOf(c.model).name} ${c.trim.toUpperCase()}`, ratio: POSTER_H / POSTER_W, node: (w: number) => cardAt(c, w) }))} staff={frame} onAdd={addCard} sidebar={sidebar} download={download} />
 
   return (
-    <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
+    <div className="flex min-h-dvh flex-col bg-paper font-sans text-ink md:h-dvh md:flex-row">
 
       {/* ── Sidebar: 320px plus the 1px outside stroke, which shows only on the right ── */}
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
         {sidebar}
         {download}
       </aside>

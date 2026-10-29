@@ -58,7 +58,7 @@ function Btn({ label, name, onClick, hidden, children }: { label: string; name?:
       aria-label={name ?? label}
       onClick={onClick}
       // 30 px as in Figma, a finger's 40 round it (the ::after); hidden keeps its place, so the others don't move
-      className={`relative flex size-[30px] shrink-0 after:absolute after:-inset-[5px] after:content-[''] cursor-pointer items-center justify-center rounded-control text-caption active:text-black ${hidden ? 'invisible' : ''}`}
+      className={`relative flex size-[30px] shrink-0 after:absolute after:-inset-[5px] after:content-[''] cursor-pointer items-center justify-center rounded-control text-caption active:text-ink ${hidden ? 'invisible' : ''}`}
     >
       {children}
     </button>
@@ -563,7 +563,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
     // The page's background is the canvas's; over it the picture with its row, over all the sheet, and the download at
     // the screen's foot over the sheet; clipped, not hidden, so nothing scrolls it (a focused control in the sheet
     // scrolled it by 83 px, the canvas off its place)
-    <div ref={root} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchCancel} className="fixed inset-0 overflow-clip bg-surface font-sans text-black">
+    <div ref={root} onTouchStart={onTouchStart} onTouchMove={onTouchMove} onTouchEnd={onTouchEnd} onTouchCancel={onTouchCancel} className="fixed inset-0 overflow-clip bg-surface font-sans text-ink">
       {/* The canvas, 10 px in: above the sheet at 60%, the whole screen with the picture alone. The
           sheet over the whole screen slides over it, leaving it as it is (it shrank under the sheet, the picture refitted
           as it went and jerked) */}
@@ -654,16 +654,16 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
         // reads as cut off. Fixed to the screen of its own, its foot always at the screen's bottom, so Safari 26 carries
         // its white under its floating bar (else it carries the page's grey, the page being the fixed box there). At most 480 px
         // wide, centred: wider, on a folded-out phone or an iPad mini, its fields run to 700 px for a name
-        className={`fixed inset-x-0 bottom-0 mx-auto flex max-w-[480px] flex-col rounded-t-[24px] bg-white ${full && !row ? '' : 'shadow-[0_10px_30px_rgba(0,0,0,0.1)]'}`}
+        className={`fixed inset-x-0 bottom-0 mx-auto flex max-w-[480px] flex-col rounded-t-sheet bg-paper ${full && !row ? '' : 'shadow-[0_10px_30px_rgba(0,0,0,0.1)]'}`}
         style={{ height: tall, transform: `translateY(${edge[sheet]}px)` }}
       >
         {/* The grabber, the sign a phone's sheets carry that they're dragged (the hold is the whole canvas and the header,
             not it): a quarter of the sheet wide and 2 px thick, 8 px over the edge, on the canvas, going with the sheet (it was in it, under the edge); none
             over the whole screen */}
-        {!full && <span aria-hidden className="pointer-events-none absolute -top-2.5 left-1/2 h-0.5 w-1/4 -translate-x-1/2 rounded-full bg-black/10" />}
+        {!full && <span aria-hidden className="pointer-events-none absolute -top-2.5 left-1/2 h-0.5 w-1/4 -translate-x-1/2 rounded-full bg-ink/10" />}
         <div ref={scroller} data-sheet onFocus={onFocus} onBlur={onBlur} // Always a scroll: switched off lowered, iOS lays the form's layers anew as the finger lets go, and the generators'
           // line's fades go for a frame (lowered, a finger on the header takes the sheet anyway)
-          className="min-h-0 flex-1 overflow-y-auto rounded-t-[24px] [contain:paint]">
+          className="min-h-0 flex-1 overflow-y-auto rounded-t-sheet [contain:paint]">
           {/* Groups 24 px apart (`src/index.css`, as on wide screens), so from one 48 px control to the next is 48 (16 + 8
               for a label + 24); at 60% as much again under the form's end as is under the screen, to scroll it into view */}
           <div ref={formEl} className="*:gap-6! *:p-6!" style={{ paddingBottom: `calc(${96 + (typing ? screen.h : full ? 0 : below)}px + env(safe-area-inset-bottom))` }}>
@@ -674,7 +674,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
         </div>
         {/* A combobox's list, over the form within the sheet's round top, as large as the sheet shows; marked as the sheet,
             so its controls are the sheet's 48 px */}
-        <div ref={setLayerEl} data-sheet className="absolute inset-0 overflow-hidden rounded-t-[24px] empty:hidden" />
+        <div ref={setLayerEl} data-sheet className="absolute inset-0 overflow-hidden rounded-t-sheet empty:hidden" />
       </div>
 
       {/* The download over the form's foot, on two white gradients the form fades under (`FOOT_BG`), 24 px in all round,

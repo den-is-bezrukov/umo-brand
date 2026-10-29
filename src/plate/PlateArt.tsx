@@ -30,7 +30,7 @@ export default function PlateArt({ guide, children, className = '' }: { guide?: 
   const view = guide ? '0 0 912 304' : `${FRAME.x} ${FRAME.y} ${FRAME.w} ${FRAME.h}`
   return (
     <svg viewBox={view} className={`block h-auto w-full ${className}`} role="img" aria-label="Номерной знак в рамке">
-      {guide && <rect width="912" height="304" fill="#F5F5F5" />}
+      {guide && <rect width="912" height="304" className="fill-surface" />}
       <rect x="195" y="86" width="522" height="132" rx="10" fill="black" />
       <rect x="202" y="93" width="376" height="100" rx="5" fill="white" />
       <rect x="582" y="93" width="128" height="100" rx="5" fill="white" />

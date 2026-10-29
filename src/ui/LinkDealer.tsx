@@ -53,7 +53,7 @@ export default function LinkDealer({ param, withPrefix, children }: { param: str
           </button>
         ))}
       </div>
-      <button type="button" onClick={() => pick()} className="cursor-pointer self-start text-[14px] leading-5 text-caption hover:text-black">
+      <button type="button" onClick={() => pick()} className="cursor-pointer self-start text-[14px] leading-5 text-caption hover:text-ink">
         Моего салона нет в списке
       </button>
     </main>

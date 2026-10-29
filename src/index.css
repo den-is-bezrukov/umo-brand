@@ -101,7 +101,7 @@ html[data-menu] [data-sheet]:not(:has([data-head])) {
    it for a click too; a dialog, focused as it opens so the keys work in it, isn't a control and shows none (Safari
    ringed the editor's window) */
 :focus-visible:not(input, textarea, select, [role='dialog']) {
-  outline: 2px solid rgb(0 0 0 / 0.3);
+  outline: 2px solid color-mix(in oklab, var(--color-ink) 30%, transparent);
   outline-offset: 2px;
 }
 a:focus-visible {

@@ -76,7 +76,7 @@ function SheetPreview({ sheet, dims, onReset, resetLabel, extra }: { sheet: Shee
         </span>
       </figcaption>
       {sheet.issues.length > 0 && (
-        <ul className="text-center text-[13px] leading-5 text-[#e30]">
+        <ul className="text-center text-[13px] leading-5 text-error">
           {sheet.issues.map(t => <li key={t}>{t}</li>)}
         </ul>
       )}
@@ -326,10 +326,10 @@ export default function Livery() {
   if (phone) return <MobileEditor slides={sheets.map((s, i) => ({ key: s.surface.id, ratio: s.surface.photo.view[3] / s.surface.photo.view[2], node: <SheetPreview sheet={s} dims={dims} />, label: s.surface.title, reset: i < 2 ? (sidesAtDefaults ? undefined : { onClick: resetSides, label: 'Вернуть борта по умолчанию' }) : (rearAtDefaults ? undefined : { onClick: resetRear, label: 'Вернуть стекло по умолчанию' }) }))} sidebar={sidebar} download={download} />
 
   return (
-    <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
+    <div className="flex min-h-dvh flex-col bg-paper font-sans text-ink md:h-dvh md:flex-row">
 
       {/* Sidebar as the price card's */}
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
         {sidebar}
         {download}
       </aside>

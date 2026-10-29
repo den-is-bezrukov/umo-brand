@@ -17,10 +17,10 @@ const EDITOR = SITE.editor ?? 'Редактор материалов'
 // matching the brand guide.
 
 /** The tick of checkboxes and of a good link: a 2 px stroke with square ends and bevelled corners, as every icon here */
-function Tick({ color = 'black' }: { color?: string }) {
+function Tick({ className = 'stroke-ink' }: { className?: string }) {
   return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden>
-      <path d="M11.5 4L5.5 10L2.5 7" stroke={color} strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" />
+    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" className={className} aria-hidden>
+      <path d="M11.5 4L5.5 10L2.5 7" strokeWidth="2" strokeLinecap="square" strokeLinejoin="bevel" />
     </svg>
   )
 }
@@ -30,7 +30,7 @@ function Tick({ color = 'black' }: { color?: string }) {
  * The breadcrumbs underline on hover as the guide's links do: black at 40%, fading out, 0.35 px (2.5%
  * of their 14 px). The generators' names don't: they are navigation, as the guide's contents, and only darken
  */
-const crumb = 'underline decoration-transparent decoration-[0.35px] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 hover:decoration-black/40 hover:duration-0'
+const crumb = 'underline decoration-transparent decoration-[0.35px] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 hover:decoration-ink/40 hover:duration-0'
 
 /**
  * The top of a generator's form, the same on every screen (the phone's, carried over to wide screens):
@@ -64,7 +64,7 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
         <nav aria-label="Конструкторы" className="mt-1 flex flex-col items-start gap-4">
           {MATERIALS.map(g => g.path === current
             ? <button key={g.path} type="button" aria-current="page" onClick={() => setMenu(false)} className={`${name} cursor-pointer text-left`}>{g.title}</button>
-            : <Link key={g.path} to={g.path} className={`${name} text-[#bfbfbf] hover:text-caption active:text-caption`}>{g.title}</Link>)}
+            : <Link key={g.path} to={g.path} className={`${name} text-faint hover:text-caption active:text-caption`}>{g.title}</Link>)}
         </nav>
       ) : (
         <GeneratorRing current={current} />
@@ -140,8 +140,8 @@ export function SegBtn({ active, onClick, disabled, title, children }: { active:
       title={title}
       aria-pressed={active}
       className={`flex-1 min-w-0 flex items-center justify-center rounded-control border px-3 py-[9px] in-[[data-sheet]]:py-[13px]! cursor-pointer
-        disabled:cursor-not-allowed disabled:text-[#999]
-        ${active ? 'border-black/10 bg-white text-black' : 'border-transparent text-caption'}`}
+        disabled:cursor-not-allowed disabled:text-hint
+        ${active ? 'border-ink/10 bg-paper text-ink' : 'border-transparent text-caption'}`}
     >
       <span className="font-medium text-[14px] leading-5 whitespace-nowrap">{children}</span>
     </button>
@@ -156,7 +156,7 @@ export function SegBtn({ active, onClick, disabled, title, children }: { active:
  * A field with an error isn't edged in red: its label turns red instead, found by the control's aria-invalid under it
  * (`ALERT_LABEL` on the label, `group/field` on what holds both), so every generator's fields do it with nothing passed
  */
-export const ALERT_LABEL = 'group-has-[[aria-invalid=true]]/field:text-[#e30]'
+export const ALERT_LABEL = 'group-has-[[aria-invalid=true]]/field:text-error'
 
 export function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -201,8 +201,8 @@ export function TextInput({ value, onChange, onBlur, onPaste, placeholder, inval
       aria-invalid={invalid || undefined}
       inputMode={inputMode ?? (numeric ? 'numeric' : undefined)}
       pattern={numeric ? '[0-9 ]*' : undefined}
-      className={`h-10 in-[[data-sheet]]:h-12! w-full min-w-0 rounded-control bg-surface px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]
-        focus:ring-1 focus:ring-inset focus:ring-black/40 ${className}`}
+      className={`h-10 in-[[data-sheet]]:h-12! w-full min-w-0 rounded-control bg-surface px-3 text-[14px] leading-5 text-ink outline-none placeholder:text-hint
+        focus:ring-1 focus:ring-inset focus:ring-ink/40 ${className}`}
     />
   )
 }
@@ -221,7 +221,7 @@ function useAutoHeight(value: string) {
   return ref
 }
 
-const areaClass = 'block min-h-10 in-[[data-sheet]]:min-h-12! in-[[data-sheet]]:py-[14px]! w-full min-w-0 resize-none overflow-hidden rounded-control bg-surface py-[10px] px-3 text-[14px] leading-5 text-black outline-none placeholder:text-[#999]'
+const areaClass = 'block min-h-10 in-[[data-sheet]]:min-h-12! in-[[data-sheet]]:py-[14px]! w-full min-w-0 resize-none overflow-hidden rounded-control bg-surface py-[10px] px-3 text-[14px] leading-5 text-ink outline-none placeholder:text-hint'
 
 /** Multi-line text where Enter is a line break the layout keeps */
 export function TextArea({ value, onChange, placeholder, invalid, className = '', ...rest }: { value: string; onChange: (v: string) => void; placeholder?: string; invalid?: boolean; className?: string } & Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'value' | 'onChange'>) {
@@ -235,7 +235,7 @@ export function TextArea({ value, onChange, placeholder, invalid, className = ''
       onChange={e => onChange(e.target.value)}
       placeholder={placeholder}
       aria-invalid={invalid || undefined}
-      className={`${areaClass} focus:ring-1 focus:ring-inset focus:ring-black/40 ${className}`}
+      className={`${areaClass} focus:ring-1 focus:ring-inset focus:ring-ink/40 ${className}`}
     />
   )
 }
@@ -353,7 +353,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
         const change = (v: string) => { onChange(singleLine || truncate ? v.replace(/\s*\n\s*/g, ' ') : v); setAll(false); setOpen(true) }
         // An input, as a textarea can't end in an ellipsis
         return truncate
-          ? <input {...field} onChange={e => change(e.target.value)} className={`${areaClass} h-10 in-[[data-sheet]]:h-12! truncate pr-10 focus:ring-1 focus:ring-inset focus:ring-black/40`} />
+          ? <input {...field} onChange={e => change(e.target.value)} className={`${areaClass} h-10 in-[[data-sheet]]:h-12! truncate pr-10 focus:ring-1 focus:ring-inset focus:ring-ink/40`} />
           : <TextArea {...field} invalid={invalid} onChange={change} className="pr-10" />
       })()}
       <button
@@ -375,7 +375,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
         onMouseDown={e => e.preventDefault()}
         // White, 2 px inside its edge, a soft shadow and no line; rows 8 px round, the pointed one grey, the picked one
         // medium with a tick
-        className="max-h-[288px] overflow-y-auto rounded-control bg-white p-[2px] text-[14px] leading-5 text-black shadow-[0_10px_15px_rgba(0,0,0,0.1)]"
+        className="max-h-[288px] overflow-y-auto rounded-control bg-paper p-[2px] text-[14px] leading-5 text-ink shadow-[0_10px_15px_rgba(0,0,0,0.1)]"
         // The popover's own styles centre it on the screen (inset 0, margin auto): undone here, then put under the field
         style={{
           position: 'fixed',
@@ -401,7 +401,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
         ))}
       </div>
       {screen && layer.el && createPortal(
-        <div role="dialog" aria-label={label} data-combo className="absolute inset-0 flex flex-col bg-white font-sans text-black" style={{ paddingBottom: layer.hidden }}>
+        <div role="dialog" aria-label={label} data-combo className="absolute inset-0 flex flex-col bg-paper font-sans text-ink" style={{ paddingBottom: layer.hidden }}>
           {/* «Готово» in the field, where the closed one has its chevron */}
           <div ref={screenField} className="relative shrink-0 px-6 pt-6 pb-2">
             <TextArea
@@ -464,17 +464,17 @@ export function UrlField({ value, onChange }: { value: string; onChange: (v: str
         placeholder="https://..."
         aria-invalid={error || undefined}
         spellCheck={false}
-        className={`${areaClass} break-all pr-9 focus:ring-1 focus:ring-inset focus:ring-black/40`}
+        className={`${areaClass} break-all pr-9 focus:ring-1 focus:ring-inset focus:ring-ink/40`}
       />
       {/* On the first line, however many lines the link takes */}
       <div className="pointer-events-none absolute top-0 right-0 flex h-10 in-[[data-sheet]]:h-12! w-9 items-center justify-center">
         {valid ? (
-          <span role="img" aria-label="Ссылка в порядке"><Tick color="#00C950" /></span>
+          <span role="img" aria-label="Ссылка в порядке"><Tick className="stroke-success" /></span>
         ) : error ? (
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-label="Проверьте ссылку">
-            <circle cx="7" cy="7" r="6" stroke="#e30" strokeWidth="1.4" />
-            <line x1="7" y1="4" x2="7" y2="7.5" stroke="#e30" strokeWidth="1.4" strokeLinecap="round" />
-            <circle cx="7" cy="9.5" r="0.7" fill="#e30" />
+            <circle cx="7" cy="7" r="6" className="stroke-error" strokeWidth="1.4" />
+            <line x1="7" y1="4" x2="7" y2="7.5" className="stroke-error" strokeWidth="1.4" strokeLinecap="round" />
+            <circle cx="7" cy="9.5" r="0.7" className="fill-error" />
           </svg>
         ) : null}
       </div>
@@ -486,9 +486,9 @@ export function UrlField({ value, onChange }: { value: string; onChange: (v: str
 export function Checkbox({ checked, onChange, children, className = '' }: { checked: boolean; onChange: (v: boolean) => void; children: React.ReactNode; className?: string }) {
   return (
     // In the phone's sheet the row takes a finger's 48 px, 16 px over and under it given back by margins, so it looks as before
-    <label className={`flex cursor-pointer items-center gap-2 text-[14px] leading-4 text-black in-[[data-sheet]]:-my-4 in-[[data-sheet]]:py-4 ${className}`}>
+    <label className={`flex cursor-pointer items-center gap-2 text-[14px] leading-4 text-ink in-[[data-sheet]]:-my-4 in-[[data-sheet]]:py-4 ${className}`}>
       <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="peer sr-only" />
-      <span aria-hidden className="flex size-4 shrink-0 items-center justify-center rounded-[4px] bg-surface peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-black/30">
+      <span aria-hidden className="flex size-4 shrink-0 items-center justify-center rounded-[4px] bg-surface peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink/30">
         {checked && <Tick />}
       </span>
       {children}
@@ -510,7 +510,7 @@ export function OptionalField({ label, on, onChange, extra, children }: { label:
 }
 
 // Grey #808080, black on hover, the icon with it
-export const rowAction = 'flex shrink-0 cursor-pointer items-center gap-2 text-[14px] leading-4 text-caption transition-colors hover:text-black'
+export const rowAction = 'flex shrink-0 cursor-pointer items-center gap-2 text-[14px] leading-4 text-caption transition-colors hover:text-ink'
 
 /** Corners for the size switch, on the 16 grid with the ticks' 2 px stroke and square ends: at the outer corners to grow, turned in to shrink */
 function SizeIcon({ grow }: { grow: boolean }) {
@@ -544,7 +544,7 @@ export function SizeSwitch({ large, onChange, label }: { large: boolean; onChang
 }
 
 // Edged at 10%, at 40% on hover
-export const outlined = 'flex min-w-16 flex-1 items-center justify-center rounded-control border border-black/10 px-3 py-[9px] in-[[data-sheet]]:py-[13px]! text-[14px] font-medium leading-5 text-black cursor-pointer hover:border-black/40 disabled:cursor-default disabled:text-[#999] disabled:hover:border-black/10'
+export const outlined = 'flex min-w-16 flex-1 items-center justify-center rounded-control border border-ink/10 px-3 py-[9px] in-[[data-sheet]]:py-[13px]! text-[14px] font-medium leading-5 text-ink cursor-pointer hover:border-ink/40 disabled:cursor-default disabled:text-hint disabled:hover:border-ink/10'
 
 /** A word the download bar's line says for a moment («В файле нет режимника») */
 const flashes = new Set<(text: string) => void>()
@@ -650,7 +650,7 @@ export function LinkButtons({ incomplete, file: make, fileOnly }: {
     // White under it: on phones it stands over the canvas, and there its stroke is centred on its edge, half out, half
     // in (a trial): inside, the stroke left 38 px of white beside the solid 40 of the download, which read larger. Wide
     // screens keep the inside stroke
-    <button type="button" onClick={share} title={alt && !fileOnly ? 'Отправить ссылку на редактор с этими настройками' : file || fileOnly ? 'Отправить файл' : 'Отправить ссылку на файл'} disabled={incomplete} aria-disabled={copied ? true : undefined} className={`${outlined} w-full bg-white ${copied ? 'cursor-default hover:border-black/10! max-md:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)]!' : ''} max-md:border-0 max-md:py-[10px] max-md:in-[[data-sheet]]:py-[14px]! max-md:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)] max-md:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.4),inset_0_0_0_0.5px_rgba(0,0,0,0.4)] max-md:disabled:hover:shadow-[0_0_0_0.5px_rgba(0,0,0,0.1),inset_0_0_0_0.5px_rgba(0,0,0,0.1)]`}>
+    <button type="button" onClick={share} title={alt && !fileOnly ? 'Отправить ссылку на редактор с этими настройками' : file || fileOnly ? 'Отправить файл' : 'Отправить ссылку на файл'} disabled={incomplete} aria-disabled={copied ? true : undefined} className={`${outlined} w-full bg-paper ${copied ? 'cursor-default hover:border-ink/10! max-md:hover:shadow-[0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_10%,transparent),inset_0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_10%,transparent)]!' : ''} max-md:border-0 max-md:py-[10px] max-md:in-[[data-sheet]]:py-[14px]! max-md:shadow-[0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_10%,transparent),inset_0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_10%,transparent)] max-md:hover:shadow-[0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_40%,transparent),inset_0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_40%,transparent)] max-md:disabled:hover:shadow-[0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_10%,transparent),inset_0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_10%,transparent)]`}>
       {/* Regular, as a note rather than a button's name; while it shows the button is still, no hover or click, its text grey #808080, as quiet lines: the hover's edge is overridden, as
           pointer-events: none kept the browser's hover on until the pointer moved */}
       {copied
@@ -733,16 +733,16 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
       // opens, the field only lights up)
       onClick={leads ? () => { foot?.(); onNote!() } : onClick}
       disabled={busy || (disabled && !leads)}
-      className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-control bg-black px-3 py-[10px] in-[[data-sheet]]:py-[14px]! text-[14px] leading-5 hover:enabled:bg-[#333] disabled:cursor-default
-        ${lead || said ? 'font-normal' : 'font-medium'} ${disabled && !leads && !busy ? 'text-[#999]' : 'text-white'}`}
+      className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-2 rounded-control bg-accent px-3 py-[10px] in-[[data-sheet]]:py-[14px]! text-[14px] leading-5 hover:enabled:bg-accent/80 disabled:cursor-default
+        ${lead || said ? 'font-normal' : 'font-medium'} ${disabled && !leads && !busy ? 'text-hint' : 'text-on-accent'}`}
     >
       {busy && (
-        <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" aria-hidden>
+        <svg className="animate-spin" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden>
           <path d="M21 12a9 9 0 1 1-6.219-8.56" />
         </svg>
       )}
       {said || (lead
-        ? <>{note}{count && <span className="text-white/50">{count}</span>}</>
+        ? <>{note}{count && <span className="text-on-accent/50">{count}</span>}</>
         : busy ? 'Генерация…' : `Скачать ${format}`)}
     </button>
   )

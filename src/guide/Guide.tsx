@@ -132,7 +132,7 @@ const NAV_HOVER = 'transition-[color] duration-350 ease-[ease] hover:text-captio
  * scrolling away under it don't peek out below. Titles stand 2px in from the list's edge (a margin, so the bullet keeps to
  * the text), their items 22px further. Its bullet stands about midway between the screen's edge and the text.
  */
-const STICKY_CHAPTER = 'ml-0.5 py-2 sticky top-2 z-10 bg-white shadow-[0_-8px_0_white,0_4px_0_white]'
+const STICKY_CHAPTER = 'ml-0.5 py-2 sticky top-2 z-10 bg-paper shadow-[0_-8px_0_var(--color-paper),0_4px_0_var(--color-paper)]'
 
 function NavLink({ id, title, active, current, onNavigate, pad, bullet = '-left-[0.9em]' }: { id: string; title: string; active: boolean; current: boolean; onNavigate?: () => void; pad: string; bullet?: string }) {
   return (
@@ -173,7 +173,7 @@ function TocToggle({ expanded, onClick, className = '' }: { expanded: boolean; o
       aria-expanded={expanded}
       aria-label={expanded ? 'Свернуть содержание' : 'Развернуть содержание'}
       // No width of its own: both places set it, and a `w-full` here outranked theirs in the built CSS
-      className={`flex cursor-pointer items-start gap-2 bg-white ${NAV_HOVER} text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] ${className}`}
+      className={`flex cursor-pointer items-start gap-2 bg-paper ${NAV_HOVER} text-left text-[16px] font-medium leading-[1.25] tracking-[-0.01em] ${className}`}
     >
       <TocIcon name={expanded ? 'close' : 'menu'} />
       {expanded ? 'Свернуть' : 'Содержание'}
@@ -780,7 +780,7 @@ function useWide() {
 function EditorLinks() {
   return MATERIALS.map(m => (
     <Link key={m.path} to={m.path} target="_blank" rel="noopener" title={editTitle(m.path)} className="group flex items-center gap-2 text-[24px] font-medium leading-6 tracking-[-0.01em]">
-      <span className={`${UNDERLINE} group-hover:decoration-black/40 group-hover:duration-0`}>{m.title}</span>
+      <span className={`${UNDERLINE} group-hover:decoration-ink/40 group-hover:duration-0`}>{m.title}</span>
       <span aria-hidden className="opacity-0 group-hover:opacity-100">↗</span>
     </Link>
   ))
@@ -899,7 +899,7 @@ export default function Guide() {
   }, [])
 
   return (
-    <div ref={pageRef} id="top" className="min-h-screen bg-white font-sans text-black">
+    <div ref={pageRef} id="top" className="min-h-screen bg-paper font-sans text-ink">
       {editor && wide && <EditorDialog />}
       {/* The hero is the top of the page: the logo leads here, and it isn't in the contents. On a phone it's the first
           picture, above the header, and covers the header's upward white (z-30). From lg it's fixed behind the page,
@@ -907,17 +907,17 @@ export default function Guide() {
           statement), so the first screen shows the logo, the row and the statement, then slides up over the photo. */}
       <Hero bodyRef={bodyRef} />
 
-      <div ref={bodyRef} data-guide-body className="bg-white lg:relative lg:z-10 lg:mt-[calc(100vh-var(--strip,286px))] lg:flex lg:items-start">
+      <div ref={bodyRef} data-guide-body className="bg-paper lg:relative lg:z-10 lg:mt-[calc(100vh-var(--strip,286px))] lg:flex lg:items-start">
       {/* Desktop sidebar. The expand row sits at the bottom of the screen, so it stays put while the open chapter
           changes the list's height, and sticks there when the list is taller than the screen, cutting the list off —
           enough of a hint that it scrolls, so the scrollbar, far from the text at this width, is hidden. */}
       <aside ref={asideRef} className="hidden lg:flex sticky top-0 h-screen w-[320px] xl:w-1/3 shrink-0 flex-col overflow-y-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         {/* The logo's box is the folded wordmark, 120 by 24; the lockup is drawn larger over it and scaled (useHeroReveal). */}
-        <div className="sticky top-0 z-10 bg-white p-6"><a href="#top" onClick={toTop} aria-label="В начало" data-logo className="block h-6 w-[120px]"><div data-logo-desk className="origin-top-left will-change-transform"><HeaderLogo title={SITE.name} /></div></a></div>
+        <div className="sticky top-0 z-10 bg-paper p-6"><a href="#top" onClick={toTop} aria-label="В начало" data-logo className="block h-6 w-[120px]"><div data-logo-desk className="origin-top-left will-change-transform"><HeaderLogo title={SITE.name} /></div></a></div>
         {/* The row is fixed to the bottom of the screen — not moved there by script, which lags the scroll a frame and
             makes it shake — so the list keeps its height free at the end. */}
         <div data-logo-nav className="px-6 pb-[68px] will-change-transform"><Nav active={active} expandAll={expandAll} /></div>
-        <div className="fixed bottom-0 left-0 z-10 w-[320px] bg-white xl:w-1/3">
+        <div className="fixed bottom-0 left-0 z-10 w-[320px] bg-paper xl:w-1/3">
           <div data-logo-toggle className="will-change-transform">
             <TocToggle expanded={expandAll && tocShown} onClick={onTocToggle} className="w-full p-6" />
           </div>
@@ -926,7 +926,7 @@ export default function Guide() {
 
       {/* Mobile top bar. iOS 26 browsers draw the page under their translucent top bar and stick `top: 0` below it,
           so the white is extended a screen upwards to hide content scrolling above the header. */}
-      <header className="lg:hidden sticky top-0 z-20 bg-white p-4 md:p-6 before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-screen before:bg-white before:content-['']">
+      <header className="lg:hidden sticky top-0 z-20 bg-paper p-4 md:p-6 before:pointer-events-none before:absolute before:inset-x-0 before:bottom-full before:h-screen before:bg-paper before:content-['']">
         <a href="#top" onClick={toTop} aria-label="В начало" className="block w-fit"><HeaderLogo title={SITE.name} /></a>
       </header>
 
@@ -936,7 +936,7 @@ export default function Guide() {
         {/* A sheet from the bottom, 60% of the screen cut down to whole 36px rows (`--toc-h`), its top corners 16 px round, as the voice examples' bubbles' corners, over the page dimmed: every item within a thumb's
             reach, the list scrolling inside it, opened at the chapter you're reading (it took the whole screen under the
             header, its top items out of reach). A tap on the page above closes it, as «Свернуть» does */}
-        <div ref={toc.dim} aria-hidden className="invisible fixed inset-0 z-40 bg-black/40 opacity-0" onClick={() => setMenuOpen(false)} />
+        <div ref={toc.dim} aria-hidden className="invisible fixed inset-0 z-40 bg-ink/40 opacity-0" onClick={() => setMenuOpen(false)} />
         {/* One bar at the foot, the sheet's own when it's open: the list comes out from behind it and goes back there,
             and the bar says «Свернуть». The whole bar toggles the contents (the button's ::before covers it), save the
             quick links standing in it on the first screen. As with the header, the bar's white runs a screen on past
@@ -945,8 +945,8 @@ export default function Guide() {
             opens on a fractional pixel. */}
         {/* A white border as tall as the bar runs on under it, past the screen's bottom, where the page would show through
             under iOS 26 Safari's floating toolbar as it slides. */}
-        <div className="fixed inset-x-0 -bottom-[52px] z-40 border-b-[52px] border-white md:-bottom-[68px] md:border-b-[68px]">
-          <div ref={toc.sheet} inert={!menuOpen || undefined} className={`invisible absolute inset-x-0 bottom-[calc(100%-2px)] flex flex-col overflow-hidden rounded-t-2xl bg-white ${sheetEditor ? 'max-h-[calc(80dvh-52px)] md:max-h-[calc(80dvh-68px)]' : 'h-(--toc-h)'}`}>
+        <div className="fixed inset-x-0 -bottom-[52px] z-40 border-b-[52px] border-paper md:-bottom-[68px] md:border-b-[68px]">
+          <div ref={toc.sheet} inert={!menuOpen || undefined} className={`invisible absolute inset-x-0 bottom-[calc(100%-2px)] flex flex-col overflow-hidden rounded-t-panel bg-paper ${sheetEditor ? 'max-h-[calc(80dvh-52px)] md:max-h-[calc(80dvh-68px)]' : 'h-(--toc-h)'}`}>
             {/* The list's top padding is inside it, so a stuck title is measured from the sheet's edge in every browser. */}
             <div ref={sheetRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 md:px-6">
               {sheetEditor ? (
@@ -963,7 +963,7 @@ export default function Guide() {
               )}
             </div>
           </div>
-          <div ref={toc.bar} className="relative z-10 flex items-start gap-4 bg-white after:pointer-events-none after:absolute after:inset-x-0 after:top-[calc(100%-2px)] after:h-screen after:bg-white after:content-[''] md:gap-6 px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]">
+          <div ref={toc.bar} className="relative z-10 flex items-start gap-4 bg-paper after:pointer-events-none after:absolute after:inset-x-0 after:top-[calc(100%-2px)] after:h-screen after:bg-paper after:content-[''] md:gap-6 px-4 pt-4 pb-[max(16px,env(safe-area-inset-bottom))] text-[16px] font-medium leading-[1.25] tracking-[-0.01em] md:px-6 md:pt-6 md:pb-[max(24px,env(safe-area-inset-bottom))]">
             <button
               type="button"
               onClick={() => { if (!menuOpen) setSheetEditor(false); setMenuOpen(!menuOpen) }}

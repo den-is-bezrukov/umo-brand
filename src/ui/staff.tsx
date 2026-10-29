@@ -444,14 +444,14 @@ export function TableSource<P extends object>({ staff, template }: { staff: Staf
         <label
           {...s.dropTarget}
           className={`flex min-h-[120px] cursor-pointer flex-col items-center justify-center gap-1 rounded-control border border-dashed p-4 text-center text-[14px] leading-5
-            ${s.dragging ? 'border-black bg-surface' : s.tableError ? 'border-[#e30]' : 'border-black/20 hover:border-black/40'}`}
+            ${s.dragging ? 'border-ink bg-surface' : s.tableError ? 'border-error' : 'border-ink/20 hover:border-ink/40'}`}
         >
           <FileInput staff={s} />
           <span className="font-medium break-all">{s.file}</span>
           <span className="text-caption">{s.countWord(s.people.length)} · заменить</span>
         </label>
       )}
-      {s.tableError && <p className="text-[13px] leading-5 text-[#e30]">{s.tableError}</p>}
+      {s.tableError && <p className="text-[13px] leading-5 text-error">{s.tableError}</p>}
       <a href={template} download={name} onClick={e => { e.preventDefault(); downloadTemplate(template, name) }} className={`${outlined} ${s.file ? 'mt-2' : ''}`}>Скачать шаблон таблицы</a>
     </div>
   )
@@ -462,7 +462,7 @@ export function UploadArea<P extends object>({ staff }: { staff: Staff<P> }) {
   const s = staff as unknown as Staff<object>
   return (
     <label className={`flex min-h-[240px] flex-1 cursor-pointer items-center justify-center rounded-control border border-dashed text-[14px] font-medium leading-5
-      ${s.dragging ? 'border-black bg-black/5' : 'border-black/20 hover:border-black/40'}`}>
+      ${s.dragging ? 'border-ink bg-ink/5' : 'border-ink/20 hover:border-ink/40'}`}>
       <FileInput staff={s} />
       {s.uploadLabel}
     </label>
@@ -474,11 +474,11 @@ export function UploadArea<P extends object>({ staff }: { staff: Staff<P> }) {
  * its row (the secondary buttons' edge; not black, too loud for a poster). Inside, so an item as wide as the phone's
  * 480 px sheet hides whole behind it (outside, it shows at the sheet's sides as a line)
  */
-export const ITEM_EDGE = 'outline-1 -outline-offset-1 outline-black/10 group-hover/row:outline-black/40'
+export const ITEM_EDGE = 'outline-1 -outline-offset-1 outline-ink/10 group-hover/row:outline-ink/40'
 /** `ITEM_EDGE` on a layer over the item, for an item whose art is positioned inside it (the price card's poster, the
  * memo's pages), which would cover an edge on the item itself; the item is `relative`. 20% on hover: 40 is harsh round
  * a page this big */
-export const ITEM_EDGE_OVER = "relative after:pointer-events-none after:absolute after:inset-0 after:content-[''] after:outline-1 after:-outline-offset-1 after:outline-black/10 group-hover/row:after:outline-black/20"
+export const ITEM_EDGE_OVER = "relative after:pointer-events-none after:absolute after:inset-0 after:content-[''] after:outline-1 after:-outline-offset-1 after:outline-ink/10 group-hover/row:after:outline-ink/20"
 
 /** ⌘↩ (Ctrl+Enter) adds an item from anywhere, a field too: one card done, the next one (⌘N is the browser's own) */
 export function useAddKey(add: (() => void) | undefined) {
@@ -545,7 +545,7 @@ export function CaptionReset({ onClick, label = 'Сбросить', extra }: { o
           title={label}
           aria-label={label}
           onClick={onClick}
-          className="flex size-[30px] cursor-pointer items-center justify-center rounded-control text-caption hover:text-black"
+          className="flex size-[30px] cursor-pointer items-center justify-center rounded-control text-caption hover:text-ink"
         >
           <ResetIcon />
         </button>
@@ -578,7 +578,7 @@ export function Action({ label, name, keys, hidden, onClick, children }: { label
       aria-keyshortcuts={keys?.replace('⌘', 'Meta+').replace('Ctrl+', 'Control+')}
       // A click here is the action's, not the row's, which would select the item again
       onClick={e => { e.stopPropagation(); onClick() }}
-      className={`flex size-[30px] shrink-0 cursor-pointer items-center justify-center rounded-control text-caption hover:text-black`}
+      className={`flex size-[30px] shrink-0 cursor-pointer items-center justify-center rounded-control text-caption hover:text-ink`}
     >
       {children}
     </button>
@@ -656,7 +656,7 @@ export function ItemFrame<P extends object>({ staff, item, n, label, onAdd, extr
  */
 export function ItemAlert<P extends object>({ staff, item, children }: { staff: Staff<P>; item: number; children: React.ReactNode }) {
   return (
-    <button type="button" onClick={e => { e.stopPropagation(); staff.goTo(item) }} className="cursor-pointer self-center text-center text-[13px] leading-5 text-[#e30]">
+    <button type="button" onClick={e => { e.stopPropagation(); staff.goTo(item) }} className="cursor-pointer self-center text-center text-[13px] leading-5 text-error">
       {children}
     </button>
   )
@@ -675,7 +675,7 @@ export function Removed<P extends object>({ staff, at }: { staff: Staff<P>; at: 
   return (
     <div className="flex h-10 items-center justify-center gap-2 text-[14px] leading-5 text-caption">
       {/* The bin in its ring (1 px, #808080, black on hover), as «Удалить»: a click removes it for good at once */}
-      <button type="button" title="Удалить сразу" aria-label="Удалить сразу" onClick={e => { e.stopPropagation(); staff.dismiss() }} className="relative flex size-[30px] cursor-pointer items-center justify-center rounded-full text-caption hover:text-black">
+      <button type="button" title="Удалить сразу" aria-label="Удалить сразу" onClick={e => { e.stopPropagation(); staff.dismiss() }} className="relative flex size-[30px] cursor-pointer items-center justify-center rounded-full text-caption hover:text-ink">
         <TrashIcon />
         {/* The ring, from the top clockwise, a new one for each removal */}
         <svg key={staff.removed.item.key} width="30" height="30" viewBox="0 0 30 30" aria-hidden className="pointer-events-none absolute inset-0 -rotate-90 motion-reduce:hidden">
@@ -683,7 +683,7 @@ export function Removed<P extends object>({ staff, at }: { staff: Staff<P>; at: 
         </svg>
       </button>
       Удаляем ·
-      <button type="button" title={`${MOD}Z`} onClick={e => { e.stopPropagation(); staff.restore() }} className="cursor-pointer text-black hover:text-caption">Вернуть</button>
+      <button type="button" title={`${MOD}Z`} onClick={e => { e.stopPropagation(); staff.restore() }} className="cursor-pointer text-ink hover:text-caption">Вернуть</button>
     </div>
   )
 }

@@ -315,9 +315,9 @@ export default function PriceTag() {
   if (phone) return <MobileEditor slides={mode === 'table' && !staff.file ? [{ key: 'upload', node: <UploadArea staff={staff} /> }] : items.map((it, i) => ({ key: it.key, item: it.key, label: it.name.replace(/\s+/g, ' ').trim(), ratio: TAG.h / TAG.w, node: renderItem(it, i) }))} onAdd={mode === 'manual' ? addItem : undefined} sidebar={sidebar} download={download} staff={staff} />
 
   return (
-    <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
+    <div className="flex min-h-dvh flex-col bg-paper font-sans text-ink md:h-dvh md:flex-row">
 
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
         {sidebar}
         {download}
       </aside>
@@ -326,7 +326,7 @@ export default function PriceTag() {
         {...staff.dropTarget}
         onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure, [data-add], [data-template]')) staff.setSelected(null) }}
         className={`flex flex-1 flex-col bg-surface px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16
-          ${mode === 'table' && staff.file && staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
+          ${mode === 'table' && staff.file && staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-ink' : ''}`}
       >
         {mode === 'table' && !staff.file ? (
           <UploadArea staff={staff} />
@@ -355,7 +355,7 @@ function PriceField({ value, onChange, invalid }: { value: string; onChange: (v:
     <div className="relative rounded-control bg-surface">
       <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center overflow-hidden px-3 text-[14px] leading-5 whitespace-pre">
         <span className="invisible">{value}</span>
-        <span className="text-[#999]">{tail}</span>
+        <span className="text-hint">{tail}</span>
       </div>
       <TextInput value={value} onChange={v => onChange(formatPrice(v))} placeholder="0 000,00" inputMode="decimal" invalid={invalid} className="relative bg-transparent!" />
     </div>
@@ -371,10 +371,10 @@ function TagArt({ white, text, alert, ghost }: { white?: string; text?: string; 
     <svg viewBox={`0 0 ${TAG.w} ${TAG.h}`} className="block w-full" role="img">
       <rect width={TAG.w} height={TAG.h} fill="#ffffff" />
       <rect width={TAG.w} height={BAND} fill="#000000" />
-      {ghost && <path d={ghost} fill="#a6a6a6" fillRule="evenodd" />}
+      {ghost && <path d={ghost} className="fill-ghost" fillRule="evenodd" />}
       {white && <path d={white} fill="#ffffff" fillRule="evenodd" />}
       {text && <path d={text} fill="#000000" fillRule="evenodd" />}
-      {alert && <path d={alert} fill="#e30" fillRule="evenodd" />}
+      {alert && <path d={alert} className="fill-error" fillRule="evenodd" />}
     </svg>
   )
 }

@@ -59,7 +59,7 @@ function CopyLink({ href, children }: { href: string; children: ReactNode }) {
       {copied
         ? <span className="ml-1 text-caption">Скопировано</span>
         : (
-          <button type="button" title="Скопировать ссылку" aria-label="Скопировать ссылку" onClick={() => navigator.clipboard.writeText(href).then(() => setCopied(true))} className="ml-1 inline-flex cursor-pointer align-[-3px] text-caption hover:text-black">
+          <button type="button" title="Скопировать ссылку" aria-label="Скопировать ссылку" onClick={() => navigator.clipboard.writeText(href).then(() => setCopied(true))} className="ml-1 inline-flex cursor-pointer align-[-3px] text-caption hover:text-ink">
             <LinkIcon />
           </button>
         )}
@@ -355,7 +355,7 @@ function HelpPanel({ page, tabs, onClose, initial = page }: { page: string; tabs
           <nav aria-label="Инструкции" className="flex flex-col items-start gap-4">
             {items.map(i => i.path === tab
               ? <button key={i.path} type="button" aria-current="true" onClick={() => setMenu(false)} className={`${name} cursor-pointer`}>{i.title}</button>
-              : <button key={i.path} type="button" onClick={() => pick(i.path)} className={`${name} cursor-pointer text-[#bfbfbf] hover:text-caption active:text-caption`}>{i.title}</button>)}
+              : <button key={i.path} type="button" onClick={() => pick(i.path)} className={`${name} cursor-pointer text-faint hover:text-caption active:text-caption`}>{i.title}</button>)}
           </nav>
         ) : <>
           {help ? <Generator help={help} /> : GENERAL.map(([q, a]) => <Part key={q} title={q}><p>{a}</p></Part>)}
@@ -391,7 +391,7 @@ export default function HelpButton({ page, tabs }: { page: string; tabs: { path:
         aria-expanded={open}
         aria-label="Инструкция"
         title="Инструкция"
-        className={`relative ml-auto shrink-0 cursor-pointer text-[14px] font-medium leading-4 after:absolute after:-inset-[10px] after:content-[''] ${open ? 'text-black' : 'text-caption hover:text-black'}`}
+        className={`relative ml-auto shrink-0 cursor-pointer text-[14px] font-medium leading-4 after:absolute after:-inset-[10px] after:content-[''] ${open ? 'text-ink' : 'text-caption hover:text-ink'}`}
       >
         ?
       </button>

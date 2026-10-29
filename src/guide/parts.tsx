@@ -23,7 +23,7 @@ export type Medium = { id: string; to: string; title: string; row: string; w: nu
  * `LINK_HOVER` shows it on the link's own hover, rows show it on the row's (`group-hover`).
  */
 export const UNDERLINE = 'underline decoration-transparent decoration-[2.5%] underline-offset-[25%] [text-decoration-skip-ink:none] transition-[text-decoration-color] duration-250 ease-[ease]'
-export const LINK_HOVER = `${UNDERLINE} hover:decoration-black/40 hover:duration-0`
+export const LINK_HOVER = `${UNDERLINE} hover:decoration-ink/40 hover:duration-0`
 
 // ─── Typography ──────────────────────────────────────────────────────────────
 
@@ -87,11 +87,11 @@ export function Caption({ children, cross, download }: { children: ReactNode; cr
       {/* A download's: no ↓ before it, as the rows; ↓ after it, 8 px off, while the picture or caption is pointed at */}
       {download ? (
         <span className="flex-1">
-          <span className={`${UNDERLINE} group-hover:decoration-black/40 group-hover:duration-0`}>{children}</span>
+          <span className={`${UNDERLINE} group-hover:decoration-ink/40 group-hover:duration-0`}>{children}</span>
           <span aria-hidden className="ml-2 hidden font-medium group-hover:inline">↓</span>
         </span>
       ) : <span className="flex-1">{children}</span>}
-      {cross && <span aria-label="нельзя" className="w-4 text-center text-[20px] leading-[1.13] text-[#e30]">×</span>}
+      {cross && <span aria-label="нельзя" className="w-4 text-center text-[20px] leading-[1.13] text-error">×</span>}
     </figcaption>
   )
 }
@@ -278,7 +278,7 @@ export function Assets({ items, preview, early, bare }: { items: Asset[]; previe
         const lit = pointed !== undefined && pointed === ('to' in a ? a.to : a.file)
         // Underlined while pointed at itself, as a format is, or while its picture is, which this row stands for (the row
         // pointed at elsewhere shows the arrow after it)
-        const name = `min-w-0 flex-1 font-medium ${UNDERLINE} hover:decoration-black/40 hover:duration-0 ${linked ? 'group-has-[[data-preview]:hover]/preview:decoration-black/40 group-has-[[data-preview]:hover]/preview:duration-0' : ''} ${lit ? 'decoration-black/40 duration-0' : ''}`
+        const name = `min-w-0 flex-1 font-medium ${UNDERLINE} hover:decoration-ink/40 hover:duration-0 ${linked ? 'group-has-[[data-preview]:hover]/preview:decoration-ink/40 group-has-[[data-preview]:hover]/preview:duration-0' : ''} ${lit ? 'decoration-ink/40 duration-0' : ''}`
         // The name with the arrow after it, 8 px off, shown while what it stands for is pointed at (`show`: the classes
         // that show it; the font's ↗ and ↓)
         const named = (text: ReactNode, show: string, arrow = '↓') => (
@@ -290,8 +290,8 @@ export function Assets({ items, preview, early, bare }: { items: Asset[]; previe
         // The row's own link pointed at, or its picture
         const pointedRow = `group-hover:inline ${linked ? 'group-has-[[data-preview]:hover]/preview:inline' : ''} ${lit ? 'inline' : ''}`
         // A format pointed at itself is underlined as the name is, the link it stands for
-        const format = `${UNDERLINE} hover:decoration-black/40 hover:duration-0`
-        const meta = `shrink-0 text-caption [font-feature-settings:"tnum"_1] group-hover:text-black ${linked ? 'group-has-[[data-preview]:hover]/preview:text-black' : ''} ${lit ? 'text-black' : ''}`
+        const format = `${UNDERLINE} hover:decoration-ink/40 hover:duration-0`
+        const meta = `shrink-0 text-caption [font-feature-settings:"tnum"_1] group-hover:text-ink ${linked ? 'group-has-[[data-preview]:hover]/preview:text-ink' : ''} ${lit ? 'text-ink' : ''}`
         if ('to' in a && a.template) {
           const tpl = a.template
           return (
@@ -308,8 +308,8 @@ export function Assets({ items, preview, early, bare }: { items: Asset[]; previe
                 </span>
                 {a.verb && <span className={`${meta} ${format}`}>{a.verb}</span>}
               </Link>
-              <a href={tpl.t} target="_blank" rel="noopener" data-format title={`Скачать ${formatOf(tpl)}`} aria-label={`${a.title}, шаблон ${formatOf(tpl)}`} className="group/format flex shrink-0 items-center pl-3 text-[16px] leading-none tracking-[-0.01em] text-caption hover:text-black">
-                <span className={`${UNDERLINE} group-hover/format:decoration-black/40 group-hover/format:duration-0`}>{formatOf(tpl)}</span>
+              <a href={tpl.t} target="_blank" rel="noopener" data-format title={`Скачать ${formatOf(tpl)}`} aria-label={`${a.title}, шаблон ${formatOf(tpl)}`} className="group/format flex shrink-0 items-center pl-3 text-[16px] leading-none tracking-[-0.01em] text-caption hover:text-ink">
+                <span className={`${UNDERLINE} group-hover/format:decoration-ink/40 group-hover/format:duration-0`}>{formatOf(tpl)}</span>
               </a>
             </div>
           )
@@ -341,8 +341,8 @@ export function Assets({ items, preview, early, bare }: { items: Asset[]; previe
                 <span className={`${meta} ${format}`}>{formatOf(a)}</span>
               </a>
               {a.also.map(f => (
-                <a key={f.file} href={`/downloads/${f.file}`} download data-format title={`Скачать ${formatOf(f)}`} aria-label={`${a.label ?? a.file}, ${formatOf(f)}`} className="flex shrink-0 items-center pl-3 text-[16px] leading-none tracking-[-0.01em] text-caption [font-feature-settings:'tnum'_1] hover:text-black group/format">
-                  <span className={`${UNDERLINE} group-hover/format:decoration-black/40 group-hover/format:duration-0`}>{formatOf(f)}</span>
+                <a key={f.file} href={`/downloads/${f.file}`} download data-format title={`Скачать ${formatOf(f)}`} aria-label={`${a.label ?? a.file}, ${formatOf(f)}`} className="flex shrink-0 items-center pl-3 text-[16px] leading-none tracking-[-0.01em] text-caption [font-feature-settings:'tnum'_1] hover:text-ink group/format">
+                  <span className={`${UNDERLINE} group-hover/format:decoration-ink/40 group-hover/format:duration-0`}>{formatOf(f)}</span>
                 </a>
               ))}
             </div>
@@ -415,7 +415,7 @@ export function Zoom({ label, children }: { label: string; children: ReactNode }
         {children}
       </button>
       {open && (
-        <div role="dialog" aria-label={label} onClick={() => setOpen(false)} className="fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-white p-4 md:p-12">
+        <div role="dialog" aria-label={label} onClick={() => setOpen(false)} className="fixed inset-0 z-50 flex cursor-zoom-out items-center justify-center bg-paper p-4 md:p-12">
           <div className="w-[min(100%,calc((100dvh-2rem)*4/3))] md:w-[min(100%,calc((100dvh-6rem)*4/3))]">{children}</div>
         </div>
       )}
@@ -444,7 +444,7 @@ export type Rule = { good: ReactNode; bad: ReactNode; why: string }
  */
 export function Bubble({ title, children }: { title?: ReactNode; children?: ReactNode }) {
   return (
-    <div className="flex flex-col gap-2 rounded-tr-2xl rounded-b-2xl bg-surface p-4 leading-[1.25]">
+    <div className="flex flex-col gap-2 rounded-tr-panel rounded-b-panel bg-surface p-4 leading-[1.25]">
       {title && <p className="text-[20px] font-medium tracking-[-0.01em]">{title}</p>}
       {children && <p className="text-[16px]">{children}</p>}
     </div>
@@ -455,7 +455,7 @@ export function Bubble({ title, children }: { title?: ReactNode; children?: Reac
 export function PhotoCard({ name, title, children, grow, focus }: { name: string; title: ReactNode; children?: ReactNode; grow?: boolean; focus?: number }) {
   return (
     // 4:3 on phones, to save the one column's height; 3:4 from md, as in Figma. Shaped as the bubbles, a message too
-    <div className={`relative aspect-4/3 overflow-hidden rounded-tr-2xl rounded-b-2xl bg-surface sm:aspect-3/4 ${grow ? 'sm:aspect-auto sm:min-h-0 sm:flex-1' : ''}`}>
+    <div className={`relative aspect-4/3 overflow-hidden rounded-tr-panel rounded-b-panel bg-surface sm:aspect-3/4 ${grow ? 'sm:aspect-auto sm:min-h-0 sm:flex-1' : ''}`}>
       <img src={img(name)} alt="" loading="lazy" decoding="async" className="absolute inset-0 size-full object-cover sm:object-center!" style={focus !== undefined ? { objectPosition: `50% ${focus}%` } : undefined} />
       <div className="absolute inset-x-4 top-4 flex flex-col gap-2 leading-[1.25] text-white">
         {/* A line alone over a photo is 240 wide, as in Figma, so it breaks the same way on any card */}
@@ -486,7 +486,7 @@ export function Dictionary({ rows }: { rows: Rule[] }) {
         <div key={i} className={`grid grid-cols-1 ${cols} gap-x-6 gap-y-2 border-t border-line py-4`}>
           <p className="font-medium"><span className="md:hidden">✓&nbsp;</span>{list(row.good)}</p>
           <p><span className="md:hidden">✗&nbsp;</span>{list(row.bad)}</p>
-          <p className="text-caption md:text-black">{row.why}</p>
+          <p className="text-caption md:text-ink">{row.why}</p>
         </div>
       ))}
     </div>

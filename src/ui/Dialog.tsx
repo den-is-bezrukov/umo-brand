@@ -24,7 +24,7 @@ export default function Dialog({ title, onClose, width = 360, head, children }: 
     return () => { window.removeEventListener('keydown', onKey); document.documentElement.style.overflow = overflow }
   }, [onClose])
   return createPortal(
-    <div data-dim className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain bg-black/40 p-4 font-sans md:p-16" onClick={onClose}>
+    <div data-dim className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto overscroll-contain bg-ink/40 p-4 font-sans md:p-16" onClick={onClose}>
       <div
         ref={ref}
         role="dialog"
@@ -33,7 +33,7 @@ export default function Dialog({ title, onClose, width = 360, head, children }: 
         tabIndex={-1}
         onClick={e => e.stopPropagation()}
         style={{ maxWidth: width }}
-        className="my-auto flex w-full flex-col gap-6 rounded-2xl bg-white p-6 text-black outline-none"
+        className="my-auto flex w-full flex-col gap-6 rounded-panel bg-paper p-6 text-ink outline-none"
       >
         <div className="flex flex-col gap-6">
           <div className="flex items-start justify-between gap-4">

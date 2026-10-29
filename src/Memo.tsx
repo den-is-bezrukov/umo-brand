@@ -89,9 +89,9 @@ function Sheet({ src, text, alert, ghost }: { src: string; text?: string; alert?
       <img src={src} alt="" className="block w-full" style={{ aspectRatio: `${PAGE.w} / ${PAGE.h}` }} draggable={false} />
       {(text || alert || ghost) && (
         <svg viewBox={`0 0 ${PAGE.w} ${PAGE.h}`} className="absolute inset-0 block size-full" aria-hidden>
-          {ghost && <path d={ghost} fill="#a6a6a6" />}
+          {ghost && <path d={ghost} className="fill-ghost" />}
           {text && <path d={text} fill="#000" />}
-          {alert && <path d={alert} fill="#e30" />}
+          {alert && <path d={alert} className="fill-error" />}
         </svg>
       )}
     </div>
@@ -490,15 +490,15 @@ export default function Memo() {
     />
   )
 
-  const first = <div className="outline-1 outline-black/10"><Sheet src={page1} /></div>
+  const first = <div className="outline-1 outline-ink/10"><Sheet src={page1} /></div>
 
 
   if (templateOnly) return null
   if (phone) return <MobileEditor slides={[{ key: 'first', number: 0, label: 'Первый лист', ratio: PAGE.h / PAGE.w, node: first }, ...items.map((p, i) => ({ key: p.key, item: p.key, number: i + 1, label: `${p.name} ${p.surname}`.replace(/\s+/g, ' ').trim() || 'Второй лист', ratio: PAGE.h / PAGE.w, node: renderItem(p, i) }))]} onAdd={addItem} sidebar={sidebar} download={download} staff={staff} />
 
   return (
-    <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+    <div className="flex min-h-dvh flex-col bg-paper font-sans text-ink md:h-dvh md:flex-row">
+      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
         {sidebar}
         {download}
       </aside>
@@ -506,7 +506,7 @@ export default function Memo() {
         ref={setCanvas}
         {...staff.dropTarget}
         onClick={e => { if (!(e.target as Element).closest('figure, [data-add], [data-template]')) staff.setSelected(null) }}
-        className={`flex flex-1 flex-col bg-surface px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16 ${staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-black' : ''}`}
+        className={`flex flex-1 flex-col bg-surface px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16 ${staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-ink' : ''}`}
       >
         <div className="m-auto grid w-full grid-cols-1 gap-8">
           {items.map((p, i) => renderItem(p, i))}

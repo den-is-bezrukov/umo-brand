@@ -113,16 +113,16 @@ function TimeField({ value, onChange, onCommit, placeholder, invalid, label, min
     const next = dir > 0 ? Math.floor(now / STEP) * STEP + STEP : Math.ceil(now / STEP) * STEP - STEP
     onCommit(timeOf(Math.max(min, Math.min(max, next))))
   }
-  const button = 'flex w-9 shrink-0 cursor-pointer items-center justify-center rounded-control text-caption hover:text-black'
+  const button = 'flex w-9 shrink-0 cursor-pointer items-center justify-center rounded-control text-caption hover:text-ink'
   return (
-    <div className="flex h-10 in-[[data-sheet]]:h-12! rounded-control bg-surface focus-within:ring-1 focus-within:ring-inset focus-within:ring-black/40">
+    <div className="flex h-10 in-[[data-sheet]]:h-12! rounded-control bg-surface focus-within:ring-1 focus-within:ring-inset focus-within:ring-ink/40">
       <button type="button" tabIndex={-1} onClick={() => step(-1)} aria-label={`${label}: на полчаса раньше`} className={button}><StepIcon /></button>
       {/* The typed time over a copy of it with the rest of «9:00» grey after it, so the colon always shows: the copy
           sizes the box, centred, and the input lies over it */}
       <label className="flex min-w-0 flex-1 cursor-text items-center justify-center text-[14px] leading-5 [font-variant-numeric:lining-nums_tabular-nums]">
         <span className="relative whitespace-pre">
           <span aria-hidden className="text-transparent">{value}</span>
-          <span aria-hidden className="text-[#999]">{value ? tailOf(value) : placeholder}</span>
+          <span aria-hidden className="text-hint">{value ? tailOf(value) : placeholder}</span>
           <input
         value={value}
         onChange={e => onChange(maskTime(e.target.value))}
@@ -134,7 +134,7 @@ function TimeField({ value, onChange, onCommit, placeholder, invalid, label, min
         inputMode="decimal"
         aria-label={label}
         aria-invalid={invalid || undefined}
-        className="absolute inset-y-0 left-0 w-[calc(100%+2px)] bg-transparent p-0 text-black outline-none"
+        className="absolute inset-y-0 left-0 w-[calc(100%+2px)] bg-transparent p-0 text-ink outline-none"
       />
         </span>
       </label>
@@ -143,8 +143,8 @@ function TimeField({ value, onChange, onCommit, placeholder, invalid, label, min
   )
 }
 
-const GHOST = '#a6a6a6'
-const ALERT = '#e30'
+const GHOST = 'var(--color-ghost)'
+const ALERT = 'var(--color-error)'
 
 export default function HoursSign() {
   const [link] = useState(linkParams)
@@ -333,7 +333,7 @@ export default function HoursSign() {
               canvas shrinks the sign whole: a fixed height with the width capped stretched its box past the sheet */}
           <svg viewBox={`0 0 ${SIGN.w} ${SIGN.h}`} style={{ '--ratio': SIGN.w / SIGN.h, background: dark ? '#000' : '#fff' } as React.CSSProperties} className="block h-auto w-full max-w-[480px] md:w-[min(100%,calc((100dvh-128px-30px)*var(--ratio)))] md:max-w-none" role="img" aria-label="Режимник">
             <path d={toD(signLogo(variant))} fill={ink} fillRule="evenodd" />
-            {[...byFill].map(([color, d]) => <path key={color} d={d} fill={color} />)}
+            {[...byFill].map(([color, d]) => <path key={color} d={d} style={{ fill: color }} />)}
           </svg>
           <figcaption className="mt-0.5 text-center text-[14px] leading-5 text-caption">
             <span className="relative">
@@ -342,7 +342,7 @@ export default function HoursSign() {
             </span>
           </figcaption>
           {/* A warning in red, as the generators' faults under their pictures, but the download stays on, as a short day can be meant (a holiday) */}
-          {short && <p className="text-center text-[14px] leading-5 text-[#e30]">День короче 8&nbsp;часов&nbsp;— проверьте время</p>}
+          {short && <p className="text-center text-[14px] leading-5 text-error">День короче 8&nbsp;часов&nbsp;— проверьте время</p>}
         </figure>
     </>
   )
@@ -423,10 +423,10 @@ export default function HoursSign() {
     <div
       onDragOver={e => e.preventDefault()}
       onDrop={e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f) openFile(f) }}
-      className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row"
+      className="flex min-h-dvh flex-col bg-paper font-sans text-ink md:h-dvh md:flex-row"
     >
 
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
         {sidebar}
         {download}
       </aside>

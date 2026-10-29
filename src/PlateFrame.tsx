@@ -24,7 +24,7 @@ import { SITE } from '@/site'
 const PREFIX = `${SITE.name} `
 /** The name field's placeholder, standing grey on the frame while it's empty; never in the PDF */
 const PLACEHOLDER_NAME = 'Центр'
-const GHOST = '#808080'
+const GHOST = 'var(--color-caption)'
 /** The dealers' names for the suggestions, without the fixed brand's name */
 const NAMES = DEALER_NAMES.map(withoutBrand)
 const PLACEHOLDER_TEXT = NAMES.length ? PREFIX + PLACEHOLDER_NAME : new URL(SITE.home).host
@@ -137,7 +137,7 @@ export default function PlateFrame() {
           <div>
             <PlateArt>
               {/* Empty, the placeholder grey, the fixed brand's name white over it */}
-              {strip && <path d={toD(strip.cmds)} fill={noName ? GHOST : wrong ? RED : 'white'} />}
+              {strip && <path d={toD(strip.cmds)} style={{ fill: noName ? GHOST : wrong ? RED : 'white' }} />}
               {strip && noName && start && <path d={toD(start.cmds)} fill="white" />}
             </PlateArt>
           </div>
@@ -149,7 +149,7 @@ export default function PlateFrame() {
             </span>
           </figcaption>
           {wrong && (
-            <ul className="text-center text-[13px] leading-5 text-[#e30]">
+            <ul className="text-center text-[13px] leading-5 text-error">
               {strip.issues.map(t => <li key={t}>{t}</li>)}
             </ul>
           )}
@@ -206,9 +206,9 @@ export default function PlateFrame() {
   if (phone) return <MobileEditor slides={[{ key: 'frame', label: 'Поле печати', node: preview, reset: blank ? undefined : { onClick: reset, label: 'Вернуть рамку по умолчанию' } }]} sidebar={sidebar} download={download} />
 
   return (
-    <div className="flex min-h-dvh flex-col bg-white font-sans text-black md:h-dvh md:flex-row">
+    <div className="flex min-h-dvh flex-col bg-paper font-sans text-ink md:h-dvh md:flex-row">
 
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-black/10">
+      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
         {sidebar}
         {download}
       </aside>

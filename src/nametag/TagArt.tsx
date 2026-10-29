@@ -12,9 +12,9 @@ export default function TagArt({ text, alert, ghost }: { text?: string; alert?: 
     <svg viewBox={`0 0 ${w} ${h}`} className="block w-full" role="img">
       <rect width={w} height={h} rx={r} fill="#ffffff" />
       <path d={LOGO} fill={INK} />
-      {ghost && <path d={ghost} fill="#a6a6a6" />}
+      {ghost && <path d={ghost} className="fill-ghost" />}
       {text && <path d={text} fill={INK} />}
-      {alert && <path d={alert} fill="#e30" />}
+      {alert && <path d={alert} className="fill-error" />}
     </svg>
   )
 }
