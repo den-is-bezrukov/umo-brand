@@ -21,9 +21,18 @@
   src: url('/fonts/Inter-Medium.woff2') format('woff2');
 }
 
-/* The editor's type (`src/index.css`): Inter, as the guide's */
+/* The editor's type (`src/index.css`): Suisse Int'l Book, as Figma's «Editor Livery» sets it (Evrone's file, its one
+   weight, for every weight asked, so Medium is Book rather than a faux bold); the guide and the files stay in Inter */
+@font-face {
+  font-family: "Suisse Int'l";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/SuisseIntl-Book.woff2') format('woff2');
+}
+
 :root {
-  --font-editor: 'Inter', sans-serif;
+  --font-editor: "Suisse Int'l", sans-serif;
 }
 
 @theme {

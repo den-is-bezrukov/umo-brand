@@ -21,8 +21,8 @@ the branch's name on the business card.
 - The editor, dark, as Figma's «Editor Livery» (27:414) draws it (`editor.css`): a black page, a 360 px sidebar of white at 8%
   cut into blocks by black lines, 24 px round; the head the Latin logo (Lang=Latin, 45:1118, `icons/logo-latin.svg`) and
   a dotted plus for every generator over the open one's name, 32 px; labels 14 px at 40%, values 16 px white on nothing,
-  choices as words, a part left out a dotted plus or cross (`icons/`), pill buttons, the download white. Figma sets it in
-  Suisse Int'l; here Inter. On a phone the core's layout in these colours.
+  choices as words, a part left out a dotted plus or cross (`icons/`), pill buttons, the download white. Set in Suisse Int'l Book,
+  Evrone's file (the one weight there is; Figma's Medium reads as Book); the guide and the files stay in Inter. On a phone the core's layout in these colours.
 - The guide: the first screen (Первый экран · hero, an Unsplash photo) and the logo (Логотип · logo), 1824 px WebP.
 - The site's settings are placeholders until it has a home: `composter.example`.
 

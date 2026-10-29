@@ -4,8 +4,8 @@
    white at 40%, its value 16 px white on nothing; choices as words, the picked one white, the rest at 20%; a part that
    can be left out a dotted plus (off) or cross (on) at the row's end; pill buttons, the download white. The colours are
    the core's tokens set for the editor alone (`:root[data-editor]`), the rest restyles the core's named parts
-   (`data-ui`, docs/brand.md), on wide screens only: on a phone the core's layout in these colours. Figma sets it in
-   Suisse Int'l, the editor's name in Suisse Int'l Mono; here Inter, the brand's free type. */
+   (`data-ui`, docs/brand.md), on wide screens only: on a phone the core's layout in these colours. Set in Suisse Int'l, as
+   Figma (`theme.css`'s `--font-editor`; Book only, so its Medium reads as Book). */
 
 :root[data-editor] {
   --color-ink: #fff;
@@ -33,6 +33,13 @@
     width: 360px;
     background: var(--panel);
     border-right: 0;
+  }
+  /* It scrolls with no bar showing */
+  :root[data-editor] [data-ui='sidebar'] {
+    scrollbar-width: none;
+  }
+  :root[data-editor] [data-ui='sidebar']::-webkit-scrollbar {
+    display: none;
   }
   :root[data-editor] [data-ui='sidebar'] * {
     letter-spacing: 0;
