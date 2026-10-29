@@ -87,6 +87,13 @@
   :root[data-editor] [data-ui='head-menu']:hover {
     color: #fff;
   }
+  /* The list open: the plus a cross, and no line under the head */
+  :root[data-editor][data-menu] [data-ui='head-menu'] {
+    mask-image: url('./icons/cross.svg');
+  }
+  :root[data-editor][data-menu] [data-head] {
+    border-bottom: 0;
+  }
   :root[data-editor] [data-ui='head-menu'] svg {
     display: none;
   }
