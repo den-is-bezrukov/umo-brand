@@ -189,8 +189,8 @@
     display: none;
   }
 
-  /* The list (Figma 57:493): under its block, the sidebar's width, darker than it, a black line and a deep shadow under
-     it; options 16 px 24 apart at 40%, the pointed and the picked one white, the picked one with dots pointing at it */
+  /* The list (Figma 57:493): under its block, the sidebar's width and colour, so it goes on from its field, a black line
+     and a deep shadow under it; options 16 px 24 apart at 40%, the pointed and the picked one white, the picked one with dots pointing at it */
   :root[data-editor] [data-ui='list']:popover-open {
     display: flex;
     flex-direction: column;
@@ -199,7 +199,7 @@
     padding: 0 24px 24px;
     border-radius: 0;
     border-bottom: 1px solid #000;
-    background: #0d0d0d;
+    background: var(--panel);
     box-shadow: none;
     filter: drop-shadow(0 20px 10px rgb(0 0 0 / 0.8));
     font-size: 16px;
