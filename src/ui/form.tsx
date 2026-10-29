@@ -396,6 +396,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
         popover="manual"
         role="listbox"
         aria-label={label}
+        data-ui="list"
         onMouseDown={e => e.preventDefault()}
         // White, 2 px inside its edge, a soft shadow and no line; rows 8 px round, the pointed one grey, the picked one
         // medium with a tick
@@ -417,10 +418,12 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
             aria-selected={t === hit}
             onMouseEnter={() => setActive(i)}
             onClick={() => pick(t)}
+            data-ui="option"
+            data-active={i === active || undefined}
             className={`flex cursor-pointer items-start gap-2 rounded-control px-3 py-[10px] ${i === active ? 'bg-surface' : ''} ${t === hit ? 'font-medium' : ''}`}
           >
             <span className="min-w-0 flex-1">{shownAs(t).replace('\n', ' ')}</span>
-            {t === hit && <span className="flex h-5 w-4 shrink-0 items-center justify-center"><Tick /></span>}
+            {t === hit && <span data-ui="picked" className="flex h-5 w-4 shrink-0 items-center justify-center"><Tick /></span>}
           </div>
         ))}
       </div>

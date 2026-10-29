@@ -189,6 +189,53 @@
     display: none;
   }
 
+  /* The list (Figma 57:493): under its block, the sidebar's width, darker than it, a black line and a deep shadow under
+     it; options 16 px 24 apart at 40%, the pointed and the picked one white, the picked one with dots pointing at it */
+  :root[data-editor] [data-ui='list']:popover-open {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+    max-height: 352px;
+    padding: 0 24px 24px;
+    border-radius: 0;
+    border-bottom: 1px solid #000;
+    background: #0d0d0d;
+    box-shadow: none;
+    filter: drop-shadow(0 20px 10px rgb(0 0 0 / 0.8));
+    font-size: 16px;
+    line-height: 16px;
+    scrollbar-width: none;
+  }
+  /* From the block's edges: the field sits 24 px inside them */
+  @supports (anchor-name: --a) {
+    :root[data-editor] [data-ui='list'] {
+      top: calc(anchor(bottom) + 24px) !important;
+      left: calc(anchor(left) - 24px) !important;
+      width: calc(anchor-size(width) + 48px) !important;
+    }
+  }
+  :root[data-editor] [data-ui='option'] {
+    flex: none;
+    gap: 8px;
+    padding: 0;
+    border-radius: 0;
+    background: none;
+    font-weight: 400;
+    color: var(--color-caption);
+  }
+  :root[data-editor] [data-ui='option']:is([data-active], [aria-selected='true']) {
+    color: #fff;
+  }
+  :root[data-editor] [data-ui='picked'] {
+    width: 16px;
+    height: 16px;
+    background: currentColor;
+    mask: url('./icons/picked.svg') center / 16px no-repeat;
+  }
+  :root[data-editor] [data-ui='picked'] svg {
+    display: none;
+  }
+
   /* Choices as words: the picked one white, the rest at 20% */
   :root[data-editor] [data-ui='segments'] {
     gap: 16px;
