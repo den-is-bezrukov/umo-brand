@@ -493,7 +493,7 @@ export function UrlField({ value, onChange }: { value: string; onChange: (v: str
       {/* On the first line, however many lines the link takes */}
       <div className="pointer-events-none absolute top-0 right-0 flex h-10 in-[[data-sheet]]:h-12! w-9 items-center justify-center">
         {valid ? (
-          <span role="img" aria-label="Ссылка в порядке"><Tick className="stroke-success" /></span>
+          <span role="img" aria-label="Ссылка в порядке" data-ui="valid"><Tick className="stroke-success" /></span>
         ) : error ? (
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-label="Проверьте ссылку">
             <circle cx="7" cy="7" r="6" className="stroke-error" strokeWidth="1.4" />

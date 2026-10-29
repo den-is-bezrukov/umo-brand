@@ -179,6 +179,11 @@
     color: #fff;
   }
 
+  /* No tick for a link that's right: only a wrong one is said */
+  :root[data-editor] [data-ui='valid'] {
+    display: none;
+  }
+
   /* Choices as words: the picked one white, the rest at 20% */
   :root[data-editor] [data-ui='segments'] {
     gap: 16px;
