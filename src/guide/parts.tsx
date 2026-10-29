@@ -5,7 +5,7 @@ import Wordmark from '@brand/Wordmark'
 import { images } from '@brand/guide/images'
 import { editTitle } from '@/data/generators'
 import { SITE } from '@/site'
-import { modelOf } from '@/data/models'
+import { productOf } from '@/data/products'
 
 // The guide's building blocks: a chapter and its sections, text, figures, the download rows, the colour tiles, the
 // dictionary. The core's; the brand's guide (`@brand/guide`) is written with them.
@@ -225,7 +225,7 @@ export function PriceCardPreview({ model, trim, alt }: { model: string; trim: st
     Promise.all([import('@/pricecard/card'), import('@/pricecard/CardArt'), import('@/ui/type')])
       .then(([c, a, t]) => Promise.all([t.loadFonts(), c.loadRunFonts()]).then(([fonts, runs]) => {
         const data = c.trimOf(model, trim)
-        const art = c.buildCard({ ...fonts, runs }, { model, trim, full: data.full, legal: data.legal, url: modelOf(model).page })
+        const art = c.buildCard({ ...fonts, runs }, { model, trim, full: data.full, legal: data.legal, url: productOf(model).page })
         if (on) setCard({ art, Draw: a.default })
       }))
     return () => { on = false }

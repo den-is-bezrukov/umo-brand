@@ -6,18 +6,19 @@ import { useStaff, ItemFrame, useAddKey, Removed, plain, ITEM_EDGE_OVER, type Ro
 import { MobileEditor, usePhone } from '@/ui/mobile'
 import { TemplateButton, useTemplateLink } from '@/ui/template'
 import { loadFonts } from '@/ui/type'
-import { CARD, TRIMS as CARD_TRIMS, buildCard, loadRunFonts, trimOf, type CardFonts, type Model, type Trim } from '@/pricecard/card'
-import { MODELS, DEFAULT_MODEL, modelFrom, modelOf, fileName } from '@/data/models'
+import { CARD, TRIMS as CARD_TRIMS, buildCard, loadRunFonts, trimOf, type CardFonts, type Product, type Trim } from '@/pricecard/card'
+import { PRODUCTS, DEFAULT_PRODUCT, productFrom, productOf, fileName } from '@/data/products'
+import { WORDS } from '@brand/words'
 import CardArt from '@/pricecard/CardArt'
 import { SITE } from '@/site'
 
 const POSTER_W = CARD.w
 const POSTER_H = CARD.h
 /** The QR leads to the model's own page unless another link is set */
-const DEFAULT_URL: Record<Model, string> = Object.fromEntries(MODELS.map(m => [m.id, m.page]))
+const DEFAULT_URL: Record<Product, string> = Object.fromEntries(PRODUCTS.map(m => [m.id, m.page]))
 
 /** Each model's trims' ids, the first its default */
-const TRIMS: Record<Model, Trim[]> = Object.fromEntries(MODELS.map(m => [m.id, CARD_TRIMS[m.id].map(t => t.id)]))
+const TRIMS: Record<Product, Trim[]> = Object.fromEntries(PRODUCTS.map(m => [m.id, CARD_TRIMS[m.id].map(t => t.id)]))
 
 const MAX_PRICE = 9_999_999
 
@@ -34,7 +35,7 @@ const priceNum = (s: string) => Number(s.replace(/\D/g, '')) || 0
  * trim's, fixed (`TRIMS` in card.ts); the full cost is the point's, the trim's price with what equipment they add
  */
 interface Card {
-  model: Model
+  model: Product
   trim: Trim
   /** The full cost; it follows the trim until edited */
   full: string
@@ -46,7 +47,7 @@ interface Card {
 }
 
 /** A model's card as it comes: its first trim, its fine print, the QR to the model's page */
-function defaultCard(model: Model): Card {
+function defaultCard(model: Product): Card {
   const trim = TRIMS[model][0]
   return { model, trim, full: trimOf(model, trim).full, fullSet: false, legal: trimOf(model, trim).legal, legalSet: false, url: DEFAULT_URL[model] }
 }
@@ -66,7 +67,7 @@ function fromLink(): Card[] {
   const count = Math.min(Math.max(Number(link.get('cards')) || 1, 1), MAX_CARDS)
   return Array.from({ length: count }, (_, i) => {
     const n = i === 0 ? '' : String(i + 1)
-    const model: Model = modelFrom(link.get(`model${n}`))
+    const model: Product = productFrom(link.get(`model${n}`))
     const asked = link.get(`trim${n}`) as Trim | null
     const trim = asked && TRIMS[model].includes(asked) ? asked : TRIMS[model][0]
     const legal = link.get(`legal${n}`)
@@ -110,14 +111,14 @@ async function pdfOf(cards: Card[], name = pdfName(cards)) {
 }
 
 /** A trim's card as it comes, the QR to the model's page */
-const defaultOf = (model: Model, trim: Trim): Card => ({ ...defaultCard(model), trim, full: trimOf(model, trim).full, legal: trimOf(model, trim).legal })
+const defaultOf = (model: Product, trim: Trim): Card => ({ ...defaultCard(model), trim, full: trimOf(model, trim).full, legal: trimOf(model, trim).legal })
 
 /**
  * What the guide's PDF link (`?t`) gives: every model's every trim as it comes, the first model first, an A3 page each, ready to
  * print (the card's own file stays in its column)
  */
 const DEFAULTS_FILE = `${SITE.file}_price-cards.pdf`
-const allDefaults = () => MODELS.flatMap(m => TRIMS[m.id].map(trim => defaultOf(m.id, trim)))
+const allDefaults = () => PRODUCTS.flatMap(m => TRIMS[m.id].map(trim => defaultOf(m.id, trim)))
 const defaultsPdf = () => pdfOf(allDefaults(), DEFAULTS_FILE)
 
 function downloadGoal(cards: Card[], extra?: Record<string, unknown>) {
@@ -155,7 +156,7 @@ export default function App() {
   }, [])
   // The cards are a list as the business cards are: one selected and edited in the sidebar, each with its number and
   // actions beside it, «Добавить» under them. There's no table mode, and one card is always selected
-  const staff = useStaff<Card>({ blank: defaultCard(DEFAULT_MODEL), readFile: () => [], readPasted: () => [], initial })
+  const staff = useStaff<Card>({ blank: defaultCard(DEFAULT_PRODUCT), readFile: () => [], readPasted: () => [], initial })
   const { items, update } = staff
   const card: Row<Card> = staff.current ?? items[0]
   const set = (patch: Partial<Card>) => update(card.key, patch)
@@ -167,7 +168,7 @@ export default function App() {
     isBlank: (c: Card) => sameCard(c, defaultCard(c.model)),
   }
 
-  const switchModel = (m: Model) => {
+  const switchModel = (m: Product) => {
     // The link follows the model while it's still the old model's own page; the fine print is the model's own (one may
     // have its credit terms), edited or not
     const url = card.url.trim() === DEFAULT_URL[card.model] ? DEFAULT_URL[m] : card.url
@@ -188,7 +189,7 @@ export default function App() {
       const n = i === 0 ? '' : String(i + 1)
       return [
         // The first model by default, so a link without `model` opens it
-        [`model${n}`, c.model === DEFAULT_MODEL ? null : c.model],
+        [`model${n}`, c.model === DEFAULT_PRODUCT ? null : c.model],
         [`trim${n}`, c.trim === TRIMS[c.model][0] ? null : c.trim],
         [`full${n}`, c.fullSet ? c.full.replace(/\D/g, '') : null],
         [`legal${n}`, c.legalSet ? c.legal : null],
@@ -258,15 +259,15 @@ export default function App() {
         <div data-ui="sidebar-body" className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
           <GeneratorHeader current="/price-card" />
 
-          {/* Model and trim side by side while each is 180 px or wider, else one under the other across the row */}
+          {/* Product and trim side by side while each is 180 px or wider, else one under the other across the row */}
           <div ref={form} className="grid grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-x-3 gap-y-4 md:grid-cols-1 tracking-normal">
-            <Field label="Модель">
+            <Field label={WORDS.product.one}>
               <Segments>
-                {MODELS.map(m => <SegBtn key={m.id} active={card.model === m.id} onClick={() => switchModel(m.id)}>{m.name}</SegBtn>)}
+                {PRODUCTS.map(m => <SegBtn key={m.id} active={card.model === m.id} onClick={() => switchModel(m.id)}>{m.name}</SegBtn>)}
               </Segments>
             </Field>
 
-            <Field label="Комплектация">
+            <Field label={WORDS.product.variant}>
               <Segments>
                 {trimOptions.map(t => (
                   <SegBtn key={t.value} active={card.trim === t.value} onClick={() => switchTrim(t.value)}>{t.label}</SegBtn>
@@ -335,7 +336,7 @@ export default function App() {
   const templateOnly = useTemplateLink(defaultsPdf, DEFAULTS_FILE, 'download_price_card_template')
 
   if (pdfOnly || templateOnly) return null
-  if (phone) return <MobileEditor slides={items.map(c => ({ key: c.key, item: c.key, label: `${modelOf(c.model).name} ${c.trim.toUpperCase()}`, ratio: POSTER_H / POSTER_W, node: (w: number) => cardAt(c, w) }))} staff={frame} onAdd={addCard} sidebar={sidebar} download={download} />
+  if (phone) return <MobileEditor slides={items.map(c => ({ key: c.key, item: c.key, label: `${productOf(c.model).name} ${c.trim.toUpperCase()}`, ratio: POSTER_H / POSTER_W, node: (w: number) => cardAt(c, w) }))} staff={frame} onAdd={addCard} sidebar={sidebar} download={download} />
 
   return (
     <div className="flex min-h-dvh flex-col bg-paper font-sans text-ink md:h-dvh md:flex-row">

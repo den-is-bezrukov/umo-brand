@@ -7,7 +7,8 @@ import { SUPPORT_BOT, TEXT_LINK } from './links'
 import { linkParams } from './share'
 import { MOD } from './keys'
 import { SITE } from '@/site'
-import { MODELS, fileName } from '@/data/models'
+import { PRODUCTS, asFile } from '@/data/products'
+import { VEHICLES } from '@/livery/layout'
 import { PRICE_CARD } from '@brand/price-card'
 import { FONTS } from '@brand/fonts'
 import { LIVERY_FILE } from '@/livery/pdf'
@@ -18,11 +19,11 @@ const HOME = new URL(SITE.home).host
 const NAME = SITE.name
 const FILE = SITE.file
 /** The livery's archives, the last model's first: «<Brand>8_dealer-livery.zip (или <Brand>5_…)» */
-const LIVERY_ZIPS = [...MODELS].reverse().map((m, i) => (i ? `${fileName(m.id, '')}_…` : `${fileName(m.id, '')}_${LIVERY_FILE}.zip`)).join(' (или ') + (MODELS.length > 1 ? ')' : '')
+const LIVERY_ZIPS = [...VEHICLES].reverse().map((m, i) => (i ? `${asFile(m.name, '')}_…` : `${asFile(m.name, '')}_${LIVERY_FILE}.zip`)).join(' (или ') + (VEHICLES.length > 1 ? ')' : '')
 /** The price card's trims per model: «Про и Макс для <Бренд> 5, Макс и Ультра для <Бренд> 8» */
-const TRIM_LIST = MODELS.map(m => `${PRICE_CARD.trims[m.id].map(t => t.name).join(' и ')} для ${m.name}`).join(', ')
+const TRIM_LIST = PRODUCTS.map(m => `${PRICE_CARD.trims[m.id].map(t => t.name).join(' и ')} для ${m.name}`).join(', ')
 /** How many cards every trim makes, in words: «четыре карты» */
-const CARDS_COUNT = (n => `${['', 'одна', 'две', 'три', 'четыре', 'пять', 'шесть', 'семь', 'восемь', 'девять', 'десять'][n] ?? n} ${n === 1 ? 'карта' : n < 5 ? 'карты' : 'карт'}`)(MODELS.reduce((n, m) => n + PRICE_CARD.trims[m.id].length, 0))
+const CARDS_COUNT = (n => `${['', 'одна', 'две', 'три', 'четыре', 'пять', 'шесть', 'семь', 'восемь', 'девять', 'десять'][n] ?? n} ${n === 1 ? 'карта' : n < 5 ? 'карты' : 'карт'}`)(PRODUCTS.reduce((n, m) => n + PRICE_CARD.trims[m.id].length, 0))
 
 /** Illustrator's «Показать все монтажные области», as the point's keyboard has it */
 const FIT_ALL = MOD === '⌘' ? '⌥⌘0' : 'Alt+Ctrl+0'

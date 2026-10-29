@@ -57,6 +57,10 @@ export interface BrandPoints { lists: Partial<Point>[][]; prefix: string; words:
  */
 export interface BrandWords {
   point: { one: string; many: string; of: string; pick: string; which: string; yours: string; notListed: string; file?: string }
+  /** The price card's product and its variant, as their fields are labelled and the card prints the variant («Модель», «Комплектация») */
+  product: { one: string; variant: string }
+  /** What the livery wraps, its field's label («Модель») */
+  vehicle: { one: string }
 }
 
 /**
@@ -82,5 +86,8 @@ export interface BrandSite {
   materials?: string[]
 }
 
-/** A model of the brand: its id in links and data (`brand5`), its name as written («<Бренд> 5»), its page on the brand's site */
-export interface BrandModel { id: string; name: string; page: string }
+/**
+ * A product of the brand (UMO's models) or a vehicle its livery wraps: its id in links and data (`brand5`), its name
+ * as written («<Бренд> 5»), its page on the brand's site (a QR's default)
+ */
+export interface BrandProduct { id: string; name: string; page: string }

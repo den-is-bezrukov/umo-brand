@@ -1,3 +1,4 @@
+import type { BrandProduct } from '@/brand'
 import type { Mark } from '@/brand'
 
 // The livery's surfaces, in millimetres: the mechanics every car shares. A surface is a sheet with its origin at the
@@ -201,11 +202,11 @@ export function smallQr(s: Surface): Surface {
 
 export const SURFACES: SurfaceId[] = ['left', 'right', 'rear']
 
-/** A model's id (`@brand/models`) */
-export type Model = string
+/** A vehicle's id (`LIVERY.vehicles`) */
+export type Vehicle = string
 
 /**
- * What the brand gives the livery (`@brand/livery`): the wordmark the lettering starts with (absolute path data, its
- * height the lettering's) and each model's surfaces
+ * What the brand gives the livery (`@brand/livery`): the vehicles it wraps (UMO's are its products), the wordmark the
+ * lettering starts with (absolute path data, its height the lettering's) and each vehicle's surfaces
  */
-export interface BrandLivery { wordmark: Mark; surfaces: Record<Model, Record<SurfaceId, Surface>> }
+export interface BrandLivery { vehicles: BrandProduct[]; wordmark: Mark; surfaces: Record<Vehicle, Record<SurfaceId, Surface>> }

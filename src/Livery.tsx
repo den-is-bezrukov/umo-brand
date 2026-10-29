@@ -6,8 +6,8 @@ import { CaptionReset } from '@/ui/staff'
 import { linkParams, useLinkState } from '@/ui/share'
 import { POINT_NAMES, pointFilter, withoutBrand } from '@/data/points'
 import { DEFAULT_TAGLINE, TAGLINES } from '@brand/taglines'
-import { MODELS, DEFAULT_MODEL, modelFrom, fileName } from '@/data/models'
-import { LIVERIES, SURFACES, withoutQr, smallQr, type Model } from '@/livery/layout'
+import { asFile } from '@/data/products'
+import { LIVERIES, SURFACES, VEHICLES, DEFAULT_VEHICLE, vehicleFrom, vehicleOf, withoutQr, smallQr, type Vehicle } from '@/livery/layout'
 import { buildSheet, specMarks, toD, mm, type Sheet, type Line } from '@/livery/geometry'
 import { loadFont } from '@/ui/type'
 import { MobileEditor, usePhone } from '@/ui/mobile'
@@ -17,14 +17,14 @@ import { WORDS } from '@brand/words'
 import { LIVERY_FILE } from '@/livery/pdf'
 
 /** What the brand calls its points (`@brand/words`) */
-const W = WORDS.point
+const W = { ...WORDS.point, vehicle: WORDS.vehicle.one }
 
 // Point livery generator: lettering for both sides and the rear window of a point's demo car. The preview puts the sheets on
 // photos of the car, with the door seam and handle marked, so a point name or tagline that would run onto them shows
 // up before the files go to the wrap shop.
 
 /** The QR leads to the model's own page unless another link is set, as on the price card */
-const DEFAULT_URL = Object.fromEntries(MODELS.map(m => [m.id, m.page])) as Record<Model, string>
+const DEFAULT_URL = Object.fromEntries(VEHICLES.map(m => [m.id, m.page])) as Record<Vehicle, string>
 const DEFAULT_TOP = `Центр ${SITE.name}`
 
 // The parts that can be left out, as the `off` link parameter names them
@@ -92,7 +92,7 @@ function SheetPreview({ sheet, dims, onReset, resetLabel, extra }: { sheet: Shee
 export default function Livery() {
   // Settings come from the link the page was opened with (see `useLinkState` below), defaults for the rest
   const [link] = useState(linkParams)
-  const [model, setModel] = useState<Model>(modelFrom(link.get('model')) as Model)
+  const [model, setModel] = useState<Vehicle>(vehicleFrom(link.get('model')) as Vehicle)
   const [point, setPoint] = useState(link.get('top') ?? DEFAULT_TOP)
   const [tagline, setTagline] = useState(() => link.get('bottom') ?? DEFAULT_TAGLINE[model])
   // The rear window's slogan follows the sides' until it's edited (as the price card's credit price follows the full
@@ -115,7 +115,7 @@ export default function Livery() {
 
   // Another model brings its own tagline in place of the old model's suggestion (the default or the one without
   // «Попробуй»), unless the field holds text of the point's own
-  const chooseModel = (m: Model) => {
+  const chooseModel = (m: Vehicle) => {
     const swap = (t: string) => { const i = TAGLINES[model].indexOf(t); return i < 0 ? t : TAGLINES[m][i] }
     setTagline(swap(tagline))
     if (rearTagline !== undefined) setRearTagline(swap(rearTagline))
@@ -131,7 +131,7 @@ export default function Livery() {
   const ownRearOn = on.rear && on.tagline && on.rearTagline && rearTagline !== undefined && rearTagline !== tagline
   useLinkState({
     // The first model by default, so a link without `model` opens it
-    model: model === DEFAULT_MODEL ? null : model,
+    model: model === DEFAULT_VEHICLE ? null : model,
     link: url.trim() === DEFAULT_URL[model] ? null : url.trim(),
     top: point === DEFAULT_TOP ? null : point,
     bottom: tagline === DEFAULT_TAGLINE[model] ? null : tagline,
@@ -206,7 +206,7 @@ export default function Livery() {
     setExporting(true)
     try {
       const { liveryZip } = await import('@/livery/pdf')
-      const prefix = fileName(model, '')
+      const prefix = asFile(vehicleOf(model).name, '')
       const blob = await liveryZip(prefix, sheets, await makeBlank!())
       const link = document.createElement('a')
       link.href = URL.createObjectURL(blob)
@@ -228,7 +228,7 @@ export default function Livery() {
     }
   }
 
-  const prefix = fileName(model, '')
+  const prefix = asFile(vehicleOf(model).name, '')
   const templateName = `${prefix}_${LIVERY_FILE}_template.pdf`
   /** The editable template, the icon's and a `template` link's alike: the model's sheets at their defaults, the rear
    * window too, whatever's typed or switched off on the page */
@@ -255,9 +255,9 @@ export default function Livery() {
           <GeneratorHeader current="/livery" />
 
           <div data-ui="form" className="flex flex-col gap-4 tracking-normal">
-            <Field label="Модель">
+            <Field label={W.vehicle}>
               <Segments>
-                {MODELS.map(m => <SegBtn key={m.id} active={model === m.id} onClick={() => chooseModel(m.id as Model)}>{m.name}</SegBtn>)}
+                {VEHICLES.map(m => <SegBtn key={m.id} active={model === m.id} onClick={() => chooseModel(m.id as Vehicle)}>{m.name}</SegBtn>)}
               </Segments>
             </Field>
 

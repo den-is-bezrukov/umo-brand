@@ -1,5 +1,5 @@
-import type { Model } from '@/livery/surface'
+import type { Vehicle } from '@/livery/surface'
 
 /** No livery: no slogans */
-export const DEFAULT_TAGLINE: Record<Model, string> = {}
-export const TAGLINES: Record<Model, string[]> = {}
+export const DEFAULT_TAGLINE: Record<Vehicle, string> = {}
+export const TAGLINES: Record<Vehicle, string[]> = {}

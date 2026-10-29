@@ -4,6 +4,7 @@ import { missingChars, setRuns, tidy, wrap, type Fonts } from '@/ui/type'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { typografText } from '@/guide/typograf'
 import { PRICE_CARD } from '@brand/price-card'
+import { WORDS } from '@brand/words'
 
 // The price card, an A3 poster (Figma «Price Cards», 2100×2970 px, 7.07 px a millimetre; everything here in its px,
 // y down): the car's photo across the top 720 px with the wordmark and «от … ₽» on it in white; under it a 150 px
@@ -18,8 +19,8 @@ const BOTTOM = CARD.h - 100
 /** With no fine print the prices stand on a margin as wide as the sides */
 const BOTTOM_BARE = CARD.h - SIDE
 
-/** A model's id (`@brand/models`) and a trim's (`PRICE_CARD.trims`) */
-export type Model = string
+/** A product's id (`@brand/products`) and a variant's, its trim (`PRICE_CARD.trims`) */
+export type Product = string
 export type Trim = string
 
 /** A run of a fixed line, as in a Figma text layer: its own font (a file under the brand's `public/`) and colour if set */
@@ -53,19 +54,19 @@ export interface TrimData {
 }
 
 /**
- * What the brand gives the price card (`@brand/price-card`): per model its headline in lines of runs, its wordmark with
- * the model's number (absolute path data, 525×75 from the band's corner) and its trims, the first the default
+ * What the brand gives the price card (`@brand/price-card`): per product its headline in lines of runs, its wordmark with
+ * the product's number (absolute path data, 525×75 from the band's corner) and its trims, the first the default
  */
 export interface BrandPriceCard {
-  headlines: Record<Model, Run[][]>
-  lettering: Record<Model, string>
-  trims: Record<Model, TrimData[]>
+  headlines: Record<Product, Run[][]>
+  lettering: Record<Product, string>
+  trims: Record<Product, TrimData[]>
 }
 
 /** A model's trims, the first its default */
 export const TRIMS = PRICE_CARD.trims
 
-export const trimOf = (model: Model, trim: Trim) => TRIMS[model].find(t => t.id === trim)!
+export const trimOf = (model: Product, trim: Trim) => TRIMS[model].find(t => t.id === trim)!
 
 /** Absolute M/L/H/V/C/Z path data to commands, moved by (dx, dy) */
 function fromD(d: string, dx: number, dy: number): Cmd[] {
@@ -108,7 +109,7 @@ export interface Art {
 }
 
 /** `full`: the full cost the point asks, the trim's price and added equipment; empty, a grey placeholder */
-export interface Input { model: Model; trim: Trim; full: string; legal: string; url: string }
+export interface Input { model: Product; trim: Trim; full: string; legal: string; url: string }
 
 /** A baseline under a line's top, as Figma sets a line `lh` tall */
 const baseline = (top: number, size: number, lh = size) => top + (lh - 1.26 * size) / 2 + 0.974 * size
@@ -160,7 +161,7 @@ export function buildCard(fonts: CardFonts, input: Input): Art {
 
   // The trim and its list
   top += 100
-  runs([{ text: `Комплектация ${trim.name}:` }], SIDE, baseline(top, BODY), BODY)
+  runs([{ text: `${WORDS.product.variant} ${trim.name}:` }], SIDE, baseline(top, BODY), BODY)
   top += BODY + 50
   for (const item of trim.list) {
     const base = baseline(top, BODY)

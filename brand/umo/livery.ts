@@ -4,6 +4,7 @@ import rearImg from './assets/livery/umo8-rear.webp'
 import side5Img from './assets/livery/umo5-side.webp'
 import rear5Img from './assets/livery/umo5-rear.webp'
 import { UMO, EIGHT, FIVE } from './lettering'
+import { PRODUCTS } from './products'
 
 // UMO's demo cars for the livery (`src/livery/layout.ts` has the mechanics): UMO 8 from 00_UMO8_dealer-livery_spec.pdf
 // and the Illustrator sources next to it (Yandex Disk: Livery/UMO 8), UMO 5 from its livery in Figma
@@ -474,4 +475,5 @@ const UMO5: Record<SurfaceId, Surface> = {
   },
 }
 
-export const LIVERY: BrandLivery = { wordmark: UMO, surfaces: { umo8: UMO8, umo5: UMO5 } }
+// The cars it wraps are UMO's models
+export const LIVERY: BrandLivery = { vehicles: PRODUCTS, wordmark: UMO, surfaces: { umo8: UMO8, umo5: UMO5 } }
