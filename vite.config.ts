@@ -6,12 +6,13 @@ import path from 'node:path'
 
 import { GENERATORS } from './src/data/generators'
 
-// The brand the site is built with: `brand/<BRAND>`, the default one package.json's `brand` names (and tsconfig.json's `@brand`) unless
-// `BRAND` says otherwise (`BRAND=demo pnpm dev`).
+// The brand the site is built with: `BRAND`, else the default one package.json's `brand` names (and tsconfig.json's
+// `@brand`). A name is a folder in `brand/` (`BRAND=demo pnpm dev`), a path a brand's folder anywhere, absolute or from
+// here (`BRAND=../site/brand pnpm build`); scripts/check.mjs reads it the same way.
 // The code takes everything of the brand from there through `@brand`; its `public/` is the site's root, the core's own
 // `public/` (404.html) added to it
 const BRAND = process.env.BRAND || JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json'), 'utf8')).brand
-const brandDir = path.resolve(__dirname, 'brand', BRAND)
+const brandDir = /[\\/]/.test(BRAND) || BRAND.startsWith('.') ? path.resolve(__dirname, BRAND) : path.resolve(__dirname, 'brand', BRAND)
 const siteConfiguration: SiteConfiguration = JSON.parse(fs.readFileSync(path.join(brandDir, 'site.json'), 'utf8'))
 
 // Vite config — https://vitejs.dev/config/
@@ -39,6 +40,8 @@ export default defineConfig(({ mode }) => {
         '@brand': brandDir,
         '@': path.resolve(__dirname, './src'),
       },
+      // A brand's folder outside the core has no node_modules: its React comes from here
+      dedupe: ['react', 'react-dom'],
     },
     server: {
       host: '0.0.0.0',
@@ -46,6 +49,8 @@ export default defineConfig(({ mode }) => {
       strictPort: true,
       // The check's builds (scripts/check.mjs) would reload the open page
       watch: { ignored: ['**/.check.nosync/**'] },
+      // The brand's folder may be outside the core's
+      fs: { allow: [__dirname, brandDir] },
     },
     preview: {
       host: '0.0.0.0',

@@ -6,7 +6,8 @@
 //
 //   node scripts/check.mjs --baseline   the baseline, from the site as it is now (.check.nosync/baseline)
 //   node scripts/check.mjs              the site now against it: .check.nosync/report.txt, pictures of the differences in .check.nosync/diff
-//   BRAND=demo node scripts/check.mjs   … the site built with another brand (a run of its own, no baseline to match)
+//   BRAND=demo node scripts/check.mjs   … the site built with another brand, a folder in brand/ or a path to one
+//                                       anywhere (a run of its own, no baseline to match)
 //   --only=livery,guide                 just the scenarios whose name starts with these
 //   --compare-only                      the last run compared again, nothing captured
 //
@@ -27,10 +28,12 @@ const OUT = path.join(ROOT, '.check.nosync')
 const args = process.argv.slice(2)
 const BASELINE = args.includes('--baseline')
 const ONLY = args.find(a => a.startsWith('--only='))?.slice(7).split(',')
-/** The brand: `BRAND`, or the default one, package.json's `brand` */
+/** The brand: `BRAND`, or the default one, package.json's `brand`; a name a folder in `brand/`, a path a brand's folder
+ * anywhere, as vite.config.ts reads it */
 const DEFAULT_BRAND = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8')).brand
 const BRAND = process.env.BRAND || DEFAULT_BRAND
-const RUN = path.join(OUT, BASELINE ? 'baseline' : BRAND === DEFAULT_BRAND ? 'current' : `current-${BRAND}`)
+const BRAND_DIR = /[\\/]/.test(BRAND) || BRAND.startsWith('.') ? path.resolve(ROOT, BRAND) : path.join(ROOT, 'brand', BRAND)
+const RUN = path.join(OUT, BASELINE ? 'baseline' : BRAND === DEFAULT_BRAND ? 'current' : `current-${path.basename(BRAND_DIR)}`)
 const BUILD = path.join(OUT, 'build')
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -52,8 +55,8 @@ function xlsx(rows) {
   })
 }
 
-// The brand's scenarios and the tables they load (`brand/<BRAND>/check.mjs`): its dealers, models and files
-const { SCENARIOS, TABLES } = await import(pathToFileURL(path.join(ROOT, 'brand', BRAND, 'check.mjs')).href)
+// The brand's scenarios and the tables they load (its `check.mjs`): its dealers, models and files
+const { SCENARIOS, TABLES } = await import(pathToFileURL(path.join(BRAND_DIR, 'check.mjs')).href)
 
 const WIDE = { width: 1440, height: 900, mobile: false }
 const PHONE = { width: 350, height: 622, mobile: true }
