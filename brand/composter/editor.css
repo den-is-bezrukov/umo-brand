@@ -107,6 +107,10 @@
     font-size: 32px;
     line-height: 32px;
   }
+  /* The list open where the title stood: its first name on the title's line */
+  :root[data-editor] [data-head] > nav {
+    margin-top: 0;
+  }
 
   /* Blocks: 24 px round, the label 16 over the value, a black line under each */
   /* Blocks line to line: no gap between the groups the core spaces them in */
