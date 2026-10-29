@@ -200,7 +200,7 @@
     font-weight: 500;
   }
 
-  /* A part left out or in: five dots before its words, at 40% while off, white while on */
+  /* A part left out or in: dots before its words, four at 40% while off (Figma 56:439), five white while on (56:389) */
   :root[data-editor] [data-ui='checkbox'] {
     flex: 1;
     gap: 8px;
@@ -214,10 +214,11 @@
     border-radius: 0;
     color: var(--color-caption);
     background: currentColor;
-    mask: url('./icons/check.svg') center / 16px no-repeat;
+    mask: url('./icons/check-off.svg') center / 16px no-repeat;
   }
   :root[data-editor] [data-ui='checkbox'] > input:checked + span[aria-hidden] {
     color: #fff;
+    mask-image: url('./icons/check.svg');
   }
   :root[data-editor] [data-ui='checkbox'] > span[aria-hidden] svg {
     display: none;
