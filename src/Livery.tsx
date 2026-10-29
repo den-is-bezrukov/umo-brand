@@ -295,6 +295,7 @@ export default function Livery() {
             {on.rear && on.tagline && (
               <OptionalField
                 label="Слоган на стекле"
+                part="rear-tagline"
                 on={on.rearTagline}
                 onChange={toggle('rearTagline')}
               >

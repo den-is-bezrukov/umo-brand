@@ -348,9 +348,12 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
     }
   }
 
-  // A brand's style may hide the chevron (`data-ui="chevron"`): then the field itself shows the whole list, on focus
-  // and on a click, as the chevron would
-  const bare = () => { const c = box.current?.querySelector('[data-ui="chevron"]'); return !!c && getComputedStyle(c).display === 'none' }
+  // A brand's style may have the field itself show the whole list, on focus and on a click, as the chevron does: by
+  // hiding the chevron, or by `--combo-opens-list: 1`
+  const bare = () => {
+    const c = box.current?.querySelector('[data-ui="chevron"]')
+    return (!!c && getComputedStyle(c).display === 'none') || (!!box.current && getComputedStyle(box.current).getPropertyValue('--combo-opens-list').trim() === '1')
+  }
   const showAll = () => { setAll(true); setOpen(true) }
   return (
     <div ref={box} className="relative" style={{ anchorName: anchor } as React.CSSProperties}>
@@ -518,9 +521,9 @@ export function Checkbox({ checked, onChange, children, className = '' }: { chec
 }
 
 /** A part that can be left out: its checkbox is the label, and the field shows only while it's on; `extra` sits at the end of the label row */
-export function OptionalField({ label, on, onChange, extra, children }: { label: string; on: boolean; onChange: (v: boolean) => void; extra?: React.ReactNode; children?: React.ReactNode }) {
+export function OptionalField({ label, on, onChange, extra, part, children }: { label: string; on: boolean; onChange: (v: boolean) => void; extra?: React.ReactNode; /** Its name for a brand's style (`data-part`) */ part?: string; children?: React.ReactNode }) {
   return (
-    <div data-ui="field" className="group/field flex flex-col gap-3">
+    <div data-ui="field" data-part={part} className="group/field flex flex-col gap-3">
       <div data-ui="label" className="flex items-center justify-between gap-2">
         <Checkbox checked={on} onChange={onChange} className={ALERT_LABEL}>{label}</Checkbox>
         {on && extra}

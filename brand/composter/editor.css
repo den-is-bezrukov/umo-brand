@@ -49,12 +49,13 @@
     padding: 0;
   }
 
-  /* The head: the logo, the editor's name and the plus, 16 px tall, the open generator's name 32 px under them */
+  /* The head: the logo and the grid of dots for every generator, 16 px tall, the generators' line 24 px under them: the
+     open one white, the rest at 30%, running off the edge */
   :root[data-editor] [data-head] {
     gap: 24px;
     padding: 24px;
   }
-  :root[data-editor] [data-head] > :not([data-ui='head-bar'], [data-ui='head-title'], nav) {
+  :root[data-editor] [data-head] > :has(> [data-ui='crumbs']) {
     display: none;
   }
   :root[data-editor] [data-ui='head-bar'] {
@@ -69,45 +70,53 @@
     background: url('./icons/logo-latin.svg') center / contain no-repeat;
   }
   :root[data-editor] [data-ui='head-logo'] svg,
-  :root[data-editor] [data-ui='head-name'] {
+  :root[data-editor] [data-ui='head-name'],
+  :root[data-editor] [data-ui='head-menu'] svg {
     display: none;
   }
   :root[data-editor] [data-ui='head-menu'] {
     margin-left: auto;
-  }
-  :root[data-editor] [data-ui='head-menu'] {
     width: 16px;
     height: 16px;
     cursor: pointer;
     color: var(--color-caption);
     background: currentColor;
-    mask: url('./icons/plus.svg') center / 16px no-repeat;
+    mask: url('./icons/grid.svg') center / 16px no-repeat;
   }
   :root[data-editor] [data-ui='head-menu']:hover {
     color: #fff;
   }
-  /* The list open: the plus a cross, and no line under the head */
+  /* The list open: the grid a cross */
   :root[data-editor][data-menu] [data-ui='head-menu'] {
     mask-image: url('./icons/cross.svg');
   }
-  :root[data-editor] [data-ui='head-menu'] svg {
-    display: none;
+  :root[data-editor] [data-ui='ring'] {
+    margin: 0 -24px;
   }
-  :root[data-editor] [data-ui='head-title'] {
-    display: block;
-    font-size: 32px;
-    line-height: 32px;
-    font-weight: 500;
-    color: #fff;
-  }
-  :root[data-editor][data-menu] [data-ui='head-title'] {
-    display: none;
+  :root[data-editor] [data-ui='ring'] nav {
+    gap: 24px;
+    padding-left: 24px;
+    scroll-padding-left: 24px;
   }
   :root[data-editor] [data-ui='ring-name'] {
-    font-size: 32px;
-    line-height: 32px;
+    font-size: 24px;
+    line-height: 24px;
+    font-weight: 500;
   }
-  /* The list open where the title stood: its first name on the title's line */
+  :root[data-editor] [data-ui='ring-name'].text-faint {
+    color: rgb(255 255 255 / 0.3);
+  }
+  :root[data-editor] [data-ui='ring-name'].text-faint:hover {
+    color: rgb(255 255 255 / 0.6);
+  }
+  /* The line's edges fade into the sidebar, not into white */
+  :root[data-editor] [data-ui='ring'] > div:first-of-type {
+    background: linear-gradient(90deg, var(--panel) 25%, transparent) !important;
+  }
+  :root[data-editor] [data-ui='ring'] > div:last-of-type {
+    background: linear-gradient(90deg, transparent, var(--panel) 75%) !important;
+  }
+  /* The list open where the line stood */
   :root[data-editor] [data-head] > nav {
     margin-top: 0;
   }
@@ -152,9 +161,22 @@
     outline: none;
   }
 
-  /* No chevron: a click in the field shows its whole list (`ComboField`) */
+  /* A click in the field shows its whole list (`ComboField`); the dotted chevron at its end says there is one */
+  :root[data-editor] [data-ui='sidebar'] {
+    --combo-opens-list: 1;
+  }
   :root[data-editor] [data-ui='chevron'] {
+    width: 16px;
+    height: 16px;
+    color: var(--color-caption);
+    background: currentColor;
+    mask: url('./icons/chevron.svg') center / 16px no-repeat;
+  }
+  :root[data-editor] [data-ui='chevron'] svg {
     display: none;
+  }
+  :root[data-editor] [data-ui='field']:hover [data-ui='chevron'] {
+    color: #fff;
   }
 
   /* Choices as words: the picked one white, the rest at 20% */
@@ -178,29 +200,33 @@
     font-weight: 500;
   }
 
-  /* A part left out or in: the label at the row's start, a dotted plus (off) or cross (on) at its end */
+  /* A part left out or in: five dots before its words, at 40% while off, white while on */
   :root[data-editor] [data-ui='checkbox'] {
     flex: 1;
+    gap: 8px;
+    cursor: pointer;
     font-size: 14px;
     line-height: 16px;
     color: var(--color-caption);
   }
-  :root[data-editor] [data-ui='checkbox'] {
-    cursor: pointer;
-  }
   :root[data-editor] [data-ui='checkbox'] > span[aria-hidden] {
-    order: 2;
-    margin-left: auto;
+    order: -1;
     border-radius: 0;
+    color: var(--color-caption);
     background: currentColor;
-    mask: url('./icons/plus.svg') center / 16px no-repeat;
+    mask: url('./icons/check.svg') center / 16px no-repeat;
   }
   :root[data-editor] [data-ui='checkbox'] > input:checked + span[aria-hidden] {
-    mask-image: url('./icons/cross.svg');
+    color: #fff;
   }
-  /* Pointed at anywhere on its block, the row's words and its mark turn white */
+  :root[data-editor] [data-ui='checkbox'] > span[aria-hidden] svg {
+    display: none;
+  }
+  /* Pointed at anywhere on its block, the row's words and its dots turn white */
   :root[data-editor] [data-ui='checkbox']:hover,
-  :root[data-editor] [data-ui='field']:hover [data-ui='checkbox'] {
+  :root[data-editor] [data-ui='field']:hover [data-ui='checkbox'],
+  :root[data-editor] [data-ui='checkbox']:hover > span[aria-hidden],
+  :root[data-editor] [data-ui='field']:hover [data-ui='checkbox'] > span[aria-hidden] {
     color: #fff;
   }
   /* A block that is only the toggle takes the click anywhere on it */
@@ -213,11 +239,7 @@
     position: absolute;
     inset: 0;
   }
-  :root[data-editor] [data-ui='checkbox'] > span[aria-hidden] svg {
-    display: none;
-  }
-  /* In a label row the checkbox's words, the row's action («Мельче») and its plus or cross in that order, the mark at
-     the end; the action's icon goes, as Figma has it */
+  /* In a label row: the dots, the words, the row's action («Мельче»), its icon gone, as Figma has it */
   :root[data-editor] [data-ui='label'] {
     justify-content: flex-start;
     gap: 8px;
@@ -225,15 +247,21 @@
   :root[data-editor] [data-ui='label'] > [data-ui='checkbox'] {
     display: contents;
   }
-  :root[data-editor] [data-ui='label'] > [data-ui='checkbox'] > span[aria-hidden] {
-    order: 3;
-  }
   :root[data-editor] [data-ui='label'] > button svg {
     display: none;
   }
   :root[data-editor] :not([data-ui='label']) > [data-ui='checkbox'] {
     padding: 24px;
     border-top: 1px solid #000;
+  }
+  /* The rear window's slogan under its toggle, one block with it: its own toggle gone */
+  :root[data-editor] [data-part='rear-tagline'] {
+    margin-top: -8px;
+    padding-top: 0;
+    border-top: 0;
+  }
+  :root[data-editor] [data-part='rear-tagline'] > [data-ui='label'] {
+    display: none;
   }
 
   /* The foot: pills 48 px, «Поделиться» white at 8%, the download white with black text */
