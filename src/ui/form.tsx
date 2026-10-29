@@ -347,6 +347,10 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
     }
   }
 
+  // A brand's style may hide the chevron (`data-ui="chevron"`): then the field itself shows the whole list, on focus
+  // and on a click, as the chevron would
+  const bare = () => { const c = box.current?.querySelector('[data-ui="chevron"]'); return !!c && getComputedStyle(c).display === 'none' }
+  const showAll = () => { setAll(true); setOpen(true) }
   return (
     <div ref={box} className="relative" style={{ anchorName: anchor } as React.CSSProperties}>
       {(() => {
@@ -359,7 +363,8 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
           'aria-controls': id,
           'aria-autocomplete': 'list' as const,
           'aria-activedescendant': open && active >= 0 ? `${id}-${active}` : undefined,
-          onFocus: () => (inSheet ? openScreen() : setOpen(true)),
+          onFocus: () => (inSheet ? openScreen() : bare() ? showAll() : setOpen(true)),
+          onClick: () => { if (!inSheet && bare()) showAll() },
           onBlur: () => { setOpen(false); setAll(false) },
           onKeyDown,
           readOnly: inSheet || undefined,

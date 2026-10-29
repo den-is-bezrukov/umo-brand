@@ -144,11 +144,9 @@
     outline: none;
   }
 
-  /* A field's chevron at its end, as tall as the 16 px value */
+  /* No chevron: a click in the field shows its whole list (`ComboField`) */
   :root[data-editor] [data-ui='chevron'] {
-    width: 16px;
-    height: 16px;
-    color: var(--color-caption);
+    display: none;
   }
 
   /* Choices as words: the picked one white, the rest at 20% */
@@ -231,11 +229,14 @@
   }
 
   /* The foot: pills 48 px, «Поделиться» white at 8%, the download white with black text */
+  /* Always at the sidebar's foot: pushed down under a short form, sticking there over a long one; its line drawn on the
+     line over it, so under the last block the two make one */
   :root[data-editor] [data-ui='download'] {
+    margin-top: auto;
     padding: 24px;
     gap: 16px;
     background: var(--panel) !important;
-    border-top: 1px solid #000;
+    box-shadow: 0 -1px 0 #000;
   }
   :root[data-editor] [data-ui='button'],
   :root[data-editor] [data-ui='primary'] {
