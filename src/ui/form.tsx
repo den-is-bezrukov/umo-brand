@@ -66,7 +66,8 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
           <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.5" aria-hidden><path d="M8 2v12M2 8h12" /></svg>
         </button>
       </div>
-      <p data-ui="head-title" className="hidden">{title}</p>
+      {/* The open one's name, which opens every generator too */}
+      <button type="button" data-ui="head-title" onClick={toggle} aria-expanded={menu} className="hidden cursor-pointer text-left">{title}</button>
       <div className="flex items-center gap-2">
         <PhoneCrumbs open={menu} onEditor={toggle} />
         <HelpButton page={current} tabs={MATERIALS} />
