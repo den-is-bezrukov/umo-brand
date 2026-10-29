@@ -48,6 +48,20 @@ export function bindShortWords(text: string): string {
 export const missingChars = (font: Font, text: string) => [...new Set([...text.replace(/\s/g, '')].filter(c => !font.hasChar(c)))]
 
 /**
+ * The glyphs opentype.js shapes a text into; where a lookup of the font is beyond it (Inter 4's `ccmp` holds a chained
+ * context of format 2, which throws), each character's own glyph: in such a font nothing opentype.js applies changes
+ * them (Inter has no ligatures, and its `ccmp` leaves precomposed letters as they are); the features asked for come
+ * after, here (`featureMap`)
+ */
+export function glyphsOf(font: Font, text: string): Glyph[] {
+  try {
+    return font.stringToGlyphs(text)
+  } catch {
+    return [...text].map(ch => font.charToGlyph(ch))
+  }
+}
+
+/**
  * A feature's single substitutions (`case`: the bar, brackets and dashes raised to the capitals; `lnum`, `tnum`), glyph
  * by glyph, as opentype.js doesn't apply them itself
  */
@@ -91,7 +105,7 @@ export function setRuns(font: Font, runs: string[], x: number, baseline: number,
   const scale = size / font.unitsPerEm
   const maps = feats.map(f => featureMap(font, f))
   const glyphs: { g: Glyph; run: number }[] = runs.flatMap((text, run) =>
-    font.stringToGlyphs(text).map(g => ({ g: font.glyphs.get(maps.reduce((i, m) => m.get(i) ?? i, g.index)), run })))
+    glyphsOf(font, text).map(g => ({ g: font.glyphs.get(maps.reduce((i, m) => m.get(i) ?? i, g.index)), run })))
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const commands: any[][] = runs.map(() => [])
   const ink = { x1: Infinity, x2: -Infinity }

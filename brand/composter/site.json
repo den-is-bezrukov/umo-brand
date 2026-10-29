@@ -1,0 +1,21 @@
+{
+  "name": "Компостер",
+  "file": "Composter",
+  "domain": "composter.example",
+  "home": "https://composter.example",
+  "support": "https://composter.example/help",
+  "editor": "Редактор",
+  "materials": [
+    "business-card",
+    "hours-sign"
+  ],
+  "title": "Компостер",
+  "description": "Демо-бренд редактора: гайд и все материалы",
+  "language": "ru",
+  "robots": {
+    "index": false
+  },
+  "icons": {
+    "icon": "/favicon.svg"
+  }
+}

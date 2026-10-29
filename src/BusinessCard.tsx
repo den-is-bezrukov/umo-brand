@@ -347,8 +347,8 @@ export default function BusinessCard() {
             {/* The dealership: the whole list's; a card naming none has the QR alone */}
             {!HAS_DEALER && qrField}
             {HAS_DEALER && <div ref={dealerForm} className="flex flex-col gap-4">
-              <div data-field="dealer" className="group/field flex flex-col gap-3">
-                <div className="flex items-center justify-between gap-2">
+              <div data-field="dealer" data-ui="field" className="group/field flex flex-col gap-3">
+                <div data-ui="label" className="flex items-center justify-between gap-2">
                   <p className={`text-[14px] leading-4 text-caption ${ALERT_LABEL}`}>Дилер</p>
                   <button type="button" onClick={() => setDealerOpen(o => !o)} aria-expanded={dealerOpen} className={rowAction}>
                     {dealerOpen ? 'Свернуть' : 'Редактировать'}
