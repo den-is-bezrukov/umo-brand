@@ -12,7 +12,7 @@ const baseline = (top: number, size: number, line = size) => top + (line - 1.297
 
 export const HOURS_SIGN: BrandHoursSign = {
   size: { w: 210, h: 297 },
-  hours: { placeholder: ['10:00', '19:00'], default: ['10:00', '19:00'], slider: true },
+  hours: { placeholder: ['10:00', '19:00'], default: ['10:00', '19:00'] },
   fields: [
     { id: 'days', kind: 'text', label: 'Выходные', placeholder: 'Сб, Вс — выходной', missing: 'Указать выходные', default: 'Сб, Вс — выходной' },
     { id: 'name', kind: 'text', label: 'Название', placeholder: 'Евроне Девелопмент', missing: 'Указать название', default: 'Евроне Девелопмент' },

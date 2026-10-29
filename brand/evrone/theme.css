@@ -3,9 +3,6 @@
    alternative, Regular and Medium where UMO's editor has its Regular and Medium; the release's own files, whole
    (Inter 4.1's `web/`; the licence beside them). Files in `public/fonts`. */
 
-/* The editor in Composter's style */
-@import './editor.css';
-
 @font-face {
   font-family: "Suisse Int'l";
   font-style: normal;
