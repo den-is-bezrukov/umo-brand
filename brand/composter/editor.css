@@ -80,7 +80,12 @@
     width: 16px;
     height: 16px;
     cursor: pointer;
-    background: url('./icons/plus.svg') center / 16px no-repeat;
+    color: var(--color-caption);
+    background: currentColor;
+    mask: url('./icons/plus.svg') center / 16px no-repeat;
+  }
+  :root[data-editor] [data-ui='head-menu']:hover {
+    color: #fff;
   }
   :root[data-editor] [data-ui='head-menu'] svg {
     display: none;
@@ -174,13 +179,22 @@
     line-height: 16px;
     color: var(--color-caption);
   }
+  :root[data-editor] [data-ui='checkbox'] {
+    cursor: pointer;
+  }
   :root[data-editor] [data-ui='checkbox'] > span[aria-hidden] {
     order: 2;
     margin-left: auto;
-    background: url('./icons/plus.svg') center / 16px no-repeat;
+    border-radius: 0;
+    background: currentColor;
+    mask: url('./icons/plus.svg') center / 16px no-repeat;
   }
   :root[data-editor] [data-ui='checkbox'] > input:checked + span[aria-hidden] {
-    background-image: url('./icons/cross.svg');
+    mask-image: url('./icons/cross.svg');
+  }
+  /* Pointed at, the row's words and its mark turn white */
+  :root[data-editor] [data-ui='checkbox']:hover {
+    color: #fff;
   }
   :root[data-editor] [data-ui='checkbox'] > span[aria-hidden] svg {
     display: none;
