@@ -326,7 +326,7 @@ export default function BusinessCard() {
 
   const sidebar = (
     <>
-        <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
+        <div data-ui="sidebar-body" className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
           <GeneratorHeader current="/business-card" />
 
           {/* The form under the header in one rhythm, 16 px apart as any fields */}
@@ -343,7 +343,7 @@ export default function BusinessCard() {
           </Labelled>
 
           {/* The dealership and the person in one column, 16 px apart as any fields; the pages, the whole file's, set apart */}
-          <div className="flex flex-col gap-4 tracking-normal">
+          <div data-ui="form" className="flex flex-col gap-4 tracking-normal">
             {/* The dealership: the whole list's; a card naming none has the QR alone */}
             {!HAS_DEALER && qrField}
             {HAS_DEALER && <div ref={dealerForm} className="flex flex-col gap-4">
@@ -490,7 +490,7 @@ export default function BusinessCard() {
   return (
     <div className="flex min-h-dvh flex-col bg-paper font-sans text-ink md:h-dvh md:flex-row">
 
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
+      <aside data-ui="sidebar" className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
         {sidebar}
         {download}
       </aside>

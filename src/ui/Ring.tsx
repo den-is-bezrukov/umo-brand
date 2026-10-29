@@ -35,10 +35,12 @@ export default function Ring({ label, items, current, onPick, href, heading, foc
   const nav = useRef<HTMLElement>(null)
   const [lit, setLit] = useState(current)
   const item = (i: number) => nav.current?.children[i] as HTMLElement | undefined
+  // The names rest at the line's own inset, its scroll padding: the sidebar's padding, which a brand's style may change
+  const inset = (n: HTMLElement) => parseFloat(getComputedStyle(n).scrollPaddingLeft) || 0
   // The current one of the middle copy at the edge, before the first paint and again once the font is in
   useLayoutEffect(() => {
     setLit(current)
-    const home = () => { const n = nav.current, el = item(middle); if (n && el) n.scrollLeft = el.offsetLeft - 24 }
+    const home = () => { const n = nav.current, el = item(middle); if (n && el) n.scrollLeft = el.offsetLeft - inset(n) }
     home()
     if (focus) nav.current?.focus({ preventScroll: true })
     document.fonts?.ready.then(home)
@@ -50,7 +52,7 @@ export default function Ring({ label, items, current, onPick, href, heading, foc
       let best = middle
       let gap = Infinity
       for (let i = 0; i < count * TURNS; i++) {
-        const d = Math.abs(item(i)!.offsetLeft - n.scrollLeft - 24)
+        const d = Math.abs(item(i)!.offsetLeft - n.scrollLeft - inset(n))
         if (d < gap) { gap = d; best = i }
       }
       return best
@@ -92,7 +94,7 @@ export default function Ring({ label, items, current, onPick, href, heading, foc
     // each, counted from the one the last press went to, so quick presses add up (the browser's own arrow scroll takes
     // one press while the line is still moving), Enter or Space picks that name, Esc turns it home, as does the focus
     // leaving it. A finger's or the wheel's scroll still picks where it rests
-    const turnTo = (i: number) => { target = i; n.scrollTo({ left: item(i)!.offsetLeft - 24, behavior: 'smooth' }) }
+    const turnTo = (i: number) => { target = i; n.scrollTo({ left: item(i)!.offsetLeft - inset(n), behavior: 'smooth' }) }
     const home = () => turnTo(middle)
     const key = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
@@ -112,7 +114,7 @@ export default function Ring({ label, items, current, onPick, href, heading, foc
     }
     const leave = (e: FocusEvent) => { if (!n.contains(e.relatedTarget as Node)) home() }
     // Resized, the current one back at the edge
-    const observer = new ResizeObserver(() => { if (!moved) n.scrollLeft = item(middle)!.offsetLeft - 24 })
+    const observer = new ResizeObserver(() => { if (!moved) n.scrollLeft = item(middle)!.offsetLeft - inset(n) })
     observer.observe(n)
     const scroll = () => { setLit(items[nearest() % count].key); settle() }
     const down = () => { touching = true; moved = true; target = -1; clearTimeout(timer) }
@@ -141,17 +143,17 @@ export default function Ring({ label, items, current, onPick, href, heading, foc
   const name = 'shrink-0 snap-start text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
   const tone = (key: string) => (key === lit ? 'text-ink' : 'text-faint hover:text-caption active:text-caption')
   return (
-    <div className="relative -mx-6 my-1">
+    <div data-ui="ring" className="relative -mx-6 my-1">
       {/* 8 px over and under for the descenders (р, у), which the scroller would clip; one Tab stop, ringed whole, its
           names turned with ← → and picked with Enter (not one stop each) */}
       <nav ref={nav} aria-label={label} tabIndex={0} className={`relative -my-2 flex snap-x snap-mandatory scroll-pl-6 gap-5 overflow-x-auto overscroll-x-contain py-2 pl-6 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden`}>
         {Array.from({ length: TURNS * count }, (_, i) => {
           const g = items[i % count]
           const copy = i < count || i >= 2 * count || undefined
-          if (i === middle && heading) return <h1 key={i} className={`${name} ${tone(g.key)}`}>{g.title}</h1>
-          if (href && i !== middle) return <Link key={i} to={href(g.key)} draggable={false} aria-hidden={copy} tabIndex={-1} className={`${name} ${tone(g.key)} outline-none`}>{g.title}</Link>
+          if (i === middle && heading) return <h1 key={i} data-ui="ring-name" className={`${name} ${tone(g.key)}`}>{g.title}</h1>
+          if (href && i !== middle) return <Link key={i} to={href(g.key)} draggable={false} aria-hidden={copy} tabIndex={-1} data-ui="ring-name" className={`${name} ${tone(g.key)} outline-none`}>{g.title}</Link>
           return (
-            <button key={i} type="button" aria-hidden={copy} aria-current={i === middle || undefined} tabIndex={-1} onClick={() => { if (g.key !== current) onPick(g.key) }} className={`${name} ${tone(g.key)} cursor-pointer outline-none`}>
+            <button key={i} type="button" aria-hidden={copy} aria-current={i === middle || undefined} tabIndex={-1} onClick={() => { if (g.key !== current) onPick(g.key) }} data-ui="ring-name" className={`${name} ${tone(g.key)} cursor-pointer outline-none`}>
               {g.title}
             </button>
           )

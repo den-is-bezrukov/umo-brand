@@ -209,7 +209,7 @@ export default function NameTag() {
 
   const sidebar = (
     <>
-        <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
+        <div data-ui="sidebar-body" className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
           <GeneratorHeader current="/name-tag" />
 
           {/* The form under the header in one rhythm, 16 px apart as any fields */}
@@ -282,7 +282,7 @@ export default function NameTag() {
   return (
     <div className="flex min-h-dvh flex-col bg-paper font-sans text-ink md:h-dvh md:flex-row">
 
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
+      <aside data-ui="sidebar" className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
         {sidebar}
         {download}
       </aside>

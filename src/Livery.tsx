@@ -246,10 +246,10 @@ export default function Livery() {
 
   const sidebar = (
     <>
-        <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
+        <div data-ui="sidebar-body" className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
           <GeneratorHeader current="/livery" />
 
-          <div className="flex flex-col gap-4 tracking-normal">
+          <div data-ui="form" className="flex flex-col gap-4 tracking-normal">
             <Field label="Модель">
               <Segments>
                 {MODELS.map(m => <SegBtn key={m.id} active={model === m.id} onClick={() => chooseModel(m.id as Model)}>{m.name}</SegBtn>)}
@@ -329,7 +329,7 @@ export default function Livery() {
     <div className="flex min-h-dvh flex-col bg-paper font-sans text-ink md:h-dvh md:flex-row">
 
       {/* Sidebar as the price card's */}
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
+      <aside data-ui="sidebar" className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
         {sidebar}
         {download}
       </aside>

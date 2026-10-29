@@ -255,7 +255,7 @@ export default function App() {
 
   const sidebar = (
     <>
-        <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
+        <div data-ui="sidebar-body" className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
           <GeneratorHeader current="/price-card" />
 
           {/* Model and trim side by side while each is 180 px or wider, else one under the other across the row */}
@@ -341,7 +341,7 @@ export default function App() {
     <div className="flex min-h-dvh flex-col bg-paper font-sans text-ink md:h-dvh md:flex-row">
 
       {/* ── Sidebar: 320px plus the 1px outside stroke, which shows only on the right ── */}
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
+      <aside data-ui="sidebar" className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
         {sidebar}
         {download}
       </aside>

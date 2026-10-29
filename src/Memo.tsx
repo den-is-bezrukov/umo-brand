@@ -431,9 +431,9 @@ export default function Memo() {
   )
 
   const sidebar = (
-    <div onFocus={onFormFocus} onBlur={onFormBlur} className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
+    <div onFocus={onFormFocus} onBlur={onFormBlur} data-ui="sidebar-body" className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
       <GeneratorHeader current="/memo" />
-      <div className="flex flex-col gap-4 tracking-normal">
+      <div data-ui="form" className="flex flex-col gap-4 tracking-normal">
         {/* The dealership: the whole list's */}
         <div ref={dealerForm} className="flex flex-col gap-4">
           <div data-field="dealer" className="group/field flex flex-col gap-3">
@@ -498,7 +498,7 @@ export default function Memo() {
 
   return (
     <div className="flex min-h-dvh flex-col bg-paper font-sans text-ink md:h-dvh md:flex-row">
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
+      <aside data-ui="sidebar" className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
         {sidebar}
         {download}
       </aside>

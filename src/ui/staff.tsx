@@ -452,7 +452,7 @@ export function TableSource<P extends object>({ staff, template }: { staff: Staf
         </label>
       )}
       {s.tableError && <p className="text-[13px] leading-5 text-error">{s.tableError}</p>}
-      <a href={template} download={name} onClick={e => { e.preventDefault(); downloadTemplate(template, name) }} className={`${outlined} ${s.file ? 'mt-2' : ''}`}>Скачать шаблон таблицы</a>
+      <a href={template} download={name} onClick={e => { e.preventDefault(); downloadTemplate(template, name) }} data-ui="button" className={`${outlined} ${s.file ? 'mt-2' : ''}`}>Скачать шаблон таблицы</a>
     </div>
   )
 }

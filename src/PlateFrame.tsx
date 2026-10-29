@@ -159,10 +159,10 @@ export default function PlateFrame() {
 
   const sidebar = (
     <>
-        <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
+        <div data-ui="sidebar-body" className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
           <GeneratorHeader current="/plate-frame" />
 
-          <div ref={form} className="flex flex-col gap-4 tracking-normal">
+          <div ref={form} data-ui="form" className="flex flex-col gap-4 tracking-normal">
             {custom ? (
               <Field label="Текст">
                 {/* Case-sensitive forms as in the print, so a bar stands with the capitals here too */}
@@ -208,7 +208,7 @@ export default function PlateFrame() {
   return (
     <div className="flex min-h-dvh flex-col bg-paper font-sans text-ink md:h-dvh md:flex-row">
 
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
+      <aside data-ui="sidebar" className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
         {sidebar}
         {download}
       </aside>

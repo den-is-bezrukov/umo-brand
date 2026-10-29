@@ -63,8 +63,8 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
         // 20 px under the crumbs, as the line's names stand (its 4 px over them), so the first name doesn't jump up
         <nav aria-label="Конструкторы" className="mt-1 flex flex-col items-start gap-4">
           {MATERIALS.map(g => g.path === current
-            ? <button key={g.path} type="button" aria-current="page" onClick={() => setMenu(false)} className={`${name} cursor-pointer text-left`}>{g.title}</button>
-            : <Link key={g.path} to={g.path} className={`${name} text-faint hover:text-caption active:text-caption`}>{g.title}</Link>)}
+            ? <button key={g.path} type="button" aria-current="page" onClick={() => setMenu(false)} data-ui="ring-name" className={`${name} cursor-pointer text-left`}>{g.title}</button>
+            : <Link key={g.path} to={g.path} data-ui="ring-name" className={`${name} text-faint hover:text-caption active:text-caption`}>{g.title}</Link>)}
         </nav>
       ) : (
         <GeneratorRing current={current} />
@@ -83,7 +83,7 @@ const CRUMBS = "text-[14px] font-medium leading-4 tracking-normal [font-feature-
  */
 function PhoneCrumbs({ open, onEditor }: { open: boolean; onEditor: () => void }) {
   return (
-    <nav className={`flex min-w-0 flex-1 items-center gap-2 whitespace-nowrap ${CRUMBS}`}>
+    <nav data-ui="crumbs" className={`flex min-w-0 flex-1 items-center gap-2 whitespace-nowrap ${CRUMBS}`}>
       <Link to="/" className={crumb}>Бренд {SITE.name}</Link>
       <span aria-hidden>·</span>
       <button type="button" onClick={onEditor} aria-expanded={open} aria-label={`${EDITOR}: все конструкторы`} className={`${crumb} cursor-pointer`}>{EDITOR}</button>
@@ -139,6 +139,7 @@ export function SegBtn({ active, onClick, disabled, title, children }: { active:
       disabled={disabled}
       title={title}
       aria-pressed={active}
+      data-ui="seg"
       className={`flex-1 min-w-0 flex items-center justify-center rounded-control border px-3 py-[9px] in-[[data-sheet]]:py-[13px]! cursor-pointer
         disabled:cursor-not-allowed disabled:text-hint
         ${active ? 'border-ink/10 bg-paper text-ink' : 'border-transparent text-caption'}`}
@@ -160,8 +161,8 @@ export const ALERT_LABEL = 'group-has-[[aria-invalid=true]]/field:text-error'
 
 export function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="group/field flex flex-col gap-3">
-      <p className={`text-[14px] leading-4 text-caption whitespace-nowrap ${ALERT_LABEL}`}>{label}</p>
+    <div data-ui="field" className="group/field flex flex-col gap-3">
+      <p data-ui="label" className={`text-[14px] leading-4 text-caption whitespace-nowrap ${ALERT_LABEL}`}>{label}</p>
       {children}
     </div>
   )
@@ -169,7 +170,7 @@ export function Field({ label, children }: { label: string; children: React.Reac
 
 export function Segments({ children }: { children: React.ReactNode }) {
   // The picked one a white tile edged at 10% on the grey, the others grey text; no hover
-  return <div className="flex rounded-control bg-surface">{children}</div>
+  return <div data-ui="segments" className="flex rounded-control bg-surface">{children}</div>
 }
 
 /**
@@ -187,6 +188,7 @@ function stepped(value: string, placeholder: string, dir: 1 | -1, step: number, 
 export function TextInput({ value, onChange, onBlur, onPaste, placeholder, invalid, numeric, step, max = Infinity, inputMode, list, className = '' }: { value: string; onChange: (v: string) => void; onBlur?: () => void; onPaste?: (e: React.ClipboardEvent) => void; placeholder?: string; invalid?: boolean; numeric?: boolean; /** ↑ ↓ change the number by this */ step?: number; max?: number; inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode']; list?: string; className?: string }) {
   return (
     <input
+      data-ui="input"
       value={value}
       onKeyDown={step ? e => {
         if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
@@ -235,7 +237,7 @@ export function TextArea({ value, onChange, placeholder, invalid, className = ''
       onChange={e => onChange(e.target.value)}
       placeholder={placeholder}
       aria-invalid={invalid || undefined}
-      className={`${areaClass} focus:ring-1 focus:ring-inset focus:ring-ink/40 ${className}`}
+      data-ui="input" className={`${areaClass} focus:ring-1 focus:ring-inset focus:ring-ink/40 ${className}`}
     />
   )
 }
@@ -353,7 +355,7 @@ export function ComboField({ value, onChange, options, placeholder, label, inval
         const change = (v: string) => { onChange(singleLine || truncate ? v.replace(/\s*\n\s*/g, ' ') : v); setAll(false); setOpen(true) }
         // An input, as a textarea can't end in an ellipsis
         return truncate
-          ? <input {...field} onChange={e => change(e.target.value)} className={`${areaClass} h-10 in-[[data-sheet]]:h-12! truncate pr-10 focus:ring-1 focus:ring-inset focus:ring-ink/40`} />
+          ? <input {...field} onChange={e => change(e.target.value)} data-ui="input" className={`${areaClass} h-10 in-[[data-sheet]]:h-12! truncate pr-10 focus:ring-1 focus:ring-inset focus:ring-ink/40`} />
           : <TextArea {...field} invalid={invalid} onChange={change} className="pr-10" />
       })()}
       <button
@@ -464,7 +466,7 @@ export function UrlField({ value, onChange }: { value: string; onChange: (v: str
         placeholder="https://..."
         aria-invalid={error || undefined}
         spellCheck={false}
-        className={`${areaClass} break-all pr-9 focus:ring-1 focus:ring-inset focus:ring-ink/40`}
+        data-ui="input" className={`${areaClass} break-all pr-9 focus:ring-1 focus:ring-inset focus:ring-ink/40`}
       />
       {/* On the first line, however many lines the link takes */}
       <div className="pointer-events-none absolute top-0 right-0 flex h-10 in-[[data-sheet]]:h-12! w-9 items-center justify-center">
@@ -486,7 +488,7 @@ export function UrlField({ value, onChange }: { value: string; onChange: (v: str
 export function Checkbox({ checked, onChange, children, className = '' }: { checked: boolean; onChange: (v: boolean) => void; children: React.ReactNode; className?: string }) {
   return (
     // In the phone's sheet the row takes a finger's 48 px, 16 px over and under it given back by margins, so it looks as before
-    <label className={`flex cursor-pointer items-center gap-2 text-[14px] leading-4 text-ink in-[[data-sheet]]:-my-4 in-[[data-sheet]]:py-4 ${className}`}>
+    <label data-ui="checkbox" className={`flex cursor-pointer items-center gap-2 text-[14px] leading-4 text-ink in-[[data-sheet]]:-my-4 in-[[data-sheet]]:py-4 ${className}`}>
       <input type="checkbox" checked={checked} onChange={e => onChange(e.target.checked)} className="peer sr-only" />
       <span aria-hidden className="flex size-4 shrink-0 items-center justify-center rounded-[4px] bg-surface peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink/30">
         {checked && <Tick />}
@@ -499,8 +501,8 @@ export function Checkbox({ checked, onChange, children, className = '' }: { chec
 /** A part that can be left out: its checkbox is the label, and the field shows only while it's on; `extra` sits at the end of the label row */
 export function OptionalField({ label, on, onChange, extra, children }: { label: string; on: boolean; onChange: (v: boolean) => void; extra?: React.ReactNode; children?: React.ReactNode }) {
   return (
-    <div className="group/field flex flex-col gap-3">
-      <div className="flex items-center justify-between gap-2">
+    <div data-ui="field" className="group/field flex flex-col gap-3">
+      <div data-ui="label" className="flex items-center justify-between gap-2">
         <Checkbox checked={on} onChange={onChange} className={ALERT_LABEL}>{label}</Checkbox>
         {on && extra}
       </div>
@@ -650,7 +652,7 @@ export function LinkButtons({ incomplete, file: make, fileOnly }: {
     // White under it: on phones it stands over the canvas, and there its stroke is centred on its edge, half out, half
     // in (a trial): inside, the stroke left 38 px of white beside the solid 40 of the download, which read larger. Wide
     // screens keep the inside stroke
-    <button type="button" onClick={share} title={alt && !fileOnly ? 'Отправить ссылку на редактор с этими настройками' : file || fileOnly ? 'Отправить файл' : 'Отправить ссылку на файл'} disabled={incomplete} aria-disabled={copied ? true : undefined} className={`${outlined} w-full bg-paper ${copied ? 'cursor-default hover:border-ink/10! max-md:hover:shadow-[0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_10%,transparent),inset_0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_10%,transparent)]!' : ''} max-md:border-0 max-md:py-[10px] max-md:in-[[data-sheet]]:py-[14px]! max-md:shadow-[0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_10%,transparent),inset_0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_10%,transparent)] max-md:hover:shadow-[0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_40%,transparent),inset_0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_40%,transparent)] max-md:disabled:hover:shadow-[0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_10%,transparent),inset_0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_10%,transparent)]`}>
+    <button type="button" data-ui="button" onClick={share} title={alt && !fileOnly ? 'Отправить ссылку на редактор с этими настройками' : file || fileOnly ? 'Отправить файл' : 'Отправить ссылку на файл'} disabled={incomplete} aria-disabled={copied ? true : undefined} className={`${outlined} w-full bg-paper ${copied ? 'cursor-default hover:border-ink/10! max-md:hover:shadow-[0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_10%,transparent),inset_0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_10%,transparent)]!' : ''} max-md:border-0 max-md:py-[10px] max-md:in-[[data-sheet]]:py-[14px]! max-md:shadow-[0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_10%,transparent),inset_0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_10%,transparent)] max-md:hover:shadow-[0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_40%,transparent),inset_0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_40%,transparent)] max-md:disabled:hover:shadow-[0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_10%,transparent),inset_0_0_0_0.5px_color-mix(in_oklab,var(--color-ink)_10%,transparent)]`}>
       {/* Regular, as a note rather than a button's name; while it shows the button is still, no hover or click, its text grey #808080, as quiet lines: the hover's edge is overridden, as
           pointer-events: none kept the browser's hover on until the pointer moved */}
       {copied
@@ -726,6 +728,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   const main = (
     <button
       ref={button}
+      data-ui="primary"
       type="button"
       title={lead || busy || said ? undefined : `Скачать ${format} ${MOD}S`}
       aria-keyshortcuts={MOD === '⌘' ? 'Meta+S' : 'Control+S'}
@@ -758,7 +761,7 @@ export function DownloadBar({ format, onClick, busy, disabled, note, count, onNo
   // all round, as on phones; «Поделиться» over the download, as wide, so it has room to say the link
   // is copied
   return (
-    <div style={{ background: FOOT_BG }} className="sticky bottom-0 z-10 mt-2 flex flex-col gap-2 p-6 tracking-normal">
+    <div data-ui="download" style={{ background: FOOT_BG }} className="sticky bottom-0 z-10 mt-2 flex flex-col gap-2 p-6 tracking-normal">
       {shareOn && <div className="flex">{links}</div>}
       <div className="flex">{main}</div>
     </div>

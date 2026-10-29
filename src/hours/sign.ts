@@ -51,7 +51,8 @@ export interface SignFieldSpec { id: string; param?: string; kind: 'dealer' | 'a
 /** `@brand/hours-sign`: the sheet, mm, the hours' placeholders and defaults, the fields in the form's order, the variants */
 export interface BrandHoursSign {
   size: { w: number; h: number }
-  hours: { placeholder: [string, string]; default?: [string, string] }
+  /** `slider`: the hours as one slider with two knobs rather than two fields */
+  hours: { placeholder: [string, string]; default?: [string, string]; slider?: boolean }
   fields: SignFieldSpec[]
   /** The first the default; `dark` a black sheet, the text white */
   variants: { label: string; dark: boolean; blocks: SignBlock[] }[]

@@ -17,6 +17,15 @@ The second brand on the core, for trying it without UMO: the business card and t
 - The colours: Figma's «evrone_colors» and evrone.com: black, #ff4400, white, #eeddcc.
 - The first screen: `04 Graphics/evrone-back-gradient.jpg`, cropped to 2:1 (`guide/images/hero.webp`).
 
+## Editor
+
+In Composter's style (`editor.css`, imported by `theme.css`; Composter is Denis's Instagram post editor for Evrone, its
+`src/style.css` the source): on wide screens a 240 px panel, Inter 11/16, every field a block with a hairline over it
+and a 40 px heading in Medium, controls 32 px, the crumbs grey over the generators' names in 13/22 Medium; the text
+black at 90%, captions 50%, placeholders 30%, the main button #ff5c16 (#e84f0c on hover), errors #f24822, a 1 px blue
+focus (#0d99ff), windows 13 px round. On a phone the core's layout in these colours. The hours sign's hours are a
+slider (`hours.slider` in `hours-sign.ts`). Composter's 450 and 550 are Inter Regular and Medium here.
+
 ## Business card
 
 `07 POS/Business Cards/Gurzhii/evrone-bc_iugu.pdf`, 85×55 mm, its text in outlines, measured at 50 px a millimetre:

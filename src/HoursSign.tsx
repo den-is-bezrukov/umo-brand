@@ -90,6 +90,33 @@ function StepIcon({ plus }: { plus?: boolean }) {
 }
 
 /**
+ * The hours as one slider with two knobs (the brand's `hours.slider`), half an hour a step over 0:00–24:00, the day
+ * between them filled and their times over it; a knob stops half an hour short of the other. Each knob is a range of
+ * its own laid over the track, only its knob taking the pointer (`.hours-range` in index.css), ← → by the keys
+ */
+function HoursSlider({ from, to, onFrom, onTo }: { from: string; to: string; onFrom: (v: string) => void; onTo: (v: string) => void }) {
+  const steps = DAY / STEP
+  const a = minutesOf(timeText(wholeTime(from)) ?? PLACEHOLDER.from) / STEP
+  const b = minutesOf(timeText(wholeTime(to)) ?? PLACEHOLDER.to) / STEP
+  const knob = (id: 'from' | 'to', value: number, label: string, set: (v: number) => void) => (
+    <span data-field={id} className="contents">
+      <input type="range" min={0} max={steps} step={1} value={value} onChange={e => set(+e.target.value)} aria-label={label} aria-valuetext={timeOf(value * STEP)} className="hours-range" />
+    </span>
+  )
+  return (
+    <div className="flex flex-col gap-2 [font-variant-numeric:lining-nums_tabular-nums]">
+      <div className="flex justify-between text-[14px] leading-5"><span>{timeOf(a * STEP)}</span><span>{timeOf(b * STEP)}</span></div>
+      <div className="relative h-4">
+        <div className="absolute inset-0 rounded-full bg-surface shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--color-ink)_10%,transparent)]" />
+        <div className="absolute inset-y-0 rounded-full bg-accent" style={{ left: `calc((100% - 16px) * ${a / steps})`, width: `calc((100% - 16px) * ${(b - a) / steps} + 16px)` }} />
+        {knob('from', a, 'Открытие', v => onFrom(timeOf(Math.min(v, b - 1) * STEP)))}
+        {knob('to', b, 'Закрытие', v => onTo(timeOf(Math.max(v, a + 1) * STEP)))}
+      </div>
+    </div>
+  )
+}
+
+/**
  * A time with steppers either side, half an hour a click (or ↑ ↓), from what's there or the placeholder; typed by
  * hand too, and rounded to the half hour when the field is left, so 9:57 can't stand on the sign
  */
@@ -115,7 +142,7 @@ function TimeField({ value, onChange, onCommit, placeholder, invalid, label, min
   }
   const button = 'flex w-9 shrink-0 cursor-pointer items-center justify-center rounded-control text-caption hover:text-ink'
   return (
-    <div className="flex h-10 in-[[data-sheet]]:h-12! rounded-control bg-surface focus-within:ring-1 focus-within:ring-inset focus-within:ring-ink/40">
+    <div data-ui="input" className="flex h-10 in-[[data-sheet]]:h-12! rounded-control bg-surface focus-within:ring-1 focus-within:ring-inset focus-within:ring-ink/40">
       <button type="button" tabIndex={-1} onClick={() => step(-1)} aria-label={`${label}: на полчаса раньше`} className={button}><StepIcon /></button>
       {/* The typed time over a copy of it with the rest of «9:00» grey after it, so the colon always shows: the copy
           sizes the box, centred, and the input lies over it */}
@@ -375,15 +402,17 @@ export default function HoursSign() {
 
   const sidebar = (
     <>
-        <div className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
+        <div data-ui="sidebar-body" className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
           <GeneratorHeader current="/hours-sign" />
 
-          <div ref={form} className="flex flex-col gap-4 tracking-normal">
+          <div ref={form} data-ui="form" className="flex flex-col gap-4 tracking-normal">
             <Field label="Часы работы">
-              <div className="grid grid-cols-2 gap-2 [font-variant-numeric:lining-nums_tabular-nums]">
-                <div data-field="from"><TimeField value={from} onChange={setFrom} onCommit={commitFrom} placeholder={PLACEHOLDER.from} label="Открытие" invalid={wrong.has('from')} min={0} max={DAY - STEP} /></div>
-                <div data-field="to"><TimeField value={to} onChange={setTo} onCommit={commitTo} placeholder={PLACEHOLDER.to} label="Закрытие" invalid={wrong.has('to')} min={STEP} max={DAY} /></div>
-              </div>
+              {HOURS.slider
+                ? <HoursSlider from={from} to={to} onFrom={setFrom} onTo={setTo} />
+                : <div className="grid grid-cols-2 gap-2 [font-variant-numeric:lining-nums_tabular-nums]">
+                    <div data-field="from"><TimeField value={from} onChange={setFrom} onCommit={commitFrom} placeholder={PLACEHOLDER.from} label="Открытие" invalid={wrong.has('from')} min={0} max={DAY - STEP} /></div>
+                    <div data-field="to"><TimeField value={to} onChange={setTo} onCommit={commitTo} placeholder={PLACEHOLDER.to} label="Закрытие" invalid={wrong.has('to')} min={STEP} max={DAY} /></div>
+                  </div>}
             </Field>
             {FIELDS.map(f => (
               <Field key={f.id} label={f.label}>
@@ -426,7 +455,7 @@ export default function HoursSign() {
       className="flex min-h-dvh flex-col bg-paper font-sans text-ink md:h-dvh md:flex-row"
     >
 
-      <aside className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
+      <aside data-ui="sidebar" className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
         {sidebar}
         {download}
       </aside>

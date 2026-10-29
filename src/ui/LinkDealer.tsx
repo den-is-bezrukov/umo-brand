@@ -47,7 +47,7 @@ export default function LinkDealer({ param, withPrefix, children }: { param: str
       <h1 className="text-[20px] font-medium leading-6">{choices.length > 1 ? 'Какой у вас салон?' : 'Это ваш салон?'}</h1>
       <div className="flex flex-col gap-2">
         {choices.map(d => (
-          <button key={d.name} type="button" onClick={() => pick(d)} className={`${outlined} flex-col items-start! gap-0.5 text-left`}>
+          <button key={d.name} type="button" onClick={() => pick(d)} data-ui="button" className={`${outlined} flex-col items-start! gap-0.5 text-left`}>
             <span>{`${POINTS.prefix} `}{withoutBrand(d.name)}</span>
             {d.address && <span className="font-normal text-caption">{d.address}</span>}
           </button>
