@@ -1,0 +1,30 @@
+@import './editor.css';
+
+@font-face {
+  font-family: 'Geist';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/Geist.woff2') format('woff2');
+}
+
+:root { --font-editor: 'Geist', sans-serif; }
+
+@theme {
+  --font-sans: 'Geist', sans-serif;
+  --color-ink: #000;
+  --color-paper: #fff;
+  --color-surface: #f0f0f0;
+  --color-line: #e5e5e5;
+  --color-caption: #808080;
+  --color-hint: #a6a6a6;
+  --color-faint: #bfbfbf;
+  --color-ghost: #a6a6a6;
+  --color-accent: #000;
+  --color-on-accent: #f0f0f0;
+  --color-error: #e30;
+  --color-success: #008a46;
+  --radius-control: 8px;
+  --radius-panel: 24px;
+  --radius-sheet: 24px;
+}

@@ -1,0 +1,189 @@
+/* POSSET's editor theme. The core supplies the working controls and their named hooks. */
+:root[data-editor] body { background: var(--color-surface); }
+:root[data-editor] [data-ui='sidebar-body'] { gap: 0; padding: 0; }
+:root[data-editor] [data-head] { gap: 24px; padding: 24px; }
+:root[data-editor] [data-head] > :has(> [data-ui='crumbs']),
+:root[data-editor] [data-ui='ring'] { display: none; }
+:root[data-editor] [data-ui='head-bar'] { display: flex; height: 16px; font-size: 16px; line-height: 16px; letter-spacing: -0.32px; }
+:root[data-editor] [data-ui='head-logo'] { flex: none; font-weight: 600; }
+:root[data-editor] [data-ui='head-logo'] > span { height: auto; }
+:root[data-editor] [data-ui='head-name'] { display: flex; gap: 8px; font-weight: 500; }
+:root[data-editor] [data-ui='head-name']::before { content: '/'; color: #d9d9d9; font-weight: 300; }
+:root[data-editor] [data-ui='head-menu'] { display: none; }
+:root[data-editor] [data-ui='head-title'] { display: flex; align-items: center; justify-content: space-between; gap: 24px; width: 100%; font-size: 32px; line-height: 32px; font-weight: 600; letter-spacing: -0.32px; font-feature-settings: 'ss02' 1; }
+:root[data-editor] [data-ui='head-title']::after { content: ''; flex: none; width: 16px; height: 16px; background: url('./icons/down.svg') center / 16px no-repeat; }
+:root[data-editor] [data-ui='head-title'][aria-expanded='true']::after { transform: rotate(180deg); }
+:root[data-editor] [data-head] > nav { margin-top: 0; }
+:root[data-editor] [data-ui='ring-name'] { font-size: 24px; line-height: 28px; }
+:root[data-editor] [data-ui='form'] { gap: 0; }
+:root[data-editor] [data-ui='field'] { gap: 16px; padding: 24px; border-top: 0; background-image: linear-gradient(var(--field-divider, var(--color-line)), var(--field-divider, var(--color-line))); background-size: 100% 1px; background-position: top; background-repeat: no-repeat; }
+:root[data-editor] [data-ui='label'],
+:root[data-editor] [data-ui='label'] * { font-size: 16px; line-height: 16px; font-weight: 500; }
+:root[data-editor] [data-ui='input'] { --textarea-line-boxes: 1; min-height: 16px; height: auto; padding: 0; border-radius: 0; background: transparent; font-size: 16px; line-height: 16px; font-weight: 500; box-shadow: none; }
+:root[data-editor] input[data-ui='input'] { display: block; height: 16px; }
+:root[data-editor] [data-ui='input']:focus { box-shadow: none; }
+:root[data-editor][data-keyboard-focus] [data-ui='field']:focus-within {
+  position: relative;
+  z-index: 1;
+  --field-divider: rgb(0 0 0 / 0.3);
+  box-shadow: inset 1px 0 rgb(0 0 0 / 0.3), inset -1px 0 rgb(0 0 0 / 0.3);
+}
+:root[data-editor][data-keyboard-focus] [data-ui='field']:focus-within::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 -1px;
+  height: 1px;
+  background: rgb(0 0 0 / 0.3);
+  pointer-events: none;
+}
+:root[data-editor] [data-ui='field'] [data-ui='input']:focus-visible,
+:root[data-editor] [data-ui='field'] [data-ui='input'] :focus-visible {
+  outline: none;
+}
+:root[data-editor] [data-ui='segments'] { gap: 16px; background: transparent; }
+:root[data-editor] [data-ui='field']:has([data-ui='segments']) > [data-ui='label'] { display: none; }
+:root[data-editor] [data-ui='seg'] { flex: none; padding: 0; border: 0; background: none; color: var(--color-caption); }
+:root[data-editor] [data-ui='seg'] span { font-size: 16px; line-height: 16px; font-weight: 500; }
+:root[data-editor] [data-ui='seg'][aria-pressed='true'] { color: var(--color-ink); }
+:root[data-editor] [data-ui='seg'][aria-pressed='true'] span { font-weight: 600; }
+:root[data-editor] [data-ui='chevron'] { width: 16px; height: 16px; background: url('./icons/right.svg') center / 16px no-repeat; }
+:root[data-editor] [data-ui='chevron'] svg { display: none; }
+:root[data-editor] [data-ui='sidebar'],
+:root[data-editor] [data-sheet] { --combo-opens-list: 1; }
+:root[data-editor] [data-ui='checkbox'] { flex: 1; justify-content: space-between; gap: 8px; font-size: 16px; line-height: 16px; font-weight: 500; color: var(--color-caption); }
+:root[data-editor] [data-ui='checkbox'] > span[aria-hidden] { order: 1; border-radius: 0; background: url('./icons/plus.svg') center / 16px no-repeat; }
+:root[data-editor] [data-ui='checkbox'] > input:checked + span[aria-hidden] { background-image: url('./icons/minus.svg'); }
+:root[data-editor] [data-ui='checkbox'] > span[aria-hidden] svg { display: none; }
+:root[data-editor] [data-ui='label'] > [data-ui='checkbox'] { position: relative; }
+:root[data-editor] [data-ui='field']:has(> [data-ui='label']:only-child) { position: relative; }
+:root[data-editor] [data-ui='field']:has(> [data-ui='label']:only-child) [data-ui='checkbox']::after { content: ''; position: absolute; inset: -24px; }
+:root[data-editor] [data-ui='form'] > [data-ui='checkbox'] { padding: 24px; border-top: 0; background-image: linear-gradient(var(--field-divider, var(--color-line)), var(--field-divider, var(--color-line))); background-size: 100% 1px; background-position: top; background-repeat: no-repeat; }
+:root[data-editor] [data-ui='valid'] { display: none; }
+:root[data-editor] [data-ui='download'] { margin-top: auto; gap: 16px; padding: 24px; flex-direction: row; }
+:root[data-editor] [data-ui='download'] > div { flex: 1; min-width: 0; }
+:root[data-editor] [data-ui='button'],
+:root[data-editor] [data-ui='primary'] { height: 48px; padding: 14px 16px; border: 0; border-radius: 888px; font-size: 16px; line-height: 20px; font-weight: 500; box-shadow: none; }
+:root[data-editor] [data-ui='button'] { background: var(--color-surface); color: var(--color-ink); }
+:root[data-editor] [data-ui='button']:hover { background: #e5e5e5; }
+:root[data-editor] [data-ui='list'] { padding: 8px; border: 1px solid var(--color-line); border-radius: 16px; font-size: 16px; }
+
+@media (min-width: 768px) {
+  :root[data-editor] #root > div { background: var(--color-surface); padding: 16px; gap: 16px; }
+  :root[data-editor] [data-ui='sidebar'] { width: 370px; height: 100%; border: 0; border-radius: 24px; background: var(--color-paper); scrollbar-width: none; overflow-x: clip; }
+  :root[data-editor] [data-ui='sidebar']::-webkit-scrollbar { display: none; }
+}
+
+/* Override the core's 20 px group rhythm: here the dividers separate adjacent blocks. */
+:root[data-editor] [data-ui='sidebar-body'] [data-ui='form'] { gap: 0; }
+:root[data-editor] [data-ui='sidebar-body'] [data-ui='field'] { gap: 16px; }
+:root[data-editor] [data-ui='field']:has([data-ui='segments']) { gap: 0; }
+:root[data-editor] [data-ui='input'] > button { display: none; }
+:root[data-editor] [data-ui='input'] > label { justify-content: flex-start; font-size: 16px; line-height: 16px; }
+/* 8 px outer padding + 1 px border + 12 px option padding align text with the input. */
+@supports (anchor-name: --a) {
+  :root[data-editor] [data-ui='list'] {
+    left: calc(anchor(left) - 21px) !important;
+    width: calc(anchor-size(width) + 42px) !important;
+  }
+}
+
+/* Nested form groups share the same divider rhythm as direct field children. */
+:root[data-editor] [data-ui='sidebar-body'] div:has(> [data-ui='field'], > [data-ui='form']) {
+  gap: 0;
+}
+:root[data-editor] [data-ui='sidebar-body'] [data-ui='checkbox']:not([data-ui='field'] [data-ui='checkbox']) {
+  padding: 24px;
+  border-top: 0; background-image: linear-gradient(var(--field-divider, var(--color-line)), var(--field-divider, var(--color-line))); background-size: 100% 1px; background-position: top; background-repeat: no-repeat;
+}
+
+/* One control geometry for both layouts. The surrounding sheet alone changes on phones.
+   Override the core's important touch sizes inside the same utility layer. */
+@layer utilities {
+  :root[data-editor] [data-ui='sidebar-body'] [data-ui='input'] {
+    min-height: 16px !important;
+    padding-block: 0 !important;
+  }
+  :root[data-editor] [data-ui='sidebar-body'] [data-ui='input']:not(textarea) {
+    height: 16px !important;
+  }
+  :root[data-editor] [data-ui='sidebar-body'] [data-ui='chevron'] {
+    height: 16px !important;
+  }
+  :root[data-editor] [data-ui='sidebar-body'] [data-ui='seg'] {
+    padding-block: 0 !important;
+  }
+  :root[data-editor] [data-ui='sidebar-body'] [data-ui='checkbox'] {
+    margin-block: 0 !important;
+    padding-block: 24px !important;
+  }
+  :root[data-editor] [data-ui='field'] [data-ui='checkbox'] {
+    padding-block: 0 !important;
+  }
+  @media (max-width: 767px) {
+    :root[data-editor] [data-sheet] [data-ui='sidebar-body'] {
+      padding: 0 !important;
+      gap: 0 !important;
+    }
+  }
+}
+
+/* Empty fields keep their label in place. Overlay the empty control on that row until focus;
+   then it takes its normal next row. The label never switches places with a placeholder. */
+:root[data-editor] [data-ui='field']:has(> p[data-ui='label']):has([data-ui='input']:is(input, textarea)) {
+  --field-click-focus: 1;
+}
+:root[data-editor] [data-ui='sidebar-body'] [data-ui='field']:has(> p[data-ui='label']):has([data-ui='input']:placeholder-shown):not(:focus-within):not(:has([data-ui='input']:not(:placeholder-shown))) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  cursor: text;
+}
+:root[data-editor] [data-ui='field']:has(> p[data-ui='label']):has([data-ui='input']:placeholder-shown):not(:focus-within):not(:has([data-ui='input']:not(:placeholder-shown))) > * {
+  grid-area: 1 / 1;
+  min-width: 0;
+}
+:root[data-editor] [data-ui='field']:has([data-ui='input']:placeholder-shown):not(:focus-within):not(:has([data-ui='input']:not(:placeholder-shown))) > p[data-ui='label'] {
+  position: relative;
+  z-index: 1;
+  pointer-events: none;
+}
+:root[data-editor] [data-ui='field']:has(> p[data-ui='label']):not(:focus-within) [data-ui='input']:placeholder-shown::placeholder,
+:root[data-editor] [data-ui='field']:has(> p[data-ui='label']) [data-ui='input']:is(
+  [placeholder='Имя'], [placeholder='Фамилия'], [placeholder='Должность'],
+  [placeholder='Почта'], [placeholder='Адрес'], [placeholder='Сайт'], [placeholder='Название офиса']
+)::placeholder {
+  color: transparent;
+}
+
+/* Size the control by its line boxes, not the glyph ink overflow returned by scrollHeight. */
+@supports (field-sizing: content) {
+  :root[data-editor] [data-ui='sidebar-body'] textarea[data-ui='input'] {
+    field-sizing: content;
+    height: auto !important;
+  }
+}
+
+/* Paint entered phone digits and the remaining mask on one baseline. */
+:root[data-editor] input[data-masked] {
+  color: transparent;
+  caret-color: var(--color-ink);
+  font-variant-numeric: lining-nums tabular-nums;
+}
+:root[data-editor] input[data-masked]::placeholder { color: transparent; }
+:root[data-editor] [data-ui='input-mask'] {
+  display: flex;
+  padding: 0;
+  font-size: 16px;
+  line-height: 16px;
+  font-weight: 500;
+  font-variant-numeric: lining-nums tabular-nums;
+}
+:root[data-editor] [data-ui='field']:has(> p[data-ui='label']):not(:focus-within):not(:has([data-ui='input']:not(:placeholder-shown))) input[data-masked]:placeholder-shown + [data-ui='input-mask'] {
+  display: none;
+}
+
+/* Table template uses the same 48 px button geometry as the download bar. */
+:root[data-editor] a[data-ui='button'] { flex: none; }
+:root[data-editor] [data-ui='field'] div:has(> [data-ui='segments']):has(a[data-ui='button']) {
+  gap: 24px;
+}
