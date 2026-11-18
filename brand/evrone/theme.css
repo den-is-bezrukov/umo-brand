@@ -51,8 +51,7 @@
   --color-on-accent: #fff;
   --color-error: #e30;
   --color-success: #00c950;
-  /* The corners of the interface's controls: fields, buttons, switches, menus (`rounded-control`), as Composter's
-     kit has them (evrone.com's are 6) */
+  /* The corners of the interface's controls: fields, buttons, switches, menus (`rounded-control`); evrone.com's are 6 */
   --radius-control: 5px;
   /* Windows and cards (`rounded-panel`); the generators' sheet on a phone (`rounded-sheet`) */
   --radius-panel: 16px;

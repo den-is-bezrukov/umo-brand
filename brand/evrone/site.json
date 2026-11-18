@@ -9,6 +9,14 @@
     "business-card",
     "hours-sign"
   ],
+  "names": {
+    "hours-sign": {
+      "title": "Табличка",
+      "phrase": "табличка с режимом работы",
+      "of": "таблички",
+      "one": "табличку"
+    }
+  },
   "title": "Бренд Evrone",
   "description": "Стандарты бренда Evrone и печатные материалы",
   "language": "ru",
