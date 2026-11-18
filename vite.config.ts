@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import fs from 'node:fs'
 import path from 'node:path'
+import opentype from 'opentype.js'
 
 import { GENERATORS } from './src/data/generators'
 
@@ -31,6 +32,7 @@ export default defineConfig(({ mode }) => {
       tailwindcss(),
       siteMetaPlugin(siteConfiguration),
       brandDefaults(brandDir, path.resolve(__dirname, 'src/brand-default')),
+      fontMetrics(brandDir),
       routePages([...GENERATORS.map(g => g.path).filter(p => !siteConfiguration.materials || siteConfiguration.materials.includes(p.slice(1))), '/editor']),
       corePublic(path.resolve(__dirname, 'public')),
       reactRefreshBoundaryFallback(),
@@ -286,6 +288,41 @@ function brandDefaults(brandDir: string, defaultsDir: string): Plugin {
       if (!file.startsWith(brandDir + path.sep) || find(file)) return null
       const fallback = find(path.join(defaultsDir, path.relative(brandDir, file)))
       return fallback && (query === undefined ? fallback : `${fallback}?${query}`)
+    },
+  }
+}
+
+/**
+ * `virtual:font-metrics`: the brand type's measures, read from its font file, in em: `cap` the capitals' height (the
+ * font's own, OS/2), `ascent` and `descent` the line box Figma puts a line in (hhea), `descender` the deepest descender of
+ * the Cyrillic (р у д ж ф ц; the Latin p g q y where the font has none). The font is the first TrueType or OpenType file
+ * the brand's `fonts.ts` names, found in its `public/`
+ */
+function fontMetrics(brandDir: string): Plugin {
+  const id = 'virtual:font-metrics'
+  return {
+    name: 'font-metrics',
+    resolveId: source => (source === id ? '\0' + id : null),
+    load(loaded) {
+      if (loaded !== '\0' + id) return null
+      const fonts = path.join(brandDir, 'fonts.ts')
+      const name = /['"]([^'"]+\.(?:ttf|otf))['"]/.exec(fs.readFileSync(fonts, 'utf8'))?.[1]
+      if (!name) throw new Error(`${fonts} names no .ttf or .otf file to measure`)
+      const file = path.join(brandDir, 'public', name)
+      this.addWatchFile(file)
+      const bytes = fs.readFileSync(file)
+      const font = opentype.parse(bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength))
+      const em = font.unitsPerEm
+      const round = (units: number) => Math.round((units / em) * 1000) / 1000
+      const depth = (letters: string) => -Math.min(...[...letters].map(c => font.charToGlyph(c).getBoundingBox().y1))
+      const cyrillic = depth('рудж\u0444ц')
+      const metrics = {
+        cap: round(font.tables.os2.sCapHeight),
+        ascent: round(font.tables.hhea.ascender),
+        descent: round(-font.tables.hhea.descender),
+        descender: round(cyrillic > 0 ? cyrillic : depth('pgqy')),
+      }
+      return `export const METRICS = ${JSON.stringify(metrics)}`
     },
   }
 }

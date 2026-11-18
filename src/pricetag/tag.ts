@@ -5,7 +5,7 @@ import { noteLine } from '@/ui/liveText'
 import { logo } from '@/card/card'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { WORDS } from '@brand/words'
-import { FONTS } from '@brand/fonts'
+import { METRICS } from 'virtual:font-metrics'
 
 // A price tag for the small goods at a point: 90×60 mm, a black band 12 mm tall across the top with the brand's
 // logo 15×3 mm, a hairline and the
@@ -19,9 +19,9 @@ import { FONTS } from '@brand/fonts'
 export const TAG = { w: 90, h: 60 }
 
 export const SIDE = 4.5
-export const CAP = FONTS.metrics.cap
+export const CAP = METRICS.cap
 /** From a «leading-none» box's top to its baseline, in sizes: (1 − (ascent + descent)) / 2 + ascent */
-export const DROP = (1 - (FONTS.metrics.ascent + FONTS.metrics.descent)) / 2 + FONTS.metrics.ascent
+export const DROP = (1 - (METRICS.ascent + METRICS.descent)) / 2 + METRICS.ascent
 
 /** The black band */
 export const BAND = 12

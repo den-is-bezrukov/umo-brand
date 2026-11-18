@@ -15,13 +15,6 @@ export interface BrandFonts {
   regular: BrandFont
   /** The same face as `regular` for a type of one weight: the generators then set everything in it */
   medium: BrandFont
-  /**
-   * The type's measures, in em, which the layouts are set by: `cap` the capitals' height; `ascent` and `descent` the
-   * line box Figma puts a line in (the font's hhea), whose middle it centres in a line's height, so a baseline is
-   * (line − (ascent + descent) · size) / 2 + ascent · size under the line's top; `descender` the deepest descender
-   * of the Cyrillic (р, у, д)
-   */
-  metrics: { cap: number; ascent: number; descent: number; descender: number }
 }
 
 /** A drawing in absolute path data (M L H V C Z), `w`×`h` units */

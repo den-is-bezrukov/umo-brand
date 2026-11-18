@@ -1,5 +1,5 @@
 import type { Font } from 'opentype.js'
-import { FONTS } from '@brand/fonts'
+import { METRICS } from 'virtual:font-metrics'
 import type { Cmd } from '@/livery/geometry'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { noteLine } from '@/ui/liveText'
@@ -16,7 +16,7 @@ export const STRIP = { x: 10.5, y: 110, w: 501, h: 21 }
 export const SIZE = 18
 export const TRACKING = -0.01
 /** The brand font's cap height, in em */
-const CAP = FONTS.metrics.cap
+const CAP = METRICS.cap
 /**
  * The capitals' top 2.5 mm under the strip's top: half a millimetre above Figma's 3, as the line is mostly lowercase
  * and Ц's tail, and its weight sat low between the plate and the frame's rounded bottom

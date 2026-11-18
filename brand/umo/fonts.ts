@@ -6,5 +6,4 @@ export const FONTS: BrandFonts = {
   short: 'CoFo',
   regular: { file: 'fonts/CoFoSans-Regular.ttf', name: 'CoFoSans-Regular' },
   medium: { file: 'fonts/CoFoSans-Medium.ttf', name: 'CoFoSans-Medium' },
-  metrics: { cap: 0.68, ascent: 0.974, descent: 0.286, descender: 0.194 },
 }
