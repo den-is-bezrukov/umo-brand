@@ -1,19 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { Font } from 'opentype.js'
 import { goal } from '@/ui/metrika'
-import { Field, TextInput, ComboField, GeneratorHeader, LinkButtons, DownloadBar, Segments, SegBtn, flash } from '@/ui/form'
+import { Field, TextInput, ComboField, GeneratorHeader, LinkButtons, DownloadBar, Segments, SegBtn } from '@/ui/form'
+import { flash } from '@/ui/formUtils'
 import { isPdf, readPdfData } from '@/ui/pdfData'
 import { CaptionReset } from '@/ui/staff'
 import { linkParams, useLinkState, saveAndOpenPdf } from '@/ui/share'
 import { toD } from '@/livery/geometry'
-import { maskPhone, siteFor } from '@/card/card'
+import { maskPhone, phoneMaskTail, siteFor } from '@/card/card'
 import { SIGN, SIGN_KEY, FIELDS, HOURS, VARIANTS, buildSign, signLogo, timeText, type SignField, type SignFieldSpec, type Input } from '@/hours/sign'
 import { loadFont, oneLine } from '@/ui/type'
 import { POINT_NAMES, pointFilter, withoutBrand, phoneOf } from '@/data/points'
 import { addressOf, hoursOf } from '@/data/hours'
-import { MobileEditor, usePhone } from '@/ui/mobile'
+import { MobileEditor } from '@/ui/mobile'
+import { usePhone } from '@/ui/usePhone'
 import { recordText } from '@/ui/liveText'
-import { TemplateButton, useTemplateLink } from '@/ui/template'
+import { TemplateButton } from '@/ui/template'
+import { useTemplateLink } from '@/ui/useTemplateLink'
 import { SITE } from '@/site'
 import { WORDS } from '@brand/words'
 
@@ -152,7 +155,7 @@ function TimeField({ value, onChange, onCommit, placeholder, invalid, label, min
           sizes the box, centred, and the input lies over it */}
       <label className="flex min-w-0 flex-1 cursor-text items-center justify-center text-[14px] leading-5 [font-variant-numeric:lining-nums_tabular-nums]">
         <span className="relative whitespace-pre">
-          <span aria-hidden className="text-transparent">{value}</span>
+          <span aria-hidden className="text-ink">{value}</span>
           <span aria-hidden className="text-hint">{value ? tailOf(value) : placeholder}</span>
           <input
         value={value}
@@ -162,6 +165,7 @@ function TimeField({ value, onChange, onCommit, placeholder, invalid, label, min
           if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); step(e.key === 'ArrowUp' ? 1 : -1) }
           if (e.key === 'Enter') onCommit(rounded(value, min, max))
         }}
+        style={{ color: 'transparent', caretColor: 'var(--color-ink)' }}
         inputMode="decimal"
         aria-label={label}
         aria-invalid={invalid || undefined}
@@ -395,6 +399,7 @@ export default function HoursSign() {
           requestAnimationFrame(() => { if (document.activeElement === el) el.setSelectionRange(caret, caret) })
         }}
         placeholder={f.placeholder}
+        maskTail={phoneMaskTail(fields[f.id])}
         inputMode="tel"
         invalid={invalid}
       />

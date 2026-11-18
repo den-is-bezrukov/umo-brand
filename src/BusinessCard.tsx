@@ -1,20 +1,25 @@
 import { flushSync } from 'react-dom'
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadBar, LinkButtons, canShareFiles, unfilled, itemOf, Segments, SegBtn, rowAction, isValidUrl, ALERT_LABEL, Checkbox } from '@/ui/form'
-import { useStaff, plain, pickTable, TableSource, UploadArea, useAddKey, fullNameField, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
+import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadBar, LinkButtons, Segments, SegBtn, Checkbox } from '@/ui/form'
+import { canShareFiles, unfilled, itemOf, rowAction, isValidUrl, ALERT_LABEL } from '@/ui/formUtils'
+import { TableSource, UploadArea, ItemFrame, Removed, ItemAlert } from '@/ui/staff'
+import { useStaff, plain, pickTable, useAddKey, fullNameField } from '@/ui/useStaff'
+import { ITEM_EDGE } from '@/ui/staffState'
 import { goal } from '@/ui/metrika'
 import { toD, qrOutline, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/ui/type'
 import { xlsxCells, pastedCells, byHeaders, FULL_NAME, fromFullName, type Cells } from '@/nametag/table'
-import { CARDS_KEY, CARD, QR, FACES, BACK_LOGO, HAS_POINT, POINT_FIELDS, buildBack, siteFor, siteText, splitPhone, maskPhone, type CardField, type PointDetails, type Person, type QrData } from '@/card/card'
+import { CARDS_KEY, CARD, QR, FACES, BACK_LOGO, HAS_POINT, POINT_FIELDS, buildBack, siteFor, siteText, splitPhone, maskPhone, phoneMaskTail, type CardField, type PointDetails, type Person, type QrData } from '@/card/card'
 import CardArt from '@/card/CardArt'
 import { POSITION_OPTIONS } from '@/data/positions'
 import { POINT_NAMES, POINT_PARAM, pointFilter, pointOf, withoutBrand, phoneOf } from '@/data/points'
 import { isPdf, readPdfData } from '@/ui/pdfData'
-import { MobileEditor, usePhone } from '@/ui/mobile'
+import { MobileEditor } from '@/ui/mobile'
+import { usePhone } from '@/ui/usePhone'
 import { linkParams, saveAndOpenPdf } from '@/ui/share'
 import { recordText } from '@/ui/liveText'
-import { TemplateButton, useTemplateLink } from '@/ui/template'
+import { TemplateButton } from '@/ui/template'
+import { useTemplateLink } from '@/ui/useTemplateLink'
 import { SITE } from '@/site'
 import { WORDS } from '@brand/words'
 
@@ -341,7 +346,7 @@ export default function BusinessCard() {
             <div className="flex flex-col gap-2">
               <Segments>
                 <SegBtn active={mode === 'manual'} onClick={() => setMode('manual')}>Вручную</SegBtn>
-                <SegBtn active={mode === 'table'} onClick={() => setMode('table')}>Из таблицы</SegBtn>
+                <SegBtn active={mode === 'table'} onClick={() => setMode('table')}>Из документа</SegBtn>
               </Segments>
               {mode === 'table' && <TableSource staff={staff} template={TEMPLATE} />}
             </div>
@@ -433,6 +438,7 @@ export default function BusinessCard() {
                             requestAnimationFrame(() => { if (document.activeElement === el) el.setSelectionRange(caret, caret) })
                           }}
                           placeholder="+7 987 654 32 10"
+                          maskTail={phoneMaskTail(p.phone)}
                           inputMode="tel"
                           invalid={bad('phone', 'Телефон')}
                         />

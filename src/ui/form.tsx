@@ -1,3 +1,4 @@
+import { isValidUrl, ALERT_LABEL, rowAction, outlined, flashes, canShareFiles } from './formUtils'
 import { useContext, useEffect, useId, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
@@ -10,6 +11,7 @@ import { InFoot, InSheet, SheetLayer, FOOT_BG } from './phone'
 import { MOD, withMod, otherLayout } from './keys'
 import { SITE } from '@/site'
 import Wordmark from '@brand/Wordmark'
+import useSidebarFocus from './focus'
 
 /** The editor's name in the generators' header: the brand's (`editor` in its site.json), «Редактор материалов» without one */
 const EDITOR = SITE.editor ?? 'Редактор материалов'
@@ -43,6 +45,8 @@ const crumb = 'underline decoration-transparent decoration-[0.35px] underline-of
  * whole app's menu and opens only the generators' list
  */
 export function GeneratorHeader({ current }: { current: '/price-card' | '/livery' | '/plate-frame' | '/name-tag' | '/business-card' | '/price-tag' | '/hours-sign' | '/memo' }) {
+  const header = useRef<HTMLDivElement>(null)
+  useSidebarFocus(header)
   const [menu, setMenu] = useState(false)
   const toggle = () => { if (!menu) goal('open_menu', { page: location.pathname }); setMenu(!menu) }
   // While it's open the rest of the form and the download step aside (`html[data-menu]` in index.css)
@@ -56,7 +60,7 @@ export function GeneratorHeader({ current }: { current: '/price-card' | '/livery
   const name = 'text-[24px] font-medium leading-6 tracking-[-0.01em] whitespace-nowrap'
   const title = MATERIALS.find(g => g.path === current)?.title
   return (
-    <div data-head className="flex flex-col gap-4">
+    <div ref={header} data-head className="flex flex-col gap-4">
       {/* A head a brand's style may show instead of the crumbs and the line (`data-ui`, hidden here): the logo, the way
           back to the guide, the editor's name, a button for every generator, and the open one's name */}
       <div data-ui="head-bar" className="hidden items-center gap-2">
@@ -124,26 +128,6 @@ function GeneratorRing({ current }: { current: string }) {
   )
 }
 
-export function isValidUrl(v: string): boolean {
-  if (!v.trim()) return false
-  try {
-    const u = new URL(v.trim())
-    if (u.protocol !== 'http:' && u.protocol !== 'https:') return false
-    const host = u.hostname
-    if (!host || host.includes(' ')) return false
-    if (!host.includes('.')) return false
-    if (host.startsWith('.') || host.endsWith('.')) return false
-    const parts = host.split('.')
-    const tld = parts[parts.length - 1]
-    if (tld.length < 2) return false
-    // each label must be non-empty and contain only valid chars
-    if (parts.some(p => p.length === 0 || /[^a-zA-Z0-9\-_]/.test(p))) return false
-    return true
-  } catch {
-    return false
-  }
-}
-
 export function SegBtn({ active, onClick, disabled, title, children }: { active: boolean; onClick: () => void; disabled?: boolean; title?: string; children: React.ReactNode }) {
   return (
     <button
@@ -170,11 +154,14 @@ export function SegBtn({ active, onClick, disabled, title, children }: { active:
  * A field with an error isn't edged in red: its label turns red instead, found by the control's aria-invalid under it
  * (`ALERT_LABEL` on the label, `group/field` on what holds both), so every generator's fields do it with nothing passed
  */
-export const ALERT_LABEL = 'group-has-[[aria-invalid=true]]/field:text-error'
-
 export function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div data-ui="field" className="group/field flex flex-col gap-3">
+    <div data-ui="field" className="group/field flex flex-col gap-3" onClick={event => {
+      // A compact brand theme may make the padding and label focus its input too.
+      if ((event.target as HTMLElement).closest('input, textarea, button, a, label')) return
+      if (getComputedStyle(event.currentTarget).getPropertyValue('--field-click-focus').trim() !== '1') return
+      event.currentTarget.querySelector<HTMLInputElement | HTMLTextAreaElement>('input:not([type="checkbox"]), textarea')?.focus()
+    }}>
       <p data-ui="label" className={`text-[14px] leading-4 text-caption whitespace-nowrap ${ALERT_LABEL}`}>{label}</p>
       {children}
     </div>
@@ -198,10 +185,11 @@ function stepped(value: string, placeholder: string, dir: 1 | -1, step: number, 
   return String(Math.max(0, Math.min(max, next)))
 }
 
-export function TextInput({ value, onChange, onBlur, onPaste, placeholder, invalid, numeric, step, max = Infinity, inputMode, list, className = '' }: { value: string; onChange: (v: string) => void; onBlur?: () => void; onPaste?: (e: React.ClipboardEvent) => void; placeholder?: string; invalid?: boolean; numeric?: boolean; /** ↑ ↓ change the number by this */ step?: number; max?: number; inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode']; list?: string; className?: string }) {
-  return (
+export function TextInput({ value, onChange, onBlur, onPaste, placeholder, invalid, numeric, step, max = Infinity, inputMode, list, maskTail, className = '' }: { value: string; onChange: (v: string) => void; onBlur?: () => void; onPaste?: (e: React.ClipboardEvent) => void; placeholder?: string; invalid?: boolean; numeric?: boolean; /** ↑ ↓ change the number by this */ step?: number; max?: number; inputMode?: React.HTMLAttributes<HTMLInputElement>['inputMode']; list?: string; /** Optional visible mask tail, enabled by the brand theme */ maskTail?: string; className?: string }) {
+  const input = (
     <input
       data-ui="input"
+      data-masked={maskTail !== undefined ? "" : undefined}
       value={value}
       onKeyDown={step ? e => {
         if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return
@@ -220,6 +208,15 @@ export function TextInput({ value, onChange, onBlur, onPaste, placeholder, inval
         focus:ring-1 focus:ring-inset focus:ring-ink/40 ${className}`}
     />
   )
+  if (maskTail === undefined) return input
+  return (
+    <div data-ui="masked-input" className="relative w-full min-w-0 flex-1">
+      {input}
+      <span data-ui="input-mask" aria-hidden className="pointer-events-none absolute inset-0 hidden items-center whitespace-pre px-3 text-[14px] leading-5">
+        <span>{value}</span><span className="text-hint">{maskTail}</span>
+      </span>
+    </div>
+  )
 }
 
 /** A one-line-tall textarea that grows with its text; the column is fluid on phones, so it refits on resize too */
@@ -228,7 +225,31 @@ function useAutoHeight(value: string) {
   useLayoutEffect(() => {
     const el = ref.current
     if (!el) return
-    const fit = () => { el.style.height = 'auto'; el.style.height = `${el.scrollHeight}px` }
+    const fit = () => {
+      el.style.height = 'auto'
+      const style = getComputedStyle(el)
+      if (style.getPropertyValue('field-sizing') === 'content') return
+      if (style.getPropertyValue('--textarea-line-boxes').trim() === '1') {
+        // Some fonts paint beyond their line boxes. scrollHeight includes that ink overflow;
+        // a text mirror measures the actual wrapped lines without adding pixels per control.
+        const mirror = document.createElement('div')
+        const padY = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom)
+        const padX = parseFloat(style.paddingLeft) + parseFloat(style.paddingRight)
+        Object.assign(mirror.style, {
+          position: 'fixed', visibility: 'hidden', pointerEvents: 'none',
+          width: `${el.clientWidth - padX}px`, padding: '0', border: '0',
+          font: style.font, letterSpacing: style.letterSpacing, lineHeight: style.lineHeight,
+          fontFeatureSettings: style.fontFeatureSettings, fontKerning: style.fontKerning,
+          whiteSpace: 'pre-wrap', overflowWrap: style.overflowWrap, wordBreak: style.wordBreak,
+        })
+        mirror.textContent = (el.value || el.placeholder || '\u200b').replace(/\n$/, '\n\u200b')
+        document.body.append(mirror)
+        const height = mirror.getBoundingClientRect().height
+        mirror.remove()
+        const border = parseFloat(style.borderTopWidth) + parseFloat(style.borderBottomWidth)
+        el.style.height = `${height + (style.boxSizing === 'border-box' ? padY + border : 0)}px`
+      } else el.style.height = `${el.scrollHeight}px`
+    }
     fit()
     window.addEventListener('resize', fit)
     return () => window.removeEventListener('resize', fit)
@@ -537,8 +558,6 @@ export function OptionalField({ label, on, onChange, extra, part, children }: { 
 }
 
 // Grey #808080, black on hover, the icon with it
-export const rowAction = 'flex shrink-0 cursor-pointer items-center gap-2 text-[14px] leading-4 text-caption transition-colors hover:text-ink'
-
 /** Corners for the size switch, on the 16 grid with the ticks' 2 px stroke and square ends: at the outer corners to grow, turned in to shrink */
 function SizeIcon({ grow }: { grow: boolean }) {
   return (
@@ -570,14 +589,6 @@ export function SizeSwitch({ large, onChange, label }: { large: boolean; onChang
   )
 }
 
-// Edged at 10%, at 40% on hover
-export const outlined = 'flex min-w-16 flex-1 items-center justify-center rounded-control border border-ink/10 px-3 py-[9px] in-[[data-sheet]]:py-[13px]! text-[14px] font-medium leading-5 text-ink cursor-pointer hover:border-ink/40 disabled:cursor-default disabled:text-hint disabled:hover:border-ink/10'
-
-/** A word the download bar's line says for a moment («В файле нет режимника») */
-const flashes = new Set<(text: string) => void>()
-/** Says something for two seconds over the download, where the line saying what's in the way stands */
-export const flash = (text: string) => flashes.forEach(f => f(text))
-
 /**
  * «Поделиться»: sends a link to the file, `pdf=1` added to the page address (the settings are in it),
  * as it's mostly sent to a point, who wants the file, not the editor; with Alt (Option) held the address as it is, the
@@ -604,11 +615,6 @@ async function shareLink(editor: boolean, onCopied: () => void) {
   onCopied()
   goal('copy_link', { page: location.pathname, pdf: !editor })
 }
-
-/** Whether the browser sends files through the share sheet (phones, Safari, Chrome; not Firefox) */
-export const canShareFiles = (() => {
-  try { return !!navigator.canShare?.({ files: [new File([''], 'x.pdf', { type: 'application/pdf' })] }) } catch { return false }
-})()
 
 /** The files the browser takes for the share sheet: all of them, else the first alone (the PDF) */
 const sendable = (files: File[]) => (navigator.canShare({ files }) ? files : navigator.canShare({ files: [files[0]] }) ? [files[0]] : null)
@@ -686,20 +692,6 @@ export function LinkButtons({ incomplete, file: make, fileOnly }: {
     </button>
   )
 }
-
-/**
- * The empty fields said in the download button, in the form's order, as what to do there, in the infinitive, a
- * button's verb («Выбрать точку», «Указать цену»), going on as they're filled in. A wholly empty form says its first
- * field too: it's the first step (not «Не хватает данных»)
- */
-export const unfilled = (said: string[]) => said[0]
-
-/**
- * Which item the note over the download is about, after it: «3/8», its number (as beside it in the list) of all; none
- * for one item or a note about what they share (the point). Not «1/5», the first of all the empty and wrong fields
- * left, which never moves on and reads as a stuck progress
- */
-export const itemOf = (index: number, total: number) => (total > 1 && index >= 0 ? `${index + 1}/${total}` : undefined)
 
 /**
  * The download, at the foot of the sidebar (in the phone's sheet): one black button saying the next step while

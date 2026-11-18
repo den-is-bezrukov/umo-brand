@@ -1,6 +1,9 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadBar, LinkButtons, canShareFiles, unfilled, itemOf, Segments, SegBtn } from '@/ui/form'
-import { useStaff, plain, pickTable, TableSource, UploadArea, useAddKey, fullNameField, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
+import { Field as Labelled, ComboField, TextArea, GeneratorHeader, DownloadBar, LinkButtons, Segments, SegBtn } from '@/ui/form'
+import { canShareFiles, unfilled, itemOf } from '@/ui/formUtils'
+import { TableSource, UploadArea, ItemFrame, Removed, ItemAlert } from '@/ui/staff'
+import { useStaff, plain, pickTable, useAddKey, fullNameField } from '@/ui/useStaff'
+import { ITEM_EDGE } from '@/ui/staffState'
 import { goal } from '@/ui/metrika'
 import { toD } from '@/livery/geometry'
 import { TAG, TAGS_KEY, buildTag, type Field, type FieldBox, type Person } from '@/nametag/tag'
@@ -9,10 +12,12 @@ import { readXlsx, parsePasted } from '@/nametag/table'
 import { POSITION_OPTIONS } from '@/data/positions'
 import TagArt from '@/nametag/TagArt'
 import { isPdf, pdfInZip, readPdfData } from '@/ui/pdfData'
-import { MobileEditor, usePhone } from '@/ui/mobile'
+import { MobileEditor } from '@/ui/mobile'
+import { usePhone } from '@/ui/usePhone'
 import { linkParams } from '@/ui/share'
 import { recordText } from '@/ui/liveText'
-import { TemplateButton, useTemplateLink } from '@/ui/template'
+import { TemplateButton } from '@/ui/template'
+import { useTemplateLink } from '@/ui/useTemplateLink'
 import { SITE } from '@/site'
 
 // Name tag generator: a point's staff list in, one zip out with the tags
@@ -45,7 +50,7 @@ export default function NameTag() {
   // Not kept in the address, unlike the other generators: a staff list isn't something to send as a link; one tag can
   // come in by one (`fromLink`)
   const [initial] = useState(fromLink)
-  // One list for both modes. «Из таблицы» shows a loaded file as it is, with no form; clicking a tag there takes the
+  // One list for both modes. «Из документа» shows a loaded file as it is, with no form; clicking a tag there takes the
   // list to «Вручную» to edit it, and the first edit makes it a list of its own, no longer the file
   const staff = useStaff<Person>({
     columns: { name: 'Имя', surname: 'Фамилия', position: 'Должность' },
@@ -219,7 +224,7 @@ export default function NameTag() {
             <div className="flex flex-col gap-2">
               <Segments>
                 <SegBtn active={mode === 'manual'} onClick={() => setMode('manual')}>Вручную</SegBtn>
-                <SegBtn active={mode === 'table'} onClick={() => setMode('table')}>Из таблицы</SegBtn>
+                <SegBtn active={mode === 'table'} onClick={() => setMode('table')}>Из документа</SegBtn>
               </Segments>
               {mode === 'table' && <TableSource staff={staff} template={TEMPLATE} />}
             </div>

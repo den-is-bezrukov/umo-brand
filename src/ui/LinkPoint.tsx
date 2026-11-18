@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { findPoints, knowsEveryWord, withoutBrand, POINT_PARAM, type Point } from '@/data/points'
-import { outlined } from './form'
+import { outlined } from './formUtils'
 import { goal } from './metrika'
 import { POINTS } from '@brand/points'
 import { WORDS } from '@brand/words'

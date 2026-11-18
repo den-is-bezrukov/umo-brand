@@ -1,5 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
-import { ResetIcon, DuplicateIcon, TrashIcon, PlusIcon, Removed, type Staff } from '@/ui/staff'
+import { ResetIcon, DuplicateIcon, TrashIcon, PlusIcon, Removed } from '@/ui/staff'
+import { type Staff } from '@/ui/useStaff'
 import { InSlide, InFoot, InSheet, SheetLayer, FOOT_BG } from '@/ui/phone'
 import { addTitle, itemName } from '@/data/generators'
 
@@ -10,19 +11,6 @@ import { addTitle, itemName } from '@/data/generators'
 // as wide either way); a swipe on the header or a pull past the form's edge opens the form over the whole screen or
 // puts it back.
 // In the link: `arrows=0` hides the arrows (swiping alone)
-
-/** Whether the screen is a phone's, as the generators' `md` breakpoint */
-export function usePhone() {
-  const query = '(max-width: 767px)'
-  const [phone, setPhone] = useState(() => matchMedia(query).matches)
-  useEffect(() => {
-    const m = matchMedia(query)
-    const on = () => setPhone(m.matches)
-    m.addEventListener('change', on)
-    return () => m.removeEventListener('change', on)
-  }, [])
-  return phone
-}
 
 const TURN_MS = 500
 /** The sheet's share of the screen under the picture */
@@ -439,7 +427,7 @@ export function MobileEditor({ slides, staff, onAdd, sidebar, download }: {
     if (!t && typed.current) typed.current.top = scroller.current?.scrollTop ?? 0
     setTyping(t)
   }
-  // A focused field taken out of the form (the list to «Из таблицы», an item reset or removed) sends no blur, and the
+  // A focused field taken out of the form (the list to «Из документа», an item reset or removed) sends no blur, and the
   // download stayed aside for good: after every render, typing is only while a field in the sheet still has the focus
   useLayoutEffect(() => {
     const el = document.activeElement

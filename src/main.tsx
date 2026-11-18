@@ -5,6 +5,15 @@ import './index.css'
 import { COUNTER } from './ui/metrika'
 import { MATERIALS } from './data/materials'
 
+// A theme may reserve field outlines for keyboard navigation. Text inputs also match :focus-visible
+// after a pointer click, so track Tab separately; typing in a clicked field keeps its quiet appearance.
+document.addEventListener('keydown', event => {
+  if (event.key === 'Tab') document.documentElement.dataset.keyboardFocus = ''
+}, true)
+document.addEventListener('pointerdown', () => {
+  delete document.documentElement.dataset.keyboardFocus
+}, true)
+
 // Pages are split so the guide doesn't download the PDF renderer the price card needs.
 const App = lazy(() => import('./App'))
 const Guide = lazy(() => import('./guide/Guide'))

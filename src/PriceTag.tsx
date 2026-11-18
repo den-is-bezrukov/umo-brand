@@ -1,6 +1,9 @@
 import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, LinkButtons, canShareFiles, unfilled, itemOf, Segments, SegBtn, ALERT_LABEL } from '@/ui/form'
-import { useStaff, pickTable, TableSource, UploadArea, useAddKey, ItemFrame, Removed, ItemAlert, ITEM_EDGE } from '@/ui/staff'
+import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, LinkButtons, Segments, SegBtn } from '@/ui/form'
+import { canShareFiles, unfilled, itemOf, ALERT_LABEL } from '@/ui/formUtils'
+import { TableSource, UploadArea, ItemFrame, Removed, ItemAlert } from '@/ui/staff'
+import { useStaff, pickTable, useAddKey } from '@/ui/useStaff'
+import { ITEM_EDGE } from '@/ui/staffState'
 import { goal } from '@/ui/metrika'
 import { toD, type Cmd } from '@/livery/geometry'
 import { loadFonts, type Fonts } from '@/ui/type'
@@ -8,11 +11,13 @@ import { xlsxCells, pastedCells, byHeaders, type Cells } from '@/nametag/table'
 import { TAG, BAND, BAND_ART, DEFAULT_CAPTION, buildTag, formatPrice, readPrice, PRICE_FORMAT, type Item, type TagField } from '@/pricetag/tag'
 import { POINT_NAMES, POINT_PARAM, pointFilter, withoutBrand } from '@/data/points'
 import { readTagsFile } from '@/pricetag/read'
-import { plural } from '@/ui/staff'
-import { MobileEditor, usePhone } from '@/ui/mobile'
+import { plural } from '@/ui/useStaff'
+import { MobileEditor } from '@/ui/mobile'
+import { usePhone } from '@/ui/usePhone'
 import { linkParams, saveAndOpenPdf } from '@/ui/share'
 import { recordText } from '@/ui/liveText'
-import { TemplateButton, useTemplateLink } from '@/ui/template'
+import { TemplateButton } from '@/ui/template'
+import { useTemplateLink } from '@/ui/useTemplateLink'
 import { SITE } from '@/site'
 import { WORDS } from '@brand/words'
 
@@ -259,7 +264,7 @@ export default function PriceTag() {
             <div className="flex flex-col gap-2">
               <Segments>
                 <SegBtn active={mode === 'manual'} onClick={() => setMode('manual')}>Вручную</SegBtn>
-                <SegBtn active={mode === 'table'} onClick={() => setMode('table')}>Из таблицы</SegBtn>
+                <SegBtn active={mode === 'table'} onClick={() => setMode('table')}>Из документа</SegBtn>
               </Segments>
               {mode === 'table' && <TableSource staff={staff} template={TEMPLATE} />}
             </div>

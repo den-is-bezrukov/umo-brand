@@ -172,6 +172,14 @@ export function maskPhone(raw: string, digits = Infinity): { text: string; caret
   return { text, caret }
 }
 
+/** Unentered digits, for a visual mask only; never part of the field's value or print data. */
+export function phoneMaskTail(value: string): string {
+  const digits = value.replace(/\D/g, '')
+  if (digits.length >= 11) return ''
+  if (!digits) return value === '+' ? '7 000 000 00 00' : '+7 000 000 00 00'
+  return maskPhone(digits.padEnd(11, '0')).text.slice(value.length)
+}
+
 /** The phone line: the number set as `formatPhone` does (as typed if it isn't one) and its extension */
 export const phoneLine = (p: Pick<Person, 'phone' | 'ext'>) =>
   [formatPhone(p.phone) ?? oneLine(p.phone), p.ext.trim() && `доб. ${p.ext.trim()}`].filter(Boolean).join(' ')

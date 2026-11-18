@@ -127,6 +127,9 @@
   }
 }
 
+/* The focused field stays in view above the sticky download */
+:root[data-editor] [data-ui='sidebar'] { --sidebar-keep-focus: 1; }
+
 /* Empty fields keep their label in place. Overlay the empty control on that row until focus;
    then it takes its normal next row. The label never switches places with a placeholder. */
 :root[data-editor] [data-ui='field']:has(> p[data-ui='label']):has([data-ui='input']:is(input, textarea)) {
