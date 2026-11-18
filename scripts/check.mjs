@@ -259,7 +259,7 @@ async function capture() {
         continue
       }
       if (sc.table) {
-        await page.evaluate(`[...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Из таблицы')?.click()`)
+        await page.evaluate(`[...document.querySelectorAll('button')].find(b => /^Из (таблицы|документа)$/.test(b.textContent.trim()))?.click()`)
         await sleep(300)
         const { root } = await page.s('DOM.getDocument', { depth: -1, pierce: true })
         const { nodeId } = await page.s('DOM.querySelector', { nodeId: root.nodeId, selector: 'input[type="file"]' })
@@ -301,7 +301,7 @@ async function capture() {
       // A file this run downloaded earlier, dropped back into the generator (its own PDF or ZIP brings the list back)
       if (sc.upload) {
         const file = path.join(RUN, sc.upload)
-        await page.evaluate(`[...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Из таблицы')?.click()`)
+        await page.evaluate(`[...document.querySelectorAll('button')].find(b => /^Из (таблицы|документа)$/.test(b.textContent.trim()))?.click()`)
         await sleep(300)
         const { root } = await page.s('DOM.getDocument', { depth: -1, pierce: true })
         const { nodeId } = await page.s('DOM.querySelector', { nodeId: root.nodeId, selector: 'input[type="file"]' })

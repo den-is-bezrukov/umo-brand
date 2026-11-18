@@ -27,7 +27,7 @@ function Generator({ help }: { help: Help }) {
     <>
       <p>{help.what}</p>
       <Part title="Шаги"><Steps items={help.steps} /></Part>
-      {help.table && <Part title="Из таблицы"><Steps items={help.table} /></Part>}
+      {help.table && <Part title="Из документа"><Steps items={help.table} /></Part>}
       <Part title="Печать">{help.print.map((p, i) => <p key={i}>{p}</p>)}</Part>
       {help.faq.length > 0 && <Part title="Вопросы"><Faq items={help.faq} /></Part>}
     </>

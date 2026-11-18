@@ -17,7 +17,7 @@ export const FIT_ALL = MOD === '⌘' ? '⌥⌘0' : 'Alt+Ctrl+0'
 
 /**
  * An instruction (`@brand/help`, one per generator, «Общее» for what they share): what to do, the table, the print and
- * the usual questions, for a point on their own. «Инструкция», the «?» at the end of the breadcrumbs (as Composter's): one panel for every generator, a tab each and
+ * the usual questions, for a point on their own. «Инструкция», the «?» at the end of the breadcrumbs: one panel for every generator, a tab each and
  * «Общее» for what they share, opened on the current one's: what to do, the table, the print and the usual questions,
  * for a point on their own. Help lives here, apart from the controls: no hint texts by them
  */
@@ -26,7 +26,7 @@ export type Help = {
   /** What the generator makes, one line */
   what: string
   steps: ReactNode[]
-  /** The «Из таблицы» mode, for the lists that have one */
+  /** The «Из документа» mode, for the lists that have one */
   table?: ReactNode[]
   print: ReactNode[]
   /** Question → answer */
