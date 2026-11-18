@@ -1,6 +1,6 @@
 import { Fragment, lazy, Suspense, useEffect, useRef, useState, type CSSProperties, type MouseEvent, type ReactNode, type RefObject } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
-import HeaderLogo, { COBRAND, setLogoFold } from '@brand/HeaderLogo'
+import HeaderLogo, { LOGO_BOX, setLogoFold } from '@brand/HeaderLogo'
 import { CHAPTERS, OLD_ANCHORS, HERO, STATEMENT, MATERIALS_LEAD, INTRO_ORDER, DRAWN, Chapters, Contact, FOOTER } from '@brand/guide'
 import tocIcons from '@/icons/toc'
 import { useTypograf } from './typograf'
@@ -259,23 +259,22 @@ function useActiveInView(asideRef: RefObject<HTMLElement | null>, active: string
 }
 
 /**
- * Trial: the sidebar wordmark's height with the Y cobrand on the first screen, in the statement's em (the brand
- * font's capitals are 0.68 em, so the wordmark stands as high as them as the statement's size follows the screen), and in px alone
- * once folded.
+ * Trial: the sidebar logo's height on the first screen, in the statement's em (the brand font's capitals, `LOGO_BOX.caps`,
+ * so the logo stands as high as them as the statement's size follows the screen), and in px alone once folded.
  */
-const LOGO_HEIGHT = { open: 0.68, folded: 24 }
+const LOGO_HEIGHT = { open: LOGO_BOX.caps, folded: 24 }
 
 /**
- * Trial: what the first screen adds to the sidebar's 24 px on top, left and bottom for the Y's circle, which overhangs
- * the wordmark by a third of its height (10–14 px); none without the cobrand.
+ * Trial: what the first screen adds to the sidebar's 24 px on top, left and bottom for a part of the brand's logo that
+ * overhangs the wordmark (`LOGO_BOX.pad`; none for a logo that stays in its box).
  */
-const LOGO_PAD = COBRAND ? 12 : 0
+const LOGO_PAD = LOGO_BOX.pad
 
 /**
- * Trial: below lg, white between the film and the header for the Y's circle, which overhangs the wordmark by 8 px there, so it
- * stands as far from the film as the header's padding; it scrolls away with the film, the stuck header keeps its own.
+ * Trial: below lg, white between the film and the header for that overhang (`LOGO_BOX.gap`), so the logo stands as far
+ * from the film as the header's padding; it scrolls away with the film, the stuck header keeps its own.
  */
-const LOGO_GAP = COBRAND ? 8 : 0
+const LOGO_GAP = LOGO_BOX.gap
 
 /**
  * While the page slides up over the hero, the sidebar's toggle row stays fixed at the bottom of the screen, while the
@@ -304,11 +303,11 @@ function useHeroReveal(bodyRef: RefObject<HTMLElement | null>, asideRef: RefObje
       const overhang = `${LOGO_PAD}px`
       if (body.style.getPropertyValue('--logo-overhang') !== overhang) body.style.setProperty('--logo-overhang', overhang)
       // From lg the sidebar's wordmark starts as high as the statement's capitals, or lower where the unfolded lockup
-      // (5/3 of it, 5 times its height wide; without the cobrand, the wordmark alone) wouldn't fit the sidebar, and
+      // (as wide as `LOGO_BOX.ratio` times its height) wouldn't fit the sidebar, and
       // folds to 24. It's drawn at that starting size (the unit `--u`) and scaled down, so it stays sharp.
       const statement = document.getElementById('statement')
       const caps = LOGO_HEIGHT.open * (statement ? parseFloat(getComputedStyle(statement).fontSize) : 60)
-      open = Math.round(Math.min(caps, (aside.clientWidth - 48) * (COBRAND ? 0.6 : 1) / 5) * 100) / 100
+      open = Math.round(Math.min(caps, (aside.clientWidth - 48) / LOGO_BOX.ratio) * 100) / 100
       aside.style.setProperty('--u', `${open / 60}px`)
       const css = logoKeyframes(open)
       if (keyframes.textContent !== css) keyframes.textContent = css
@@ -447,7 +446,7 @@ function useHeroStrip(pageRef: RefObject<HTMLElement | null>, quickRef: RefObjec
       const md = window.matchMedia('(min-width: 48rem)').matches
       const film = window.innerHeight - mstrip - (md ? 92 : 68) - LOGO_GAP
       page.toggleAttribute('data-hero-full', !window.matchMedia('(min-width: 64rem)').matches && film < Math.min(window.innerWidth / 2, window.innerHeight * 0.4))
-      // The toggle row's bottom padding grows by the Y's overhang on the first screen (see useHeroReveal), lifting its line.
+      // The toggle row's bottom padding grows by the logo's overhang on the first screen (see useHeroReveal), lifting its line.
       const overhang = parseFloat(body.style.getPropertyValue('--logo-overhang')) || 0
       const strip = `${Math.round(16 + quick.offsetTop - block.offsetTop + 68 - 24 + overhang)}px`
       if (page.style.getPropertyValue('--strip') === strip) return
@@ -721,7 +720,7 @@ function useExpandAll() {
 /**
  * The logo takes you to the very top, the hero photo included, and leaves no #top in the address. From further than two
  * screens down it first jumps to where the page has just risen over the photo (from lg; a screen down below it), and
- * glides only the rest, the photo coming down and, from lg, the Y unfolding: the whole guide flying by in half a second
+ * glides only the rest, the photo coming down and, from lg, the logo unfolding: the whole guide flying by in half a second
  * blurred.
  */
 function toTop(e: MouseEvent<HTMLAnchorElement>) {

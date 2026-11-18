@@ -1,8 +1,17 @@
 /**
- * The guide's logo with the Yandex cobrand (true) or UMO alone (false). Off, the logo is the wordmark and shrinks with
- * the scroll as before, and the first screen's extra room for the Y (LOGO_PAD in Guide) goes.
+ * What the core's header needs to fold the logo with the scroll: `caps` the logo's height on the first screen, in the
+ * brand font's capital height (an em's share), `ratio` its unfolded width over its height, `pad` and `gap` in px what
+ * a part overhanging the logo's box takes on the first screen (on top, left and bottom; below lg, over the header).
  */
+/** The guide's logo with the Yandex cobrand (true) or UMO alone (false); off, the box is the wordmark's (5:1, no pad or gap). */
 export const COBRAND = true
+
+/**
+ * What the core's header needs to fold the logo with the scroll: `caps` the logo's height on the first screen, in the
+ * brand font's capital height (an em's share), `ratio` its unfolded width over its height, `pad` and `gap` in px what
+ * a part overhanging the logo's box takes on the first screen (on top, left and bottom; below lg, over the header).
+ */
+export const LOGO_BOX = COBRAND ? { caps: 0.68, ratio: 500 / 60, pad: 12, gap: 8 } : { caps: 0.68, ratio: 5, pad: 0, gap: 0 }
 
 /**
  * UMO with the Y cobrand, in Figma's units: the wordmark 300×60, the lockup 500×100, a unit `--u`
