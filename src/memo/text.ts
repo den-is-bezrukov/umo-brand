@@ -1,11 +1,29 @@
 import type { Font, Glyph } from 'opentype.js'
 import { glyphsOf } from '@/ui/type'
 import { METRICS } from 'virtual:font-metrics'
+import { MEMO_LAYOUT as L } from '@brand/memo/layout'
 
 // The memo's texts as Figma sets them, line by line, for the editable template's live text (the brand's memo/texts.json; the PDF in outlines takes Figma's own outlines instead). Figma px, 10 a
 // millimetre, y down. Figma centres the font's height (hhea: the brand font's ascent and descent) in each line's box, breaks lines
 // between words (a no-break space holds two together), puts `paragraphSpacing` after a paragraph and `listSpacing`
 // between a list's items, and hangs an ordered list's number in its indent.
+
+/**
+ * `@brand/memo/layout`: the page, Figma px (10 a millimetre). `bottom` is where the point's column ends (it grows up from
+ * there), `columns` the contacts' two columns as [x, measure], six and six (`even`) or, for a long address, eight and
+ * four (`wide`), `gap` the space between items, `head` and `body` the first line's and the rest's size and line height;
+ * `indent` a list's indent, a level, its number ending `markerGap` short of the text
+ */
+export interface BrandMemo {
+  page: { w: number; h: number }
+  bottom: number
+  columns: Record<'even' | 'wide', { point: readonly [number, number]; person: readonly [number, number] }>
+  gap: number
+  head: { size: number; lineHeight: number }
+  body: { size: number; lineHeight: number }
+  indent: number
+  markerGap: number
+}
 
 export type FontKey = 'r' | 'm'
 export type MemoFonts = Record<FontKey, Font>
@@ -35,8 +53,8 @@ export interface Seg { font: FontKey; text: string; x: number }
 export interface Line { baseline: number; segs: Seg[] }
 
 /** A list's indent, a level; its number ends `MARKER_GAP` short of the text */
-const INDENT = 55
-const MARKER_GAP = 13
+const INDENT = L.indent
+const MARKER_GAP = L.markerGap
 
 const ASCENT = METRICS.ascent
 const HEIGHT = METRICS.ascent + METRICS.descent

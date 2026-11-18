@@ -132,5 +132,6 @@ export const LIVERY: BrandLivery = {
     { id: 'hatch', name: 'Легковой', page: 'https://posset.example' },
   ],
   wordmark: LOGO,
+  smallQr: { size: 160, gap: 100 },
   surfaces: { van: SURFACES, hatch: SURFACES },
 }

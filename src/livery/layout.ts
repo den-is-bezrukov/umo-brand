@@ -3,7 +3,13 @@ import { LIVERY } from '@brand/livery'
 // The livery's surfaces: the mechanics (`surface.ts`) and the brand's cars (`@brand/livery`), apart so the brand's
 // data can use the mechanics' helpers without a loop
 
+import { smallQrWith } from './surface'
+import type { Surface } from './surface'
+
 export * from './surface'
+
+/** The side with the small QR, as the brand's `smallQr` numbers give it */
+export const smallQr = (s: Surface) => smallQrWith(s, LIVERY.smallQr)
 
 /** Each vehicle's surfaces */
 export const LIVERIES = LIVERY.surfaces

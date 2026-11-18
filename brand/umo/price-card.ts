@@ -35,6 +35,18 @@ const UMO = [
 const ALICE = { font: 'fonts/AliceOkniks.woff', color: '#7a55ff' }
 
 export const PRICE_CARD: BrandPriceCard = {
+  /**
+   * Figma «Price Cards», 2100×2970 px, 7.07 px a millimetre: the car's photo across the top 720 px with the wordmark and
+   * «от … ₽» on it in white; under it a 150 px headline, the trim's name and its list, and at the bottom, standing on the
+   * 100 px margin, the fine print with the prices and the QR (200 px) over it
+   */
+  layout: {
+    size: { w: 2100, h: 2970 }, side: 125, bottom: 100, band: 720,
+    from: { top: 539, lineHeight: 56.25 }, headline: { top: 820, size: 150 },
+    body: 75, label: 50, price: 125, legal: 25, listIndent: 75, bullet: 5.8,
+    afterHeadline: 100, afterTrim: 50, itemGap: 25, minGap: 75, legalGap: 75, row: 200, qr: 200, priceTop: 75, monthlyGap: 125,
+  },
+  texts: { from: 'от ', full: 'Полная стоимость', monthly: 'Ежемесячный платёж' },
   /** The headline as Figma breaks it, a line a row; Alice's mark (and on UMO 5 the thin no-break space before it) in Alice Okniks, in Alice's violet */
   headlines: {
     umo8: [[{ text: 'Гибрид с\u00a0Алисой\u00a0' }, { text: '@', ...ALICE }], [{ text: 'и\u00a0технологиями\u00a0Яндекса' }]],

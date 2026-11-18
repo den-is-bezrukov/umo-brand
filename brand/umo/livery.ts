@@ -476,4 +476,5 @@ const UMO5: Record<SurfaceId, Surface> = {
 }
 
 // The cars it wraps are UMO's models
-export const LIVERY: BrandLivery = { vehicles: PRODUCTS, wordmark: UMO, surfaces: { umo8: UMO8, umo5: UMO5 } }
+/** The small QR (a side without the full one): as tall as the lettering, 160 mm, 100 mm behind the model number */
+export const LIVERY: BrandLivery = { vehicles: PRODUCTS, wordmark: UMO, smallQr: { size: 160, gap: 100 }, surfaces: { umo8: UMO8, umo5: UMO5 } }

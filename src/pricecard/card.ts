@@ -8,16 +8,18 @@ import { PRICE_CARD } from '@brand/price-card'
 import { WORDS } from '@brand/words'
 import { METRICS } from 'virtual:font-metrics'
 
-// The price card, an A3 poster (Figma «Price Cards», 2100×2970 px, 7.07 px a millimetre; everything here in its px,
-// y down): the car's photo across the top 720 px with the wordmark and «от … ₽» on it in white; under it a 150 px
-// headline, the trim's name and its list, and at the bottom, standing on the 100 px margin, the fine print with the
-// prices and the QR over it, so a longer text lifts them. All in the brand font's Medium but the fine print (Regular)
-// and a headline's run in a font of its own. Figma's text boxes put a baseline (lh − (ascent + descent) em) / 2 + ascent em under a line's top, the brand font's (`METRICS`).
+// The price card, an A3 poster laid out as the brand's `@brand/price-card` says (`PriceCardLayout`, in Figma's px, y
+// down): the car's photo across the top with the wordmark and «от … ₽» on it in white; under it the headline, the trim's
+// name and its list, and at the bottom, standing on the margin, the fine print with the prices and the QR over it, so a
+// longer text lifts them. All in the brand font's Medium but the fine print (Regular) and a headline's run in a font of
+// its own. Figma's text boxes put a baseline (lh − (ascent + descent) em) / 2 + ascent em under a line's top, the brand font's (`METRICS`).
 
-export const CARD = { w: 2100, h: 2970 }
-const SIDE = 125
+const L = PRICE_CARD.layout
+
+export const CARD = L.size
+const SIDE = L.side
 const COLUMN = CARD.w - 2 * SIDE
-const BOTTOM = CARD.h - 100
+const BOTTOM = CARD.h - L.bottom
 /** With no fine print the prices stand on a margin as wide as the sides */
 const BOTTOM_BARE = CARD.h - SIDE
 
@@ -56,10 +58,48 @@ export interface TrimData {
 }
 
 /**
- * What the brand gives the price card (`@brand/price-card`): per product its headline in lines of runs, its wordmark with
- * the product's number (absolute path data, 525×75 from the band's corner) and its trims, the first the default
+ * The card's layout, Figma px (7.07 px a millimetre on A3): `size` the sheet, `side` the margin each side, `bottom` the
+ * margin under the fine print, `band` the photo's height; `from` the «от … ₽» on the photo (the top of its line box, `lineHeight`);
+ * `headline` the first line's top and the size of every one; `body` the size of the trim's name and its list, `label`
+ * of the price's label, `price` of the prices, `legal` of the fine print; `listIndent` and `bullet` where the list's
+ * text and its bullets stand from the side; `afterHeadline`, `afterTrim` and `itemGap` the gaps over the trim's name, the
+ * list and between its items; `minGap` the least between the list and the prices, `legalGap` between the prices and the fine print,
+ * `row` the height of the prices' row and the QR (`qr` its side), `priceTop` the price under its label, `monthlyGap` the
+ * space between the full cost and the monthly payment
+ */
+export interface PriceCardLayout {
+  size: { w: number; h: number }
+  side: number
+  bottom: number
+  band: number
+  from: { top: number; lineHeight: number }
+  headline: { top: number; size: number }
+  body: number
+  label: number
+  price: number
+  legal: number
+  listIndent: number
+  bullet: number
+  afterHeadline: number
+  afterTrim: number
+  itemGap: number
+  minGap: number
+  legalGap: number
+  row: number
+  qr: number
+  priceTop: number
+  monthlyGap: number
+}
+
+/**
+ * What the brand gives the price card (`@brand/price-card`): its `layout`, the words on the card, per product its
+ * headline in lines of runs, its wordmark with the product's number (absolute path data, 525×75 from the band's
+ * corner) and its trims, the first the default
  */
 export interface BrandPriceCard {
+  layout: PriceCardLayout
+  /** «от » before the price on the photo, the label over the full cost, the label over the monthly payment */
+  texts: { from: string; full: string; monthly: string }
   headlines: Record<Product, Run[][]>
   lettering: Record<Product, string>
   trims: Record<Product, TrimData[]>
@@ -116,16 +156,16 @@ export interface Input { model: Product; trim: Trim; full: string; legal: string
 /** A baseline under a line's top, as Figma sets a line `lh` tall */
 const baseline = (top: number, size: number, lh = size) => top + (lh - (METRICS.ascent + METRICS.descent) * size) / 2 + METRICS.ascent * size
 
-const HEADLINE = 150
-const BODY = 75
-const LABEL = 50
-const PRICE = 125
-const LEGAL = 25
-/** The list's text 75 px in from the column, its bullets hung before it */
-const LIST_X = SIDE + 75
-const BULLET_X = SIDE + 5.8
+const HEADLINE = L.headline.size
+const BODY = L.body
+const LABEL = L.label
+const PRICE = L.price
+const LEGAL = L.legal
+/** The list's text `listIndent` px in from the column, its bullets hung before it */
+const LIST_X = SIDE + L.listIndent
+const BULLET_X = SIDE + L.bullet
 /** The fine print may lift the prices this close to the list, no closer */
-const MIN_GAP = 75
+const MIN_GAP = L.minGap
 
 const NUMS = ['lnum', 'tnum']
 
@@ -150,11 +190,11 @@ export function buildCard(fonts: CardFonts, input: Input): Art {
 
   // The band: the wordmark, «от … ₽» on the band's bottom padding
   parts[WHITE].push(...fromD(PRICE_CARD.lettering[input.model], SIDE, SIDE))
-  const fromBase = baseline(539, BODY, 56.25)
-  price(trim.from, runs([{ text: 'от ', ink: WHITE }], SIDE, fromBase, BODY), fromBase, BODY, WHITE)
+  const fromBase = baseline(L.from.top, BODY, L.from.lineHeight)
+  price(trim.from, runs([{ text: PRICE_CARD.texts.from, ink: WHITE }], SIDE, fromBase, BODY), fromBase, BODY, WHITE)
 
   // The headline, Figma's lines
-  let top = 820
+  let top = L.headline.top
   for (const line of PRICE_CARD.headlines[input.model]) {
     const end = runs(line.map(r => ({ text: r.text, font: r.font ? fonts.runs[r.font] : undefined, ink: r.color })), SIDE, baseline(top, HEADLINE), HEADLINE)
     if (end - SIDE > COLUMN + 0.5) issues.push('Заголовок не помещается')
@@ -162,16 +202,16 @@ export function buildCard(fonts: CardFonts, input: Input): Art {
   }
 
   // The trim and its list
-  top += 100
+  top += L.afterHeadline
   runs([{ text: `${WORDS.product.variant} ${trim.name}:` }], SIDE, baseline(top, BODY), BODY)
-  top += BODY + 50
+  top += BODY + L.afterTrim
   for (const item of trim.list) {
     const base = baseline(top, BODY)
     runs([{ text: '•' }], BULLET_X, base, BODY)
     runs([{ text: item }], LIST_X, base, BODY)
-    top += BODY + 25
+    top += BODY + L.itemGap
   }
-  const listEnd = top - 25
+  const listEnd = top - L.itemGap
 
   // From the bottom up: the fine print, the prices and the QR on one top
   const legalFits = (line: string) => setRuns(fonts.regular, [line], 0, 0, LEGAL).width <= COLUMN
@@ -180,18 +220,18 @@ export function buildCard(fonts: CardFonts, input: Input): Art {
   const legal = wrap(tidy(input.legal).map(p => typografText(p).replace(/(\d) (?=\d{3}(?!\d))/g, '$1\u00a0').replace(/\bст\. (?=\d)/g, 'ст.\u00a0')), legalFits)
   const legalTop = legal.length ? BOTTOM - legal.length * LEGAL : BOTTOM_BARE
   legal.forEach((line, i) => runs([{ text: line, font: fonts.regular, ink: GREY }], SIDE, baseline(legalTop + i * LEGAL, LEGAL), LEGAL))
-  const row = legalTop - (legal.length ? 75 : 0) - 200
+  const row = legalTop - (legal.length ? L.legalGap : 0) - L.row
   if (row < listEnd + MIN_GAP) issues.push('Сноска слишком длинная')
 
   // «от …» in the band is the trim bare, this the car as it stands, with the point's equipment: the law asks for it whole
-  runs([{ text: 'Полная стоимость' }], SIDE, baseline(row, LABEL), LABEL)
-  const after = price(input.full || '9 999 999', SIDE, baseline(row + 75, PRICE), PRICE, input.full ? BLACK : GREY)
+  runs([{ text: PRICE_CARD.texts.full }], SIDE, baseline(row, LABEL), LABEL)
+  const after = price(input.full || '9 999 999', SIDE, baseline(row + L.priceTop, PRICE), PRICE, input.full ? BLACK : GREY)
   if (trim.monthly) {
-    const x = after + 125
-    runs([{ text: 'Ежемесячный платёж' }], x, baseline(row, LABEL), LABEL)
-    price(trim.monthly, x, baseline(row + 75, PRICE), PRICE)
+    const x = after + L.monthlyGap
+    runs([{ text: PRICE_CARD.texts.monthly }], x, baseline(row, LABEL), LABEL)
+    price(trim.monthly, x, baseline(row + L.priceTop, PRICE), PRICE)
   }
-  parts[BLACK].push(...qrOutline(input.url, CARD.w - SIDE - 200, row, 200))
+  parts[BLACK].push(...qrOutline(input.url, CARD.w - SIDE - L.qr, row, L.qr))
 
   const absent = missingChars(fonts.regular, input.legal)
   if (absent.length) issues.push(`Сноска: нет в шрифте ${absent.map(c => `«${c}»`).join(', ')}`)
@@ -209,4 +249,4 @@ export function photoRect({ box, px }: Pick<Art['photo'], 'box' | 'px'>) {
 }
 
 /** The band the photo is cut to */
-export const BAND = 720
+export const BAND = L.band

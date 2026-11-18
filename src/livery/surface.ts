@@ -141,19 +141,20 @@ export function withoutQr(s: Surface): Surface {
   }
 }
 
-// The small QR: the QR-less side with a QR as
-// tall as its lettering, 160, `SMALL_QR_GAP` behind the model number, at the rear end of the sheet
-const SMALL_QR = 160
-const SMALL_QR_GAP = 100
+// The small QR: the QR-less side with a QR as tall as its lettering, `size`, `gap` behind the model number, at the
+// rear end of the sheet (`BrandLivery.smallQr`, the numbers the brand gives)
+/** The small QR's side and its gap behind the model number, mm */
+export interface SmallQr { size: number; gap: number }
 
 /** A length for a spec label: whole millimetres, or halves with a decimal comma */
 const mmLabel = (v: number) => String(Math.round(v * 2) / 2).replace('.', ',')
 
 /**
- * The side with the small QR: laid out as without the QR, the sheet `SMALL_QR_GAP + SMALL_QR` longer towards the rear
- * with the QR there, level with the lettering; the front edge stays where it was on the body. Sides only.
+ * The side with the small QR: laid out as without the QR, the sheet `gap + size` longer towards the rear
+ * with the QR there, level with the lettering; the front edge stays where it was on the body. Sides only. The core's
+ * `smallQr` (`layout.ts`) gives it the brand's numbers.
  */
-export function smallQr(s: Surface): Surface {
+export function smallQrWith(s: Surface, { size: SMALL_QR, gap: SMALL_QR_GAP }: SmallQr): Surface {
   const bare = withoutQr(s)
   const add = SMALL_QR_GAP + SMALL_QR
   const w = bare.w
@@ -207,6 +208,7 @@ export type Vehicle = string
 
 /**
  * What the brand gives the livery (`@brand/livery`): the vehicles it wraps (UMO's are its products), the wordmark the
- * lettering starts with (absolute path data, its height the lettering's) and each vehicle's surfaces
+ * lettering starts with (absolute path data, its height the lettering's), the small QR's side and gap, and each
+ * vehicle's surfaces
  */
-export interface BrandLivery { vehicles: BrandProduct[]; wordmark: Mark; surfaces: Record<Vehicle, Record<SurfaceId, Surface>> }
+export interface BrandLivery { vehicles: BrandProduct[]; wordmark: Mark; smallQr: SmallQr; surfaces: Record<Vehicle, Record<SurfaceId, Surface>> }

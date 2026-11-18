@@ -7,36 +7,30 @@ import { layoutText, glyphRuns, advance, type Line, type MemoFonts, type MemoTex
 import TEXTS from '@brand/memo/texts.json'
 import { SITE } from '@/site'
 import { WORDS } from '@brand/words'
+import { MEMO_LAYOUT as L } from '@brand/memo/layout'
 
 // The owner's memo: two A4 pages a point hands over with a car. Everything
 // but the contacts at the foot of the second page is Figma's, in
-// the brand's assets/memo (outlines) and texts.json (the texts, for the template's live text). The contacts are two columns
-// 90 mm apart from 15 mm in and 252 mm down: the point (its name, then address, phone, email and site) and the
-// consultant (position, then name, phone and email), the first line the brand font's Medium 4,5 mm on 5,985 mm lines, the
-// rest Regular 3,6 mm on 4,5, each 1,5 mm under the one before; a line left out closes up. Figma px, 10 a millimetre.
+// the brand's assets/memo (outlines) and texts.json (the texts, for the template's live text). The contacts, laid out as the
+// brand's `@brand/memo/layout` says (`BrandMemo`), are two columns: the point (its name, then address, phone, email and
+// site) and the consultant (position, then name, phone and email), the first line the brand font's Medium, the rest
+// Regular, each a gap under the one before; a line left out closes up. Figma px, 10 a millimetre.
 
 /** The PDF info entry holding what the memos were made from (`writePdfData`), read back when the PDF is dropped */
 export const MEMOS_KEY = `${SITE.file}OwnerMemos`
 
 /** A4, Figma px */
-export const PAGE = { w: 2100, h: 2970 }
+export const PAGE = L.page
 
 export const MEMO_TEXTS = TEXTS as MemoText[]
 
-/** Where the point's column ends, as in Figma (its five lines from 2520): it grows up from there */
-const BOTTOM = 2820
-/**
- * The columns, [x, measure], on twelve of 150 px across the 1800 px text: six and six (the point's measure 50 px
- * clear of the consultant, as the second page's two columns of features), or, `wide`, eight and four, for an address
- * that takes a third line in six
- */
-const COLUMNS = {
-  even: { point: [150, 850], person: [1050, 850] },
-  wide: { point: [150, 1150], person: [1350, 600] },
-} as const
-const GAP = 15
-const HEAD = { size: 45, lineHeight: 59.85, font: 'm' as const }
-const BODY = { size: 36, lineHeight: 45, font: 'r' as const }
+/** Where the point's column ends, as in Figma: it grows up from there */
+const BOTTOM = L.bottom
+/** The columns, [x, measure]: `even`, or `wide` for an address that takes a third line in the first */
+const COLUMNS = L.columns
+const GAP = L.gap
+const HEAD = { ...L.head, font: 'm' as const }
+const BODY = { ...L.body, font: 'r' as const }
 
 export interface PointDetails { name: string; address: string; phone: string; email: string; site: string }
 export interface Person { position: string; name: string; surname: string; phone: string; email: string }
