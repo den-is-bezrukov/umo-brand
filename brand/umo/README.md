@@ -38,6 +38,18 @@ The headlines say «с Алисой» and «технологиями Яндек�
 
 Each trim has its own, two files: the full JPEG for the PDF and a 1600 px WebP for the preview (`*-car-preview.webp`, `cwebp -q 80 -resize 1600 0`), all Figma's own, cut to what the band shows and 3 mm round it at the photo's own resolution (no more is kept: the four were 5.6 MB uncut, 2 MB cut). UMO 8 Max `assets/umo8-car.jpg` 2286×814, Ultra `umo8-ultra-car.jpg` 2744×977, UMO 5 Pro `umo5-car.jpg` and Max `umo5-max-car.jpg` 3902×1389 (Max cut 3 px lower, from +15+669: its car stands that much lower in Figma's photo, and switching the trims it jumped) (the shorter names are the first trims'). Figma's boxes for the uncut photos, from which the cuts were made: UMO 8 Max (−30, −350) 2560×1440 over 2752×1536, Ultra (−200, −330) 2400×1200 over 3084×1536 (Figma's top layer; the earlier photo lies under it), UMO 5 (−30, −350) 2250×1181 over 4096×2286. A new photo: cut it the same way (`magick … -crop WxH+X+Y -quality 88`), set its box and `px`, and make the WebP.
 
+## Plate frame
+
+`plate-frame.ts`: the line is the brand font's Medium, 18 mm with −1% tracking, the capitals' top 2.5 mm under the top of the print field (Figma has 3; half a millimetre less, as the line is mostly lowercase and Ц's tail, and its weight sat low between the plate and the frame's rounded bottom).
+
+## Price tag
+
+`price-tag.ts`: 90×60 mm, Figma's frame 900×600. A black band 12 mm tall: the logo 15 mm wide at 4.5, 4.5, a 0.15 mm white hairline 3 mm tall at 22.5 and the point's name in Medium 4.4 mm (case forms on) 2.625 mm after it (Figma has 3; 2.25 is a touch close), one line free to run to the tag's right edge (64.875 mm, so the longest points, 61.1 mm, fit). On white, within 4.5 mm sides: the goods' name in Medium 4.5 mm on 4.5 mm lines from 16 mm, up to four lines within 81 mm; the code and the caption in Regular 3 mm with 1% tracking, at 38 and 42.5 mm; the price in Medium 9 mm at 47 mm.
+
+## Name tag
+
+`name-tag.ts`: 70×25 mm, 4 mm corners and margins, the name and surname in Medium 14 pt on 12 pt lines (baselines 7.65 and 11.88 mm), the position in Regular 9 pt on 10.8 pt lines, anchored at the bottom (its last line on 21.23 mm, a second line at 17.42), the source's logo 20×4 mm in the top right corner. Every line of the name and surname stays in the 40 mm column left of the logo, 2 mm clear of it (Преображенский, 39.6 mm, fits; Александровская, 40.3, is an error).
+
 ## Business card
 
 90×50 mm (10 Figma px = 1 mm, cap height 680 of 1000), numbers in `business-card.ts`. The face is the logo 40×8 mm in

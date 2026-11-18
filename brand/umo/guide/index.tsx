@@ -6,6 +6,7 @@ import UmoYandexLockup from '@brand/CobrandLockup'
 import { COLORS } from '@brand/colors'
 import PlateArt from '@/plate/PlateArt'
 import { BASELINE as STRIP_BASELINE } from '@/plate/frame'
+import { PLATE_FRAME } from '@brand/plate-frame'
 import { toD } from '@/livery/geometry'
 import { TAG, BAND, BAND_ART, DEFAULT_CAPTION, SIDE as TAG_SIDE, CAP as TAG_CAP, DROP as TAG_DROP, POINT as TAG_DEALER, NAME as TAG_NAME, SMALL as TAG_SMALL, TRACK as TAG_TRACK, CAPTION_TOP as TAG_CAPTION_TOP, PRICE as TAG_PRICE } from '@/pricetag/tag'
 import { SIGN, LOGO as SIGN_LOGO, MARGIN as SIGN_MARGIN, TIME as SIGN_TIME, LINE as SIGN_LINE, INFO as SIGN_INFO, INFO_LAST as SIGN_INFO_LAST } from '@brand/hours-sign'
@@ -149,7 +150,7 @@ export const DRAWN: Medium[] = [
     picture: (
       <div className="flex aspect-4/3 items-center justify-center bg-surface">
         <PlateArt className="w-[58.8%]!">
-          <text y={STRIP_BASELINE} fontFamily="CoFo Sans" fontWeight={500} fontSize={18} letterSpacing={-0.18} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Центр UMO | Название дилера</text>
+          <text y={STRIP_BASELINE} fontFamily="CoFo Sans" fontWeight={500} fontSize={PLATE_FRAME.size} letterSpacing={PLATE_FRAME.tracking * PLATE_FRAME.size} fill="white" style={{ fontFeatureSettings: "'case' 1" }}>Центр UMO | Название дилера</text>
         </PlateArt>
       </div>
     ),

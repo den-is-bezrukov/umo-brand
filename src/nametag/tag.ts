@@ -5,42 +5,55 @@ import { withListBreak } from '@/data/positions'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { nameFault } from '@/ui/names'
 import { noteLine } from '@/ui/liveText'
-import { NAME_TAG_LOGO } from '@brand/name-tag'
+import { NAME_TAG_LOGO, NAME_TAG as L } from '@brand/name-tag'
 import { SITE } from '@/site'
 
-// A point employee's name tag, as in the hand-made source: a 70×25 mm plate with 4 mm rounded corners, the name and surname in the brand font's Medium
-// 14 pt on 12 pt lines, the position in Regular 9 pt on 10.8 pt lines, both from the left margin of 4 mm, and the brand's
-// logo 20×4 mm in the top right corner, 4 mm from the edges. Every number here was measured off that PDF.
+// A point employee's name tag, laid out as the brand's `@brand/name-tag` says (`BrandNameTag`), as in the hand-made source:
+// a plate with rounded corners, the name and surname in the brand font's Medium, the position in Regular, both from the
+// left margin, and the brand's logo in the top right corner. The numbers were measured off that source PDF.
 
 const PT = 25.4 / 72
 
 /** The PDF info entry holding the staff the tags were made from (`writePdfData`), read back when the PDF or ZIP is dropped */
 export const TAGS_KEY = `${SITE.file}NameTags`
 
-/** The plate, in millimetres */
-export const TAG = { w: 70, h: 25, r: 4 }
+/**
+ * `@brand/name-tag`: the tag's layout. `size` the plate in mm (`r` its corners), `margin` the left, right and bottom
+ * margin, `logoX` where the logo's column starts, `name` the name and surname's size and leading in pt, the first
+ * baseline in mm and the `clear` mm kept from the logo, `position` its size and leading in pt and the baseline in mm of
+ * the line above the last (the last stands a leading lower)
+ */
+export interface BrandNameTag {
+  size: { w: number; h: number; r: number }
+  margin: number
+  logoX: number
+  name: { pt: number; leading: number; baseline: number; clear: number }
+  position: { pt: number; leading: number; baseline: number }
+}
 
-const MARGIN = 4
-/** The logo's column starts here; the name keeps 4 mm clear of it */
-const LOGO_X = 46
+/** The plate, in millimetres */
+export const TAG = L.size
+
+const MARGIN = L.margin
+/** The logo's column starts here; the name keeps `name.clear` mm clear of it */
+const LOGO_X = L.logoX
 
 interface Block { size: number; leading: number; baseline: number; maxWidth: number; maxLines: number }
 
 /**
- * The name and surname: every line in the column left of the logo, 2 mm clear of it (40 mm: half the 4 mm margin, so
- * Преображенский, 39.6 mm, fits). Not running on under the logo, which looks broken: a double name or
- * surname breaks after its hyphen instead, and one too long without a hyphen is an error (Александровская, 40.3 mm),
- * as the type size can't be reduced
+ * The name and surname: every line in the column left of the logo, `name.clear` mm clear of it. Not running on under the
+ * logo, which looks broken: a double name or surname breaks after its hyphen instead, and one too long without a
+ * hyphen is an error, as the type size can't be reduced
  */
-const NAME: Block = { size: 14 * PT, leading: 12 * PT, baseline: 7.6486, maxWidth: LOGO_X - MARGIN - 2, maxLines: 1 }
+const NAME: Block = { size: L.name.pt * PT, leading: L.name.leading * PT, baseline: L.name.baseline, maxWidth: LOGO_X - MARGIN - L.name.clear, maxLines: 1 }
 /** Lines the name and surname may take together; at three the position is left one */
 const NAME_LINES = 3
 /**
  * The position, under the logo: the full width between the margins, up to two lines; a typed line break is kept.
- * Anchored at the bottom: `baseline` is the last line's, the source's second (21.23 mm), and a second line goes above
+ * Anchored at the bottom: `baseline` is the last line's, the source's second, and a second line goes above
  * it, where the source has its first, so one line doesn't hang in the middle.
  */
-const POSITION: Block = { size: 9 * PT, leading: 10.8 * PT, baseline: 17.4166 + 10.8 * PT, maxWidth: TAG.w - 2 * MARGIN, maxLines: 2 }
+const POSITION: Block = { size: L.position.pt * PT, leading: L.position.leading * PT, baseline: L.position.baseline + L.position.leading * PT, maxWidth: TAG.w - 2 * MARGIN, maxLines: 2 }
 
 /** The logo of the source, in the tag's millimetres (nonzero fill) */
 export const LOGO = NAME_TAG_LOGO

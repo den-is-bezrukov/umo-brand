@@ -5,46 +5,68 @@ import { noteLine } from '@/ui/liveText'
 import { logo } from '@/card/card'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { WORDS } from '@brand/words'
+import { PRICE_TAG as L } from '@brand/price-tag'
 import { METRICS } from 'virtual:font-metrics'
 
-// A price tag for the small goods at a point: 90×60 mm, a black band 12 mm tall across the top with the brand's
-// logo 15×3 mm, a hairline and the
-// point's name in white, then on white the goods' name from the top, its code under it, and at the bottom the price's
-// caption and the price. The layout is fixed, as in Figma: a longer name takes more lines down to the code, never
-// moving it. Figma's frame is 900×600, 10 px a millimetre. Text boxes there are «leading-none» (the line as tall as the
-// type, the font's ascent and descent centred on it, so the baseline is `DROP` of the size under the box's top), but the
-// point's, trimmed to the capitals.
+// A price tag for the small goods at a point, laid out as the brand's `@brand/price-tag` says (`BrandPriceTag`): a black
+// band across the top with the brand's logo, a hairline and the point's name in white, then on white the goods' name
+// from the top, its code under it, and at the bottom the price's caption and the price. The layout is fixed, as in
+// Figma: a longer name takes more lines down to the code, never moving it. Figma's frame is 10 px a millimetre. Text
+// boxes there are «leading-none» (the line as tall as the type, the font's ascent and descent centred on it, so the
+// baseline is `DROP` of the size under the box's top), but the point's, trimmed to the capitals.
+
+/**
+ * `@brand/price-tag`: the tag's layout, mm, from Figma, whose frame is 10 px a millimetre. `side` is the padding, `band` the
+ * band's height; `logo` the logo's width and the hairline after it (`x` where it stands, `w` its thickness, `h` its
+ * height), the point's name `gap` after it in `point.size`; below the band, `name` (its top, `size`, at most `lines`
+ * lines), then `code` and `caption` (tops, in `small`, tracked `tracking` em) and the `price` (top, `size`)
+ */
+export interface BrandPriceTag {
+  size: { w: number; h: number }
+  side: number
+  band: number
+  logo: { w: number }
+  rule: { x: number; w: number; h: number }
+  point: { gap: number; size: number }
+  name: { top: number; size: number; lines: number }
+  small: number
+  tracking: number
+  code: number
+  caption: number
+  price: { top: number; size: number }
+}
 
 /** The tag, mm */
-export const TAG = { w: 90, h: 60 }
+export const TAG = L.size
 
-export const SIDE = 4.5
+export const SIDE = L.side
 export const CAP = METRICS.cap
 /** From a «leading-none» box's top to its baseline, in sizes: (1 − (ascent + descent)) / 2 + ascent */
 export const DROP = (1 - (METRICS.ascent + METRICS.descent)) / 2 + METRICS.ascent
 
 /** The black band */
-export const BAND = 12
+export const BAND = L.band
 /**
- * The logo, its hairline and the point's name: the logo 4.5 mm in and 3 mm (30 px) before the hairline, as Figma; the
- * name 2.625 mm after it (Figma has 3; 2.25 is a touch close) and free to run to the tag's right edge, with no padding there, so the longest
- * points the brand lists (61.1 mm) fit, the type staying as in Figma
+ * The logo, its hairline and the point's name: the logo `side` in and, as Figma, before the hairline; the name `gap` after
+ * it and free to run to the tag's right edge, with no padding there, so the longest points the brand lists fit, the type
+ * staying as in Figma
  */
-const LOGO_W = 15
-const RULE_X = 22.5
-const RULE_W = 0.15
-const POINT_X = RULE_X + 2.625
-export const POINT = { x: POINT_X, size: 4.4, width: TAG.w - POINT_X }
+const LOGO_W = L.logo.w
+const RULE_X = L.rule.x
+const RULE_W = L.rule.w
+const RULE_H = L.rule.h
+const POINT_X = RULE_X + L.point.gap
+export const POINT = { x: POINT_X, size: L.point.size, width: TAG.w - POINT_X }
 
-/** The goods' name, Medium 45 px on 45 px lines, from the body's 4 mm padding down to the code */
-export const NAME = { top: BAND + 4, size: 4.5, width: TAG.w - 2 * SIDE, lines: 4 }
-/** Regular 30 px with 1% tracking: the code, the caption */
-export const SMALL = 3
-export const TRACK = 0.01 * SMALL
-export const CODE_TOP = BAND + 4 + 22
-export const CAPTION_TOP = BAND + 30.5
-/** The price, Medium 90 px, its box standing on the body's bottom padding; lining tabular figures */
-export const PRICE = { top: BAND + 35, size: 9 }
+/** The goods' name, Medium on lines as tall as its size, from the body's padding down to the code */
+export const NAME = { top: BAND + L.name.top, size: L.name.size, width: TAG.w - 2 * SIDE, lines: L.name.lines }
+/** Regular with tracking: the code, the caption */
+export const SMALL = L.small
+export const TRACK = L.tracking * SMALL
+export const CODE_TOP = BAND + L.code
+export const CAPTION_TOP = BAND + L.caption
+/** The price, Medium, its box standing on the body's bottom padding; lining tabular figures */
+export const PRICE = { top: BAND + L.price.top, size: L.price.size }
 
 export const DEFAULT_CAPTION = 'Цена за штуку с НДС'
 
@@ -63,7 +85,7 @@ export interface Tag {
 /** The band's art the same for every tag: the logo and the hairline after it */
 export const BAND_ART: Cmd[] = [
   ...logo(SIDE, SIDE, LOGO_W),
-  ['M', RULE_X - RULE_W / 2, SIDE], ['L', RULE_X + RULE_W / 2, SIDE], ['L', RULE_X + RULE_W / 2, SIDE + 3], ['L', RULE_X - RULE_W / 2, SIDE + 3], ['Z'],
+  ['M', RULE_X - RULE_W / 2, SIDE], ['L', RULE_X + RULE_W / 2, SIDE], ['L', RULE_X + RULE_W / 2, SIDE + RULE_H], ['L', RULE_X - RULE_W / 2, SIDE + RULE_H], ['Z'],
 ]
 
 /**

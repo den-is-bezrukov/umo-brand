@@ -3,25 +3,27 @@ import { METRICS } from 'virtual:font-metrics'
 import type { Cmd } from '@/livery/geometry'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { noteLine } from '@/ui/liveText'
+import { PLATE_FRAME as L } from '@brand/plate-frame'
 import { missingChars, oneLine, setLine as setType } from '@/ui/type'
 
 // The print strip of a number plate frame: the 501×21 mm field under the plate of
-// a standard 522×132 frame, where the frame maker prints in white on the black plastic. One line of the brand font's Medium,
-// 18 mm with −1% tracking and the case-sensitive forms, its capitals 2.5 mm under the top of the field, set from the left edge or centred. The PDF has
-// the field at 1:1 with the text in outlines, no bleed.
+// a standard 522×132 frame, where the frame maker prints in white on the black plastic. One line of the brand font's Medium
+// with the case-sensitive forms, set as the brand's `@brand/plate-frame` says (`BrandPlateFrame`: the size, the tracking, how
+// far its capitals stand under the top of the field), from the left edge or centred. The PDF has the field at 1:1 with the
+// text in outlines, no bleed.
+
+/** `@brand/plate-frame`: the line's size, mm, its tracking in em, and the distance from the field's top to the capitals' top, mm */
+export interface BrandPlateFrame { size: number; tracking: number; top: number }
 
 /** The strip in the frame's millimetres (the frame is 522×132) */
 export const STRIP = { x: 10.5, y: 110, w: 501, h: 21 }
 
-export const SIZE = 18
-export const TRACKING = -0.01
+export const SIZE = L.size
+export const TRACKING = L.tracking
 /** The brand font's cap height, in em */
 const CAP = METRICS.cap
-/**
- * The capitals' top 2.5 mm under the strip's top: half a millimetre above Figma's 3, as the line is mostly lowercase
- * and Ц's tail, and its weight sat low between the plate and the frame's rounded bottom
- */
-export const BASELINE = 2.5 + CAP * SIZE
+/** The capitals' top `top` mm under the strip's top, so the baseline is a cap's height lower */
+export const BASELINE = L.top + CAP * SIZE
 
 export type Align = 'left' | 'center'
 
