@@ -2,6 +2,7 @@ import type { Font } from 'opentype.js'
 import QRCode from 'qrcode'
 import { LIVERY } from '@brand/livery'
 import { WORDS } from '@brand/words'
+import { FONTS } from '@brand/fonts'
 import type { Surface, TextBlock, Obstacle, TextPart } from './layout'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { textLine, type TextLine } from '@/ui/liveText'
@@ -39,7 +40,7 @@ export interface Sheet {
 }
 
 /** The deepest descender of the brand font's Cyrillic (р, у, д), in em */
-const DESCENDER = 0.194
+const DESCENDER = FONTS.metrics.descender
 
 function moveCmds(cmds: Cmd[], dx: number, dy: number): Cmd[] {
   return cmds.map(c => c.length === 1 ? c : c.map((v, i) => (i === 0 ? v : (v as number) + (i % 2 ? dx : dy))) as Cmd)

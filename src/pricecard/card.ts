@@ -6,12 +6,13 @@ import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { typografText } from '@/guide/typograf'
 import { PRICE_CARD } from '@brand/price-card'
 import { WORDS } from '@brand/words'
+import { FONTS } from '@brand/fonts'
 
 // The price card, an A3 poster (Figma «Price Cards», 2100×2970 px, 7.07 px a millimetre; everything here in its px,
 // y down): the car's photo across the top 720 px with the wordmark and «от … ₽» on it in white; under it a 150 px
 // headline, the trim's name and its list, and at the bottom, standing on the 100 px margin, the fine print with the
 // prices and the QR over it, so a longer text lifts them. All in the brand font's Medium but the fine print (Regular)
-// and a headline's run in a font of its own. Figma's text boxes put a baseline (lh − 1.26 em) / 2 + 0.974 em under a line's top.
+// and a headline's run in a font of its own. Figma's text boxes put a baseline (lh − (ascent + descent) em) / 2 + ascent em under a line's top, the brand font's (`FONTS.metrics`).
 
 export const CARD = { w: 2100, h: 2970 }
 const SIDE = 125
@@ -113,7 +114,7 @@ export interface Art {
 export interface Input { model: Product; trim: Trim; full: string; legal: string; url: string }
 
 /** A baseline under a line's top, as Figma sets a line `lh` tall */
-const baseline = (top: number, size: number, lh = size) => top + (lh - 1.26 * size) / 2 + 0.974 * size
+const baseline = (top: number, size: number, lh = size) => top + (lh - (FONTS.metrics.ascent + FONTS.metrics.descent) * size) / 2 + FONTS.metrics.ascent * size
 
 const HEADLINE = 150
 const BODY = 75

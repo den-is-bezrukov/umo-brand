@@ -5,22 +5,23 @@ import { noteLine } from '@/ui/liveText'
 import { logo } from '@/card/card'
 import { hasProfanity, PROFANITY } from '@/ui/profanity'
 import { WORDS } from '@brand/words'
+import { FONTS } from '@brand/fonts'
 
 // A price tag for the small goods at a point: 90×60 mm, a black band 12 mm tall across the top with the brand's
 // logo 15×3 mm, a hairline and the
 // point's name in white, then on white the goods' name from the top, its code under it, and at the bottom the price's
 // caption and the price. The layout is fixed, as in Figma: a longer name takes more lines down to the code, never
 // moving it. Figma's frame is 900×600, 10 px a millimetre. Text boxes there are «leading-none» (the line as tall as the
-// type, the font's 974 + 286 units centred on it, so the baseline is 0.844 of the size under the box's top), but the
+// type, the font's ascent and descent centred on it, so the baseline is `DROP` of the size under the box's top), but the
 // point's, trimmed to the capitals.
 
 /** The tag, mm */
 export const TAG = { w: 90, h: 60 }
 
 export const SIDE = 4.5
-export const CAP = 0.68
-/** From a «leading-none» box's top to its baseline, in sizes: (1 − (974 + 286) / 1000) / 2 + 0.974 */
-export const DROP = 0.844
+export const CAP = FONTS.metrics.cap
+/** From a «leading-none» box's top to its baseline, in sizes: (1 − (ascent + descent)) / 2 + ascent */
+export const DROP = (1 - (FONTS.metrics.ascent + FONTS.metrics.descent)) / 2 + FONTS.metrics.ascent
 
 /** The black band */
 export const BAND = 12

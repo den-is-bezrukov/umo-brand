@@ -1,8 +1,9 @@
 import type { Font, Glyph } from 'opentype.js'
 import { glyphsOf } from '@/ui/type'
+import { FONTS } from '@brand/fonts'
 
 // The memo's texts as Figma sets them, line by line, for the editable template's live text (the brand's memo/texts.json; the PDF in outlines takes Figma's own outlines instead). Figma px, 10 a
-// millimetre, y down. Figma centres the font's height (hhea, 974 + 286 of 1000) in each line's box, breaks lines
+// millimetre, y down. Figma centres the font's height (hhea: the brand font's ascent and descent) in each line's box, breaks lines
 // between words (a no-break space holds two together), puts `paragraphSpacing` after a paragraph and `listSpacing`
 // between a list's items, and hangs an ordered list's number in its indent.
 
@@ -37,8 +38,8 @@ export interface Line { baseline: number; segs: Seg[] }
 const INDENT = 55
 const MARKER_GAP = 13
 
-const ASCENT = 0.974
-const HEIGHT = 0.974 + 0.286
+const ASCENT = FONTS.metrics.ascent
+const HEIGHT = FONTS.metrics.ascent + FONTS.metrics.descent
 
 /** Advances and kerning of one font's text from `x`: each glyph's pen position */
 function advance(font: Font, text: string, size: number): { glyphs: Glyph[]; pens: number[]; end: number } {
