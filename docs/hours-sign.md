@@ -7,3 +7,5 @@ Only one range of hours: the points open different hours on different days get n
 The PDF's title is its file name. A link with `pdf` saves `<Brand>_hours-sign.pdf` to the downloads and opens it with no editor; a sign at fault opens the editor (see «Links with settings» in `docs/generators.md`).
 
 «Скачать шаблон», an icon in the caption before its reset, `<Brand>_hours-sign_template.pdf`: the same page, the text live in the brand font Medium in the brand's print black (`ink` in its `colors.ts`), the logo in outlines (`signTemplate`; the lines noted by `placeRuns`); `<site>/hours-sign?t` gives it blank, every field its placeholder and the fixed lines as they are (see «Editable templates» in `docs/generators.md`).
+
+Time inputs paint the entered characters and grey remainder in a single text layer with one baseline; the overlaid native input supplies editing, selection and caret without painting a second copy. Phone fields expose the remaining digits as a visual mask for themes that enable it.

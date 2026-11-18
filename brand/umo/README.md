@@ -84,3 +84,28 @@ Under Логотип на иконках, after the favicon, `umo-icon-black` (w
 If the logo changes, update `public/downloads/umo-logo.svg` and `Wordmark.tsx` together, then regenerate the PNGs, e.g. `magick -background none -density 360 umo-logo.svg -resize 2400x480 PNG32:umo-logo-black.png` (swap `fill="black"` for `white` for the white one), and re-zip with `zip -X -j`.
 
 Icons in `brand/umo/public/`: `favicon.svg` and `favicon.ico` are the U module of the logo, white on a black tile (the full wordmark turns to mush at 16px). The tile is rounded in the icon itself: radius 1 on the 16 grid with 60% corner smoothing, since Safari and Chrome show favicons as drawn. The U is hinted: on a 16-unit grid its stems (2), bar (2) and edges sit on whole units, so it lands on whole pixels at 16, 32 and 48; the .ico's 16px frame keeps the hand-drawn U with mirrored corners and takes its rounded-corner alpha from the SVG; 32/48 are Chrome renders of the SVG at 768px, box-downscaled. `apple-touch-icon.png` (180) carries the whole UMO wordmark at 2/3 of the tile (120×24 at 30,78), as the app icon in Логотип на иконках.
+
+## Метрика
+
+Счётчик `113514674`, домен `umo.autos`. 3 ноября 2026 через Management API добавлены 16 целей: три недостающих печатных материала, восемь шаблонов, меню, инструкция, ссылка с дилером и две раздельные сводные цели. Повторным чтением проверены все 20 событий `Goal` и обе сводные цели. Код сайта уже отправляет эти события; деплой для регистрации целей не нужен. Доставка событий из рабочего браузера отдельно не проверялась.
+
+| Событие / группа | ID цели |
+| --- | --- |
+| `download_owner_memo` | `678440244` |
+| `download_owner_memo_template` | `678440245` |
+| `download_business_card_template` | `678440246` |
+| `download_price_card_template` | `678440247` |
+| `download_price_tag_template` | `678440249` |
+| `download_hours_sign_template` | `678440250` |
+| `download_name_tag_template` | `678440252` |
+| `download_plate_frame_template` | `678440253` |
+| `download_livery_template` | `678440254` |
+| `download_price_tag` | `678440255` |
+| `download_hours_sign` | `678440256` |
+| `open_menu` | `678440257` |
+| `open_help` | `678440258` |
+| `dealer_link` | `678440259` |
+| `print_files` | `678440260` |
+| `templates` | `678440261` |
+
+`print_files` и `templates` — обозначения групп в этой таблице, не новые события сайта: первая цель содержит восемь точных событий печатных файлов, вторая — восемь событий шаблонов. Старую общую цель `670519503` с условием «содержит download_» сохранили для непрерывности; она считает и файлы, и шаблоны. Цели пересекаются, их достижения нельзя складывать. Регистрация новых целей не означает, что историческая статистика по ним уже доступна; для сравнения использовать период после настройки. Токены в репозитории не хранятся.

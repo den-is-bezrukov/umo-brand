@@ -12,11 +12,14 @@ This file holds only what every task needs. The details live in `docs/`, one fil
 - `docs/brand.md` — where the brand lives (`brand/<name>/`), what the code takes from it and how, and why the core names no brand; read it before touching anything a brand's own: logo, fonts, texts, points, models, photos. The brand's own notes (its numbers, how its parts were made) are its `README.md`
 - `docs/generators.md` — what all generators share: the form, the phone layout, item lists, links with settings, files dropped back, name checks, obscene words, Metrika goals. Read it for any generator task
 - `BACKLOG.md` — what's parked for later, in Russian; when a task from it is done, remove its line in the same commit
+- `docs/layouts.md` — every material's frames for drawing in Figma: sizes in px at 1:10, the data and graphics on each (in Russian, the working sheet of BACKLOG:16)
 - `docs/price-card.md`, `docs/livery.md`, `docs/plate-frame.md`, `docs/name-tag.md`, `docs/business-card.md`, `docs/price-tag.md`, `docs/hours-sign.md`, `docs/memo.md` — each generator's layout in mm (where the brand lays it out, as the business card and the hours sign, what the brand gives; its numbers are in its `README.md`), its texts, limits and file
 
 ## Development Server
 
 One server is always running at `http://localhost:5588` (port set in `vite.config.ts`, not the Vite default), started at login by the LaunchAgent `~/Library/LaunchAgents/autos.umo.dev.plist` (`pnpm dev` in this folder; log in `~/Library/Logs/umo-dev.log`). Hot reload is on. Don't start another one: open it with `preview_start {name: "dev"}`, which only attaches to that URL. If it's down, `launchctl kickstart -k gui/$(id -u)/autos.umo.dev` restarts it.
+
+POSSET has its own always-running server at `http://localhost:1234` (`BRAND=posset PORT=1234`), managed the same way by `~/Library/LaunchAgents/autos.posset.dev.plist`, with its log at `~/Library/Logs/posset-dev.log`. The `posset` preview configuration only attaches to that URL. Do not start another POSSET server. Restart with `launchctl kickstart -k gui/$(id -u)/autos.posset.dev`.
 
 ## Checking that nothing changed
 
@@ -45,7 +48,7 @@ Start with task-relevant files below. Only follow imports or inspect other files
 - `src/PriceTag.tsx` - The price tag generator; `src/pricetag/`: the tag (`tag.ts`: `TAG`, `buildTag`, `readPrice`), the A4 sheets (`pdf.ts`), read back (`read.ts`)
 - `src/HoursSign.tsx` - The hours sign generator; `src/hours/`: the layout (`sign.ts`), the PDF (`pdf.ts`)
 - `src/Memo.tsx` - The owner's memo generator; `src/memo/`: the contacts and Figma's art read back (`memo.ts`), the texts set as Figma sets them (`text.ts`, from `texts.json`), the PDF and the template (`pdf.ts`); Figma's pages in outlines in the brand's `assets/memo`, both taken out of Figma by the brand's script
-- `src/ui/` - What the generators share (see `docs/generators.md`): the form (`form.tsx`), the point a `pdf` link names found before the generator reads it (`LinkPoint.tsx`), the phone layout (`mobile.tsx`, `phone.ts`), item lists (`staff.tsx`), settings in the link (`share.ts`), data in the PDF (`pdfData.ts`, `pdfDataWrite.ts`), name checks (`names.ts`), obscene words (`profanity.ts`), Metrika goals (`metrika.ts`), the editable templates' button and link (`template.tsx`) and live text (`liveText.ts`, its PDF half `liveTextPdf.ts`), text in outlines and the fonts (`type.ts`)
+- `src/ui/` - What the generators share (see `docs/generators.md`): the form (`form.tsx`, helpers in `formUtils.ts`), the point a `pdf` link names found before the generator reads it (`LinkPoint.tsx`), the phone layout (`mobile.tsx`, `phone.ts`), item lists (`staff.tsx`, logic in `useStaff.ts`, shared state in `staffState.ts`), settings in the link (`share.ts`), data in the PDF (`pdfData.ts`, `pdfDataWrite.ts`), name checks (`names.ts`), obscene words (`profanity.ts`), Metrika goals (`metrika.ts`), the editable templates' button and link (`template.tsx`) and live text (`liveText.ts`, its PDF half `liveTextPdf.ts`), text in outlines and the fonts (`type.ts`)
 - `src/data/` - Every generator's path and name (`generators.ts`: the ring, «Инструкция», the guide's «Редактор материалов», its Материалы cards and first sentence, the template icon's tooltip; add a new generator there); the brand's products as the price card chooses them (`products.ts`, from `@brand/products`; the livery's vehicles are `LIVERY.vehicles`); the texts the generators suggest: the positions (`positions.ts`, from `@brand/positions`), the points, the brand's points of sale (`points.ts`: `@brand/points` merged, and `findPoints`, which finds one by any spelling; see «Points» in `docs/generators.md`), the hours sign's lines and the points' hours as the brand's site writes them (`hours.ts`)
 - `brand/<name>/points/` - The brand's points, its lists for `@brand/points` (where they come from: the brand's `README.md`); their marketing names («<Бренд> Точка Город», `POINT_NAMES`) are the point fields' suggestions; what the brand calls a point is its `words.ts`
 - `src/icons/` - SVG path data for small UI icons, imported directly by component name
@@ -72,3 +75,5 @@ This project uses **Tailwind CSS v4** through the `@tailwindcss/vite` plugin con
 - Use double quotes for strings containing apostrophes (`"We're here to help"`), or escape them in single-quoted strings. An unescaped apostrophe in a single-quoted string breaks the build.
 - Ensure JSX tags are closed and braces are balanced.
 - Export components as default exports.
+
+Keep React component modules as refresh boundaries: export components and types only; place hooks, contexts, and other runtime helpers in separate modules and import them directly. Mixed exports can reset editor state during hot updates.
