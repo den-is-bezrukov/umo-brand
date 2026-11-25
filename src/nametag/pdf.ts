@@ -1,0 +1,166 @@
+import {
+  PDFDocument, PDFOperator, PDFOperatorNames, PDFNumber,
+  moveTo, lineTo, appendBezierCurve, closePath, pushGraphicsState, popGraphicsState, setFillingCmykColor, setStrokingCmykColor, stroke,
+} from 'pdf-lib'
+import { zipSync, strToU8 } from 'fflate'
+import { TAG, LOGO, TAGS_KEY, type Tag } from './tag'
+import { writePdfData } from '@/ui/pdfDataWrite'
+import type { Cmd } from '@/livery/geometry'
+import { embedFonts, textOps, type LiveFonts } from '@/ui/liveTextPdf'
+import type { TextLine } from '@/ui/liveText'
+// How the tag should look, for the maker: the guide's photo of the tag on a shirt
+import REFERENCE from '@brand/guide/images/name-tag.webp'
+import { SITE } from '@/site'
+import { COLORS } from '@brand/colors'
+
+// Loaded only when the files are downloaded, so the page doesn't carry pdf-lib until then.
+
+
+const PT = 72 / 25.4
+/** The brand's print black: nominal, the material decides the real one */
+const INK = COLORS.ink
+
+/** The LOGO path's M/L/C/Z commands as Cmds */
+function svgCmds(d: string): Cmd[] {
+  const cmds: Cmd[] = []
+  for (const [, op, args] of d.matchAll(/([MLCZ])([^MLCZ]*)/g)) {
+    const n = args.trim() ? args.trim().split(/[\s,]+/).map(Number) : []
+    if (op === 'Z') cmds.push(['Z'])
+    else if (op === 'C') cmds.push(['C', n[0], n[1], n[2], n[3], n[4], n[5]])
+    else cmds.push([op as 'M' | 'L', n[0], n[1]])
+  }
+  return cmds
+}
+
+/** The plate's outline, 4 mm corners drawn as the source draws them */
+function outline(): Cmd[] {
+  const { w, h, r } = TAG
+  const k = r * 0.5523
+  return [
+    ['M', r, 0], ['L', w - r, 0], ['C', w - r + k, 0, w, r - k, w, r],
+    ['L', w, h - r], ['C', w, h - r + k, w - r + k, h, w - r, h],
+    ['L', r, h], ['C', r - k, h, 0, h - r + k, 0, h - r],
+    ['L', 0, r], ['C', 0, r - k, r - k, 0, r, 0], ['Z'],
+  ]
+}
+
+function pathOps(cmds: Cmd[], H: number): PDFOperator[] {
+  const X = (x: number) => x * PT
+  const Y = (y: number) => H - y * PT
+  return cmds.map(c =>
+    c[0] === 'M' ? moveTo(X(c[1]), Y(c[2]))
+      : c[0] === 'L' ? lineTo(X(c[1]), Y(c[2]))
+        : c[0] === 'C' ? appendBezierCurve(X(c[1]), Y(c[2]), X(c[3]), Y(c[4]), X(c[5]), Y(c[6]))
+          : closePath())
+}
+
+/**
+ * One page per tag at 1:1, as the source: the plate's outline as a 0.5 pt stroke (the cut line), the logo and the text
+ * as filled outlines, all in the source's colour
+ */
+async function tagsPdf(tags: Tag[], people: unknown): Promise<Uint8Array> {
+  const doc = await PDFDocument.create()
+  doc.setTitle(`${SITE.name} name tags 70×25`)
+  // The staff as typed, so the PDF (or the ZIP holding it) dropped back on the page opens them
+  writePdfData(doc, TAGS_KEY, { people })
+  await tagPages(doc, tags.map(tag => ({ tag })))
+  return doc.save({ useObjectStreams: false })
+}
+
+/**
+ * The editable template (`<Brand>_name-tags_template.pdf`, a file of its own, not in the ZIP): the same pages, the text
+ * live in the brand font (`src/ui/liveTextPdf.ts`), the logo in outlines
+ */
+export async function tagsTemplate(tags: { tag: Tag; lines: TextLine[] }[]): Promise<Blob> {
+  const doc = await PDFDocument.create()
+  doc.setTitle(`${SITE.file}_name-tags_template.pdf`)
+  await tagPages(doc, tags, await embedFonts(doc))
+  const bytes = await doc.save({ useObjectStreams: false })
+  return new Blob([bytes as BlobPart], { type: 'application/pdf' })
+}
+
+/** The pages: the text as outlines, or, with `live`, the noted lines as text */
+async function tagPages(doc: PDFDocument, tags: { tag: Tag; lines?: TextLine[] }[], live?: LiveFonts) {
+  const logo = svgCmds(LOGO)
+  for (const { tag, lines = [] } of tags) {
+    const page = doc.addPage([TAG.w * PT, TAG.h * PT])
+    const H = page.getHeight()
+    page.pushOperators(
+      pushGraphicsState(), setStrokingCmykColor(...INK), PDFOperator.of(PDFOperatorNames.SetLineWidth, [PDFNumber.of(0.5)]),
+      ...pathOps(outline(), H), stroke(), popGraphicsState(),
+      pushGraphicsState(), setFillingCmykColor(...INK),
+      ...pathOps(logo, H), PDFOperator.of(PDFOperatorNames.FillNonZero),
+      ...(live ? [] : [...pathOps(tag.cmds, H), PDFOperator.of(PDFOperatorNames.FillNonZero)]),
+      popGraphicsState(),
+    )
+    if (live) page.pushOperators(...textOps(page, live, lines, (x, y) => [x * PT, H - y * PT], PT, INK))
+  }
+}
+
+/** The requirements of the source's spec, the text now coming in outlines */
+function spec(count: number): string {
+  return `БЕЙДЖ СОТРУДНИКА ДЦ ${SITE.name}
+Требования к изготовлению
+
+
+СОСТАВ
+
+${`${SITE.file}_name-tags.pdf`.padEnd(29)}— макеты бейджей, ${count} шт., по одному на странице, 1:1
+${`${SITE.file}_name-tag_reference.webp`.padEnd(29)}— референс внешнего вида
+Размер 70 × 25 мм, углы скруглены радиусом 4 мм.
+Контур — линия реза. Текст и логотип уже в кривых.
+
+
+ВНЕШНИЙ ВИД
+
+Как на референсе: матовая шлифованная серебристая поверхность, тёмный
+текст и логотип.
+Размер, форма и вёрстка — строго по макету.
+Цвета в файле условные: итоговый цвет текста определяется материалом.
+
+
+МАТЕРИАЛ И НАНЕСЕНИЕ (допустимые варианты)
+
+1. Двухслойный пластик для лазерной гравировки: лицевой слой «серебро
+   шлифованное», сердцевина чёрная, толщина 0,8–1,6 мм (Rowmark LaserMax
+   или аналог). Гравировка CO2-лазером на всю глубину лицевого слоя.
+   Основной вариант.
+
+2. Нержавеющая сталь с шлифовкой, толщина 0,5–1 мм. Маркировка
+   волоконным лазером методом отжига, текст тёмный и контрастный.
+   Премиальный вариант.
+
+
+НЕ ДОПУСКАЕТСЯ
+
+- Лазерная маркировка по серебристому анодированному алюминию
+  (текст выходит светлым и нечитаемым).
+- Сублимация, УФ-печать, аппликация плёнкой.
+- Глянцевая или зеркальная поверхность.
+- Изменение вёрстки, масштабирование текста или логотипа.
+
+
+ОБРАБОТКА И КРЕПЛЕНИЕ
+
+- Направление шлифовки — горизонтальное.
+- Торец обработан, со скосом (фаской), без заусенцев и следов реза.
+- Крепление — магнитное (два неодимовых магнита). Допустима булавка.
+`
+}
+
+async function tagsParts(tags: Tag[], people: unknown) {
+  const [pdf, photo] = await Promise.all([tagsPdf(tags, people), fetch(REFERENCE).then(r => r.arrayBuffer())])
+  return { [`${SITE.file}_name-tags.pdf`]: pdf, [`${SITE.file}_name-tag_reference.webp`]: new Uint8Array(photo), [`00_${SITE.file}_name-tags_spec.txt`]: strToU8(spec(tags.length)) }
+}
+
+export async function tagsZip(tags: Tag[], people: unknown): Promise<Blob> {
+  const zip = zipSync(await tagsParts(tags, people), { level: 0 })
+  return new Blob([zip as BlobPart], { type: 'application/zip' })
+}
+
+/** What the ZIP holds as files of their own, for «Поделиться»: the share sheet doesn't take a ZIP */
+export async function tagsFiles(tags: Tag[], people: unknown): Promise<File[]> {
+  const parts = await tagsParts(tags, people)
+  const type = (name: string) => (name.endsWith('.pdf') ? 'application/pdf' : name.endsWith('.webp') ? 'image/webp' : 'text/plain')
+  return Object.entries(parts).map(([name, bytes]) => new File([bytes as BlobPart], name, { type: type(name) }))
+}

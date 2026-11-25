@@ -1,0 +1,361 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
+import type { Font } from 'opentype.js'
+import { goal } from '@/ui/metrika'
+import { Field, OptionalField, Segments, SegBtn, ComboField, UrlField, Checkbox, SizeSwitch, GeneratorHeader, LinkButtons, DownloadBar } from '@/ui/form'
+import { isValidUrl } from '@/ui/formUtils'
+import { CaptionReset } from '@/ui/staff'
+import { linkParams, useLinkState } from '@/ui/share'
+import { POINT_NAMES, pointFilter, withoutBrand } from '@/data/points'
+import { DEFAULT_TAGLINE, TAGLINES } from '@brand/taglines'
+import { asFile } from '@/data/products'
+import { LIVERIES, SURFACES, VEHICLES, DEFAULT_VEHICLE, vehicleFrom, vehicleOf, withoutQr, smallQr, type Vehicle } from '@/livery/layout'
+import { buildSheet, specMarks, toD, mm, type Sheet, type Line } from '@/livery/geometry'
+import { loadFont } from '@/ui/type'
+import { MobileEditor } from '@/ui/mobile'
+import { usePhone } from '@/ui/usePhone'
+import { TemplateButton } from '@/ui/template'
+import { useTemplateLink } from '@/ui/useTemplateLink'
+import { SITE } from '@/site'
+import { WORDS } from '@brand/words'
+import { LIVERY_FILE } from '@/livery/pdf'
+
+/** What the brand calls its points (`@brand/words`) */
+const W = { ...WORDS.point, vehicle: WORDS.vehicle.one }
+
+// Point livery generator: lettering for both sides and the rear window of a point's demo car. The preview puts the sheets on
+// photos of the car, with the door seam and handle marked, so a point name or tagline that would run onto them shows
+// up before the files go to the wrap shop.
+
+/** The QR leads to the model's own page unless another link is set, as on the price card */
+const DEFAULT_URL = Object.fromEntries(VEHICLES.map(m => [m.id, m.page])) as Record<Vehicle, string>
+const DEFAULT_TOP = `Центр ${SITE.name}`
+
+// The parts that can be left out, as the `off` link parameter names them
+const PARTS = { qr: 'qr', point: 'top', tagline: 'bottom', rear: 'rear', rearPoint: 'rdealer', rearTagline: 'rslogan' } as const
+const RED = '#ff2a1a'
+/** The spec's dimensions: orange, apart from the red of text at fault */
+const DIMS = '#ee4400'
+
+function SheetPreview({ sheet, dims, onReset, resetLabel, extra }: { sheet: Sheet; dims: boolean; onReset?: () => void; resetLabel?: string; extra?: React.ReactNode }) {
+  const s = sheet.surface
+  const marks = specMarks(s)
+  const [vx, vy, vw, vh] = s.photo.view
+  const bad = (l: Line) => l.issues.length > 0
+  const lines = [...sheet.point.lines, ...sheet.tagline.lines]
+  const hairline = { vectorEffect: 'non-scaling-stroke' as const, strokeWidth: 1, fill: 'none' }
+  const anchor = { left: 'start', center: 'middle', right: 'end' } as const
+  // White decals, or black on a white car's sides (`Surface.decal`)
+  const decal = s.decal ?? '#fff'
+  return (
+    <figure className="group/sheet flex min-w-0 flex-col gap-2">
+      {/* The car straight on the canvas, no plate behind it: the side photos are cut out; the rear ones are photos */}
+      <svg viewBox={`${vx} ${vy} ${vw} ${vh}`} className="block w-full">
+        <image
+          href={s.photo.src}
+          width={s.photo.w}
+          height={s.photo.h}
+          transform={s.photo.mirror ? `translate(${s.photo.w} 0) scale(-1 1)` : undefined}
+        />
+        <g transform={`translate(${s.photo.x} ${s.photo.y})`}>
+          {/* QR and lettering */}
+          {sheet.fixed.map((cmds, i) => <path key={i} d={toD(cmds)} fill={decal} fillRule="evenodd" />)}
+          {lines.map((l, i) => (
+            <path key={`t${i}`} d={toD(l.cmds)} fill={bad(l) || l.extra ? RED : decal} fillRule="evenodd" />
+          ))}
+          {/* The spec's dimensions */}
+          {dims && (
+            <g>
+              {/* Half a pixel on Retina screens, one device pixel; a whole one elsewhere, as half would only turn pale */}
+              {marks.lines.map(([x1, y1, x2, y2], i) => <line key={i} x1={x1} y1={y1} x2={x2} y2={y2} stroke={DIMS} {...hairline} strokeWidth={devicePixelRatio >= 2 ? 0.5 : 1} />)}
+              {/* The brand font's Medium with tabular figures (the spec PDF keeps Helvetica Bold) */}
+              {marks.labels.map((l, i) => (
+                <text key={i} x={l.x} y={l.y} textAnchor={anchor[l.align]} fontSize={marks.size} fontWeight={500} fill={DIMS} className="font-sans [font-variant-numeric:tabular-nums]">{l.text}</text>
+              ))}
+            </g>
+          )}
+        </g>
+      </svg>
+      {/* Under the picture, centred, as on every generator's canvas */}
+      {/* One grey line, as quiet as the rest of the page's secondary text: the sheet is what's shown */}
+      <figcaption className="mt-0.5 text-center text-[14px] leading-5 text-caption">
+        <span className="relative">
+          {s.title}, {mm(s.w)}&nbsp;×&nbsp;{mm(s.h)}&nbsp;мм
+          {(onReset || extra) && <CaptionReset onClick={onReset} label={resetLabel} extra={extra} />}
+        </span>
+      </figcaption>
+      {sheet.issues.length > 0 && (
+        <ul className="text-center text-[13px] leading-5 text-error">
+          {sheet.issues.map(t => <li key={t}>{t}</li>)}
+        </ul>
+      )}
+    </figure>
+  )
+}
+
+export default function Livery() {
+  // Settings come from the link the page was opened with (see `useLinkState` below), defaults for the rest
+  const [link] = useState(linkParams)
+  const [model, setModel] = useState<Vehicle>(vehicleFrom(link.get('model')) as Vehicle)
+  const [point, setPoint] = useState(link.get('top') ?? DEFAULT_TOP)
+  const [tagline, setTagline] = useState(() => link.get('bottom') ?? DEFAULT_TAGLINE[model])
+  // The rear window's slogan follows the sides' until it's edited (as the price card's credit price follows the full
+  // one); the point there is always the sides' (one line), only left off or not: there's no reason for it to differ.
+  // Links from when it could carry its own (`rtop`) open with the sides'.
+  const [rearTagline, setRearTagline] = useState<string | undefined>(() => link.get('rbottom') ?? undefined)
+  const [url, setUrl] = useState(link.get('link') ?? DEFAULT_URL[model])
+  // What goes into the files; a part that's off is in neither the preview, nor the decals, nor the spec
+  const [on, setOn] = useState(() => {
+    const off = (link.get('off') ?? '').split(',')
+    return { qr: !off.includes(PARTS.qr), tagline: !off.includes(PARTS.tagline), point: !off.includes(PARTS.point), rear: link.get('rear') === 'on', rearPoint: !off.includes(PARTS.rearPoint), rearTagline: !off.includes(PARTS.rearTagline) }
+  })
+  const toggle = (key: keyof typeof on) => (v: boolean) => setOn(o => ({ ...o, [key]: v }))
+  const show = (link.get('show') ?? '').split(',')
+  const [dims, setDims] = useState(show.includes('dims'))
+  // The bottom text larger, 60 mm in two lines; the QR-less sides have room for it
+  const [large, setLarge] = useState(link.get('size') === 'large')
+  // The sides' QR as tall as the lettering, behind it; the rear window keeps its own
+  const [qrSmall, setQrSmall] = useState(link.get('qr') === 'small')
+
+  // Another model brings its own tagline in place of the old model's suggestion (the default or the one without
+  // «Попробуй»), unless the field holds text of the point's own
+  const chooseModel = (m: Vehicle) => {
+    const swap = (t: string) => { const i = TAGLINES[model].indexOf(t); return i < 0 ? t : TAGLINES[m][i] }
+    setTagline(swap(tagline))
+    if (rearTagline !== undefined) setRearTagline(swap(rearTagline))
+    if (url.trim() === DEFAULT_URL[model]) setUrl(DEFAULT_URL[m])
+    setModel(m)
+  }
+  // The larger tagline is a choice only where the QR-less sides have one (both models do)
+  const layout = LIVERIES[model]
+  const noQrSide = layout.left.noQr
+  const canLarge = noQrSide.kind === 'layout' && !!noQrSide.taglineLarge
+
+  // The rear window's own slogan, once edited apart from the sides'
+  const ownRearOn = on.rear && on.tagline && on.rearTagline && rearTagline !== undefined && rearTagline !== tagline
+  useLinkState({
+    // The first model by default, so a link without `model` opens it
+    model: model === DEFAULT_VEHICLE ? null : model,
+    link: url.trim() === DEFAULT_URL[model] ? null : url.trim(),
+    top: point === DEFAULT_TOP ? null : point,
+    bottom: tagline === DEFAULT_TAGLINE[model] ? null : tagline,
+    // The rear window is off by default, so it's the one part the link turns on
+    off: (Object.keys(PARTS) as (keyof typeof PARTS)[]).filter(k => k !== 'rear' && !on[k]).map(k => PARTS[k]).join(','),
+    rear: on.rear ? 'on' : null,
+    rbottom: ownRearOn ? rearTagline : null,
+    show: dims ? 'dims' : '',
+    size: large ? 'large' : null,
+    qr: qrSmall ? 'small' : null,
+  })
+  const [font, setFont] = useState<Font>()
+  const [exporting, setExporting] = useState(false)
+  const phone = usePhone()
+
+  useEffect(() => { loadFont().then(setFont) }, [])
+
+  useEffect(() => {
+    const prev = document.title
+    document.title = `Ливрея ${SITE.name}`
+    return () => { document.title = prev }
+  }, [])
+
+  const urlValid = isValidUrl(url.trim())
+  const urlRef = useRef<HTMLDivElement>(null)
+  const qrUrl = urlValid ? url.trim() : DEFAULT_URL[model]
+
+  const sideText = { point: on.point ? point : null, tagline: on.tagline ? tagline : null }
+  const rearText = {
+    point: on.rearPoint ? sideText.point : null,
+    tagline: !on.rearTagline ? null : ownRearOn ? rearTagline! : sideText.tagline,
+  }
+  const qr = on.qr ? qrUrl : null
+  const sheets = useMemo(
+    () => font
+      ? SURFACES.filter(id => id !== 'rear' || on.rear).map(id => {
+        const surface = !qr ? withoutQr(layout[id]) : qrSmall && id !== 'rear' ? smallQr(layout[id]) : layout[id]
+        return buildSheet(font, surface, { ...(id === 'rear' ? rearText : sideText), url: qr, large })
+      })
+      : [],
+    [font, layout, on.rear, sideText.point, sideText.tagline, rearText.point, rearText.tagline, qr, qrSmall, large],
+  )
+  // Which sheets a field's text goes on, to mark it when one of them has a problem with it
+  const sloganSheets = sheets.filter(s => s.surface.id !== 'rear' || !ownRearOn)
+  const rearSheet = ownRearOn ? sheets.filter(s => s.surface.id === 'rear') : []
+  // Turning the rear window off forgets its settings, so it comes back carrying the sides' texts
+  const toggleRear = (v: boolean) => {
+    if (!v) setRearTagline(undefined)
+    setOn(o => ({ ...o, rear: v, ...(v ? {} : { rearPoint: true, rearTagline: true }) }))
+  }
+  // The resets on the canvas, at the end of a sheet's caption, by what they reset. Both sides are made of the same
+  // fields, so either side's resets them both: the point, slogan and QR, their sizes; the model stays, as do the
+  // dimensions shown (a view, not the content). The glass's resets its own: its slogan follows the sides' again
+  const sidesAtDefaults = point === DEFAULT_TOP && tagline === DEFAULT_TAGLINE[model] && url === DEFAULT_URL[model]
+    && on.qr && on.tagline && on.point && !large && !qrSmall
+  const resetSides = () => {
+    setPoint(DEFAULT_TOP)
+    setTagline(DEFAULT_TAGLINE[model])
+    setUrl(DEFAULT_URL[model])
+    setOn(o => ({ ...o, qr: true, tagline: true, point: true }))
+    setLarge(false)
+    setQrSmall(false)
+  }
+  const rearAtDefaults = rearTagline === undefined && on.rearPoint && on.rearTagline
+  const resetRear = () => {
+    setRearTagline(undefined)
+    setOn(o => ({ ...o, rearPoint: true, rearTagline: true }))
+  }
+  const ok = sheets.length > 0 && sheets.every(s => s.issues.length === 0)
+
+  const handleExport = async (via?: 'link') => {
+    setExporting(true)
+    try {
+      const { liveryZip } = await import('@/livery/pdf')
+      const prefix = asFile(vehicleOf(model).name, '')
+      const blob = await liveryZip(prefix, sheets, await makeBlank!())
+      const link = document.createElement('a')
+      link.href = URL.createObjectURL(blob)
+      link.download = `${prefix}_${LIVERY_FILE}.zip`
+      link.click()
+      // Texts and the QR link go along only when they aren't from the suggestions: what points put on the car themselves
+      const flat = (t: string) => t.replace(/\s+/g, ' ').trim()
+      const own = (shown: boolean, t: string, list: string[]) => shown && !list.some(o => flat(o) === flat(t)) ? flat(t).slice(0, 200) : undefined
+      const texts = Object.fromEntries(Object.entries({
+        pointText: own(on.point, point, POINT_NAMES),
+        taglineText: own(on.tagline, tagline, TAGLINES[model]),
+        rearTaglineText: own(ownRearOn, rearTagline ?? '', TAGLINES[model]),
+        link: own(on.qr, qrUrl, Object.values(DEFAULT_URL)),
+      }).filter(([, t]) => t !== undefined)) as Record<string, string>
+      goal('download_livery', { model, qr: on.qr ? (qrSmall ? 'small' : 'large') : 'off', dealer: on.point, tagline: on.tagline, rear: on.rear, ...texts, ...(via && { via }) })
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000)
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  const prefix = asFile(vehicleOf(model).name, '')
+  const templateName = `${prefix}_${LIVERY_FILE}_template.pdf`
+  /** The editable template, the icon's and a `template` link's alike: the model's sheets at their defaults, the rear
+   * window too, whatever's typed or switched off on the page */
+  const makeBlank = font ? () => {
+    const text = { point: DEFAULT_TOP, tagline: DEFAULT_TAGLINE[model], url: DEFAULT_URL[model] }
+    const blank = SURFACES.map(id => buildSheet(font, layout[id], text))
+    return import('@/livery/pdf').then(m => m.liveryTemplate(prefix, blank))
+  } : undefined
+  const templateOnly = useTemplateLink(makeBlank, templateName, 'download_livery_template')
+  const templateIcon = <TemplateButton make={makeBlank} name={templateName} goalId="download_livery_template" />
+
+  // `pdf` in the link (a link made for the point) downloads the ZIP once the font is in, the editor staying
+  // with the car in it, as the name tag's (a ZIP doesn't open in the browser); sheets at fault only show what's wrong
+  const zipStarted = useRef(false)
+  useEffect(() => {
+    if (!sheets.length || zipStarted.current || !link.has('pdf')) return
+    zipStarted.current = true
+    if (ok) handleExport('link')
+  }, [sheets]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const sidebar = (
+    <>
+        <div data-ui="sidebar-body" className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
+          <GeneratorHeader current="/livery" />
+
+          <div data-ui="form" className="flex flex-col gap-4 tracking-normal">
+            <Field label={W.vehicle}>
+              <Segments>
+                {VEHICLES.map(m => <SegBtn key={m.id} active={model === m.id} onClick={() => chooseModel(m.id as Vehicle)}>{m.name}</SegBtn>)}
+              </Segments>
+            </Field>
+
+            <OptionalField
+              label="QR-код"
+              on={on.qr}
+              onChange={toggle('qr')}
+              extra={<SizeSwitch large={!qrSmall} onChange={v => setQrSmall(!v)} label="Крупный QR-код" />}
+            >
+              <div ref={urlRef}><UrlField value={url} onChange={setUrl} /></div>
+            </OptionalField>
+
+            <OptionalField label={W.one} on={on.point} onChange={toggle('point')}>
+              <ComboField value={point} onChange={setPoint} options={POINT_NAMES} filter={pointFilter} shownAs={withoutBrand} label={W.many} invalid={sheets.some(s => s.point.issues.length > 0) || !point.trim()} />
+            </OptionalField>
+
+            <OptionalField
+              label="Слоган"
+              on={on.tagline}
+              onChange={toggle('tagline')}
+              // The larger size is for the sides laid out without the big QR: no QR or the small one
+              extra={(!on.qr || qrSmall) && canLarge ? <SizeSwitch large={large} onChange={setLarge} label="Крупный текст" /> : undefined}
+            >
+              <ComboField value={tagline} onChange={setTagline} options={TAGLINES[model]} label="Варианты текста" invalid={sloganSheets.some(s => s.tagline.issues.length > 0) || !tagline.trim()} />
+            </OptionalField>
+
+            {/* The rear window carries what the sides do; «Изменить» opens what can differ there, «По умолчанию» puts it back
+                and folds it, so nothing set apart from the sides is ever hidden */}
+            <OptionalField
+              label="Заднее стекло"
+              on={on.rear}
+              onChange={toggleRear}
+            />
+
+            {on.rear && on.tagline && (
+              <OptionalField
+                label="Слоган на стекле"
+                part="rear-tagline"
+                on={on.rearTagline}
+                onChange={toggle('rearTagline')}
+              >
+                <ComboField value={ownRearOn ? rearTagline! : tagline} onChange={setRearTagline} options={TAGLINES[model]} label="Варианты текста" invalid={(ownRearOn ? rearSheet : sloganSheets).some(s => s.tagline.issues.length > 0) || !(ownRearOn ? rearTagline! : tagline).trim()} />
+              </OptionalField>
+            )}
+
+            {on.rear && on.point && <Checkbox checked={on.rearPoint} onChange={toggle('rearPoint')}>{W.one} на стекле</Checkbox>}
+
+            {/* Overlays on the preview only */}
+            <Checkbox checked={dims} onChange={setDims}>Показать размеры</Checkbox>
+          </div>
+
+        </div>
+
+        {/* Over it while it's off, the first fault, which the preview also says under its sheet */}
+    </>
+  )
+
+  const download = (
+        <DownloadBar
+          format="ZIP"
+          onClick={() => handleExport()}
+          busy={exporting}
+          disabled={!ok || (on.qr && !urlValid)}
+          note={on.qr && !urlValid ? (url.trim() ? 'Проверить ссылку QR-кода' : 'Указать ссылку QR-кода') : sheets.flatMap(s => s.issues)[0]}
+          onNote={on.qr && !urlValid ? () => urlRef.current?.querySelector('input')?.focus() : undefined}
+          links={<LinkButtons incomplete={!ok || (on.qr && !urlValid)} />}
+        />
+  )
+
+  if (templateOnly) return null
+  // Phones: the canvas over a sheet with the form (trial)
+  if (phone) return <MobileEditor slides={sheets.map((s, i) => ({ key: s.surface.id, ratio: s.surface.photo.view[3] / s.surface.photo.view[2], node: <SheetPreview sheet={s} dims={dims} />, label: s.surface.title, reset: i < 2 ? (sidesAtDefaults ? undefined : { onClick: resetSides, label: 'Вернуть борта по умолчанию' }) : (rearAtDefaults ? undefined : { onClick: resetRear, label: 'Вернуть стекло по умолчанию' }) }))} sidebar={sidebar} download={download} />
+
+  return (
+    <div className="flex min-h-dvh flex-col bg-paper font-sans text-ink md:h-dvh md:flex-row">
+
+      {/* Sidebar as the price card's */}
+      <aside data-ui="sidebar" className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
+        {sidebar}
+        {download}
+      </aside>
+
+      <main className="flex-1 bg-surface p-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16">
+        <div className="mx-auto flex max-w-[1200px] flex-col gap-10">
+          {/* «Скачать шаблон» by every sheet's caption, before its reset, each the same file of all the sheets: sought
+              by the one in hand (it stood by the left side's only and read as that side's) */}
+          {sheets.slice(0, 2).map(s => <SheetPreview key={s.surface.id} sheet={s} dims={dims} onReset={sidesAtDefaults ? undefined : resetSides} resetLabel="Вернуть борта по умолчанию" extra={templateIcon} />)}
+          {sheets[2] && (
+            <div className="w-full md:w-1/2">
+              <SheetPreview sheet={sheets[2]} dims={dims} onReset={rearAtDefaults ? undefined : resetRear} resetLabel="Вернуть стекло по умолчанию" extra={templateIcon} />
+            </div>
+          )}
+        </div>
+      </main>
+
+    </div>
+  )
+}

@@ -1,0 +1,88 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Check for oversized images
+        run: |
+          big=$(find src public brand -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \) -size +2560k)
+          if [ -n "$big" ]; then
+            echo "These images are over 2.5MB — compress before committing:"
+            echo "$big"
+            exit 1
+          fi
+      - name: Check for oversized videos
+        run: |
+          big=$(find src public brand -type f \( -iname '*.mp4' -o -iname '*.webm' \) -size +15360k)
+          if [ -n "$big" ]; then
+            echo "These videos are over 15MB — compress before committing:"
+            echo "$big"
+            exit 1
+          fi
+      - run: npx tsc --noEmit
+      - run: pnpm build
+      # Metrika's Webvisor replays a visit with the stylesheet it had, fetched from the site at viewing time, and every
+      # deploy replaces the hashed CSS. So the stylesheets of the last 15 days (as long as Webvisor keeps recordings)
+      # are carried over from the live site, listed in css-archive.txt with the last time each was current
+      # The live site's address as Pages has it (its custom domain), for the stylesheets below
+      - uses: actions/configure-pages@v6
+        id: pages
+      - name: Keep the last 15 days' stylesheets for Webvisor
+        run: |
+          site="${{ steps.pages.outputs.base_url }}"
+          curl -sf --max-time 10 "$site/css-archive.txt" -o old.txt || : > old.txt
+          cat .github/pages-css/css-archive.txt >> old.txt
+          now=$(date +%s)
+          : > dist/css-archive.txt
+          for f in dist/assets/*.css; do echo "$(basename "$f") $now" >> dist/css-archive.txt; done
+          while read -r name ts; do
+            [[ "$name" =~ ^[A-Za-z0-9_-]+\.css$ && "$ts" =~ ^[0-9]+$ ]] || continue
+            [ -e "dist/assets/$name" ] && continue
+            [ $((now - ts)) -gt $((15 * 86400)) ] && continue
+            # 10 s at most per file, so a slow site never holds the deploy; a file cut off is dropped, not kept half
+            if [ -f ".github/pages-css/$name" ]; then
+              cp ".github/pages-css/$name" "dist/assets/$name"
+            elif ! curl -sf --max-time 10 "$site/assets/$name" -o "dist/assets/$name"; then
+              rm -f "dist/assets/$name"
+              continue
+            fi
+            echo "$name $ts" >> dist/css-archive.txt
+          done < old.txt
+          echo "Stylesheets kept: $(wc -l < dist/css-archive.txt)"
+      - uses: actions/upload-pages-artifact@v5
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-24.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/deploy-pages@v5
+        id: deployment

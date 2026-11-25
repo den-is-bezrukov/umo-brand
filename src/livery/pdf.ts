@@ -1,0 +1,135 @@
+import {
+  PDFDocument, PDFPage, PDFOperator, PDFOperatorNames, rgb,
+  moveTo, lineTo, appendBezierCurve, closePath, pushGraphicsState, popGraphicsState, setFillingCmykColor, setFillingRgbColor,
+} from 'pdf-lib'
+import { zipSync } from 'fflate'
+import { specMarks, labelCmds, type Cmd, type Sheet } from './geometry'
+import { loadFont } from '@/ui/type'
+import type { Surface } from './layout'
+import { embedFonts, textOps } from '@/ui/liveTextPdf'
+import { COLORS } from '@brand/colors'
+import { WORDS } from '@brand/words'
+
+/** The livery's word in files' names: the brand's word for its points before it where it has one (dealer-livery), else livery */
+export const LIVERY_FILE = WORDS.point.file ? `${WORDS.point.file}-livery` : 'livery'
+
+const PT = 72 / 25.4
+// The film's colour: the brand's print black
+const INK = COLORS.ink
+// The dimensions' orange, #ee4400, as on the page
+const DIMS: [number, number, number] = [0xee / 255, 0x44 / 255, 0]
+
+/** Fills outlines given in sheet millimetres (y down), scaled by `k` and moved to (ox, oy) from the page's top left */
+function fillShapes(page: PDFPage, shapes: Cmd[][], k: number, ox: number, oy: number, color: 'ink' | 'white' | 'black' | 'dims') {
+  const H = page.getHeight()
+  const X = (x: number) => ox + x * k
+  const Y = (y: number) => H - (oy + y * k)
+  const ops: PDFOperator[] = [pushGraphicsState(), color === 'ink' ? setFillingCmykColor(...INK) : color === 'black' ? setFillingRgbColor(0, 0, 0) : color === 'dims' ? setFillingRgbColor(...DIMS) : setFillingRgbColor(1, 1, 1)]
+  for (const c of shapes.flat()) {
+    if (c[0] === 'M') ops.push(moveTo(X(c[1]), Y(c[2])))
+    else if (c[0] === 'L') ops.push(lineTo(X(c[1]), Y(c[2])))
+    else if (c[0] === 'C') ops.push(appendBezierCurve(X(c[1]), Y(c[2]), X(c[3]), Y(c[4]), X(c[5]), Y(c[6])))
+    else ops.push(closePath())
+  }
+  ops.push(PDFOperator.of(PDFOperatorNames.FillEvenOdd), popGraphicsState())
+  page.pushOperators(...ops)
+}
+
+/** Decals: each sheet on a page of its own at 1:1 in millimetres, lettering in the livery colour */
+async function cutFile(sheets: Sheet[], title: string): Promise<Uint8Array> {
+  const doc = await PDFDocument.create()
+  doc.setTitle(title)
+  for (const s of sheets) {
+    const page = doc.addPage([s.surface.w * PT, s.surface.h * PT])
+    fillShapes(page, s.shapes, PT, 0, 0, 'ink')
+  }
+  return doc.save()
+}
+
+/**
+ * The editable template (`<Brand>8_dealer-livery_template.pdf`): the decals' pages as in the cut file, the point and
+ * tagline live in the brand font (`src/ui/liveTextPdf.ts`), the QR and lettering in outlines; for editing the text only,
+ * the plotter cuts the outlines
+ */
+export async function liveryTemplate(prefix: string, sheets: Sheet[]): Promise<Blob> {
+  const doc = await PDFDocument.create()
+  doc.setTitle(`${prefix}_${LIVERY_FILE}_template.pdf`)
+  const fonts = await embedFonts(doc)
+  for (const s of sheets) {
+    const page = doc.addPage([s.surface.w * PT, s.surface.h * PT])
+    const H = page.getHeight()
+    fillShapes(page, s.fixed, PT, 0, 0, 'ink')
+    const lines = [...s.point.lines, ...s.tagline.lines].filter(l => !l.extra).map(l => l.live)
+    page.pushOperators(...textOps(page, fonts, lines, (x, y) => [x * PT, H - y * PT], PT, INK))
+  }
+  return new Blob([await doc.save() as BlobPart], { type: 'application/pdf' })
+}
+
+/** The car photo flattened onto its background, as a JPEG the PDF can carry */
+async function photoJpeg(surface: Surface): Promise<Uint8Array> {
+  const img = new Image()
+  img.src = surface.photo.src
+  await img.decode()
+  const canvas = document.createElement('canvas')
+  canvas.width = img.naturalWidth
+  canvas.height = img.naturalHeight
+  const ctx = canvas.getContext('2d')!
+  ctx.fillStyle = surface.photo.background
+  ctx.fillRect(0, 0, canvas.width, canvas.height)
+  if (surface.photo.mirror) { ctx.translate(canvas.width, 0); ctx.scale(-1, 1) }
+  ctx.drawImage(img, 0, 0)
+  const blob = await new Promise<Blob>(resolve => canvas.toBlob(b => resolve(b!), 'image/jpeg', 0.9))
+  return new Uint8Array(await blob.arrayBuffer())
+}
+
+/**
+ * The spec: each surface on the car with its dimensions in orange, like the brand's own spec. One point on these
+ * pages is a millimetre on the car, so the numbers can be checked with a ruler in Illustrator.
+ */
+async function specFile(sheets: Sheet[], title: string): Promise<Uint8Array> {
+  const doc = await PDFDocument.create()
+  doc.setTitle(title)
+  // The figures in the brand font's Medium, as on the page, in outlines
+  const font = await loadFont()
+  for (const s of sheets) {
+    const { photo } = s.surface
+    const [vx, vy, vw, vh] = photo.view
+    const page = doc.addPage([vw, vh])
+    page.drawRectangle({ x: 0, y: 0, width: vw, height: vh, color: photo.background === '#000000' ? rgb(0, 0, 0) : rgb(1, 1, 1) })
+    const jpg = await doc.embedJpg(await photoJpeg(s.surface))
+    page.drawImage(jpg, { x: -vx, y: vh - (photo.h - vy), width: photo.w, height: photo.h })
+    const ox = photo.x - vx
+    const oy = photo.y - vy
+    // The decals as they look on the car: white, or black on a white car's sides
+    fillShapes(page, s.shapes, 1, ox, oy, s.surface.decal === '#000000' ? 'black' : 'white')
+
+    // Dimensions, as in the preview
+    const marks = specMarks(s.surface)
+    const X = (x: number) => ox + x
+    const Y = (y: number) => vh - (oy + y)
+    for (const [x1, y1, x2, y2] of marks.lines) {
+      page.drawLine({ start: { x: X(x1), y: Y(y1) }, end: { x: X(x2), y: Y(y2) }, thickness: marks.thickness, color: rgb(...DIMS) })
+    }
+    fillShapes(page, marks.labels.map(l => labelCmds(font, l.text, l.x, l.y, marks.size, l.align)), 1, ox, oy, 'dims')
+  }
+  return doc.save()
+}
+
+/**
+ * A point livery in one zip: the decals (left side, right side, rear window — one page each, every page at its own
+ * size), the spec, and the editable template (the model's defaults, as
+ * the icon gives it), so whoever gets the zip has all of it
+ */
+export async function liveryZip(prefix: string, sheets: Sheet[], template: Blob): Promise<Blob> {
+  const [livery, spec, tpl] = await Promise.all([
+    cutFile(sheets, `${prefix} ${LIVERY_FILE.replace('-', ' ')}`),
+    specFile(sheets, `${prefix} ${LIVERY_FILE.replace('-', ' ')} spec`),
+    template.arrayBuffer(),
+  ])
+  const zip = zipSync({
+    [`00_${prefix}_${LIVERY_FILE}_spec.pdf`]: spec,
+    [`${prefix}_${LIVERY_FILE}.pdf`]: livery,
+    [`${prefix}_${LIVERY_FILE}_template.pdf`]: new Uint8Array(tpl),
+  }, { level: 0 })
+  return new Blob([zip as BlobPart], { type: 'application/zip' })
+}

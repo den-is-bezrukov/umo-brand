@@ -1,0 +1,92 @@
+/* UMO's type on the site: CoFo Sans for everything (the generators set their files in it too, `fonts.ts`), Alice
+   Okniks for Alice's mark. Files in `public/fonts`. */
+
+/* Alice Okniks: Denis's icon font for the Alice mark (repo alice-okniks, dist/Alice Okniks.ttf, shipped whole as
+   WOFF): the mark on @ * ^, a thin no-break space on U+00A0, weight 400–700 and X/Y/Z axes, ss01 solid, ss02 drop
+   for CoFo Sans. Only set on the mark's own span (Голос → Примеры), so its nbsp doesn't reach the text around. */
+@font-face {
+  font-family: 'Alice Okniks';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('/fonts/AliceOkniks.woff') format('woff');
+  unicode-range: U+002A, U+0040, U+005E, U+00A0;
+}
+
+@font-face {
+  font-family: 'CoFo Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/CoFoSans-Regular.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'CoFo Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/CoFoSans-Medium.woff2') format('woff2');
+}
+
+/* The editor's type (`src/index.css`): CoFo Sans, as the guide's */
+:root {
+  --font-editor: 'CoFo Sans', sans-serif;
+}
+
+@theme {
+  --font-sans: 'CoFo Sans', sans-serif;
+  /* The interface's colours by role (`docs/brand.md`): the text, and at its opacities the edges, rings, underlines and
+     dims over the page; the page, panels and menus */
+  --color-ink: #000;
+  --color-paper: #fff;
+  /* The palette's greys (`colors.ts`), the site's own: backgrounds, hairlines, captions */
+  --color-surface: #f5f5f5;
+  --color-line: #e6e6e6;
+  --color-caption: #808080;
+  /* Placeholders and what can't be pressed yet; the generators' names not open; the empty fields in a preview */
+  --color-hint: #999;
+  --color-faint: #bfbfbf;
+  --color-ghost: #a6a6a6;
+  /* The main button and its text; a field at fault, a link that's right */
+  --color-accent: #000;
+  --color-on-accent: #fff;
+  --color-error: #e30;
+  --color-success: #00c950;
+  /* The corners of the interface's controls: fields, buttons, switches, menus (`rounded-control`) */
+  --radius-control: 8px;
+  /* Windows and cards (`rounded-panel`); the generators' sheet on a phone (`rounded-sheet`) */
+  --radius-panel: 16px;
+  --radius-sheet: 24px;
+}
+
+/* The guide's logo with the Y cobrand (`HeaderLogo.tsx`) folds with the scroll as the core folds the sidebar
+   (src/index.css, --logo-fold): the cobrand slides into the O, the divider steps left, the Y turns and shrinks. The
+   moves in percent of each layer (the layer's own width), so they hold at any size; `setLogoFold` makes them by script
+   where there are no scroll timelines. */
+@supports (animation-timeline: scroll()) {
+  [data-logo-layers] [data-layer] {
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: scroll(root);
+    animation-range: 0px var(--logo-fold, 300px);
+  }
+  [data-logo-layers] [data-layer='cobrand'] { animation-name: logo-cobrand; }
+  [data-logo-layers] [data-layer='divider'] { animation-name: logo-divider; }
+  [data-logo-layers] [data-layer='y'] { animation-name: logo-y; }
+}
+
+@keyframes logo-cobrand {
+  from { transform: translateX(231.126%); }
+  to { transform: translateX(184.768%); }
+}
+
+@keyframes logo-divider {
+  0%, 30% { transform: translateX(50%); }
+  70%, 100% { transform: translateX(-50%); }
+}
+
+@keyframes logo-y {
+  from { transform: translateX(51%) rotate(0deg) scale(1); }
+  to { transform: translateX(-60%) rotate(-90deg) scale(0.46); }
+}

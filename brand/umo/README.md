@@ -1,0 +1,123 @@
+# UMO
+
+UMO's site is [umo.autos](https://umo.autos), the brand's own [umo.auto](https://umo.auto). Paths are from this folder unless they start with `src/`.
+
+## Where things come from
+
+- The type: CoFo Sans Regular and Medium (`fonts.ts`, `theme.css`); Alice's mark is Alice Okniks, the icon font (below).
+- The interface: the editor (the generators' pages) in CoFo Sans too, as the guide (`--font-editor`); the controls'
+  corners 8 px (`radius-control`, `theme.css`).
+
+## Dealers
+
+From the repository root, run `node brand/umo/scripts/fetch-dealers.mjs` to refresh `points/site.json` from the booking pages on umo.auto. Review the changes with `git diff`. Keep manual additions and corrections in `points/own.json`: use the same dealer name to extend an existing entry with aliases (`aka`) or a showroom phone (`phone`), and a new name to add a signed dealer missing from umo.auto. Use public showroom contact details.
+
+The editor merges both lists in `src/data/points.ts`. See [Generators](../../docs/generators.md#points) for dealer search and links.
+
+## Livery: UMO 8 and UMO 5
+
+The core's mechanics are `docs/livery.md`; the cars are `livery.ts` and `lettering.ts`, the photos `assets/livery/`. UMO 8's numbers, as the hand-made files have them (left and right side 1280×500 mm each, the rear window 835×250):
+
+**Layout**: everything is in millimetres: the mechanics in `src/livery/surface.ts` (the core), UMO's cars in `livery.ts` (`LIVERY`: the wordmark and each model's surfaces): per surface the QR, the UMO wordmark and model number, two text blocks (dealer, tagline) and the obstacles. Text is CoFo Sans Medium, 40 mm on 40 mm lines on the sides and 37.5 on the rear, anchored at the last line's baseline so a block grows upwards (a one-line dealer name on the sides is centred on its two lines' zone, `centred`); measured off the Illustrator sources within half a millimetre, except the bottom tagline baselines, raised by 2 mm so a descender in the last line stays on the sheet. Lines wrap by ink width; words of one or two characters stick to the next word. Pasted text is cleaned first (`clean` in `geometry.ts`): every kind of space becomes a plain one and zero-width marks go (the narrow no-break space has no glyph in CoFo Sans), and a character the font lacks is an error. Limits: on the sides the dealer is up to 500 mm and two lines (clear of the door handle), the tagline up to 400 mm and three lines (clear of the door seam); on the rear one dealer line (typed line breaks become spaces) and two tagline lines within 510 mm, three without a dealer name. Anything over the limit or within `clearance` of an obstacle turns red and blocks the download.
+
+**Sides without the QR** (`noQr`, `withoutQr`): the lettering a third larger, 160 mm, a 1100×500 mm sheet from the front edge, which stays where it was, so the door seam falls between UMO and 8 on the left and between U and M on the right; the bottom text 40 mm in three lines (up to 400 mm) or, with «Крупнее» at the end of its label row (`SizeSwitch`), 60 mm in two (up to 850 mm; `taglineLarge`). **Small QR** («Мельче» on the QR's label row): laid out as without the QR, with a 160 mm QR level with the lettering, 100 mm behind the model number at the rear end (`smallQr`), the sheet 260 longer towards the rear (1360 on UMO 8, 1346,67 on UMO 5), both tagline sizes offered. A small QR scans only up close (~1,5 m against ~3,5 m). The rear window keeps its QR.
+
+**Rear window**: the text is stacked (`stack`): the tagline follows the dealer name or takes its place, and the sheet is cut down to the column (from the top of the lettering to the last descender), centred where the full sheet was. The QR is as tall as the column (`sized` in `geometry.ts`): with all the text 250; with less it shrinks with it (UMO 8 without the dealer name 197,5, without any text the lettering's 75), the sheet narrowing by as much. Without the QR the column alone is cut out (510 wide), centred. Its spec rows on the text side come from where the column lands (`stackDims`), to half a millimetre, the last row taking up the rounding; the full height is given on the other side.
+
+**Side sheets** are cut down to their content (`trimmed`): without the top text a sheet starts at the top of the QR and lettering, without the bottom text and the QR it ends under the lettering; it stays where it was on the body, so the strip cut off joins the distance to the body. The spec gives the distances to the body (~100 from the window line, ~150 to the sill moulding, at the front door's edge; ~125 / sheet / ~320 along the moulding), and the rows of a text left out close up (`part` in `dims`, `withoutParts`). Without the QR its dimensions are in `noQr.dims`.
+
+The obstacles — the seam between the doors and the front door handle — are approximate, taken from the spec mockup; correct them in `leftObstacles` once there are real measurements (the right side mirrors them). The side and rear pictures (`assets/livery/umo8-side.webp`, `umo8-rear.webp`) are the photos from the spec PDF, cropped with known placement: the side covers 4800×2000 mm of the spec page from (0, 450), the rear 2280×2400 from (300, 250); `photo.x`/`photo.y` is where the sheet sits on them.
+
+**UMO 5** (`UMO5`), picked by the model switch (`LIVERIES`). The sides are 1310×500: a 830 lettering column (UMO 600, 90, the 5 140 — the 5 of the number plate, `FIVE` in `lettering.ts`), 120, the 360 QR column; text 40 mm on 42 mm lines, the dealer up to 550 and two lines, the tagline up to 420 and three. Without the QR: the lettering 160 (1086,67 wide), the dealer 40 mm up to 550 in two lines or one centred, the tagline 40 mm in three lines up to 420 or 60 mm in two up to 850. The rear window is 650×200: QR 200, 50, a 400 column with the lettering 60 high and 30 mm text, stacked like UMO 8's. The car is white, so the side decals are black in the preview and spec (`decal` on a surface; the cut file's colour is the same for both); on the glass they stay white. The pictures come from the Figma frames at 0.5 px/mm: `umo5-side.webp` is the right side (4718×1680 mm, transparent around the car, the sheet's top at 682), mirrored for the left; `umo5-rear.webp` (2080×1980 mm) has the decal painted out of the darkened window. The seam and handle in `right5Obstacles` were measured on that photo.
+
+**Texts**: the QR leads to the model's own page by default (`DEFAULT_URL`, the model's `page` in `products.ts`, which `livery.ts` gives as its vehicles), swapped with the model while it's still the old one's. Each model has its own default tagline («Попробуй гибрид…» / «Попробуй электрокар…»); the bottom text fields are comboboxes offering it, the same without «Попробуй» and «Гибрид / Электрокар с Яндексом внутри» (`TAGLINES` in `taglines.ts`, matched across the models by their place in the list); switching models swaps a suggestion for the other model's and leaves the dealer's own text alone. The dealer field starts as «Центр UMO» (`DEFAULT_TOP`) and offers the dealers' marketing names, listed without «UMO » and put in whole (`shownAs`); 12 of the 55 run over 500 mm on the sides and need a hand-made line break or a shorter name.
+
+## Price card
+
+The headlines say «с Алисой» and «технологиями Яндекса», with Alice's mark (`@`) in Alice Okniks in Alice's purple #7a55ff (a run with its own `font` and `color` in `price-card.ts`; ss02 is set in Figma but the font has none, so it's the plain mark). «Ежемесячный платёж» is UMO 8's only, and UMO 8's fine print carries its credit terms. «от …» is the trim's own price (Figma had UMO 5 Pro's at 3 440 000, Max's). The guide's picture of the card is UMO 5 Max at its defaults.
+
+Each trim has its own, two files: the full JPEG for the PDF and a 1600 px WebP for the preview (`*-car-preview.webp`, `cwebp -q 80 -resize 1600 0`), all Figma's own, cut to what the band shows and 3 mm round it at the photo's own resolution (no more is kept: the four were 5.6 MB uncut, 2 MB cut). UMO 8 Max `assets/umo8-car.jpg` 2286×814, Ultra `umo8-ultra-car.jpg` 2744×977, UMO 5 Pro `umo5-car.jpg` and Max `umo5-max-car.jpg` 3902×1389 (Max cut 3 px lower, from +15+669: its car stands that much lower in Figma's photo, and switching the trims it jumped) (the shorter names are the first trims'). Figma's boxes for the uncut photos, from which the cuts were made: UMO 8 Max (−30, −350) 2560×1440 over 2752×1536, Ultra (−200, −330) 2400×1200 over 3084×1536 (Figma's top layer; the earlier photo lies under it), UMO 5 (−30, −350) 2250×1181 over 4096×2286. A new photo: cut it the same way (`magick … -crop WxH+X+Y -quality 88`), set its box and `px`, and make the WebP.
+
+## Plate frame
+
+`plate-frame.ts`: the line is the brand font's Medium, 18 mm with −1% tracking, the capitals' top 2.5 mm under the top of the print field (Figma has 3; half a millimetre less, as the line is mostly lowercase and Ц's tail, and its weight sat low between the plate and the frame's rounded bottom).
+
+## Price tag
+
+`price-tag.ts`: 90×60 mm, Figma's frame 900×600. A black band 12 mm tall: the logo 15 mm wide at 4.5, 4.5, a 0.15 mm white hairline 3 mm tall at 22.5 and the point's name in Medium 4.4 mm (case forms on) 2.625 mm after it (Figma has 3; 2.25 is a touch close), one line free to run to the tag's right edge (64.875 mm, so the longest points, 61.1 mm, fit). On white, within 4.5 mm sides: the goods' name in Medium 4.5 mm on 4.5 mm lines from 16 mm, up to four lines within 81 mm; the code and the caption in Regular 3 mm with 1% tracking, at 38 and 42.5 mm; the price in Medium 9 mm at 47 mm.
+
+## Name tag
+
+`name-tag.ts`: 70×25 mm, 4 mm corners and margins, the name and surname in Medium 14 pt on 12 pt lines (baselines 7.65 and 11.88 mm), the position in Regular 9 pt on 10.8 pt lines, anchored at the bottom (its last line on 21.23 mm, a second line at 17.42), the source's logo 20×4 mm in the top right corner. Every line of the name and surname stays in the 40 mm column left of the logo, 2 mm clear of it (Преображенский, 39.6 mm, fits; Александровская, 40.3, is an error).
+
+## Business card
+
+90×50 mm (10 Figma px = 1 mm, cap height 680 of 1000), numbers in `business-card.ts`. The face is the logo 40×8 mm in
+the bottom left corner. The back, within 5 mm margins: the dealership at the top, hanging from the top margin — its
+name in CoFo Sans Medium 4 mm (case forms on), then «Официальный дилер UMO», the address (up to two lines) and the site
+in Regular 3 mm, within 65 mm but the address, which runs under the logo to its right edge (80 mm), the logo 15×3 in
+the top right corner level with the name's capitals — and the person at the bottom, standing on the bottom margin —
+name and surname on one line of Medium 4 mm within 60 mm (never shrunk), then position (up to two lines), email and
+phone in Regular 3 mm, the QR 15×15 in the bottom right corner. 2.3 mm between the capitals under a heading, 2 mm
+between items, 100% leading inside one.
+
+## Hours sign
+
+The dealership's plate (the source: 480×680 mm, Illustrator's large canvas at 1:10), numbers in `hours-sign.ts`
+(Figma's frame is 2400×3400, 5 px a millimetre; within half a millimetre of the source), which also exports them for
+the guide's picture of the sign (`guide/index.tsx`). The margins and column are sevenths of the width (68,57 and
+342,86 mm), the logo across the column from the top margin. The hours centred, CoFo Sans Medium 58,5 mm, −0,85%
+tracking, lining tabular figures and case forms («9:00—21:00», the dash raised), always as wide as Figma's «9:00—21:00»
+at its size, so a longer range is smaller and a shorter one larger, on the same baseline. The line under them, 31,1 mm,
+−0,8%, is fixed as «Работаем без выходных». The dealership at the bottom, Medium 9,14 mm on 1,5 lines, standing on its
+last line: the marketing name («UMO » fixed), «Адрес: …» (up to two lines, balanced), «Телефон: …», the site.
+
+## Guide
+
+UMO's chapters, its logo, the hero film, its downloads and icons (the core's side is `docs/guide.md`):
+
+- Платформа бренда (`brand`: positioning, vision, mission, audience) is a `Chapter` with its own title, as every chapter, under the statement under the hero («Автомобильный бренд, созданный в технологическом партнёрстве с Яндексом»; from `lg` 60px in the 912px Figma column, scaled with the column below that — `min(60px, 6.58cqw)` — so it wraps the same three lines at any width) which stands as the cover's line (the brand's descriptor, see Коммуникация → Дескрипторы; it stood in for the chapter's title and carried its anchor, now `statement`).
+- Фотография (anchor `photography`, after Цвет) opens with its two principles side by side over the `keyvisual` picture, then UMO 5 and UMO 8 (`photo-umo5`, `photo-umo8`): each model's photo with its ad banners, no caption. The banners are `Poster` components: a photo-only background (`<model>-<banner|square>-bg.webp`, about 3x the Figma frame) with the title, subtitle and `UmoYandexLockup` laid over it in container-width units, so text and lockup stay sharp at any size. The backgrounds were cut from the source photos using the layer geometry in Figma (the direct export of those layers is broken the same way as stretched frames).
+- Кобрендинг is two columns from 640 px (`sm`), a scheme over its example, on 4:3 cards: the four 444×333 Figma cards exported as SVG one by one (they export 684 wide with the content centred, so their viewBox is shifted by 120). The schemes open large on a click (`Zoom`, a lightbox: a click anywhere or Esc closes it, the page doesn't scroll under it).
+- Типографика: the CoFo Sans specimen is 4:3 below 520 px (2:1 from it); below 640 px its alternatives stand two to a row, 4:3, three in a row from `sm`.
+- Коммуникация (`communication`, after Платформа бренда; the structure follows A17's guide: strategy, then how the brand speaks) holds Имена (`name`: one column of text, as Тон голоса — UMO as Urban Mobility Object, read «Умо», stressed on the first syllable, and how the name and the models' names are written; then what isn't written, «УМО», «Umo», «U.M.O.», «UMO5», and no play on the name, «Умка» included; not a table, which right over Словарь read as one long table), Дескрипторы (`descriptors`: one text in two columns, as Имена — what a descriptor is and the brand's, the statement under the hero, on the left; the models', their type and «с технологиями Яндекса», as umo.auto has them, on the right; campaign slogans don't go here), Тон голоса (`tone`, the voice's text and picture; the old `#voice` links land here), Тон голоса (`tone`, the voice's text and picture; the old `#voice` links land here), Словарь (`dictionary`) and Примеры.
+- Коммуникация → Примеры (`examples`) shows the voice as the brand's own messages (`Examples`): chat-like grey bubbles (`Bubble`: #f5f5f5, 16 px round but the top-left corner, title 20 medium over 16 text) and photos with a white line over them, shaped as the bubbles (`PhotoCard`; a line alone is at most 240 wide, so it breaks the same on any card; `voice-alice`, `voice-runner`, `voice-charging`.webp, exported at 2x with their text removed, as the text is live). Three columns from `sm`, each a stack; the middle and right photos take what their column has left (`grow`), so the columns end level. «Запоминающиеся фары» and the runner's «…город комфортнее» are kept apart from the typograph's tie of the last word. On phones one column (the middle column's bubble after its runner photo), photos cropped to 4:3, the runner's at 20% from the top (`focus`). The Alice mark in «Электромобиль с @ Алисой…» is «@» set in Alice Okniks, the icon font, shipped as `public/fonts/AliceOkniks.woff` (from `dist/Alice Okniks.ttf`; WOFF, as brotli for WOFF2 isn't installed) and declared in `src/index.css`; Medium with the axes at 0 and `ss02` (Drop) on, which lowers the mark by 18 to sit with CoFo Sans. After a rebuild of the font, convert it again.
+- Цвет (anchor `color`, after Леттеринг, no sections) states that the brand has two colours, black and white, the colour coming from the car and photography, and that the greys are service colours. The colours are `Swatch` tiles, 4:3: black and white (444×333) over the three greys (288×216); below 640 px the greys stand two to a row, 16 px inside, label and code at least 4 px apart; from 520 px to `sm` white joins them as a small tile, two by two under the black; narrower it stays large. Each tile carries its values in the guide's 16px type: the name at the top in body copy size (18, 20 from `md`), at the bottom a row per value, a short label and the value; a row with a code (HEX, CMYK, K) is a button as a whole, underlined on hover, copying only the code (`CopyRow`) and saying «Скопировано» in the label's place for 0,5 s. Black is #000000 on screen, C60 M40 Y40 K100 for film and signs (the livery's and name tag's colour) and K100 for text (the business card's); white #FFFFFF, paper on light and white ink on dark; Фон #F5F5F5 (K4), Линии #E6E6E6 (K10), Подписи #808080 (K50), the greys the guide itself uses — all its secondary text is #808080. The red and yellow plates under Цвет логотипа are captioned as examples only, not brand colours. The logo misuse examples (Ограничения) stand two to a row on phones, three from 640 px, 16 px apart below md.
+- Пространства holds the brand's physical places (its intro with the dealership photo).
+
+**The UMO × Яндекс logo** (`brand/umo/HeaderLogo.tsx`; `COBRAND` there turns it off in one place: UMO alone, no extra room). On the first screen it's the lockup, UMO | Я; as the page docks it folds into UMO — the cobrand slides into the O's right wall, the Я turns a quarter and shrinks behind the cobrand's clip, the divider steps aside — linearly with the scroll. From `lg` UMO starts as high as the statement's capitals (0.68 em of CoFo Sans, or lower where the lockup wouldn't fit the sidebar) and ends 24 high (120 wide) in the corner; below `lg` it stays 24 high. It's built of HTML layers (wordmark, cobrand clip, divider, Я) whose transforms run as CSS scroll-driven animations (`src/index.css`, over `--logo-fold`, the page's rise) — moving parts inside one SVG redrew it on the main thread and lagged a finger on iPhone; the sidebar's lockup is drawn at its first-screen size (`--u`) and scaled down, and its moves, which depend on the screen, are written as keyframes by `useHeroReveal`. Without scroll timelines (Firefox) a script makes the same moves. The Я's circle overhangs UMO by a third of its height, so on the first screen the sidebar's logo, contents and toggle row stand 36px from the edges (`LOGO_PAD` 12 over the usual 24), the statement 12px lower to keep its capitals level with UMO and the quick links 12px higher on the row's line, going back to 24 as the page docks (transforms too); below `lg` 8px of white stand between the film and the header (`LOGO_GAP`), scrolling away with it.
+
+The hero is the UMO test-drive film, looped and muted: `brand/umo/guide/images/hero.mp4` is `UMO_test-drive_1080.mp4` byte for byte (H.264, 12 MB) and `hero-720.mp4` is `UMO_test-drive_720.mp4` (1280×720, 6.2 MB), both already fast-start and silent — don't re-encode them — with their first frame as `hero-poster.webp`.
+
+Under Логотип на иконках, after the favicon, `umo-icon-black` (white logo on black) and `umo-icon-white` (black on white), each as SVG (720 grid) and PNG (1024×1024), a row each with its PNG after the SVG: a square tile with no rounding, so any platform can crop it, the logo 2/3 of its width and centred. The pictures stand userpic and favicon on light over app icon and favicon on dark, two columns from 520 px; the app icon picture downloads the black one, the userpic the white one, the favicon pictures the favicon. `umo-favicon.svg` / `.ico` are copies of `public/favicon.svg` / `.ico`: update them together.
+
+`umo-logo` (2400×480) sits under the Логотип figure, `umo-yandex` (the UMO | Яндекс lockup, 2000×400) under Кобрендинг, `umo-model-8` / `umo-model-5` (MODEL 8 / MODEL 5 lettering, 2400×280, exported from the `Vector` layers of the Figma frame) under Леттеринг → Модели. The number plates `umo-plate-8` / `umo-plate-5` (5200×1120, the 520×112 mm plate) come in two colours that are separate designs, so they ship as one `<file>-svg.zip` holding `-black` (white on black) and `-white` (black on white), with no PNGs. UMO 8 files come first so they fill the left column.
+
+If the logo changes, update `public/downloads/umo-logo.svg` and `Wordmark.tsx` together, then regenerate the PNGs, e.g. `magick -background none -density 360 umo-logo.svg -resize 2400x480 PNG32:umo-logo-black.png` (swap `fill="black"` for `white` for the white one), and re-zip with `zip -X -j`.
+
+Icons in `brand/umo/public/`: `favicon.svg` and `favicon.ico` are the U module of the logo, white on a black tile (the full wordmark turns to mush at 16px). The tile is rounded in the icon itself: radius 1 on the 16 grid with 60% corner smoothing, since Safari and Chrome show favicons as drawn. The U is hinted: on a 16-unit grid its stems (2), bar (2) and edges sit on whole units, so it lands on whole pixels at 16, 32 and 48; the .ico's 16px frame keeps the hand-drawn U with mirrored corners and takes its rounded-corner alpha from the SVG; 32/48 are Chrome renders of the SVG at 768px, box-downscaled. `apple-touch-icon.png` (180) carries the whole UMO wordmark at 2/3 of the tile (120×24 at 30,78), as the app icon in Логотип на иконках.
+
+## Метрика
+
+Счётчик `113514674`, домен `umo.autos`. 3 ноября 2026 через Management API добавлены 16 целей: три недостающих печатных материала, восемь шаблонов, меню, инструкция, ссылка с дилером и две раздельные сводные цели. Повторным чтением проверены все 20 событий `Goal` и обе сводные цели. Код сайта уже отправляет эти события; деплой для регистрации целей не нужен. Доставка событий из рабочего браузера отдельно не проверялась.
+
+| Событие / группа | ID цели |
+| --- | --- |
+| `download_owner_memo` | `678440244` |
+| `download_owner_memo_template` | `678440245` |
+| `download_business_card_template` | `678440246` |
+| `download_price_card_template` | `678440247` |
+| `download_price_tag_template` | `678440249` |
+| `download_hours_sign_template` | `678440250` |
+| `download_name_tag_template` | `678440252` |
+| `download_plate_frame_template` | `678440253` |
+| `download_livery_template` | `678440254` |
+| `download_price_tag` | `678440255` |
+| `download_hours_sign` | `678440256` |
+| `open_menu` | `678440257` |
+| `open_help` | `678440258` |
+| `dealer_link` | `678440259` |
+| `print_files` | `678440260` |
+| `templates` | `678440261` |
+
+`print_files` и `templates` — обозначения групп в этой таблице, не новые события сайта: первая цель содержит восемь точных событий печатных файлов, вторая — восемь событий шаблонов. Старую общую цель `670519503` с условием «содержит download_» сохранили для непрерывности; она считает и файлы, и шаблоны. Цели пересекаются, их достижения нельзя складывать. Регистрация новых целей не означает, что историческая статистика по ним уже доступна; для сравнения использовать период после настройки. Токены в репозитории не хранятся.

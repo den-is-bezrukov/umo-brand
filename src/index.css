@@ -1,0 +1,155 @@
+@import 'tailwindcss';
+/* The brand's fonts and theme (`brand/<name>/theme.css`) */
+@import '@brand/theme.css';
+
+/* The generators (the editor, `data-editor` on the page while one is open, `src/main.tsx`) are set in the brand's
+   interface type, `--font-editor`, a free one; the guide in the brand's own, `--font-sans` (both the brand's
+   `theme.css`). */
+:root[data-editor] {
+  --font-sans: var(--font-editor);
+}
+
+/* Grayscale smoothing like contrastfoundry.com: on macOS/iOS the default draws the type heavier and softer. */
+body {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* No pull-to-refresh (Safari and mobile browsers reload the page when you scroll up past its top) and no rubber band
+   at the ends, which pulled the page off the hero film: the page stops where it ends. */
+html,
+body {
+  overscroll-behavior-y: none;
+}
+
+/* Trial: the guide's logo (`@brand/HeaderLogo`) folds with the page's scroll over the film's height (--logo-fold, set
+   by Guide), run by the browser on the scroll's own thread, in step with a finger: only transforms of layers move (the
+   logo's own layers are the brand's, its `theme.css`). From lg the sidebar comes in too (logo-desk, -nav, -toggle:
+   Guide writes them for the screen; these are for a 60px statement until it does), and its contents fade in over the
+   first 160px. Without scroll timelines Guide's script makes the same moves. */
+@supports (animation-timeline: scroll()) {
+  :is([data-logo-desk], [data-logo-nav], [data-logo-toggle]) {
+    animation-timing-function: linear;
+    animation-fill-mode: both;
+    animation-timeline: scroll(root);
+    animation-range: 0px var(--logo-fold, 300px);
+  }
+  [data-logo-desk] { animation-name: logo-desk; }
+  [data-logo-nav] { animation-name: logo-nav; }
+  [data-logo-toggle] { animation-name: logo-toggle; }
+  [data-logo-nav] nav {
+    animation: logo-fade linear both;
+    animation-timeline: scroll(root);
+    animation-range: 0px 160px;
+  }
+}
+
+@keyframes logo-desk {
+  from { transform: translate(12px, 12px) scale(1); }
+  to { transform: translate(0px, 0px) scale(0.588); }
+}
+
+@keyframes logo-nav {
+  from { transform: translate(12px, 28.8px); }
+  to { transform: translate(0px, 0px); }
+}
+
+@keyframes logo-toggle {
+  from { transform: translate(12px, -12px); }
+  to { transform: translate(0px, 0px); }
+}
+
+@keyframes logo-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@theme {
+  --breakpoint-xs: 360px;
+  /* Guide rhythm, fluid between a 375px phone and the 1440px Figma frame: sections 96 → 216px apart,
+     chapters 144 → 288px. Linear in viewport width, held at both ends. */
+  --spacing-section: clamp(6rem, 3.359rem + 11.268vw, 13.5rem);
+  --spacing-chapter: clamp(9rem, 5.831rem + 13.521vw, 18rem);
+}
+
+/* The hours sign's slider (`HoursSlider`): two ranges over one track, transparent but their knobs, which alone take
+   the pointer; the knob white with a soft shadow, ringed for the keyboard */
+.hours-range {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  -webkit-appearance: none;
+  appearance: none;
+  background: none;
+  pointer-events: none;
+  outline: none;
+}
+.hours-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-paper);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.1), 0 3px 8px rgb(0 0 0 / 0.1), 0 0 0.5px rgb(0 0 0 / 0.18);
+  pointer-events: auto;
+  cursor: pointer;
+}
+.hours-range::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--color-paper);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.1), 0 3px 8px rgb(0 0 0 / 0.1), 0 0 0.5px rgb(0 0 0 / 0.18);
+  pointer-events: auto;
+  cursor: pointer;
+}
+.hours-range::-moz-range-track {
+  background: transparent;
+}
+.hours-range:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid color-mix(in oklab, var(--color-ink) 30%, transparent);
+  outline-offset: 2px;
+}
+.hours-range:focus-visible::-moz-range-thumb {
+  outline: 2px solid color-mix(in oklab, var(--color-ink) 30%, transparent);
+  outline-offset: 2px;
+}
+
+/* The ring round «Удаляем · Вернуть»'s bin running out (`Removed` in src/ui/staff.tsx) */
+@keyframes countdown {
+  from { stroke-dashoffset: 0; }
+  to { stroke-dashoffset: 1; }
+}
+
+/* The generators' menu open in the form's header (`GeneratorHeader`): the rest of the form and the download step aside,
+   on wide screens in the sidebar, on a phone in the sheet and its foot; the header and what holds it stay */
+html[data-menu] :is(aside, [data-sheet]) > :not([data-head], :has([data-head])),
+html[data-menu] :is(aside, [data-sheet]) :has([data-head]) > :not([data-head], :has([data-head])),
+html[data-menu] [data-sheet]:not(:has([data-head])) {
+  display: none;
+}
+
+/* The generators' form: from one control to the next is 48 on every screen — the groups 20 px apart, a label's 16 and
+   12 to its field (it was 24 and 8; 16 and 8 on wide screens); the header keeps its 16 */
+:is(aside:has([data-head]), [data-sheet]) .gap-4:not([data-head]) {
+  gap: 20px;
+}
+:is(aside:has([data-head]), [data-sheet]) .gap-y-4 {
+  row-gap: 20px;
+}
+
+/* One focus look for the keyboard on every page, the browser's own (in the system's accent colour, yellow on some
+   Macs) and the controls' rings made one: 2 px at 30% black, 2 px off, round with the element's corners. Unlayered, so
+   it wins over the utilities; fields keep their own focused edge (1 px inside at 40%), as they show
+   it for a click too; a dialog, focused as it opens so the keys work in it, isn't a control and shows none (Safari
+   ringed the editor's window) */
+:focus-visible:not(input, textarea, select, [role='dialog']) {
+  outline: 2px solid color-mix(in oklab, var(--color-ink) 30%, transparent);
+  outline-offset: 2px;
+}
+a:focus-visible {
+  border-radius: 2px;
+}

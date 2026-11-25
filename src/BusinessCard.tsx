@@ -1,0 +1,545 @@
+import { flushSync } from 'react-dom'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Field as Labelled, ComboField, TextArea, TextInput, UrlField, GeneratorHeader, DownloadBar, LinkButtons, Segments, SegBtn, Checkbox } from '@/ui/form'
+import { canShareFiles, unfilled, itemOf, rowAction, isValidUrl, ALERT_LABEL } from '@/ui/formUtils'
+import { TableSource, UploadArea, ItemFrame, Removed, ItemAlert } from '@/ui/staff'
+import { useStaff, plain, pickTable, useAddKey, fullNameField } from '@/ui/useStaff'
+import { ITEM_EDGE } from '@/ui/staffState'
+import { goal } from '@/ui/metrika'
+import { toD, qrOutline, type Cmd } from '@/livery/geometry'
+import { loadFonts, type Fonts } from '@/ui/type'
+import { xlsxCells, pastedCells, byHeaders, FULL_NAME, fromFullName, type Cells } from '@/nametag/table'
+import { CARDS_KEY, CARD, QR, FACES, BACK_LOGO, HAS_POINT, POINT_FIELDS, buildBack, siteFor, siteText, splitPhone, maskPhone, phoneMaskTail, type CardField, type PointDetails, type Person, type QrData } from '@/card/card'
+import CardArt from '@/card/CardArt'
+import { POSITION_OPTIONS } from '@/data/positions'
+import { POINT_NAMES, POINT_PARAM, pointFilter, pointOf, withoutBrand, phoneOf } from '@/data/points'
+import { isPdf, readPdfData } from '@/ui/pdfData'
+import { MobileEditor } from '@/ui/mobile'
+import { usePhone } from '@/ui/usePhone'
+import { linkParams, saveAndOpenPdf } from '@/ui/share'
+import { recordText } from '@/ui/liveText'
+import { TemplateButton } from '@/ui/template'
+import { useTemplateLink } from '@/ui/useTemplateLink'
+import { SITE } from '@/site'
+import { WORDS } from '@brand/words'
+
+/** What the brand calls its points (`@brand/words`) */
+const W = WORDS.point
+
+// Business card generator: the point set once, its staff typed on the page
+// or loaded from the template, one PDF out with the face and a back per person. The staff list works as the name
+// tag's (`useStaff`); the point and the QR are the whole list's.
+
+const TEMPLATE = `${import.meta.env.BASE_URL}downloads/${SITE.file}_business-cards_template.xlsx`
+
+const BLANK: Person = { name: '', surname: '', position: '', email: '', phone: '', ext: '' }
+/** Shown grey on the card in place of an empty required field; never in the PDF */
+const PLACEHOLDER = { point: `Название ${W.of}`, address: 'Адрес', site: 'Сайт', name: 'Имя', surname: 'Фамилия', position: 'Должность', email: 'Почта', phone: 'Телефон' }
+const MISSING: Partial<Record<CardField, string>> = {
+  point: `Нет названия ${W.of}`, address: 'Нет адреса', site: 'Нет сайта',
+  name: 'Нет имени', surname: 'Нет фамилии', position: 'Нет должности', email: 'Нет почты', phone: 'Нет телефона',
+}
+/** The mail services the email field suggests after the point's own domain, the most used in Russia first */
+const MAIL_DOMAINS = ['yandex.ru', 'mail.ru', 'gmail.com', 'ya.ru', 'bk.ru', 'inbox.ru', 'list.ru', 'rambler.ru']
+/** The last empty field, said by name under the download */
+const UNFILLED: Partial<Record<CardField, string>> = {
+  point: `Выбрать ${W.pick}`, address: 'Указать адрес', site: 'Указать сайт',
+  name: 'Добавить имя', surname: 'Добавить фамилию', position: 'Указать должность', email: 'Указать почту', phone: 'Указать телефон',
+}
+
+const HEADERS: Record<keyof Person, RegExp> = {
+  name: /^имя$/i,
+  surname: /^фамилия$/i,
+  position: /^должность$/i,
+  email: /^(почта|e-?mail|эл.*почта)$/i,
+  phone: /^(телефон|тел\.?)$/i,
+  ext: /^(доб\.?|добавочный)$/i,
+}
+/** A phone cell carrying its extension («… доб. 204») fills in the extension, unless it has a column of its own */
+const toPeople = (rows: Cells[]): Person[] => byHeaders(rows, { ...HEADERS, full: FULL_NAME }).map(({ full, ...row }) => {
+  const p = fromFullName(row, full)
+  const split = !p.ext.trim() && splitPhone(p.phone)
+  return split ? { ...p, ...split } : p
+})
+
+/** The address the points of sale (`@brand/points`) give a point, put in when the point is picked */
+const addressOf = (name: string) => pointOf(name)?.address || undefined
+
+/**
+ * The points as the card names them: without the brand's name their marketing names start with («Точка Город»), as the logo
+ * and the brand's line under it («Официальный дилер <Бренд>») stand right by the name. For the full names, offer `POINT_NAMES` as it is
+ */
+const POINT_OPTIONS = POINT_NAMES.map(withoutBrand)
+
+/** What the grey stand-in QR holds, and the QR's link on a card that names no point */
+const SAMPLE_LINK = SITE.home
+
+/** What the cards were made from, kept in their PDF (`CARDS_KEY`) */
+// `dealer`: the point, under the key the files and saved lists already out carry
+interface CardsData { dealer: Omit<PointDetails, 'site'> & { site: string | null }; qrLink: string | null; face?: number; faceEach: boolean; marks: boolean; people: Person[] }
+
+const PERSON_FIELDS: CardField[] = ['name', 'surname', 'position', 'email', 'phone']
+
+/**
+ * One person's card a link brings (a link made for the point): `point` (its address from the brand's site and its site follow,
+ * as when picked; `address`, `site` and `qr` override them; `marks` adds crop marks), then `name`, `surname`, `position`, `phone`, `ext`,
+ * `email`. Read on load only, never written back: a whole staff list is made here, not sent as a link
+ */
+function fromLink(): { point: Omit<PointDetails, 'site'> & { site: string | null }; qrLink: string | null; marks: boolean; people: Person[] } {
+  const link = linkParams()
+  const get = (k: string) => link.get(k)?.trim() ?? ''
+  const name = withoutBrand(get(POINT_PARAM))
+  const person = { ...BLANK, name: get('name'), surname: get('surname'), position: get('position'), email: get('email'), phone: maskPhone(get('phone')).text, ext: get('ext').replace(/\D/g, '').slice(0, 6) }
+  // A person with no phone takes the salon's, as when the point is picked
+  if (!person.phone && Object.values(person).some(Boolean)) person.phone = maskPhone(phoneOf(name) ?? '').text
+  return {
+    point: { name, address: get('address') || addressOf(name) || '', site: get('site') || null },
+    qrLink: get('qr') || null,
+    marks: link.has('marks'),
+    people: Object.values(person).some(Boolean) ? [person] : [],
+  }
+}
+
+export default function BusinessCard() {
+  // Not kept in the address, as the name tag's: a staff list isn't something to send as a link; one card can come in by
+  // one (`fromLink`)
+  const [initial] = useState(fromLink)
+  /** The site follows the point's name (`siteFor`) until it's edited: null */
+  const [input, setPoint] = useState<Omit<PointDetails, 'site'> & { site: string | null }>(initial.point)
+  const point: PointDetails = { ...input, site: input.site ?? siteFor(input.name) }
+  /** The address and the site, under «Изменить»: a point picked from the list fills them in */
+  const [pointOpen, setPointOpen] = useState(false)
+  /** The QR's link, following the site until it's edited */
+  const [qrLink, setQrLink] = useState<string | null>(initial.qrLink)
+  // Which of the brand's faces, the face before every back (else once, before all of them), and crop marks around each card
+  const [face, setFace] = useState(0)
+  const [faceEach, setFaceEach] = useState(false)
+  const [marks, setMarks] = useState(initial.marks)
+
+  const staff = useStaff<Person>({
+    columns: { name: 'Имя', surname: 'Фамилия', position: 'Должность', email: 'Почта', phone: 'Телефон', ext: 'Доб.' },
+    blank: BLANK,
+    initial: initial.people,
+    // The cards' own PDF brings back the point, the QR link, the file's options and the staff, to change a line
+    // and download again; else a table
+    readFile: data => {
+      const bytes = new Uint8Array(data)
+      if (!isPdf(bytes)) return toPeople(xlsxCells(data))
+      const d = readPdfData(bytes, CARDS_KEY) as CardsData | undefined
+      if (!d?.people?.length) throw new Error('В этом PDF нет визиток: подходят PDF, скачанные здесь')
+      setPoint({ name: String(d.dealer?.name ?? ''), address: String(d.dealer?.address ?? ''), site: d.dealer?.site ?? null })
+      setQrLink(d.qrLink ?? null)
+      setFace(FACES[d.face ?? 0] ? d.face ?? 0 : 0)
+      setFaceEach(!!d.faceEach)
+      setMarks(!!d.marks)
+      return d.people.map(p => ({ ...BLANK, ...p }))
+    },
+    readPasted: text => toPeople(pastedCells(text)),
+    accept: '.xlsx,.pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf',
+    uploadLabel: 'Загрузить таблицу или PDF',
+  })
+  const { mode, setMode, current, update } = staff
+  staff.useKeys(false)
+
+  const [fonts, setFonts] = useState<Fonts>()
+  const [exporting, setExporting] = useState(false)
+  const phone = usePhone()
+  useEffect(() => { loadFonts().then(setFonts) }, [])
+
+  useEffect(() => {
+    const prev = document.title
+    document.title = `Визитка ${SITE.name}`
+    return () => { document.title = prev }
+  }, [])
+
+  // A card naming no point links to the brand's site, and its staff's mail is there
+  const siteLink = !HAS_POINT ? SAMPLE_LINK : siteText(point.site) ? `https://${siteText(point.site)}` : ''
+  /** The domain the email field suggests: the site's, without a path */
+  const mailDomain = (HAS_POINT ? siteText(point.site) : siteText(SITE.home)).split('/')[0]
+  const link = qrLink ?? siteLink
+  const qrFor = (_p: Person): QrData | null =>
+    isValidUrl(link) ? { text: link.trim(), level: 'M' } : null
+
+  const items = staff.items
+  /** Each card as built, with the placeholders standing in for empty required fields */
+  const cards = useMemo(() => fonts ? items.map(p => {
+    const ghost = new Set<CardField>()
+    const or = <K extends keyof typeof PLACEHOLDER>(field: K & CardField, v: string) => {
+      if (v.trim()) return v
+      ghost.add(field)
+      return PLACEHOLDER[field]
+    }
+    const shownPoint = { name: or('point', point.name), address: or('address', point.address), site: or('site', point.site) }
+    const shownPerson = {
+      name: or('name', p.name), surname: or('surname', p.surname), position: or('position', p.position),
+      email: or('email', p.email), phone: or('phone', p.phone), ext: p.ext,
+    }
+    const qr = qrFor(p)
+    // Its lines noted too, for the editable template
+    const { result: back, lines } = recordText(() => buildBack(fonts, shownPoint, shownPerson, qr))
+    // Without a link yet, a grey code stands in for it, as the placeholders do
+    const ghostQr = qr ? [] : qrOutline(SAMPLE_LINK, QR.x, QR.y, QR.size)
+    return { back, lines, ghost, ghostQr, issues: back.issues.filter(i => !i.field || !ghost.has(i.field)) }
+  }) : undefined, [fonts, items, point, link]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** The point's errors, the same on every card */
+  const pointMissing = !HAS_POINT ? [] : (['point', 'address', 'site'] as const).filter(f => !(f === 'point' ? point.name : point[f]).trim())
+  const pointIssues = [
+    ...pointMissing.map(f => MISSING[f]!),
+    ...new Set(cards?.[0]?.issues.filter(i => i.field && POINT_FIELDS.includes(i.field)).map(i => i.text) ?? []),
+  ]
+  const pointWrong = new Set<CardField>(cards?.[0]?.issues.filter(i => i.field && POINT_FIELDS.includes(i.field)).map(i => i.field!) ?? [])
+
+  const missing = items.map(p => (['name', 'surname', 'position', 'email', 'phone'] as const).filter(f => !p[f].trim()))
+  const problems = items.map((p, i) => [...new Set([
+    ...(staff.showsMissing(p.key) ? missing[i].map(f => MISSING[f]!) : []),
+    ...(cards?.[i]?.issues.filter(x => !x.field || PERSON_FIELDS.includes(x.field)).map(x => x.text) ?? []),
+  ])])
+  const failing = items.filter((_, i) => missing[i].length || cards?.[i]?.issues.some(x => !x.field || PERSON_FIELDS.includes(x.field))).map(p => p.key)
+  const ok = !!cards && items.length > 0 && failing.length === 0 && pointIssues.length === 0
+
+  const pointForm = useRef<HTMLDivElement>(null)
+  /** The point's first field at fault takes the focus */
+  const toPoint = () => {
+    const at = pointMissing[0] ?? [...pointWrong][0] ?? 'point'
+    // Opened at once and focused in the tap itself, as iOS raises the keyboard only then
+    if (at !== 'point') flushSync(() => setPointOpen(true))
+    pointForm.current?.querySelector<HTMLElement>(`[data-field="${at}"] textarea, [data-field="${at}"] input`)?.focus()
+  }
+
+  /** The salon's phone as the field writes it: a person's phone and their extension make the salesman's line */
+  const salonPhone = (name: string) => { const p = phoneOf(name); return p ? maskPhone(p).text : undefined }
+  const pickPoint = (v: string) => {
+    // People's phones follow the point picked while they're empty or the previous point's
+    const was = salonPhone(point.name), now = salonPhone(v)
+    if (now) staff.fill(p => (!p.phone.trim() || p.phone === was ? { phone: now } : null))
+    setPointOnly(v)
+  }
+  const setPointOnly = (v: string) => setPoint(d => ({
+    ...d,
+    name: v,
+    // The address follows the point picked while it's empty or the previous point's
+    address: addressOf(v) && (!d.address.trim() || d.address === addressOf(d.name)) ? addressOf(v)! : d.address,
+  }))
+
+  /** The cards' PDF for «Поделиться» to send, made again as they change */
+  const shareFile = useCallback(async () => {
+    const { cardsPdf } = await import('@/card/pdf')
+    const data: CardsData = { dealer: input, qrLink, ...(FACES.length > 1 && { face }), faceEach, marks, people: items.map(plain) }
+    return new File([await cardsPdf(cards!.map(c => c.back), { face, faceEach, marks }, data)], `${SITE.file}_business-cards.pdf`, { type: 'application/pdf' })
+  }, [cards, input, qrLink, face, faceEach, marks, items]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleExport = async () => {
+    if (!cards || !ok) return
+    setExporting(true)
+    try {
+      const { cardsPdf } = await import('@/card/pdf')
+      const data: CardsData = { dealer: input, qrLink, ...(FACES.length > 1 && { face }), faceEach, marks, people: items.map(plain) }
+      const blob = await cardsPdf(cards.map(c => c.back), { face, faceEach, marks }, data)
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = `${SITE.file}_business-cards.pdf`
+      a.click()
+      // The QR link goes along when it isn't the site made up from the point's name: what points put there
+      const ownLink = link.trim() !== `https://${siteText(siteFor(point.name))}`
+      goal('download_business_card', { count: cards.length, faceEach, marks, ...(ownLink && { link: link.trim().slice(0, 300) }) })
+      URL.revokeObjectURL(a.href)
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  // `pdf` in the link opens the cards' PDF itself, with no editor, once the fonts are in; a card at fault opens the editor
+  // instead, showing what's wrong
+  const [pdfOnly, setPdfOnly] = useState(() => linkParams().has('pdf') && initial.people.length > 0)
+  const pdfStarted = useRef(false)
+  useEffect(() => {
+    if (!pdfOnly || !cards || pdfStarted.current) return
+    pdfStarted.current = true
+    if (!ok) { setPdfOnly(false); return }
+    import('@/card/pdf')
+      .then(async ({ cardsPdf }) => {
+        const data: CardsData = { dealer: input, qrLink, ...(FACES.length > 1 && { face }), faceEach, marks, people: items.map(plain) }
+        saveAndOpenPdf(await cardsPdf(cards.map(c => c.back), { face, faceEach, marks }, data), `${SITE.file}_business-cards.pdf`)
+        goal('download_business_card', { count: cards.length, faceEach, marks, via: 'link' })
+      })
+      .catch(() => setPdfOnly(false))
+  }, [cards]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** The editable template, one card's by its icon (its face too): as on the page, placeholders where nothing is typed */
+  const makeTemplate = (i: number) => {
+    const c = cards?.[i]
+    // Without a link yet, the grey sample code stands in, as on the page
+    return c ? () => import('@/card/pdf').then(m => m.cardsTemplate([{ back: { ...c.back, qr: c.back.qr.length ? c.back.qr : c.ghostQr }, lines: c.lines }], { face, faceEach, marks })) : undefined
+  }
+  /** The blank one a `template` link gives: every field its placeholder, the QR the sample one */
+  const makeBlank = fonts ? () => {
+    const { result: back, lines } = recordText(() => buildBack(
+      fonts,
+      { name: PLACEHOLDER.point, address: PLACEHOLDER.address, site: PLACEHOLDER.site },
+      { name: PLACEHOLDER.name, surname: PLACEHOLDER.surname, position: PLACEHOLDER.position, email: PLACEHOLDER.email, phone: PLACEHOLDER.phone, ext: '' },
+      { text: SAMPLE_LINK, level: 'M' },
+    ))
+    return import('@/card/pdf').then(m => m.cardsTemplate([{ back, lines }], { faceEach: false, marks: false }))
+  } : undefined
+  const templateOnly = useTemplateLink(makeBlank, `${SITE.file}_business-cards_template.pdf`, 'download_business_card_template')
+  /** «Добавить» in the item's column, ⌘↩ from anywhere (the manual list, wide screens) */
+  const addItem = (after?: number) => { const p = salonPhone(point.name); if (p) staff.add({ ...BLANK, phone: p }, true, after); else staff.add(undefined, undefined, after) }
+  useAddKey(!phone && mode === 'manual' ? () => addItem(staff.selected) : undefined)
+  /** «Скачать шаблон» in the item's column */
+  const templateIcon = (i: number) => <TemplateButton make={makeTemplate(i)} name={`${SITE.file}_business-cards_template.pdf`} goalId="download_business_card_template" />
+
+  const faceArt = <CardArt text={toD(FACES[face].art)} dark={FACES[face].dark} />
+  /** The QR, the whole list's: with the point, under «Изменить» after the site it follows */
+  const qrField = (
+    <Labelled label="QR-код">
+      <UrlField value={link} onChange={setQrLink} />
+    </Labelled>
+  )
+  /** A card's first fault: a wrong value said as it is, else its first empty field by name (the point's are filled) */
+  const problemOf = (i: number) => cards?.[i]?.issues.find(x => !x.field || PERSON_FIELDS.includes(x.field))?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!)) : undefined)
+
+  const renderItem = (p: typeof items[number], i: number) => {
+            const card = cards?.[i]
+            const active = mode === 'manual' && p.key === current?.key
+            const dimmed = mode === 'manual' && !!current && !active && !phone
+            const wrong = new Set<CardField>([...pointWrong, ...(card?.issues.map(x => x.field).filter((f): f is CardField => !!f) ?? [])])
+            const paths = (only: (f: CardField) => boolean) => card
+              ? (Object.entries(card.back.fields) as [CardField, Cmd[]][]).filter(([f]) => only(f)).flatMap(([, c]) => c)
+              : []
+            return (
+              <Fragment key={p.key}>
+              <Removed staff={staff} at={i} />
+              <figure ref={staff.figureRef(p.key)} onClick={() => staff.pick(p.key)} className="group/row flex cursor-pointer justify-center">
+                <div className="flex w-full max-w-[480px] flex-col gap-3">
+                  <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>
+                  <button
+                    type="button"
+                    aria-pressed={mode === 'manual' ? active : undefined}
+                    // Edged as every generator's items (`ITEM_EDGE`)
+                    className={`block w-full cursor-pointer ${ITEM_EDGE} transition-opacity duration-150
+                      ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
+                  >
+                    <CardArt
+                      text={card ? toD([...BACK_LOGO, ...card.back.qr, ...paths(f => !card.ghost.has(f) && !wrong.has(f))]) : undefined}
+                      alert={card ? toD(paths(f => !card.ghost.has(f) && wrong.has(f))) : undefined}
+                      ghost={card ? toD([...card.ghostQr, ...paths(f => card.ghost.has(f))]) : undefined}
+                    />
+                  </button>
+                  </ItemFrame>
+                  {problems[i].length > 0 && <ItemAlert staff={staff} item={p.key}>{alertLine(problems[i])}</ItemAlert>}
+                </div>
+              </figure>
+              </Fragment>
+            )
+          }
+
+  const sidebar = (
+    <>
+        <div data-ui="sidebar-body" className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
+          <GeneratorHeader current="/business-card" />
+
+          {/* The form under the header in one rhythm, 16 px apart as any fields */}
+          <div className="flex flex-col gap-4">
+          <Labelled label="Данные">
+            {/* The table mode's template (then its file) right under the switch, 8 px off it, as a pair: the mode's first step */}
+            <div className="flex flex-col gap-2">
+              <Segments>
+                <SegBtn active={mode === 'manual'} onClick={() => setMode('manual')}>Вручную</SegBtn>
+                <SegBtn active={mode === 'table'} onClick={() => setMode('table')}>Из документа</SegBtn>
+              </Segments>
+              {mode === 'table' && <TableSource staff={staff} template={TEMPLATE} />}
+            </div>
+          </Labelled>
+
+          {/* The point and the person in one column, 16 px apart as any fields; the pages, the whole file's, set apart */}
+          <div data-ui="form" className="flex flex-col gap-4 tracking-normal">
+            {/* The point: the whole list's; a card naming none has the QR alone */}
+            {!HAS_POINT && qrField}
+            {HAS_POINT && <div ref={pointForm} className="flex flex-col gap-4">
+              <div data-field="point" data-ui="field" className="group/field flex flex-col gap-3">
+                <div data-ui="label" className="flex items-center justify-between gap-2">
+                  <p className={`text-[14px] leading-4 text-caption ${ALERT_LABEL}`}>{W.one}</p>
+                  <button type="button" onClick={() => setPointOpen(o => !o)} aria-expanded={pointOpen} className={rowAction}>
+                    {pointOpen ? 'Свернуть' : 'Редактировать'}
+                  </button>
+                </div>
+                  <ComboField
+                    value={point.name}
+                    onChange={pickPoint}
+                    options={POINT_OPTIONS} filter={pointFilter}
+                    singleLine
+                    placeholder={`Название ${W.of}`}
+                    label={`${W.many} ${SITE.name}`}
+                    invalid={pointWrong.has('point')}
+                  />
+              </div>
+              {pointOpen && <>
+              <div data-field="address">
+                <Labelled label="Адрес">
+                  <TextArea value={input.address} onChange={v => setPoint(d => ({ ...d, address: v }))} placeholder="Адрес" invalid={pointWrong.has('address')} />
+                </Labelled>
+              </div>
+              <div data-field="site">
+                <Labelled label="Сайт">
+                  <TextInput value={point.site} onChange={v => setPoint(d => ({ ...d, site: v }))} placeholder="Сайт" invalid={pointWrong.has('site')} />
+                </Labelled>
+              </div>
+              {qrField}
+              </>}
+            </div>}
+
+            {mode === 'manual' && current && (() => {
+              const p = current
+              const i = items.findIndex(it => it.key === p.key)
+              const issues = problems[i] ?? []
+              const bad = (field: CardField, label: string) => issues.some(t => t.startsWith(label) || t === MISSING[field])
+              return (
+                <div ref={staff.form} onPasteCapture={e => staff.paste(p.key, e)} className="flex flex-col gap-2">
+                  <div className="flex flex-col gap-4">
+                    <Labelled label="Имя">
+                      <TextInput value={p.name} onChange={v => update(p.key, { name: v })} {...fullNameField(p, s => update(p.key, s))} placeholder="Имя" invalid={bad('name', 'Имя')} />
+                    </Labelled>
+                    <Labelled label="Фамилия">
+                      <TextInput value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={bad('surname', 'Фамилия') || issues.some(t => t.startsWith('Имя и фамилия'))} />
+                    </Labelled>
+                    <Labelled label="Должность">
+                      <ComboField key={p.key} value={p.position} onChange={v => update(p.key, { position: v })} options={POSITION_OPTIONS} placeholder="Должность" label="Типовые должности" invalid={bad('position', 'Должность')} />
+                    </Labelled>
+                    <Labelled label="Почта">
+                      {/* The browser's own suggestions: what's typed before the @ at the card's site first (point-city.<brand site>
+                          follows the point's name, or the site as edited), then the common mail services; the browser
+                          narrows them as the domain is typed */}
+                      <TextInput value={p.email} onChange={v => update(p.key, { email: v })} placeholder="Почта" invalid={bad('email', 'Почта')} inputMode="email" list="mail-domains" />
+                      {(() => {
+                        const local = p.email.split('@')[0].trim()
+                        return local && (
+                          <datalist id="mail-domains">
+                            {[...new Set([mailDomain, ...MAIL_DOMAINS].filter(Boolean))].map(d => <option key={d} value={`${local}@${d}`} />)}
+                          </datalist>
+                        )
+                      })()}
+                    </Labelled>
+                    <Labelled label="Телефон">
+                      {/* One field of two parts with no line between them, each 8 px round, so a focused part
+                          is edged on its own. The number is a live mask, set
+                          as the card sets it while it's typed, the caret staying after the same digit; a whole one pasted
+                          with its extension splits. The extension follows «Доб.», grey, its placeholder and prefix both */}
+                      <div data-ui="input" className="flex rounded-control bg-surface">
+                        <TextInput
+                          value={p.phone}
+                          onChange={v => {
+                            const el = document.activeElement as HTMLInputElement
+                            const split = splitPhone(v)
+                            const raw = split ? split.phone : v
+                            const before = split ? Infinity : v.slice(0, el.selectionStart ?? v.length).replace(/\D/g, '').length
+                            const { text, caret } = maskPhone(raw, before)
+                            update(p.key, split ? { phone: text, ext: split.ext } : { phone: text })
+                            requestAnimationFrame(() => { if (document.activeElement === el) el.setSelectionRange(caret, caret) })
+                          }}
+                          placeholder="+7 987 654 32 10"
+                          maskTail={phoneMaskTail(p.phone)}
+                          inputMode="tel"
+                          invalid={bad('phone', 'Телефон')}
+                        />
+                        <label data-ui="input" className="flex h-10 in-[[data-sheet]]:h-12! min-w-20 shrink-0 cursor-text items-center rounded-control bg-surface px-3 text-[14px] leading-5 focus-within:ring-1 focus-within:ring-inset focus-within:ring-ink/40">
+                          <span className="text-hint">Доб.&nbsp;</span>
+                          <input
+                            value={p.ext}
+                            onChange={e => update(p.key, { ext: e.target.value.replace(/\D/g, '').slice(0, 6) })}
+                            inputMode="numeric"
+                            aria-label="Добавочный"
+                            className="w-[6ch] min-w-0 bg-transparent text-ink outline-none [font-variant-numeric:lining-nums_tabular-nums]"
+                          />
+                        </label>
+                      </div>
+                    </Labelled>
+                  </div>
+                </div>
+              )
+            })()}
+
+
+            {/* The whole file's, in the form's rhythm (not 24 px more: set apart, they read as a slip) */}
+            <div className="flex flex-col gap-4">
+              {FACES.length > 1 && (
+                <Labelled label="Обложка">
+                  <Segments>
+                    {FACES.map((f, i) => <SegBtn key={f.label} active={face === i} onClick={() => setFace(i)}>{f.label}</SegBtn>)}
+                  </Segments>
+                </Labelled>
+              )}
+              {/* With one card the face goes once either way */}
+              {items.length > 1 && <Checkbox checked={faceEach} onChange={setFaceEach}>Обложка у всех</Checkbox>}
+              <Checkbox checked={marks} onChange={setMarks}>Метки реза</Checkbox>
+            </div>
+          </div>
+          </div>
+        </div>
+
+        {/* The point first, as every card needs it; then the cards in work, as the name tag counts them */}
+    </>
+  )
+
+  const download = (
+        <DownloadBar
+          format="PDF"
+          onClick={handleExport}
+          busy={exporting}
+          disabled={!ok}
+          note={(pointMissing.length ? unfilled([...pointMissing, ...(items.length === 1 ? missing[0] : [])].map(f => UNFILLED[f]!)) : pointIssues[0]) ?? (!items.length ? 'Загрузить таблицу' : problemOf(failing.length ? staff.inWork(failing).index : 0))}
+          count={!pointIssues.length && failing.length ? itemOf(staff.inWork(failing).index, items.length) : undefined}
+          onNote={pointIssues.length ? toPoint : items.length ? () => staff.nextOf(failing) : pickTable}
+          links={canShareFiles && <LinkButtons incomplete={!ok} file={shareFile} fileOnly />}
+        />
+  )
+
+  // Phones: the canvas over a sheet with the form (trial)
+  if (pdfOnly || templateOnly) return null
+  if (phone) return <MobileEditor slides={mode === 'table' && !staff.file ? [{ key: 'upload', node: <UploadArea staff={staff} /> }] : [{ key: 'face', number: 0, label: 'Обложка', ratio: CARD.h / CARD.w, node: <div className="outline-1 outline-ink/10">{faceArt}</div> }, ...items.map((p, i) => ({ key: p.key, item: p.key, number: i + 1, label: `${p.name} ${p.surname}`.replace(/\s+/g, ' ').trim(), ratio: CARD.h / CARD.w, node: renderItem(p, i) }))]} onAdd={mode === 'manual' ? addItem : undefined} sidebar={sidebar} download={download} staff={staff} />
+
+  return (
+    <div className="flex min-h-dvh flex-col bg-paper font-sans text-ink md:h-dvh md:flex-row">
+
+      <aside data-ui="sidebar" className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
+        {sidebar}
+        {download}
+      </aside>
+
+      <main
+        {...staff.dropTarget}
+        onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure, [data-add], [data-template]')) staff.setSelected(null) }}
+        className={`flex flex-1 flex-col bg-surface px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16
+          ${mode === 'table' && staff.file && staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-ink' : ''}`}
+      >
+        {mode === 'table' && !staff.file ? (
+          <UploadArea staff={staff} />
+        ) : (
+        <div className="m-auto grid w-full grid-cols-1 gap-8">
+          {/* The face, the same for everyone, once at the top whatever the file's page order («Обложка у всех» is the file's) */}
+          <div className="flex justify-center">
+            {/* Dimmed with the cards not selected while there are several; with one card it's that card's own face, never dimmed */}
+            <div className={`w-full max-w-[480px] transition-opacity duration-150 ${mode === 'manual' && current && items.length > 1 ? 'opacity-40' : ''}`}>
+              <div className="outline-1 outline-ink/10">{faceArt}</div>
+            </div>
+          </div>
+          {items.map(renderItem)}
+          <Removed staff={staff} at={items.length} />
+        </div>
+        )}
+      </main>
+
+    </div>
+  )
+}
+
+/**
+ * A card's errors in one line, as the name tag's: the empty fields in one phrase («Нет имени, фамилии, почты и
+ * телефона»), then the rest
+ */
+function alertLine(problems: string[]): string {
+  const all = Object.values(MISSING) as string[]
+  const empty = all.filter(t => problems.includes(t)).map(t => t.replace(/^Нет /, ''))
+  const missing = empty.length ? `Нет ${empty.length > 1 ? `${empty.slice(0, -1).join(', ')} и ${empty[empty.length - 1]}` : empty[0]}` : ''
+  return [missing, ...problems.filter(t => !all.includes(t))].filter(Boolean).join(' · ')
+}

@@ -1,0 +1,531 @@
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, LinkButtons } from '@/ui/form'
+import { canShareFiles, unfilled, itemOf, ALERT_LABEL } from '@/ui/formUtils'
+import { ItemFrame, Removed, ItemAlert } from '@/ui/staff'
+import { useStaff, plain, useAddKey, fullNameField } from '@/ui/useStaff'
+import { ITEM_EDGE_OVER } from '@/ui/staffState'
+import { goal } from '@/ui/metrika'
+import { toD, type Box, type Cmd } from '@/livery/geometry'
+import { loadFonts } from '@/ui/type'
+import { siteFor, maskPhone } from '@/card/card'
+import { MEMOS_KEY, PAGE, POINT_FIELDS, buildBlocks, type PointDetails, type MemoField, type Person } from '@/memo/memo'
+import type { MemoFonts } from '@/memo/text'
+import page1 from '@brand/assets/memo/page-1.svg'
+import page2 from '@brand/assets/memo/page-2.svg'
+import { POSITION_OPTIONS } from '@/data/positions'
+import { POINT_NAMES, pointFilter, pointOf, withoutBrand, phoneOf } from '@/data/points'
+import { isPdf, readPdfData } from '@/ui/pdfData'
+import { MobileEditor } from '@/ui/mobile'
+import { usePhone } from '@/ui/usePhone'
+import { TemplateButton } from '@/ui/template'
+import { useTemplateLink } from '@/ui/useTemplateLink'
+import { SITE } from '@/site'
+import { MATERIALS } from '@/data/materials'
+import { WORDS } from '@brand/words'
+
+/** What the brand calls its points (`@brand/words`) */
+const W = WORDS.point
+
+// Owner's memo generator: two A4 pages a point hands over with a car,
+// Figma's but for the contacts at the foot of the second, which are set here: the point once for the list, a
+// consultant per memo, as the business card's staff (`useStaff`). «Скачать PDF» gives the memos in outlines,
+// «Скачать шаблон», beside «Добавить», the same with every text live in the brand font, to be edited where the font is.
+
+const BLANK: Person = { position: 'Мастер-консультант', name: '', surname: '', phone: '', email: '' }
+/** Shown grey on the page in place of an empty required field; in the template as they are */
+const PLACEHOLDER: Partial<Record<MemoField, string>> = {
+  point: `Название ${W.of}`, address: 'Адрес', pointPhone: 'Телефон', site: 'Сайт',
+  position: 'Должность', name: 'Имя', surname: 'Фамилия', phone: 'Телефон',
+}
+const MISSING: Partial<Record<MemoField, string>> = {
+  point: `Нет названия ${W.of}`, address: 'Нет адреса', pointPhone: `Нет телефона ${W.of}`, site: 'Нет сайта',
+  position: 'Нет должности', name: 'Нет имени', surname: 'Нет фамилии', phone: 'Нет телефона',
+}
+const UNFILLED: Partial<Record<MemoField, string>> = {
+  point: `Выбрать ${W.pick}`, address: 'Указать адрес', pointPhone: `Указать телефон ${W.of}`, site: 'Указать сайт',
+  position: 'Указать должность', name: 'Добавить имя', surname: 'Добавить фамилию', phone: 'Указать телефон',
+}
+const PERSON_FIELDS: MemoField[] = ['position', 'name', 'surname', 'phone', 'email']
+const PERSON_REQUIRED = ['position', 'name', 'surname', 'phone'] as const
+const POINT_REQUIRED = ['point', 'pointPhone', 'address', 'site'] as const
+/** A page's widest on the canvas */
+const PAGE_MAX = 600
+/** Between the pages in a row: the item's actions' column (8 + 30 + 8), so a third page would clear them as the canvas's edge does */
+const PAGES_GAP = 46
+/** The pages on the canvas */
+const PAGES = 2
+
+/** The point as typed: the site follows the name until it's edited (null) */
+type PointInput = Omit<PointDetails, 'site'> & { site: string | null }
+/** What the memos were made from, kept in their PDF (`MEMOS_KEY`) */
+// `dealer`: the point, under the key the files and saved lists already out carry
+interface MemosData { dealer: PointInput; people: Person[] }
+
+const NO_POINT: PointInput = { name: '', address: '', phone: '', email: '', site: null }
+const POINT_OPTIONS = POINT_NAMES.map(withoutBrand)
+const addressOf = (name: string) => pointOf(name)?.address || undefined
+const salonPhone = (name: string) => { const p = phoneOf(name); return p ? maskPhone(p).text : undefined }
+
+/** The phone field's live mask, the caret kept after the same digit */
+function phoneChange(v: string, set: (text: string) => void) {
+  const el = document.activeElement as HTMLInputElement
+  const before = v.slice(0, el.selectionStart ?? v.length).replace(/\D/g, '').length
+  const { text, caret } = maskPhone(v, before)
+  set(text)
+  requestAnimationFrame(() => { if (document.activeElement === el) el.setSelectionRange(caret, caret) })
+}
+
+const save = (blob: Blob, name: string) => {
+  const a = document.createElement('a')
+  a.href = URL.createObjectURL(blob)
+  a.download = name
+  a.click()
+  URL.revokeObjectURL(a.href)
+}
+
+/** The box round a path's points, in the page's px */
+function boxOf(cmds: Cmd[]): Box | undefined {
+  let b: Box | undefined
+  for (const c of cmds) for (let k = 1; k < c.length; k += 2) {
+    const x = c[k] as number, y = c[k + 1] as number
+    b = b ? { x1: Math.min(b.x1, x), y1: Math.min(b.y1, y), x2: Math.max(b.x2, x), y2: Math.max(b.y2, y) } : { x1: x, y1: y, x2: x, y2: y }
+  }
+  return b
+}
+
+/** A page of the memo: Figma's art under the contacts, `text` black, `alert` red, `ghost` grey */
+function Sheet({ src, text, alert, ghost }: { src: string; text?: string; alert?: string; ghost?: string }) {
+  return (
+    <div className="relative bg-white">
+      <img src={src} alt="" className="block w-full" style={{ aspectRatio: `${PAGE.w} / ${PAGE.h}` }} draggable={false} />
+      {(text || alert || ghost) && (
+        <svg viewBox={`0 0 ${PAGE.w} ${PAGE.h}`} className="absolute inset-0 block size-full" aria-hidden>
+          {ghost && <path d={ghost} className="fill-ghost" />}
+          {text && <path d={text} fill="#000" />}
+          {alert && <path d={alert} className="fill-error" />}
+        </svg>
+      )}
+    </div>
+  )
+}
+
+export default function Memo() {
+  const [input, setPoint] = useState<PointInput>(NO_POINT)
+  const point: PointDetails = { ...input, site: input.site ?? siteFor(input.name) }
+
+  const staff = useStaff<Person>({
+    columns: { position: 'Должность', name: 'Имя', surname: 'Фамилия', phone: 'Телефон', email: 'Почта' },
+    blank: BLANK,
+    // The memos' own PDF brings back the point and the consultants, to change a line and download again
+    readFile: data => {
+      const bytes = new Uint8Array(data)
+      const d = isPdf(bytes) ? readPdfData(bytes, MEMOS_KEY) as MemosData | undefined : undefined
+      if (!d?.people?.length) throw new Error('В файле нет памяток: подходят PDF, скачанные здесь')
+      setPoint({ ...NO_POINT, ...d.dealer, site: d.dealer?.site ?? null })
+      return d.people.map(p => ({ ...BLANK, ...p }))
+    },
+    readPasted: () => [],
+    accept: '.pdf,application/pdf',
+    uploadLabel: 'Загрузить PDF',
+  })
+  const { mode, current, update } = staff
+  staff.useKeys(false)
+  const items = staff.items
+
+  const [fonts, setFonts] = useState<MemoFonts>()
+  const [exporting, setExporting] = useState(false)
+  const phone = usePhone()
+  /** The field with the caret in the form: its memo's contacts come into view on the canvas */
+  const [editing, setEditing] = useState<MemoField | null>(null)
+  const fieldOf = (el: Element | null) => (el?.closest('[data-field]')?.getAttribute('data-field') as MemoField | null) ?? null
+  // Off a field only once the focus has settled (a list's option, clicked, takes it on its way back to the field)
+  const onFormFocus = () => setEditing(fieldOf(document.activeElement))
+  const onFormBlur = () => setTimeout(() => setEditing(fieldOf(document.activeElement)), 100)
+  useEffect(() => { loadFonts().then(f => setFonts({ r: f.regular, m: f.medium })) }, [])
+
+  // `t` in the link (<site>/memo?t, or ?template, a link that never goes stale): every field its placeholder, the
+  // emails too, made from the memo as it is now
+  const makeBlank = fonts ? () => {
+    const point = { name: PLACEHOLDER.point!, address: PLACEHOLDER.address!, phone: PLACEHOLDER.pointPhone!, email: 'Почта', site: PLACEHOLDER.site! }
+    const person = { position: BLANK.position, name: PLACEHOLDER.name!, surname: PLACEHOLDER.surname!, phone: PLACEHOLDER.phone!, email: 'Почта' }
+    return import('@/memo/pdf').then(m => m.memosTemplate(buildBlocks(fonts, point, [person]), fonts))
+  } : undefined
+  const templateOnly = useTemplateLink(makeBlank, `${SITE.file}_owner-memo_template.pdf`, 'download_owner_memo_template')
+  /** «Добавить» in the item's column, ⌘↩ from anywhere (the manual list, wide screens) */
+  const addItem = (after?: number) => staff.add(undefined, undefined, after)
+  useAddKey(!phone ? () => addItem(staff.selected) : undefined)
+
+  useEffect(() => {
+    const prev = document.title
+    // The memo as the brand names it («памятка владельца» at UMO), capitalised
+    const phrase = MATERIALS.find(g => g.path === '/memo')?.phrase ?? 'памятка'
+    document.title = `${phrase[0].toUpperCase()}${phrase.slice(1)} ${SITE.name}`
+    return () => { document.title = prev }
+  }, [])
+
+  /** The point's and a person's fields with placeholders standing in for the empty required ones */
+  const shown = (p: Person) => {
+    const ghost = new Set<MemoField>()
+    const or = (field: MemoField, v: string) => {
+      if (v.trim() || !PLACEHOLDER[field]) return v
+      ghost.add(field)
+      return PLACEHOLDER[field]!
+    }
+    return {
+      ghost,
+      point: { name: or('point', point.name), address: or('address', point.address), phone: or('pointPhone', point.phone), email: point.email, site: or('site', point.site) },
+      person: { position: or('position', p.position), name: or('name', p.name), surname: or('surname', p.surname), phone: or('phone', p.phone), email: p.email },
+    }
+  }
+
+  // One layout for the whole list (`buildBlocks`: eight and four columns for a long address); the point's
+  // placeholders are the same for everyone
+  const memos = useMemo(() => {
+    if (!fonts) return undefined
+    const s = items.map(shown)
+    const blocks = buildBlocks(fonts, s[0]?.point ?? shown(BLANK).point, s.map(x => x.person))
+    return blocks.map((block, i) => ({ block, ghost: s[i].ghost, issues: block.issues.filter(x => !x.field || !s[i].ghost.has(x.field)) }))
+  }, [fonts, items, input]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const pointMissing = POINT_REQUIRED.filter(f => !(f === 'point' ? point.name : f === 'pointPhone' ? point.phone : point[f]).trim())
+  const pointFaults = memos?.[0]?.issues.filter(i => i.field && POINT_FIELDS.includes(i.field)) ?? []
+  const pointIssues = [...pointMissing.map(f => MISSING[f]!), ...new Set(pointFaults.map(i => i.text))]
+  const pointWrong = new Set<MemoField>(pointFaults.map(i => i.field!))
+
+  const missing = items.map(p => PERSON_REQUIRED.filter(f => !p[f].trim()))
+  const personIssues = (i: number) => memos?.[i]?.issues.filter(x => !x.field || PERSON_FIELDS.includes(x.field)) ?? []
+  const problems = items.map((p, i) => [...new Set([
+    ...(staff.showsMissing(p.key) ? missing[i].map(f => MISSING[f]!) : []),
+    ...personIssues(i).map(x => x.text),
+  ])])
+  const failing = items.filter((_, i) => missing[i].length || personIssues(i).length).map(p => p.key)
+  const ok = !!memos && items.length > 0 && failing.length === 0 && pointIssues.length === 0
+
+  const pointForm = useRef<HTMLDivElement>(null)
+  const toPoint = () => {
+    const at = pointMissing[0] ?? [...pointWrong][0] ?? 'point'
+    pointForm.current?.querySelector<HTMLElement>(`[data-field="${at}"] textarea, [data-field="${at}"] input`)?.focus()
+  }
+
+  // The address and the phone follow the point picked while they're empty or the previous point's
+  const pickPoint = (v: string) => setPoint(d => ({
+    ...d,
+    name: v,
+    address: addressOf(v) && (!d.address.trim() || d.address === addressOf(d.name)) ? addressOf(v)! : d.address,
+    phone: salonPhone(v) && (!d.phone.trim() || d.phone === salonPhone(d.name)) ? salonPhone(v)! : d.phone,
+  }))
+
+  const data = (): MemosData => ({ dealer: input, people: items.map(plain) })
+
+  const shareFile = useCallback(async () => {
+    const { memosPdf } = await import('@/memo/pdf')
+    return new File([await memosPdf(memos!.map(m => m.block), data())], `${SITE.file}_owner-memo.pdf`, { type: 'application/pdf' })
+  }, [memos]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleExport = async () => {
+    if (!memos || !ok) return
+    setExporting(true)
+    try {
+      const { memosPdf } = await import('@/memo/pdf')
+      save(await memosPdf(memos.map(m => m.block), data()), `${SITE.file}_owner-memo.pdf`)
+      goal('download_owner_memo', { count: memos.length })
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  /** One consultant's template, by its icon: what's typed, the placeholders where nothing is (it's edited anyway) */
+  const makeTemplate = (i: number) => memos?.[i] && fonts ? () => import('@/memo/pdf').then(m => m.memosTemplate([memos[i].block], fonts)) : undefined
+  /** «Скачать шаблон» in the item's column */
+  const templateIcon = (i: number) => <TemplateButton make={makeTemplate(i)} name={`${SITE.file}_owner-memo_template.pdf`} goalId="download_owner_memo_template" />
+
+  const problemOf = (i: number) => personIssues(i)[0]?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!)) : undefined)
+
+  // The pages in a row as tall as the canvas (600 px wide at most), the item's actions after the last; a row wider than
+  // the canvas scrolls across the canvas's whole width, cut by its edges alone (the item's own edges cut it off
+  // awkwardly), standing at its end, the consultant's page, as it comes and whenever a field has the caret. A state,
+  // not a ref: the canvas comes after the first render (the phone check, the fonts), and a ref's effect missed it
+  const [canvas, setCanvas] = useState<HTMLElement | null>(null)
+  const [pageW, setPageW] = useState(PAGE_MAX)
+  const [rowEnd, setRowEnd] = useState(64)
+  const [measured, setMeasured] = useState(false)
+  /** The row wider than the canvas, scrolling across */
+  const [scrolls, setScrolls] = useState(false)
+  /** The page a row stands at; the others dimmed (`data-off`), none while all are in view */
+  const pageAt = (el: HTMLElement) => {
+    const max = el.scrollWidth - el.clientWidth, pages = el.querySelectorAll('[data-page]')
+    return max < 1 ? -1 : Math.round(el.scrollLeft / (max / (pages.length - 1)))
+  }
+  /** The page each row stands at, by its item, for the number beside it */
+  const [rowAt, setRowAt] = useState<Record<number, number>>({})
+  const markPage = (el: HTMLElement) => {
+    const at = pageAt(el), key = Number(el.dataset.pages)
+    setRowAt(r => (r[key] === at ? r : { ...r, [key]: at }))
+    el.querySelectorAll('[data-page]').forEach((p, k) => p.toggleAttribute('data-off', at >= 0 && k !== at))
+  }
+  /** A row put at a page, the consultant's (the second) */
+  const toConsultant = (el: HTMLElement, behavior: ScrollBehavior = 'auto') => {
+    const max = el.scrollWidth - el.clientWidth, n = el.querySelectorAll('[data-page]').length
+    el.scrollTo({ left: max / (n - 1), behavior })
+  }
+  /** A click on a page brings it to the canvas's middle */
+  /**
+   * The row dragged with a mouse, which has no way across otherwise (a trackpad's swipe or a phone's own still scroll it):
+   * past 5 px it follows the pointer, the snap off meanwhile; let go, the page nearest the middle comes there, the next
+   * one that way however short the drag, and the click the drag ends in selects nothing
+   */
+  const dragRow = (e: React.PointerEvent<HTMLElement>) => {
+    if (e.pointerType !== 'mouse' || e.button !== 0) return
+    // No selection or the browser's own drag, which cancels the pointer and leaves the row hanging
+    e.preventDefault()
+    const el = e.currentTarget, x0 = e.clientX, left0 = el.scrollLeft
+    const pages = [...el.querySelectorAll<HTMLElement>('[data-page]')]
+    const nearest = () => {
+      const mid = el.getBoundingClientRect().left + el.clientWidth / 2
+      const off = (p: HTMLElement) => Math.abs(p.getBoundingClientRect().left + p.offsetWidth / 2 - mid)
+      return pages.indexOf(pages.reduce((a, b) => off(b) < off(a) ? b : a))
+    }
+    const from = nearest()
+    let moved = false, dx = 0
+    const move = (m: PointerEvent) => {
+      dx = m.clientX - x0
+      if (!moved && Math.abs(dx) < 5) return
+      if (!moved) { moved = true; el.style.scrollSnapType = 'none'; document.body.style.cursor = 'grabbing' }
+      el.scrollLeft = left0 - dx
+    }
+    const up = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', up)
+      window.removeEventListener('pointercancel', up)
+      if (!moved) return
+      document.body.style.cursor = ''
+      // Any drag goes on to the next page that way, even if the one it left is still the nearest
+      let to = nearest()
+      if (to === from) to = Math.min(pages.length - 1, Math.max(0, from - Math.sign(dx)))
+      pages[to]?.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+      // The snap back once the row is there: back at once, it jumps to the nearest page before gliding on
+      const snap = () => { el.style.scrollSnapType = ''; clearTimeout(late) }
+      const late = setTimeout(snap, 800)
+      el.addEventListener('scrollend', snap, { once: true })
+      // The click the drag ends in, if any, lands on nothing
+      const eat = (c: MouseEvent) => { c.stopPropagation(); c.preventDefault() }
+      window.addEventListener('click', eat, { capture: true, once: true })
+      setTimeout(() => window.removeEventListener('click', eat, { capture: true }), 0)
+    }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', up)
+    window.addEventListener('pointercancel', up)
+  }
+  const toPage = (e: React.MouseEvent<HTMLElement>) => e.currentTarget.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' })
+  // A row put at the consultant's page as it comes, once the canvas is measured (before that its ends aren't set and it
+  // stands at the last); the canvas resized, a row may now fit or not
+  useEffect(() => {
+    canvas?.querySelectorAll<HTMLElement>('[data-pages]').forEach(el => {
+      if (measured && !el.dataset.placed) { toConsultant(el); el.dataset.placed = '1' }
+      markPage(el)
+    })
+  }, [pageW, rowEnd, measured, canvas, items.length]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (editing) canvas?.querySelectorAll<HTMLElement>('[data-pages]').forEach(el => toConsultant(el, 'smooth'))
+  }, [editing, canvas])
+  useEffect(() => {
+    const el = canvas
+    if (!el) return
+    const fit = () => {
+      const cs = getComputedStyle(el)
+      const w = el.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight)
+      const h = el.clientHeight - parseFloat(cs.paddingTop) - parseFloat(cs.paddingBottom)
+      const pw = Math.floor(Math.min(PAGE_MAX, w, h * PAGE.w / PAGE.h))
+      setPageW(pw)
+      // The row's ends: the canvas's 64 px while it fits, else as much as centres a page at either end
+      setMeasured(true)
+      const fits = PAGES * pw + (PAGES - 1) * PAGES_GAP <= w
+      setScrolls(!fits)
+      setRowEnd(fits ? 64 : Math.max(64, (el.clientWidth - pw) / 2))
+    }
+    const ro = new ResizeObserver(fit)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [canvas])
+
+  /** The memo the edited field is seen on: the consultant's, or for the point's fields the one selected or the first */
+  const shownAt = editing && !phone ? items.findIndex(p => p.key === (current ?? items[0])?.key) : -1
+  /** Its contacts, in the page's px */
+  const block = shownAt >= 0 && memos?.[shownAt] ? boxOf(Object.values(memos[shownAt].block.fields).flat() as Cmd[]) : undefined
+  const shownPage = useRef<HTMLDivElement>(null)
+  // The contacts brought to the canvas's middle when they're out of view
+  useEffect(() => {
+    const page = shownPage.current, main = page?.closest('main')
+    if (!page || !main || !block) return
+    const r = page.getBoundingClientRect(), m = main.getBoundingClientRect()
+    const top = r.top + block.y1 / PAGE.h * r.height, bottom = r.top + block.y2 / PAGE.h * r.height
+    if (top < m.top || bottom > m.bottom) main.scrollBy({ top: (top + bottom) / 2 - (m.top + m.bottom) / 2, behavior: 'smooth' })
+  }, [shownAt, !!block]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const renderItem = (p: typeof items[number], i: number) => {
+    const memo = memos?.[i]
+    const active = mode === 'manual' && p.key === current?.key
+    const dimmed = mode === 'manual' && !!current && !active && !phone
+    const wrong = new Set<MemoField>([...pointWrong, ...(memo?.issues.map(x => x.field).filter((f): f is MemoField => !!f) ?? [])])
+    const paths = (only: (f: MemoField) => boolean) => memo
+      ? (Object.entries(memo.block.fields) as [MemoField, Cmd[]][]).filter(([f]) => only(f)).flatMap(([, c]) => c)
+      : []
+    const second = (
+      <Sheet
+        src={page2}
+        text={memo ? toD(paths(f => !memo.ghost.has(f) && !wrong.has(f))) : undefined}
+        alert={memo ? toD(paths(f => !memo.ghost.has(f) && wrong.has(f))) : undefined}
+        ghost={memo ? toD(paths(f => memo.ghost.has(f))) : undefined}
+      />
+    )
+    // On phones each slide is the second page (the first a slide of its own)
+    return (
+      <Fragment key={p.key}>
+        <Removed staff={staff} at={i} />
+        <figure ref={staff.figureRef(p.key)} onClick={() => staff.pick(p.key)} className="group/row flex cursor-pointer justify-center">
+          <div className="flex w-full max-w-[600px] flex-col gap-3" style={phone ? undefined : { maxWidth: 'none' }}>
+            {phone ? (
+              <ItemFrame staff={staff} item={p} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>
+                <button type="button" aria-pressed={mode === 'manual' ? active : undefined} className="block w-full cursor-pointer">
+                  <div className={ITEM_EDGE_OVER}>{second}</div>
+                </button>
+              </ItemFrame>
+            ) : (() => {
+              const pages = (
+                <button type="button" aria-pressed={mode === 'manual' ? active : undefined} className="flex cursor-pointer" style={{ gap: PAGES_GAP }}>
+                  {/* A page the row doesn't stand at dimmed, clear on hover; the first, everyone's, only so, the
+                      consultant's also while another consultant is selected */}
+                  {Array.from({ length: PAGES }, (_, k) => (
+                    <div
+                      key={k}
+                      data-page
+                      ref={k === 1 && i === shownAt ? shownPage : undefined}
+                      onClick={toPage}
+                      className={`shrink-0 snap-center ${ITEM_EDGE_OVER} transition-opacity duration-150 ${k > 0 && dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''} data-off:opacity-40 hover:opacity-100!`}
+                      style={{ width: pageW }}
+                    >
+                      {k === 0 ? <Sheet src={page1} /> : second}
+                    </div>
+                  ))}
+                </button>
+              )
+              // Scrolling, the number says the memo and its page in view, «1.2», a lone memo's too
+              const at = rowAt[p.key] ?? -1
+              const frame = (children: React.ReactNode) => <ItemFrame staff={staff} item={p} n={i + 1} label={scrolls && at >= 0 ? `${i + 1}.${at + 1}` : undefined} onAdd={addItem} extra={templateIcon(i)}>{children}</ItemFrame>
+              return (
+                <div className="relative">
+                  {/* Across the canvas's whole width, past its 64 px padding, which the row keeps as its own ends; let go,
+                      it stands at a page, in the canvas's middle, never between them */}
+                  <div data-pages={p.key} onScroll={e => markPage(e.currentTarget)} onPointerDown={scrolls ? dragRow : undefined} className="-mx-16 snap-x snap-mandatory overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+                    {/* Its width set: the item's box is a size container, which `w-max` takes as nothing */}
+                    <div className="mx-auto box-content" style={{ width: PAGES * pageW + (PAGES - 1) * PAGES_GAP, paddingInline: rowEnd }}>
+                      {scrolls ? pages : frame(pages)}
+                    </div>
+                  </div>
+                  {/* Scrolling, the actions stay in view: beside the page in the middle, in the gap the next page leaves
+                      them, not going with the row */}
+                  {scrolls && (
+                    <div className="pointer-events-none absolute inset-y-0 left-1/2 -translate-x-1/2 [&_button]:pointer-events-auto" style={{ width: pageW }}>
+                      {frame(<div style={{ aspectRatio: `${PAGE.w} / ${PAGE.h}` }} />)}
+                    </div>
+                  )}
+                </div>
+              )
+            })()}
+            {problems[i].length > 0 && <ItemAlert staff={staff} item={p.key}>{problems[i].join(' · ')}</ItemAlert>}
+          </div>
+        </figure>
+      </Fragment>
+    )
+  }
+
+  const field = (key: MemoField, label: string, node: React.ReactNode) => (
+    <div data-field={key}><Labelled label={label}>{node}</Labelled></div>
+  )
+
+  const sidebar = (
+    <div onFocus={onFormFocus} onBlur={onFormBlur} data-ui="sidebar-body" className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
+      <GeneratorHeader current="/memo" />
+      <div data-ui="form" className="flex flex-col gap-4 tracking-normal">
+        {/* The point: the whole list's */}
+        <div ref={pointForm} className="flex flex-col gap-4">
+          <div data-field="point" className="group/field flex flex-col gap-3">
+            <p className={`text-[14px] leading-4 text-caption ${ALERT_LABEL}`}>{W.one}</p>
+            <ComboField value={point.name} onChange={pickPoint} options={POINT_OPTIONS} filter={pointFilter} singleLine placeholder={`Название ${W.of}`} label={`${W.many} ${SITE.name}`} invalid={pointWrong.has('point')} />
+          </div>
+            {field('pointPhone', `Телефон ${W.of}`, <TextInput value={input.phone} onChange={v => phoneChange(v, text => setPoint(d => ({ ...d, phone: text })))} placeholder="+7 987 654 32 10" inputMode="tel" invalid={pointWrong.has('pointPhone')} />)}
+            {field('address', 'Адрес', <TextArea value={input.address} onChange={v => setPoint(d => ({ ...d, address: v }))} placeholder="Адрес" invalid={pointWrong.has('address')} />)}
+            {field('pointEmail', `Почта ${W.of}`, <TextInput value={input.email} onChange={v => setPoint(d => ({ ...d, email: v }))} placeholder={`Почта ${W.of}`} inputMode="email" invalid={pointWrong.has('pointEmail')} />)}
+            {field('site', 'Сайт', <TextInput value={point.site} onChange={v => setPoint(d => ({ ...d, site: v }))} placeholder="Сайт" invalid={pointWrong.has('site')} />)}
+        </div>
+
+        {mode === 'manual' && current && (() => {
+          const p = current
+          const i = items.findIndex(it => it.key === p.key)
+          const issues = problems[i] ?? []
+          const bad = (f: MemoField, label: string) => issues.some(t => t.startsWith(label) || t === MISSING[f])
+          return (
+            <div ref={staff.form} className="flex flex-col gap-4">
+              <div data-field="position"><Labelled label="Должность">
+                <ComboField key={p.key} value={p.position} onChange={v => update(p.key, { position: v })} options={POSITION_OPTIONS} placeholder="Должность" label="Типовые должности" invalid={bad('position', 'Должность')} />
+              </Labelled></div>
+              {/* A whole name typed or pasted into «Имя» splits into both, the patronymic dropped (`fullNameField`, as the
+                  business card's); typed after the name by hand, it stays */}
+              <div data-field="name"><Labelled label="Имя">
+                <TextInput value={p.name} onChange={v => update(p.key, { name: v })} {...fullNameField(p, s => update(p.key, s))} placeholder="Имя" invalid={bad('name', 'Имя')} />
+              </Labelled></div>
+              <div data-field="surname"><Labelled label="Фамилия">
+                <TextInput value={p.surname} onChange={v => update(p.key, { surname: v })} placeholder="Фамилия" invalid={bad('surname', 'Фамилия') || issues.some(t => t.startsWith('Имя и фамилия'))} />
+              </Labelled></div>
+              <div data-field="phone"><Labelled label="Телефон">
+                <TextInput value={p.phone} onChange={v => phoneChange(v, text => update(p.key, { phone: text }))} placeholder="+7 987 654 32 10" inputMode="tel" invalid={bad('phone', 'Телефон')} />
+              </Labelled></div>
+              <div data-field="email"><Labelled label="Почта">
+                <TextInput value={p.email} onChange={v => update(p.key, { email: v })} placeholder="Почта" inputMode="email" invalid={bad('email', 'Почта')} />
+              </Labelled></div>
+            </div>
+          )
+        })()}
+      </div>
+    </div>
+  )
+
+  const download = (
+    <DownloadBar
+      format="PDF"
+      onClick={handleExport}
+      busy={exporting}
+      disabled={!ok}
+      note={(pointMissing.length ? unfilled(pointMissing.map(f => UNFILLED[f]!)) : pointIssues[0]) ?? problemOf(failing.length ? staff.inWork(failing).index : 0)}
+      count={!pointIssues.length && failing.length ? itemOf(staff.inWork(failing).index, items.length) : undefined}
+      onNote={pointIssues.length ? toPoint : () => staff.nextOf(failing)}
+      links={canShareFiles && <LinkButtons incomplete={!ok} file={shareFile} fileOnly />}
+    />
+  )
+
+  const first = <div className="outline-1 outline-ink/10"><Sheet src={page1} /></div>
+
+
+  if (templateOnly) return null
+  if (phone) return <MobileEditor slides={[{ key: 'first', number: 0, label: 'Первый лист', ratio: PAGE.h / PAGE.w, node: first }, ...items.map((p, i) => ({ key: p.key, item: p.key, number: i + 1, label: `${p.name} ${p.surname}`.replace(/\s+/g, ' ').trim() || 'Второй лист', ratio: PAGE.h / PAGE.w, node: renderItem(p, i) }))]} onAdd={addItem} sidebar={sidebar} download={download} staff={staff} />
+
+  return (
+    <div className="flex min-h-dvh flex-col bg-paper font-sans text-ink md:h-dvh md:flex-row">
+      <aside data-ui="sidebar" className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
+        {sidebar}
+        {download}
+      </aside>
+      <main
+        ref={setCanvas}
+        {...staff.dropTarget}
+        onClick={e => { if (!(e.target as Element).closest('figure, [data-add], [data-template]')) staff.setSelected(null) }}
+        className={`flex flex-1 flex-col bg-surface px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16 ${staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-ink' : ''}`}
+      >
+        <div className="m-auto grid w-full grid-cols-1 gap-8">
+          {items.map((p, i) => renderItem(p, i))}
+          <Removed staff={staff} at={items.length} />
+        </div>
+      </main>
+    </div>
+  )
+}

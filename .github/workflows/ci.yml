@@ -1,0 +1,38 @@
+name: CI
+
+on:
+  push:
+    branches-ignore: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+        with:
+          version: 11
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - name: Check for oversized images
+        run: |
+          big=$(find src public brand -type f \( -iname '*.png' -o -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.webp' \) -size +2560k)
+          if [ -n "$big" ]; then
+            echo "These images are over 2.5MB — compress before committing:"
+            echo "$big"
+            exit 1
+          fi
+      - name: Check for oversized videos
+        run: |
+          big=$(find src public brand -type f \( -iname '*.mp4' -o -iname '*.webm' \) -size +15360k)
+          if [ -n "$big" ]; then
+            echo "These videos are over 15MB — compress before committing:"
+            echo "$big"
+            exit 1
+          fi
+      - run: npx tsc --noEmit
+      - run: pnpm build

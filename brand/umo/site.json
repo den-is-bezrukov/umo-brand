@@ -1,0 +1,30 @@
+{
+  "name": "UMO",
+  "file": "UMO",
+  "domain": "umo.autos",
+  "home": "https://umo.auto",
+  "support": "https://t.me/umo_support_bot",
+  "names": {
+    "livery": {
+      "phrase": "ливрея демо-автомобиля"
+    },
+    "memo": {
+      "phrase": "памятка владельца"
+    }
+  },
+  "metrika": 113514674,
+  "title": "Бренд UMO",
+  "description": "Стандарты бренда UMO и печатные материалы для дилеров",
+  "language": "ru",
+  "robots": {
+    "index": false
+  },
+  "icons": {
+    "icon": "/favicon.svg",
+    "ico": "/favicon.ico",
+    "appleTouchIcon": "/apple-touch-icon.png"
+  },
+  "openGraph": {
+    "image": "https://umo.autos/social-image.png"
+  }
+}

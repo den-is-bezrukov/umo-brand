@@ -1,0 +1,397 @@
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { Field as Labelled, ComboField, TextArea, TextInput, GeneratorHeader, DownloadBar, LinkButtons, Segments, SegBtn } from '@/ui/form'
+import { canShareFiles, unfilled, itemOf, ALERT_LABEL } from '@/ui/formUtils'
+import { TableSource, UploadArea, ItemFrame, Removed, ItemAlert } from '@/ui/staff'
+import { useStaff, pickTable, useAddKey } from '@/ui/useStaff'
+import { ITEM_EDGE } from '@/ui/staffState'
+import { goal } from '@/ui/metrika'
+import { toD, type Cmd } from '@/livery/geometry'
+import { loadFonts, type Fonts } from '@/ui/type'
+import { xlsxCells, pastedCells, byHeaders, type Cells } from '@/nametag/table'
+import { TAG, BAND, BAND_ART, DEFAULT_CAPTION, buildTag, formatPrice, readPrice, PRICE_FORMAT, type Item, type TagField } from '@/pricetag/tag'
+import { POINT_NAMES, POINT_PARAM, pointFilter, withoutBrand } from '@/data/points'
+import { readTagsFile } from '@/pricetag/read'
+import { plural } from '@/ui/useStaff'
+import { MobileEditor } from '@/ui/mobile'
+import { usePhone } from '@/ui/usePhone'
+import { linkParams, saveAndOpenPdf } from '@/ui/share'
+import { recordText } from '@/ui/liveText'
+import { TemplateButton } from '@/ui/template'
+import { useTemplateLink } from '@/ui/useTemplateLink'
+import { SITE } from '@/site'
+import { WORDS } from '@brand/words'
+
+/** What the brand calls its points (`@brand/words`) */
+const W = WORDS.point
+
+// Price tag generator: price tags for the small goods at a point, any
+// employee printing them on an office printer and cutting them out with scissors. The point is set once, the goods typed
+// on the page or loaded from the template; one PDF out, eight tags to an A4 sheet. The list works as the name tag's and
+// the business card's (`useStaff`).
+
+const TEMPLATE = `${import.meta.env.BASE_URL}downloads/${SITE.file}_price-tags_template.xlsx`
+
+const BLANK: Item = { name: '', code: '', caption: DEFAULT_CAPTION, price: '' }
+/** Shown grey on the tag in place of an empty required field; never in the PDF */
+const PLACEHOLDER: Partial<Record<TagField, string>> = { point: `Название ${W.of}`, name: 'Наименование товара', caption: DEFAULT_CAPTION, price: '0 000' }
+const MISSING: Partial<Record<TagField, string>> = { point: `Нет названия ${W.of}`, name: 'Нет наименования', caption: 'Нет подписи', price: 'Нет цены' }
+/** The first empty field, said by name over the download */
+const UNFILLED: Partial<Record<TagField, string>> = { point: `Выбрать ${W.pick}`, name: 'Добавить наименование', caption: 'Добавить подпись', price: 'Указать цену' }
+const REQUIRED = ['name', 'caption', 'price'] as const
+
+const CAPTIONS = [DEFAULT_CAPTION, 'Цена за комплект с НДС', 'Цена за упаковку с НДС']
+
+const HEADERS: Record<keyof Item, RegExp> = {
+  name: /^(наименование|название|товар)/i,
+  code: /^(артикул|код|sku)/i,
+  price: /^(цена|стоимость)/i,
+  caption: /^подпись/i,
+}
+/** A price as a table has it, a number or text, set in threes; left as it is if it isn't one, to be said wrong */
+const toItems = (rows: Cells[]): Item[] => byHeaders(rows, HEADERS).map(r => ({
+  ...r,
+  caption: r.caption.trim() || DEFAULT_CAPTION,
+  price: readPrice(r.price) ?? r.price,
+}))
+
+/** A link's caption: `set` and `pack` for the suggestions, else as written */
+const LINK_CAPTIONS: Record<string, string> = { set: CAPTIONS[1], pack: CAPTIONS[2] }
+
+/**
+ * The point and goods a link brings (a link made for the point): `point`, then `n1`, `c1`, `p1`, `s1` (the
+ * name, code, price, caption), `n2`… while there's a name. Read on load only, never written back: the list would make
+ * the address huge
+ */
+function fromLink(): { point: string; items: Item[] } {
+  const link = linkParams()
+  const items: Item[] = []
+  for (let i = 1; link.has(`n${i}`); i++) {
+    const s = link.get(`s${i}`)?.trim() ?? ''
+    const p = link.get(`p${i}`) ?? ''
+    items.push({ name: link.get(`n${i}`) ?? '', code: link.get(`c${i}`) ?? '', caption: LINK_CAPTIONS[s] ?? (s || DEFAULT_CAPTION), price: readPrice(p) ?? p })
+  }
+  return { point: withoutBrand(link.get(POINT_PARAM)?.trim() ?? ''), items }
+}
+
+/** The points as the band names them: without the brand's name, as the logo stands right by the name */
+const POINT_OPTIONS = POINT_NAMES.map(withoutBrand)
+
+export default function PriceTag() {
+  const [initial] = useState(fromLink)
+  const [point, setPoint] = useState(initial.point)
+  const staff = useStaff<Item>({
+    columns: { name: 'Наименование', code: 'Артикул', price: 'Цена', caption: 'Подпись' },
+    blank: BLANK,
+    initial: initial.items,
+    // The tags' own PDF brings its point and goods
+    // back, to fix a price and download again; else a table
+    readFile: data => {
+      const own = readTagsFile(data)
+      if (!own) return toItems(xlsxCells(data))
+      if (own.dealer) setPoint(own.dealer)
+      return own.items
+    },
+    readPasted: text => toItems(pastedCells(text)),
+    accept: '.xlsx,.pdf,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/pdf',
+    uploadLabel: 'Загрузить таблицу или PDF',
+    countWord: n => `${n} ценник` + ({ '': '', 'а': 'а', 'ей': 'ов' } as Record<string, string>)[plural(n)],
+  })
+  const { mode, setMode, current, update } = staff
+  staff.useKeys(false)
+
+  const [fonts, setFonts] = useState<Fonts>()
+  const [exporting, setExporting] = useState(false)
+  const phone = usePhone()
+  useEffect(() => { loadFonts().then(setFonts) }, [])
+
+  useEffect(() => {
+    const prev = document.title
+    document.title = `Ценник ${SITE.name}`
+    return () => { document.title = prev }
+  }, [])
+
+  const items = staff.items
+  /** Each tag as built, with the placeholders standing in for empty required fields */
+  const tags = useMemo(() => fonts ? items.map(it => {
+    const ghost = new Set<TagField>()
+    const or = (field: TagField, v: string) => {
+      if (v.trim()) return v
+      ghost.add(field)
+      return PLACEHOLDER[field]!
+    }
+    // Its lines noted too, for the editable template
+    const { result: tag, lines } = recordText(() => buildTag(fonts, or('point', point), { name: or('name', it.name), code: it.code, caption: or('caption', it.caption), price: or('price', it.price) }))
+    const wrongPrice = it.price.trim() && !PRICE_FORMAT.test(it.price.trim())
+      // A table's price over the largest, else one that isn't a number
+      ? [{ field: 'price' as const, text: it.price.split(/[,.]/)[0].replace(/\D/g, '').length > 7 ? 'Цена больше 9 999 999,99' : 'Цена: проверьте число' }]
+      : []
+    return { tag, lines, ghost, issues: [...tag.issues.filter(i => !ghost.has(i.field)), ...wrongPrice] }
+  }) : undefined, [fonts, items, point])
+
+  /** The editable template, one tag's by its icon: as on the page, placeholders where nothing is typed */
+  const makeTemplate = (i: number) => tags?.[i] ? () => import('@/pricetag/pdf').then(m => m.tagsTemplate([tags[i]])) : undefined
+  /** The blank one a `template` link gives: a sheet of eight placeholder tags */
+  const makeBlank = fonts ? () => {
+    const one = recordText(() => buildTag(fonts, PLACEHOLDER.point!, { name: PLACEHOLDER.name!, code: 'Артикул', caption: PLACEHOLDER.caption!, price: PLACEHOLDER.price! }))
+    return import('@/pricetag/pdf').then(m => m.tagsTemplate(Array.from({ length: m.PER_PAGE }, () => ({ tag: one.result, lines: one.lines }))))
+  } : undefined
+  const templateOnly = useTemplateLink(makeBlank, `${SITE.file}_price-tags_template.pdf`, 'download_price_tag_template')
+  /** «Добавить» in the item's column, ⌘↩ from anywhere (the manual list, wide screens) */
+  const addItem = (after?: number) => staff.add(undefined, undefined, after)
+  useAddKey(!phone && mode === 'manual' ? () => addItem(staff.selected) : undefined)
+  /** «Скачать шаблон» in the item's column */
+  const templateIcon = (i: number) => <TemplateButton make={makeTemplate(i)} name={`${SITE.file}_price-tags_template.pdf`} goalId="download_price_tag_template" />
+
+  const pointMissing = !point.trim()
+  const pointIssues = [...(pointMissing ? [MISSING.point!] : []), ...new Set(tags?.[0]?.issues.filter(i => i.field === 'point').map(i => i.text) ?? [])]
+
+  const missing = items.map(it => REQUIRED.filter(f => !it[f].trim()))
+  const ownIssues = (i: number) => tags?.[i]?.issues.filter(x => x.field !== 'point') ?? []
+  const problems = items.map((it, i) => [...new Set([
+    ...(staff.showsMissing(it.key) ? missing[i].map(f => MISSING[f]!) : []),
+    ...ownIssues(i).map(x => x.text),
+  ])])
+  const failing = items.filter((_, i) => missing[i].length || ownIssues(i).length).map(it => it.key)
+  const ok = !!tags && items.length > 0 && failing.length === 0 && pointIssues.length === 0
+
+  const pointField = useRef<HTMLDivElement>(null)
+  const toPoint = () => pointField.current?.querySelector<HTMLElement>('textarea, input')?.focus()
+
+  const save = (blob: Blob, name: string) => {
+    const a = document.createElement('a')
+    a.href = URL.createObjectURL(blob)
+    a.download = name
+    a.click()
+    URL.revokeObjectURL(a.href)
+  }
+  /** The tags' PDF for «Поделиться» to send, made again as they change */
+  const shareFile = useCallback(async () => {
+    const { tagsPdf, TAGS_FILE } = await import('@/pricetag/pdf')
+    return new File([await tagsPdf(tags!.map(t => t.tag), { dealer: point, items: items.map(({ key: _, ...it }) => it) })], TAGS_FILE, { type: 'application/pdf' })
+  }, [tags, point, items]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleExport = async () => {
+    if (!tags || !ok) return
+    setExporting(true)
+    try {
+      const { tagsPdf, TAGS_FILE } = await import('@/pricetag/pdf')
+      save(await tagsPdf(tags.map(t => t.tag), { dealer: point, items: items.map(({ key: _, ...it }) => it) }), TAGS_FILE)
+      goal('download_price_tag', { count: tags.length, format: 'pdf' })
+    } finally {
+      setExporting(false)
+    }
+  }
+
+  // `pdf` in the link opens the tags' PDF itself, with no editor, once the fonts are in; a tag at fault opens the editor
+  // instead, showing what's wrong
+  const [pdfOnly, setPdfOnly] = useState(() => linkParams().has('pdf') && initial.items.length > 0)
+  const pdfStarted = useRef(false)
+  useEffect(() => {
+    if (!pdfOnly || !tags || pdfStarted.current) return
+    pdfStarted.current = true
+    if (!ok) { setPdfOnly(false); return }
+    import('@/pricetag/pdf')
+      .then(async ({ tagsPdf, TAGS_FILE }) => {
+        const blob = await tagsPdf(tags.map(t => t.tag), { dealer: point, items: items.map(({ key: _, ...it }) => it) })
+        goal('download_price_tag', { count: tags.length, format: 'pdf', via: 'link' })
+        saveAndOpenPdf(blob, TAGS_FILE)
+      })
+      .catch(() => setPdfOnly(false))
+  }, [tags]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  /** A tag's first fault: a wrong value said as it is, else its first empty field by name */
+  const problemOf = (i: number) => ownIssues(i)[0]?.text ?? (missing[i].length ? unfilled(missing[i].map(f => UNFILLED[f]!)) : undefined)
+
+  const renderItem = (it: typeof items[number], i: number) => {
+            const t = tags?.[i]
+            const active = mode === 'manual' && it.key === current?.key
+            const dimmed = mode === 'manual' && !!current && !active && !phone
+            const wrong = new Set<TagField>([...(pointIssues.length && !pointMissing ? ['point' as const] : []), ...(t?.issues.map(x => x.field) ?? [])])
+            const paths = (only: (f: TagField) => boolean) => t
+              ? (Object.entries(t.tag.fields) as [TagField, Cmd[]][]).filter(([f]) => only(f)).flatMap(([, c]) => c)
+              : []
+            const band = (f: TagField) => f === 'point'
+            return (
+              <Fragment key={it.key}>
+              <Removed staff={staff} at={i} />
+              <figure ref={staff.figureRef(it.key)} onClick={() => staff.pick(it.key)} className="group/row flex cursor-pointer justify-center">
+                <div className="flex w-full max-w-[480px] flex-col gap-3">
+                  <ItemFrame staff={staff} item={it} n={i + 1} onAdd={addItem} extra={templateIcon(i)}>
+                  <button
+                    type="button"
+                    aria-pressed={mode === 'manual' ? active : undefined}
+                    className={`block w-full cursor-pointer ${ITEM_EDGE} transition-opacity duration-150
+                      ${dimmed ? 'opacity-40 group-hover/row:opacity-100' : ''}`}
+                  >
+                    <TagArt
+                      white={t ? toD([...BAND_ART, ...paths(f => band(f) && !t.ghost.has(f) && !wrong.has(f))]) : toD(BAND_ART)}
+                      text={t ? toD(paths(f => !band(f) && !t.ghost.has(f) && !wrong.has(f))) : undefined}
+                      alert={t ? toD(paths(f => !t.ghost.has(f) && wrong.has(f))) : undefined}
+                      ghost={t ? toD(paths(f => t.ghost.has(f))) : undefined}
+                    />
+                  </button>
+                  </ItemFrame>
+                  {problems[i].length > 0 && <ItemAlert staff={staff} item={it.key}>{alertLine(problems[i])}</ItemAlert>}
+                </div>
+              </figure>
+              </Fragment>
+            )
+          }
+
+  const sidebar = (
+    <>
+        <div data-ui="sidebar-body" className="flex flex-col gap-6 p-6 tracking-[-0.01em] md:pb-2">
+          <GeneratorHeader current="/price-tag" />
+
+          {/* The form under the header in one rhythm, 16 px apart as any fields */}
+          <div className="flex flex-col gap-4">
+          {/* The point first: the whole list's, set once */}
+          <div ref={pointField} className="group/field flex flex-col gap-3 tracking-normal">
+            <p className={`text-[14px] leading-4 text-caption ${ALERT_LABEL}`}>{W.one}</p>
+            <ComboField
+              value={point}
+              onChange={setPoint}
+              options={POINT_OPTIONS} filter={pointFilter}
+              singleLine
+              placeholder={`Название ${W.of}`}
+              label={`${W.many} ${SITE.name}`}
+              invalid={pointIssues.length > 0 && !pointMissing}
+            />
+          </div>
+
+          <Labelled label="Данные">
+            {/* The table mode's template (then its file) right under the switch, 8 px off it, as a pair: the mode's first step */}
+            <div className="flex flex-col gap-2">
+              <Segments>
+                <SegBtn active={mode === 'manual'} onClick={() => setMode('manual')}>Вручную</SegBtn>
+                <SegBtn active={mode === 'table'} onClick={() => setMode('table')}>Из документа</SegBtn>
+              </Segments>
+              {mode === 'table' && <TableSource staff={staff} template={TEMPLATE} />}
+            </div>
+          </Labelled>
+
+          <div data-ui="form" className="flex flex-col gap-4 tracking-normal">
+            {mode === 'manual' && current && (() => {
+              const it = current
+              const i = items.findIndex(x => x.key === it.key)
+              const issues = problems[i] ?? []
+              const bad = (field: TagField, label: string) => issues.some(t => t.startsWith(label) || t === MISSING[field])
+              return (
+                <div ref={staff.form} onPasteCapture={e => staff.paste(it.key, e)} className="@container flex flex-col gap-4">
+                  <Labelled label="Наименование">
+                    <TextArea value={it.name} onChange={v => update(it.key, { name: v })} placeholder="Наименование товара" invalid={bad('name', 'Наименование')} />
+                  </Labelled>
+                  <Labelled label="Артикул">
+                    <TextInput value={it.code} onChange={v => update(it.key, { code: v })} placeholder="CODE-12345" invalid={bad('code', 'Артикул')} />
+                  </Labelled>
+                  {/* The caption and the price share a row where the form is wide enough for the caption to show whole (a phone held
+                      sideways), one under the other otherwise; a longer caption is cut to one line */}
+                  <div className="grid gap-x-3 gap-y-4 @min-[400px]:grid-cols-2">
+                  <Labelled label="Подпись">
+                    <ComboField key={it.key} value={it.caption} onChange={v => update(it.key, { caption: v })} options={CAPTIONS} singleLine placeholder={DEFAULT_CAPTION} label="Подписи цены" truncate invalid={bad('caption', 'Подпись')} />
+                  </Labelled>
+                  <Labelled label="Цена, ₽">
+                    <PriceField value={it.price} onChange={v => update(it.key, { price: v })} invalid={bad('price', 'Цена')} />
+                  </Labelled>
+                  </div>
+                </div>
+              )
+            })()}
+
+          </div>
+          </div>
+        </div>
+
+        {/* The point first, as every tag needs it; then the tags in work, as the name tag counts them */}
+    </>
+  )
+
+  const download = (
+        <DownloadBar
+          format="PDF"
+          onClick={handleExport}
+          busy={exporting}
+          disabled={!ok}
+          note={(pointMissing ? unfilled([UNFILLED.point!, ...(items.length === 1 ? missing[0].map(f => UNFILLED[f]!) : [])]) : pointIssues[0]) ?? (!items.length ? 'Загрузить таблицу' : problemOf(failing.length ? staff.inWork(failing).index : 0))}
+          count={!pointIssues.length && failing.length ? itemOf(staff.inWork(failing).index, items.length) : undefined}
+          onNote={pointIssues.length ? toPoint : items.length ? () => staff.nextOf(failing) : pickTable}
+          links={canShareFiles && <LinkButtons incomplete={!ok} file={shareFile} fileOnly />}
+        />
+  )
+
+  // Phones: the canvas over a sheet with the form (trial)
+  if (pdfOnly || templateOnly) return null
+  if (phone) return <MobileEditor slides={mode === 'table' && !staff.file ? [{ key: 'upload', node: <UploadArea staff={staff} /> }] : items.map((it, i) => ({ key: it.key, item: it.key, label: it.name.replace(/\s+/g, ' ').trim(), ratio: TAG.h / TAG.w, node: renderItem(it, i) }))} onAdd={mode === 'manual' ? addItem : undefined} sidebar={sidebar} download={download} staff={staff} />
+
+  return (
+    <div className="flex min-h-dvh flex-col bg-paper font-sans text-ink md:h-dvh md:flex-row">
+
+      <aside data-ui="sidebar" className="relative flex shrink-0 flex-col md:h-full md:w-[321px] md:overflow-y-auto md:border-r md:border-ink/10">
+        {sidebar}
+        {download}
+      </aside>
+
+      <main
+        {...staff.dropTarget}
+        onClick={e => { if (mode === 'manual' && !(e.target as Element).closest('figure, [data-add], [data-template]')) staff.setSelected(null) }}
+        className={`flex flex-1 flex-col bg-surface px-2 py-6 pb-[88px] md:min-w-0 md:overflow-y-auto md:p-16
+          ${mode === 'table' && staff.file && staff.dragging ? 'outline-2 -outline-offset-8 outline-dashed outline-ink' : ''}`}
+      >
+        {mode === 'table' && !staff.file ? (
+          <UploadArea staff={staff} />
+        ) : (
+        <div className="m-auto grid w-full grid-cols-1 gap-8">
+          {items.map(renderItem)}
+          <Removed staff={staff} at={items.length} />
+        </div>
+        )}
+      </main>
+
+    </div>
+  )
+}
+
+/**
+ * The price, one field with the kopecks it doesn't have yet shown after it in grey: «1 290» reads «1 290,00», «1 290,5»
+ * reads «1 290,50», so it's plain there are kopecks without typing them (not two parts, roubles and kopecks, as the
+ * business card's phone). The grey tail is a copy of the text laid under the field, transparent but for
+ * the tail, in the same type and padding
+ */
+function PriceField({ value, onChange, invalid }: { value: string; onChange: (v: string) => void; invalid?: boolean }) {
+  const kopecks = value.split(',')[1]
+  const tail = !value ? '' : kopecks === undefined ? ',00' : '00'.slice(kopecks.length)
+  return (
+    <div className="relative rounded-control bg-surface">
+      <div aria-hidden className="pointer-events-none absolute inset-0 flex items-center overflow-hidden px-3 text-[14px] leading-5 whitespace-pre">
+        <span className="invisible">{value}</span>
+        <span className="text-hint">{tail}</span>
+      </div>
+      <TextInput value={value} onChange={v => onChange(formatPrice(v))} placeholder="0 000,00" inputMode="decimal" invalid={invalid} className="relative bg-transparent!" />
+    </div>
+  )
+}
+
+/**
+ * A tag in the preview, in its millimetres: the black band and white tag, `white` on the band, `text` black, `alert`
+ * (the fields at fault) red, `ghost` (placeholders of empty fields) grey. Every path is even-odd, as in the PDF
+ */
+function TagArt({ white, text, alert, ghost }: { white?: string; text?: string; alert?: string; ghost?: string }) {
+  return (
+    <svg viewBox={`0 0 ${TAG.w} ${TAG.h}`} className="block w-full" role="img">
+      <rect width={TAG.w} height={TAG.h} fill="#ffffff" />
+      <rect width={TAG.w} height={BAND} fill="#000000" />
+      {ghost && <path d={ghost} className="fill-ghost" fillRule="evenodd" />}
+      {white && <path d={white} fill="#ffffff" fillRule="evenodd" />}
+      {text && <path d={text} fill="#000000" fillRule="evenodd" />}
+      {alert && <path d={alert} className="fill-error" fillRule="evenodd" />}
+    </svg>
+  )
+}
+
+/** A tag's errors in one line, as the name tag's: the empty fields in one phrase, then the rest */
+function alertLine(problems: string[]): string {
+  const all = Object.values(MISSING) as string[]
+  const empty = all.filter(t => problems.includes(t)).map(t => t.replace(/^Нет /, ''))
+  const missing = empty.length ? `Нет ${empty.length > 1 ? `${empty.slice(0, -1).join(', ')} и ${empty[empty.length - 1]}` : empty[0]}` : ''
+  return [missing, ...problems.filter(t => !all.includes(t))].filter(Boolean).join(' · ')
+}
